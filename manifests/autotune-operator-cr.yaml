@@ -2,7 +2,7 @@ apiVersion: "recommender.com/v1beta1"
 kind: "Autotune"
 metadata:
  name: "autotunes.recommender.com"
- namespace: "autotune-ns"
+ namespace: "autotune-operator-ns"
 spec:
  replicas: 1
  sla:
@@ -12,6 +12,6 @@ spec:
  selector: 
    matchLabel: "appname-acmeair"
    matchRoute: ""
-   matchRUI: ""
-   matchService: "https"
+   matchRUI: "https://localhost:8080/acmeair"
+   matchService: ""
 

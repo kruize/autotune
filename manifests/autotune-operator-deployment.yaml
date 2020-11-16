@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autotune
+  namespace: autotune-operator-ns
+  labels:
+    app: autotune-operator
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: autotune-operator
+  template:
+    metadata:
+      labels:
+        app: autotune-operator
+        name: autotune-operator
+        operatorframework.io/os.linux: supported
+    spec:
+      serviceAccountName: autotune-operator-sa
+      containers:
+      - name: autotune-operator-pod
+        image: ngnix:1.6
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: CLUSTER_TYPE 
+          - name: K8S_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: K8S_TYPE
+          - name: AUTH_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: AUTH_TYPE 
+                optional: true
+          - name: AUTH_TOKEN
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: AUTH_TOKEN
+                optional: true
+          - name: MONITORING_AGENT
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: AUTH_TOKEN
+                optional: true
+          - name: MONITORING_SERVICE
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: MONITORING_SERVICE
+                optional: true
+          - name: MONITORING_AGENT_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: MONITORING_AGENT_ENDPOINT
+                optional: true
+          - name: LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: minikube-config-key
+                key: LOGGING_LEVEL
+        envFrom: 
+          - configMapRef:
+              name: minikube-config 
+        ports:
+         - name: http
+           containerPort: 31313
