@@ -43,7 +43,7 @@ Returns the JSON array response containing all the applications along with their
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/getTunables?application_name=<APPLICATION_NAME>&type='container'`
 
 **Response**
-
+Tuning Set C:
 ```
 [
     {
@@ -126,71 +126,6 @@ Returns the JSON array response containing all the applications along with their
         ]
     }
 ]
-```
-
-##  ListTunables
-Get the tunables supported by autotune for the SLA.
-
-**Request**
-`GET /listTunables?sla=<SLA>` gives all tunables for the SLA
-
-`GET /listTunables?sla=<SLA>&layer=<LAYER>` gives tunables for the SLA and the layer
-
-`GET /listTunables?sla=<SLA>&layer=<LAYER>&type=<TYPE>` gives tunables for the SLA and the type for the layer.
-
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listTunables?sla=<SLA>`
-
-**Response**
-Tuning Set C:
-```
-{
-    "sla": "SLA",
-    "application_tunables": [
-        {
-            "layer": "container",
-            "level": "0",
-            "layer_tunables": [
-                {
-                    "type": "container",
-                    "tunables": [
-                        {
-                            "tunable": "CPU_Request",
-                            "details": "CPU requests of the application"
-                        },
-                        {
-                            "tunable": "CPU_Limit",
-                            "details": "CPU limit of the application"
-                        }        
-                    ]
-                }
-            ]
-        },
-        {
-            "layer": "runtime",
-            "level": "1",
-            "layer_tunables":  [
-                {
-                    "type": "java",
-                    "tunables": [
-                        {
-                            "tunable": "HEAP_SIZE",
-                            "details": "Java heap size of the application"
-                        }        
-                    ]
-                },
-                {
-                    "type": "python",
-                    "tunables": [
-                        {
-                            "tunable": "NUMBER_OF_THREADS",
-                            "details": ""
-                        }
-                    ]
-                }
-            ]
-        }
-    ] 
-}
 ```
 Tuning Set B:
 ```
@@ -285,6 +220,69 @@ Tuning set A:
         ]
     }
 ]
+```
+##  ListTunables
+Get the tunables supported by autotune for the SLA.
+
+**Request**
+`GET /listTunables?sla=<SLA>` gives all tunables for the SLA
+
+`GET /listTunables?sla=<SLA>&layer=<LAYER>` gives tunables for the SLA and the layer
+
+`GET /listTunables?sla=<SLA>&layer=<LAYER>&type=<TYPE>` gives tunables for the SLA and the type for the layer.
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listTunables?sla=<SLA>`
+
+**Response**
+```
+{
+    "sla": "SLA",
+    "application_tunables": [
+        {
+            "layer": "container",
+            "level": "0",
+            "layer_tunables": [
+                {
+                    "type": "container",
+                    "tunables": [
+                        {
+                            "tunable": "CPU_Request",
+                            "details": "CPU requests of the application"
+                        },
+                        {
+                            "tunable": "CPU_Limit",
+                            "details": "CPU limit of the application"
+                        }        
+                    ]
+                }
+            ]
+        },
+        {
+            "layer": "runtime",
+            "level": "1",
+            "layer_tunables":  [
+                {
+                    "type": "java",
+                    "tunables": [
+                        {
+                            "tunable": "HEAP_SIZE",
+                            "details": "Java heap size of the application"
+                        }        
+                    ]
+                },
+                {
+                    "type": "python",
+                    "tunables": [
+                        {
+                            "tunable": "NUMBER_OF_THREADS",
+                            "details": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ] 
+}
 ```
 ##  Health
 Get the status of the dependency analyzer.
