@@ -1,7 +1,6 @@
 from install_package import install
 
 install('optuna')
-install('scikit-optimize')
 
 import optuna, random
 from optuna.samplers import TPESampler
@@ -55,7 +54,7 @@ sla, direction, tunables = get_all_tunables()
 study = optuna.create_study(direction=direction, sampler=TPESampler())
 
 # Execute an optimization by using an `Objective` instance.
-study.optimize(Objective(sla, tunables), n_trials=5)
+study.optimize(Objective(sla, tunables), n_trials=5, n_jobs=1)
 
 # get the best parameter 
 print(study.best_params)

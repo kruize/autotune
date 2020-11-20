@@ -2,7 +2,7 @@ import subprocess
 
 
 def perform_experiment(config):
-    output = subprocess.run(["bash", "scripts/applyconfig.sh", "1", "300"], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(config["cpu_request"]), str(config["memory_request"])], stdout=subprocess.PIPE).stdout.decode('utf-8')
 
     if output == '':
         return "Nan", 0
