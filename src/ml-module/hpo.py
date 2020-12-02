@@ -36,6 +36,8 @@ class Objective(object):
         
         config = {'cpu_request': cpu_request, 'memory_request': memory_request, 'flag': 0}
 
+        print(cpu_request, memory_request)
+
         actual_sla, is_success = perform_experiment(config)
         
         if is_success == 1:
