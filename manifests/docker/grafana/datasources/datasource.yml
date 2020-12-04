@@ -1,0 +1,22 @@
+﻿# config file version
+apiVersion: 1
+
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
+datasources:
+- name: Prometheus
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: http://prometheus:9090
+  basicAuth: true
+  basicAuthUser: admin
+
+  jsonData:
+     tlsAuth: false
+     tlsAuthWithCACert: false
+
+  version: 1
+  editable: true
