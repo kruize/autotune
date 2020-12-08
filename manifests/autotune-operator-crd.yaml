@@ -37,15 +37,19 @@ spec:
           description: 'sla allow an user to provide any one option out of response-time,  
           right-size, throughput'
           properties:
-            name: 
-              description: 'name of the sala like response-time'
+            class: 
+              description: 'name of the sla like response-time'
               type: string
-            value:
-              description: 'it will take the value like lower, higher '
+            direction:
+              description: 'it will take the value like up or down'
               type: string
+            promql: 
+              description: "query string to get the sla" 
+              type: string  
           required:
           - name
           - value
+          - promql
         mode:
           description: 'provide an options to either try, show or apply the recommendation'
           type: string 
@@ -59,6 +63,9 @@ spec:
               description: 'match lable is may be the name of the applications where  
                             recommendation system apply' 
               type: string
+            matchLabelValue:
+              description: 'match lable value'
+              type: string 
             matchRoute:
               description: 'test'
               type: string

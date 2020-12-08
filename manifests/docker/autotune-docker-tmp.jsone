@@ -1,7 +1,0 @@
-{
-  "containers": [
-    { "name": "cadvisor", "cpu_limit": "0", "mem_limit": "0" },
-    { "name": "grafana", "cpu_limit": "0", "mem_limit": "0" },
-    { "name": "prometheus", "cpu_limit": "0", "mem_limit": "0" },
-  ]
-}

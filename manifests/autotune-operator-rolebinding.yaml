@@ -1,12 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
- name: autotune-operator-crb
+ name: autotune-crb
 roleRef:
  apiGroup: rbac.authorization.k8s.io
  kind: ClusterRole
- name: autotune-operator-role
+ name: autotune-role
 subjects:
 - kind: ServiceAccount
-  name: autotune-operator-sa
-  namespace: autotune-operator-ns
+  name: autotune-sa
+  namespace: "monitoring"
+  

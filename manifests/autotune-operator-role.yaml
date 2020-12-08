@@ -1,8 +1,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: autotune-operator-cr
-  namespace: autotune-operator-ns
+  name: autotune-cr
+  namespace: "monitoring"
 rules:
 - apiGroups:
   - recommender.com

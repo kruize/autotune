@@ -1,9 +1,0 @@
----
-# Add names of the containers that you want kruize to monitor, one per line in double quotes
-containers:
-  - name: "cadvisor"
-  - name: "grafana"
-  - name: "autotune"
-  - name: "prometheus"
-#  - name: "acmeair-mono-app1"
-#  - name: "acmeair-db1"
