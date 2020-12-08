@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2019, 2019 IBM Corporation and others.
+# Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ SCRIPTS_DIR="${ROOT_DIR}/scripts"
 . ${SCRIPTS_DIR}/docker-helpers.sh
 . ${SCRIPTS_DIR}/minikube-helpers.sh
 . ${SCRIPTS_DIR}/openshift-helpers.sh
-
+. ${SCRIPTS_DIR}/dependent-tool-installation.sh
 # Defaults for the script
 # minikube is the default cluster type
 cluster_type="minikube"
