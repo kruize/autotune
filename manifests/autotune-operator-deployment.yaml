@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autotune
+  namespace: "monitoring"
+  labels:
+    app: autotune
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: autotune
+  template:
+    metadata:
+      labels:
+        app: autotune
+        name: autotune
+        operatorframework.io/os.linux: supported
+    spec:
+      serviceAccountName: autotune-sa
+      containers:
+      - name: autotune
+        image: kruize/kruize
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: CLUSTER_TYPE 
+          - name: K8S_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: K8S_TYPE
+          - name: AUTH_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: AUTH_TYPE 
+                optional: true
+          - name: AUTH_TOKEN
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: AUTH_TOKEN
+                optional: true
+          - name: MONITORING_AGENT
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: AUTH_TOKEN
+                optional: true
+          - name: MONITORING_SERVICE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: MONITORING_SERVICE
+                optional: true
+          - name: MONITORING_AGENT_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: MONITORING_AGENT_ENDPOINT
+                optional: true
+          - name: LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config-key
+                key: LOGGING_LEVEL
+        envFrom: 
+          - configMapRef:
+              name: autotune-config 
+        ports:
+         - name: http
+           containerPort: 31313
