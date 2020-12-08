@@ -1,5 +1,8 @@
 package com.autotune.collection;
 
+/**
+ * Holds information about the fields in selector tag in the autotune object yaml
+ */
 public class SelectorInfo
 {
     private String matchLabel;
