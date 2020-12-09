@@ -19,20 +19,48 @@ import subprocess
 import sys
 
 
-def perform_experiment(config):
+def perform_experiment(experiment_tunables):
     """
     Return the result received from the experiment manager.
     
     Parameters:
-        config (dict): A dictionary containing hyperparameter values suggested by the sampler.
+        experiment_tunables (dict): A list containing hyperparameter values suggested by the sampler.
     
     Returns:
         sla (float/str): Value returned by the experiment manager.
         is_success (bool): A boolean value that is set to true if the experiment runs successfully for this config, false otherwise.
+
+    Files generated:
+        total-output.txt:
+            Sample format:
+            Instances , Throughput , Responsetime , TOTAL_PODS_MEM , TOTAL_PODS_CPU , CPU_MIN , CPU_MAX , MEM_MIN , MEM_MAX , CLUSTER_MEM% , CLUSTER_CPU% , CPU_REQ , MEM_REQ , WEB_ERRORS
+            1 ,  338.3 , 765 , 0 , 0 , 0 , 0 , 0 , 0 ,  60.2367 , 21.4259 , 3.3294886353000983 , 410.36017895925215M , 0
+            Run , CPU_REQ , MEM_REQ , Throughput , Responsetime , WEB_ERRORS , CPU , CPU_MIN , CPU_MAX , MEM , MEM_MIN , MEM_MAX
+            0 , 3.3294886353000983 , 410.36017895925215M , 338.3 , 765 , 0  ,0 , 0 , 0  , 0 , 0 , 0
+
+            Instances , Throughput , Responsetime , TOTAL_PODS_MEM , TOTAL_PODS_CPU , CPU_MIN , CPU_MAX , MEM_MIN , MEM_MAX , CLUSTER_MEM% , CLUSTER_CPU% , CPU_REQ , MEM_REQ , WEB_ERRORS
+            1 ,  150 , 2130 , 0 , 0 , 0 , 0 , 0 , 0 ,  60.0533 , 17.1877 , 3.750514009853204 , 290.75151431609027M , 7778
+            Run , CPU_REQ , MEM_REQ , Throughput , Responsetime , WEB_ERRORS , CPU , CPU_MIN , CPU_MAX , MEM , MEM_MIN , MEM_MAX
+            0 , 3.750514009853204 , 290.75151431609027M , 150.0 , 2130 , 7778   ,0 , 0 , 0  , 0 , 0 , 0
+        output.txt:
+            Sample format:
+            1 ,  338.3 , 765 , 0 , 0 , 0 , 0 , 0 , 0 ,  60.2367 , 21.4259 , 3.3294886353000983 , 410.36017895925215M , 0
+            1 ,  150 , 2130 , 0 , 0 , 0 , 0 , 0 , 0 ,  60.0533 , 17.1877 , 3.750514009853204 , 290.75151431609027M , 7778
+        experiment-data.csv:
+            Sample format:
+            Instances,Throughput,Responsetime,TOTAL_PODS_MEM,TOTAL_PODS_CPU,CPU_MIN,CPU_MAX,MEM_MIN,MEM_MAX,CLUSTER_MEM%,CLUSTER_CPU%,CPU_REQ,MEM_REQ,WEB_ERRORS
+            1,338.3,765,0,0,0,0,0,0,60.2367,21.4259,3.3294886353000983,410.36017895925215M,0
+            1,150,2130,0,0,0,0,0,0,60.0533,17.1877,3.750514009853204,290.75151431609027M,7778
     """
     experiment_data_file = "experiment-data.csv"
     
-    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(config["cpu_request"]), str(config["memory_request"])], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    for tunable in experiment_tunables:
+        if tunable["tunable_name"] == "cpuRequest":
+            cpu_request = tunable["tunable_value"]
+        elif tunable["tunable_name"] == "memoryRequest":
+            memory_request = tunable["tunable_value"]
+
+    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)], stdout=subprocess.PIPE).stdout.decode('utf-8')
 
     orig_stdout = sys.stdout
     f = open('total-output.txt', 'a')

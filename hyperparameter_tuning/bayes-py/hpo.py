@@ -34,7 +34,7 @@ class Objective(object):
     A class used to define search space and return the actual sla value.
     
     Parameters:
-        sla (str): The term that is being optimized.
+        sla (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
     """
 
@@ -45,25 +45,25 @@ class Objective(object):
     def __call__(self, trial):
         global trials
 
+        experiment_tunables = []
+        config = {}
+
         # Define search space
         for tunable in tunables:
-            if tunable['name'] == 'cpu-request':
-                cpu_request = trial.suggest_uniform(tunable['name'], tunable['lower_bound'], tunable['upper_bound'])
-                break
-        
-        for tunable in tunables:
-            if tunable['name'] == 'memory-request':
-                memory_request = trial.suggest_uniform(tunable['name'], tunable['lower_bound'], tunable['upper_bound'])
-                break
-        
-        config = {'cpu_request': cpu_request, 'memory_request': memory_request, 'flag': 0}
+            if tunable["value_type"] == "double":
+                tunable_value = trial.suggest_uniform(tunable["name"], tunable["lower_bound"], tunable["upper_bound"])
+            experiment_tunables.append({"tunable_name": tunable["name"], "tunable_value": tunable_value})
 
-        print(cpu_request, memory_request)
+        config["experiment_tunables"] = experiment_tunables
 
-        actual_sla_value, is_success = perform_experiment(config)
+        print(experiment_tunables)
+
+        actual_sla_value, is_success = perform_experiment(experiment_tunables)
         
         if is_success == True:
-            config['flag'] = 1
+            config["is_success"] = True
+        else:
+            config["is_success"] = False
         
         trials.append(config)
 
