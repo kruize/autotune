@@ -88,38 +88,6 @@ spec:
           required:
           - type
           - value
-          
-#        allOf:
-#        - properties:
-#            sla:
-#             required:
-#             - name
-#             - value
-#            mode:
-#             required:
-#             - type
-#            datasource:
-#             required:
-#             - name
-#             - value
-#          required: ["sla","mode","datasource"]  
-        
-#        anyOf:
-#        - properties:
-#           selector:
-#           - properties:
-#              matchLabel:
-#               required:
-#               - type
-#              matchRoute:
-#               required:
-#               - type
-#              matchURI:
-#               required:
-#               - type
-#              matchService:
-#               required:
-#               - type
     status:
      type: object
      properties:
@@ -127,4 +95,3 @@ spec:
        type: integer
       labelSelector:
        type: string
-       

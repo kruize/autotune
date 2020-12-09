@@ -2,16 +2,16 @@ apiVersion: "recommender.com/v1beta1"
 kind: "Autotune"
 metadata:
  name: "autotunes.recommender.com"
- namespace: "{{ AUTOTUNE_NAMESPACE }}"
+ namespace: "{{ APPLICATION_NAMESPACE }}"
 spec:
  replicas: 1
  sla:
-   name: "response-time"
-   value: "lower"
+   class: "response-time"
+   direction: "lower"
+   prmql: ""
  mode: "show"
  selector: 
    matchLabel: ""
    matchRoute: ""
    matchURI: ""
    matchService: ""
-   

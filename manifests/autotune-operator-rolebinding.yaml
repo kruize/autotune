@@ -10,4 +10,3 @@ subjects:
 - kind: ServiceAccount
   name: autotune-sa
   namespace: "{{ AUTOTUNE_NAMESPACE }}"
-  

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: autotune
-  namespace: "monitoring"
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
   labels:
     app: autotune
 spec:
