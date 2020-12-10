@@ -16,7 +16,6 @@
 #
 
 ###############################  v MiniKube v #################################
-source dependent-tool-installation.sh
 
 function minikube_first() {
 
@@ -75,10 +74,32 @@ function minikube_start() {
 	echo
 	echo "###   Installing autotune for minikube"
 	echo
-	check_install_required_tools
+	check_prometheus_installation
 	minikube_first
 	minikube_deploy
 }
+
+function check_prometheus_installation() {
+	echo
+	echo "Info: Checking pre requisites for minikube..."
+	kubectl_tool=$(which kubectl)
+	check_err "Error: Please install the kubectl tool"
+	# Check to see if kubectl supports kustomize
+	kubectl kustomize --help >/dev/null 2>/dev/null
+	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
+
+	autotune_ns="monitoring"
+	kubectl_cmd="kubectl -n ${autotune_ns}"
+	prometheus_pod_running=$(${kubectl_cmd} get pods | grep "prometheus-k8s-1")
+	if [ "${prometheus_pod_running}" == "" ]; then
+		echo "Prometheus is not running, use 'install_prometheus_on_minikube.sh' to install."
+		exit 1
+	else
+		echo "Prometheus is already installed and running."
+	fi
+
+}
+
 
 function minikube_terminate() {
 	echo -n "###   Removing autotune for minikube"
@@ -97,22 +118,7 @@ function minikube_terminate() {
 	echo
 	echo "Removing autotune serviceMonitor"
 	${kubectl_cmd} delete -f ${SERVICE_MONITOR_MANIFEST} 2>/dev/null
-
-	pushd minikube_downloads > /dev/null
-		echo
-		echo "Removing cadvisor"
-		pushd cadvisor/deploy/kubernetes/base > /dev/null
-		kubectl kustomize . | kubectl delete -f-
-		popd > /dev/null
-		
-		echo
-		echo "Removing prometheus"
-		pushd kube-prometheus/manifests > /dev/null
-		kubectl delete -f . 2>/dev/null
-		kubectl delete -f setup 2>/dev/null
-		popd > /dev/null
-	popd > /dev/null
-
+	
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_SA_MANIFEST}
 	

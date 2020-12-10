@@ -30,18 +30,16 @@ AUTOTUNE_SA_NAME="autotune-sa"
 
 SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
 
-AUTOTUNE_DOCKER_REPO="kruize/kruize"
+AUTOTUNE_DOCKER_REPO="kruize/autotune"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
-AUTOTUNE_PORT="31313"
+AUTOTUNE_PORT=""
 
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
 # source all the helpers scripts
-. ${SCRIPTS_DIR}/docker-helpers.sh
 . ${SCRIPTS_DIR}/minikube-helpers.sh
-. ${SCRIPTS_DIR}/openshift-helpers.sh
-. ${SCRIPTS_DIR}/dependent-tool-installation.sh
+. ${SCRIPTS_DIR}/install_prometheus_on_minikube.sh
 
 # Defaults for the script
 # minikube is the default cluster type
@@ -72,7 +70,7 @@ trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i docker-image] [-s|t] [-u user] [-p password] [-n namespace] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i docker-image] [-n namespace] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	exit -1
 }
