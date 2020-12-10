@@ -15,6 +15,7 @@ spec:
  version: v1beta1
  validation: 
   openAPIV3Schema:
+   type: object
    properties:
     apiVersion:
       description: 'APIVersion defines the versioned schema of this representation
@@ -33,18 +34,27 @@ spec:
       description: 'Autotune containts specification parameter for the the recommendation'
       properties:
         sla:
-          description: 'sla allow an user to provide any one option out of response-time,  
+          description: 'sla allow an user to provide any one option out of response_time,  
           right-size, throughput'
           properties:
-            name: 
-              description: 'name of the sala like response-time'
+            sla_class: 
+              description: 'name of the sla like response_time'
               type: string
-            value:
-              description: 'it will take the value like lower, higher '
+            direction:
+              description: 'it will take the value like up or down'
               type: string
+            promql: 
+              description: "query string to get the sla" 
+              type: string  
+          required:
+          - sla_class
+          - direction
+          - promql
         mode:
           description: 'provide an options to either try, show or apply the recommendation'
-          type: string  
+          type: string 
+          required:
+          - type
         
         selector:
           description: ' test'
@@ -53,16 +63,18 @@ spec:
               description: 'match lable is may be the name of the applications where  
                             recommendation system apply' 
               type: string
+            matchLabelValue:
+              description: 'match lable value'
+              type: string 
             matchRoute:
               description: 'test'
               type: string
-            matchRUI:
+            matchURI:
               description: 'test'
               type: string
             matchService:
               description: 'test'
               type: string
-        
         datasource:
           description: 'name of the applicaton which is going to monitor the cluster and
                         provide the data e.g prometheus etc'
@@ -73,4 +85,13 @@ spec:
             value:
               description: ' actual name of the monitoring agent software'
               type: string
- 
+          required:
+          - type
+          - value
+    status:
+     type: object
+     properties:
+      replicas:
+       type: integer
+      labelSelector:
+       type: string

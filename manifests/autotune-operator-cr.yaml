@@ -2,16 +2,16 @@ apiVersion: "recommender.com/v1beta1"
 kind: "Autotune"
 metadata:
  name: "autotunes.recommender.com"
- namespace: "autotune-ns"
+ namespace: "{{ APPLICATION_NAMESPACE }}"
 spec:
  replicas: 1
  sla:
-   name: "response-time"
-   value: "lower"
+   sla_class: "response_time"
+   direction: "lower"
+   promql: ""
  mode: "show"
  selector: 
-   matchLabel: "appname-acmeair"
+   matchLabel: ""
    matchRoute: ""
-   matchRUI: ""
-   matchService: "https"
-
+   matchURI: ""
+   matchService: ""
