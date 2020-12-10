@@ -34,11 +34,11 @@ spec:
       description: 'Autotune containts specification parameter for the the recommendation'
       properties:
         sla:
-          description: 'sla allow an user to provide any one option out of response-time,  
+          description: 'sla allow an user to provide any one option out of response_time,  
           right-size, throughput'
           properties:
             sla_class: 
-              description: 'name of the sla like response-time'
+              description: 'name of the sla like response_time'
               type: string
             direction:
               description: 'it will take the value like up or down'

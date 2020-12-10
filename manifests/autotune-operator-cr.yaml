@@ -6,7 +6,7 @@ metadata:
 spec:
  replicas: 1
  sla:
-   sla_class: "response-time"
+   sla_class: "response_time"
    direction: "lower"
    promql: ""
  mode: "show"
