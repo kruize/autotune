@@ -121,6 +121,6 @@ function minikube_terminate() {
 	
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_SA_MANIFEST}
-	
+
 	rm -rf minikube_downloads
 }
