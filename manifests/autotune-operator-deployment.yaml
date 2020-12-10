@@ -20,7 +20,7 @@ spec:
       serviceAccountName: autotune-sa
       containers:
       - name: autotune
-        image: kruize/kruize
+        image: kruize/autotune
         imagePullPolicy: Always
         env:
           - name: CLUSTER_TYPE
@@ -73,4 +73,4 @@ spec:
               name: autotune-config 
         ports:
          - name: http
-           containerPort: 31313
+           containerPort: 8080

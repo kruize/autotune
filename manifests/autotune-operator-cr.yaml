@@ -6,9 +6,9 @@ metadata:
 spec:
  replicas: 1
  sla:
-   class: "response-time"
+   sla_class: "response-time"
    direction: "lower"
-   prmql: ""
+   promql: ""
  mode: "show"
  selector: 
    matchLabel: ""

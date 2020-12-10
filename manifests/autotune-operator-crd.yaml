@@ -37,7 +37,7 @@ spec:
           description: 'sla allow an user to provide any one option out of response-time,  
           right-size, throughput'
           properties:
-            class: 
+            sla_class: 
               description: 'name of the sla like response-time'
               type: string
             direction:
@@ -47,8 +47,8 @@ spec:
               description: "query string to get the sla" 
               type: string  
           required:
-          - name
-          - value
+          - sla_class
+          - direction
           - promql
         mode:
           description: 'provide an options to either try, show or apply the recommendation'
