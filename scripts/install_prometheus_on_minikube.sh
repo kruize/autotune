@@ -16,31 +16,30 @@
 #
 
 ###############################  v MiniKube v #################################
-function check_install_required_tools(){
+# Default mode is interactive
+non_interactive=0
+
+function install_prometheus() {
     echo
 	echo "Info: Checking pre requisites for prometheus..."
 	kubectl_tool=$(which kubectl)
 	check_err "Error: Please install the kubectl tool"
+
 	kubectl kustomize --help >/dev/null 2>/dev/null
 	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
 
-    autotune_ns="monitoring"
-	kubectl_cmd="kubectl -n ${autotune_ns}"
+    prometheus_ns="monitoring"
+	kubectl_cmd="kubectl -n ${prometheus_ns}"
+	prometheus_pod_running=$(${kubectl_cmd} get pods | grep "prometheus-k8s-1")
 
-	prometheus_cnt=$(${kubectl_cmd} get pods | grep -c "prometheus-k8s-1")
-	echo "prometheus pos count: ${prometheus_cnt} "
-
-	if [ ${prometheus_cnt} == 1 ]; then
-		echo "Prometheus already installed and running"
-		exit 0
-	else 	
+	if [ "${prometheus_pod_running}" == "" ]; then
 		if [ ${non_interactive} == 0 ]; then
-			echo "Info: autotune needs cadvisor/prometheus/grafana to be installed in minikube"
+			echo "Info:You can install cadvisor/prometheus in minikube"
 			echo -n "Download and install these software to minikube(y/n)? "
 			read inst
 			linst=$(echo ${inst} | tr A-Z a-z)
 			if [ ${linst} == "n" ]; then
-				echo "Info: autotune not installed"
+				echo "Info: prometheus not installed"
 				exit 0
 			fi
 		fi
@@ -84,10 +83,12 @@ function check_install_required_tools(){
 		done
 		check_running prometheus-k8s-1
 		sleep 2
+	else
+		echo "Prometheus is already installed and running."
 	fi	
 }
 
-function minikube_terminate() {
+function delete_prometheus() {
 	echo -n "###   Removing cadvisor and prometheus"
 	pushd minikube_downloads > /dev/null
 		echo
@@ -105,4 +106,50 @@ function minikube_terminate() {
 	popd > /dev/null
 	rm -rf minikube_downloads
 }
-"$@"
+
+function check_running() {
+	
+	check_pod=$1
+    prometheus_ns="monitoring"
+	kubectl_cmd="kubectl -n ${prometheus_ns}"
+
+	echo "Info: Waiting for ${check_pod} to come up..."
+	while true;
+	do
+		sleep 2
+		${kubectl_cmd} get pods | grep ${check_pod}
+		pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | awk '{ print $3 }' | grep -v 'Terminating')
+		case "${pod_stat}" in
+			"ContainerCreating"|"Terminating"|"Pending")
+				sleep 2
+				;;
+			"Running")
+				echo "Info: ${check_pod} deploy succeeded: ${pod_stat}"
+				err=0
+				break;
+				;;
+			*)
+				echo "Error: ${check_pod} deploy failed: ${pod_stat}"
+				err=-1
+				break;
+				;;
+		esac
+	done
+
+	${kubectl_cmd} get pods | grep ${check_pod}
+	echo
+}
+
+#Taking input from user to test the script
+
+echo Would you like to install/delete prometheus:? 
+read option
+if [ ${option} == "install" ]; then
+	install_prometheus
+elif [ ${option} == "delete" ]; then
+	delete_prometheus 
+
+else
+	echo "Entered input is not valid option, please provide a valid option !"	
+fi		
+

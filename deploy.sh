@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-AUTOTUNE_VERSION=$(cat .autotune-version)
+
 AUTOTUNE_CRD_MANIFEST="manifests/autotune-operator-crd.yaml"
 AUTOTUNE_CR_MANIFEAST="manifests/autotune-operator-cr.yaml"
 AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
@@ -31,11 +31,17 @@ AUTOTUNE_SA_NAME="autotune-sa"
 SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
 
 AUTOTUNE_DOCKER_REPO="kruize/autotune"
-AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 AUTOTUNE_PORT=""
 
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
+
+#Fetch autotune version from the pom.xml file.
+artifact_id= grep -m 1 "<artifactId>" ${ROOT_DIR}/pom.xml|awk '{split($0,a,">"); print a[2]}'| awk '{split($0,a,"<"); print a[1]}'
+version= grep -m 1 "<version>" ${ROOT_DIR}/pom.xml|awk '{split($0,a,">"); print a[2]}'| awk '{split($0,a,"<"); print a[1]}'
+AUTOTUNE_VERSION=${artifact_id}-${version}
+echo ${AUTOTUNE_VERSION}
+AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
@@ -50,8 +56,6 @@ setup=1
 non_interactive=0
 # Default namespace is kube-system
 autotune_ns="kube-system"
-# Default userid is "admin"
-user="admin"
 # docker: loop timeout is turned off by default
 timeout=-1
 
@@ -161,17 +165,11 @@ do
 	n)
 		autotune_ns="${OPTARG}"
 		;;
-	p)
-		password="${OPTARG}"
-		;;
 	s)
 		setup=1
 		;;
 	t)
 		setup=0
-		;;
-	u)
-		user="${OPTARG}"
 		;;
 	[?])
 		usage
