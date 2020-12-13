@@ -52,6 +52,7 @@ class Objective(object):
         for tunable in tunables:
             if tunable["value_type"] == "double":
                 tunable_value = trial.suggest_uniform(tunable["name"], tunable["lower_bound"], tunable["upper_bound"])
+                tunable_value = round(tunable_value, 2)
             experiment_tunables.append({"tunable_name": tunable["name"], "tunable_value": tunable_value})
 
         config["experiment_tunables"] = experiment_tunables
@@ -66,8 +67,6 @@ class Objective(object):
             config["is_success"] = False
         
         trials.append(config)
-
-        # predicted_sla_value = random.randint(10, 800) 
 
         return actual_sla_value
 

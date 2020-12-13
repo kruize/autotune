@@ -96,6 +96,8 @@ def perform_experiment(experiment_tunables):
         """
         print(data)
         sla = data.split(" , ")[2]
+        file = open(experiment_data_file, "a")
+        file.close()
         with open(experiment_data_file, "r+") as file:
             reader = csv.reader(file)
             csv_data = list(reader)
@@ -106,10 +108,6 @@ def perform_experiment(experiment_tunables):
                 writer.writerow(column)
                 column = [c.strip() for c in rows[1].split(',')]
                 writer.writerow(column)
-                # for row in rows:
-                    # if len(row) != 0:
-                        # column = [c.strip() for c in row.split(',')]
-                        # writer.writerow(column)
             else:
                 column = [c.strip() for c in rows[1].split(',')]
                 writer.writerow(column)
