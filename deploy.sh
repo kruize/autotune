@@ -37,15 +37,13 @@ ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
 #Fetch autotune version from the pom.xml file.
-artifact_id= grep -m 1 "<artifactId>" ${ROOT_DIR}/pom.xml|awk '{split($0,a,">"); print a[2]}'| awk '{split($0,a,"<"); print a[1]}'
-version= grep -m 1 "<version>" ${ROOT_DIR}/pom.xml|awk '{split($0,a,">"); print a[2]}'| awk '{split($0,a,"<"); print a[1]}'
-AUTOTUNE_VERSION=${artifact_id}-${version}
-echo ${AUTOTUNE_VERSION}
+AUTOTUNE_VERSION="$(grep -A 1 "Autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
+
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
-. ${SCRIPTS_DIR}/install_prometheus_on_minikube.sh
+. ${SCRIPTS_DIR}/common_utils.sh
 
 # Defaults for the script
 # minikube is the default cluster type
@@ -97,36 +95,6 @@ function check_cluster_type() {
 		echo "Error: unsupported cluster type: ${cluster_type}"
 		exit -1
 	esac
-}
-
-function check_running() {
-	check_pod=$1
-
-	echo "Info: Waiting for ${check_pod} to come up..."
-	while true;
-	do
-		sleep 2
-		${kubectl_cmd} get pods | grep ${check_pod}
-		pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | awk '{ print $3 }' | grep -v 'Terminating')
-		case "${pod_stat}" in
-			"ContainerCreating"|"Terminating"|"Pending")
-				sleep 2
-				;;
-			"Running")
-				echo "Info: ${check_pod} deploy succeeded: ${pod_stat}"
-				err=0
-				break;
-				;;
-			*)
-				echo "Error: ${check_pod} deploy failed: ${pod_stat}"
-				err=-1
-				break;
-				;;
-		esac
-	done
-
-	${kubectl_cmd} get pods | grep ${check_pod}
-	echo
 }
 
 # Iterate through the commandline options
