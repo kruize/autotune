@@ -16,11 +16,13 @@
 #
 
 ###############################  v MiniKube v #################################
-
+# include the common_utils.sh script to access methods 
+source common_utils.sh
 non_interactive=0
-
+# Call setup by default (and not terminate)
+setup=1
 function install_prometheus() {
-    echo
+	echo
 	echo "Info: Checking pre requisites for prometheus..."
 	kubectl_tool=$(which kubectl)
 	check_err "Error: Please install the kubectl tool"
@@ -28,13 +30,13 @@ function install_prometheus() {
 	kubectl kustomize --help >/dev/null 2>/dev/null
 	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
 
-    prometheus_ns="monitoring"
+	prometheus_ns="monitoring"
 	kubectl_cmd="kubectl -n ${prometheus_ns}"
 	prometheus_pod_running=$(${kubectl_cmd} get pods | grep "prometheus-k8s-1")
 
-	if [ "${prometheus_pod_running}" == "" ]; then
+	if [ "${prometheus_pod_running}" != "" ]; then
 		echo "Prometheus is already installed and running."
-    	return;
+		return;
 	fi	
 
 	if [ ${non_interactive} == 0 ]; then
@@ -108,19 +110,22 @@ function delete_prometheus() {
 	rm -rf minikube_downloads
 }
 
-#Taking input from user to test the script
-while getopts "st" option; do
-case ${option} in
-s ) #For option s to install the prometheus
-    echo "Info: install prometheus..."
-	install_prometheus
-;;
-t ) #For option t terminating and deleting the prometheus 
-    echo "Info: deleting prometheus..."
-	delete_prometheus
-;;
-\? ) #For invalid option
-echo "You have to use: [-s] or [-t] options only"
-;;
-esac
+#Taking input from user to install/delete prometheus
+while getopts "st" option; 
+	do
+		case ${option} in
+		s ) #For option s to install the prometheus
+			echo "Info: install prometheus..."
+			setup=1
+			install_prometheus
+		;;
+		t ) #For option t terminating and deleting the prometheus 
+			echo "Info: deleting prometheus..."
+			setup=0	
+			delete_prometheus
+		;;
+		\? ) #For invalid option
+			echo "You have to use: [-s] or [-t] options only"
+		;;
+		esac
 done

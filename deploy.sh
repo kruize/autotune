@@ -77,15 +77,6 @@ function usage() {
 	exit -1
 }
 
-# Check error code from last command, exit on error
-check_err() {
-	err=$?
-	if [ ${err} -ne 0 ]; then
-		echo "$*"
-		exit -1
-	fi
-}
-
 # Check if the cluster_type is one of icp or openshift
 function check_cluster_type() {
 	case "${cluster_type}" in

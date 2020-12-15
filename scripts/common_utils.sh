@@ -49,3 +49,12 @@ function check_running() {
 	${kubectl_cmd} get pods | grep ${check_pod}
 	echo
 }
+
+# Check error code from last command, exit on error
+check_err() {
+	err=$?
+	if [ ${err} -ne 0 ]; then
+		echo "$*"
+		exit -1
+	fi
+}

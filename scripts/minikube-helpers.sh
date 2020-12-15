@@ -92,7 +92,7 @@ function check_prometheus_installation() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	prometheus_pod_running=$(${kubectl_cmd} get pods | grep "prometheus-k8s-1")
 	if [ "${prometheus_pod_running}" == "" ]; then
-		echo "Prometheus is not running, use 'prometheus_on_minikube.sh' to install."
+		echo "Prometheus is not running, use 'scripts/prometheus_on_minikube.sh' to install."
 		exit 1
 	fi
 	echo "Prometheus is already installed and running."
