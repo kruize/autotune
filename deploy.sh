@@ -15,30 +15,27 @@
 # limitations under the License.
 #
 
+ROOT_DIR="${PWD}"
+SCRIPTS_DIR="${ROOT_DIR}/scripts"
+
 AUTOTUNE_CRD_MANIFEST="manifests/autotune-operator-crd.yaml"
 AUTOTUNE_CR_MANIFEAST="manifests/autotune-operator-cr.yaml"
 AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
 AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
 AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
+AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
-#Environment property files minikube, docker and openshift
+SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
+
+# Environment property files minikube, docker and openshift
 DOCKER_ENV="scripts/env/docker_env.properties"
 MINIKUBE_ENV="scripts/env/minikube_env.properties"
 OPENSHIFT_ENV="scripts/env/openshift_env.properties"
 
-AUTOTUNE_SA_NAME="autotune-sa"
-
-SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
-
-AUTOTUNE_DOCKER_REPO="kruize/autotune"
 AUTOTUNE_PORT=""
-
-ROOT_DIR="${PWD}"
-SCRIPTS_DIR="${ROOT_DIR}/scripts"
-
+AUTOTUNE_DOCKER_REPO="kruize/autotune"
 #Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "Autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
-
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
@@ -58,13 +55,13 @@ autotune_ns="kube-system"
 timeout=-1
 
 function ctrlc_handler () {
-    # Check if cluster type is docker
-    if [[ "$cluster_type" == "docker" ]]; then
-        # Terminate the containers [autotune && grafana && prometheus && cadvisor]
-        docker_terminate
-    fi
-    # Exiting gracefully
-    exit 2
+	# Check if cluster type is docker
+	if [[ "$cluster_type" == "docker" ]]; then
+		# Terminate the containers [autotune && grafana && prometheus && cadvisor]
+		docker_terminate
+	fi
+	# Exiting gracefully
+	exit 2
 }
 
 # Handle SIGHUP(1), SIGINT(2), SIGQUIT(3) for cleaning up containers in docker case
