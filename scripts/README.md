@@ -6,6 +6,7 @@
 - [Installation](#installation)
   - [Kubernetes](#kubernetes)
     - [Minikube](#minikube)
+    - [OpenShift](#openshift)
 
 # Installation
 
@@ -65,4 +66,41 @@ Info: Run the following command first to access grafana port
 After the installation completes successfully, run the `port-forward` command as shown. This is needed to access the grafana service. Now click on the [http://localhost:3000](http://localhost:3000) to access grafana. Login as `admin/admin`, navigate to `Create` from the left bar, then click on `Import`. Click on `Upload .json file` and point it to the [dashboard](/grafana/autotune_kubernetes_dashboard.json) file that is part of this repo. Once installed, select `autotune Dashboard`. Select the application name from the `Deployment` drop down and you are all set !
 
 Note: autotune only monitors application with a specific label. See [Add Application Label](#add-application-label) below for more info.
+
+### OpenShift
+
+
+```
+$ ./deploy.sh -c openshift
+
+###   Installing Autotune for OpenShift
+
+WARNING: This will create a Autotune ServiceMonitor object in the openshift-monitoring namespace
+WARNING: This is currently not recommended for production
+
+Create ServiceMonitor object and continue installation?(y/n)? y
+
+Info: Checking pre requisites for OpenShift...done
+Info: Logging in to OpenShift cluster...
+Authentication required for https://aaa.bbb.com:6443 (openshift)
+Username: kubeadmin
+Password: *****
+Login successful.
+
+You have access to 52 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "kube-system".
+
+Info: Setting Prometheus URL as https://prometheus-k8s-openshift-monitoring.apps.autotuneshift1.lab.upshift.rdu2.redhat.com
+Info: Deploying autotune yaml to OpenShift cluster
+Now using project "openshift-monitoring" on server "https://api.autotuneshift1.lab.upshift.rdu2.redhat.com:6443".
+deployment.extensions/autotune configured
+service/autotune unchanged
+Info: Waiting for autotune to come up...
+autotune-5cd5967d97-tz2cb                        0/1     ContainerCreating   0          6s
+autotune-5cd5967d97-tz2cb                        0/1     ContainerCreating   0          13s
+autotune-5cd5967d97-tz2cb                        1/1     Running   0          20s
+Info: autotune deploy succeeded: Running
+autotune-5cd5967d97-tz2cb                        1/1     Running   0          24s
+```
 

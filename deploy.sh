@@ -40,6 +40,7 @@ AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
+. ${SCRIPTS_DIR}/openshift-helpers.sh
 . ${SCRIPTS_DIR}/common_utils.sh
 
 # Defaults for the script
