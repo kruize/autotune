@@ -19,9 +19,54 @@ import subprocess
 import sys
 
 
-def perform_experiment(experiment_tunables):
+def create_experiment_data_file(experiment_data_file, rows):
     """
     Return the result received from the experiment manager.
+
+    Parameters:
+        experiment_data_file (str): Name of the file that will contain experiment data.
+        rows (list): List containing result received from the experiment manager.
+    """
+    file = open(experiment_data_file, "a")
+    file.close()
+    with open(experiment_data_file, "r+") as file:
+        reader = csv.reader(file)
+        csv_data = list(reader)
+        row_count = len(csv_data)
+        writer = csv.writer(file)
+        if row_count == 0:
+            column = [c.strip() for c in rows[0].split(',')]
+            writer.writerow(column)
+            column = [c.strip() for c in rows[1].split(',')]
+            writer.writerow(column)
+        else:
+            column = [c.strip() for c in rows[1].split(',')]
+            writer.writerow(column)
+
+
+def get_experiment_result(experiment_tunables):
+    """
+    Return the result received from the experiment manager.
+
+    Parameters:
+        experiment_tunables (dict): A list containing hyperparameter values suggested by the sampler.
+
+    Returns:
+        output (str): Result received from the experiment manager.
+    """
+    for tunable in experiment_tunables:
+        if tunable["tunable_name"] == "cpuRequest":
+            cpu_request = tunable["tunable_value"]
+        elif tunable["tunable_name"] == "memoryRequest":
+            memory_request = tunable["tunable_value"]
+
+    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    return output
+
+
+def perform_experiment(experiment_tunables):
+    """
+    Process the result received from the experiment manager to retrieve sla value.
     
     Parameters:
         experiment_tunables (dict): A list containing hyperparameter values suggested by the sampler.
@@ -53,14 +98,8 @@ def perform_experiment(experiment_tunables):
             1,150,2130,0,0,0,0,0,0,60.0533,17.1877,3.750514009853204,290.75151431609027M,7778
     """
     experiment_data_file = "experiment-data.csv"
-    
-    for tunable in experiment_tunables:
-        if tunable["tunable_name"] == "cpuRequest":
-            cpu_request = tunable["tunable_value"]
-        elif tunable["tunable_name"] == "memoryRequest":
-            memory_request = tunable["tunable_value"]
 
-    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    output = get_experiment_result(experiment_tunables)
 
     orig_stdout = sys.stdout
     f = open('total-output.txt', 'a')
@@ -88,7 +127,6 @@ def perform_experiment(experiment_tunables):
         f = open('output.txt', 'a')
         sys.stdout = f
         rows = output.split("\n")
-        # print(rows)
         data = rows[1]
         """
         data:
@@ -96,22 +134,10 @@ def perform_experiment(experiment_tunables):
         """
         print(data)
         sla = data.split(" , ")[2]
-        file = open(experiment_data_file, "a")
-        file.close()
-        with open(experiment_data_file, "r+") as file:
-            reader = csv.reader(file)
-            csv_data = list(reader)
-            row_count = len(csv_data)
-            writer = csv.writer(file)
-            if row_count == 0:
-                column = [c.strip() for c in rows[0].split(',')]
-                writer.writerow(column)
-                column = [c.strip() for c in rows[1].split(',')]
-                writer.writerow(column)
-            else:
-                column = [c.strip() for c in rows[1].split(',')]
-                writer.writerow(column)
         sys.stdout = orig_stdout
         f.close()
+        
+        create_experiment_data_file(experiment_data_file, rows)
+    
         return sla, is_success 
 

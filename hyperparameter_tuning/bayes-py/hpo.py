@@ -16,12 +16,21 @@ limitations under the License.
 
 from install_package import install
 
+install('python-dotenv')
 install('optuna')
 
 import optuna, random
 from optuna.samplers import TPESampler
 
+import os
 import subprocess
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+n_trials = int(os.getenv("n_trials"))
+n_jobs = int(os.getenv("n_jobs"))
 
 trials = []
 
@@ -68,6 +77,9 @@ class Objective(object):
         
         trials.append(config)
 
+        if is_success == False:
+            raise optuna.TrialPruned()
+
         return actual_sla_value
 
 
@@ -78,7 +90,7 @@ sla, direction, tunables = get_all_tunables()
 study = optuna.create_study(direction=direction, sampler=TPESampler())
 
 # Execute an optimization by using an 'Objective' instance.
-study.optimize(Objective(sla, tunables), n_trials=5, n_jobs=1)
+study.optimize(Objective(sla, tunables), n_trials=n_trials, n_jobs=n_jobs)
 
 # Get the best parameter 
 print(study.best_params)
