@@ -60,7 +60,7 @@ spec:
                   type: string
                 value_type:
                   description: 'value of the holding objective_function calculation'
-                  type: double  
+                  type: string  
               required:
               - name
               - query
