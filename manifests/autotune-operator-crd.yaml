@@ -37,19 +37,40 @@ spec:
           description: 'sla allow an user to provide any one option out of response_time,  
           right-size, throughput'
           properties:
-            sla_class: 
-              description: 'name of the sla like response_time'
+            objective_function: 
+              description: 'function take simple and complex expression'
               type: string
             direction:
               description: 'it will take the value like up or down'
               type: string
-            promql: 
-              description: "query string to get the sla" 
-              type: string  
+            components: 
+              description: 'describe the complex objective_function variables'
+              properties:
+                name:
+                  description: 'name of the varialbe used in objective_function'  
+                  type: string
+                query:
+                  description: 'query expression for respective datasource'
+                  type: string
+                query_datasource:
+                  description: 'name of the monitoring tool like prometheus'  
+                  type: string
+                sla_class: 
+                  description: 'name of the sla_class should be like throughput, response_time etc'   
+                  type: string
+                value_type:
+                  description: 'value of the holding objective_function calculation'
+                  type: double  
+              required:
+              - name
+              - query
+              - sla_class
+              - value_type    
           required:
-          - sla_class
+          - objective_function
           - direction
-          - promql
+          - components
+          
         mode:
           description: 'provide an options to either try, show or apply the recommendation'
           type: string 

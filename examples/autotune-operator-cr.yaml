@@ -1,0 +1,22 @@
+apiVersion: "recommender.com/v1beta1"
+kind: "Autotune"
+metadata:
+ name: "autotunes.recommender.com"
+ namespace: "{{ APPLICATION_NAMESPACE }}"
+spec:
+ replicas: 1
+sla:
+ objective_function: performedChecks_total
+ direction: maximize
+ components:
+ - name: performedChecks_total
+   query: "application_metrics_PrimeNumberChecker_performedChecks_total"
+   query_datasource: "prometheus"
+   sla_class: "throughput"
+   value_type: "double" 
+ mode: "show"
+ selector: 
+   matchLabel: ""
+   matchRoute: ""
+   matchURI: ""
+   matchService: ""
