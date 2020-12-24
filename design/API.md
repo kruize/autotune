@@ -38,9 +38,9 @@ Returns the JSON array response containing all the applications along with their
 
 `GET /getTunables?application_name=<APPLICATION_NAME>` for getting the tuning set C of a specific application.
 
-`GET /getTunables?application_name=<APPLICATION_NAME>&type='container'` for getting tunables of a specific type for the application.
+`GET /getTunables?application_name=<APPLICATION_NAME>&layer='container'` for getting tunables of a specific layer for the application.
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/getTunables?application_name=<APPLICATION_NAME>&type='container'`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/getTunables?application_name=<APPLICATION_NAME>&layer='container'`
 
 **Response**
 Tuning Set C:
@@ -49,7 +49,7 @@ Tuning Set C:
   {
     "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
     "namespace": "default",
-    "type": "response_time",
+    "sla_class": "response_time",
     "application_tunables": [
       {
         "level": 0,
@@ -139,7 +139,7 @@ Tuning Set B:
         ]
       }
     ],
-    "direction": "lower"
+    "direction": "minimize"
   }
 ]
 ```
@@ -153,7 +153,7 @@ Tuning set A:
     "services": [
       "petclinic-deployment-6d4c8678d4-jmz8x"
     ],
-    "direction": "lower"
+    "direction": "minimize"
   }
 ]
 ```
@@ -161,11 +161,11 @@ Tuning set A:
 Get the tunables supported by autotune for the SLA.
 
 **Request**
-`GET /listTunables?sla=<SLA>` gives all tunables for the SLA
+`GET /listTunables?sla_class=<SLA_CLASS>` gives all tunables for the SLA class
 
-`GET /listTunables?sla=<SLA>&layer=<LAYER>` gives tunables for the SLA and the layer
+`GET /listTunables?sla_class=<SLA_CLASS>&layer=<LAYER>` gives tunables for the SLA class and the layer
 
-`GET /listTunables?sla=<SLA>&layer_level=<LEVEL>` gives tunables for the SLA and the level type.
+`GET /listTunables?sla_class=<SLA_CLASS>&layer_level=<LEVEL>` gives tunables for the SLA class and the level.
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listTunables?sla=<SLA>`
 
@@ -176,22 +176,26 @@ Get the tunables supported by autotune for the SLA.
     "layer_level": 0,
     "tunables": [
       {
-        "name": "memoryLimit",          
+        "name": "memoryLimit",
+        "value_type": "double",          
         "lower_bound": "150M",
         "upper_bound": "300M"
       },
       {
         "name": "memoryRequests",
+        "value_type": "double",          
         "lower_bound": "150M",
         "upper_bound": "300M"
       },
       {
         "name": "cpuLimit",
+        "value_type": "double",          
         "lower_bound": "2.0",
         "upper_bound": "4.0"
       },
       {
         "name": "cpuRequest",
+        "value_type": "double",          
         "lower_bound": "1.0",
         "upper_bound": "3.0"
       }
@@ -204,6 +208,7 @@ Get the tunables supported by autotune for the SLA.
     "tunables": [
       {
         "name": "javaHeap",
+        "value_type": "double",          
         "lower_bound": "100M",
         "upper_bound": "250M"
       }
@@ -246,7 +251,9 @@ Get the list of applications, along with layer information for the application.
 Generates the search space used for the analysis.
 
 **Request**
-`GET /searchSpace`
+`GET /searchSpace` gives the search space for all applications monitored.
+
+`GET /searchSpace?application_name=<APPLICATION>` gives the search space for a specific application.
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/searchSpace`
 
@@ -256,41 +263,37 @@ Generates the search space used for the analysis.
 [
   {
     "application": "petclinic-deployment-6d4c8678d4-jmz8x",
+    "direction": "minimize"
     "tunables": [
       {
         "value_type": "double",
         "lower_bound": "150M",
         "name": "memoryLimit",
         "upper_bound": "300M",
-        "direction": "lower"
       },
       {
         "value_type": "double",
         "lower_bound": "150M",
         "name": "memoryRequests",
         "upper_bound": "300M",
-        "direction": "lower"
       },
       {
         "value_type": "double",
         "lower_bound": "2.0",
         "name": "cpuLimit",
         "upper_bound": "4.0",
-        "direction": "lower"
       },
       {
         "value_type": "double",
         "lower_bound": "1.0",
         "name": "cpuRequest",
         "upper_bound": "3.0",
-        "direction": "lower"
       },
       {
         "value_type": "double",
         "lower_bound": "100M",
         "name": "javaHeap",
         "upper_bound": "250M",
-        "direction": "lower"
       }
     ],
     "sla_class": "response_time"
