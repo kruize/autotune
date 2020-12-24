@@ -7,9 +7,9 @@ rules:
 - apiGroups:
   - recommender.com
   resources:
-  - etcdclusters
-  - etcdbackups
-  - etcdrestores
+  - autotunes
+  - autotuneconfigs
+  - autotunequeryvariables
   verbs:
   - '*'
 - apiGroups:
