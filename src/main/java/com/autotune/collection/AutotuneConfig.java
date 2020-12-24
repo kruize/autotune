@@ -16,6 +16,7 @@
 package com.autotune.collection;
 
 import com.autotune.application.Tunable;
+import com.autotune.exceptions.InvalidValueException;
 
 import java.util.ArrayList;
 
@@ -66,8 +67,12 @@ public class AutotuneConfig
         return level;
     }
 
-    public void setLevel(int level) {
-        this.level = level;
+    public void setLevel(int level) throws InvalidValueException
+    {
+        if (level >= 0)
+            this.level = level;
+        else
+            throw new InvalidValueException("Layer level cannot be negative");
     }
 
     public String getDetails() {
@@ -82,8 +87,11 @@ public class AutotuneConfig
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String name) throws InvalidValueException
+    {
+        if (name != null)
+            this.name = name;
+        else throw new InvalidValueException("Name cannot be null");
     }
 
     public ArrayList<Tunable> getTunables() {
