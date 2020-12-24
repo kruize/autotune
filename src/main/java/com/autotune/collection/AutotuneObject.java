@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.collection;
 
-import com.autotune.application.Application;
+import com.autotune.application.ApplicationServiceStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +39,7 @@ public class AutotuneObject
     /**
      * Map of applications matching the label selector in the autotune object yaml
      */
-    public Map<String, Application> applicationsMap = new HashMap<>();
+    public Map<String, ApplicationServiceStack> applicationsStackMap = new HashMap<>();
 
     public String getName() {
         return name;

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.collection;
 
-import com.autotune.application.Query;
+import com.autotune.application.Tunable;
 
 import java.util.ArrayList;
 
@@ -38,7 +38,7 @@ public class AutotuneConfig
     String levelPresenceKey;
     String levelPresenceQuery;
 
-    ArrayList<Query> queries;
+    ArrayList<Tunable> tunables;
 
     public AutotuneConfig(String name, int level, String details, String levelPresenceQuery, String levelPresenceKey) {
         this.name = name;
@@ -47,7 +47,7 @@ public class AutotuneConfig
         this.levelPresenceQuery = levelPresenceQuery;
         this.levelPresenceKey = levelPresenceKey;
 
-        queries = new ArrayList<>();
+        tunables = new ArrayList<>();
     }
 
     public AutotuneConfig(AutotuneConfig copy)
@@ -58,8 +58,8 @@ public class AutotuneConfig
         this.levelPresenceQuery = copy.getLevelPresenceQuery();
         this.levelPresenceKey = copy.getLevelPresenceKey();
 
-        this.queries = new ArrayList<>();
-        this.queries.addAll(copy.getQueries());
+        this.tunables = new ArrayList<>();
+        this.tunables.addAll(copy.getTunables());
     }
 
     public int getLevel() {
@@ -86,12 +86,12 @@ public class AutotuneConfig
         this.name = name;
     }
 
-    public ArrayList<Query> getQueries() {
-        return queries;
+    public ArrayList<Tunable> getTunables() {
+        return tunables;
     }
 
-    public void setQueries(ArrayList<Query> queries) {
-        this.queries = queries;
+    public void setTunables(ArrayList<Tunable> tunables) {
+        this.tunables = tunables;
     }
 
     public String getLevelPresenceKey() {
@@ -118,7 +118,7 @@ public class AutotuneConfig
                 ", details='" + details + '\'' +
                 ", levelPresenceQuery='" + levelPresenceQuery + '\'' +
                 ", levelPresenceKey='" + levelPresenceKey + '\'' +
-                ", queries=" + queries +
+                ", tunables=" + tunables +
                 '}';
     }
 }
