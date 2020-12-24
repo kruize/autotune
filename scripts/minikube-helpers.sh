@@ -49,8 +49,8 @@ function minikube_first() {
 # You can deploy using kubectl
 function minikube_deploy() {
 	echo
-	echo "Createing environment variable in minikube cluster using configMap"
-	${kubectl_cmd} create cm autotune-config --from-file=autotune-config-key=${MINIKUBE_ENV}
+	echo "Creating environment variable in minikube cluster using configMap"
+	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGMAPS}/${cluster_type}-config.yaml
 	
 	echo "Info: Deploying autotune yaml to minikube cluster"
 

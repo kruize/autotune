@@ -25,6 +25,7 @@ AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
 AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
 AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
+AUTOTUNE_CONFIGMAPS="manifests/configmaps"
 SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
 
 # Environment property files minikube, docker and openshift
