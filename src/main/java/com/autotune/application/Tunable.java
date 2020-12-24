@@ -15,6 +15,9 @@
  *******************************************************************************/
 package com.autotune.application;
 
+import com.autotune.exceptions.BoundsNotSetException;
+import com.autotune.exceptions.InvalidValueException;
+
 import java.util.ArrayList;
 
 /**
@@ -36,6 +39,13 @@ public class Tunable
     String upperBound;
     String lowerBound;
     String valueType;
+    String description;
+    String query;
+
+    /*
+    TODO Think about bounds for other valueTypes
+    String bound; //[1.5-3.5], [true, false]
+    */
 
     public ArrayList<String> slaClassList;
 
@@ -62,32 +72,48 @@ public class Tunable
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String name) throws InvalidValueException
+    {
+        if (name != null)
+            this.name = name;
+        else
+            throw new InvalidValueException("Tunable name cannot be null");
     }
 
     public String getUpperBound() {
         return upperBound;
     }
 
-    public void setUpperBound(String upperBound) {
-        this.upperBound = upperBound;
+    public void setUpperBound(String upperBound) throws BoundsNotSetException
+    {
+        if (upperBound != null)
+            this.upperBound = upperBound;
+        else
+            throw new BoundsNotSetException();
     }
 
     public String getLowerBound() {
         return lowerBound;
     }
 
-    public void setLowerBound(String lowerBound) {
-        this.lowerBound = lowerBound;
+    public void setLowerBound(String lowerBound) throws BoundsNotSetException
+    {
+        if (lowerBound != null)
+            this.lowerBound = lowerBound;
+        else
+            throw new BoundsNotSetException();
     }
 
     public String getValueType() {
         return valueType;
     }
 
-    public void setValueType(String valueType) {
-        this.valueType = valueType;
+    public void setValueType(String valueType) throws InvalidValueException
+    {
+        if (valueType != null)
+            this.valueType = valueType;
+        else
+            throw new InvalidValueException("Value type not set for tunable");
     }
 
     @Override
@@ -97,6 +123,8 @@ public class Tunable
                 ", upperBound='" + upperBound + '\'' +
                 ", lowerBound='" + lowerBound + '\'' +
                 ", valueType='" + valueType + '\'' +
+                ", description='" + description + '\'' +
+                ", query='" + query + '\'' +
                 ", slaClassList=" + slaClassList +
                 '}';
     }
