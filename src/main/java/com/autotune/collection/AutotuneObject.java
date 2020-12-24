@@ -16,6 +16,7 @@
 package com.autotune.collection;
 
 import com.autotune.application.ApplicationServiceStack;
+import com.autotune.exceptions.InvalidValueException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,8 +46,11 @@ public class AutotuneObject
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String name) throws InvalidValueException
+    {
+        if (name != null)
+            this.name = name;
+        else throw new InvalidValueException("Name cannot be null");
     }
 
     public SlaInfo getSlaInfo() {
@@ -77,16 +81,22 @@ public class AutotuneObject
         return replicas;
     }
 
-    public void setReplicas(int replicas) {
-        this.replicas = replicas;
+    public void setReplicas(int replicas) throws InvalidValueException
+    {
+        if (replicas > 0)
+            this.replicas = replicas;
+        else throw new InvalidValueException("replicas must be a positive integer");
     }
 
     public String getNamespace() {
         return namespace;
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
+    public void setNamespace(String namespace) throws InvalidValueException
+    {
+        if (namespace != null)
+            this.namespace = namespace;
+        else throw new InvalidValueException("namespace cannot be null");
     }
 
     @Override
