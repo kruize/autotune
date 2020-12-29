@@ -22,6 +22,7 @@ install('optuna')
 import optuna, random
 from optuna.samplers import TPESampler
 
+import logging
 import os
 import subprocess
 
@@ -43,12 +44,12 @@ class Objective(object):
     A class used to define search space and return the actual sla value.
     
     Parameters:
-        sla (str): The objective function that is being optimized.
+        sla_class (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
     """
 
-    def __init__(self, sla, tunables):
-        self.sla = sla
+    def __init__(self, sla_class, tunables):
+        self.sla_class = sla_class
         self.tunables = tunables
 
     def __call__(self, trial):
@@ -66,7 +67,7 @@ class Objective(object):
 
         config["experiment_tunables"] = experiment_tunables
 
-        print(experiment_tunables)
+        logger.debug("Experiment tunables: " + str(experiment_tunables))
 
         actual_sla_value, is_success = perform_experiment(experiment_tunables)
         
@@ -83,21 +84,39 @@ class Objective(object):
         return actual_sla_value
 
 
-# arguments
-sla, direction, tunables = get_all_tunables()
+# Create and configure logger
+logging.basicConfig(filename='optuna.log',
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%d-%b-%y %H:%M:%S',
+        filemode='a',
+        level=logging.DEBUG)
+
+logger = logging.getLogger()
+
+sla_class, direction, tunables = get_all_tunables()
 
 # Create a study object
 study = optuna.create_study(direction=direction, sampler=TPESampler())
 
-# Execute an optimization by using an 'Objective' instance.
-study.optimize(Objective(sla, tunables), n_trials=n_trials, n_jobs=n_jobs)
+# Execute an optimization by using an 'Objective' instance
+study.optimize(Objective(sla_class, tunables), n_trials=n_trials, n_jobs=n_jobs)
 
-# Get the best parameter 
-print(study.best_params)
-# Get the best value 
-print(study.best_value)
-# Get the best trial 
-print(study.best_trial)
+# Get the best parameter
+logger.info("Best parameter: " + str(study.best_params))
+# Get the best value
+logger.info("Best value: " + str(study.best_value))
+# Get the best trial
+logger.info("Best trial: " + str(study.best_trial))
 
-print(trials)
+logger.info("All trials: " + str(trials))
+
+best_config = {}
+optimal_value = {}
+
+best_config["sla_class"] = sla_class
+optimal_value["tunables"] = study.best_params
+optimal_value["sla"] = study.best_value
+best_config["optimal_value"] = optimal_value
+
+logger.info("Best config: " + str(best_config))
 
