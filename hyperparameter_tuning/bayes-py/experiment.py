@@ -16,12 +16,11 @@ limitations under the License.
 
 import csv
 import subprocess
-import sys
 
 
 def create_experiment_data_file(experiment_data_file, rows):
     """
-    Return the result received from the experiment manager.
+    Save the result received from the experiment manager into a file.
 
     Parameters:
         experiment_data_file (str): Name of the file that will contain experiment data.
@@ -101,15 +100,9 @@ def perform_experiment(experiment_tunables):
 
     output = get_experiment_result(experiment_tunables)
 
-    orig_stdout = sys.stdout
-    f = open('total-output.txt', 'a')
-    sys.stdout = f
-
     if output == '':
         sla = "Nan"
         is_success = False
-        sys.stdout = orig_stdout
-        f.close()
         return sla, is_success
     else:
         is_success = True
@@ -120,22 +113,19 @@ def perform_experiment(experiment_tunables):
         Run , CPU_REQ , MEM_REQ , Throughput , Responsetime , WEB_ERRORS , CPU , CPU_MIN , CPU_MAX , MEM , MEM_MIN , MEM_MAX
         0 , 3.3294886353000983 , 410.36017895925215M , 338.3 , 765 , 0  ,0 , 0 , 0  , 0 , 0 , 0 
         """
-        print(output)
-        sys.stdout = orig_stdout
-        f.close()
-        orig_stdout = sys.stdout
-        f = open('output.txt', 'a')
-        sys.stdout = f
+        file = open('total-output.txt', 'a')
+        file.write(output)
+        file.close()
+        file = open('output.txt', 'a')
         rows = output.split("\n")
         data = rows[1]
         """
         data:
         1 ,  338.3 , 765 , 0 , 0 , 0 , 0 , 0 , 0 ,  60.2367 , 21.4259 , 3.3294886353000983 , 410.36017895925215M , 0
         """
-        print(data)
+        file.write(data + "\n")
         sla = data.split(" , ")[2]
-        sys.stdout = orig_stdout
-        f.close()
+        file.close()
         
         create_experiment_data_file(experiment_data_file, rows)
     
