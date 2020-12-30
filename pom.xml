@@ -6,55 +6,61 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
+    <version>0.0.1</version>
+    <properties>
+        <fabric8-version>4.13.0</fabric8-version>
+        <org-json-version>20201115</org-json-version>
+        <jetty-version>9.4.19.v20190610</jetty-version>
+        <slf4j-version>2.13.2</slf4j-version>
+        <java-version>11</java-version>
+        <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
+        <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
-            <version>4.13.0</version>
+            <version>${fabric8-version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20201115</version>
+            <version>${org-json-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.19.v20190610</version>
+            <version>${jetty-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlets -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
-            <version>9.4.19.v20190610</version>
+            <version>${jetty-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>9.4.19.v20190610</version>
+            <version>${jetty-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.13.2</version>
-            <scope>compile</scope>
+            <version>${slf4j-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.13.2</version>
-            <scope>compile</scope>
+            <version>${slf4j-version}</version>
         </dependency>
     </dependencies>
 
@@ -63,11 +69,8 @@
             <!-- any other plugins -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2</version>
+                <version>${maven-assembly-plugin-version}</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
                     <archive>
                         <index>true</index>
                         <manifest>
@@ -96,13 +99,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>${maven-compiler-plugin-version}</version>
                 <configuration>
-                    <source>1.11</source>
-                    <target>1.11</target>
+                    <release>${java-version}</release>
                 </configuration>
             </plugin>
 
         </plugins>
     </build>
 </project>
+
