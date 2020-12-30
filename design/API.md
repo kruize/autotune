@@ -15,21 +15,41 @@ Get the list of applications monitored by dependency analyzer, along with the la
 [
     {
         "application_name": "app1",
-        "sla": "Response Time",
-        "runtime" : "java",
-        "framework" : "springboot"
+        "sla_class": "Response Time",
+        "layers": [
+          {
+            "layer_level": 0,
+            "layer_name": "container",
+            "layer_details": "generic container tunables"
+          },
+          {
+            "layer_level": 1,
+            "layer_name": "openj9",
+            "layer_details": "java openj9 tunables"
+          }
+        ]
     },
     {
         "application_name": "app2",
-        "sla": "Throughput",
-        "runtime" : "none",
-        "framework" : "none"
+        "sla_class": "Throughput",
+        "layers": [
+          {
+            "layer_level": 0,
+            "layer_name": "container",
+            "layer_details": "generic container tunables"
+          },
+          {
+            "layer_level": 1,
+            "layer_name": "hotspot",
+            "layer_details": "java hotspot tunables"
+          }
+        ]
     }
 ]
 ```
 
 ##  getAllTunables
-Returns the JSON array response containing all the applications along with their tunables for the SLA.
+Returns the JSON array response containing all the applications along with their tunables for the SLA class.
 
 **Request**
 `GET /getTunables` gives the tuning set C for all the applications monitored.
@@ -38,9 +58,9 @@ Returns the JSON array response containing all the applications along with their
 
 `GET /getTunables?application_name=<APPLICATION_NAME>` for getting the tuning set C of a specific application.
 
-`GET /getTunables?application_name=<APPLICATION_NAME>&layer='container'` for getting tunables of a specific layer for the application.
+`GET /getTunables?application_name=<APPLICATION_NAME>&layer_name='container'` for getting tunables of a specific layer for the application.
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/getTunables?application_name=<APPLICATION_NAME>&layer='container'`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/getTunables?application_name=<APPLICATION_NAME>&layer_name='container'`
 
 **Response**
 Tuning Set C:
@@ -52,64 +72,53 @@ Tuning Set C:
     "sla_class": "response_time",
     "application_tunables": [
       {
-        "level": 0,
-        "layer_tunables": [
+        "layer_name": "container",
+        "layer_level": 0,
+        "layer_details": "generic container tunables",
+        "tunables": [
           {
+            "name": "memoryLimit",
+            "upper_bound": "300M",
+            "lower_bound": "150M",
             "value_type": "double",
-            "query": "container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}",
-            "tunables": [
-              {
-                "lower_bound": "150M",
-                "name": "memoryLimit",
-                "upper_bound": "300M"
-              },
-              {
-                "lower_bound": "150M",
-                "name": "memoryRequests",
-                "upper_bound": "300M"
-              }
-            ],
-            "details": "Current RSS value"
+            "query_url": "http://prometheus:9090/container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}"
           },
           {
+            "name": "memoryRequests",
+            "upper_bound": "300M",
+            "lower_bound": "150M",
             "value_type": "double",
-            "query": "(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])",
-            "tunables": [
-              {
-                "lower_bound": "2.0",
-                "name": "cpuLimit",
-                "upper_bound": "4.0"
-              },
-              {
-                "lower_bound": "1.0",
-                "name": "cpuRequest",
-                "upper_bound": "3.0"
-              }
-            ],
-            "details": "Current CPU used"
+            "query_url": "http://prometheus:9090/container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}"
+          },
+          {
+            "name": "cpuLimit",
+            "upper_bound": "4.0",
+            "lower_bound": "2.0",
+            "value_type": "double",
+            "query_url": "http://prometheus:9090/(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])"
+          },
+          {
+            "name": "cpuRequest",
+            "upper_bound": "3.0",
+            "lower_bound": "1.0",
+            "value_type": "double",
+            "query_url": "http://prometheus:9090/(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])"
           }
-        ],
-        "layer": "container",
-        "layer_details": "generic container tunables"
+        ]
       },
       {
-        "level": 1,
-        "layer_tunables": [
+        "layer__name": "openj9",
+        "layer_level": 1,
+        "layer_details": "java openj9 tunables",
+        "tunables": [
           {
+            "name": "javaHeap",
+            "upper_bound": "250M",
+            "lower_bound": "100M",
             "value_type": "double",
-            "query": "jvm_memory_used_bytes{area=\"heap\",id=\"nursery-allocate\", pod=petclinic-deployment-6d4c8678d4-jmz8x}",
-            "tunables": [
-              {
-                "lower_bound": "100M",
-                "name": "javaHeap",
-                "upper_bound": "250M"
-              }
-            ],
-            "details": "Current Nursery Heap"
+            "query_url": "http://prometheus:9090/jvm_memory_used_bytes{area=\"heap\",id=\"nursery-allocate\", pod=petclinic-deployment-6d4c8678d4-jmz8x}"
           }
-        ],
-        "layer": "openj9",
-        "layer_details": "java openj9 tunables"
+        ]          
       }
     ]
   }
@@ -122,24 +131,24 @@ Tuning Set B:
     "name": "petclinic-autotune",
     "namespace": "default",
     "sla_class": "response_time",
+    "direction": "minimize",
     "services": [
       {
         "name": "petclinic-deployment-6d4c8678d4-jmz8x",
         "layers": [
           {
-            "level": 0,
-            "name": "container",
-            "details": "generic container tunables"
+            "layer_name": "container",
+            "layer_level": 0,
+            "layer_details": "generic container tunables"
           },
           {
-            "level": 1,
-            "name": "openj9",
-            "details": "java openj9 tunables"
+            "layer_name": "openj9",
+            "layer_level": 1,
+            "layer_details": "java openj9 tunables"
           }
         ]
       }
-    ],
-    "direction": "minimize"
+    ]
   }
 ]
 ```
@@ -150,10 +159,10 @@ Tuning set A:
     "name": "petclinic-autotune",
     "namespace": "default",
     "sla_class": "response_time",
+    "direction": "minimize",
     "services": [
       "petclinic-deployment-6d4c8678d4-jmz8x"
-    ],
-    "direction": "minimize"
+    ]
   }
 ]
 ```
@@ -167,13 +176,15 @@ Get the tunables supported by autotune for the SLA.
 
 `GET /listTunables?sla_class=<SLA_CLASS>&layer_level=<LEVEL>` gives tunables for the SLA class and the level.
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listTunables?sla=<SLA>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listTunables?sla_class=<SLA_CLASS>`
 
 **Response**
 ```
 [
   {
+    "layer_name": "container",
     "layer_level": 0,
+    "layer_details": "generic container tunables",
     "tunables": [
       {
         "name": "memoryLimit",
@@ -199,12 +210,12 @@ Get the tunables supported by autotune for the SLA.
         "lower_bound": "1.0",
         "upper_bound": "3.0"
       }
-    ],
-    "details": "generic container tunables",
-    "layer_name": "container"
+    ]
   },
   {
+    "layer_name": "openj9",
     "layer_level": 1,
+    "layer_details": "java openj9 tunables",
     "tunables": [
       {
         "name": "javaHeap",
@@ -212,38 +223,7 @@ Get the tunables supported by autotune for the SLA.
         "lower_bound": "100M",
         "upper_bound": "250M"
       }
-    ],
-    "details": "java openj9 tunables",
-    "layer_name": "openj9"
-  }
-]
-```
-##  ListApplications
-Get the list of applications, along with layer information for the application.
-
-**Request**
-`GET /listApplications` gives list of applications monitored by autotune, along with the individual detected layers of the application.
-
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listApplications`
-
-**Response**
-```
-[
-  {
-    "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
-    "layers": [
-      {
-        "level": 0,
-        "name": "container",
-        "details": "generic container tunables"
-      },
-      {
-        "level": 1,
-        "name": "openj9",
-        "details": "java openj9 tunables"
-      }
-    ],
-    "type": "response_time"
+    ]
   }
 ]
 ```
@@ -263,40 +243,40 @@ Generates the search space used for the analysis.
 [
   {
     "application": "petclinic-deployment-6d4c8678d4-jmz8x",
+    "sla_class": "response_time",
     "direction": "minimize"
     "tunables": [
       {
-        "value_type": "double",
-        "lower_bound": "150M",
         "name": "memoryLimit",
         "upper_bound": "300M",
+        "lower_bound": "150M",
+        "value_type": "double"
       },
       {
-        "value_type": "double",
-        "lower_bound": "150M",
         "name": "memoryRequests",
         "upper_bound": "300M",
+        "lower_bound": "150M",
+        "value_type": "double"
       },
       {
-        "value_type": "double",
-        "lower_bound": "2.0",
         "name": "cpuLimit",
         "upper_bound": "4.0",
+        "lower_bound": "2.0",
+        "value_type": "double"
       },
       {
-        "value_type": "double",
-        "lower_bound": "1.0",
         "name": "cpuRequest",
         "upper_bound": "3.0",
+        "lower_bound": "1.0",
+        "value_type": "double"
       },
       {
-        "value_type": "double",
-        "lower_bound": "100M",
         "name": "javaHeap",
         "upper_bound": "250M",
+        "lower_bound": "100M",
+        "value_type": "double"
       }
-    ],
-    "sla_class": "response_time"
+    ]
   }
 ]
 ```
