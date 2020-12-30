@@ -78,7 +78,7 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Main-Class>com.autotune.main.Autotune</Main-Class>
+                            <Main-Class>com.autotune.Autotune</Main-Class>
                             <Multi-Release>true</Multi-Release>
                         </manifestEntries>
                     </archive>
