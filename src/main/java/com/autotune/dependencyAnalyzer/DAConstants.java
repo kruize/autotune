@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.dependencyAnalyzer.datasource;
+package com.autotune.dependencyAnalyzer;
 
-import java.net.MalformedURLException;
-import java.util.List;
-
-public interface DataSource
+public class DAConstants
 {
-    /**
-     * Run the getAppsForLayer and return the list of applications matching the layer.
-     * @param query getAppsForLayer query for the layer
-     * @param key The key to search for in the response
-     * @return List of all applications from the query
-     * @throws MalformedURLException
-     */
-    List<String> getAppsForLayer(String query, String key) throws MalformedURLException;
+    public static final String AUTH_TOKEN = "auth_token";
+    public static final String MONITORING_SERVICE = "monitoring_service";
+    public static final String MONITORING_AGENT_ENDPOINT = "monitoring_agent_endpoint";
+    public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
+    public static final String HTTP_PROTOCOL = "http";
+
 }
+
