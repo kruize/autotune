@@ -1,6 +1,21 @@
+/*******************************************************************************
+ * Copyright (c) 2020 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
-import com.autotune.util.HttpUtil;
+import com.autotune.dependencyAnalyzer.util.HttpUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -14,18 +29,15 @@ public class PrometheusDataSource implements DataSource
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
-    String dataSource = "prometheus";
     String dataSourceURL;
-    String token;
-    String endpoint = "/api/v1/query?query=";
+    String token = "";
+    final String endpoint = "/api/v1/query?query=";
 
     public PrometheusDataSource(String monitoringAgentEndpoint, String token)
     {
         this.dataSourceURL = monitoringAgentEndpoint;
         this.token = token;
     }
-
-
 
     private JSONArray getAsJsonArray(String response) throws IndexOutOfBoundsException
     {
@@ -52,15 +64,15 @@ public class PrometheusDataSource implements DataSource
     }
 
     /**
-     * Run the getAllAppsQuery and return the list of applications matching the layer.
-     * @param query GetAllApps query for the layer
+     * Run the getAppsForLayer and return the list of applications matching the layer.
+     * @param query getAppsForLayer query for the layer
      * @param key The key to search for in the response
      * @return ArrayList of all applications from the query
      * @throws MalformedURLException
      */
     public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException
     {
-        String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + endpoint + query), "");
+        String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + endpoint + query), token);
 
         JSONObject responseJson = new JSONObject(response);
         ArrayList<String> valuesList = new ArrayList<>();
