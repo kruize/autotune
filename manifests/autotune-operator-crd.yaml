@@ -34,16 +34,18 @@ spec:
       description: 'Autotune containts specification parameter for the the recommendation'
       properties:
         sla:
-          description: 'sla allow an user to provide any one option out of response_time,  
-          right-size, throughput'
+          description: 'sla details the objective function that needs to be optimized'
           properties:
             objective_function: 
-              description: 'function take simple and complex expression'
+              description: 'Objective_function can be a simple or a complex regular expression'
               type: string
             direction:
-              description: 'it will take the value like up or down'
+              description: 'One of maximize or minimize'
               type: string
-            components: 
+            sla_class: 
+              description: 'One of throughput, response_time or resource_usage'
+              type: string
+            function_variables: 
               description: 'describe the complex objective_function variables'
               properties:
                 name:
@@ -52,11 +54,8 @@ spec:
                 query:
                   description: 'query expression for respective datasource'
                   type: string
-                query_datasource:
+                datasource:
                   description: 'name of the monitoring tool like prometheus'  
-                  type: string
-                sla_class: 
-                  description: 'name of the sla_class should be like throughput, response_time etc'   
                   type: string
                 value_type:
                   description: 'value of the holding objective_function calculation'
@@ -64,7 +63,6 @@ spec:
               required:
               - name
               - query
-              - sla_class
               - value_type    
           required:
           - objective_function
@@ -72,7 +70,7 @@ spec:
           - components
           
         mode:
-          description: 'provide an options to either try, show or apply the recommendation'
+          description: 'Specify whether to try, show or apply the recommendation'
           type: string 
           required:
           - type
