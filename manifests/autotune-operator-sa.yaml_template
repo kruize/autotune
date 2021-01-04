@@ -1,5 +1,0 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: autotune-sa
-  namespace: "{{ AUTOTUNE_NAMESPACE }}"
