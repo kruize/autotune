@@ -34,24 +34,43 @@ spec:
       description: 'Autotune containts specification parameter for the the recommendation'
       properties:
         sla:
-          description: 'sla allow an user to provide any one option out of response_time,  
-          right-size, throughput'
+          description: 'sla details the objective function that needs to be optimized'
           properties:
-            sla_class: 
-              description: 'name of the sla like response_time'
+            objective_function: 
+              description: 'Objective_function can be a simple or a complex regular expression'
               type: string
             direction:
-              description: 'it will take the value like up or down'
+              description: 'One of maximize or minimize'
               type: string
-            promql: 
-              description: "query string to get the sla" 
-              type: string  
+            sla_class: 
+              description: 'One of throughput, response_time or resource_usage'
+              type: string
+            function_variables: 
+              description: 'describe the complex objective_function variables'
+              properties:
+                name:
+                  description: 'name of the variables used in objective_function'  
+                  type: string
+                query:
+                  description: 'query expression for respective datasource'
+                  type: string
+                datasource:
+                  description: 'name of the monitoring tool like prometheus'  
+                  type: string
+                value_type:
+                  description: 'value of the holding objective_function calculation'
+                  type: string  
+              required:
+              - name
+              - query
+              - value_type    
           required:
-          - sla_class
+          - objective_function
           - direction
-          - promql
+          - function_variables
+          
         mode:
-          description: 'provide an options to either try, show or apply the recommendation'
+          description: 'Specify whether to try, show or apply the recommendation'
           type: string 
           required:
           - type
@@ -88,10 +107,3 @@ spec:
           required:
           - type
           - value
-    status:
-     type: object
-     properties:
-      replicas:
-       type: integer
-      labelSelector:
-       type: string
