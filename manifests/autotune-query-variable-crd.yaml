@@ -40,4 +40,3 @@ spec:
               value:
                 description: 'Value of the variable'
                 type: string
-

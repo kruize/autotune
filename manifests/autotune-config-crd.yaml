@@ -37,24 +37,29 @@ spec:
         details:
           description: 'Description of the layer'
           type: string
-        layerPresenceQuery:
-          description: 'Query to detect the applications matching the layer'
+        global:
+          type: string
+        layerPresence:
+          type: object
           properties:
-            datasource:
-              description: 'Query to detect the presence of the layer for the application for the datasource'
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    description: 'Name of the datasource'
-                    type: string
-                  query:
-                    description: 'Query for the datasource'
-                    type: string
-                  key:
-                    description: 'Key to search for in the query response'
-                    type: string
+            query:
+              description: 'Query to detect the applications matching the layer'
+              properties:
+                datasource:
+                  description: 'Query to detect the presence of the layer for the application for the datasource'
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        description: 'Name of the datasource'
+                        type: string
+                      query:
+                        description: 'Query for the datasource'
+                        type: string
+                      key:
+                        description: 'Key to search for in the query response'
+                        type: string
             label:
               description: 'Label used to detect the presence of the layer for the application for the datasource'
               type: array
@@ -67,47 +72,44 @@ spec:
                   value:
                     description: 'Value for the label'
                     type: string
-        queries:
-          description: 'List of queries for the layer'
+        tunables:
+          description: 'List of tunables affected by the query'
           type: array
           items:
             type: object
             properties:
-              query_details:
-                description: 'Details of the query'
+              name:
+                description: 'Name of the tunable'
                 type: string
-              datasource:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    name:
-                      description: 'Name of the datasource'
-                      type: string
-                    query:
-                      description: 'Query for the datasource'
-                      type: string
+              upper_bound:
+                description: 'Upper bound of the recommendations generated for the tunable'
+                type: string
+              lower_bound:
+                description: 'Upper bound of the recommendations generated for the tunable'
+                type: string
               value_type:
                 description: 'Value type of the query response (double, string, int)'
                 type: string
-              tunables:
-                description: 'List of tunables affected by the query'
+                queries:
+                  description: 'List of queries for the layer'
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      datasource:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: 'Name of the datasource'
+                              type: string
+                            query:
+                              description: 'Query for the datasource'
+                              type: string
+              sla_class:
+                description: 'sla class of the tunable'
                 type: array
                 items:
-                  type: object
-                  properties:
-                    name:
-                      description: 'Name of the tunable'
-                      type: string
-                    upper_bound:
-                      description: 'Upper bound of the recommendations generated for the tunable'
-                      type: string
-                    lower_bound:
-                      description: 'Upper bound of the recommendations generated for the tunable'
-                      type: string
-                    sla_class:
-                      description: 'sla class of the tunable'
-                      type: array
-                      items:
-                        type: string
+                  type: string
 

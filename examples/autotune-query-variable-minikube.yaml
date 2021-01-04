@@ -1,0 +1,10 @@
+apiVersion: "recommender.com/v1beta1"
+kind: "AutotuneQueryVariable"
+metadata:
+  name: "minikube"
+  namespace: "default"
+query_variables:
+  - name: '$POD_LABEL$'
+    value: 'pod_name'
+  - name: '$CONTAINER_LABEL$'
+    value: 'container'
