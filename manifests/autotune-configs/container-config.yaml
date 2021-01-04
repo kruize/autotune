@@ -7,29 +7,10 @@ layer_name: container
 layer_level: 0
 details: generic container tunables
 layerPresence:
+  # This layer is assumed to be available by default for all applications.
   presence: always
-  query:
-    datasource:
-      - name: 'prometheus'
-        query: ''
-        key: ''
-  label:
-    - name: 'org.kubernetes.io/autotune_layer'
-      value: 'container'
 tunables:
-  - name: memoryLimit
-    value_type: double
-    upper_bound: 300M
-    lower_bound: 150M
-    queries:
-      datasource:
-        - name: 'prometheus'
-          query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
-    sla_class:
-      - response_time
-      - throughput
-
-  - name: memoryRequests
+  - name: memoryRequest
     value_type: double
     upper_bound: '300M'
     lower_bound: '150M'
@@ -39,19 +20,8 @@ tunables:
           query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
     sla_class:
       - response_time
-      - rightsize
-
-  - name: cpuLimit
-    value_type: double
-    upper_bound: '4.0'
-    lower_bound: '2.0'
-    queries:
-      datasource:
-        - name: 'prometheus'
-          query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
-    sla_class:
-      - response_time
       - throughput
+      - resource_usage
 
   - name: cpuRequest
     value_type: double
@@ -63,5 +33,6 @@ tunables:
           query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
     sla_class:
       - response_time
-      - rightsize
+      - throughput
+      - resource_usage
 
