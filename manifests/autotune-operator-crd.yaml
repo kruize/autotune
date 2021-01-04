@@ -49,7 +49,7 @@ spec:
               description: 'describe the complex objective_function variables'
               properties:
                 name:
-                  description: 'name of the varialbe used in objective_function'  
+                  description: 'name of the variables used in objective_function'  
                   type: string
                 query:
                   description: 'query expression for respective datasource'
@@ -67,7 +67,7 @@ spec:
           required:
           - objective_function
           - direction
-          - components
+          - function_variables
           
         mode:
           description: 'Specify whether to try, show or apply the recommendation'
@@ -107,10 +107,3 @@ spec:
           required:
           - type
           - value
-    status:
-     type: object
-     properties:
-      replicas:
-       type: integer
-      labelSelector:
-       type: string
