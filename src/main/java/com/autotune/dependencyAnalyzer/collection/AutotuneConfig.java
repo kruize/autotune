@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.collection;
+package com.autotune.dependencyAnalyzer.collection;
 
-import com.autotune.application.Tunable;
-import com.autotune.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.application.Tunable;
+import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 
 import java.util.ArrayList;
 
@@ -31,22 +31,31 @@ public class AutotuneConfig
     int level;
     String name;
     String details;
+    //If true, apply to all autotuneobjects
+    String global;
 
     /*
     Used to detect the presence of the layer in an application. Autotune runs the query, looks for
     the key, and all applications in the query output are matched to the AutotuneConfig object.
     */
-    String levelPresenceKey;
-    String levelPresenceQuery;
+    String layerPresenceKey;
+    String layerPresenceQuery;
+    
+    String layerPresenceLabel;
+    String layerPresenceLabelValue;
 
     ArrayList<Tunable> tunables;
 
-    public AutotuneConfig(String name, int level, String details, String levelPresenceQuery, String levelPresenceKey) {
-        this.name = name;
+    public AutotuneConfig(String name, int level, String details, String layerPresenceKey, String layerPresenceQuery, String layerPresenceLabel, String layerPresenceLabelValue, String global)
+    {
         this.level = level;
+        this.name = name;
         this.details = details;
-        this.levelPresenceQuery = levelPresenceQuery;
-        this.levelPresenceKey = levelPresenceKey;
+        this.layerPresenceKey = layerPresenceKey;
+        this.layerPresenceQuery = layerPresenceQuery;
+        this.layerPresenceLabel = layerPresenceLabel;
+        this.layerPresenceLabelValue = layerPresenceLabelValue;
+        this.global = global;
 
         tunables = new ArrayList<>();
     }
@@ -56,8 +65,11 @@ public class AutotuneConfig
         this.name = copy.getName();
         this.level = copy.getLevel();
         this.details = copy.getDetails();
-        this.levelPresenceQuery = copy.getLevelPresenceQuery();
-        this.levelPresenceKey = copy.getLevelPresenceKey();
+        this.layerPresenceQuery = copy.getLayerPresenceQuery();
+        this.layerPresenceKey = copy.getLayerPresenceKey();
+        this.layerPresenceLabel = copy.getLayerPresenceLabel();
+        this.layerPresenceLabelValue = copy.getLayerPresenceLabelValue();
+        this.global = copy.global;
 
         this.tunables = new ArrayList<>();
         this.tunables.addAll(copy.getTunables());
@@ -94,6 +106,18 @@ public class AutotuneConfig
         else throw new InvalidValueException("Name cannot be null");
     }
 
+    public String getGlobal()
+    {
+        return global;
+    }
+
+    public void setGlobal(String global) throws InvalidValueException
+    {
+        if (global.equals("true") || global.equals("false"))
+            this.global = global;
+        else throw new InvalidValueException("Invalid global type");
+    }
+
     public ArrayList<Tunable> getTunables() {
         return tunables;
     }
@@ -102,20 +126,40 @@ public class AutotuneConfig
         this.tunables = tunables;
     }
 
-    public String getLevelPresenceKey() {
-        return levelPresenceKey;
+    public String getLayerPresenceKey() {
+        return layerPresenceKey;
     }
 
-    public void setLevelPresenceKey(String levelPresenceKey) {
-        this.levelPresenceKey = levelPresenceKey;
+    public void setLayerPresenceKey(String layerPresenceKey) {
+        this.layerPresenceKey = layerPresenceKey;
     }
 
-    public String getLevelPresenceQuery() {
-        return levelPresenceQuery;
+    public String getLayerPresenceQuery() {
+        return layerPresenceQuery;
     }
 
-    public void setLevelPresenceQuery(String levelPresenceQuery) {
-        this.levelPresenceQuery = levelPresenceQuery;
+    public void setLayerPresenceQuery(String layerPresenceQuery) {
+        this.layerPresenceQuery = layerPresenceQuery;
+    }
+
+    public String getLayerPresenceLabel()
+    {
+        return layerPresenceLabel;
+    }
+
+    public void setLayerPresenceLabel(String layerPresenceLabel)
+    {
+        this.layerPresenceLabel = layerPresenceLabel;
+    }
+
+    public String getLayerPresenceLabelValue()
+    {
+        return layerPresenceLabelValue;
+    }
+
+    public void setLayerPresenceLabelValue(String layerPresenceLabelValue)
+    {
+        this.layerPresenceLabelValue = layerPresenceLabelValue;
     }
 
     @Override
@@ -124,8 +168,8 @@ public class AutotuneConfig
                 "level=" + level +
                 ", name='" + name + '\'' +
                 ", details='" + details + '\'' +
-                ", levelPresenceQuery='" + levelPresenceQuery + '\'' +
-                ", levelPresenceKey='" + levelPresenceKey + '\'' +
+                ", levelPresenceQuery='" + layerPresenceQuery + '\'' +
+                ", levelPresenceKey='" + layerPresenceKey + '\'' +
                 ", tunables=" + tunables +
                 '}';
     }
