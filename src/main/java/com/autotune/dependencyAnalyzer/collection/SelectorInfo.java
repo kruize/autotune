@@ -1,4 +1,4 @@
-package com.autotune.collection;
+package com.autotune.dependencyAnalyzer.collection;
 
 /**
  * Holds information about the selector key in the autotune object yaml

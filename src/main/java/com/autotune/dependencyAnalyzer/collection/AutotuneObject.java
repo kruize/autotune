@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.collection;
+package com.autotune.dependencyAnalyzer.collection;
 
-import com.autotune.application.ApplicationServiceStack;
-import com.autotune.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
+import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 
 import java.util.HashMap;
 import java.util.Map;
