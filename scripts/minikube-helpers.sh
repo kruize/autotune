@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,26 +19,25 @@
 
 function minikube_first() {
 
-	# Check if the service account already exists
-	sa_exists=$(${kubectl_cmd} get sa | grep ${AUTOTUNE_SA_NAME})
-	if [ "${sa_exists}" != "" ]; then
-		return;
-	fi
-	echo
+	kubectl_cmd="kubectl -n ${autotune_ns}"
 	echo "Info: One time setup - Create a service account to deploy autotune"
 	
-	sed -ie "s/{{ AUTOTUNE_NAMESPACE }}/${autotune_ns}/" ${AUTOTUNE_SA_MANIFEST}
 	${kubectl_cmd} apply -f ${AUTOTUNE_SA_MANIFEST}
 	check_err "Error: Failed to create service account and RBAC"
 
-	${kubectl_cmd} apply -f ${AUTOTUNE_CRD_MANIFEST}
+	echo "${kubectl_cmd} apply -f ${AUTOTUNE_OPERATOR_CRD}"
 	check_err "Error: Failed to create autotune CRD"
 
-	sed -ie "s/{{ AUTOTUNE_NAMESPACE }}/${autotune_ns}/" ${AUTOTUNE_ROLE_MANIFEST}
+	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIG_CRD}
+	check_err "Error: Failed to create autotuneconfig CRD"
+
+	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLE_CRD}
+	check_err "Error: Failed to create autotunequeryvariable CRD"
+
 	${kubectl_cmd} apply -f ${AUTOTUNE_ROLE_MANIFEST}
 	check_err "Error: Failed to create role"
 
-	sed -ie "s/{{ AUTOTUNE_NAMESPACE }}/${autotune_ns}/" ${AUTOTUNE_RB_MANIFEST}
+	sed -e "s|{{ AUTOTUNE_NAMESPACE }}|${autotune_ns}|" ${AUTOTUNE_RB_MANIFEST_TEMPLATE} > ${AUTOTUNE_RB_MANIFEST}
 	${kubectl_cmd} apply -f ${AUTOTUNE_RB_MANIFEST}
 	check_err "Error: Failed to create role binding"
 
@@ -54,15 +53,17 @@ function minikube_deploy() {
 	
 	echo "Info: Deploying autotune yaml to minikube cluster"
 
-	sed -ie "s/{{ AUTOTUNE_NAMESPACE }}/${autotune_ns}/" ${AUTOTUNE_DEPLOY_MANIFEST}
+	# Replace autotune docker image in deployment yaml
+	sed -e "s|{{ AUTOTUNE_IMAGE }}|${AUTOTUNE_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE} > ${AUTOTUNE_DEPLOY_MANIFEST}
+
 	${kubectl_cmd} apply -f ${AUTOTUNE_DEPLOY_MANIFEST}
 	sleep 2
 	check_running autotune
 	if [ "${err}" == "0" ]; then
-		grafana_pod=$(${kubectl_cmd} get pods | grep grafana | awk '{ print $1 }')
-		echo "Info: Access grafana dashboard to see autotune recommendations at http://localhost:3000"
-		echo "Info: Run the following command first to access grafana port"
-		echo "      $ kubectl port-forward -n monitoring ${grafana_pod} 3000:3000"
+		autotune_pod=$(${kubectl_cmd} get svc | grep autotune | awk '{ print $1 }')
+		echo "Info: Access autotune service to access the API and see autotune recommendations at http://localhost:8080"
+		echo "Info: Run the following command first to access autotune"
+		echo "      $ kubectl port-forward -n monitoring ${autotune_pod} 8080:8080"
 		echo
 	else
 		# Indicate deploy failed on error
@@ -74,6 +75,13 @@ function minikube_start() {
 	echo
 	echo "###   Installing autotune for minikube"
 	echo
+
+	# If autotune_ns was not set by the user
+	if [ -z "$autotune_ns" ]
+	then
+		autotune_ns="monitoring"
+	fi
+
 	check_prometheus_installation
 	minikube_first
 	minikube_deploy
@@ -88,21 +96,25 @@ function check_prometheus_installation() {
 	kubectl kustomize --help >/dev/null 2>/dev/null
 	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
 
-	autotune_ns="monitoring"
-	kubectl_cmd="kubectl -n ${autotune_ns}"
-	prometheus_pod_running=$(${kubectl_cmd} get pods | grep "prometheus-k8s-1")
+	kubectl_cmd="kubectl"
+	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
 	if [ "${prometheus_pod_running}" == "" ]; then
 		echo "Prometheus is not running, use 'scripts/prometheus_on_minikube.sh' to install."
 		exit 1
 	fi
-	echo "Prometheus is already installed and running."
+	echo "Prometheus is installed and running."
 }
 
 
 function minikube_terminate() {
+		# If autotune_ns was not set by the user
+	if [ -z "$autotune_ns" ]
+	then
+		autotune_ns="monitoring"
+	fi
+
 	echo -n "###   Removing autotune for minikube"
 
-	autotune_ns="monitoring"
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 
 	echo
@@ -114,11 +126,19 @@ function minikube_terminate() {
 	${kubectl_cmd} delete -f ${AUTOTUNE_SA_MANIFEST} 2>/dev/null
 
 	echo
+	echo "Removing autotune role"
+	${kubectl_cmd} delete -f ${AUTOTUNE_ROLE_MANIFEST} 2>/dev/null
+
+	echo
+	echo "Removing autotune rolebinding"
+	${kubectl_cmd} delete -f ${AUTOTUNE_RB_MANIFEST} 2>/dev/null
+
+	echo
 	echo "Removing autotune serviceMonitor"
 	${kubectl_cmd} delete -f ${SERVICE_MONITOR_MANIFEST} 2>/dev/null
 	
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
-	rm ${AUTOTUNE_SA_MANIFEST}
+	rm ${AUTOTUNE_RB_MANIFEST}
 
 	rm -rf minikube_downloads
 }
