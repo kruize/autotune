@@ -2,7 +2,7 @@ apiVersion: "recommender.com/v1beta1"
 kind: "AutotuneConfig"
 metadata:
   name: "container"
-  namespace: "monitoring"
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
 layer_name: container
 layer_level: 0
 details: generic container tunables

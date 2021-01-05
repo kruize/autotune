@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: autotune-config
-  namespace: monitoring
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
 data:
   cluster_type: "kubernetes"
   k8s_type: "docker"
