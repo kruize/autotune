@@ -50,8 +50,7 @@ public class ApplicationServiceStack
 	private String status;
 	private ArrayList<AutotuneConfig> applicationServiceStackLayers;
 
-	public ApplicationServiceStack(String applicationServiceName, String namespace)
-	{
+	public ApplicationServiceStack(String applicationServiceName, String namespace) {
 		this.applicationServiceName = applicationServiceName;
 		this.namespace = namespace;
 
@@ -62,9 +61,8 @@ public class ApplicationServiceStack
 		return namespace;
 	}
 
-	public void setNamespace(String namespace) throws InvalidValueException
-	{
-		if(namespace != null)
+	public void setNamespace(String namespace) throws InvalidValueException {
+		if (namespace != null)
 			this.namespace = namespace;
 		else
 			throw new InvalidValueException("Namespace cannot be null");
@@ -74,8 +72,7 @@ public class ApplicationServiceStack
 		return applicationServiceName;
 	}
 
-	public void setApplicationServiceName(String applicationServiceName) throws InvalidValueException
-	{
+	public void setApplicationServiceName(String applicationServiceName) throws InvalidValueException {
 		if (applicationServiceName != null)
 			this.applicationServiceName = applicationServiceName;
 		else
@@ -90,13 +87,11 @@ public class ApplicationServiceStack
 		this.applicationServiceStackLayers = applicationServiceStackLayers;
 	}
 
-	public String getStatus()
-	{
+	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status)
-	{
+	public void setStatus(String status) {
 		this.status = status;
 	}
 
