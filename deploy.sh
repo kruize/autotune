@@ -18,25 +18,23 @@
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
-AUTOTUNE_CRD_MANIFEST="manifests/autotune-operator-crd.yaml"
-AUTOTUNE_CR_MANIFEAST="manifests/autotune-operator-cr.yaml"
+AUTOTUNE_OPERATOR_CRD="manifests/autotune-operator-crd.yaml"
+AUTOTUNE_CONFIG_CRD="manifests/autotune-config-crd.yaml"
+AUTOTUNE_QUERY_VARIABLE_CRD="manifests/autotune-query-variable-crd.yaml"
+AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="manifests/autotune-operator-deployment.yaml_template"
 AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
 AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
 AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
-AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
+AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune-operator-rolebinding.yaml_template"
+AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_CONFIGMAPS="manifests/configmaps"
 SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
 
-# Environment property files minikube, docker and openshift
-DOCKER_ENV="scripts/env/docker_env.properties"
-MINIKUBE_ENV="scripts/env/minikube_env.properties"
-OPENSHIFT_ENV="scripts/env/openshift_env.properties"
-
-AUTOTUNE_PORT=""
+AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="kruize/autotune"
 #Fetch autotune version from the pom.xml file.
-AUTOTUNE_VERSION="$(grep -A 1 "Autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
+AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
@@ -50,8 +48,7 @@ cluster_type="minikube"
 setup=1
 # Default mode is interactive
 non_interactive=0
-# Default namespace is kube-system
-autotune_ns="kube-system"
+autotune_ns=""
 # docker: loop timeout is turned off by default
 timeout=-1
 
