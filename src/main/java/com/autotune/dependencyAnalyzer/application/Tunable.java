@@ -55,9 +55,7 @@ public class Tunable
 				   double lowerBound,
 				   String valueType,
 				   String query,
-				   ArrayList<String> slaClassList) throws InvalidBoundsException
-	{
-
+				   ArrayList<String> slaClassList) throws InvalidBoundsException {
 		this.query = query;
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
@@ -69,19 +67,11 @@ public class Tunable
 		} else throw new InvalidBoundsException();
 	}
 
-	public Tunable() { }
-
-	public Tunable(String name)
-	{
-		this.name = name;
-	}
-
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) throws InvalidValueException
-	{
+	public void setName(String name) throws InvalidValueException {
 		if (name != null)
 			this.name = name;
 		else
@@ -92,17 +82,15 @@ public class Tunable
 		return upperBound;
 	}
 
-	public void setUpperBound(double upperBound)
-	{
-			this.upperBound = upperBound;
+	public void setUpperBound(double upperBound) {
+		this.upperBound = upperBound;
 	}
 
 	public double getLowerBound() {
 		return lowerBound;
 	}
 
-	public void setLowerBound(double lowerBound) throws InvalidBoundsException
-	{
+	public void setLowerBound(double lowerBound) throws InvalidBoundsException {
 		if (lowerBound < this.upperBound)
 			this.lowerBound = lowerBound;
 		else
@@ -113,21 +101,18 @@ public class Tunable
 		return valueType;
 	}
 
-	public void setValueType(String valueType) throws InvalidValueException
-	{
+	public void setValueType(String valueType) throws InvalidValueException {
 		if (valueType != null)
 			this.valueType = valueType;
 		else
 			throw new InvalidValueException("Value type not set for tunable");
 	}
 
-	public String getQuery()
-	{
+	public String getQuery() {
 		return query;
 	}
 
-	public void setQuery(String query)
-	{
+	public void setQuery(String query) {
 		this.query = query;
 	}
 
