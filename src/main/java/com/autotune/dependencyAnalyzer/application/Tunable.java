@@ -15,10 +15,11 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.application;
 
-import com.autotune.dependencyAnalyzer.exceptions.BoundsNotSetException;
+import com.autotune.dependencyAnalyzer.exceptions.InvalidBoundsException;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
@@ -36,8 +37,8 @@ import java.util.ArrayList;
 public class Tunable
 {
 	String name;
-	String upperBound;
-	String lowerBound;
+	double upperBound;
+	double lowerBound;
 	String valueType;
 	String description;
 	String query;
@@ -50,17 +51,22 @@ public class Tunable
 	public ArrayList<String> slaClassList;
 
 	public Tunable(String name,
-				   String upperBound,
-				   String lowerBound,
+				   double upperBound,
+				   double lowerBound,
 				   String valueType,
 				   String query,
-				   ArrayList<String> slaClassList) {
-		this.name = name;
-		this.upperBound = upperBound;
-		this.lowerBound = lowerBound;
-		this.valueType = valueType;
+				   ArrayList<String> slaClassList) throws InvalidBoundsException
+	{
+
 		this.query = query;
-		this.slaClassList = slaClassList;
+		this.name = Objects.requireNonNull(name, "name cannot be null");
+		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
+		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
+
+		if (upperBound > lowerBound) {
+			this.lowerBound = lowerBound;
+			this.upperBound = upperBound;
+		} else throw new InvalidBoundsException();
 	}
 
 	public Tunable() { }
@@ -82,28 +88,25 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public String getUpperBound() {
+	public double getUpperBound() {
 		return upperBound;
 	}
 
-	public void setUpperBound(String upperBound) throws BoundsNotSetException
+	public void setUpperBound(double upperBound)
 	{
-		if (upperBound != null)
 			this.upperBound = upperBound;
-		else
-			throw new BoundsNotSetException();
 	}
 
-	public String getLowerBound() {
+	public double getLowerBound() {
 		return lowerBound;
 	}
 
-	public void setLowerBound(String lowerBound) throws BoundsNotSetException
+	public void setLowerBound(double lowerBound) throws InvalidBoundsException
 	{
-		if (lowerBound != null)
+		if (lowerBound < this.upperBound)
 			this.lowerBound = lowerBound;
 		else
-			throw new BoundsNotSetException();
+			throw new InvalidBoundsException();
 	}
 
 	public String getValueType() {

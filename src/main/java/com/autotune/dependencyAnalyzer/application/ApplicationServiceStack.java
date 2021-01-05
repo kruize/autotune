@@ -45,10 +45,10 @@ import java.util.ArrayList;
  */
 public class ApplicationServiceStack
 {
-	String applicationServiceName;
-	String namespace;
-	String status;
-	ArrayList<AutotuneConfig> applicationServiceStackLayers;
+	private String applicationServiceName;
+	private String namespace;
+	private String status;
+	private ArrayList<AutotuneConfig> applicationServiceStackLayers;
 
 	public ApplicationServiceStack(String applicationServiceName, String namespace)
 	{
