@@ -26,42 +26,58 @@ import java.util.ArrayList;
  *
  * Refer to examples dir for a reference AutotuneConfig yaml.
  */
-public class AutotuneConfig
+public final class AutotuneConfig
 {
-	int level;
-	String name;
-	String details;
+	private final int level;
+	private final String name;
+	private final String details;
 	//If true, apply to all autotuneobjects
-	String presence;
+	private final String presence;
 
 	/*
 	Used to detect the presence of the layer in an application. Autotune runs the query, looks for
 	the key, and all applications in the query output are matched to the AutotuneConfig object.
 	*/
-	String layerPresenceKey;
-	String layerPresenceQuery;
+	private final String layerPresenceKey;
+	private final String layerPresenceQuery;
 
-	String layerPresenceLabel;
-	String layerPresenceLabelValue;
+	private final String layerPresenceLabel;
+	private final String layerPresenceLabelValue;
 
-	ArrayList<Tunable> tunables;
+	private final ArrayList<Tunable> tunables;
 
-	public AutotuneConfig(String name, int level, String details, String layerPresenceKey, String layerPresenceQuery, String layerPresenceLabel, String layerPresenceLabelValue, String presence)
-	{
-		this.level = level;
-		this.name = name;
+	public AutotuneConfig(String name,
+			int level,
+			String details,
+			String presence,
+			String layerPresenceQuery,
+			String layerPresenceKey,
+			String layerPresenceLabel,
+			String layerPresenceLabelValue,
+			ArrayList<Tunable> tunables) throws InvalidValueException {
+		if (name != null)
+			this.name = name;
+		else throw new InvalidValueException("Name cannot be null");
+
+		if (presence.equals("always"))
+			this.presence = presence;
+		else throw new InvalidValueException("Invalid presence value");
+
+		if (level >= 0)
+			this.level = level;
+		else
+			throw new InvalidValueException("Layer level cannot be negative");
+
 		this.details = details;
 		this.layerPresenceKey = layerPresenceKey;
 		this.layerPresenceQuery = layerPresenceQuery;
 		this.layerPresenceLabel = layerPresenceLabel;
 		this.layerPresenceLabelValue = layerPresenceLabelValue;
-		this.presence = presence;
 
-		tunables = new ArrayList<>();
+		this.tunables = new ArrayList<>(tunables);
 	}
 
-	public AutotuneConfig(AutotuneConfig copy)
-	{
+	public AutotuneConfig(AutotuneConfig copy) {
 		this.name = copy.getName();
 		this.level = copy.getLevel();
 		this.details = copy.getDetails();
@@ -71,39 +87,19 @@ public class AutotuneConfig
 		this.layerPresenceLabelValue = copy.getLayerPresenceLabelValue();
 		this.presence = copy.presence;
 
-		this.tunables = new ArrayList<>();
-		this.tunables.addAll(copy.getTunables());
+		this.tunables = new ArrayList<>(copy.getTunables());
 	}
 
 	public int getLevel() {
 		return level;
 	}
 
-	public void setLevel(int level) throws InvalidValueException
-	{
-		if (level >= 0)
-			this.level = level;
-		else
-			throw new InvalidValueException("Layer level cannot be negative");
-	}
-
 	public String getDetails() {
 		return details;
 	}
 
-	public void setDetails(String details) {
-		this.details = details;
-	}
-
 	public String getName() {
 		return name;
-	}
-
-	public void setName(String name) throws InvalidValueException
-	{
-		if (name != null)
-			this.name = name;
-		else throw new InvalidValueException("Name cannot be null");
 	}
 
 	public String getPresence()
@@ -111,35 +107,16 @@ public class AutotuneConfig
 		return presence;
 	}
 
-	public void setPresence(String presence) throws InvalidValueException
-	{
-		if (presence.equals("always"))
-			this.presence = presence;
-		else throw new InvalidValueException("Invalid presence value");
-	}
-
 	public ArrayList<Tunable> getTunables() {
-		return tunables;
-	}
-
-	public void setTunables(ArrayList<Tunable> tunables) {
-		this.tunables = tunables;
+		return new ArrayList<>(tunables);
 	}
 
 	public String getLayerPresenceKey() {
 		return layerPresenceKey;
 	}
 
-	public void setLayerPresenceKey(String layerPresenceKey) {
-		this.layerPresenceKey = layerPresenceKey;
-	}
-
 	public String getLayerPresenceQuery() {
 		return layerPresenceQuery;
-	}
-
-	public void setLayerPresenceQuery(String layerPresenceQuery) {
-		this.layerPresenceQuery = layerPresenceQuery;
 	}
 
 	public String getLayerPresenceLabel()
@@ -147,19 +124,9 @@ public class AutotuneConfig
 		return layerPresenceLabel;
 	}
 
-	public void setLayerPresenceLabel(String layerPresenceLabel)
-	{
-		this.layerPresenceLabel = layerPresenceLabel;
-	}
-
 	public String getLayerPresenceLabelValue()
 	{
 		return layerPresenceLabelValue;
-	}
-
-	public void setLayerPresenceLabelValue(String layerPresenceLabelValue)
-	{
-		this.layerPresenceLabelValue = layerPresenceLabelValue;
 	}
 
 	@Override

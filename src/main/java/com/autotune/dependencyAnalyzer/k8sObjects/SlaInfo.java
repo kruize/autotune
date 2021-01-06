@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
-import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.util.SupportedTypes;
 
 import java.util.ArrayList;
 
@@ -38,30 +38,42 @@ import java.util.ArrayList;
  *     matchLabel: "app.kubernetes.io/name"
  *     matchLabelValue: "petclinic-deployment"
  */
-public class SlaInfo
+public final class SlaInfo
 {
-	private String slaClass;
-	private String objectiveFunction;
-	private String direction;
-	private ArrayList<FunctionVariable> functionVariables;
+	private final String slaClass;
+	private final String objectiveFunction;
+	private final String direction;
+	private final ArrayList<FunctionVariable> functionVariables;
+
+	public SlaInfo(String slaClass,
+		String objectiveFunction,
+		String direction,
+		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
+		this.slaClass = slaClass;
+		this.objectiveFunction = objectiveFunction;
+
+		if (SupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
+			this.direction = direction;
+		else throw new InvalidValueException("Invalid direction for autotune kind");
+
+		this.functionVariables = new ArrayList<>(functionVariables);
+	}
+
+	public SlaInfo(SlaInfo copy) {
+		this.slaClass = copy.getSlaClass();
+		this.objectiveFunction = copy.getObjectiveFunction();
+		this.direction = copy.getDirection();
+
+		this.functionVariables = new ArrayList<>(copy.getFunctionVariables());
+
+	}
 
 	public String getSlaClass() {
 		return slaClass;
 	}
 
-	public void setSlaClass(String slaClass) {
-		this.slaClass = slaClass;
-	}
-
 	public String getDirection() {
 		return direction;
-	}
-
-	public void setDirection(String direction) throws InvalidValueException
-	{
-		if (DAConstants.DIRECTIONS_SUPPORTED.contains(direction))
-			this.direction = direction;
-		else throw new InvalidValueException("Invalid direction for autotune kind");
 	}
 
 	public String getObjectiveFunction()
@@ -69,14 +81,8 @@ public class SlaInfo
 		return objectiveFunction;
 	}
 
-	public void setObjectiveFunction(String objectiveFunction)
-	{
-		this.objectiveFunction = objectiveFunction;
-	}
-
-	public ArrayList<FunctionVariable> getFunctionVariables()
-	{
-		return functionVariables;
+	public ArrayList<FunctionVariable> getFunctionVariables() {
+		return new ArrayList<>(functionVariables);
 	}
 
 	@Override
