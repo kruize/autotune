@@ -1,8 +1,8 @@
 # Autotune REST API
-The Dependency Analyzer REST API design is proposed as follows:
+The Autotune REST API design is proposed as follows:
 
 ##  listApplications
-Get the list of applications monitored by dependency analyzer.
+Get the list of applications monitored by autotune.
 
 **Request**
 `GET /listApplications`
@@ -12,7 +12,6 @@ Get the list of applications monitored by dependency analyzer.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listApplications?application_name=<APP_NAME>`
 
 **Response**
-
 ```
 [
     {
@@ -30,20 +29,70 @@ Get the list of applications monitored by dependency analyzer.
 ]
 ```
 
-##  listAppTunables
-Returns the JSON array response containing the applications along with their tunables.
+## listAppLayers
+Returns the list of applications monitored by autotune along with layers detected in the applications.
 
 **Request**
-`GET /listAppTunables` gives the tuning set C for all the applications monitored.
+`GET /listAppLayers`
 
-`GET /listAppTunables?application_name=<APPLICATION_NAME>` for getting the tuning set C of a specific application.
+`GET /listAppLayers?application_name=<APP_NAME>`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listAppLayers?application_name=<APP_NAME>`
+
+**Response**
+```
+[
+    {
+        "application_name": "app1",
+        “objective_function”: “transaction_response_time”,
+        "sla_class": "response_time",
+        “direction”: “minimize”
+        "layers": [
+          {
+            "layer_level": 0,
+            "layer_name": "container",
+            "layer_details": "generic container tunables"
+          },
+          {
+            "layer_level": 1,
+            "layer_name": "openj9",
+            "layer_details": "java openj9 tunables"
+          }
+        ]
+    },
+    {
+        "application_name": "app2",
+        “objective_function”: “performedChecks_total”,
+        "sla_class": "throughput",
+        “direction”: “maximize”
+        "layers": [
+          {
+            "layer_level": 0,
+            "layer_name": "container",
+            "layer_details": "generic container tunables"
+          },
+          {
+            "layer_level": 1,
+            "layer_name": "hotspot",
+            "layer_details": "java hotspot tunables"
+          }
+        ]
+    }
+]
+```
+
+##  listAppTunables
+Returns the list of applications monitored by autotune along with their tunables.
+**Request**
+`GET /listAppTunables` gives the tunables and layer information for all the applications monitored by autotune.
+
+`GET /listAppTunables?application_name=<APPLICATION_NAME>` for getting the tunables information of a specific application.
 
 `GET /listAppTunables?application_name=<APPLICATION_NAME>&layer_name='<LAYER>'` for getting tunables of a specific layer for the application.
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAppTunables?application_name=<APPLICATION_NAME>&layer_name='<LAYER>'`
 
 **Response**
-Tuning Set C:
 ```
 [
   {
@@ -99,7 +148,7 @@ Get the tunables supported by autotune for the SLA.
 
 `GET /listAutotuneTunables?sla_class=<SLA_CLASS>` gives all tunables for the SLA class
 
-`GET /listTunables?sla_class=<SLA_CLASS>&layer=<LAYER>` gives tunables for the SLA class and the layer
+`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer=<LAYER>` gives tunables for the SLA class and the layer
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?sla_class=<SLA_CLASS>`
 
@@ -208,7 +257,7 @@ Generates the search space used for the analysis.
 ```
 
 ##  Health
-Get the status of the dependency analyzer.
+Get the status of autotune.
 
 **Request**
 `GET /health`
