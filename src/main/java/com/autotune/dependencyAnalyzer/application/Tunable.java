@@ -19,6 +19,7 @@ import com.autotune.dependencyAnalyzer.exceptions.InvalidBoundsException;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -30,18 +31,22 @@ import java.util.Objects;
  *   value_type: double
  *   upper_bound: '4.0'
  *   lower_bound: '2.0'
+ *   queries:
+ *     datasource:
+ *     - name: 'prometheus'
+ *       query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
  *   sla_class:
  *   - response_time
  *   - throughput
  */
 public class Tunable
 {
-	String name;
-	double upperBound;
-	double lowerBound;
-	String valueType;
-	String description;
-	String query;
+	private String name;
+	private double upperBound;
+	private double lowerBound;
+	private String valueType;
+	private String description;
+	private Map<String, String> queries;
 
     /*
     TODO Think about bounds for other valueTypes
@@ -54,9 +59,9 @@ public class Tunable
 				   double upperBound,
 				   double lowerBound,
 				   String valueType,
-				   String query,
+				   Map<String, String> queries,
 				   ArrayList<String> slaClassList) throws InvalidBoundsException {
-		this.query = query;
+		this.queries = queries;
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
@@ -108,12 +113,28 @@ public class Tunable
 			throw new InvalidValueException("Value type not set for tunable");
 	}
 
-	public String getQuery() {
-		return query;
+	public Map<String, String> getQueries() {
+		return queries;
 	}
 
-	public void setQuery(String query) {
-		this.query = query;
+	public void setQueries(Map<String, String> queries) {
+		this.queries = queries;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public ArrayList<String> getSlaClassList() {
+		return slaClassList;
+	}
+
+	public void setSlaClassList(ArrayList<String> slaClassList) {
+		this.slaClassList = slaClassList;
 	}
 
 	@Override
@@ -124,7 +145,7 @@ public class Tunable
 				", lowerBound='" + lowerBound + '\'' +
 				", valueType='" + valueType + '\'' +
 				", description='" + description + '\'' +
-				", query='" + query + '\'' +
+				", queries='" + queries + '\'' +
 				", slaClassList=" + slaClassList +
 				'}';
 	}
