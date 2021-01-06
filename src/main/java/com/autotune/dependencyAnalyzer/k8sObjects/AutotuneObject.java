@@ -17,6 +17,7 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.util.SupportedTypes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,64 +28,73 @@ import java.util.Map;
  *
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public class AutotuneObject
+public final class AutotuneObject
 {
-	private String name;
-	private String namespace;
-	private String mode;
-	private SlaInfo slaInfo;
-	private SelectorInfo selectorInfo;
-
-
+	private final String name;
+	private final String namespace;
+	private final String mode;
+	private final SlaInfo slaInfo;
+	private final SelectorInfo selectorInfo;
 	/**
 	 * Map of applications matching the label selector in the autotune object yaml
 	 */
-	public Map<String, ApplicationServiceStack> applicationsStackMap = new HashMap<>();
+	private final Map<String, ApplicationServiceStack> applicationsStackMap;
+
+	public AutotuneObject(String name,
+			String namespace,
+			String mode,
+			SlaInfo slaInfo,
+			SelectorInfo selectorInfo,
+			Map<String, ApplicationServiceStack> applicationsStackMap) throws InvalidValueException {
+		if (name != null)
+			this.name = name;
+		else throw new InvalidValueException("Name cannot be null");
+
+		if (namespace != null)
+			this.namespace = namespace;
+		else throw new InvalidValueException("Namespace cannot be null");
+
+		if (SupportedTypes.MODES_SUPPORTED.contains(mode))
+			this.mode = mode;
+		else throw new InvalidValueException("Invalid mode");
+
+		this.slaInfo = new SlaInfo(slaInfo);
+		this.selectorInfo = new SelectorInfo(selectorInfo);
+
+		this.applicationsStackMap = new HashMap<>();
+
+		for (String application : applicationsStackMap.keySet()) {
+			this.applicationsStackMap.put(application, applicationsStackMap.get(application));
+		}
+	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) throws InvalidValueException
-	{
-		if (name != null)
-			this.name = name;
-		else throw new InvalidValueException("Name cannot be null");
-	}
-
 	public SlaInfo getSlaInfo() {
-		return slaInfo;
-	}
-
-	public void setSlaInfo(SlaInfo slaInfo) {
-		this.slaInfo = slaInfo;
+		return new SlaInfo(slaInfo);
 	}
 
 	public SelectorInfo getSelectorInfo() {
-		return selectorInfo;
-	}
-
-	public void setSelectorInfo(SelectorInfo selectorInfo) {
-		this.selectorInfo = selectorInfo;
+		return new SelectorInfo(selectorInfo);
 	}
 
 	public String getMode() {
 		return mode;
 	}
 
-	public void setMode(String mode) {
-		this.mode = mode;
-	}
-
 	public String getNamespace() {
 		return namespace;
 	}
 
-	public void setNamespace(String namespace) throws InvalidValueException
-	{
-		if (namespace != null)
-			this.namespace = namespace;
-		else throw new InvalidValueException("namespace cannot be null");
+	public Map<String, ApplicationServiceStack> getApplicationsStackMap() {
+		HashMap<String, ApplicationServiceStack> map = new HashMap<>();
+
+		for (String application : applicationsStackMap.keySet()) {
+			map.put(application, applicationsStackMap.get(application));
+		}
+		return map;
 	}
 
 	@Override

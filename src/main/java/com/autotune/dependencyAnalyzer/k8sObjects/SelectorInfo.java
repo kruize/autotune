@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
+import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
+
 /**
  * Holds information about the selector key in the autotune object yaml
  *
@@ -26,59 +28,66 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
  *     matchURI: ""
  *     matchService: "https"
  */
-public class SelectorInfo
+public final class SelectorInfo
 {
-	private String matchLabel;
-	private String matchValue;
-	private String matchURI;
-	private String matchRoute;
-	private String matchService;
+	private final String matchLabel;
+	private final String matchLabelValue;
+	private final String matchURI;
+	private final String matchRoute;
+	private final String matchService;
+
+	public SelectorInfo(String matchLabel,
+			String matchLabelValue,
+			String matchURI,
+			String matchRoute,
+			String matchService) throws InvalidValueException {
+		//TODO Can this be blank?
+		if (matchLabel != null && !matchLabel.equals(""))
+			this.matchLabel = matchLabel;
+		else throw new InvalidValueException("Invalid MatchLabel");
+
+		if (matchLabelValue != null && !matchLabelValue.equals(""))
+			this.matchLabelValue = matchLabelValue;
+		else throw new InvalidValueException("Invalid MatchLabelValue");
+
+		this.matchURI = matchURI;
+		this.matchRoute = matchRoute;
+		this.matchService = matchService;
+	}
+
+	public SelectorInfo(SelectorInfo copy) {
+		this.matchLabel = copy.getMatchLabel();
+		this.matchLabelValue = copy.getMatchLabelValue();
+		this.matchURI = copy.getMatchURI();
+		this.matchRoute = copy.getMatchRoute();
+		this.matchService = copy.getMatchService();
+	}
 
 	public String getMatchLabel() {
 		return matchLabel;
 	}
 
-	public void setMatchLabel(String matchLabel) {
-		this.matchLabel = matchLabel;
-	}
-
-	public String getMatchValue() {
-		return matchValue;
-	}
-
-	public void setMatchValue(String matchValue) {
-		this.matchValue = matchValue;
+	public String getMatchLabelValue() {
+		return matchLabelValue;
 	}
 
 	public String getMatchURI() {
 		return matchURI;
 	}
 
-	public void setMatchURI(String matchURI) {
-		this.matchURI = matchURI;
-	}
-
 	public String getMatchRoute() {
 		return matchRoute;
-	}
-
-	public void setMatchRoute(String matchRoute) {
-		this.matchRoute = matchRoute;
 	}
 
 	public String getMatchService() {
 		return matchService;
 	}
 
-	public void setMatchService(String matchService) {
-		this.matchService = matchService;
-	}
-
 	@Override
 	public String toString() {
 		return "SelectorInfo{" +
 				"matchLabel='" + matchLabel + '\'' +
-				", matchValue='" + matchValue + '\'' +
+				", matchLabelValue='" + matchLabelValue + '\'' +
 				", matchURI='" + matchURI + '\'' +
 				", matchRoute='" + matchRoute + '\'' +
 				", matchService='" + matchService + '\'' +

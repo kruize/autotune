@@ -23,30 +23,42 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  */
 public class Configuration
 {
-    public static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
-            .Builder()
-            .withGroup(DAConstants.group)
-            .withScope(DAConstants.scope)
-            .withPlural(DAConstants.autotunePlurals)
-            .withVersion(DAConstants.apiVersion)
-            .withName(DAConstants.autotuneResourceName)
-            .build();
+	private static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
+			.Builder()
+			.withGroup(DAConstants.group)
+			.withScope(DAConstants.scope)
+			.withPlural(DAConstants.autotunePlurals)
+			.withVersion(DAConstants.apiVersion)
+			.withName(DAConstants.autotuneResourceName)
+			.build();
 
-    public static final CustomResourceDefinitionContext autotuneConfigContext = new CustomResourceDefinitionContext
-            .Builder()
-            .withGroup(DAConstants.group)
-            .withScope(DAConstants.scope)
-            .withPlural(DAConstants.autotuneConfigPlurals)
-            .withVersion(DAConstants.apiVersion)
-            .withName(DAConstants.autotuneConfigResourceName)
-            .build();
+	private static final CustomResourceDefinitionContext autotuneConfigContext = new CustomResourceDefinitionContext
+			.Builder()
+			.withGroup(DAConstants.group)
+			.withScope(DAConstants.scope)
+			.withPlural(DAConstants.autotuneConfigPlurals)
+			.withVersion(DAConstants.apiVersion)
+			.withName(DAConstants.autotuneConfigResourceName)
+			.build();
 
-    public static final CustomResourceDefinitionContext autotuneVariableContext = new CustomResourceDefinitionContext
-            .Builder()
-            .withGroup(DAConstants.group)
-            .withScope(DAConstants.scope)
-            .withPlural(DAConstants.autotuneVariablePlurals)
-            .withVersion(DAConstants.apiVersion)
-            .withName(DAConstants.autotuneVariableResourceName)
-            .build();
+	private static final CustomResourceDefinitionContext autotuneVariableContext = new CustomResourceDefinitionContext
+			.Builder()
+			.withGroup(DAConstants.group)
+			.withScope(DAConstants.scope)
+			.withPlural(DAConstants.autotuneVariablePlurals)
+			.withVersion(DAConstants.apiVersion)
+			.withName(DAConstants.autotuneVariableResourceName)
+			.build();
+
+	public static CustomResourceDefinitionContext getAutotuneCrdContext() {
+		return autotuneCrdContext;
+	}
+
+	public static CustomResourceDefinitionContext getAutotuneConfigContext() {
+		return autotuneConfigContext;
+	}
+
+	public static CustomResourceDefinitionContext getAutotuneVariableContext() {
+		return autotuneVariableContext;
+	}
 }

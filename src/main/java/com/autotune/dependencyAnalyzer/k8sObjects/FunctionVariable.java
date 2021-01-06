@@ -15,10 +15,36 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
-public class FunctionVariable
+public final class FunctionVariable
 {
-	private String name;
-	private String query;
-	private String datasource;
-	private String valueType;
+	private final String name;
+	private final String query;
+	private final String datasource;
+	private final String valueType;
+
+	public FunctionVariable(String name,
+			String query,
+			String datasource,
+			String valueType) {
+		this.name = name;
+		this.query = query;
+		this.datasource = datasource;
+		this.valueType = valueType;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public String getDatasource() {
+		return datasource;
+	}
+
+	public String getValueType() {
+		return valueType;
+	}
 }
