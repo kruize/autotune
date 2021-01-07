@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
+import com.autotune.dependencyAnalyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import io.fabric8.kubernetes.api.model.Service;
@@ -36,9 +37,7 @@ public class DataSourceFactory
 		String token = System.getenv(DAConstants.AUTH_TOKEN);
 
 		if (dataSource.equals(DAConstants.PROMETHEUS_DATA_SOURCE))
-		{
 			return new PrometheusDataSource(monitoringAgentEndpoint, token);
-		}
 
 		return null;
 	}
@@ -63,11 +62,9 @@ public class DataSourceFactory
 		if (monitoringAgentService == null)
 			throw new MonitoringAgentNotFoundException();
 
-		for (Service service : serviceList.getItems())
-		{
+		for (Service service : serviceList.getItems()) {
 			String serviceName = service.getMetadata().getName();
-			if (serviceName.toLowerCase().equals(monitoringAgentService))
-			{
+			if (serviceName.toLowerCase().equals(monitoringAgentService)) {
 				try {
 					String clusterIP = service.getSpec().getClusterIP();
 					int port = service.getSpec().getPorts().get(0).getPort();
@@ -86,11 +83,11 @@ public class DataSourceFactory
 	 * @param values ArrayList to hold the key values in the JSON
 	 * @param level Level of recursion
 	 */
-	static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) {
+	static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
 		level += 1;
 
 		if (level > 30)
-			return;
+			throw new TooManyRecursiveCallsException();
 
 		for (String keyStr : jsonObj.keySet()) {
 			Object keyvalue = jsonObj.get(keyStr);
