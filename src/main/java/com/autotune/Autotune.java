@@ -16,25 +16,32 @@
 package com.autotune;
 
 import com.autotune.dependencyAnalyzer.DependencyAnalyzer;
+import com.autotune.dependencyAnalyzer.util.ServerContext;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Autotune
 {
+	private static final int PORT = 8080;
+	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
+
 	public static void main(String[] args) {
 		ServletContextHandler context = null;
 
 		disableServerLogging();
 
-		Server server = new Server(8080);
+		Server server = new Server(PORT);
 		context = new ServletContextHandler();
-		context.setContextPath("/");
+		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);
 
 		DependencyAnalyzer.start(context);
 		try {
 			server.start();
 		} catch (Exception e) {
+			LOGGER.error("Could not start the server!");
 			e.printStackTrace();
 		}
 	}
