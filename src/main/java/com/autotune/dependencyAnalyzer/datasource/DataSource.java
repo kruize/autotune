@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import java.util.List;
 
 public interface DataSource
 {
-    /**
-     * Run the getAppsForLayer and return the list of applications matching the layer.
-     * @param query getAppsForLayer query for the layer
-     * @param key The key to search for in the response
-     * @return List of all applications from the query
-     * @throws MalformedURLException
-     */
-    List<String> getAppsForLayer(String query, String key) throws MalformedURLException;
+	/**
+	 * Run the getAppsForLayer and return the list of applications matching the layer.
+	 * @param query getAppsForLayer query for the layer
+	 * @param key The key to search for in the response
+	 * @return List of all applications from the query
+	 * @throws MalformedURLException
+	 */
+	List<String> getAppsForLayer(String query, String key) throws MalformedURLException;
 }
