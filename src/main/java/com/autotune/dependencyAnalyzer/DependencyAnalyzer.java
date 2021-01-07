@@ -16,10 +16,8 @@
 package com.autotune.dependencyAnalyzer;
 
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
-import com.autotune.dependencyAnalyzer.service.ListApplicationService;
-import com.autotune.dependencyAnalyzer.service.ListTunables;
-import com.autotune.dependencyAnalyzer.service.SearchSpace;
-import com.autotune.dependencyAnalyzer.service.TuningSetService;
+import com.autotune.dependencyAnalyzer.service.*;
+import com.autotune.dependencyAnalyzer.util.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class DependencyAnalyzer
@@ -36,10 +34,11 @@ public class DependencyAnalyzer
 	}
 
 	public static void addServlets(ServletContextHandler context) {
-		context.addServlet(ListApplicationService.class, "/listApplications");
-		context.addServlet(TuningSetService.class, "/getTuningSet");
-		context.addServlet(TuningSetService.class, "/");
-		context.addServlet(ListTunables.class, "/listTunables");
-		context.addServlet(SearchSpace.class, "/searchSpace");
+		context.addServlet(ListApplicationService.class, ServerContext.LIST_APPLICATIONS);
+		context.addServlet(ListAppLayers.class, ServerContext.LIST_APP_LAYERS);
+		context.addServlet(ListAppTunables.class, ServerContext.LIST_APP_TUNABLES);
+		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
+		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
+		context.addServlet(HealthService.class, ServerContext.SEARCH_SPACE);
 	}
 }
