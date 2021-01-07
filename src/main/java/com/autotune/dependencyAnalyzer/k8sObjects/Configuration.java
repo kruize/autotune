@@ -25,29 +25,29 @@ public class Configuration
 {
 	private static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.group)
-			.withScope(DAConstants.scope)
-			.withPlural(DAConstants.autotunePlurals)
-			.withVersion(DAConstants.apiVersion)
-			.withName(DAConstants.autotuneResourceName)
+			.withGroup(DAConstants.GROUP)
+			.withScope(DAConstants.SCOPE)
+			.withPlural(DAConstants.AUTOTUNE_PLURALS)
+			.withVersion(DAConstants.API_VERSION)
+			.withName(DAConstants.AUTOTUNE_RESOURCE_NAME)
 			.build();
 
 	private static final CustomResourceDefinitionContext autotuneConfigContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.group)
-			.withScope(DAConstants.scope)
-			.withPlural(DAConstants.autotuneConfigPlurals)
-			.withVersion(DAConstants.apiVersion)
-			.withName(DAConstants.autotuneConfigResourceName)
+			.withGroup(DAConstants.GROUP)
+			.withScope(DAConstants.SCOPE)
+			.withPlural(DAConstants.AUTOTUNE_CONFIG_PLURALS)
+			.withVersion(DAConstants.API_VERSION)
+			.withName(DAConstants.AUTOTUNE_CONFIG_RESOURCE_NAME)
 			.build();
 
 	private static final CustomResourceDefinitionContext autotuneVariableContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.group)
-			.withScope(DAConstants.scope)
-			.withPlural(DAConstants.autotuneVariablePlurals)
-			.withVersion(DAConstants.apiVersion)
-			.withName(DAConstants.autotuneVariableResourceName)
+			.withGroup(DAConstants.GROUP)
+			.withScope(DAConstants.SCOPE)
+			.withPlural(DAConstants.AUTOTUNE_VARIABLE_PLURALS)
+			.withVersion(DAConstants.API_VERSION)
+			.withName(DAConstants.AUTOTUNE_VARIABLE_RESOURCE_NAME)
 			.build();
 
 	public static CustomResourceDefinitionContext getAutotuneCrdContext() {
