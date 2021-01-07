@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
+import com.autotune.dependencyAnalyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.HttpUtil;
 import org.json.JSONArray;
@@ -74,7 +75,11 @@ public class PrometheusDataSource implements DataSource
 		ArrayList<String> valuesList = new ArrayList<>();
 
 		int level = 0;
-		DataSourceFactory.parseJsonForKey(responseJson, key, valuesList, level);
+		try {
+			DataSourceFactory.parseJsonForKey(responseJson, key, valuesList, level);
+		} catch (TooManyRecursiveCallsException e) {
+			e.printStackTrace();
+		}
 		return valuesList;
 	}
 }
