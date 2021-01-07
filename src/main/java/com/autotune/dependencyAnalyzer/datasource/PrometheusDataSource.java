@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.HttpUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,86 +28,53 @@ import java.util.ArrayList;
 
 public class PrometheusDataSource implements DataSource
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
-    String dataSourceURL;
-    String token = "";
-    final String endpoint = "/api/v1/query?query=";
+	String dataSourceURL;
+	String token = "";
 
-    public PrometheusDataSource(String monitoringAgentEndpoint, String token)
-    {
-        this.dataSourceURL = monitoringAgentEndpoint;
-        this.token = token;
-    }
+	public PrometheusDataSource(String monitoringAgentEndpoint, String token) {
+		this.dataSourceURL = monitoringAgentEndpoint;
+		this.token = token;
+	}
 
-    private JSONArray getAsJsonArray(String response) throws IndexOutOfBoundsException
-    {
-        JSONObject jsonObject = new JSONObject(response);
+	private JSONArray getAsJsonArray(String response) throws IndexOutOfBoundsException {
+		JSONObject jsonObject = new JSONObject(response);
 
-        return jsonObject
-                .getJSONObject("data")
-                .getJSONArray("result")
-                .getJSONObject(0)
-                .getJSONArray("value");
-    }
+		return jsonObject
+				.getJSONObject("data")
+				.getJSONArray("result")
+				.getJSONObject(0)
+				.getJSONArray("value");
+	}
 
-    private String getValueForQuery(String response) throws IndexOutOfBoundsException
-    {
-        try {
-            return getAsJsonArray(response)
-                    .getString(1);
+	private String getValueForQuery(String response) throws IndexOutOfBoundsException {
+		try {
+			return getAsJsonArray(response)
+					.getString(1);
 
-        } catch (Exception e) {
-            LOGGER.info(response.toString());
-            e.printStackTrace();
-            return "";
-        }
-    }
+		} catch (Exception e) {
+			LOGGER.info(response.toString());
+			e.printStackTrace();
+			return "";
+		}
+	}
 
-    /**
-     * Run the getAppsForLayer and return the list of applications matching the layer.
-     * @param query getAppsForLayer query for the layer
-     * @param key The key to search for in the response
-     * @return ArrayList of all applications from the query
-     * @throws MalformedURLException
-     */
-    public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException
-    {
-        String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + endpoint + query), token);
+	/**
+	 * Run the getAppsForLayer and return the list of applications matching the layer.
+	 * @param query getAppsForLayer query for the layer
+	 * @param key The key to search for in the response
+	 * @return ArrayList of all applications from the query
+	 * @throws MalformedURLException
+	 */
+	public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException {
+		String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + DAConstants.PROMETHEUS_ENDPOINT + query), token);
 
-        JSONObject responseJson = new JSONObject(response);
-        ArrayList<String> valuesList = new ArrayList<>();
+		JSONObject responseJson = new JSONObject(response);
+		ArrayList<String> valuesList = new ArrayList<>();
 
-        getValuesForKey(responseJson, key, valuesList);
-
-        return valuesList;
-    }
-
-    private static void getValuesForKey(JSONObject jsonObj, String key, ArrayList<String> values)
-    {
-        jsonObj.keySet().forEach(keyStr ->
-        {
-            Object keyvalue = jsonObj.get(keyStr);
-
-            if (keyStr.equals(key))
-                values.add(keyvalue.toString());
-
-            //for nested objects
-            if (keyvalue instanceof JSONObject)
-                getValuesForKey((JSONObject)keyvalue, key, values);
-
-            //for json array, iterate and recursively get values
-            if (keyvalue instanceof JSONArray)
-            {
-                JSONArray jsonArray = (JSONArray) keyvalue;
-                for (int index = 0; index < jsonArray.length(); index++)
-                {
-                    Object jsonObject = jsonArray.get(index);
-                    if (jsonObject instanceof JSONObject) {
-                        getValuesForKey((JSONObject) jsonObject, key, values);
-                    }
-                }
-            }
-        });
-    }
+		int level = 0;
+		DataSourceFactory.parseJsonForKey(responseJson, key, valuesList, level);
+		return valuesList;
+	}
 }
