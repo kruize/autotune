@@ -25,7 +25,7 @@ function minikube_first() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_SA_MANIFEST}
 	check_err "Error: Failed to create service account and RBAC"
 
-	echo "${kubectl_cmd} apply -f ${AUTOTUNE_OPERATOR_CRD}"
+	${kubectl_cmd} apply -f ${AUTOTUNE_OPERATOR_CRD}
 	check_err "Error: Failed to create autotune CRD"
 
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIG_CRD}
@@ -77,8 +77,7 @@ function minikube_start() {
 	echo
 
 	# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]
-	then
+	if [ -z "$autotune_ns" ]; then
 		autotune_ns="monitoring"
 	fi
 
@@ -107,9 +106,8 @@ function check_prometheus_installation() {
 
 
 function minikube_terminate() {
-		# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]
-	then
+	# If autotune_ns was not set by the user
+	if [ -z "$autotune_ns" ]; 	then
 		autotune_ns="monitoring"
 	fi
 
