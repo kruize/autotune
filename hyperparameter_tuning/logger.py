@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,16 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import subprocess
-import sys
+import logging
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
 
 
-def install(package):
-    """
-    Install the package.
-    
-    Parameters:
-        package (str): The name of the package to be installed.
-    """
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
+def get_logger(name):
+    return logging.getLogger(name)
