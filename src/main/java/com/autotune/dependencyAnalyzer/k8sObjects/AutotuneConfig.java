@@ -17,6 +17,7 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.util.SupportedTypes;
 
 import java.util.ArrayList;
 
@@ -59,7 +60,7 @@ public final class AutotuneConfig
 			this.name = name;
 		else throw new InvalidValueException("Name cannot be null");
 
-		if (presence.equals("always"))
+		if (SupportedTypes.PRESENCE_SUPPORTED.contains(presence))
 			this.presence = presence;
 		else throw new InvalidValueException("Invalid presence value");
 
@@ -102,8 +103,7 @@ public final class AutotuneConfig
 		return name;
 	}
 
-	public String getPresence()
-	{
+	public String getPresence() {
 		return presence;
 	}
 
@@ -119,13 +119,11 @@ public final class AutotuneConfig
 		return layerPresenceQuery;
 	}
 
-	public String getLayerPresenceLabel()
-	{
+	public String getLayerPresenceLabel() {
 		return layerPresenceLabel;
 	}
 
-	public String getLayerPresenceLabelValue()
-	{
+	public String getLayerPresenceLabelValue() {
 		return layerPresenceLabelValue;
 	}
 

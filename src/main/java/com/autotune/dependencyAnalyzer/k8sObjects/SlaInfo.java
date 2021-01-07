@@ -76,8 +76,7 @@ public final class SlaInfo
 		return direction;
 	}
 
-	public String getObjectiveFunction()
-	{
+	public String getObjectiveFunction() {
 		return objectiveFunction;
 	}
 
@@ -86,8 +85,7 @@ public final class SlaInfo
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "SlaInfo{" +
 				"slaClass='" + slaClass + '\'' +
 				", objectiveFunction='" + objectiveFunction + '\'' +
