@@ -20,14 +20,14 @@ package com.autotune.dependencyAnalyzer.util;
  */
 public class DAConstants
 {
-	//Used to parse autotune configmaps
+	// Used to parse autotune configmaps
 	public static final String AUTH_TOKEN = "auth_token";
 	public static final String MONITORING_SERVICE = "monitoring_service";
 	public static final String MONITORING_AGENT_ENDPOINT = "monitoring_agent_endpoint";
 	public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
 	public static final String HTTP_PROTOCOL = "http";
 
-	//Used in Configuration for accessing the autotune objects from kubernetes
+	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";
 	public static final String API_VERSION = "v1beta1";
 	public static final String GROUP = "recommender.com";
@@ -40,4 +40,6 @@ public class DAConstants
 	public static final String LAYER_PRESENCE = "layerPresence";
 
 	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
+
+	public static final String PRESENCE_ALWAYS = "always";
 }
