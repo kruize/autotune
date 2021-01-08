@@ -39,6 +39,5 @@ public class DependencyAnalyzer
 		context.addServlet(ListAppTunables.class, ServerContext.LIST_APP_TUNABLES);
 		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
 		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
-		context.addServlet(HealthService.class, ServerContext.SEARCH_SPACE);
 	}
 }

@@ -17,6 +17,7 @@ package com.autotune;
 
 import com.autotune.dependencyAnalyzer.DependencyAnalyzer;
 import com.autotune.dependencyAnalyzer.util.ServerContext;
+import com.autotune.service.HealthService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
@@ -25,6 +26,8 @@ import org.slf4j.LoggerFactory;
 public class Autotune
 {
 	private static final int PORT = 8080;
+	private static final String ROOT_CONTEXT = "/";
+	private static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
 	public static void main(String[] args) {
@@ -36,6 +39,7 @@ public class Autotune
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);
+		addAutotuneServlets(context);
 
 		DependencyAnalyzer.start(context);
 		try {
@@ -44,6 +48,10 @@ public class Autotune
 			LOGGER.error("Could not start the server!");
 			e.printStackTrace();
 		}
+	}
+
+	private static void addAutotuneServlets(ServletContextHandler context) {
+		context.addServlet(HealthService.class, HEALTH_SERVICE);
 	}
 
 	private static void disableServerLogging() {
