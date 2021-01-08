@@ -13,17 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.dependencyAnalyzer.util;
+package com.autotune.service;
 
-/**
- * Holds the server context of the dependency analyzer.
- */
-public class ServerContext
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class HealthService extends HttpServlet
 {
-	public static final String ROOT_CONTEXT = "/";
-	public static final String LIST_APPLICATIONS = ROOT_CONTEXT + "listApplications";
-	public static final String LIST_APP_LAYERS = ROOT_CONTEXT + "listAppLayers";
-	public static final String LIST_APP_TUNABLES = ROOT_CONTEXT + "listAppTunables";
-	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
-	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
+	public static final int STATUS_UP = 1;
+	public static final int STATUS_DOWN = 0;
+
+	private static int CURRENT_STATUS = STATUS_UP;
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		if (CURRENT_STATUS == STATUS_UP) {
+			resp.setStatus(HttpServletResponse.SC_OK);
+			resp.getWriter().println("UP");
+		} else {
+			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			resp.getWriter().println("DOWN");
+		}
+	}
 }
