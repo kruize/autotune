@@ -16,7 +16,7 @@
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
-import com.autotune.dependencyAnalyzer.util.SupportedTypes;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 
@@ -49,10 +49,13 @@ public final class SlaInfo
 		String objectiveFunction,
 		String direction,
 		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
-		this.slaClass = slaClass;
+		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
+			this.slaClass = slaClass;
+		else
+			throw new InvalidValueException("sla_class: " + slaClass + " not supported");
 		this.objectiveFunction = objectiveFunction;
 
-		if (SupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
+		if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
 			this.direction = direction;
 		else throw new InvalidValueException("Invalid direction for autotune kind");
 

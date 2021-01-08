@@ -19,9 +19,9 @@ import com.autotune.dependencyAnalyzer.util.DAConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 /**
- * Holds Kubernetes configuration for autotune kinds in the cluster
+ * Holds Kubernetes contexts for autotune kinds in the cluster
  */
-public class Configuration
+public class KubernetesContexts
 {
 	private static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
 			.Builder()
