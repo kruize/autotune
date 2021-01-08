@@ -19,7 +19,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SupportedTypes
+/**
+ * Supported types to both Autotune and AutotuneConfig objects
+ */
+public class AutotuneSupportedTypes
 {
 	public static final Set<String> DIRECTIONS_SUPPORTED =
 			new HashSet<>(Arrays.asList("minimize", "maximize"));
@@ -29,4 +32,10 @@ public class SupportedTypes
 
 	public static final Set<String> MODES_SUPPORTED =
 			new HashSet<>(Arrays.asList("show", "try", "apply"));
+
+	public static final Set<String> PRESENCE_SUPPORTED =
+			new HashSet<>(Arrays.asList("always", "", null));
+
+	public static final Set<String> SLA_CLASSES_SUPPORTED =
+			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage"));
 }
