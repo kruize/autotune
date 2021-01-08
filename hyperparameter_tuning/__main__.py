@@ -21,9 +21,9 @@ from install_package import install
 install('python-dotenv')
 install('optuna')
 
-from bayes_optuna import optuna_tpe
+from bayes_optuna import optuna_hpo
 
 sla_class, direction, ml_algo_impl, tunables = get_all_tunables()
 
-if ml_algo_impl == "optuna_tpe":
-    optuna_tpe.recommend(sla_class, direction, tunables)
+if ml_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
+    optuna_hpo.recommend(direction, ml_algo_impl, sla_class, tunables)
