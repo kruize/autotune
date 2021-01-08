@@ -15,6 +15,16 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
+/**
+ * Holds the variables used in the objective_function for the autotune object
+ *
+ *  objective_function: "transaction_response_time"
+ *  function_variables:
+ *  - name: "transaction_response_time"
+ *    query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
+ *    datasource: "prometheus"
+ *    value_type: "double"
+ */
 public final class FunctionVariable
 {
 	private final String name;

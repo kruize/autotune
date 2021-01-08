@@ -15,16 +15,11 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
-import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
-import com.autotune.dependencyAnalyzer.util.SupportedTypes;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
- * Also contains details about applications matching the autotune object
  *
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
@@ -35,37 +30,29 @@ public final class AutotuneObject
 	private final String mode;
 	private final SlaInfo slaInfo;
 	private final SelectorInfo selectorInfo;
-	/**
-	 * Map of applications matching the label selector in the autotune object yaml
-	 */
-	private final Map<String, ApplicationServiceStack> applicationsStackMap;
 
 	public AutotuneObject(String name,
 			String namespace,
 			String mode,
 			SlaInfo slaInfo,
-			SelectorInfo selectorInfo,
-			Map<String, ApplicationServiceStack> applicationsStackMap) throws InvalidValueException {
+			SelectorInfo selectorInfo) throws InvalidValueException {
 		if (name != null)
 			this.name = name;
-		else throw new InvalidValueException("Name cannot be null");
+		else
+			throw new InvalidValueException("Name cannot be null");
 
 		if (namespace != null)
 			this.namespace = namespace;
-		else throw new InvalidValueException("Namespace cannot be null");
+		else
+			throw new InvalidValueException("Namespace cannot be null");
 
-		if (SupportedTypes.MODES_SUPPORTED.contains(mode))
+		if (AutotuneSupportedTypes.MODES_SUPPORTED.contains(mode))
 			this.mode = mode;
-		else throw new InvalidValueException("Invalid mode");
+		else
+			throw new InvalidValueException("Invalid mode");
 
 		this.slaInfo = new SlaInfo(slaInfo);
 		this.selectorInfo = new SelectorInfo(selectorInfo);
-
-		this.applicationsStackMap = new HashMap<>();
-
-		for (String application : applicationsStackMap.keySet()) {
-			this.applicationsStackMap.put(application, applicationsStackMap.get(application));
-		}
 	}
 
 	public String getName() {
@@ -86,15 +73,6 @@ public final class AutotuneObject
 
 	public String getNamespace() {
 		return namespace;
-	}
-
-	public Map<String, ApplicationServiceStack> getApplicationsStackMap() {
-		HashMap<String, ApplicationServiceStack> map = new HashMap<>();
-
-		for (String application : applicationsStackMap.keySet()) {
-			map.put(application, applicationsStackMap.get(application));
-		}
-		return map;
 	}
 
 	@Override

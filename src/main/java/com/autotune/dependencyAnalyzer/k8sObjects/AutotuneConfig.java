@@ -17,7 +17,7 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
-import com.autotune.dependencyAnalyzer.util.SupportedTypes;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 
@@ -58,11 +58,13 @@ public final class AutotuneConfig
 			ArrayList<Tunable> tunables) throws InvalidValueException {
 		if (name != null)
 			this.name = name;
-		else throw new InvalidValueException("Name cannot be null");
+		else
+			throw new InvalidValueException("Name cannot be null");
 
-		if (SupportedTypes.PRESENCE_SUPPORTED.contains(presence))
+		if (AutotuneSupportedTypes.PRESENCE_SUPPORTED.contains(presence))
 			this.presence = presence;
-		else throw new InvalidValueException("Invalid presence value");
+		else
+			throw new InvalidValueException("Invalid presence value");
 
 		if (level >= 0)
 			this.level = level;
