@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import optuna
-from optuna.samplers import TPESampler
 
 import os
 
@@ -80,14 +79,22 @@ class Objective(object):
         return actual_sla_value
 
 
-def recommend(sla_class, direction, tunables):
+def recommend(direction, ml_algo_impl, sla_class, tunables):
     # Propagate all of Optuna log outputs to the root logger
     optuna.logging.enable_propagation()
     # Disable the default handler of the Optuna’s root logger
     optuna.logging.disable_default_handler()
 
+    # Choose a sampler based on the value of ml_algo_impl
+    if ml_algo_impl == "optuna_tpe":
+        sampler = optuna.samplers.TPESampler()
+    elif ml_algo_impl == "optuna_tpe_multivariate":
+        sampler = optuna.samplers.TPESampler(multivariate=True)
+    elif ml_algo_impl == "optuna_skopt":
+        sampler = optuna.integration.SkoptSampler()
+
     # Create a study object
-    study = optuna.create_study(direction=direction, sampler=TPESampler())
+    study = optuna.create_study(direction=direction, sampler=sampler)
 
     # Execute an optimization by using an 'Objective' instance
     study.optimize(Objective(sla_class, tunables), n_trials=n_trials, n_jobs=n_jobs)
