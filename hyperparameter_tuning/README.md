@@ -14,7 +14,7 @@ Accepted values of `ml_algo_impl` are:
 
 ## Logging Level
 
-The logging levels used in Python are <sup>[[1]] [doc]</sup>:
+The logging levels used in Python are <sup>[[1]]</sup>:
 
 | Logging Level | Description                                                                                                                                                           |
 |---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -29,7 +29,7 @@ By default, the logging level is set to `WARNING` in [`logger.py`](./logger.py).
 of optuna which are at the `INFO` level by default. To change the logging level, set the `level` argument in
 `logging.basicConfig` function in [`logger.py`](./logger.py) to any of the above levels.
 
-[doc]: https://docs.python.org/3/howto/logging.html#when-to-use-logging
+[1]: https://docs.python.org/3/howto/logging.html#when-to-use-logging
 
 ## Experiment Status
 
