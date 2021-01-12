@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ import subprocess
 import sys
 
 
-def install(package):
-    """
-    Install the package.
-    
-    Parameters:
-        package (str): The name of the package to be installed.
-    """
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+def setup_virtual_env():
+    """Set up a virtual environment."""
+    subprocess.check_call([sys.executable, "-m", "venv", "env"])
 
+
+setup_virtual_env()
+
+python_bin = "./env/bin/python"
+main_script = "./__main__.py"
+
+subprocess.Popen([python_bin, main_script])

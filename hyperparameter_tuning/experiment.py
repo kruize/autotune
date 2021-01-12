@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,7 +59,8 @@ def get_experiment_result(experiment_tunables):
         elif tunable["tunable_name"] == "memoryRequest":
             memory_request = tunable["tunable_value"]
 
-    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)],
+                            stdout=subprocess.PIPE).stdout.decode('utf-8')
     return output
 
 
@@ -72,7 +73,7 @@ def perform_experiment(experiment_tunables):
     
     Returns:
         sla (float/str): Value returned by the experiment manager.
-        is_success (bool): A boolean value that is set to true if the experiment runs successfully for this config, false otherwise.
+        experiment_status (str): Status of the experiment run by the experiment manager for this config. It is set to one of success, failure or prune.
 
     Files generated:
         total-output.txt:
@@ -102,10 +103,10 @@ def perform_experiment(experiment_tunables):
 
     if output == '':
         sla = "Nan"
-        is_success = False
-        return sla, is_success
+        experiment_status = "prune"
+        return sla, experiment_status
     else:
-        is_success = True
+        experiment_status = "success"
         """
         output:
         Instances , Throughput , Responsetime , TOTAL_PODS_MEM , TOTAL_PODS_CPU , CPU_MIN , CPU_MAX , MEM_MIN , MEM_MAX , CLUSTER_MEM% , CLUSTER_CPU% , CPU_REQ , MEM_REQ , WEB_ERRORS 
@@ -126,8 +127,7 @@ def perform_experiment(experiment_tunables):
         file.write(data + "\n")
         sla = data.split(" , ")[2]
         file.close()
-        
-        create_experiment_data_file(experiment_data_file, rows)
-    
-        return sla, is_success 
 
+        create_experiment_data_file(experiment_data_file, rows)
+
+        return sla, experiment_status
