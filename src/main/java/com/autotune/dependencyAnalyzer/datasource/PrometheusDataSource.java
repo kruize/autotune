@@ -31,12 +31,20 @@ public class PrometheusDataSource implements DataSource
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
-	String dataSourceURL;
-	String token = "";
+	private final String dataSourceURL;
+	private final String token;
 
 	public PrometheusDataSource(String monitoringAgentEndpoint, String token) {
 		this.dataSourceURL = monitoringAgentEndpoint;
 		this.token = token;
+	}
+
+	public String getDataSourceURL() {
+		return dataSourceURL;
+	}
+
+	public String getToken() {
+		return token;
 	}
 
 	private JSONArray getAsJsonArray(String response) throws IndexOutOfBoundsException {
