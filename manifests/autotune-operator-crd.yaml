@@ -1,115 +1,112 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
- #name must match the spec fields below, and be in the form: <plural>.<group>
- name: autotunes.recommender.com
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: autotunes.recommender.com
 spec:
- # group name to use for REST API: /apis/<group>/<version>
+  # group name to use for REST API: /apis/<group>/<version>
   group: recommender.com
   # preserveUnknownFields: false
-  names: 
+  names:
     plural: autotunes
     singular: autotune
-    #types can be identified with this tag
-    kind: Autotune 
+    # types can be identified with this tag
+    kind: Autotune
   scope: Namespaced
   versions:
-    - name: v1
-      served: true
-      storage: true
-      schema: 
-        openAPIV3Schema:
-          properties:
-            apiVersion:
-              type: string
-            kind:
-              type: string
-            metadata:
-              type: object
-            spec:
-              properties:
-                sla:
-                  description: 'sla allow an user to provide any one option out of response_time, right-size, throughput'
-                  properties:
-                    objective_function: 
-                      description: 'function take simple and complex expression'
-                      type: string
-                    direction:
-                      description: 'it will take the value like up or down'
-                      type: string
-                    sla_class: 
-                      description: 'One of throughput, response_time or resource_usage'   
-                      type: string
-                    function_variables:
-                      description: 'describe the complex objective_function variables'
-                      properties:
-                        name:
-                          description: 'name of the varialbe used in objective_function'  
-                          type: string
-                        query:
-                          description: 'query expression for respective datasource'
-                          type: string
-                        query_datasource:
-                          description: 'name of the monitoring tool like prometheus'  
-                          type: string
-                        value_type:
-                          description: 'value of the holding objective_function calculation'
-                          type: string 
-                      required:
-                      - name
-                      - query
-                      - value_type
-                      type: object
-                  required:
-                  - objective_function
-                  - direction
-                  - function_variables
-                  type: object      
-                mode:
-                  description: 'provide an options to either try, show or apply the recommendation'
-                  type: string 
-                  default: "show"
-                
-                selector:
-                  description: ' test'
-                  type: object
-                  properties:
-                    matchLabel:
-                      description: 'match lable is may be the name of the applications where recommendation system apply' 
-                      type: string
-                    matchLabelValue:
-                      description: 'match lable value'
-                      type: string 
-                    matchRoute:
-                      description: 'test'
-                      type: string
-                    matchURI:
-                      description: 'test'
-                      type: string
-                    matchService:
-                      description: 'test'
-                      type: string
-                datasource:
-                  description: 'name of the applicaton which is going to monitor the cluster and
-                                provide the data e.g prometheus etc'
-                  properties:
-                    name:
-                      description: 'name of the monitoring agent alias w.r.t autotune'
-                      type: string
-                    value:
-                      description: 'actual name of the monitoring agent software'
-                      type: string
-                  required:
-                  - type
-                  - value
-                  type: object  
-
-              required:
-              - sla
-              - mode
-              - selector
-              type: object
-            
-          required:
-          - spec
-          type: object           
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              sla:
+                description: 'sla allow an user to provide any one option out of response_time, right-size, throughput'
+                properties:
+                  objective_function:
+                    description: 'function take simple and complex expression'
+                    type: string
+                  direction:
+                    description: 'it will take the value like up or down'
+                    type: string
+                  sla_class:
+                    description: 'One of throughput, response_time or resource_usage'
+                    type: string
+                  function_variables:
+                    description: 'describe the complex objective_function variables'
+                    properties:
+                      name:
+                        description: 'name of the varialbe used in objective_function'
+                        type: string
+                      query:
+                        description: 'query expression for respective datasource'
+                        type: string
+                      datasource:
+                        description: 'name of the monitoring tool like prometheus'
+                        type: string
+                      value_type:
+                        description: 'value of the holding objective_function calculation'
+                        type: string
+                    required:
+                    - name
+                    - query
+                    - value_type
+                    type: object
+                required:
+                - objective_function
+                - direction
+                - function_variables
+                type: object
+              mode:
+                description: 'provide an options to either try, show or apply the recommendation'
+                type: string
+                default: "show"
+              selector:
+                description: 'test'
+                type: object
+                properties:
+                  matchLabel:
+                    description: 'match lable is may be the name of the applications where recommendation system apply'
+                    type: string
+                  matchLabelValue:
+                    description: 'match lable value'
+                    type: string
+                  matchRoute:
+                    description: 'test'
+                    type: string
+                  matchURI:
+                    description: 'test'
+                    type: string
+                  matchService:
+                    description: 'test'
+                    type: string
+              datasource:
+                description: 'name of the applicaton which is going to monitor the cluster and
+                              provide the data e.g prometheus etc'
+                properties:
+                  name:
+                    description: 'name of the monitoring agent alias w.r.t autotune'
+                    type: string
+                  value:
+                    description: 'actual name of the monitoring agent software'
+                    type: string
+                required:
+                - type
+                - value
+                type: object
+            required:
+            - sla
+            - mode
+            - selector
+            type: object
+        required:
+        - spec
+        type: object
