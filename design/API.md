@@ -148,7 +148,7 @@ Get the tunables supported by autotune for the SLA.
 
 `GET /listAutotuneTunables?sla_class=<SLA_CLASS>` gives all tunables for the SLA class
 
-`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer=<LAYER>` gives tunables for the SLA class and the layer
+`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer_name=<LAYER>` gives tunables for the SLA class and the layer
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?sla_class=<SLA_CLASS>`
 
