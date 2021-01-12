@@ -19,9 +19,15 @@ import logging
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    level=logging.DEBUG
+    level=logging.WARNING
 )
 
 
 def get_logger(name):
+    """
+    Returns a reference to a logger instance with the specified name.
+
+    Parameters:
+        name (str): Name of the module.
+    """
     return logging.getLogger(name)

@@ -64,22 +64,28 @@ class Objective(object):
 
         logger.debug("Experiment tunables: " + str(experiment_tunables))
 
-        actual_sla_value, is_success = perform_experiment(experiment_tunables)
+        actual_sla_value, experiment_status = perform_experiment(experiment_tunables)
 
-        if is_success == True:
-            config["is_success"] = True
-        else:
-            config["is_success"] = False
+        config["experiment_status"] = experiment_status
 
         trials.append(config)
 
-        if is_success == False:
+        if experiment_status == "prune":
             raise optuna.TrialPruned()
 
         return actual_sla_value
 
 
 def recommend(direction, ml_algo_impl, sla_class, tunables):
+    """
+    Perform Bayesian Optimization with Optuna using the appropriate sampler and recommend the best config.
+
+    Parameters:
+        direction (str): Direction of optimization, minimize or maximize.
+        ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
+        sla_class (str): The objective function that is being optimized.
+        tunables (list): A list containing the details of each tunable in a dictionary format.
+    """
     # Propagate all of Optuna log outputs to the root logger
     optuna.logging.enable_propagation()
     # Disable the default handler of the Optuna’s root logger
@@ -106,7 +112,7 @@ def recommend(direction, ml_algo_impl, sla_class, tunables):
     # Get the best trial
     logger.info("Best trial: " + str(study.best_trial))
 
-    logger.info("All trials: " + str(trials))
+    logger.debug("All trials: " + str(trials))
 
     best_config = {}
 

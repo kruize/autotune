@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# __main__.py is the entrypoint for the ML module. Depending upon the value of ml_algo_impl,
+# the appropriate hyperparameter optimization library module is called to perform Bayesian Optimization.
+
 from tunables import get_all_tunables
 
 from install_package import install
@@ -23,7 +26,11 @@ install('optuna')
 
 from bayes_optuna import optuna_hpo
 
-sla_class, direction, ml_algo_impl, tunables = get_all_tunables()
+# direction (str): Direction of optimization, minimize or maximize.
+# ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
+# sla_class (str): The objective function that is being optimized.
+# tunables (list): A list containing the details of each tunable in a dictionary format.
+direction, ml_algo_impl, sla_class, tunables = get_all_tunables()
 
 if ml_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
     optuna_hpo.recommend(direction, ml_algo_impl, sla_class, tunables)
