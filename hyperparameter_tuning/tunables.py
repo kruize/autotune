@@ -22,12 +22,13 @@ def get_all_tunables():
     Query Dependency Analyzer API for the sla_class, direction, ml_algo and tunables, and return them.
 
     Returns:
-        sla_class (str): The objective function that is being optimized.
         direction (str): Direction of optimization, minimize or maximize.
         ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
+        sla_class (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
     """
     # JSON returned by the Dependency Analyzer
+    # Placeholder code until the actual API parsing code is added
     tuning_set_json = '{"sla_class": "response_time", "direction": "minimize", "ml_algo_impl": "optuna_tpe", ' \
                       '"tunables": [{"name": "cpuRequest", "value_type": "double", "upper_bound": 4, "lower_bound": ' \
                       '1, "step": 0.01}, {"name": "memoryRequest", "value_type": "double", "upper_bound": 1024, ' \
@@ -37,4 +38,4 @@ def get_all_tunables():
     direction = tuning_set["direction"]
     ml_algo_impl = tuning_set["ml_algo_impl"]
     tunables = tuning_set["tunables"]
-    return sla_class, direction, ml_algo_impl, tunables
+    return direction, ml_algo_impl, sla_class, tunables
