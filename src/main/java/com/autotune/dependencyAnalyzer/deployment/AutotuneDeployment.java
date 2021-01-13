@@ -27,6 +27,7 @@ import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotSupportedExc
 import com.autotune.dependencyAnalyzer.k8sObjects.*;
 import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
+import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 import com.autotune.dependencyAnalyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -163,7 +164,7 @@ public class AutotuneDeployment
 							applicationServiceStackMap.get(autotuneObject.getName()).put(applicationServiceStack.getApplicationServiceName(),
 									applicationServiceStack);
 						}
-					}else {
+					} else {
 						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
 						innerMap.put(applicationServiceStack.getApplicationServiceName(), applicationServiceStack);
 						applicationServiceStackMap.put(autotuneObject.getName(), innerMap);
@@ -212,7 +213,7 @@ public class AutotuneDeployment
 					throw new MonitoringAgentNotSupportedException();
 
 				if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(valueType.toLowerCase()))
-					throw new InvalidValueException("Invalid value_type for function variable");
+					throw new InvalidValueException(DAErrorConstants.INVALID_VALUE_TYPE);
 
 				FunctionVariable functionVariable = new FunctionVariable(variableName,
 						query,
@@ -221,7 +222,7 @@ public class AutotuneDeployment
 
 				for (FunctionVariable variable : functionVariableArrayList) {
 					if (variable.getName().equals(variableName))
-						throw new InvalidValueException("Multiple function varibles with same name");
+						throw new InvalidValueException(DAErrorConstants.MULTIPLE_FUNCTION_VARIABLES_WITH_SAME_NAME);
 				}
 				functionVariableArrayList.add(functionVariable);
 			}
@@ -261,7 +262,7 @@ public class AutotuneDeployment
 			autotuneObjectMap.put(name, autotuneObjectInfo);
 			LOGGER.info("Added autotune object " + name);
 		} catch (JSONException e) {
-			LOGGER.error("Invalid Autotune yaml");
+			LOGGER.error(DAErrorConstants.INVALID_AUTOTUNE_YAML);
 		} catch (MonitoringAgentNotSupportedException | InvalidValueException e) {
 			LOGGER.error(e.getMessage());
 		}
@@ -295,15 +296,14 @@ public class AutotuneDeployment
 
 			String presence = presenceJson.optString(DAConstants.AutotuneConfigConstants.PRESENCE);
 
-			//If neither layerPresenceQuery, layerPresenceLabels or the presence field is specified throw exception
-
-			if (presence == null && layerPresenceQueryJson == null && layerPresenceLabelJson == null)
-				throw new InvalidValueException("Invalid AutotuneConfig yaml");
+			//If neither layerPresenceQuery or layerPresenceLabels are specified, and the presence field is not set to always throw exception
+			if (!presence.equals(DAConstants.PRESENCE_ALWAYS) && layerPresenceQueryJson == null && layerPresenceLabelJson == null)
+				throw new InvalidValueException(DAErrorConstants.COULD_NOT_GET_LIST_OF_APPLICATIONS);
 
 			if (layerPresenceQueryJson != null) {
 				for (Object datasource : layerPresenceQueryJson) {
 					JSONObject datasourceJson = (JSONObject) datasource;
-					if (datasourceJson.getString("name").equals(EnvInfo.getDataSource())) {
+					if (datasourceJson.getString(DAConstants.AutotuneConfigConstants.NAME).equals(EnvInfo.getDataSource())) {
 						layerPresenceQuery = datasourceJson.getString(DAConstants.AutotuneConfigConstants.QUERY);
 						layerPresenceKey = datasourceJson.getString(DAConstants.AutotuneConfigConstants.KEY);
 						break;
@@ -321,7 +321,7 @@ public class AutotuneDeployment
 
 			String configName = autotuneConfigJson.getString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
 			String details = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.DETAILS);
-			int level = autotuneConfigJson.getInt(DAConstants.AutotuneConfigConstants.LEVEL);
+			int level = autotuneConfigJson.getInt(DAConstants.AutotuneConfigConstants.LAYER_LEVEL);
 
 			try {
 				layerPresenceQuery = Variables.updateQueryWithVariables(null, null,
@@ -386,7 +386,7 @@ public class AutotuneDeployment
 			autotuneConfigMap.put(configName, autotuneConfig);
 			return autotuneConfig;
 		} catch (JSONException e) {
-			LOGGER.error("Invalid Autotune yaml");
+			LOGGER.error(DAErrorConstants.INVALID_AUTOTUNE_CONFIG_YAML);
 		} catch (InvalidValueException e) {
 			LOGGER.error(e.getMessage());
 		}
@@ -425,7 +425,7 @@ public class AutotuneDeployment
 			try {
 				apps = (ArrayList<String>) dataSource.getAppsForLayer(layerPresenceQuery, layerPresenceKey);
 			} catch (MalformedURLException | NullPointerException e) {
-				LOGGER.info("Could not get the applications for the layer " + autotuneConfig.getName());
+				LOGGER.info(DAErrorConstants.COULD_NOT_GET_LIST_OF_APPLICATIONS + autotuneConfig.getName());
 			}
 
 			if (apps != null) {
