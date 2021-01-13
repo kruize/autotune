@@ -50,6 +50,14 @@ function minikube_deploy() {
 	echo
 	echo "Creating environment variable in minikube cluster using configMap"
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGMAPS}/${cluster_type}-config.yaml
+
+	echo
+	echo "Deploying AutotuneConfig objects"
+	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGS}
+
+	echo
+	echo "Deploying AutotuneQueryVariable objects"
+	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLES}
 	
 	echo "Info: Deploying autotune yaml to minikube cluster"
 
@@ -60,10 +68,9 @@ function minikube_deploy() {
 	sleep 2
 	check_running autotune
 	if [ "${err}" == "0" ]; then
-		autotune_pod=$(${kubectl_cmd} get svc | grep autotune | awk '{ print $1 }')
 		echo "Info: Access autotune service to access the API and see autotune recommendations at http://localhost:8080"
 		echo "Info: Run the following command first to access autotune"
-		echo "      $ kubectl port-forward -n monitoring ${autotune_pod} 8080:8080"
+		echo "      $ kubectl port-forward -n ${autotune_ns} svc/autotune 8080:8080"
 		echo
 	else
 		# Indicate deploy failed on error
@@ -134,7 +141,31 @@ function minikube_terminate() {
 	echo
 	echo "Removing autotune serviceMonitor"
 	${kubectl_cmd} delete -f ${SERVICE_MONITOR_MANIFEST} 2>/dev/null
+
+	echo
+	echo "Removing AutotuneConfig objects"
+	${kubectl_cmd} delete -f ${AUTOTUNE_CONFIGS} 2>/dev/null
+
+	echo
+	echo "Removing AutotuneQueryVariable objects"
+	${kubectl_cmd} delete -f ${AUTOTUNE_QUERY_VARIABLES} 2>/dev/null
 	
+	echo
+	echo "Removing Autotune configmap"
+	${kubectl_cmd} delete -f ${AUTOTUNE_CONFIGMAPS}/${cluster_type}-config.yaml 2>/dev/null
+
+	echo
+	echo "Removing Autotune CRD"
+	${kubectl_cmd} delete -f ${AUTOTUNE_OPERATOR_CRD} 2>/dev/null
+
+	echo
+	echo "Removing AutotuneConfig CRD"
+	${kubectl_cmd} delete -f ${AUTOTUNE_CONFIG_CRD} 2>/dev/null
+
+	echo
+	echo "Removing AutotuneQueryVariables CRD"
+	${kubectl_cmd} delete -f ${AUTOTUNE_QUERY_VARIABLE_CRD} 2>/dev/null
+
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_RB_MANIFEST}
 
