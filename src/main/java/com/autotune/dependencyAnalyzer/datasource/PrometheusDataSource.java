@@ -39,6 +39,10 @@ public class PrometheusDataSource implements DataSource
 		this.token = token;
 	}
 
+	/**
+	 * Returns the datasource endpoint from which queries can be run
+	 * @return String containing the URL
+	 */
 	public String getDataSourceURL() {
 		return dataSourceURL;
 	}

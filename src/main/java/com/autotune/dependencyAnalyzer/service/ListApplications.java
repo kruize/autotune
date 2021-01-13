@@ -17,6 +17,7 @@ package com.autotune.dependencyAnalyzer.service;
 
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -57,7 +58,7 @@ public class ListApplications extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter("application_name");
+        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -79,10 +80,10 @@ public class ListApplications extends HttpServlet
             return;
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("application_name", application);
-        jsonObject.put("direction", autotuneObject.getSlaInfo().getDirection());
-        jsonObject.put("objective_function", autotuneObject.getSlaInfo().getObjectiveFunction());
-        jsonObject.put("sla_class", autotuneObject.getSlaInfo().getSlaClass());
+        jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
+        jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 
         outputJsonArray.put(jsonObject);
     }

@@ -37,9 +37,69 @@ public class DAConstants
 	public static final String AUTOTUNE_CONFIG_RESOURCE_NAME = AUTOTUNE_CONFIG_PLURALS + GROUP;
 	public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
 	public static final String AUTOTUNE_VARIABLE_RESOURCE_NAME = AUTOTUNE_VARIABLE_PLURALS + GROUP;
-	public static final String LAYER_PRESENCE = "layerPresence";
 
 	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
 
 	public static final String PRESENCE_ALWAYS = "always";
+
+	public static class AutotuneObjectConstants {
+		public static final String SPEC = "spec";
+		public static final String SLA = "sla";
+		public static final String SLA_CLASS = "sla_class";
+		public static final String DIRECTION = "direction";
+		public static final String OBJECTIVE_FUNCTION = "objective_function";
+
+		public static final String FUNCTION_VARIABLES = "function_variables";
+		public static final String NAME = "name";
+		public static final String QUERY = "query";
+		public static final String VALUE_TYPE = "value_type";
+		public static final String DATASOURCE = "datasource";
+
+		public static final String SELECTOR = "selector";
+		public static final String MATCH_LABEL = "matchLabel";
+		public static final String MATCH_LABEL_VALUE = "matchLabelValue";
+		public static final String MATCH_ROUTE = "matchRoute";
+		public static final String MATCH_URI = "matchURI";
+		public static final String MATCH_SERVICE = "matchService";
+
+		public static final String MODE = "mode";
+		public static final String METADATA = "metadata";
+		public static final String NAMESPACE = "namespace";
+	}
+
+	public static class AutotuneConfigConstants {
+		public static final String METADATA = "metadata";
+		public static final String NAMESPACE = "namespace";
+
+		public static final String DATASOURCE = "datasource";
+		public static final String LAYER_PRESENCE = "layerPresence";
+		public static final String PRESENCE = "presence";
+		public static final String LABEL = "label";
+		public static final String QUERY_VARIABLES = "query_variables";
+		public static final String VALUE = "value";
+
+		public static final String LAYER_NAME = "layer_name";
+		public static final String DETAILS = "details";
+		public static final String LAYER_DETAILS = "layer_details";
+		public static final String LAYER_LEVEL = "layer_level";
+
+		public static final String TUNABLES = "tunables";
+		public static final String QUERIES = "queries";
+
+		public static final String NAME = "name";
+		public static final String QUERY = "query";
+		public static final String KEY = "key";
+		public static final String VALUE_TYPE = "value_type";
+		public static final String UPPER_BOUND = "upper_bound";
+		public static final String LOWER_BOUND = "lower_bound";
+		public static final String SLA_CLASS = "sla_class";
+
+	}
+
+	public static class ServiceConstants {
+		public static final String APPLICATION_NAME = "application_name";
+		public static final String LAYER_DETAILS = "layer_details";
+		public static final String LAYERS = "layers";
+		public static final String QUERY_URL = "query_url";
+	}
 }
