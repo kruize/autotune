@@ -18,10 +18,10 @@ package com.autotune.dependencyAnalyzer.service;
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,16 +88,15 @@ public class ListAutotuneTunables extends HttpServlet
 	 * ]
 	 * @param req
 	 * @param resp
-	 * @throws ServletException
 	 * @throws IOException
 	 */
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String slaClass = req.getParameter("sla_class");
-		String layerName = req.getParameter("layer_name");
+		String slaClass = req.getParameter(DAConstants.AutotuneObjectConstants.SLA_CLASS);
+		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		//No layer parameter was passed in the request
 		if (layerName == null) {
@@ -119,24 +118,24 @@ public class ListAutotuneTunables extends HttpServlet
 		else
 			return;
 
-		autotuneConfigJson.put("layer_name", autotuneConfig.getName());
-		autotuneConfigJson.put("layer_level", autotuneConfig.getLevel());
-		autotuneConfigJson.put("layer_details", autotuneConfig.getDetails());
+		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 
 		JSONArray tunablesArray = new JSONArray();
 		for (Tunable tunable : autotuneConfig.getTunables()) {
 			//If no slaClass parameter was passed in the request, or if the argument matches the slaClassList for the Tunable
 			if (slaClass == null || tunable.slaClassList.contains(slaClass)) {
 				JSONObject tunablesJson = new JSONObject();
-				tunablesJson.put("name", tunable.getName());
-				tunablesJson.put("value_type", tunable.getValueType());
-				tunablesJson.put("lower_bound", tunable.getLowerBound());
-				tunablesJson.put("upper_bound", tunable.getUpperBound());
+				tunablesJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
+				tunablesJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+				tunablesJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+				tunablesJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
 
 				tunablesArray.put(tunablesJson);
 			}
 		}
-		autotuneConfigJson.put("tunables", tunablesArray);
+		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 		outputJsonArray.put(autotuneConfigJson);
 	}
 }

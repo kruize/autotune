@@ -216,7 +216,7 @@ Generates the search space used for the analysis.
 ```
 [
   {
-    "application": "petclinic-deployment-6d4c8678d4-jmz8x",
+    "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
     "objective_function": "transaction_response_time",
     "sla_class": "response_time",
     "direction": "minimize"

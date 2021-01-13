@@ -22,6 +22,7 @@ import com.autotune.dependencyAnalyzer.env.EnvInfo;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -97,8 +98,8 @@ public class ListAppTunables extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String applicationName = req.getParameter("application_name");
-		String layerName = req.getParameter("layer_name");
+		String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
 			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -121,39 +122,39 @@ public class ListAppTunables extends HttpServlet
 			return;
 
 		JSONObject jsonObject = new JSONObject();
-		jsonObject.put("application_name", application);
-		jsonObject.put("direction", autotuneObject.getSlaInfo().getDirection());
-		jsonObject.put("objective_function", autotuneObject.getSlaInfo().getObjectiveFunction());
-		jsonObject.put("sla_class", autotuneObject.getSlaInfo().getSlaClass());
+		jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
+		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 
 		JSONArray layersArray = new JSONArray();
 		for (AutotuneConfig autotuneConfig : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).get(application).getStackLayers()) {
 			if (layerName == null || autotuneConfig.getName().equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
-				layerJson.put("layer_name", autotuneConfig.getName());
-				layerJson.put("layer_details", autotuneConfig.getDetails());
-				layerJson.put("layer_level", autotuneConfig.getLevel());
+				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+				layerJson.put(DAConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
+				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 
 				JSONArray tunablesArray = new JSONArray();
 				for (Tunable tunable : autotuneConfig.getTunables()) {
 					JSONObject tunableJson = new JSONObject();
-					tunableJson.put("name", tunable.getName());
-					tunableJson.put("upper_bound", tunable.getUpperBound());
-					tunableJson.put("lower_bound", tunable.getLowerBound());
-					tunableJson.put("value_type", tunable.getValueType());
+					tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
+					tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 					try {
-						tunableJson.put("query_url", Objects.requireNonNull(DataSourceFactory.getDataSource(EnvInfo.getDataSource())).getDataSourceURL() +
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(DataSourceFactory.getDataSource(EnvInfo.getDataSource())).getDataSourceURL() +
 								tunable.getQueries().get(EnvInfo.getDataSource()));
 					} catch (MonitoringAgentNotFoundException e) {
-						tunableJson.put("query_url", tunable.getQueries().get(EnvInfo.getDataSource()));
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunable.getQueries().get(EnvInfo.getDataSource()));
 					}
 					tunablesArray.put(tunableJson);
 				}
-				layerJson.put("tunables", tunablesArray);
+				layerJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 				layersArray.put(layerJson);
 			}
 		}
-		jsonObject.put("layers", layersArray);
+		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
 		outputJsonArray.put(jsonObject);
 	}
 }

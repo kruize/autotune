@@ -18,10 +18,10 @@ package com.autotune.dependencyAnalyzer.service;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,12 +29,63 @@ import java.io.IOException;
 
 public class ListAppLayers extends HttpServlet
 {
+	/**
+	 * Returns the list of applications monitored by autotune along with layers detected in the applications.
+	 *
+	 * Request:
+	 * `GET /listAppLayers` returns the list of all applications monitored by autotune, and their layers.
+	 *
+	 * `GET /listAppLayers?application_name=<APP_NAME>` returns the layers for the application specified.
+	 *
+	 * Example JSON:
+	 * [
+	 *     {
+	 *         "application_name": "app1",
+	 *         “objective_function”: “transaction_response_time”,
+	 *         "sla_class": "response_time",
+	 *         “direction”: “minimize”
+	 *         "layers": [
+	 *           {
+	 *             "layer_level": 0,
+	 *             "layer_name": "container",
+	 *             "layer_details": "generic container tunables"
+	 *           },
+	 *           {
+	 *             "layer_level": 1,
+	 *             "layer_name": "openj9",
+	 *             "layer_details": "java openj9 tunables"
+	 *           }
+	 *         ]
+	 *     },
+	 *     {
+	 *         "application_name": "app2",
+	 *         “objective_function”: “performedChecks_total”,
+	 *         "sla_class": "throughput",
+	 *         “direction”: “maximize”
+	 *         "layers": [
+	 *           {
+	 *             "layer_level": 0,
+	 *             "layer_name": "container",
+	 *             "layer_details": "generic container tunables"
+	 *           },
+	 *           {
+	 *             "layer_level": 1,
+	 *             "layer_name": "hotspot",
+	 *             "layer_details": "java hotspot tunables"
+	 *           }
+	 *         ]
+	 *     }
+	 * ]
+	 * @param req
+	 * @param resp
+	 * @throws IOException
+	 */
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String application_name = req.getParameter("application_name");
+		String application_name = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
 
 		for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
 			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -58,20 +109,20 @@ public class ListAppLayers extends HttpServlet
 			return;
 
 		JSONObject jsonObject = new JSONObject();
-		jsonObject.put("application_name", application);
-		jsonObject.put("direction", autotuneObject.getSlaInfo().getDirection());
-		jsonObject.put("objective_function", autotuneObject.getSlaInfo().getObjectiveFunction());
-		jsonObject.put("sla_class", autotuneObject.getSlaInfo().getSlaClass());
+		jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
+		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 
 		JSONArray layersArray = new JSONArray();
 		for (AutotuneConfig autotuneConfig : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).get(application).getStackLayers()) {
 			JSONObject layerJson = new JSONObject();
-			layerJson.put("layer_name", autotuneConfig.getName());
-			layerJson.put("layer_details", autotuneConfig.getDetails());
-			layerJson.put("layer_level", autotuneConfig.getLevel());
+			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
+			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 			layersArray.put(layerJson);
 		}
-		jsonObject.put("layers", layersArray);
+		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
 		outputJsonArray.put(jsonObject);
 	}
 }
