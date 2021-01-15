@@ -113,10 +113,12 @@ public class ListAutotuneTunables extends HttpServlet
 		AutotuneConfig autotuneConfig;
 		JSONObject autotuneConfigJson = new JSONObject();
 
-		if (AutotuneDeployment.autotuneConfigMap.containsKey(autotuneConfigName))
+		if (AutotuneDeployment.autotuneConfigMap.containsKey(autotuneConfigName)) {
 			autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(autotuneConfigName);
-		else
+		} else {
+			outputJsonArray.put("Error: AutotuneConfig " + autotuneConfigName + " not found!");
 			return;
+		}
 
 		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
 		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
@@ -134,6 +136,10 @@ public class ListAutotuneTunables extends HttpServlet
 
 				tunablesArray.put(tunablesJson);
 			}
+		}
+		if (tunablesArray.isEmpty()) {
+			outputJsonArray.put("Error: Tunables matching sla_class " + slaClass + " not found");
+			return;
 		}
 		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 		outputJsonArray.put(autotuneConfigJson);
