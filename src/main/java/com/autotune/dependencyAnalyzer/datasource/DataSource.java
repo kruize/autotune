@@ -28,4 +28,10 @@ public interface DataSource
 	 * @throws MalformedURLException
 	 */
 	List<String> getAppsForLayer(String query, String key) throws MalformedURLException;
+
+	/**
+	 * Returns the datasource endpoint from which queries can be run
+	 * @return String containing the URL
+	 */
+	String getDataSourceURL();
 }
