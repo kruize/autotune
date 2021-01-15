@@ -85,20 +85,23 @@ public class ListAppLayers extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String application_name = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+		String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
 
 		for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
 			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
 			//No application_name parameter was passed in the request
-			if (application_name == null) {
+			if (applicationName == null) {
 				for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
 					addLayerToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, application);
 				}
 			} else {
-				addLayerToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, application_name);
+				addLayerToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName);
 			}
 		}
+
+		if (outputJsonArray.isEmpty())
+			outputJsonArray.put("Error: Application " + applicationName + " not found!");
 
 		resp.getWriter().println(outputJsonArray.toString(4));
 	}

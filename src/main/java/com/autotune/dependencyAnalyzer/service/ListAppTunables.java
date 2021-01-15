@@ -18,7 +18,7 @@ package com.autotune.dependencyAnalyzer.service;
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.datasource.DataSourceFactory;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
-import com.autotune.dependencyAnalyzer.env.EnvInfo;
+import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
@@ -118,8 +118,10 @@ public class ListAppTunables extends HttpServlet
 
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
 		//If no such application is monitored by autotune
-		if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(application))
+		if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(application)){
+			outputJsonArray.put("Error: Application " + application + " not found!");
 			return;
+		}
 
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
@@ -143,16 +145,21 @@ public class ListAppTunables extends HttpServlet
 					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 					try {
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(DataSourceFactory.getDataSource(EnvInfo.getDataSource())).getDataSourceURL() +
-								tunable.getQueries().get(EnvInfo.getDataSource()));
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(DataSourceFactory.getDataSource(
+								DeploymentInfo.getMonitoringAgent())).getDataSourceURL() +
+								tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
 					} catch (MonitoringAgentNotFoundException e) {
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunable.getQueries().get(EnvInfo.getDataSource()));
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
 					}
 					tunablesArray.put(tunableJson);
 				}
 				layerJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 				layersArray.put(layerJson);
 			}
+		}
+		if (layersArray.isEmpty()) {
+			outputJsonArray.put("Error: AutotuneConfig " + layerName + " not found!");
+			return;
 		}
 		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
 		outputJsonArray.put(jsonObject);

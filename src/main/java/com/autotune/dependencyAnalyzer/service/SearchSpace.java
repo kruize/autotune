@@ -87,6 +87,9 @@ public class SearchSpace extends HttpServlet
                 }
             }
         }
+        if (outputJsonArray.isEmpty())
+            outputJsonArray.put("Error: Application " + applicationName + " not found!");
+        
         resp.getWriter().println(outputJsonArray.toString(4));
     }
 

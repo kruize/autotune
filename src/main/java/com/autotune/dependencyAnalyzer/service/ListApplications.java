@@ -71,6 +71,9 @@ public class ListApplications extends HttpServlet
                 addApplicationToResponse(outputJsonArray, autotuneObject, applicationName);
             }
         }
+        if (outputJsonArray.isEmpty())
+            outputJsonArray.put("Error: Application " + applicationName + " not found!");
+
         resp.getWriter().println(outputJsonArray.toString(4));
     }
 
