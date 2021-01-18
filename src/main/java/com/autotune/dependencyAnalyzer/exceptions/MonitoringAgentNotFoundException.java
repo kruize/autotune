@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class MonitoringAgentNotFoundException extends Throwable
 {
+	public MonitoringAgentNotFoundException() {
+	}
+
+	public MonitoringAgentNotFoundException(String message) {
+		super(message);
+	}
 }

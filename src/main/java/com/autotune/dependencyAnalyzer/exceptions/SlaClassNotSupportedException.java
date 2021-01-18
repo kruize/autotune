@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class SlaClassNotSupportedException extends Throwable
 {
+	public SlaClassNotSupportedException() {
+	}
+
+	public SlaClassNotSupportedException(String message) {
+		super(message);
+	}
 }

@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class ClusterTypeNotSupportedException extends Exception
 {
+	public ClusterTypeNotSupportedException() {
+	}
+
+	public ClusterTypeNotSupportedException(String message) {
+		super(message);
+	}
 }
