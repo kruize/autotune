@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class InvalidBoundsException extends Throwable
 {
+	public InvalidBoundsException() {
+	}
+
+	public InvalidBoundsException(String message) {
+		super(message);
+	}
 }

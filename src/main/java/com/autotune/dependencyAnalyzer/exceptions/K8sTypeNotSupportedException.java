@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class K8sTypeNotSupportedException extends Throwable
 {
+	public K8sTypeNotSupportedException() {
+	}
+
+	public K8sTypeNotSupportedException(String message) {
+		super(message);
+	}
 }

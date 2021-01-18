@@ -17,4 +17,10 @@ package com.autotune.dependencyAnalyzer.exceptions;
 
 public class TooManyRecursiveCallsException extends Throwable
 {
+	public TooManyRecursiveCallsException() {
+	}
+
+	public TooManyRecursiveCallsException(String message) {
+		super(message);
+	}
 }

@@ -22,6 +22,9 @@ import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Contains information about the current deployment by parsing the autotune config map
+ */
 public class DeploymentInfo
 {
 	private static String clusterType;
@@ -54,7 +57,7 @@ public class DeploymentInfo
 
 	public static void setClusterType(String clusterType) throws ClusterTypeNotSupportedException {
 		if (clusterType != null)
-			clusterType = clusterType.toUpperCase();
+			clusterType = clusterType.toLowerCase();
 
 		if (AutotuneSupportedTypes.CLUSTER_TYPES_SUPPORTED.contains(clusterType)) {
 			DeploymentInfo.clusterType = clusterType;
@@ -72,7 +75,7 @@ public class DeploymentInfo
 	public static void setKubernetesType(String kubernetesType) throws K8sTypeNotSupportedException
 	{
 		if (kubernetesType != null)
-			kubernetesType = kubernetesType.toUpperCase();
+			kubernetesType = kubernetesType.toLowerCase();
 
 		if (AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(kubernetesType)) {
 			DeploymentInfo.kubernetesType = kubernetesType;
@@ -88,7 +91,7 @@ public class DeploymentInfo
 
 	public static void setAuthType(String authType) {
 		if (authType != null)
-			authType = authType.toUpperCase();
+			authType = authType.toLowerCase();
 
 		if (AutotuneSupportedTypes.AUTH_TYPES_SUPPORTED.contains(authType)) {
 			DeploymentInfo.authType = authType;
@@ -109,7 +112,7 @@ public class DeploymentInfo
 
 	public static void setMonitoringAgent(String monitoringAgent) throws MonitoringAgentNotSupportedException {
 		if (monitoringAgent != null)
-			monitoringAgent = monitoringAgent.toUpperCase();
+			monitoringAgent = monitoringAgent.toLowerCase();
 
 		if (AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoringAgent)) {
 			DeploymentInfo.monitoringAgent = monitoringAgent;
