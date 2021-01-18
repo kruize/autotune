@@ -16,14 +16,16 @@
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
-import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
+
+import java.util.HashMap;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
  *
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class AutotuneObject
+public final class AutotuneObject extends ValidateImpl
 {
 	private final String name;
 	private final String namespace;
@@ -36,23 +38,23 @@ public final class AutotuneObject
 			String mode,
 			SlaInfo slaInfo,
 			SelectorInfo selectorInfo) throws InvalidValueException {
-		if (name != null)
+		HashMap<String, Object> map = new HashMap<>();
+		map.put(DAConstants.AutotuneObjectConstants.NAME, name);
+		map.put(DAConstants.AutotuneObjectConstants.NAMESPACE, namespace);
+		map.put(DAConstants.AutotuneObjectConstants.MODE, mode);
+		map.put(DAConstants.AutotuneObjectConstants.SLA, slaInfo);
+		map.put(DAConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+
+		StringBuilder error = validateAutotuneObject(map);
+		if (error.toString().isEmpty()) {
 			this.name = name;
-		else
-			throw new InvalidValueException("Name cannot be null");
-
-		if (namespace != null)
 			this.namespace = namespace;
-		else
-			throw new InvalidValueException("Namespace cannot be null");
-
-		if (AutotuneSupportedTypes.MODES_SUPPORTED.contains(mode))
 			this.mode = mode;
-		else
-			throw new InvalidValueException("Invalid mode");
-
-		this.slaInfo = new SlaInfo(slaInfo);
-		this.selectorInfo = new SelectorInfo(selectorInfo);
+			this.slaInfo = slaInfo;
+			this.selectorInfo = selectorInfo;
+		} else {
+			throw new InvalidValueException(error.toString());
+		}
 	}
 
 	public String getName() {

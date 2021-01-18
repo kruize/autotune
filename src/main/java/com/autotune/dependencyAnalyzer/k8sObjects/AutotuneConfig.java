@@ -17,9 +17,10 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
 
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
-import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
+import com.autotune.dependencyAnalyzer.util.DAConstants;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Container class for the AutotuneConfig kubernetes kind, which is used to tune
@@ -27,7 +28,7 @@ import java.util.ArrayList;
  *
  * Refer to examples dir for a reference AutotuneConfig yaml.
  */
-public final class AutotuneConfig
+public final class AutotuneConfig extends ValidateImpl
 {
 	private final int level;
 	private final String name;
@@ -56,28 +57,31 @@ public final class AutotuneConfig
 			String layerPresenceLabel,
 			String layerPresenceLabelValue,
 			ArrayList<Tunable> tunables) throws InvalidValueException {
-		if (name != null)
+		HashMap<String, Object> map = new HashMap<>();
+		map.put(DAConstants.AutotuneConfigConstants.NAME, name);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
+		map.put(DAConstants.AutotuneConfigConstants.PRESENCE, presence);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY, layerPresenceQuery);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY, layerPresenceKey);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL, layerPresenceLabel);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
+		map.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunables);
+
+		StringBuilder error = validateAutotuneConfig(map);
+		if (error.toString().isEmpty()) {
 			this.name = name;
-		else
-			throw new InvalidValueException("Name cannot be null");
-
-		if (AutotuneSupportedTypes.PRESENCE_SUPPORTED.contains(presence))
 			this.presence = presence;
-		else
-			throw new InvalidValueException("Invalid presence value");
-
-		if (level >= 0)
 			this.level = level;
-		else
-			throw new InvalidValueException("Layer level cannot be negative");
+			this.details = details;
+			this.layerPresenceKey = layerPresenceKey;
+			this.layerPresenceQuery = layerPresenceQuery;
+			this.layerPresenceLabel = layerPresenceLabel;
+			this.layerPresenceLabelValue = layerPresenceLabelValue;
+			this.tunables = new ArrayList<>(tunables);
 
-		this.details = details;
-		this.layerPresenceKey = layerPresenceKey;
-		this.layerPresenceQuery = layerPresenceQuery;
-		this.layerPresenceLabel = layerPresenceLabel;
-		this.layerPresenceLabelValue = layerPresenceLabelValue;
-
-		this.tunables = new ArrayList<>(tunables);
+		} else {
+			throw new InvalidValueException(error.toString());
+		}
 	}
 
 	public AutotuneConfig(AutotuneConfig copy) {
