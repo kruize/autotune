@@ -15,15 +15,18 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
+import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
+import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
-import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -32,32 +35,38 @@ import java.util.ArrayList;
  */
 public class DataSourceFactory
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceFactory.class);
+
 	public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
-		String monitoringAgentEndpoint = getMonitoringAgentEndpoint();
-		String token = System.getenv(DAConstants.AUTH_TOKEN);
+		String monitoringAgentEndpoint = null;
+		if (dataSource.toLowerCase().equals(DeploymentInfo.getMonitoringAgent()))
+			monitoringAgentEndpoint = DeploymentInfo.getMonitoringAgentEndpoint();
+
+		// Monitoring agent endpoint not set in the configmap
+		if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
+			monitoringAgentEndpoint = getMonitoringAgentEndpoint();
+
+		String token = DeploymentInfo.getAuthToken();
 
 		if (dataSource.equals(DAConstants.PROMETHEUS_DATA_SOURCE))
 			return new PrometheusDataSource(monitoringAgentEndpoint, token);
 
+		LOGGER.error("Datasource " + dataSource + " not supported");
 		return null;
 	}
 
 	/**
-	 * Gets the monitoring agent endpoint for the datasource through the env, or by the cluster IP
+	 * Gets the monitoring agent endpoint for the datasource through the cluster IP
 	 * of the service.
 	 *
 	 * @return Endpoint of the monitoring agent.
 	 * @throws MonitoringAgentNotFoundException
 	 */
 	private static String getMonitoringAgentEndpoint() throws MonitoringAgentNotFoundException {
-		String monitoringAgentEndpoint = System.getenv(DAConstants.MONITORING_AGENT_ENDPOINT);
-		if (monitoringAgentEndpoint != null)
-			return monitoringAgentEndpoint;
-
-		//No URL was provided, find the endpoint from the service.
+		//No endpoint was provided in the configmap, find the endpoint from the service.
 		KubernetesClient client = new DefaultKubernetesClient();
 		ServiceList serviceList = client.services().inAnyNamespace().list();
-		String monitoringAgentService = System.getenv(DAConstants.MONITORING_SERVICE);
+		String monitoringAgentService = DeploymentInfo.getMonitoringAgentService();
 
 		if (monitoringAgentService == null)
 			throw new MonitoringAgentNotFoundException();
@@ -74,6 +83,7 @@ public class DataSourceFactory
 				}
 			}
 		}
+		LOGGER.error("Monitoring agent endpoint not found");
 		return null;
 	}
 
