@@ -18,7 +18,6 @@ package com.autotune.dependencyAnalyzer.k8sObjects;
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
-import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ import java.util.HashMap;
  *
  * Refer to examples dir for a reference AutotuneConfig yaml.
  */
-public final class AutotuneConfig implements Validate
+public final class AutotuneConfig
 {
 	private final int level;
 	private final String name;
@@ -58,7 +57,7 @@ public final class AutotuneConfig implements Validate
 			String layerPresenceLabel,
 			String layerPresenceLabelValue,
 			ArrayList<Tunable> tunables) throws InvalidValueException {
-		HashMap<Object, Object> map = new HashMap<>();
+		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneConfigConstants.NAME, name);
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
 		map.put(DAConstants.AutotuneConfigConstants.PRESENCE, presence);
@@ -68,8 +67,8 @@ public final class AutotuneConfig implements Validate
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
 		map.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunables);
 
-		String error = validate(map);
-		if (error.isEmpty()) {
+		StringBuilder error = ValidateAutotuneConfig.validate(map);
+		if (error.toString().isEmpty()) {
 			this.name = name;
 			this.presence = presence;
 			this.level = level;
@@ -81,7 +80,7 @@ public final class AutotuneConfig implements Validate
 			this.tunables = new ArrayList<>(tunables);
 
 		} else {
-			throw new InvalidValueException(error);
+			throw new InvalidValueException(error.toString());
 		}
 	}
 
@@ -96,45 +95,6 @@ public final class AutotuneConfig implements Validate
 		this.presence = copy.presence;
 
 		this.tunables = new ArrayList<>(copy.getTunables());
-	}
-
-	/**
-	 * Check if the AutotuneConfig is valid
-	 * @param map
-	 * @return
-	 */
-	public String validate(HashMap<Object, Object> map) {
-		StringBuilder errorString = new StringBuilder();
-
-		// Check if name is valid
-		if (map.get(DAConstants.AutotuneConfigConstants.NAME) == null || ((String)map.get(DAConstants.AutotuneConfigConstants.NAME)).isEmpty()) {
-			errorString.append(DAErrorConstants.AutotuneConfigErrors.AUTOTUNE_CONFIG_NAME_NULL);
-		}
-
-		// Check if either presence, layerPresenceQuery or layerPresenceLabel are set. presence field has highest priority.
-		if (((String)map.get(DAConstants.AutotuneConfigConstants.PRESENCE)) == null ||
-				!((String)map.get(DAConstants.AutotuneConfigConstants.PRESENCE)).equals(DAConstants.PRESENCE_ALWAYS)) {
-			if ((map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) == null || map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE) == null) &&
-					(map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY) == null || map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY) == null)) {
-				errorString.append(DAErrorConstants.AutotuneConfigErrors.LAYER_PRESENCE_MISSING);
-			}
-		}
-
-		// Check if both layerPresenceQuery and layerPresenceLabel are set
-		if (map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY) != null && map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) != null) {
-			errorString.append(DAErrorConstants.AutotuneConfigErrors.BOTH_LAYER_QUERY_AND_LABEL_SET);
-		}
-
-		// Check if level is valid
-		if ((Integer)map.get(DAConstants.AutotuneConfigConstants.LAYER_LEVEL) < 0) {
-			errorString.append(DAErrorConstants.AutotuneConfigErrors.LAYER_LEVEL_INVALID);
-		}
-
-		// Check if tunables is empty
-		if ((map.get(DAConstants.AutotuneConfigConstants.TUNABLES)) == null) {
-			errorString.append(DAErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
-		}
-		return errorString.toString();
 	}
 
 	public int getLevel() {
