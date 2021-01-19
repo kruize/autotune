@@ -45,6 +45,7 @@ public class InitializeDeployment
 		DeploymentInfo.setMonitoringAgent(monitoring_agent);
 		DeploymentInfo.setAuthToken(auth_token);
 		DeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
+		DeploymentInfo.setLoggingLevel(logging_level);
 
 		//If no endpoint was specified in the configmap
 		if (monitoring_agent_endpoint == null) {
@@ -58,8 +59,7 @@ public class InitializeDeployment
 		DeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
 
 		/* Update logging level from the env */
-		if (logging_level != null)
-			Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(logging_level));
+		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(DeploymentInfo.getLoggingLevel()));
 
 		DeploymentInfo.logDeploymentInfo();
 	}

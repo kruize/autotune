@@ -54,7 +54,15 @@ public class ApplicationServiceStack
 		this.applicationServiceName = applicationServiceName;
 		this.namespace = namespace;
 
-		applicationServiceStackLayers = new ArrayList<>();
+		this.applicationServiceStackLayers = new ArrayList<>();
+	}
+
+	public ApplicationServiceStack(String applicationServiceName, String namespace, String status) {
+		this.applicationServiceName = applicationServiceName;
+		this.namespace = namespace;
+		this.status = status;
+
+		this.applicationServiceStackLayers = new ArrayList<>();
 	}
 
 	public String getNamespace() {

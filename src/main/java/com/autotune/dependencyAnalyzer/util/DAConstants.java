@@ -36,7 +36,7 @@ public class DAConstants
 	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";
 	public static final String GROUP = "recommender.com";
-	public static final String API_VERSION = "v1beta1";
+	public static final String API_VERSION = "v1";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
@@ -47,6 +47,10 @@ public class DAConstants
 	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
 
 	public static final String PRESENCE_ALWAYS = "always";
+
+	public static final String POD_VARIABLE = "$POD$";
+	public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
+
 
 	/**
 	 * Used to parse the Autotune kind resource
