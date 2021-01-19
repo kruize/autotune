@@ -28,7 +28,7 @@ import java.util.HashMap;
  *
  * Refer to examples dir for a reference AutotuneConfig yaml.
  */
-public final class AutotuneConfig extends ValidateImpl
+public final class AutotuneConfig
 {
 	private final int level;
 	private final String name;
@@ -67,7 +67,7 @@ public final class AutotuneConfig extends ValidateImpl
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
 		map.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunables);
 
-		StringBuilder error = validateAutotuneConfig(map);
+		StringBuilder error = ValidateAutotuneConfig.validate(map);
 		if (error.toString().isEmpty()) {
 			this.name = name;
 			this.presence = presence;

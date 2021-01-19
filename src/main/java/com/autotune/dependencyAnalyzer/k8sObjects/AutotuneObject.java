@@ -25,7 +25,7 @@ import java.util.HashMap;
  *
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class AutotuneObject extends ValidateImpl
+public final class AutotuneObject
 {
 	private final String name;
 	private final String namespace;
@@ -45,7 +45,7 @@ public final class AutotuneObject extends ValidateImpl
 		map.put(DAConstants.AutotuneObjectConstants.SLA, slaInfo);
 		map.put(DAConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
-		StringBuilder error = validateAutotuneObject(map);
+		StringBuilder error = ValidateAutotuneObject.validate(map);
 		if (error.toString().isEmpty()) {
 			this.name = name;
 			this.namespace = namespace;
