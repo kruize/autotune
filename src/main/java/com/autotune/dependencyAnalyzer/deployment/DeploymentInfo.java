@@ -34,6 +34,7 @@ public class DeploymentInfo
 	private static String monitoringAgent;
 	private static String monitoringAgentService;
 	private static String monitoringAgentEndpoint;
+	private static String loggingLevel;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DeploymentInfo.class);
 
@@ -129,6 +130,20 @@ public class DeploymentInfo
 	public static void setMonitoringAgentService(String monitoringAgentService) {
 		if (monitoringAgentService != null)
 			DeploymentInfo.monitoringAgentService = monitoringAgentService.toUpperCase();
+	}
+
+	public static String getLoggingLevel() {
+		return loggingLevel;
+	}
+
+	public static void setLoggingLevel(String loggingLevel) {
+		if (loggingLevel != null)
+			loggingLevel = loggingLevel.toLowerCase();
+
+		if (AutotuneSupportedTypes.LOGGING_TYPES_SUPPORTED.contains(loggingLevel))
+			DeploymentInfo.loggingLevel = loggingLevel;
+		else
+			DeploymentInfo.loggingLevel = "info";
 	}
 
 	public static void logDeploymentInfo() {

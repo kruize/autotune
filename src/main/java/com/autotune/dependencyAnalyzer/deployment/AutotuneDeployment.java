@@ -235,7 +235,7 @@ public class AutotuneDeployment
 					matchURI,
 					matchService);
 
-			mode = slaJson.optString(DAConstants.AutotuneObjectConstants.MODE);
+			mode = specJson.optString(DAConstants.AutotuneObjectConstants.MODE);
 			name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
 					.optString(DAConstants.AutotuneObjectConstants.NAME);
 			namespace = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
@@ -330,17 +330,19 @@ public class AutotuneDeployment
 
 				// Store the datasource and query from the JSON in a map
 				Map<String, String> queriesMap = new HashMap<>();
-				for (Object dataSourceObject : dataSourceArray) {
-					JSONObject dataSourceJson = (JSONObject) dataSourceObject;
-					String datasource = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.NAME);
-					String datasourceQuery = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.QUERY);
+				if (dataSourceArray != null) {
+					for (Object dataSourceObject : dataSourceArray) {
+						JSONObject dataSourceJson = (JSONObject) dataSourceObject;
+						String datasource = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.NAME);
+						String datasourceQuery = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.QUERY);
 
-					try {
-						datasourceQuery = Variables.updateQueryWithVariables(null, null,
-								datasourceQuery, arrayList);
-					} catch (IOException ignored) { }
+						try {
+							datasourceQuery = Variables.updateQueryWithVariables(null, null,
+									datasourceQuery, arrayList);
+						} catch (IOException ignored) { }
 
-					queriesMap.put(datasource, datasourceQuery);
+						queriesMap.put(datasource, datasourceQuery);
+					}
 				}
 
 				String name = tunableJson.optString(DAConstants.AutotuneConfigConstants.NAME);

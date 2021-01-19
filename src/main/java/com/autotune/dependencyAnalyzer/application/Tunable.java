@@ -42,8 +42,8 @@ import java.util.Objects;
 public class Tunable
 {
 	private String name;
-	private double upperBound;
-	private double lowerBound;
+	private String upperBound;
+	private String lowerBound;
 	private String valueType;
 	private String description;
 	private Map<String, String> queries;
@@ -56,8 +56,8 @@ public class Tunable
 	public ArrayList<String> slaClassList;
 
 	public Tunable(String name,
-				   double upperBound,
-				   double lowerBound,
+				   String upperBound,
+				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> slaClassList) throws InvalidBoundsException {
@@ -66,10 +66,20 @@ public class Tunable
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
 
-		if (upperBound > lowerBound) {
+		if (upperBound != null && lowerBound != null) {
 			this.lowerBound = lowerBound;
 			this.upperBound = upperBound;
 		} else throw new InvalidBoundsException();
+	}
+
+	public Tunable(Tunable copy) {
+		this.name = copy.name;
+		this.upperBound = copy.upperBound;
+		this.lowerBound = copy.lowerBound;
+		this.valueType = copy.valueType;
+		this.description = copy.description;
+		this.queries = copy.queries;
+		this.slaClassList = copy.slaClassList;
 	}
 
 	public String getName() {
@@ -83,23 +93,20 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public double getUpperBound() {
+	public String getUpperBound() {
 		return upperBound;
 	}
 
-	public void setUpperBound(double upperBound) {
+	public void setUpperBound(String upperBound) {
 		this.upperBound = upperBound;
 	}
 
-	public double getLowerBound() {
+	public String getLowerBound() {
 		return lowerBound;
 	}
 
-	public void setLowerBound(double lowerBound) throws InvalidBoundsException {
-		if (lowerBound < this.upperBound)
+	public void setLowerBound(String lowerBound) {
 			this.lowerBound = lowerBound;
-		else
-			throw new InvalidBoundsException();
 	}
 
 	public String getValueType() {
