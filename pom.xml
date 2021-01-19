@@ -15,6 +15,7 @@
         <java-version>11</java-version>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
+        <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
     </properties>
     <dependencies>
         <dependency>
@@ -55,33 +56,31 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${slf4j-version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>${slf4j-version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <!-- any other plugins -->
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven-assembly-plugin-version}</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>${appassembler-maven-plugin-version}</version>
                 <configuration>
-                    <archive>
-                        <index>true</index>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <Main-Class>com.autotune.Autotune</Main-Class>
-                            <Multi-Release>true</Multi-Release>
-                        </manifestEntries>
-                    </archive>
+                    <assembleDirectory>target</assembleDirectory>
+                    <programs>
+                        <program>
+                            <mainClass>com.autotune.Autotune</mainClass>
+                            <name>Autotune</name>
+                        </program>
+                    </programs>
                 </configuration>
                 <executions>
                     <execution>
@@ -90,7 +89,7 @@
                         <phase>package</phase>
                         <!-- append to the packaging phase. -->
                         <goals>
-                            <goal>single</goal>
+                            <goal>assemble</goal>
                             <!-- goals == mojos -->
                         </goals>
                     </execution>
@@ -108,4 +107,3 @@
         </plugins>
     </build>
 </project>
-
