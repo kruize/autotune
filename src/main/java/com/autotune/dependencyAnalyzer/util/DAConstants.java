@@ -21,16 +21,22 @@ package com.autotune.dependencyAnalyzer.util;
 public class DAConstants
 {
 	// Used to parse autotune configmaps
-	public static final String AUTH_TOKEN = "auth_token";
-	public static final String MONITORING_SERVICE = "monitoring_service";
-	public static final String MONITORING_AGENT_ENDPOINT = "monitoring_agent_endpoint";
+	public static final String K8S_TYPE = "K8S_TYPE";
+	public static final String AUTH_TYPE = "AUTH_TYPE";
+	public static final String AUTH_TOKEN = "AUTH_TOKEN";
+	public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
+	public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
+	public static final String MONITORING_AGENT = "MONITORING_AGENT";
+	public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
+	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
+
 	public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
 	public static final String HTTP_PROTOCOL = "http";
 
 	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";
-	public static final String API_VERSION = "v1beta1";
 	public static final String GROUP = "recommender.com";
+	public static final String API_VERSION = "v1beta1";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
@@ -42,6 +48,9 @@ public class DAConstants
 
 	public static final String PRESENCE_ALWAYS = "always";
 
+	/**
+	 * Used to parse the Autotune kind resource
+	 */
 	public static class AutotuneObjectConstants {
 		public static final String SPEC = "spec";
 		public static final String SLA = "sla";
@@ -67,6 +76,9 @@ public class DAConstants
 		public static final String NAMESPACE = "namespace";
 	}
 
+	/**
+	 * Used to parse the AutotuneConfig resource
+	 */
 	public static class AutotuneConfigConstants {
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
@@ -94,8 +106,15 @@ public class DAConstants
 		public static final String LOWER_BOUND = "lower_bound";
 		public static final String SLA_CLASS = "sla_class";
 
+		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
+		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
+		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
+		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
 	}
 
+	/**
+	 * Contains Strings used in REST services
+	 */
 	public static class ServiceConstants {
 		public static final String APPLICATION_NAME = "application_name";
 		public static final String LAYER_DETAILS = "layer_details";
