@@ -73,7 +73,7 @@ class Objective(object):
         if experiment_status == "prune":
             raise optuna.TrialPruned()
 
-        return actual_sla_value
+        return float(actual_sla_value)
 
 
 def recommend(direction, ml_algo_impl, sla_class, tunables):
@@ -86,6 +86,8 @@ def recommend(direction, ml_algo_impl, sla_class, tunables):
         sla_class (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
     """
+    # Set the logging level for the Optuna’s root logger
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
     # Propagate all of Optuna log outputs to the root logger
     optuna.logging.enable_propagation()
     # Disable the default handler of the Optuna’s root logger

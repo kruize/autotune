@@ -25,9 +25,13 @@ The logging levels used in Python are <sup>[[1]]</sup>:
 | `DEBUG`       | Detailed information, typically of interest only when diagnosing problems.                                                                                            |
 | `NOTSET`      | All messages are processed when the logger is the root logger, or delegation to the parent when the logger is a non-root logger.                                      |
 
-By default, the logging level is set to `WARNING` in [`logger.py`](./logger.py). This is done to suppress log messages
-of optuna which are at the `INFO` level by default. To change the logging level, set the `level` argument in
-`logging.basicConfig` function in [`logger.py`](./logger.py) to any of the above levels.
+By default, the logging level is set to `INFO` in [`logger.py`](./logger.py). To change the logging level, set the
+`level` argument in `logging.basicConfig` function in [`logger.py`](./logger.py) to any of the above levels.
+
+However, Optuna shows log messages at the `INFO` level by default. To suppress log messages of optuna, the logging level
+for the Optuna’s root logger is set to `WARNING` by using `optuna.logging.set_verbosity()` in
+[`bayes_optuna/optuna_hpo.py`](./bayes_optuna/optuna_hpo.py). To view log messages of optuna, the logging level can be
+changed to `DEBUG` or `INFO` in [`bayes_optuna/optuna_hpo.py`](./bayes_optuna/optuna_hpo.py).
 
 [1]: https://docs.python.org/3/howto/logging.html#when-to-use-logging
 
