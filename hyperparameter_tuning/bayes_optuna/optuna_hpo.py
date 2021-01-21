@@ -73,6 +73,7 @@ class Objective(object):
         if experiment_status == "prune":
             raise optuna.TrialPruned()
 
+        actual_sla_value = round(float(actual_sla_value), 2)
         return float(actual_sla_value)
 
 
