@@ -74,7 +74,7 @@ class Objective(object):
             raise optuna.TrialPruned()
 
         actual_sla_value = round(float(actual_sla_value), 2)
-        return float(actual_sla_value)
+        return actual_sla_value
 
 
 def recommend(direction, ml_algo_impl, sla_class, tunables):
