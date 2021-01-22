@@ -108,7 +108,11 @@ public class SearchSpace extends HttpServlet
         applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
 
         JSONArray tunablesJsonArray = new JSONArray();
+<<<<<<< HEAD
         for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
+=======
+        for(String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
+>>>>>>> 2e26447... Update modifications and deletions of existing autotuneconfig objects
             AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
             for (Tunable tunable : autotuneConfig.getTunables()) {
                 JSONObject tunableJson = new JSONObject();

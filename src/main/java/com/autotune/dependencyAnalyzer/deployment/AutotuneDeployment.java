@@ -104,13 +104,22 @@ public class AutotuneDeployment
 		Watcher<String> autotuneConfigWatcher = new Watcher<>() {
 			@Override
 			public void eventReceived(Action action, String resource) {
+				AutotuneConfig autotuneConfig = null;
+
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
-						AutotuneConfig autotuneConfig = null;
 						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
 						if (autotuneConfig != null)
 							addLayerInfo(autotuneConfig);
 						break;
+					case "MODIFIED":
+						deleteExistingConfig(resource);
+						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
+						if (autotuneConfig != null)
+							addLayerInfo(autotuneConfig);
+						break;
+					case "DELETED":
+						deleteExistingConfig(resource);
 					default:
 						break;
 				}
@@ -123,6 +132,27 @@ public class AutotuneDeployment
 		/* Register custom watcher for autotune object and autotuneconfig object*/
 		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+	}
+
+	/**
+	 * Delete existing autotuneconfig in applications monitored by autotune
+	 * @param resource JSON string of the autotuneconfig object
+	 */
+	private static void deleteExistingConfig(String resource) {
+		JSONObject autotuneConfigJson = new JSONObject(resource);
+		String configName = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+
+		LOGGER.info("AutotuneConfig " + configName + " removed from autotune monitoring");
+		// Remove from collection of autotuneconfigs in map
+		autotuneConfigMap.remove(configName);
+
+		// Remove autotuneconfig for all applications monitored
+		for (String autotuneObject : applicationServiceStackMap.keySet()) {
+			for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObject).keySet()) {
+				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(applicationServiceStackName);
+				applicationServiceStack.getStackLayers().remove(configName);
+			}
+		}
 	}
 
 	/**
@@ -459,10 +489,8 @@ public class AutotuneDeployment
 	 */
 	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
 		//Check if layer already exists
-		for (AutotuneConfig layer : applicationServiceStack.getStackLayers()) {
-			if (layer.getName().equals(autotuneConfig.getName())) {
-				return;
-			}
+		if (applicationServiceStack.getStackLayers().containsKey(autotuneConfig.getName())) {
+			return;
 		}
 
 		ArrayList<Tunable> tunables = new ArrayList<>();
@@ -502,6 +530,6 @@ public class AutotuneDeployment
 		} catch (InvalidValueException ignored) { }
 
 		LOGGER.info("Added layer " + autotuneConfig.getName() + " to application " + applicationServiceStack.getApplicationServiceName());
-		applicationServiceStack.getStackLayers().add(autotuneConfigCopy);
+		applicationServiceStack.getStackLayers().put(autotuneConfig.getName(), autotuneConfigCopy);
 	}
 }
