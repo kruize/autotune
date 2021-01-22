@@ -134,3 +134,4 @@ spec:
         required:
         - layer_name
         - layer_level
+        - layerPresence
