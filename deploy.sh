@@ -23,13 +23,15 @@ AUTOTUNE_CONFIG_CRD="manifests/autotune-config-crd.yaml"
 AUTOTUNE_QUERY_VARIABLE_CRD="manifests/autotune-query-variable-crd.yaml"
 AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="manifests/autotune-operator-deployment.yaml_template"
 AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
+AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune-operator-rolebinding.yaml_template"
+AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
 AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
 AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
-AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
-AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune-operator-rolebinding.yaml_template"
+SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
 AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_CONFIGMAPS="manifests/configmaps"
-SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
+AUTOTUNE_CONFIGS="manifests/autotune-configs"
+AUTOTUNE_QUERY_VARIABLES="manifests/autotune-query-variables"
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="kruize/autotune"
@@ -111,7 +113,7 @@ do
 		check_cluster_type
 		;;
 	i)
-		KRUIZE_DOCKER_IMAGE="${OPTARG}"		
+		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
 		;;
 	k)
 		kurl="${OPTARG}"

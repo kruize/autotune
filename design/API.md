@@ -148,7 +148,7 @@ Get the tunables supported by autotune for the SLA.
 
 `GET /listAutotuneTunables?sla_class=<SLA_CLASS>` gives all tunables for the SLA class
 
-`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer=<LAYER>` gives tunables for the SLA class and the layer
+`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer_name=<LAYER>` gives tunables for the SLA class and the layer
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?sla_class=<SLA_CLASS>`
 
@@ -216,7 +216,7 @@ Generates the search space used for the analysis.
 ```
 [
   {
-    "application": "petclinic-deployment-6d4c8678d4-jmz8x",
+    "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
     "objective_function": "transaction_response_time",
     "sla_class": "response_time",
     "direction": "minimize"

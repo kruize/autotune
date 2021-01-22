@@ -21,25 +21,108 @@ package com.autotune.dependencyAnalyzer.util;
 public class DAConstants
 {
 	// Used to parse autotune configmaps
-	public static final String AUTH_TOKEN = "auth_token";
-	public static final String MONITORING_SERVICE = "monitoring_service";
-	public static final String MONITORING_AGENT_ENDPOINT = "monitoring_agent_endpoint";
+	public static final String K8S_TYPE = "K8S_TYPE";
+	public static final String AUTH_TYPE = "AUTH_TYPE";
+	public static final String AUTH_TOKEN = "AUTH_TOKEN";
+	public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
+	public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
+	public static final String MONITORING_AGENT = "MONITORING_AGENT";
+	public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
+	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
+
 	public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
 	public static final String HTTP_PROTOCOL = "http";
 
 	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";
-	public static final String API_VERSION = "v1beta1";
 	public static final String GROUP = "recommender.com";
+	public static final String API_VERSION = "v1";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
 	public static final String AUTOTUNE_CONFIG_RESOURCE_NAME = AUTOTUNE_CONFIG_PLURALS + GROUP;
 	public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
 	public static final String AUTOTUNE_VARIABLE_RESOURCE_NAME = AUTOTUNE_VARIABLE_PLURALS + GROUP;
-	public static final String LAYER_PRESENCE = "layerPresence";
 
 	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
 
 	public static final String PRESENCE_ALWAYS = "always";
+
+	public static final String POD_VARIABLE = "$POD$";
+	public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
+
+
+	/**
+	 * Used to parse the Autotune kind resource
+	 */
+	public static class AutotuneObjectConstants {
+		public static final String SPEC = "spec";
+		public static final String SLA = "sla";
+		public static final String SLA_CLASS = "sla_class";
+		public static final String DIRECTION = "direction";
+		public static final String OBJECTIVE_FUNCTION = "objective_function";
+
+		public static final String FUNCTION_VARIABLES = "function_variables";
+		public static final String NAME = "name";
+		public static final String QUERY = "query";
+		public static final String VALUE_TYPE = "value_type";
+		public static final String DATASOURCE = "datasource";
+
+		public static final String SELECTOR = "selector";
+		public static final String MATCH_LABEL = "matchLabel";
+		public static final String MATCH_LABEL_VALUE = "matchLabelValue";
+		public static final String MATCH_ROUTE = "matchRoute";
+		public static final String MATCH_URI = "matchURI";
+		public static final String MATCH_SERVICE = "matchService";
+
+		public static final String MODE = "mode";
+		public static final String METADATA = "metadata";
+		public static final String NAMESPACE = "namespace";
+	}
+
+	/**
+	 * Used to parse the AutotuneConfig resource
+	 */
+	public static class AutotuneConfigConstants {
+		public static final String METADATA = "metadata";
+		public static final String NAMESPACE = "namespace";
+
+		public static final String DATASOURCE = "datasource";
+		public static final String LAYER_PRESENCE = "layerPresence";
+		public static final String PRESENCE = "presence";
+		public static final String LABEL = "label";
+		public static final String QUERY_VARIABLES = "query_variables";
+		public static final String VALUE = "value";
+
+		public static final String LAYER_NAME = "layer_name";
+		public static final String DETAILS = "details";
+		public static final String LAYER_DETAILS = "layer_details";
+		public static final String LAYER_LEVEL = "layer_level";
+
+		public static final String TUNABLES = "tunables";
+		public static final String QUERIES = "queries";
+
+		public static final String NAME = "name";
+		public static final String QUERY = "query";
+		public static final String KEY = "key";
+		public static final String VALUE_TYPE = "value_type";
+		public static final String UPPER_BOUND = "upper_bound";
+		public static final String LOWER_BOUND = "lower_bound";
+		public static final String SLA_CLASS = "sla_class";
+
+		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
+		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
+		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
+		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
+	}
+
+	/**
+	 * Contains Strings used in REST services
+	 */
+	public static class ServiceConstants {
+		public static final String APPLICATION_NAME = "application_name";
+		public static final String LAYER_DETAILS = "layer_details";
+		public static final String LAYERS = "layers";
+		public static final String QUERY_URL = "query_url";
+	}
 }

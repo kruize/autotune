@@ -38,4 +38,19 @@ public class AutotuneSupportedTypes
 
 	public static final Set<String> SLA_CLASSES_SUPPORTED =
 			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage"));
+
+	public static final Set<String> VALUE_TYPES_SUPPORTED =
+			new HashSet<>(Arrays.asList("double", "int", "string"));
+
+	public static final Set<String> CLUSTER_TYPES_SUPPORTED =
+			new HashSet<>(Arrays.asList("kubernetes"));
+
+	public static final Set<String> K8S_TYPES_SUPPORTED =
+			new HashSet<>(Arrays.asList("minikube", "openshift", "icp", null));
+
+	public static final Set<String> AUTH_TYPES_SUPPORTED =
+			new HashSet<>(Arrays.asList("saml", "oidc", "", null));
+
+	public static final Set<String> LOGGING_TYPES_SUPPORTED =
+			new HashSet<>(Arrays.asList("all", "debug", "error", "info", "off", "warn"));
 }

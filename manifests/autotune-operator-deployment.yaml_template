@@ -22,44 +22,44 @@ spec:
         image: "{{ AUTOTUNE_IMAGE }}"
         imagePullPolicy: Always
         env:
-          - name: cluster_type
+          - name: CLUSTER_TYPE
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: cluster_type 
-          - name: k8s_type
+          - name: K8S_TYPE
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: k8s_type
-          - name: auth_type
+          - name: AUTH_TYPE
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: auth_type 
                 optional: true
-          - name: auth_token
+          - name: AUTH_TOKEN
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: auth_token
                 optional: true
-          - name: monitoring_agent
+          - name: MONITORING_AGENT
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: monitoring_agent
-          - name: monitoring_service
+          - name: MONITORING_SERVICE
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: monitoring_service
-          - name: monitoring_agent_endpoint
+          - name: MONITORING_AGENT_ENDPOINT
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
                 key: monitoring_agent_endpoint
-          - name: logging_level
+          - name: LOGGING_LEVEL
             valueFrom:
               configMapKeyRef:
                 name: autotune-config

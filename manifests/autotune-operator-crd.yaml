@@ -42,24 +42,26 @@ spec:
                     type: string
                   function_variables:
                     description: 'describe the complex objective_function variables'
-                    properties:
-                      name:
-                        description: 'name of the varialbe used in objective_function'
-                        type: string
-                      query:
-                        description: 'query expression for respective datasource'
-                        type: string
-                      datasource:
-                        description: 'name of the monitoring tool like prometheus'
-                        type: string
-                      value_type:
-                        description: 'value of the holding objective_function calculation'
-                        type: string
-                    required:
-                    - name
-                    - query
-                    - value_type
-                    type: object
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          description: 'name of the varialbe used in objective_function'
+                          type: string
+                        query:
+                          description: 'query expression for respective datasource'
+                          type: string
+                        datasource:
+                          description: 'name of the monitoring tool like prometheus'
+                          type: string
+                        value_type:
+                          description: 'value of the holding objective_function calculation'
+                          type: string
+                      required:
+                      - name
+                      - query
+                      - value_type
                 required:
                 - objective_function
                 - direction

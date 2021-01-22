@@ -16,6 +16,10 @@
 package com.autotune.dependencyAnalyzer;
 
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
+import com.autotune.dependencyAnalyzer.deployment.InitializeDeployment;
+import com.autotune.dependencyAnalyzer.exceptions.K8sTypeNotSupportedException;
+import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
+import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.dependencyAnalyzer.service.*;
 import com.autotune.dependencyAnalyzer.util.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -23,6 +27,13 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 public class DependencyAnalyzer
 {
 	public static void start(ServletContextHandler contextHandler) {
+		try {
+			InitializeDeployment.setup_deployment_info();
+		} catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
+			e.printStackTrace();
+			// Current deployment not supported. Exit
+			System.exit(1);
+		}
 		AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
 
 		try {
@@ -34,7 +45,7 @@ public class DependencyAnalyzer
 	}
 
 	public static void addServlets(ServletContextHandler context) {
-		context.addServlet(ListApplicationService.class, ServerContext.LIST_APPLICATIONS);
+		context.addServlet(ListApplications.class, ServerContext.LIST_APPLICATIONS);
 		context.addServlet(ListAppLayers.class, ServerContext.LIST_APP_LAYERS);
 		context.addServlet(ListAppTunables.class, ServerContext.LIST_APP_TUNABLES);
 		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
