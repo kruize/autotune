@@ -100,8 +100,12 @@ public class ListAutotuneTunables extends HttpServlet
 
 		//No layer parameter was passed in the request
 		if (layerName == null) {
-			for (String autotuneConfigName : AutotuneDeployment.autotuneConfigMap.keySet()) {
-				addLayerTunablesToResponse(outputJsonArray, slaClass, autotuneConfigName);
+			if (!AutotuneDeployment.autotuneConfigMap.isEmpty()) {
+				for (String autotuneConfigName : AutotuneDeployment.autotuneConfigMap.keySet()) {
+					addLayerTunablesToResponse(outputJsonArray, slaClass, autotuneConfigName);
+				}
+			} else {
+				outputJsonArray.put("Error: No AutotuneConfig objects found!");
 			}
 		} else {
 			addLayerTunablesToResponse(outputJsonArray, slaClass, layerName);
