@@ -77,14 +77,11 @@ public class ValidateAutotuneObject
 
 		for (FunctionVariable functionVariable : slaInfo.getFunctionVariables()) {
 			//Check if datasource is supported
-			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
-				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datatype not supported\n");
-			}
+			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
+				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");
 
-			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase())) {
+			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
-
-			}
 		}
 		return errorString;
 	}
