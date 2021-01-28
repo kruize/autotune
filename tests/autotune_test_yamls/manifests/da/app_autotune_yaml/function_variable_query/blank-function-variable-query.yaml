@@ -1,0 +1,21 @@
+apiVersion: "recommender.com/v1"
+kind: "Autotune"
+metadata:
+ name: "blank-function-variable-query"
+spec:
+  sla:
+    objective_function: "transaction_response_time"
+    sla_class: "response_time"
+    direction: "minimize"
+    function_variables:
+    - name: "transaction_response_time"
+      query: " "
+      datasource: "prometheus"
+      value_type: "double"
+  mode: "show"
+  selector:
+    matchLabel: "app.kubernetes.io/name"
+    matchLabelValue: "petclinic-deployment"
+    matchRoute: ""
+    matchURI: ""
+    matchService: "https"
