@@ -117,6 +117,13 @@ public class ListAppTunables extends HttpServlet
 	}
 
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
+		// If no autotune objects in the cluster
+		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+			outputJsonArray.put("Error: No objects of kind Autotune found!");
+			return;
+		}
+
+
 		//If no such application is monitored by autotune
 		if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(application)){
 			outputJsonArray.put("Error: Application " + application + " not found!");
@@ -130,8 +137,11 @@ public class ListAppTunables extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 
 		JSONArray layersArray = new JSONArray();
-		for (AutotuneConfig autotuneConfig : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).get(application).getStackLayers()) {
-			if (layerName == null || autotuneConfig.getName().equals(layerName)) {
+		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
+				.get(application).getStackLayers().keySet()) {
+			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
+					.get(application).getStackLayers().get(autotuneConfigName);
+			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
 				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
 				layerJson.put(DAConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
@@ -158,7 +168,11 @@ public class ListAppTunables extends HttpServlet
 			}
 		}
 		if (layersArray.isEmpty()) {
-			outputJsonArray.put("Error: AutotuneConfig " + layerName + " not found!");
+			// No autotuneconfig objects currently being monitored.
+			if (layerName == null)
+				outputJsonArray.put("Error: No AutotuneConfig objects found!");
+			else
+				outputJsonArray.put("Error: AutotuneConfig " + layerName + " not found!");
 			return;
 		}
 		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
