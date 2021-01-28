@@ -16,6 +16,7 @@
 package com.autotune.dependencyAnalyzer.service;
 
 import com.autotune.dependencyAnalyzer.application.Tunable;
+import com.autotune.dependencyAnalyzer.datasource.DataSource;
 import com.autotune.dependencyAnalyzer.datasource.DataSourceFactory;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
 import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
@@ -123,7 +124,6 @@ public class ListAppTunables extends HttpServlet
 			return;
 		}
 
-
 		//If no such application is monitored by autotune
 		if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(application)){
 			outputJsonArray.put("Error: Application " + application + " not found!");
@@ -155,9 +155,9 @@ public class ListAppTunables extends HttpServlet
 					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 					try {
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(DataSourceFactory.getDataSource(
-								DeploymentInfo.getMonitoringAgent())).getDataSourceURL() +
-								tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
+						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
+								dataSource.getQueryEndpoint() + tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
 					} catch (MonitoringAgentNotFoundException e) {
 						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
 					}

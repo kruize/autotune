@@ -15,10 +15,11 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.application;
 
-import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
+import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An ApplicationServiceStack represents a microservice, and can have multiple
@@ -48,13 +49,13 @@ public class ApplicationServiceStack
 	private String applicationServiceName;
 	private String namespace;
 	private String status;
-	private ArrayList<AutotuneConfig> applicationServiceStackLayers;
+	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 
 	public ApplicationServiceStack(String applicationServiceName, String namespace) {
 		this.applicationServiceName = applicationServiceName;
 		this.namespace = namespace;
 
-		this.applicationServiceStackLayers = new ArrayList<>();
+		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
 	public ApplicationServiceStack(String applicationServiceName, String namespace, String status) {
@@ -62,7 +63,7 @@ public class ApplicationServiceStack
 		this.namespace = namespace;
 		this.status = status;
 
-		this.applicationServiceStackLayers = new ArrayList<>();
+		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
 	public String getNamespace() {
@@ -87,11 +88,11 @@ public class ApplicationServiceStack
 			throw new InvalidValueException("Application service name cannot be null");
 	}
 
-	public ArrayList<AutotuneConfig> getStackLayers() {
+	public Map<String, AutotuneConfig> getStackLayers() {
 		return applicationServiceStackLayers;
 	}
 
-	public void setStackLayers(ArrayList<AutotuneConfig> applicationServiceStackLayers) {
+	public void setStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
 		this.applicationServiceStackLayers = applicationServiceStackLayers;
 	}
 
