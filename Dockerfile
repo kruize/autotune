@@ -43,12 +43,16 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 
 ARG AUTOTUNE_VERSION
+ARG NUM_TRIALS=5
+ARG NUM_JOBS=1
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Install packages needed for Java to function correctly
-RUN microdnf install -y tzdata openssl curl ca-certificates fontconfig glibc-langpack-en gzip tar \
-    && microdnf update -y; microdnf clean all
+RUN microdnf install -y tzdata openssl curl ca-certificates fontconfig \
+                        glibc-langpack-en gzip tar python3 \
+    && microdnf update -y \
+    && microdnf clean all
 
 LABEL name="Kruize Autotune" \
       vendor="Red Hat" \
@@ -62,7 +66,7 @@ WORKDIR /opt/app
 
 # Create the non root user, same as the one used in the build phase.
 RUN microdnf -y install shadow-utils \
-    && useradd -u 1001 -r -g 0 -s /usr/sbin/nologin default \
+    && adduser -u 1001 -G root -s /usr/sbin/nologin default \
     && chown -R 1001:0 /opt/app \
     && chmod -R g+rw /opt/app \
     && microdnf -y remove shadow-utils \
@@ -71,6 +75,11 @@ RUN microdnf -y install shadow-utils \
 # Switch to the non root user
 USER 1001
 
+# Install optuna to the default user
+RUN python3 -m pip install --user optuna
+
+# Copy ML hyperparameter tuning code
+COPY --chown=1001:0 hyperparameter_tuning /opt/app/hyperparameter_tuning/
 # Copy the jlinked JRE
 COPY --chown=1001:0 --from=mvnbuild-jdk11 /opt/src/autotune/jre/ /opt/app/jre/
 # Copy the app binaries
@@ -79,6 +88,8 @@ COPY --chown=1001:0 --from=mvnbuild-jdk11 /opt/src/autotune/target/ /opt/app/tar
 EXPOSE 8080
 
 ENV JAVA_HOME=/opt/app/jre \
-    PATH="/opt/app/jre/bin:$PATH"
+    PATH="/opt/app/jre/bin:$PATH" \
+    N_TRIALS=${NUM_TRIALS} \
+    N_JOBS=${NUM_JOBS}
 
 ENTRYPOINT bash target/bin/Autotune
