@@ -377,6 +377,7 @@ public class AutotuneDeployment
 					tunableArrayList);
 
 			autotuneConfigMap.put(configName, autotuneConfig);
+			LOGGER.info("Added autotuneconfig " + configName);
 			return autotuneConfig;
 
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
