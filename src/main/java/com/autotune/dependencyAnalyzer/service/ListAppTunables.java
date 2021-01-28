@@ -112,8 +112,8 @@ public class ListAppTunables extends HttpServlet
 			} else {
 				addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName, layerName);
 			}
-			resp.getWriter().println(outputJsonArray.toString(4));
 		}
+		resp.getWriter().println(outputJsonArray.toString(4));
 	}
 
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
