@@ -109,14 +109,20 @@ public class AutotuneDeployment
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
 						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
-						if (autotuneConfig != null)
+						if (autotuneConfig != null) {
+							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
+							LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+						}
 						break;
 					case "MODIFIED":
-						deleteExistingConfig(resource);
 						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
-						if (autotuneConfig != null)
+						if (autotuneConfig != null) {
+							deleteExistingConfig(resource);
+							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
+							LOGGER.info("Added modified autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+						}
 						break;
 					case "DELETED":
 						deleteExistingConfig(resource);
@@ -396,7 +402,8 @@ public class AutotuneDeployment
 					e.printStackTrace();
 				}
 			}
-			AutotuneConfig autotuneConfig = new AutotuneConfig(configName,
+
+			return new AutotuneConfig(configName,
 					level,
 					details,
 					presence,
@@ -405,11 +412,6 @@ public class AutotuneDeployment
 					layerPresenceLabel,
 					layerPresenceLabelValue,
 					tunableArrayList);
-
-			autotuneConfigMap.put(configName, autotuneConfig);
-			LOGGER.info("Added autotuneconfig " + configName);
-			return autotuneConfig;
-
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
 			e.printStackTrace();
 			return null;
@@ -436,7 +438,7 @@ public class AutotuneDeployment
 			return;
 		}
 
-		if (layerPresenceQuery != null && !layerPresenceQuery.equals("")) {
+		if (layerPresenceQuery != null && !layerPresenceQuery.isEmpty()) {
 			DataSource dataSource = null;
 			try {
 				dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
