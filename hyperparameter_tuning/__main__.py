@@ -23,8 +23,10 @@ from install_package import install
 
 install('python-dotenv')
 install('optuna')
+install('hyperopt')
 
 from bayes_optuna import optuna_hpo
+from bayes_hyperopt import hyperopt_hpo
 
 # direction (str): Direction of optimization, minimize or maximize.
 # ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
@@ -34,3 +36,5 @@ direction, ml_algo_impl, sla_class, tunables = get_all_tunables()
 
 if ml_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
     optuna_hpo.recommend(direction, ml_algo_impl, sla_class, tunables)
+elif ml_algo_impl == "hyperopt":
+    hyperopt_hpo.recommend(direction, sla_class, tunables)

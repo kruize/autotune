@@ -48,7 +48,7 @@ def get_experiment_result(experiment_tunables):
     Return the result received from the experiment manager.
 
     Parameters:
-        experiment_tunables (dict): A list containing hyperparameter values suggested by the sampler.
+        experiment_tunables (list): A list containing hyperparameter values suggested by the sampler.
 
     Returns:
         output (str): Result received from the experiment manager.
@@ -69,7 +69,7 @@ def perform_experiment(experiment_tunables):
     Process the result received from the experiment manager to retrieve sla value.
     
     Parameters:
-        experiment_tunables (dict): A list containing hyperparameter values suggested by the sampler.
+        experiment_tunables (list): A list containing hyperparameter values suggested by the sampler.
     
     Returns:
         sla (float/str): Value returned by the experiment manager.
