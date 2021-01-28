@@ -76,12 +76,18 @@ public class ValidateAutotuneObject
 		}
 
 		for (FunctionVariable functionVariable : slaInfo.getFunctionVariables()) {
-			//Check if datasource is supported
+			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");
 
+			// Check if value_type is supported
 			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
+
+			// Check if function_variable is part of objective_function
+			String objectiveFunction = slaInfo.getObjectiveFunction();
+			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName()))
+				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
 		}
 		return errorString;
 	}
