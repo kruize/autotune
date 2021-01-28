@@ -103,23 +103,21 @@ spec:
                 queries:
                   description: 'List of queries for the tunable'
                   type: object
-                  items:
-                    type: object
-                    properties:
-                      datasource:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            name:
-                              description: 'Name of the datasource'
+                  properties:
+                    datasource:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            description: 'Name of the datasource'
+                            type: string
+                          query:
+                              description: 'Query for the datasource'
                               type: string
-                            query:
-                                description: 'Query for the datasource'
-                                type: string
-                          required:
-                          - name
-                          - query
+                        required:
+                        - name
+                        - query
                 sla_class:
                   description: 'sla class of the tunable'
                   type: array

@@ -129,7 +129,7 @@ public class DeploymentInfo
 
 	public static void setMonitoringAgentService(String monitoringAgentService) {
 		if (monitoringAgentService != null)
-			DeploymentInfo.monitoringAgentService = monitoringAgentService.toUpperCase();
+			DeploymentInfo.monitoringAgentService = monitoringAgentService.toLowerCase();
 	}
 
 	public static String getLoggingLevel() {

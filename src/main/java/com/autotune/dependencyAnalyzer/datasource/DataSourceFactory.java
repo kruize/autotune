@@ -77,7 +77,7 @@ public class DataSourceFactory
 				try {
 					String clusterIP = service.getSpec().getClusterIP();
 					int port = service.getSpec().getPorts().get(0).getPort();
-					return DAConstants.HTTP_PROTOCOL + clusterIP + ":" + port;
+					return DAConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
 				} catch (Exception e) {
 					throw new MonitoringAgentNotFoundException();
 				}

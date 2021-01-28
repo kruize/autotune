@@ -34,4 +34,10 @@ public interface DataSource
 	 * @return String containing the URL
 	 */
 	String getDataSourceURL();
+
+	/**
+	 * Returns the query API endpoint for the datasource
+	 * @return String containing the API endpoint
+	 */
+	String getQueryEndpoint();
 }
