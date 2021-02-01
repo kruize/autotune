@@ -23,6 +23,7 @@ import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
+import com.autotune.dependencyAnalyzer.k8sObjects.FunctionVariable;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -135,6 +136,25 @@ public class ListAppTunables extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+
+		// Add function_variables info
+		JSONArray functionVariablesArray = new JSONArray();
+		for (FunctionVariable functionVariable : autotuneObject.getSlaInfo().getFunctionVariables()) {
+			JSONObject functionVariableJson = new JSONObject();
+			functionVariableJson.put(DAConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
+			functionVariableJson.put(DAConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
+			try {
+				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
+				functionVariableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
+						dataSource.getQueryEndpoint() + functionVariable.getQuery());
+			} catch (MonitoringAgentNotFoundException e) {
+				functionVariableJson.put(DAConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
+			}
+
+			functionVariablesArray.put(functionVariableJson);
+		}
+
+		jsonObject.put(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)

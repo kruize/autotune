@@ -99,7 +99,14 @@ Returns the list of applications monitored by autotune along with their tunables
       "application_name": "app1",
       “objective_function”: “transaction_response_time”,
       "sla_class": "response_time",
-      “direction”: “minimize”
+      “direction”: “minimize”,
+      "function_variables": [
+        {
+          "name": "transaction_response_time",
+          "value_type": "double",
+          "query_url": "http://prometheus:9090/api/v1/query?query=application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
+        }
+      ],
       "layers": [
         {
           "layer_level": 0,
@@ -111,14 +118,14 @@ Returns the list of applications monitored by autotune along with their tunables
                 "upper_bound": "300M",
                 "lower_bound": "150M",
                 "value_type": "double",
-                "query_url": "http://prometheus:9090/container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}"
+                "query_url": "http://prometheus:9090/api/v1/query?query=container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}"
             },
             {
                 "name": "cpuRequest",
                 "upper_bound": "3.0",
                 "lower_bound": "1.0",
                 "value_type": "double",
-                "query_url": "http://prometheus:9090/(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])"
+                "query_url": "http://prometheus:9090/api/v1/query?query=(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])"
             }
           ]
         },
