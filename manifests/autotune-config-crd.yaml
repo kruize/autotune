@@ -91,6 +91,8 @@ spec:
                 name:
                   description: 'Name of the tunable'
                   type: string
+                description:
+                  type: string
                 upper_bound:
                   description: 'Upper bound of the recommendations generated for the tunable'
                   type: string
