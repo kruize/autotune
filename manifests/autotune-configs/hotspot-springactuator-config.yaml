@@ -7,10 +7,10 @@ layer_level: 1
 details: hotspot tunables
 layerPresence:
   query:
-   datasource:
-    -name: prometheus
-     query: jvm_memory_used_bytes{area=\"heap\",id=\"Eden Space\"}
-     key: pod
+    datasource:
+    - name: prometheus
+      query: jvm_memory_used_bytes{area=\"heap\",id=\"Eden Space\"}
+      key: pod
 tunables:
 - name: MaxInlineLevel
   description: 'maximum number of nested calls that are inlined. Default is 9'

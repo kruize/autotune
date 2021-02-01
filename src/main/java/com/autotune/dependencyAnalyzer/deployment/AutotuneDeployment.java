@@ -306,11 +306,11 @@ public class AutotuneDeployment
 			JSONObject presenceJson = autotuneConfigJson.optJSONObject(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
-			JSONArray layerPresenceQueryJson = null;
+			JSONObject layerPresenceQueryJson = null;
 			JSONArray layerPresenceLabelJson = null;
 			if (presenceJson != null) {
 				presence = presenceJson.optString(DAConstants.AutotuneConfigConstants.PRESENCE);
-				layerPresenceQueryJson = presenceJson.optJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+				layerPresenceQueryJson = presenceJson.optJSONObject(DAConstants.AutotuneConfigConstants.QUERY);
 				layerPresenceLabelJson = presenceJson.optJSONArray(DAConstants.AutotuneConfigConstants.LABEL);
 			}
 
@@ -327,7 +327,8 @@ public class AutotuneDeployment
 			String layerPresenceLabelValue = null;
 
 			if (layerPresenceQueryJson != null) {
-				for (Object datasource : layerPresenceQueryJson) {
+				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+				for (Object datasource : datasourceArray) {
 					JSONObject datasourceJson = (JSONObject) datasource;
 					if (datasourceJson.getString(DAConstants.AutotuneConfigConstants.NAME).equals(DeploymentInfo.getMonitoringAgent())) {
 						layerPresenceQuery = datasourceJson.getString(DAConstants.AutotuneConfigConstants.QUERY);
@@ -361,8 +362,11 @@ public class AutotuneDeployment
 			for (Object tunablesObject : tunablesJsonArray) {
 				JSONObject tunableJson = (JSONObject) tunablesObject;
 
-				JSONArray dataSourceArray = tunableJson.optJSONObject(DAConstants.AutotuneConfigConstants.QUERIES)
-						.optJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+				JSONObject tunableQueries = tunableJson.optJSONObject(DAConstants.AutotuneConfigConstants.QUERIES);
+				JSONArray dataSourceArray = null;
+				if (tunableQueries != null) {
+					dataSourceArray = tunableQueries.optJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+				}
 
 				// Store the datasource and query from the JSON in a map
 				Map<String, String> queriesMap = new HashMap<>();
