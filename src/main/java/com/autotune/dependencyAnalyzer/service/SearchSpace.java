@@ -87,9 +87,13 @@ public class SearchSpace extends HttpServlet
                 }
             }
         }
-        if (outputJsonArray.isEmpty())
-            outputJsonArray.put("Error: Application " + applicationName + " not found!");
 
+        if (outputJsonArray.isEmpty()) {
+            if (AutotuneDeployment.autotuneObjectMap.isEmpty())
+                outputJsonArray.put("Error: No objects of kind Autotune found!");
+            else
+                outputJsonArray.put("Error: Application " + applicationName + " not found!");
+        }
         resp.getWriter().println(outputJsonArray.toString(4));
     }
 
@@ -104,7 +108,8 @@ public class SearchSpace extends HttpServlet
         applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
 
         JSONArray tunablesJsonArray = new JSONArray();
-        for(AutotuneConfig autotuneConfig : applicationServiceStack.getStackLayers()) {
+        for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
+            AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
             for (Tunable tunable : autotuneConfig.getTunables()) {
                 JSONObject tunableJson = new JSONObject();
                 tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());

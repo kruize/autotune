@@ -47,6 +47,11 @@ public class PrometheusDataSource implements DataSource
 		return dataSourceURL;
 	}
 
+	@Override
+	public String getQueryEndpoint() {
+		return DAConstants.PROMETHEUS_ENDPOINT;
+	}
+
 	public String getToken() {
 		return token;
 	}
@@ -81,7 +86,7 @@ public class PrometheusDataSource implements DataSource
 	 * @throws MalformedURLException
 	 */
 	public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException {
-		String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + DAConstants.PROMETHEUS_ENDPOINT + query), token);
+		String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + getQueryEndpoint() + query), token);
 
 		JSONObject responseJson = new JSONObject(response);
 		ArrayList<String> valuesList = new ArrayList<>();

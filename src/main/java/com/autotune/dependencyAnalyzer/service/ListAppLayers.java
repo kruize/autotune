@@ -100,8 +100,12 @@ public class ListAppLayers extends HttpServlet
 			}
 		}
 
-		if (outputJsonArray.isEmpty())
-			outputJsonArray.put("Error: Application " + applicationName + " not found!");
+		if (outputJsonArray.isEmpty()) {
+			if (AutotuneDeployment.autotuneObjectMap.isEmpty())
+				outputJsonArray.put("Error: No objects of kind Autotune found!");
+			else
+				outputJsonArray.put("Error: Application " + applicationName + " not found!");
+		}
 
 		resp.getWriter().println(outputJsonArray.toString(4));
 	}
@@ -118,7 +122,10 @@ public class ListAppLayers extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 
 		JSONArray layersArray = new JSONArray();
-		for (AutotuneConfig autotuneConfig : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).get(application).getStackLayers()) {
+		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
+				.get(application).getStackLayers().keySet()) {
+			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
+					.get(application).getStackLayers().get(autotuneConfigName);
 			JSONObject layerJson = new JSONObject();
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());

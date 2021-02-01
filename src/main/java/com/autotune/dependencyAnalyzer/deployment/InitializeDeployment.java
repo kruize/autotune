@@ -48,7 +48,7 @@ public class InitializeDeployment
 		DeploymentInfo.setLoggingLevel(logging_level);
 
 		//If no endpoint was specified in the configmap
-		if (monitoring_agent_endpoint == null) {
+		if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
 			if (monitoring_agent == null || monitoring_agent_service == null) {
 				throw new MonitoringAgentNotFoundException();
 			} else {
