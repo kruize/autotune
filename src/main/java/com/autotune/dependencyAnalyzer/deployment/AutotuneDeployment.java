@@ -510,7 +510,7 @@ public class AutotuneDeployment
 		ArrayList<Tunable> tunables = new ArrayList<>();
 		for (Tunable tunable : autotuneConfig.getTunables()) {
 			try {
-				Map<String, String> queries = tunable.getQueries();
+				Map<String, String> queries = new HashMap<>(tunable.getQueries());
 
 				//Replace the query variables for all queries in the tunable and add the updated tunable copy to the tunables arraylist
 				for (String datasource : queries.keySet()) {
