@@ -318,8 +318,14 @@ public class AutotuneDeployment
 			String namespace = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
-			Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
-			ArrayList<Map<String, String>> arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(DAConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+			ArrayList<Map<String, String>> arrayList = null;
+			try {
+				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
+				arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(DAConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+			} catch (Exception e) {
+				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
+				return null;
+			}
 
 			String layerPresenceQuery = null;
 			String layerPresenceKey = null;
