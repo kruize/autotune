@@ -124,7 +124,7 @@ public class ListAutotuneTunables extends HttpServlet
 			return;
 		}
 
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 
