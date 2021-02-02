@@ -314,6 +314,7 @@ public class AutotuneDeployment
 				layerPresenceLabelJson = presenceJson.optJSONArray(DAConstants.AutotuneConfigConstants.LABEL);
 			}
 
+			String name = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAME);
 			String namespace = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
@@ -346,7 +347,7 @@ public class AutotuneDeployment
 				}
 			}
 
-			String configName = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+			String layerName = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
 			String details = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.DETAILS);
 			int level = autotuneConfigJson.optInt(DAConstants.AutotuneConfigConstants.LAYER_LEVEL);
 
@@ -385,7 +386,7 @@ public class AutotuneDeployment
 					}
 				}
 
-				String name = tunableJson.optString(DAConstants.AutotuneConfigConstants.NAME);
+				String tunableName = tunableJson.optString(DAConstants.AutotuneConfigConstants.NAME);
 				String tunableValueType = tunableJson.optString(DAConstants.AutotuneConfigConstants.VALUE_TYPE);
 				String upperBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
 				String lowerBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
@@ -400,14 +401,15 @@ public class AutotuneDeployment
 
 				Tunable tunable;
 				try {
-					tunable = new Tunable(name, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
+					tunable = new Tunable(tunableName, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
 					e.printStackTrace();
 				}
 			}
 
-			return new AutotuneConfig(configName,
+			return new AutotuneConfig(name,
+					layerName,
 					level,
 					details,
 					presence,
@@ -525,6 +527,7 @@ public class AutotuneDeployment
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
 			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getName(),
+					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
 					autotuneConfig.getPresence(),

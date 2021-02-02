@@ -32,6 +32,7 @@ public final class AutotuneConfig
 {
 	private final int level;
 	private final String name;
+	private final String layerName;
 	private final String details;
 	//If true, apply to all autotuneobjects
 	private final String presence;
@@ -49,6 +50,7 @@ public final class AutotuneConfig
 	private final ArrayList<Tunable> tunables;
 
 	public AutotuneConfig(String name,
+			String layerName,
 			int level,
 			String details,
 			String presence,
@@ -59,6 +61,7 @@ public final class AutotuneConfig
 			ArrayList<Tunable> tunables) throws InvalidValueException {
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneConfigConstants.NAME, name);
+		map.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
 		map.put(DAConstants.AutotuneConfigConstants.PRESENCE, presence);
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY, layerPresenceQuery);
@@ -70,6 +73,7 @@ public final class AutotuneConfig
 		StringBuilder error = ValidateAutotuneConfig.validate(map);
 		if (error.toString().isEmpty()) {
 			this.name = name;
+			this.layerName = layerName;
 			this.presence = presence;
 			this.level = level;
 			this.details = details;
@@ -86,6 +90,7 @@ public final class AutotuneConfig
 
 	public AutotuneConfig(AutotuneConfig copy) {
 		this.name = copy.getName();
+		this.layerName = copy.getLayerName();
 		this.level = copy.getLevel();
 		this.details = copy.getDetails();
 		this.layerPresenceQuery = copy.getLayerPresenceQuery();
@@ -107,6 +112,10 @@ public final class AutotuneConfig
 
 	public String getName() {
 		return name;
+	}
+
+	public String getLayerName() {
+		return layerName;
 	}
 
 	public String getPresence() {

@@ -163,7 +163,7 @@ public class ListAppTunables extends HttpServlet
 					.get(application).getStackLayers().get(autotuneConfigName);
 			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
-				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 				layerJson.put(DAConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 

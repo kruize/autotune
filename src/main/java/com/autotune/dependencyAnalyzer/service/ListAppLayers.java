@@ -127,7 +127,7 @@ public class ListAppLayers extends HttpServlet
 			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
 					.get(application).getStackLayers().get(autotuneConfigName);
 			JSONObject layerJson = new JSONObject();
-			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getName());
+			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 			layersArray.put(layerJson);
