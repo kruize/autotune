@@ -317,7 +317,7 @@ public class AutotuneDeployment
 			String namespace = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
-			Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
+			Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(DeploymentInfo.getKubernetesType());
 			ArrayList<Map<String, String>> arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(DAConstants.AutotuneConfigConstants.QUERY_VARIABLES);
 
 			String layerPresenceQuery = null;
