@@ -23,8 +23,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 public class PrometheusDataSource implements DataSource
@@ -86,7 +88,12 @@ public class PrometheusDataSource implements DataSource
 	 * @throws MalformedURLException
 	 */
 	public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException {
-		String response = HttpUtil.getDataFromURL(new URL(dataSourceURL + getQueryEndpoint() + query), token);
+		try {
+			query = URLEncoder.encode(query, "UTF-8");
+		} catch (UnsupportedEncodingException ignored) { }
+
+		String queryURL = dataSourceURL + getQueryEndpoint() + query;
+		String response = HttpUtil.getDataFromURL(new URL(queryURL), token);
 
 		JSONObject responseJson = new JSONObject(response);
 		ArrayList<String> valuesList = new ArrayList<>();

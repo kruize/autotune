@@ -468,7 +468,7 @@ public class AutotuneDeployment
 			if (apps != null) {
 				for (String application : apps) {
 					for (String autotuneObject : applicationServiceStackMap.keySet()) {
-						if (applicationServiceStackMap.containsKey(application)) {
+						if (applicationServiceStackMap.get(autotuneObject).containsKey(application)) {
 							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(application), autotuneConfig);
 						}
 					}
