@@ -170,16 +170,22 @@ public class ListAppTunables extends HttpServlet
 				JSONArray tunablesArray = new JSONArray();
 				for (Tunable tunable : autotuneConfig.getTunables()) {
 					JSONObject tunableJson = new JSONObject();
+					String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 					try {
+						String query = DAConstants.NONE;
 						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-								dataSource.getQueryEndpoint() + tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
+						// If tunable has a query specified
+						if (tunableQuery != null && !tunableQuery.isEmpty()) {
+							query = Objects.requireNonNull(dataSource).getDataSourceURL() +
+									dataSource.getQueryEndpoint() + tunableQuery;
+						}
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, query);
 					} catch (MonitoringAgentNotFoundException e) {
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunable.getQueries().get(DeploymentInfo.getMonitoringAgent()));
+						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunableQuery);
 					}
 					tunablesArray.put(tunableJson);
 				}

@@ -31,6 +31,8 @@ public class DAConstants
 	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
 
 	public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
+	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
+
 	public static final String HTTP_PROTOCOL = "http";
 
 	// Used in Configuration for accessing the autotune objects from kubernetes
@@ -44,9 +46,8 @@ public class DAConstants
 	public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
 	public static final String AUTOTUNE_VARIABLE_RESOURCE_NAME = AUTOTUNE_VARIABLE_PLURALS + GROUP;
 
-	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
-
 	public static final String PRESENCE_ALWAYS = "always";
+	public static final String NONE = "none";
 
 	public static final String POD_VARIABLE = "$POD$";
 	public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
