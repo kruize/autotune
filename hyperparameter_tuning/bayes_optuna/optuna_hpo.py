@@ -62,6 +62,9 @@ class Objective(object):
                 tunable_value = trial.suggest_int(
                     tunable["name"], tunable["lower_bound"], tunable["upper_bound"], tunable["step"]
                 )
+            elif tunable["value_type"].lower() == "string":
+                tunable_value = trial.suggest_categorical(tunable["name"], tunable["choices"])
+
             experiment_tunables.append({"tunable_name": tunable["name"], "tunable_value": tunable_value})
 
         config["experiment_tunables"] = experiment_tunables
