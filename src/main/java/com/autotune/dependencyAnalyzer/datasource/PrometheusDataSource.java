@@ -94,7 +94,8 @@ public class PrometheusDataSource implements DataSource
 
 		String queryURL = dataSourceURL + getQueryEndpoint() + query;
 		String response = HttpUtil.getDataFromURL(new URL(queryURL), token);
-
+		LOGGER.debug("Query URL is: {}", queryURL);
+		LOGGER.debug("Query response: {}", response);
 		JSONObject responseJson = new JSONObject(response);
 		ArrayList<String> valuesList = new ArrayList<>();
 
@@ -104,6 +105,7 @@ public class PrometheusDataSource implements DataSource
 		} catch (TooManyRecursiveCallsException e) {
 			e.printStackTrace();
 		}
+		LOGGER.debug("Applications for the query: {}", valuesList.toString());
 		return valuesList;
 	}
 }
