@@ -17,7 +17,8 @@
 
 ###############################  v MiniKube v #################################
 # include the common_utils.sh script to access methods 
-source common_utils.sh
+my_current_dir="$(dirname "$0")"
+$my_current_dir/common_utils.sh
 non_interactive=0
 # Call setup by default (and not terminate)
 setup=1
@@ -111,21 +112,36 @@ function delete_prometheus() {
 }
 
 #Taking input from user to install/delete prometheus
-while getopts "st" option; 
-	do
-		case ${option} in
-		s ) #For option s to install the prometheus
-			echo "Info: install prometheus..."
-			setup=1
-			install_prometheus
-		;;
-		t ) #For option t terminating and deleting the prometheus 
-			echo "Info: deleting prometheus..."
-			setup=0	
-			delete_prometheus
-		;;
-		\? ) #For invalid option
-			echo "You have to use: [-s] or [-t] options only"
-		;;
-		esac
-done
+
+usage()
+{ 
+	echo >&2 "usage: $0 [-a] [-s|t] where -a= non-interactive mode,  -s=start, -t=terminate "; exit 0; 
+}
+#empty argument validation
+if [ $# -eq 0 ];
+then
+    usage
+    exit 0
+else
+	while getopts "ast" option; 
+		do
+			case ${option} in
+			a)
+				non_interactive=1
+			;;
+			s) #For option s to install the prometheus
+				echo "Info: install prometheus..."
+				setup=1
+				install_prometheus
+			;;
+			t) #For option t terminating and deleting the prometheus 
+				echo "Info: deleting prometheus..."
+				setup=0	
+				delete_prometheus
+			;;
+			\? ) #For invalid option
+				echo "You have to use: [-s] or [-t] options only"
+			;;
+			esac
+	done
+fi	
