@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
 # limitations under the License.
 #
 
-###############################  v MiniKube v #################################
-# include the common_utils.sh script to access methods 
-source common_utils.sh
+# include the common_utils.sh script to access methods
+current_dir="$(dirname "$0")"
+source ${current_dir}/common_utils.sh
 non_interactive=0
 # Call setup by default (and not terminate)
 setup=1
+
 function install_prometheus() {
 	echo
 	echo "Info: Checking pre requisites for prometheus..."
@@ -37,14 +38,14 @@ function install_prometheus() {
 	if [ "${prometheus_pod_running}" != "" ]; then
 		echo "Prometheus is already installed and running."
 		return;
-	fi	
+	fi
 
-	if [ ${non_interactive} == 0 ]; then
+	if [ "${non_interactive}" == 0 ]; then
 		echo "Info: Prometheus needs cadvisor/grafana"
 		echo -n "Download and install these software to minikube(y/n)? "
 		read inst
 		linst=$(echo ${inst} | tr A-Z a-z)
-		if [ ${linst} == "n" ]; then
+		if [ "${linst}" == "n" ]; then
 			echo "Info: prometheus not installed"
 			exit 0
 		fi
@@ -110,22 +111,39 @@ function delete_prometheus() {
 	rm -rf minikube_downloads
 }
 
-#Taking input from user to install/delete prometheus
-while getopts "st" option; 
-	do
-		case ${option} in
-		s ) #For option s to install the prometheus
-			echo "Info: install prometheus..."
-			setup=1
-			install_prometheus
+# Input from user to install/delete prometheus
+function usage() {
+	echo >&2 "usage: $0 [-a] [-s|t] where -a= non-interactive mode,  -s=start, -t=terminate ";
+	exit 1;
+}
+
+# empty argument validation
+if [ $# -eq 0 ]; then
+	usage
+fi
+
+while getopts "ast" option;
+do
+	case "${option}" in
+	a)
+		non_interactive=1
 		;;
-		t ) #For option t terminating and deleting the prometheus 
-			echo "Info: deleting prometheus..."
-			setup=0	
-			delete_prometheus
+	s) # For option s to install the prometheus
+		setup=1
 		;;
-		\? ) #For invalid option
-			echo "You have to use: [-s] or [-t] options only"
+	t) # For option t terminating and deleting the prometheus
+		setup=0
 		;;
-		esac
+	\?) # For invalid option
+		usage
+		;;
+	esac
 done
+
+if [ "${setup}" == 1 ]; then
+	echo "Info: installing prometheus..."
+	install_prometheus
+else
+	echo "Info: deleting prometheus..."
+	delete_prometheus
+fi
