@@ -1,0 +1,20 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "quarkus"
+layer_name: quarkus
+layer_level: 2
+details: quarkus tunables
+layerPresence:
+  label:
+  - name: "app.kubernetes.io/layer"
+    value: "quarkus"
+tunables:
+- name: quarkus.hibernate-orm.jdbc.statement-fetch-size
+  description: 'How many rows are fetched at a time by the JDBC driver.'
+  value_type: integer
+  upper_bound: "50"
+  lower_bound: "1"
+  sla_class:
+  - response_time
+  - throughput
