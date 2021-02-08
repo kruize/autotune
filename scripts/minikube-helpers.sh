@@ -67,15 +67,16 @@ function minikube_deploy() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_DEPLOY_MANIFEST}
 	sleep 2
 	check_running autotune
-	if [ "${err}" == "0" ]; then
-		echo "Info: Access autotune service to access the API and see autotune recommendations at http://localhost:8080"
-		echo "Info: Run the following command first to access autotune"
-		echo "      $ kubectl port-forward -n ${autotune_ns} svc/autotune 8080:8080"
-		echo
-	else
+	if [ "${err}" != "0" ]; then
 		# Indicate deploy failed on error
 		exit 1
 	fi
+
+	# Get the Autotune application port in minikube
+	MINIKUBE_IP=$(minikube ip)
+	AUTOTUNE_PORT=$(${kubectl_cmd} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+	echo "Info: Access Autotune at http://${MINIKUBE_IP}:${AUTOTUNE_PORT}/listAutotuneTunables"
+	echo
 }
 
 function minikube_start() {
