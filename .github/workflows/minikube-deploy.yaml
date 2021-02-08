@@ -31,9 +31,9 @@ jobs:
           kubectl get pods -n kube-system      
       - name: Build autotune
         run: |
-         echo Build autotune
-        ./build.sh -t autotune:test
-         docker images | grep autotune     
+          echo Build autotune
+          ./build.sh -t autotune:test
+          docker images | grep autotune     
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube  
@@ -42,5 +42,5 @@ jobs:
       - name: Deploy autotune
         run: |
           echo Deploy autotune  
-        ./deploy.sh -c minikube -i autotune:test
+          ./deploy.sh -c minikube -i autotune:test
 
