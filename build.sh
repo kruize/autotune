@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
 AUTOTUNE_DOCKER_REPO="kruize/autotune"
-#Fetch autotune version from the pom.xml file.
+# Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
@@ -36,7 +36,7 @@ function check_err() {
 	fi
 }
 
-# Remove any previous images of kruize
+# Remove any previous images of autotune
 function cleanup() {
 	echo -n "Cleanup any previous kruize images..."
 	docker stop autotune >/dev/null 2>/dev/null
