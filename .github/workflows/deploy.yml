@@ -32,15 +32,15 @@ jobs:
       - name: Build autotune
         run: |
          echo Build autotune
-         ./build.sh
+        ./build.sh -t autotune:test
          docker images | grep autotune     
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube  
           cd scripts
-          ./prometheus_on_minikube.sh -s    
+          ./prometheus_on_minikube.sh -as    
       - name: Deploy autotune
         run: |
           echo Deploy autotune  
-          ./deploy.sh -c minikube
+        ./deploy.sh -c minikube -i autotune:test
 
