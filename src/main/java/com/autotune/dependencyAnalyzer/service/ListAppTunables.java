@@ -103,28 +103,27 @@ public class ListAppTunables extends HttpServlet
 		String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
 		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
 
-		for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+		// If no autotuneobjects in the cluster
+		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+			outputJsonArray.put("Error: No objects of kind Autotune found!");
+		} else {
+			for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
+				AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
-			//If no application_name was passed in the request
-			if (applicationName == null) {
-				for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-					addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, application, layerName);
+				//If no application_name was passed in the request
+				if (applicationName == null) {
+					for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+						addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, application, layerName);
+					}
+				} else {
+					addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName, layerName);
 				}
-			} else {
-				addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName, layerName);
 			}
 		}
 		resp.getWriter().println(outputJsonArray.toString(4));
 	}
 
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
-		// If no autotune objects in the cluster
-		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-			outputJsonArray.put("Error: No objects of kind Autotune found!");
-			return;
-		}
-
 		//If no such application is monitored by autotune
 		if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(application)){
 			outputJsonArray.put("Error: Application " + application + " not found!");
