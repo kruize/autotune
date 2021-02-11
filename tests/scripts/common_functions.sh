@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 RedHat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -306,7 +306,6 @@ function validate_yaml () {
 				failed=1
 				error_message  ${failed} 
 			fi
-	
 		else
 			echo "${object} object ${testcase} did not get created" | tee -a ${LOG}
 			failed=1
@@ -380,4 +379,49 @@ function run_test_case() {
 	rm kubectl.log
 	echo ""
 	echo "--------------------------------------------------------------------------------"| tee -a ${LOG}
+}
+
+# Perform app_autotune/autotuneconfig yaml tests
+# input: testcase, testobject(autotune/autotuneconfig), path to yaml directory
+# output: Perform the tests for given test case 
+function run_test() {
+	testcase=$1
+	object=$2
+	path=$3
+	
+	for test in ${testtorun[@]}
+	do	
+		LOG_DIR="${TEST_SUITE_DIR}/${test}"
+		mkdir ${LOG_DIR}
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" 
+		echo "                    Running Testcases for ${test}"
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		typeset -n var="${test}_testcases"
+		for testcase in ${var[@]}
+		do 
+			yaml=${path}/${test}/${testcase}
+			typeset -n autotune_object="${test}_autotune_objects[${testcase}]"
+			typeset -n expected_log_msg="${test}_expected_log_msgs[${testcase}]"
+			run_test_case ${object} ${testcase} ${yaml} 
+			echo
+		done
+		echo ""
+	done
+	
+	# perform other test cases
+	LOG_DIR="${TEST_SUITE_DIR}/${other_tests}"
+	mkdir ${LOG_DIR}
+	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" 
+	echo "                    Running Testcases for ${other_tests}"
+	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	typeset -n var="${other_tests}_testcases"
+	for testcase in ${var[@]}
+	do 
+		yaml=${path}/${other_tests}/${testcase}
+		typeset -n autotune_object="${other_tests}_autotune_objects[${testcase}]"
+		typeset -n expected_log_msg="${other_tests}_expected_log_msgs[${testcase}]"
+		run_test_case ${object} ${testcase} ${yaml} 
+		echo
+	done
+	echo ""
 }

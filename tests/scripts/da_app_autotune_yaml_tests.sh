@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 RedHat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,31 +50,8 @@ function app_autotune_yaml_tests() {
 		testtorun=${testcase}
 	fi
 	
-	for test in ${testtorun[@]}
-	do	
-		LOG_DIR="${TEST_SUITE_DIR}/${test}"
-		mkdir ${LOG_DIR}
-		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" 
-		echo "                    Running Testcases for ${test}"
-		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-		typeset -n var="${test}_testcases"
-		for testcase in ${var[@]}
-		do 
-			yaml=${MANIFESTS}/${module}/${App_Autotune_yaml}/${test}/${testcase}
-			typeset -n autotune_object="${test}_autotune_objects[${testcase}]"
-			typeset -n log_msg="${test}_expected_log_msgs[${testcase}]"
-			run_test_case autotune ${testcase} ${yaml} 
-			echo
-		done
-		echo ""
-	done
-	
-	testcase=incomplete-autotune
-	test=incomplete_yaml 
-	yaml=${MANIFESTS}/${module}/${App_Autotune_yaml}/${testcase}
-	typeset -n autotune_object="${test}_autotune_objects[${testcase}]"
-	typeset -n log_msg="${test}_expected_log_msgs[${testcase}]"
-	run_test_case autotune ${testcase} ${yaml} 
+	# perform the tests for application autotune yamls
+	run_test ${testcase} autotune ${path}
 	
 	# Summary of the test suite
 	testsuitesummary ${FUNCNAME} ${FAILED_CASES} 
