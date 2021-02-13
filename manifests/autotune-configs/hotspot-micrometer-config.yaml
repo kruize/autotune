@@ -9,7 +9,7 @@ layerPresence:
   query:
     datasource:
     - name: prometheus
-      query: vendor_memoryPool_usage_bytes{name="Tenured Gen"}
+      query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
       key: pod
 tunables:
 - name: MaxInlineLevel
