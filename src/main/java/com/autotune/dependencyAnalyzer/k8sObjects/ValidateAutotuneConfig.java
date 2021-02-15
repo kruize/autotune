@@ -15,9 +15,12 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.k8sObjects;
 
+import com.autotune.dependencyAnalyzer.application.Tunable;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -39,8 +42,8 @@ public class ValidateAutotuneConfig
 		}
 
 		// Check if either presence, layerPresenceQuery or layerPresenceLabel are set. presence field has highest priority.
-		if (((String)map.get(DAConstants.AutotuneConfigConstants.PRESENCE)) == null ||
-				!((String)map.get(DAConstants.AutotuneConfigConstants.PRESENCE)).equals(DAConstants.PRESENCE_ALWAYS)) {
+		if (map.get(DAConstants.AutotuneConfigConstants.PRESENCE) == null ||
+				!map.get(DAConstants.AutotuneConfigConstants.PRESENCE).equals(DAConstants.PRESENCE_ALWAYS)) {
 			if ((map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) == null || map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE) == null) &&
 					(map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY) == null || map.get(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY) == null)) {
 				errorString.append(DAErrorConstants.AutotuneConfigErrors.LAYER_PRESENCE_MISSING);
@@ -60,6 +63,18 @@ public class ValidateAutotuneConfig
 		// Check if tunables is empty
 		if ((map.get(DAConstants.AutotuneConfigConstants.TUNABLES)) == null) {
 			errorString.append(DAErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
+		}
+
+		// Validate sla_class in tunables
+		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(DAConstants.AutotuneConfigConstants.TUNABLES);
+		if (tunableArrayList != null) {
+			for (Tunable tunable : tunableArrayList) {
+				for (String sla_class : tunable.getSlaClassList()) {
+					if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
+						errorString.append(DAErrorConstants.AutotuneConfigErrors.INVALID_SLA_CLASS).append(tunable.getName()).append("\n");
+					}
+				}
+			}
 		}
 		return errorString;
 	}
