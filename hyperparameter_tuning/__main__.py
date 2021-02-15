@@ -23,6 +23,7 @@ from install_package import install
 
 install('python-dotenv')
 install('optuna')
+install('scikit-optimize')
 
 from bayes_optuna import optuna_hpo
 
