@@ -79,8 +79,8 @@ function setup() {
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
 	
-	# Wait for 20 seconds to terminate the autotune pod
-	sleep 20
+	# Wait for 30 seconds to terminate the autotune pod
+	sleep 30
 	
 	# Check if jq is installed
 	check_prereq
