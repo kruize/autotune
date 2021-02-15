@@ -37,7 +37,7 @@ public class AutotuneSupportedTypes
 			new HashSet<>(Arrays.asList("always", "", null));
 
 	public static final Set<String> SLA_CLASSES_SUPPORTED =
-			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage"));
+			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage", "generic"));
 
 	public static final Set<String> VALUE_TYPES_SUPPORTED =
 			new HashSet<>(Arrays.asList("double", "int", "string"));

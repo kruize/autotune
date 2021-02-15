@@ -34,7 +34,7 @@ public class DAErrorConstants
 		public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
 		public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";
 		public static final String INVALID_MATCHLABEL_VALUE = "Invalid or blank MatchLabelValue in selector\n";
-		public static final String SLA_CLASS_NOT_SUPPORTED = "sla_class not supported\n";
+		public static final String SLA_CLASS_NOT_SUPPORTED = "sla_class not supported. Defaulting to generic sla_class\n";
 		public static final String DIRECTION_NOT_SUPPORTED = "direction not supported\n";
 		public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";

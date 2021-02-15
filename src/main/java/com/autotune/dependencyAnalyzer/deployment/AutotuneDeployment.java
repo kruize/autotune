@@ -23,6 +23,7 @@ import com.autotune.dependencyAnalyzer.exceptions.InvalidBoundsException;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.*;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 import com.autotune.dependencyAnalyzer.variables.Variables;
@@ -246,6 +247,12 @@ public class AutotuneDeployment
 						valueType);
 
 				functionVariableArrayList.add(functionVariable);
+			}
+
+			// If sla_class is invalid or null, default to generic sla_class.
+			if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
+				LOGGER.info(DAErrorConstants.AutotuneObjectErrors.SLA_CLASS_NOT_SUPPORTED);
+				sla_class = DAConstants.AutotuneObjectConstants.GENERIC_SLA_CLASS;
 			}
 
 			slaInfo = new SlaInfo(sla_class,
