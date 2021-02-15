@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 RedHat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 
 # Source the test suite scripts
 . ${SCRIPTS_DIR}/da_app_autotune_yaml_tests.sh
+. ${SCRIPTS_DIR}/da_autotune_config_yaml_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -74,35 +75,15 @@ mkdir -p "${RESULTS_DIR}"
 RESULTS="${RESULTS_DIR}/${tctype}"
 mkdir ${RESULTS}
 
-# Set up the autotune 
-function setup() {
-	# remove the existing autotune objects
-	autotune_cleanup ${cluster_type}
-	
-	# Wait for 30 seconds to terminate the autotune pod
-	sleep 30
-	
-	# Check if jq is installed
-	check_prereq
-	
-	# Deploy autotune 
-	deploy_autotune  ${cluster_type} ${AUTOTUNE_DOCKER_IMAGE}
-	
-	#check if the autotune operator got deployed
-	check_autotune_operator
-	
-	status=$?
-	if [ ${status} -eq 1 ]; then
-		echo "Error deploying Autotune"
-	fi
-}
-
 # Set of functional tests to be performed 
 # input: Result directory to store the functional test results
 # output: Perform the set of functional tests
 function functional_test() {
 	# perform the application autotune yaml tests 
 	app_autotune_yaml_tests > >(tee "${RESULTS}/app_autotune_yaml_tests.log") 2>&1
+
+	# perform the autotune config yaml tests
+	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
 }
 
 # If testsuite is not specified perform the set of functional tests
