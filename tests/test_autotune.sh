@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 RedHat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,8 @@
 ##### Script to test autotune #####
 #
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests")
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}/scripts"
-matched=0
-setup=1
 
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/common_functions.sh
@@ -171,6 +168,16 @@ if [ ! -z "${testcase}" ]; then
 		echo "Error: Do specify the testsuite name"
 		exit -1
 	fi
+fi
+
+if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
+	AUTOTUNE_DOCKER_IMAGE="${AUTOTUNE_IMAGE}"
+fi
+
+# check for benchmarks directory path
+if [ -z "${APP_REPO}" ]; then
+	echo "Error: Do specify the benchmarks directory path"
+	usage
 fi
 
 if [ "${setup}" -ne "0" ]; then

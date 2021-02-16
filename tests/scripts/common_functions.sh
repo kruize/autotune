@@ -36,14 +36,10 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-case "${cluster_type}" in
-	minikube)
-		NAMESPACE="monitoring"
-		;;
-	openshift)
-		NAMESPACE="openshift-monitoring"
-		;;
-esac
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests")
+AUTOTUNE_IMAGE="kruize/autotune:test"
+matched=0
+setup=1
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -67,6 +63,30 @@ function check_prereq() {
 	fi
 }
 
+# Set up the autotune 
+function setup() {
+	# remove the existing autotune objects
+	autotune_cleanup ${cluster_type}
+	
+	# Wait for 30 seconds to terminate the autotune pod
+	sleep 30
+	
+	# Check if jq is installed
+	check_prereq
+	
+	# Deploy autotune 
+	deploy_autotune  ${cluster_type} ${AUTOTUNE_DOCKER_IMAGE}
+	
+	case "${cluster_type}" in
+		minikube)
+			NAMESPACE="monitoring"
+			;;
+		openshift)
+			NAMESPACE="openshift-monitoring"
+			;;
+	esac
+}
+
 # Deploy autotune
 # input: cluster type , autotune image
 # output: Deploy autotune based on the parameter passed
@@ -88,7 +108,12 @@ function deploy_autotune() {
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
 	pushd ${AUTOTUNE_REPO} > /dev/null
-	./deploy.sh -t
+	pushd autotune/
+	echo "${PWD}"
+	cmd="./deploy.sh -c ${cluster_type} -t"
+	echo "CMD= ${cmd}"
+	${cmd}
+	popd
 }
 
 # list of test cases supported 
@@ -121,29 +146,6 @@ function check_test_case() {
 		echo "Error: Invalid testcase **${testcase}** "
 		test_case_usage ${checkfor}
 		exit -1
-	fi
-}
-
-# Check the status of autotune pod
-# input: cluster type
-# output: check if the autotune operator got deployed
-function check_autotune_operator() {
-	sleep 20
-	case ${cluster_type} in 
-		docker)
-			status=$(docker ps | grep "autotune" | cut -d " " -f1)
-			;;
-		minikube)
-			status=$(kubectl get pod -n monitoring | grep "Running" | cut -d " " -f1 | grep autotune)  
-			;;
-		openshift)
-			status=$(oc get pod -n ${NAMESPACE} | grep "Running" | cut -d " " -f1 | grep autotune)
-			;;
-	esac
-	
-	if [ -z "${status}" ]; then
-		echo "Autotune deployed successfully"
-		return 0
 	fi
 }
 
@@ -339,12 +341,12 @@ function run_test_case() {
 	((TESTS++))
 	object=$1
 	testcase=$2
-	yaml=$3	
+	yaml=$3
 	
 	# create autotune setup
 	setup >> setup.log 2>&1
 	
-	# Run the test	
+	# Run the test
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "                    Running Testcase ${test}">> ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
@@ -362,13 +364,13 @@ function run_test_case() {
 	echo "${kubectl_log_msg}" >> "${LOG}"
 	
 	# get the log of the autotune pod
-	autotune_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n monitoring)
+	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
-		status=$(kubectl get ${object} -n monitoring | grep "${testcase}" | cut -d " " -f1) >> setup.log 2>&1
+		status=$(kubectl get ${object} -n ${NAMESPACE} | grep "${testcase}" | cut -d " " -f1) >> setup.log 2>&1
 	else
 		status=$(kubectl get ${object} | grep "${testcase}" | cut -d " " -f1) >> setup.log 2>&1
 	fi
