@@ -1,0 +1,22 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "blank-layer-presence-query-datasource"
+layer_name: hotspot
+layer_level: 1
+details: hotspot tunables
+layerPresence:
+  query:
+    datasource:
+    - name: ' '
+      query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
+      key: pod
+tunables:
+- name: MaxInlineLevel
+  description: 'maximum number of nested calls that are inlined. Default is 9'
+  value_type: integer
+  upper_bound: "50"
+  lower_bound: "9"
+  sla_class:
+  - response_time
+  - throughput
