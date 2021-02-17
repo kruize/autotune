@@ -2,11 +2,18 @@ name: Deploy
 
 # Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push event but only for the master branch
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'design/**'
+      - 'examples/**'
+      - 'extensions/**'
   pull_request:
-    branches: [ master ]
+    paths-ignore:
+      - 'design/**'
+      - 'examples/**'
+      - 'extensions/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
