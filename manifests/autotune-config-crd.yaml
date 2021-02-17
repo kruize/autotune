@@ -135,3 +135,4 @@ spec:
         - layer_name
         - layer_level
         - layerPresence
+        - tunables
