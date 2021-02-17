@@ -1,0 +1,11 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "no-tunables"
+layer_name: container
+layer_level: 0
+details: generic container tunables
+layerPresence:
+  # This layer is assumed to be available by default for all applications.
+  presence: always
+
