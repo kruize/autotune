@@ -28,6 +28,8 @@ public class DAErrorConstants
 		public final static String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
 		public final static String NO_TUNABLES = "AutotuneConfig has no tunables\n";
 		public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
+		public static final String INVALID_SLA_CLASS = "Invalid sla_class for tunable ";
+		public static final String TUNABLE_NAME_EMPTY = "Tunable name cannot be empty";
 	}
 
 	public static class AutotuneObjectErrors {
