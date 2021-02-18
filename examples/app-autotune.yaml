@@ -20,3 +20,6 @@ spec:
     matchRoute: ""
     matchURI: ""
     matchService: ""
+  datasource:
+    name: "prometheus"
+    value: "prometheus_URL"
