@@ -24,24 +24,29 @@ function check_running() {
 	kubectl_cmd="kubectl -n ${prometheus_ns}"
 
 	echo "Info: Waiting for ${check_pod} to come up..."
+	err_wait=0
 	while true;
 	do
 		sleep 2
 		${kubectl_cmd} get pods | grep ${check_pod}
-		pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | awk '{ print $3 }' | grep -v 'Terminating')
+		pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | awk '{ print $3 }')
 		case "${pod_stat}" in
-			"ContainerCreating"|"Terminating"|"Pending")
-				sleep 2
-				;;
 			"Running")
 				echo "Info: ${check_pod} deploy succeeded: ${pod_stat}"
 				err=0
 				break;
 				;;
+			"Error")
+				# On Error, wait for 10 seconds before exiting.
+				err_wait=$(( err_wait + 1 ))
+				if [ ${err_wait} -gt 5 ]; then
+					echo "Error: ${check_pod} deploy failed: ${pod_stat}"
+					err=-1
+					break;
+				fi
+				;;
 			*)
-				echo "Error: ${check_pod} deploy failed: ${pod_stat}"
-				err=-1
-				break;
+				sleep 2
 				;;
 		esac
 	done
