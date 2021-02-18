@@ -54,10 +54,17 @@ class Objective(object):
 
         # Define search space
         for tunable in self.tunables:
-            if tunable["value_type"] == "double":
+            if tunable["value_type"].lower() == "double":
                 tunable_value = trial.suggest_discrete_uniform(
                     tunable["name"], tunable["lower_bound"], tunable["upper_bound"], tunable["step"]
                 )
+            elif tunable["value_type"].lower() == "integer":
+                tunable_value = trial.suggest_int(
+                    tunable["name"], tunable["lower_bound"], tunable["upper_bound"], tunable["step"]
+                )
+            elif tunable["value_type"].lower() == "categorical":
+                tunable_value = trial.suggest_categorical(tunable["name"], tunable["choices"])
+
             experiment_tunables.append({"tunable_name": tunable["name"], "tunable_value": tunable_value})
 
         config["experiment_tunables"] = experiment_tunables
