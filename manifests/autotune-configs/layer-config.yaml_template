@@ -1,0 +1,46 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "xyz"
+layer_name: xyz
+# layer_level 0 = container, 1 = runtime (eg: openj9, hotspot, nodejs)
+#             2 = framework (eg: quarkus, liberty, springboot), 3 = app
+layer_level: 2
+details: xyz tunables
+# layerPresence tells autotune how to detect this layer in a pod
+layerPresence:
+  # Uncomment one of the following
+  # This layer is assumed to be available by default for all applications.
+  #presence: always
+  # This layer is present if the following prometheus query returns non null
+  #query:
+  #  datasource:
+  #  - name: prometheus
+  #    query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
+  #    key: pod
+  # This layer is present if the following pod label is present
+  #label:
+  #- name: app.kubernetes.io/layer
+  #  value: quarkus
+# This section describes the tunables associated with this layer and is an array
+tunables:
+- name: quarkus.thread-pool.core-threads
+  description: 'The core thread pool size. This number of threads will always be kept alive.'
+  # value_type: currently one of double or integer
+  value_type: integer
+  upper_bound: "10"
+  lower_bound: "1"
+  # sla_class is an array of one or more of "response_time, throughput or resource_usage"
+  # It represents which sla's are affected by this tunable
+  sla_class:
+  - response_time
+  - throughput
+- name: quarkus.hibernate-orm.jdbc.statement-fetch-size
+  description: 'How many rows are fetched at a time by the JDBC driver.'
+  value_type: integer
+  upper_bound: "50"
+  lower_bound: "1"
+  sla_class:
+  - response_time
+  - throughput
+  - resource_usage
