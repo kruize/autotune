@@ -26,6 +26,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 # Source the test suite scripts
 . ${SCRIPTS_DIR}/da_app_autotune_yaml_tests.sh
 . ${SCRIPTS_DIR}/da_autotune_config_yaml_tests.sh
+. ${SCRIPTS_DIR}/da_basic_api_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -84,6 +85,9 @@ function functional_test() {
 
 	# perform the autotune config yaml tests
 	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
+
+	# perform the basic api tests
+	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
 }
 
 # If testsuite is not specified perform the set of functional tests
