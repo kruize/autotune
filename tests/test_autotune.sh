@@ -19,14 +19,13 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}/scripts"
-
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/common_functions.sh
 
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c docker|minikube|openshift -k kurl -r [location of benchmarks] -y [autotune yaml path] [-i autotune image] [--tctype=functional|system] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
+	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
 	echo ""
 	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results"
 	echo ""
@@ -55,7 +54,7 @@ function check_cluster_type() {
 		usage
 	fi
 	case "${cluster_type}" in
-	docker|minikube|openshift)
+	minikube)
 		;;
 	*)
 		echo "Error: Cluster type **${cluster_type}** is not supported  "
@@ -145,9 +144,6 @@ do
 		;;
 	r)
 		APP_REPO="${OPTARG}"
-		;;
-	y)
-		AUTOTUNE_YAML_PATH="${OPTARG}"
 		;;
 	[?])
 		usage
