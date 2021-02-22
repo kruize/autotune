@@ -69,7 +69,7 @@ public class ValidateAutotuneConfig
 		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(DAConstants.AutotuneConfigConstants.TUNABLES);
 		if (tunableArrayList != null) {
 			for (Tunable tunable : tunableArrayList) {
-				if (tunable.getName().isEmpty()) {
+				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(DAErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
 				for (String sla_class : tunable.getSlaClassList()) {
