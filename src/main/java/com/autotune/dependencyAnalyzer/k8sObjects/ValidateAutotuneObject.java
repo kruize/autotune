@@ -44,13 +44,14 @@ public class ValidateAutotuneObject
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.MODE_NOT_SUPPORTED);
 		}
 
-		// Check if matching label is set
+		// Check if matching label is set to a valid value (not null or only whitespace)
 		SelectorInfo selectorInfo = (SelectorInfo) map.get(DAConstants.AutotuneObjectConstants.SELECTOR);
-		if (selectorInfo.getMatchLabel() == null || selectorInfo.getMatchLabel().isEmpty()) {
+		if (selectorInfo.getMatchLabel() == null || selectorInfo.getMatchLabel().trim().isEmpty()) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.INVALID_MATCHLABEL);
 		}
 
-		if (selectorInfo.getMatchLabelValue() == null || selectorInfo.getMatchLabelValue().isEmpty()) {
+		// Check if labelValue is valid
+		if (selectorInfo.getMatchLabelValue() == null || selectorInfo.getMatchLabelValue().trim().isEmpty()) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.INVALID_MATCHLABEL_VALUE);
 		}
 
@@ -58,11 +59,6 @@ public class ValidateAutotuneObject
 		SlaInfo slaInfo = (SlaInfo) map.get(DAConstants.AutotuneObjectConstants.SLA);
 		if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaInfo.getSlaClass())) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.SLA_CLASS_NOT_SUPPORTED);
-		}
-
-		// Check if labelValue is valid
-		if (selectorInfo.getMatchLabelValue() == null || selectorInfo.getMatchLabelValue().isEmpty()) {
-			errorString.append(DAErrorConstants.AutotuneObjectErrors.INVALID_MATCHLABEL_VALUE);
 		}
 
 		// Check if direction is supported
