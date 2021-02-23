@@ -18,13 +18,13 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-pushd ${CURRENT_DIR}/.. >> setup.log
+pushd ${CURRENT_DIR}/.. > /dev/null
 
 TEST_DIR=${PWD}
-pushd ${TEST_DIR}/..  >> setup.log
+pushd ${TEST_DIR}/..  > /dev/null
 
 AUTOTUNE_REPO="${PWD}"
-
+SETUP_LOG="${TEST_DIR}/setup.log"
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
 TOTAL_TESTS_PASSED=0
@@ -68,8 +68,8 @@ function setup() {
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
 	
-	# Wait for 30 seconds to terminate the autotune pod
-	sleep 30
+	# Wait for 5 seconds to terminate the autotune pod
+	sleep 5
 	
 	# Check if jq is installed
 	check_prereq
@@ -108,7 +108,7 @@ function deploy_autotune() {
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
 	pushd ${AUTOTUNE_REPO} > /dev/null
-	pushd autotune/
+	pushd autotune/ > /dev/null
 	echo "${PWD}"
 	cmd="./deploy.sh -c ${cluster_type} -t"
 	echo "CMD= ${cmd}"
@@ -141,6 +141,12 @@ function check_test_case() {
 			testcase_matched=1
 		fi
 	done
+	
+	if [ "${testcase}" == "help" ]; then
+		test_case_usage ${checkfor}
+		exit -1
+	fi
+	
 	if [ "${testcase_matched}" -eq "0" ]; then
 		echo ""
 		echo "Error: Invalid testcase **${testcase}** "
@@ -253,9 +259,9 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> setup.log
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${SETUP_LOG}
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> setup.log
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${SETUP_LOG}
 	fi
 	echo "done"
 }
@@ -343,14 +349,16 @@ function run_test_case() {
 	testcase=$2
 	yaml=$3
 	
-	# create autotune setup
-	setup >> setup.log 2>&1
-	
 	# Run the test
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "                    Running Testcase ${test}">> ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "*******----------- Running test for ${testcase} ----------*******"| tee  ${LOG}
+	
+	# create autotune setup
+	echo -n "Deploying autotune..."| tee  ${LOG}
+	setup >> ${SETUP_LOG} 2>&1
+	echo "done"| tee  ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
@@ -360,6 +368,7 @@ function run_test_case() {
 	fi
 	echo "CMD=${kubectl_cmd}">>${LOG}
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1) 
+	err_exit "Error: Issue in deploying ${object} object"
 	echo "${kubectl_log_msg}" > kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
 	
@@ -370,9 +379,9 @@ function run_test_case() {
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
-		status=$(kubectl get ${object} -n ${NAMESPACE} | grep "${testcase}" | cut -d " " -f1) >> setup.log 2>&1
+		status=$(kubectl get ${object} -n ${NAMESPACE} | grep "${testcase}" | cut -d " " -f1) >> ${SETUP_LOG} 2>&1
 	else
-		status=$(kubectl get ${object} | grep "${testcase}" | cut -d " " -f1) >> setup.log 2>&1
+		status=$(kubectl get ${object} | grep "${testcase}" | cut -d " " -f1) >> ${SETUP_LOG} 2>&1
 	fi
 	
 	# check if the expected message is matching with the actual message
@@ -387,7 +396,7 @@ function run_test_case() {
 # input: testcase, testobject(autotune/autotuneconfig), path to yaml directory
 # output: Perform the tests for given test case 
 function run_test() {
-	testcase=$1
+	testtorun=$1
 	object=$2
 	path=$3
 	
