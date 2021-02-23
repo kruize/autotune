@@ -24,6 +24,7 @@ TEST_DIR=${PWD}
 pushd ${TEST_DIR}/..  > /dev/null
 
 AUTOTUNE_REPO="${PWD}"
+SETUP_LOG="${TEST_DIR}/setup.log"
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
 TOTAL_TESTS_PASSED=0
@@ -442,6 +443,11 @@ function run_test_case() {
 	echo -n "Deploying autotune..."| tee -a ${LOG}
 	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
+	
+	# create autotune setup
+	echo -n "Deploying autotune..."| tee  ${LOG}
+	setup >> ${SETUP_LOG} 2>&1
+	echo "done"| tee  ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
