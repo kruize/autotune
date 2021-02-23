@@ -1,0 +1,52 @@
+name: Test on Pull Request 
+
+# Controls when the action will run. 
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'design/**'
+      - 'examples/**'
+      - 'extensions/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Build autotune
+        run: |
+          echo Build autotune
+          ./build.sh -t autotune:test
+          docker images | grep autotune     
+      - name: Start minikube
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+      - name: Deploy autotune
+        run: |
+          echo Deploy autotune
+          cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
+          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
+          echo "***************************************************************"
+          cat ./manifests/autotune-operator-deployment.yaml_template
+          echo "***************************************************************"
+          ./deploy.sh -c minikube -i autotune:test
+
