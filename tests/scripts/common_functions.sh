@@ -450,6 +450,11 @@ function run_test_case() {
 	setup >> ${SETUP_LOG} 2>&1
 	echo "done"| tee  ${LOG}
 	
+	# create autotune setup
+	echo -n "Deploying autotune..."| tee  ${LOG}
+	setup >> ${SETUP_LOG} 2>&1
+	echo "done"| tee  ${LOG}
+	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml -n ${NAMESPACE}"
