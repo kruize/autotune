@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "AutotuneConfig"
 metadata:
-  name: "numerical-tunable-name"
+  name: "valid-tunable-name"
 layer_name: container
 layer_level: 0
 details: generic container tunables

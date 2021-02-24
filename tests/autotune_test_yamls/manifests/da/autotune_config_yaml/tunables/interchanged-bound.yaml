@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "AutotuneConfig"
 metadata:
-  name: "interchanged-bound-val"
+  name: "interchanged-bound"
 layer_name: container
 layer_level: 0
 details: generic container tunables
