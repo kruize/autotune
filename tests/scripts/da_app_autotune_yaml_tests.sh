@@ -51,7 +51,7 @@ function app_autotune_yaml_tests() {
 	fi
 	
 	# perform the tests for application autotune yamls
-	run_test ${testcase} autotune ${path}
+	run_test "${testtorun}" autotune ${path}
 	
 	# Summary of the test suite
 	testsuitesummary ${FUNCNAME} ${FAILED_CASES} 
