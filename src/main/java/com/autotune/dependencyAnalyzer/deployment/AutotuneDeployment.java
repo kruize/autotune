@@ -23,8 +23,10 @@ import com.autotune.dependencyAnalyzer.exceptions.InvalidBoundsException;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.*;
+import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
+import com.autotune.dependencyAnalyzer.util.Util;
 import com.autotune.dependencyAnalyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -84,14 +86,41 @@ public class AutotuneDeployment
 		Watcher<String> autotuneObjectWatcher = new Watcher<>() {
 			@Override
 			public void eventReceived(Action action, String resource) {
+				AutotuneObject autotuneObject = null;
+
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
-						autotuneDeployment.addAutotuneObjectToMap(resource);
-						autotuneDeployment.matchPodsToAutotuneObject(client);
-						for (String autotuneConfig : autotuneConfigMap.keySet()) {
-							addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						if (autotuneObject != null) {
+							autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+							LOGGER.info("Added autotune object " + autotuneObject.getName());
+							autotuneDeployment.matchPodsToAutotuneObject(client);
+
+							for (String autotuneConfig : autotuneConfigMap.keySet()) {
+								addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+							}
 						}
 						break;
+					case "MODIFIED":
+						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						if (autotuneObject != null) {
+							int newId = autotuneObject.toString().hashCode();
+
+							// Check if any of the values have changed
+							if (autotuneObjectMap.get(autotuneObject.getName()).toString().hashCode() != newId) {
+								deleteExistingAutotuneObject(resource);
+								autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+								autotuneDeployment.matchPodsToAutotuneObject(client);
+
+								for (String autotuneConfig : autotuneConfigMap.keySet()) {
+									addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+								}
+								LOGGER.info("Autotune object {} has been modified", autotuneObject.getName());
+							}
+						}
+						break;
+					case "DELETED":
+						deleteExistingAutotuneObject(resource);
 					default:
 						break;
 				}
@@ -138,6 +167,15 @@ public class AutotuneDeployment
 		/* Register custom watcher for autotune object and autotuneconfig object*/
 		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+	}
+
+	private static void deleteExistingAutotuneObject(String autotuneObject) {
+		JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
+		String name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
+				.optString(DAConstants.AutotuneObjectConstants.NAME);
+
+		autotuneObjectMap.remove(name);
+		applicationServiceStackMap.remove(name);
 	}
 
 	/**
@@ -204,7 +242,7 @@ public class AutotuneDeployment
 	 *
 	 * @param autotuneObject JSON string of the autotune object
 	 */
-	private void addAutotuneObjectToMap(String autotuneObject) {
+	private AutotuneObject getAutotuneObject(String autotuneObject) {
 		try {
 			JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
 
@@ -248,6 +286,12 @@ public class AutotuneDeployment
 				functionVariableArrayList.add(functionVariable);
 			}
 
+			// If sla_class is invalid or null, default to generic sla_class.
+			if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
+				LOGGER.info(DAErrorConstants.AutotuneObjectErrors.SLA_CLASS_NOT_SUPPORTED);
+				sla_class = DAConstants.AutotuneObjectConstants.GENERIC_SLA_CLASS;
+			}
+
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
 					direction,
@@ -277,18 +321,19 @@ public class AutotuneDeployment
 			namespace = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
 					.optString(DAConstants.AutotuneObjectConstants.NAMESPACE);
 
-			AutotuneObject autotuneObjectInfo = new AutotuneObject(name,
+			int id = Util.generateID(autotuneObject);
+
+			return new AutotuneObject(id,
+					name,
 					namespace,
 					mode,
 					slaInfo,
 					selectorInfo
 			);
 
-			autotuneObjectMap.put(name, autotuneObjectInfo);
-			LOGGER.info("Added autotune object " + name);
-
 		} catch (InvalidValueException | NullPointerException | JSONException e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
@@ -414,7 +459,8 @@ public class AutotuneDeployment
 				}
 			}
 
-			return new AutotuneConfig(name,
+			int id = Util.generateID(autotuneConfigResource);
+			return new AutotuneConfig(id, name,
 					layerName,
 					level,
 					details,
@@ -423,7 +469,8 @@ public class AutotuneDeployment
 					layerPresenceKey,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
-					tunableArrayList);
+					tunableArrayList,
+			);
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
 			e.printStackTrace();
 			return null;
@@ -444,7 +491,7 @@ public class AutotuneDeployment
 			for (String autotuneObject : applicationServiceStackMap.keySet()) {
 				for (String application : applicationServiceStackMap.get(autotuneObject).keySet()) {
 					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(application);
-					addLayerInfoToApplication(applicationServiceStack, autotuneConfig);
+					addLayerInfoToApplication(applicationServiceStack, autotuneConfig, null);
 				}
 			}
 			return;
@@ -469,7 +516,7 @@ public class AutotuneDeployment
 				for (String application : apps) {
 					for (String autotuneObject : applicationServiceStackMap.keySet()) {
 						if (applicationServiceStackMap.get(autotuneObject).containsKey(application)) {
-							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(application), autotuneConfig);
+							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(application), autotuneConfig, null);
 						}
 					}
 				}
@@ -486,7 +533,7 @@ public class AutotuneDeployment
 					for (String autotuneObject : applicationServiceStackMap.keySet()) {
 						String podName = pod.getMetadata().getName();
 						if (applicationServiceStackMap.get(autotuneObject).containsKey(podName)) {
-							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(podName), autotuneConfig);
+							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(podName), autotuneConfig, pod);
 							break;
 						}
 					}
@@ -497,11 +544,11 @@ public class AutotuneDeployment
 
 	/**
 	 * Add layer, queries and tunables info to the autotuneObject
-	 *
-	 * @param applicationServiceStack ApplicationServiceStack instance that contains the layer
+	 *  @param applicationServiceStack ApplicationServiceStack instance that contains the layer
 	 * @param autotuneConfig          AutotuneConfig object for the layer
+	 * @param pod
 	 */
-	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
+	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig, Pod pod) {
 		//Check if layer already exists
 		if (applicationServiceStack.getStackLayers().containsKey(autotuneConfig.getName())) {
 			return;
@@ -532,7 +579,9 @@ public class AutotuneDeployment
 		//Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
-			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getName(),
+			// TODO SHOULD ALL CHILDREN HAVE SAME ID?
+			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getId(),
+					autotuneConfig.getName(),
 					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
