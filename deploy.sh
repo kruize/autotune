@@ -69,7 +69,7 @@ trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i docker-image] [-n namespace] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i docker-image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	exit -1
 }
@@ -86,7 +86,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:i:k:n:p:stu:-: gopts
+while getopts ac:i:k:n:p:d:stu:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -120,6 +120,9 @@ do
 		;;
 	n)
 		autotune_ns="${OPTARG}"
+		;;
+	d)
+		AUTOTUNE_CONFIGMAPS="${OPTARG}"
 		;;
 	s)
 		setup=1
