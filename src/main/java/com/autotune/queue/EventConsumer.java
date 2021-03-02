@@ -28,7 +28,6 @@ public class EventConsumer implements Callable<AutotuneDTO> {
 	public AutotuneDTO call() throws Exception {
         try {
         	taskDto = queue.get();
-        	System.out.println("Get item from queue: task id: " + taskDto.getId() + " time in nano: " + System.nanoTime());
             
         } catch (InterruptedException e) {
             e.printStackTrace();
