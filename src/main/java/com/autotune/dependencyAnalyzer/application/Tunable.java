@@ -42,9 +42,10 @@ import java.util.Objects;
 public class Tunable
 {
 	private String name;
+	private double step;
+	private String valueType;
 	private String upperBound;
 	private String lowerBound;
-	private String valueType;
 	private String description;
 	private Map<String, String> queries;
 
@@ -56,6 +57,7 @@ public class Tunable
 	public ArrayList<String> slaClassList;
 
 	public Tunable(String name,
+				   double step,
 				   String upperBound,
 				   String lowerBound,
 				   String valueType,
@@ -65,6 +67,7 @@ public class Tunable
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
+		this.step = step;
 
 		if (upperBound != null && lowerBound != null) {
 			this.lowerBound = lowerBound;
@@ -74,6 +77,7 @@ public class Tunable
 
 	public Tunable(Tunable copy) {
 		this.name = copy.name;
+		this.step = copy.step;
 		this.upperBound = copy.upperBound;
 		this.lowerBound = copy.lowerBound;
 		this.valueType = copy.valueType;
@@ -144,15 +148,24 @@ public class Tunable
 		this.slaClassList = slaClassList;
 	}
 
+	public double getStep() {
+		return step;
+	}
+
+	public void setStep(double step) {
+		this.step = step;
+	}
+
 	@Override
 	public String toString() {
 		return "Tunable{" +
 				"name='" + name + '\'' +
+				", step=" + step +
+				", valueType='" + valueType + '\'' +
 				", upperBound='" + upperBound + '\'' +
 				", lowerBound='" + lowerBound + '\'' +
-				", valueType='" + valueType + '\'' +
 				", description='" + description + '\'' +
-				", queries='" + queries + '\'' +
+				", queries=" + queries +
 				", slaClassList=" + slaClassList +
 				'}';
 	}

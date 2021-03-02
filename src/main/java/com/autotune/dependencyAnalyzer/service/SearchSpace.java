@@ -106,6 +106,7 @@ public class SearchSpace extends HttpServlet
         applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
         applicationJson.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
         applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
 
         JSONArray tunablesJsonArray = new JSONArray();
         for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
@@ -116,6 +117,7 @@ public class SearchSpace extends HttpServlet
                 tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
                 tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
                 tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+                tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 
                 tunablesJsonArray.put(tunableJson);
             }

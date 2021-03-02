@@ -102,6 +102,9 @@ spec:
                 value_type:
                   description: 'Value type of the query response (double, string, int)'
                   type: string
+                step:
+                  description: 'Step of the tunable'
+                  type: number
                 queries:
                   description: 'List of queries for the tunable'
                   type: object

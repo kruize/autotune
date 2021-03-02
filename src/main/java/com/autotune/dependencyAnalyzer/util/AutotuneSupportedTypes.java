@@ -53,4 +53,7 @@ public class AutotuneSupportedTypes
 
 	public static final Set<String> LOGGING_TYPES_SUPPORTED =
 			new HashSet<>(Arrays.asList("all", "debug", "error", "info", "off", "warn"));
+
+	public static final Set<String> HPO_ALGOS_SUPPORTED =
+			new HashSet<>(Arrays.asList("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt", null));
 }

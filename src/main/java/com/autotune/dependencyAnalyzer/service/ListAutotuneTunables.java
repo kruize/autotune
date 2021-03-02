@@ -138,6 +138,7 @@ public class ListAutotuneTunables extends HttpServlet
 				tunablesJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 				tunablesJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 				tunablesJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+				tunablesJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 
 				tunablesArray.put(tunablesJson);
 			}

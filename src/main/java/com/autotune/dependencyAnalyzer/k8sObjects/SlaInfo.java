@@ -41,13 +41,15 @@ import java.util.ArrayList;
 public final class SlaInfo
 {
 	private final String slaClass;
-	private final String objectiveFunction;
 	private final String direction;
+	private final String hpoAlgoImpl;
+	private final String objectiveFunction;
 	private final ArrayList<FunctionVariable> functionVariables;
 
 	public SlaInfo(String slaClass,
 		String objectiveFunction,
 		String direction,
+		String hpoMlImpl,
 		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
 		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
 			this.slaClass = slaClass;
@@ -59,6 +61,7 @@ public final class SlaInfo
 			this.direction = direction;
 		else throw new InvalidValueException("Invalid direction for autotune kind");
 
+		this.hpoAlgoImpl = hpoMlImpl;
 		this.functionVariables = new ArrayList<>(functionVariables);
 	}
 
@@ -66,6 +69,7 @@ public final class SlaInfo
 		this.slaClass = copy.getSlaClass();
 		this.objectiveFunction = copy.getObjectiveFunction();
 		this.direction = copy.getDirection();
+		this.hpoAlgoImpl = copy.getHpoAlgoImpl();
 
 		this.functionVariables = new ArrayList<>(copy.getFunctionVariables());
 
@@ -85,6 +89,10 @@ public final class SlaInfo
 
 	public ArrayList<FunctionVariable> getFunctionVariables() {
 		return new ArrayList<>(functionVariables);
+	}
+
+	public String getHpoAlgoImpl() {
+		return hpoAlgoImpl;
 	}
 
 	@Override

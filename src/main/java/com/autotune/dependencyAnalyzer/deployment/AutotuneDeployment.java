@@ -265,10 +265,12 @@ public class AutotuneDeployment
 			String sla_class = null;
 			String direction = null;
 			String objectiveFunction = null;
+			String hpoAlgoImpl = null;
 			if (specJson != null) {
 				slaJson = specJson.optJSONObject(DAConstants.AutotuneObjectConstants.SLA);
 				sla_class = slaJson.optString(DAConstants.AutotuneObjectConstants.SLA_CLASS);
 				direction = slaJson.optString(DAConstants.AutotuneObjectConstants.DIRECTION);
+				hpoAlgoImpl = slaJson.optString(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
 				objectiveFunction = slaJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
@@ -296,6 +298,7 @@ public class AutotuneDeployment
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
 					direction,
+					hpoAlgoImpl,
 					functionVariableArrayList);
 
 			JSONObject selectorJson = null;
@@ -450,6 +453,7 @@ public class AutotuneDeployment
 				String tunableValueType = tunableJson.optString(DAConstants.AutotuneConfigConstants.VALUE_TYPE);
 				String upperBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
 				String lowerBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
+				double step = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.STEP);
 
 				ArrayList<String> slaClassList = new ArrayList<>();
 
@@ -461,7 +465,7 @@ public class AutotuneDeployment
 
 				Tunable tunable;
 				try {
-					tunable = new Tunable(tunableName, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
+					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
 					e.printStackTrace();
@@ -588,6 +592,7 @@ public class AutotuneDeployment
 					queries.replace(datasource, query);
 				}
 				Tunable tunableCopy = new Tunable(tunable.getName(),
+						tunable.getStep(),
 						tunable.getUpperBound(),
 						tunable.getLowerBound(),
 						tunable.getValueType(),
