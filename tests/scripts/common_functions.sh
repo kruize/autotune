@@ -48,7 +48,6 @@ function err_exit() {
 	err=$?
 	if [ ${err} -ne 0 ]; then
 		echo "$*"
-		exit -1
 	fi
 }
 
@@ -239,7 +238,7 @@ function app_cleanup() {
 	set_app_folder ${app_name}
 	echo
 	echo "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh ${cluster_type}
+	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type}
 	echo "done"
 }
 

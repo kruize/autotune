@@ -26,7 +26,7 @@ MANIFESTS="${PWD}/autotune_test_yamls/manifests"
 autotune_config_testsuite="autotune_config_yaml"
 testcase_matched=0
 module="da"
-path="${MANIFESTS}/${module}/${autotune_config_testsuite}"
+yaml_path="${MANIFESTS}/${module}/${autotune_config_testsuite}"
 
 # testcases for autotune config yaml 
 autotune_config_tests=("layer_name" 
@@ -132,8 +132,7 @@ layer_presence_testcases=("complete-layer-presence"
 "valid-layer-presence")
 
 # tests for tunable name
-tunable_name_testcases=("blank-tunable-name" 
-"invalid-tunable-name" 
+tunable_name_testcases=("blank-tunable-name"  
 "no-tunable-name-value" 
 "null-tunable-name" 
 "numerical-tunable-name" 
@@ -215,9 +214,9 @@ layer_name_autotune_objects=([blank-layer-name]='true'
 # Expected log message for layer-name
 declare -A layer_name_expected_log_msgs
 layer_name_expected_log_msgs=([blank-layer-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: AutotuneConfig object name cannot be null or empty' 
-[no-layer-name]='error: error validating "'${path}/${autotune_config_tests[0]}/no-layer-name.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-layer-name-value]='error: error validating "'${path}/${autotune_config_tests[0]}/no-layer-name-value.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-layer-name]='error: error validating "'${path}/${autotune_config_tests[0]}/null-layer-name.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-name]='error: error validating "'${yaml_path}/${autotune_config_tests[0]}/no-layer-name.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-name-value]='error: error validating "'${yaml_path}/${autotune_config_tests[0]}/no-layer-name-value.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-layer-name]='error: error validating "'${yaml_path}/${autotune_config_tests[0]}/null-layer-name.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-layer-name]='The AutotuneConfig "numerical-layer-name" is invalid: layer_name: Invalid value: "integer": layer_name in body must be of type string: "integer"' 
 [valid-layer-name]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-layer-name' )
 
@@ -232,11 +231,11 @@ layer_level_autotune_objects=([char-layer-level]='false'
 [valid-layer-level]='true')
 # Expected log message for layer-level
 declare -A layer_level_expected_log_msgs
-layer_level_expected_log_msgs=([char-layer-level]='error: error validating "'${path}/${autotune_config_tests[1]}/char-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig.layer_level): invalid type for com.recommender.v1.AutotuneConfig.layer_level: got "string", expected "integer"; if you choose to ignore these errors, turn validation off with --validate=false' 
+layer_level_expected_log_msgs=([char-layer-level]='error: error validating "'${yaml_path}/${autotune_config_tests[1]}/char-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig.layer_level): invalid type for com.recommender.v1.AutotuneConfig.layer_level: got "string", expected "integer"; if you choose to ignore these errors, turn validation off with --validate=false' 
 [invalid-layer-level]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer level must be a non-negative integer' 
-[no-layer-level]='error: error validating "'${path}/${autotune_config_tests[1]}/no-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-layer-level-value]='error: error validating "'${path}/${autotune_config_tests[1]}/no-layer-level-value.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-layer-level]='error: error validating "'${path}/${autotune_config_tests[1]}/null-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-level]='error: error validating "'${yaml_path}/${autotune_config_tests[1]}/no-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-level-value]='error: error validating "'${yaml_path}/${autotune_config_tests[1]}/no-layer-level-value.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
+[null-layer-level]='error: error validating "'${yaml_path}/${autotune_config_tests[1]}/null-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [valid-layer-level]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-layer-level' )
 
 # Expected autotune object for presence
@@ -252,7 +251,7 @@ presence_autotune_objects=([blank-presence]='true'
 declare -A presence_expected_log_msgs
 presence_expected_log_msgs=([blank-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
 [invalid-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
-[no-presence]='error: error validating "'${path}/${autotune_config_tests[2]}/no-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-presence]='error: error validating "'${yaml_path}/${autotune_config_tests[2]}/no-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [no-presence-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
 [null-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
 [numerical-presence]='The AutotuneConfig "numerical-presence" is invalid: layerPresence.presence: Invalid value: "integer": layerPresence.presence in body must be of type string: "integer"' 
@@ -271,9 +270,9 @@ layer_presence_query_datasource_autotune_objects=([blank-layer-presence-query-da
 declare -A layer_presence_query_datasource_expected_log_msgs
 layer_presence_query_datasource_expected_log_msgs=([blank-layer-presence-query-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
 [invalid-layer-presence-query-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
-[no-layer-presence-query-datasource]='error: error validating "'${path}/${autotune_config_tests[3]}/no-layer-presence-query-datasource.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.query.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-layer-presence-query-datasource-value]='error: error validating "'${path}/${autotune_config_tests[3]}/no-layer-presence-query-datasource-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-layer-presence-query-datasource]='error: error validating "'${path}/${autotune_config_tests[3]}/null-layer-presence-query-datasource.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query-datasource]='error: error validating "'${yaml_path}/${autotune_config_tests[3]}/no-layer-presence-query-datasource.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.query.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query-datasource-value]='error: error validating "'${yaml_path}/${autotune_config_tests[3]}/no-layer-presence-query-datasource-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-layer-presence-query-datasource]='error: error validating "'${yaml_path}/${autotune_config_tests[3]}/null-layer-presence-query-datasource.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-layer-presence-query-datasource]='The AutotuneConfig "numerical-layer-presence-query-datasource" is invalid: layerPresence.query.datasource.name: Invalid value: "integer": layerPresence.query.datasource.name in body must be of type string: "integer"' 
 [valid-layer-presence-query-datasource]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-layer-presence-query-datasource')
 
@@ -288,11 +287,11 @@ layer_presence_query_autotune_objects=([blank-layer-presence-query]='true'
 [valid-layer-presence-query]='true')
 #Expected log message for layer presence query
 declare -A layer_presence_query_expected_log_msgs
-layer_presence_query_expected_log_msgs=([blank-layer-presence-query]='validation from da' 
+layer_presence_query_expected_log_msgs=([blank-layer-presence-query]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Could not get the applications for the layer blank-layer-presence-query' 
 [invalid-layer-presence-query]='validation from da' 
-[no-layer-presence-query]='error: error validating "'${path}/${autotune_config_tests[4]}/no-layer-presence-query.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-layer-presence-query-value]='error: error validating "'${path}/${autotune_config_tests[4]}/no-layer-presence-query-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-layer-presence-query]='error: error validating "'${path}/${autotune_config_tests[4]}/null-layer-presence-query.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query]='error: error validating "'${yaml_path}/${autotune_config_tests[4]}/no-layer-presence-query.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query-value]='error: error validating "'${yaml_path}/${autotune_config_tests[4]}/no-layer-presence-query-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-layer-presence-query]='error: error validating "'${yaml_path}/${autotune_config_tests[4]}/null-layer-presence-query.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-layer-presence-query]='The AutotuneConfig "numerical-layer-presence-query" is invalid: layerPresence.query.datasource.query: Invalid value: "integer": layerPresence.query.datasource.query in body must be of type string: "integer"' 
 [valid-layer-presence-query]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-layer-presence-query')
 
@@ -309,9 +308,9 @@ layer_presence_query_key_autotune_objects=([blank-layer-presence-query-key]='tru
 declare -A layer_presence_query_key_expected_log_msgs
 layer_presence_query_key_expected_log_msgs=([blank-layer-presence-query-key]='validation from da' 
 [invalid-layer-presence-query-key]='validation from da' 
-[no-layer-presence-query-key]='error: error validating "'${path}/${autotune_config_tests[5]}/no-layer-presence-query-key.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-layer-presence-query-key-value]='error: error validating "'${path}/${autotune_config_tests[5]}/no-layer-presence-query-key-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-layer-presence-query-key]='error: error validating "'${path}/${autotune_config_tests[5]}/null-layer-presence-query-key.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query-key]='error: error validating "'${yaml_path}/${autotune_config_tests[5]}/no-layer-presence-query-key.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-query-key-value]='error: error validating "'${yaml_path}/${autotune_config_tests[5]}/no-layer-presence-query-key-value.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-layer-presence-query-key]='error: error validating "'${yaml_path}/${autotune_config_tests[5]}/null-layer-presence-query-key.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-layer-presence-query-key]='The AutotuneConfig "numerical-layer-presence-query-key" is invalid: layerPresence.query.datasource.key: Invalid value: "integer": layerPresence.query.datasource.key in body must be of type string: "integer"' 
 [valid-layer-presence-query-key]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-layer-presence-query-key')
 
@@ -328,7 +327,7 @@ layer_presence_label_name_autotune_objects=([blank-layer-presence-label-name]='t
 declare -A layer_presence_label_name_expected_log_msgs
 layer_presence_label_name_expected_log_msgs=([blank-layer-presence-label-name]='validation from da' 
 [invalid-layer-presence-label-name]='validation from da' 
-[no-layer-presence-label-name]='error: error validating "'${path}/${autotune_config_tests[6]}/no-layer-presence-label-name.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.label): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.label: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-layer-presence-label-name]='error: error validating "'${yaml_path}/${autotune_config_tests[6]}/no-layer-presence-label-name.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.label): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.label: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
 [no-layer-presence-label-name-value]='validation from crd' 
 [null-layer-presence-label-name]='validation from crd' 
 [numerical-layer-presence-label-name]='The AutotuneConfig "numerical-layer-presence-label-name" is invalid: layerPresence.label.name: Invalid value: "integer": layerPresence.label.name in body must be of type string: "integer"' 
@@ -367,9 +366,9 @@ layer_presence_autotune_objects=([complete-layer-presence]='true'
 # Expected log message for layer presence
 declare -A layer_presence_expected_log_msgs
 layer_presence_expected_log_msgs=([complete-layer-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Both layerPresenceQuery and layerPresenceLabel cannot be set' 
-[empty-layer-presence]='error: error validating "'${path}/${autotune_config_tests[8]}/empty-layer-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
+[empty-layer-presence]='error: error validating "'${yaml_path}/${autotune_config_tests[8]}/empty-layer-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [no-label-layer-presence]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig no-label-layer-presence' 
-[no-layer-presence]='error: error validating "'${path}/${autotune_config_tests[8]}/no-layer-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'  
+[no-layer-presence]='error: error validating "'${yaml_path}/${autotune_config_tests[8]}/no-layer-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'  
 [no-presence-layer-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Both layerPresenceQuery and layerPresenceLabel cannot be set' 
 [no-query-layer-presence]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig no-query-layer-presence' 
 [only-label-layer-presence]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig only-label-layer-presence' 
@@ -379,17 +378,15 @@ layer_presence_expected_log_msgs=([complete-layer-presence]='com.autotune.depend
 # Expected autotune object for tunable-name
 declare -A tunable_name_autotune_objects
 tunable_name_autotune_objects=([blank-tunable-name]='true' 
-[invalid-tunable-name]='true' 
 [no-tunable-name-value]='false' 
 [null-tunable-name]='false' 
 [numerical-tunable-name]='false' 
 [valid-tunable-name]='true')
 # Expected log message for tunable-name
 declare -A tunable_name_expected_log_msgs
-tunable_name_expected_log_msgs=([blank-tunable-name]='Validation from da' 
-[invalid-tunable-name]='validation from da' 
-[no-tunable-name-value]='error: error validating "'${path}/${autotune_config_tests[9]}/no-tunable-name-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-name]='error: error validating "'${path}/${autotune_config_tests[9]}/null-tunable-name.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+tunable_name_expected_log_msgs=([blank-tunable-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Tunable name cannot be empty' 
+[no-tunable-name-value]='error: error validating "'${yaml_path}/${autotune_config_tests[9]}/no-tunable-name-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-name]='error: error validating "'${yaml_path}/${autotune_config_tests[9]}/null-tunable-name.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-tunable-name]='The AutotuneConfig "numerical-tunable-name" is invalid: tunables.name: Invalid value: "integer": tunables.name in body must be of type string: "integer"' 
 [valid-tunable-name]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-name' )
 
@@ -406,9 +403,9 @@ tunable_value_type_autotune_objects=([blank-tunable-value-type]='true'
 declare -A tunable_value_type_expected_log_msgs
 tunable_value_type_expected_log_msgs=([blank-tunable-value-type]='Validation from da' 
 [invalid-tunable-value-type]='validation from da' 
-[no-tunable-value-type]='error: error validating "'${path}/${autotune_config_tests[10]}/no-tunable-value-type.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-value-type-value]='error: error validating '${path}/${autotune_config_tests[10]}/no-tunable-value-type-value.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables, ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-value-type]='error: error validating "'${path}/${autotune_config_tests[10]}/null-tunable-value-type.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-value-type]='error: error validating "'${yaml_path}/${autotune_config_tests[10]}/no-tunable-value-type.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-value-type-value]='error: error validating '${yaml_path}/${autotune_config_tests[10]}/no-tunable-value-type-value.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables, ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-value-type]='error: error validating "'${yaml_path}/${autotune_config_tests[10]}/null-tunable-value-type.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-tunable-value-type]='The AutotuneConfig "numerical-tunable-value-type" is invalid: tunables.value_type: Invalid value: "integer": tunables.value_type in body must be of type string: "integer"' 
 [valid-tunable-value-type]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-value-type' )
 
@@ -425,9 +422,9 @@ tunable_upper_bound_autotune_objects=([blank-tunable-upper-bound]='true'
 declare -A tunable_upper_bound_expected_log_msgs
 tunable_upper_bound_expected_log_msgs=([blank-tunable-upper-bound]='Validation from da' 
 [invalid-tunable-upper-bound]='validation from da' 
-[no-tunable-upper-bound]='error: error validating "'${path}/${autotune_config_tests[11]}/no-tunable-upper-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-upper-bound-value]='error: error validating "'${path}/${autotune_config_tests[11]}/no-tunable-upper-bound-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-upper-bound]='error: error validating "'${path}/${autotune_config_tests[11]}/null-tunable-upper-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-upper-bound]='error: error validating "'${yaml_path}/${autotune_config_tests[11]}/no-tunable-upper-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-upper-bound-value]='error: error validating "'${yaml_path}/${autotune_config_tests[11]}/no-tunable-upper-bound-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-upper-bound]='error: error validating "'${yaml_path}/${autotune_config_tests[11]}/null-tunable-upper-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
 [char-tunable-upper-bound]='validation from da' 
 [valid-tunable-upper-bound]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-upper-bound' )
 
@@ -444,9 +441,9 @@ tunable_lower_bound_autotune_objects=([blank-tunable-lower-bound]='true'
 declare -A tunable_lower_bound_expected_log_msgs
 tunable_lower_bound_expected_log_msgs=([blank-tunable-lower-bound]='validation from da' 
 [invalid-tunable-lower-bound]='validation from da' 
-[no-tunable-lower-bound]='error: error validating "'${path}/${autotune_config_tests[12]}/no-tunable-lower-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-lower-bound-value]='error: error validating "'${path}/${autotune_config_tests[12]}/no-tunable-lower-bound-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-lower-bound]='error: error validating "'${path}/${autotune_config_tests[12]}/null-tunable-lower-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-lower-bound]='error: error validating "'${yaml_path}/${autotune_config_tests[12]}/no-tunable-lower-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-lower-bound-value]='error: error validating "'${yaml_path}/${autotune_config_tests[12]}/no-tunable-lower-bound-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-lower-bound]='error: error validating "'${yaml_path}/${autotune_config_tests[12]}/null-tunable-lower-bound.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
 [char-tunable-lower-bound]='validation from da' 
 [valid-tunable-lower-bound]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-lower-bound' )
 
@@ -463,9 +460,9 @@ tunable_query_autotune_objects=([blank-tunable-query]='true'
 declare -A tunable_query_expected_log_msgs
 tunable_query_expected_log_msgs=([blank-tunable-query]='validation from da' 
 [invalid-tunable-query]='validation from da' 
-[no-tunable-query]='error: error validating "'${path}/${autotune_config_tests[13]}/no-tunable-query.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-query-value]='error: error validating "'${path}/${autotune_config_tests[13]}/no-tunable-query-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-query]='error: error validating "'${path}/${autotune_config_tests[13]}/null-tunable-query.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-query]='error: error validating "'${yaml_path}/${autotune_config_tests[13]}/no-tunable-query.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-query-value]='error: error validating "'${yaml_path}/${autotune_config_tests[13]}/no-tunable-query-value.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-query]='error: error validating "'${yaml_path}/${autotune_config_tests[13]}/null-tunable-query.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-tunable-query]='The AutotuneConfig "numerical-tunable-query" is invalid: tunables.queries.datasource.query: Invalid value: "integer": tunables.queries.datasource.query in body must be of type string: "integer"' 
 [valid-tunable-query]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-query' )
 
@@ -500,28 +497,28 @@ tunable_sla_class_autotune_objects=([blank-tunable-sla-class]='true'
 [valid-tunable-sla-class]='true')
 # Expected log message for sla class
 declare -A tunable_sla_class_expected_log_msgs
-tunable_sla_class_expected_log_msgs=([blank-tunable-sla-class]='Expecting Error message from DA' 
-[invalid-tunable-sla-class]='Expecting Error message from DA' 
-[empty-tunable-sla-class]='error message from crd' 
-[no-tunable-sla-class]='error: error validating "'${path}/${autotune_config_tests[15]}/no-tunable-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-sla-class-value]='error: error validating "'${path}/${autotune_config_tests[15]}/no-tunable-sla-class-value.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[0\], ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[1\], ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-sla-class]='error: error validating "'${path}/${autotune_config_tests[15]}/null-tunable-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false' 
+tunable_sla_class_expected_log_msgs=([blank-tunable-sla-class]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid sla_class for tunable memoryRequest' 
+[invalid-tunable-sla-class]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid sla_class for tunable memoryRequest' 
+[empty-tunable-sla-class]='error: error validating "'${yaml_path}/${autotune_config_tests[15]}/empty-tunable-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-sla-class]='error: error validating "'${yaml_path}/${autotune_config_tests[15]}/no-tunable-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-tunable-sla-class-value]='error: error validating "'${yaml_path}/${autotune_config_tests[15]}/no-tunable-sla-class-value.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[0\], ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[1\], ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-sla-class]='error: error validating "'${yaml_path}/${autotune_config_tests[15]}/null-tunable-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\].sla_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false' 
 [numerical-tunable-sla-class]='The AutotuneConfig "numerical-tunable-sla-class" is invalid: tunables.sla_class: Invalid value: "integer": tunables.sla_class in body must be of type string: "integer"' 
 [valid-tunable-sla-class]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunable-sla-class')
 
 # Expected autotune object for tunable-query
 declare -A tunables_autotune_objects
 tunables_autotune_objects=([interchanged-bound]='true' 
-[no-tunables]='true' 
+[no-tunables]='false' 
 [no-tunables-queries]='true' 
 [no-tunables-sla-class]='false' 
 [valid-tunables]='true')
 # Expected log message for tunable-query
 declare -A tunables_expected_log_msgs
 tunables_expected_log_msgs=([interchanged-bound]='validation from da' 
-[no-tunables]='Expected validation from da' 
+[no-tunables]='error: error validating "'${yaml_path}/${autotune_config_tests[16]}/no-tunables.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [no-tunables-queries]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig no-tunables-queries' 
-[no-tunables-sla-class]='error: error validating "'${path}/${autotune_config_tests[16]}/no-tunables-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-tunables-sla-class]='error: error validating "'${yaml_path}/${autotune_config_tests[16]}/no-tunables-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
  [valid-tunables]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunables' )
 
 # Expected autotune object for other test cases
@@ -529,5 +526,5 @@ declare -A other_autotune_objects
 other_autotune_objects=([incomplete-autotuneconfig]='false')
 # Expected log message for other test cases
 declare -A other_expected_log_msgs
-other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${path}/${other_tests[0]}/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
+other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/${other_tests[0]}/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
 

@@ -51,7 +51,7 @@ function autotune_config_yaml_tests() {
 	fi
 	
 	# perform the tests for autotuneconfig yamls
-	run_test ${testcase} autotuneconfig ${path}
+	run_test "${testtorun}" autotuneconfig ${yaml_path}
 	
 	# Summary of the test suite
 	testsuitesummary ${FUNCNAME} ${FAILED_CASES} 
