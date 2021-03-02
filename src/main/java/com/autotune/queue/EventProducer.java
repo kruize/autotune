@@ -30,20 +30,14 @@ public class EventProducer implements Callable {
 	
 	@Override
 	public Boolean call() {
-			boolean wasAdded=false;
+			boolean isAdded=false;
 			try {
-				wasAdded = queue.send(inputDTO);
-				
+				isAdded = queue.send(inputDTO);
 					
 			} catch (InterruptedException e) {
-				
 				System.out.println("Adding Thread was interrupted");
-				
-			} finally {
-				
-				System.out.println("Added object to queue of Id:" + inputDTO.getId() + " wasAdded: " + wasAdded);
-			}
+			} 
 			
-			return wasAdded;
+			return isAdded;
 		}
 }
