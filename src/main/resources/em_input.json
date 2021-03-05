@@ -1,0 +1,73 @@
+{
+  "trails": {
+    "id": "101383821",
+    "app-version":"v1",
+    "deployment_name": "petclinic_deployment",
+    "trial_run": "15mins",
+    "trail_num": 1,
+    "update_config": [
+      {
+        "config": "update requests and limits",
+        "spec": {
+          "template": {
+            "spec": {
+              "container": {
+                "resources": {
+                  "requests": {
+                    "cpu": 2,
+                    "mem": "150Mi"
+                  },
+                  "limits": {
+                    "cpu": "2",
+                    "mem": "150Mi"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "config": "update env params",
+        "spec": {
+          "template": {
+            "spec": {
+              "container": {
+                "env": {
+                  "JVM_OPTIONS": "--XX:MaxInlineLevel=23",
+                  "JVM_ARGS": "--XX:MaxInlineLevel=23"
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "queries": [
+      {
+        "param1": {
+          "query": "",
+          "datasource": ""
+        }
+      },
+      {
+        "param2": {
+          "query": "",
+          "datasource": ""
+        }
+      },
+      {
+        "param3": {
+          "query": "",
+          "datasource": ""
+        }
+      },
+      {
+        "param4": {
+          "query": "",
+          "datasource": ""
+        }
+      }
+    ]
+  }
+}
