@@ -360,12 +360,12 @@ function run_test_case() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "                    Running Testcase ${test}">> ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
-	echo "*******----------- Running test for ${testcase} ----------*******"| tee  ${LOG}
+	echo "*******----------- Running test for ${testcase} ----------*******"| tee -a ${LOG}
 	
 	# create autotune setup
-	echo -n "Deploying autotune..."| tee  ${LOG}
+	echo -n "Deploying autotune..."| tee -a ${LOG}
 	setup >> ${SETUP_LOG} 2>&1
-	echo "done"| tee  ${LOG}
+	echo "done"| tee -a ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then

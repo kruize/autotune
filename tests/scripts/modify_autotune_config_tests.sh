@@ -31,11 +31,11 @@ function modify_autotune_config_tests() {
 		check_test_case modify_autotune_config
 	fi
 	
-	TEST_SUITE_DIR="${RESULTS}/${FUNCNAME}"
-	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
+	TESTS_DIR="${RESULTS}/${FUNCNAME}"
+	AUTOTUNE_CONFIG_JSONS_DIR="${TESTS_DIR}/autotuneconfig_jsons"
 	mkdir -p ${AUTOTUNE_CONFIG_JSONS_DIR}
-	SETUP="${TEST_SUITE_DIR}/setup.log"
-	AUTOTUNE_LOG="${TEST_SUITE_DIR}/${FUNCNAME}_autotune.log"
+	SETUP="${TESTS_DIR}/setup.log"
+	AUTOTUNE_LOG="${TESTS_DIR}/${FUNCNAME}_autotune.log"
 	YAML="${api_yaml_path}/${FUNCNAME}"
 	((TOTAL_TEST_SUITES++))
 	
@@ -61,33 +61,15 @@ function modify_autotune_config_tests() {
 	
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
-		testtorun="all"
+		testtorun=("${modify_autotune_config_tests[@]}")
 	else
 		testtorun=${testcase}
 	fi
 	
-	case "${testtorun}" in
-		# Add new tunable to existing autotune config and check if it gets reflected in the API
-		add_new_tunable|all) 
-			add_new_tunable 
-			;;&	
-		# Add null tunable to existing autotune config and check if it gets reflected in the API
-		apply_null_tunable|all)
-			apply_null_tunable
-			;;&
-		# remove tunable from existing autotune config and check if it gets reflected in the API
-		remove_tunable|all)
-			remove_tunable
-			;;&
-		# Change tunable bound of existing autotune config and check if it gets reflected in the API
-		change_bound|all)
-			change_bound
-			;;&
-		# Apply multiple tunables and check for API result
-		multiple_tunables|all)
-			multiple_tunables
-			;;&
-	esac
+	for test in "${testtorun[@]}"
+	do
+		${test}	
+	done
 	
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
@@ -114,15 +96,16 @@ function modify_autotune_config_tests() {
 # ouput: create the required setup and perform the test based on test name
 function perform_test() {
 	api_test_name=$1
-		
-	LOG_DIR="${TEST_SUITE_DIR}/${api_test_name}"
-	mkdir ${LOG_DIR}
-	LOG="${TEST_SUITE_DIR}/${api_test_name}.log"
+	
+	TEST_SUITE_DIR="${TESTS_DIR}/${api_test_name}"
+	mkdir ${TEST_SUITE_DIR}
+	LOG="${TESTS_DIR}/${api_test_name}.log"
+	
 	test=$(echo "${api_test_name}" | tr '_' '-')
 	
 	echo ""
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
-	echo "                    Running Testcase ${api_test_name}" | tee -a ${LOG}
+	echo "                    Running Test ${api_test_name}" | tee -a ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a ${LOG}
 	kubectl apply -f ${YAML}/${test}.yaml -n ${NAMESPACE} >> ${LOG}
 	
