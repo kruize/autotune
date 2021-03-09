@@ -120,6 +120,7 @@ public class ListAppLayers extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
@@ -130,6 +131,7 @@ public class ListAppLayers extends HttpServlet
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 			layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+			layerJson.put(DAConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
 			layersArray.put(layerJson);
 		}
 		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);

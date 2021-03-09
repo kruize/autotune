@@ -47,7 +47,7 @@ public final class AutotuneConfig
 
 	private final String layerPresenceLabel;
 	private final String layerPresenceLabelValue;
-	
+
 	private final ArrayList<Tunable> tunables;
 
 	public AutotuneConfig(int id, String name,
@@ -154,9 +154,12 @@ public final class AutotuneConfig
 		return "AutotuneConfig{" +
 				"level=" + level +
 				", name='" + name + '\'' +
-				", details='" + details + '\'' +
-				", levelPresenceQuery='" + layerPresenceQuery + '\'' +
-				", levelPresenceKey='" + layerPresenceKey + '\'' +
+				", layerName='" + layerName + '\'' +
+				", presence='" + presence + '\'' +
+				", layerPresenceKey='" + layerPresenceKey + '\'' +
+				", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+				", layerPresenceLabel='" + layerPresenceLabel + '\'' +
+				", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
 				", tunables=" + tunables +
 				'}';
 	}

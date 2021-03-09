@@ -66,14 +66,14 @@ public class ValidateAutotuneObject
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
 		}
 
-		// Check if function_variables is empty
-		if (slaInfo.getFunctionVariables().isEmpty()) {
-			errorString.append(DAErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
-		}
-
 		// Check if objective_function exists
 		if (slaInfo.getObjectiveFunction() == null || slaInfo.getObjectiveFunction().isEmpty()) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
+		}
+
+		// Check if function_variables is empty
+		if (slaInfo.getFunctionVariables().isEmpty()) {
+			errorString.append(DAErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
 
 		for (FunctionVariable functionVariable : slaInfo.getFunctionVariables()) {

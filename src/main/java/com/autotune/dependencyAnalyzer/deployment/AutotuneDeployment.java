@@ -23,7 +23,6 @@ import com.autotune.dependencyAnalyzer.exceptions.InvalidBoundsException;
 import com.autotune.dependencyAnalyzer.exceptions.InvalidValueException;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.*;
-import com.autotune.dependencyAnalyzer.util.AutotuneSupportedTypes;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 import com.autotune.dependencyAnalyzer.util.Util;
@@ -99,13 +98,11 @@ public class AutotuneDeployment
 					case "MODIFIED":
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
-							int newId = autotuneObject.toString().hashCode();
-
-							// Check if any of the values have changed
-							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != newId) {
+							// Check if any of the values have changed from the existing object in the map
+							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != autotuneObject.getId()) {
 								deleteExistingAutotuneObject(resource);
 								addAutotuneObject(autotuneObject, autotuneDeployment, client);
-								LOGGER.info("Autotune object {} has been modified", autotuneObject.getName());
+								LOGGER.info("Modified autotune object {}", autotuneObject.getName());
 							}
 						}
 						break;
@@ -185,6 +182,7 @@ public class AutotuneDeployment
 
 		autotuneObjectMap.remove(name);
 		applicationServiceStackMap.remove(name);
+		LOGGER.info("Deleted autotune object {}", name);
 	}
 
 	/**
@@ -274,9 +272,31 @@ public class AutotuneDeployment
 				objectiveFunction = slaJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
+			JSONArray functionVariables = new JSONArray();
+			if (slaJson != null) {
+				functionVariables = slaJson.getJSONArray(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
+			}
+			ArrayList<FunctionVariable> functionVariableArrayList = new ArrayList<>();
+
+			for (Object functionVariableObj : functionVariables) {
+				JSONObject functionVariableJson = (JSONObject) functionVariableObj;
+				String variableName = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.NAME);
+				String query = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.QUERY);
+				String datasource = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.DATASOURCE);
+				String valueType = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.VALUE_TYPE);
+
+				FunctionVariable functionVariable = new FunctionVariable(variableName,
+						query,
+						datasource,
+						valueType);
+
+				functionVariableArrayList.add(functionVariable);
+			}
+
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
-					direction);
+					direction,
+					functionVariableArrayList);
 
 			JSONObject selectorJson = null;
 			if (specJson != null) {
@@ -302,7 +322,15 @@ public class AutotuneDeployment
 			namespace = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
 					.optString(DAConstants.AutotuneObjectConstants.NAMESPACE);
 
-			int id = Util.generateID(autotuneObject);
+			// Generate string of all fields we want to use for ID. This is the same as toString() for later comparison
+			String idString = "AutotuneObject{" +
+					"name='" + name + '\'' +
+					", namespace='" + namespace + '\'' +
+					", mode='" + mode + '\'' +
+					", slaInfo=" + slaInfo +
+					", selectorInfo=" + selectorInfo +
+					'}';
+			int id = Util.generateID(idString);
 
 			return new AutotuneObject(id,
 					name,
@@ -440,7 +468,20 @@ public class AutotuneDeployment
 				}
 			}
 
-			int id = Util.generateID(autotuneConfigResource);
+			// Generate string of all fields we want to use for ID. This is the same as toString() for later comparison
+			String idString = "AutotuneConfig{" +
+					"level=" + level +
+					", name='" + name + '\'' +
+					", layerName='" + layerName + '\'' +
+					", presence='" + presence + '\'' +
+					", layerPresenceKey='" + layerPresenceKey + '\'' +
+					", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+					", layerPresenceLabel='" + layerPresenceLabel + '\'' +
+					", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
+					", tunables=" + tunableArrayList +
+					'}';
+
+			int id = Util.generateID(idString);
 			return new AutotuneConfig(id, name,
 					layerName,
 					level,
@@ -471,7 +512,7 @@ public class AutotuneDeployment
 			for (String autotuneObject : applicationServiceStackMap.keySet()) {
 				for (String application : applicationServiceStackMap.get(autotuneObject).keySet()) {
 					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(application);
-					addLayerInfoToApplication(applicationServiceStack, autotuneConfig, null);
+					addLayerInfoToApplication(applicationServiceStack, autotuneConfig);
 				}
 			}
 			return;
@@ -496,7 +537,7 @@ public class AutotuneDeployment
 				for (String application : apps) {
 					for (String autotuneObject : applicationServiceStackMap.keySet()) {
 						if (applicationServiceStackMap.get(autotuneObject).containsKey(application)) {
-							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(application), autotuneConfig, null);
+							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(application), autotuneConfig);
 						}
 					}
 				}
@@ -513,7 +554,7 @@ public class AutotuneDeployment
 					for (String autotuneObject : applicationServiceStackMap.keySet()) {
 						String podName = pod.getMetadata().getName();
 						if (applicationServiceStackMap.get(autotuneObject).containsKey(podName)) {
-							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(podName), autotuneConfig, pod);
+							addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(podName), autotuneConfig);
 							break;
 						}
 					}
@@ -524,11 +565,11 @@ public class AutotuneDeployment
 
 	/**
 	 * Add layer, queries and tunables info to the autotuneObject
-	 *  @param applicationServiceStack ApplicationServiceStack instance that contains the layer
+	 *
+	 * @param applicationServiceStack ApplicationServiceStack instance that contains the layer
 	 * @param autotuneConfig          AutotuneConfig object for the layer
-	 * @param pod
 	 */
-	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig, Pod pod) {
+	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
 		//Check if layer already exists
 		if (applicationServiceStack.getStackLayers().containsKey(autotuneConfig.getName())) {
 			return;

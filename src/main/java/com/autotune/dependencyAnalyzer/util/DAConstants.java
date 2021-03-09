@@ -79,6 +79,7 @@ public class DAConstants
 		public static final String MODE = "mode";
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
+		public static final String ID = "id";
 	}
 
 	/**
@@ -115,6 +116,7 @@ public class DAConstants
 		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
 		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
 		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
+		public static final String ID = "id";
 	}
 
 	/**

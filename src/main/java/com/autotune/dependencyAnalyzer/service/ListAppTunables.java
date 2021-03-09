@@ -140,6 +140,7 @@ public class ListAppTunables extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
 
 		// Add function_variables info
 		JSONArray functionVariablesArray = new JSONArray();
@@ -167,6 +168,7 @@ public class ListAppTunables extends HttpServlet
 					.get(application).getStackLayers().get(autotuneConfigName);
 			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
+				layerJson.put(DAConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
 				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 				layerJson.put(DAConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
