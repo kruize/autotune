@@ -27,11 +27,14 @@ install('scikit-optimize')
 
 from bayes_optuna import optuna_hpo
 
+# application_name (str): The name of the application that is being optimized.
 # direction (str): Direction of optimization, minimize or maximize.
-# ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
-# sla_class (str): The objective function that is being optimized.
+# hpo_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
+# id (str): The id of the application that is being optimized.
+# objective_function (str): The objective function that is being optimized.
 # tunables (list): A list containing the details of each tunable in a dictionary format.
-direction, ml_algo_impl, sla_class, tunables = get_all_tunables()
+# value_type (string): Value type of the objective function.
+application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type = get_all_tunables()
 
-if ml_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
-    optuna_hpo.recommend(direction, ml_algo_impl, sla_class, tunables)
+if hpo_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
+    optuna_hpo.recommend(application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type)

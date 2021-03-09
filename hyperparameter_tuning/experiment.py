@@ -54,9 +54,9 @@ def get_experiment_result(experiment_tunables):
         output (str): Result received from the experiment manager.
     """
     for tunable in experiment_tunables:
-        if tunable["tunable_name"] == "cpuRequest":
+        if tunable["tunable_name"] == "cpu_request":
             cpu_request = tunable["tunable_value"]
-        elif tunable["tunable_name"] == "memoryRequest":
+        elif tunable["tunable_name"] == "memory_request":
             memory_request = tunable["tunable_value"]
 
     output = subprocess.run(["bash", "scripts/applyconfig.sh", str(cpu_request), str(memory_request)],
