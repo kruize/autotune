@@ -43,12 +43,10 @@ public final class SlaInfo
 	private final String slaClass;
 	private final String objectiveFunction;
 	private final String direction;
-	private final ArrayList<FunctionVariable> functionVariables;
 
 	public SlaInfo(String slaClass,
 		String objectiveFunction,
-		String direction,
-		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
+		String direction) throws InvalidValueException {
 		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
 			this.slaClass = slaClass;
 		else
@@ -58,17 +56,12 @@ public final class SlaInfo
 		if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
 			this.direction = direction;
 		else throw new InvalidValueException("Invalid direction for autotune kind");
-
-		this.functionVariables = new ArrayList<>(functionVariables);
 	}
 
 	public SlaInfo(SlaInfo copy) {
 		this.slaClass = copy.getSlaClass();
 		this.objectiveFunction = copy.getObjectiveFunction();
 		this.direction = copy.getDirection();
-
-		this.functionVariables = new ArrayList<>(copy.getFunctionVariables());
-
 	}
 
 	public String getSlaClass() {
@@ -83,17 +76,12 @@ public final class SlaInfo
 		return objectiveFunction;
 	}
 
-	public ArrayList<FunctionVariable> getFunctionVariables() {
-		return new ArrayList<>(functionVariables);
-	}
-
 	@Override
 	public String toString() {
 		return "SlaInfo{" +
 				"slaClass='" + slaClass + '\'' +
 				", objectiveFunction='" + objectiveFunction + '\'' +
 				", direction='" + direction + '\'' +
-				", functionVariables=" + functionVariables +
 				'}';
 	}
 }

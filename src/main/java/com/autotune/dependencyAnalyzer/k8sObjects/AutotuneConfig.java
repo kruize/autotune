@@ -58,7 +58,8 @@ public final class AutotuneConfig
 			String layerPresenceQuery,
 			String layerPresenceKey,
 			String layerPresenceLabel,
-			String layerPresenceLabelValue) throws InvalidValueException {
+			String layerPresenceLabelValue,
+			ArrayList<Tunable> tunables) throws InvalidValueException {
 		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneConfigConstants.NAME, name);

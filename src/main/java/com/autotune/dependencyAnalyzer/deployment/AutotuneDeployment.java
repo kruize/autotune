@@ -92,13 +92,8 @@ public class AutotuneDeployment
 					case "ADDED":
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
-							autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+							addAutotuneObject(autotuneObject, autotuneDeployment, client);
 							LOGGER.info("Added autotune object " + autotuneObject.getName());
-							autotuneDeployment.matchPodsToAutotuneObject(client);
-
-							for (String autotuneConfig : autotuneConfigMap.keySet()) {
-								addLayerInfo(autotuneConfigMap.get(autotuneConfig));
-							}
 						}
 						break;
 					case "MODIFIED":
@@ -107,14 +102,9 @@ public class AutotuneDeployment
 							int newId = autotuneObject.toString().hashCode();
 
 							// Check if any of the values have changed
-							if (autotuneObjectMap.get(autotuneObject.getName()).toString().hashCode() != newId) {
+							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != newId) {
 								deleteExistingAutotuneObject(resource);
-								autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
-								autotuneDeployment.matchPodsToAutotuneObject(client);
-
-								for (String autotuneConfig : autotuneConfigMap.keySet()) {
-									addLayerInfo(autotuneConfigMap.get(autotuneConfig));
-								}
+								addAutotuneObject(autotuneObject, autotuneDeployment, client);
 								LOGGER.info("Autotune object {} has been modified", autotuneObject.getName());
 							}
 						}
@@ -169,6 +159,25 @@ public class AutotuneDeployment
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
 	}
 
+	/**
+	 * Add autotuneobject to monitoring map and match pods and autotuneconfigs
+	 * @param autotuneObject
+	 * @param autotuneDeployment
+	 * @param client
+	 */
+	private static void addAutotuneObject(AutotuneObject autotuneObject, AutotuneDeployment autotuneDeployment, KubernetesClient client) {
+		autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+		autotuneDeployment.matchPodsToAutotuneObject(client);
+
+		for (String autotuneConfig : autotuneConfigMap.keySet()) {
+			addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+		}
+	}
+
+	/**
+	 * Delete autotuneobject that's currently monitored
+	 * @param autotuneObject
+	 */
 	private static void deleteExistingAutotuneObject(String autotuneObject) {
 		JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
 		String name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
@@ -265,37 +274,9 @@ public class AutotuneDeployment
 				objectiveFunction = slaJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
-			JSONArray functionVariables = new JSONArray();
-			if (slaJson != null) {
-				functionVariables = slaJson.getJSONArray(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-			}
-			ArrayList<FunctionVariable> functionVariableArrayList = new ArrayList<>();
-
-			for (Object functionVariableObj : functionVariables) {
-				JSONObject functionVariableJson = (JSONObject) functionVariableObj;
-				String variableName = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.NAME);
-				String query = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.QUERY);
-				String datasource = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.DATASOURCE);
-				String valueType = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.VALUE_TYPE);
-
-				FunctionVariable functionVariable = new FunctionVariable(variableName,
-						query,
-						datasource,
-						valueType);
-
-				functionVariableArrayList.add(functionVariable);
-			}
-
-			// If sla_class is invalid or null, default to generic sla_class.
-			if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
-				LOGGER.info(DAErrorConstants.AutotuneObjectErrors.SLA_CLASS_NOT_SUPPORTED);
-				sla_class = DAConstants.AutotuneObjectConstants.GENERIC_SLA_CLASS;
-			}
-
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
-					direction,
-					functionVariableArrayList);
+					direction);
 
 			JSONObject selectorJson = null;
 			if (specJson != null) {
@@ -469,8 +450,7 @@ public class AutotuneDeployment
 					layerPresenceKey,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
-					tunableArrayList,
-			);
+					tunableArrayList);
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
 			e.printStackTrace();
 			return null;
