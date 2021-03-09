@@ -16,22 +16,24 @@
 package com.autotune.queue;
 
 import java.io.Serializable;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.autotune.em.utils.EMUtils.QueueName;
-
-public class RecMgrQueue implements AutotuneQueue, Serializable {
+import com.autotune.utils.AutotuneUtil;
+import com.autotune.utils.AutotuneUtil.QueueName;
+/**
+ * RecMgrQueue is singleton concrete implementation of AutotuneQueue for Recommendation Manager.
+ * @author bipkumar
+ *
+ */
+public class RecMgrQueue extends AutotuneQueueImpl implements Serializable {
+	
 	private static final long serialVersionUID = -6045964856984857449L;
-	private final int INITIAL_CAPACITY = 50;
-	private final BlockingQueue<AutotuneDTO> queue;
-	private final String name;
 	private static RecMgrQueue instance;
 
 	private RecMgrQueue()
 	{
-		this.name = QueueName.RECMGRQUEUE.name();
-		queue = new LinkedBlockingQueue<AutotuneDTO>(INITIAL_CAPACITY);
+		name = QueueName.RECMGRQUEUE.name();
+		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtil.INITIAL_QUEUE_CAPACITY);
 	}
 
 	public static RecMgrQueue getInstance()
@@ -49,24 +51,9 @@ public class RecMgrQueue implements AutotuneQueue, Serializable {
 
 		return instance;
 	} 
-	//
+
+	// implement this method to avoid the creating the copy of object from a external stream.
 	private Object readResolve() {
 		return getInstance();
 	}
-	
-	@Override
-	public boolean send(AutotuneDTO data) throws InterruptedException {
-		return queue.offer(data);
-	}
-	
-	@Override
-	public AutotuneDTO get() throws InterruptedException {
-		return queue.take();
-	}
-	
-	@Override
-	public String getName() {
-		return this.name;
-	}
-		
 }

@@ -15,18 +15,26 @@
  *******************************************************************************/
 package com.autotune.queue;
 
-import com.autotune.em.utils.EMUtils.QueueName;
+import com.autotune.utils.AutotuneUtil.QueueName;
 
+/**
+ * AutotuneQueueFactory return object of a Queue, In autotune we are using two queues,
+ * RECMGRQUEUE work between Dependency Analyzer and Recommendation Manager.
+ * EXPMGRQUEUE work between Recommendation Manager and Experiment Manager
+ * @author bipkumar
+ *
+ */
 public class AutotuneQueueFactory {
 
 	public static AutotuneQueue getQueue(String queueName) {
-		if(queueName == null) {
+		
+		if (queueName == null) {
 			return null;
 		}
-		if(queueName.equalsIgnoreCase(QueueName.RECMGRQUEUE.name())) {
+		if (queueName.equalsIgnoreCase(QueueName.RECMGRQUEUE.name())) {
 			return RecMgrQueue.getInstance();
 			
-		} else if(queueName.equalsIgnoreCase(QueueName.EXPMGRQUEUE.name())) {
+		} else if (queueName.equalsIgnoreCase(QueueName.EXPMGRQUEUE.name())) {
 			return ExpMgrQueue.getInstance();
 		}
 		

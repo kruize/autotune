@@ -13,20 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.queue;
+
+import java.util.concurrent.BlockingQueue;
+
 /**
- * AutotuneQueue is an interface having three main contracts
- * send method: it send data to the AutotuneQueue 
- * get method: recieved data from AutotuneQueue
- * getName method: return the name of the component currently operating on AutotuneDTO object
+ * AututuneQueueImpl is default implementation of the AutotuneQueue contracts
  * @author bipkumar
+ *
  */
-public interface AutotuneQueue {
+public abstract class AutotuneQueueImpl implements AutotuneQueue {
 	
-	public boolean send(AutotuneDTO data) throws InterruptedException;
+	protected BlockingQueue<AutotuneDTO> queue = null;
+	protected String name = "";
 	
-	public AutotuneDTO get() throws InterruptedException;
-	
-	public String getName();
+	@Override
+	public boolean send(AutotuneDTO data) throws InterruptedException {
+		if (queue != null) {
+			return queue.offer(data);
+		}
+			
+		return false;
+	}
+
+	@Override
+	public AutotuneDTO get() throws InterruptedException {
+		if (queue != null)
+			return queue.take();
+		
+		return null;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
 }

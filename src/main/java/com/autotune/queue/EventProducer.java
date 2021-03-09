@@ -16,7 +16,12 @@
 package com.autotune.queue;
 
 import java.util.concurrent.Callable;
-
+/**
+ * EventProducer is a collable which will run in a separate 
+ * thread and push the data into the AutotuneQueue.
+ * @author bipkumar
+ *
+ */
 public class EventProducer implements Callable {
 	
 	private final AutotuneQueue queue;
@@ -26,18 +31,16 @@ public class EventProducer implements Callable {
 		this.queue = queue;
 		this.inputDTO = inputData;
 	}
-
 	
 	@Override
 	public Boolean call() {
-			boolean isAdded=false;
 			try {
-				isAdded = queue.send(inputDTO);
+				return queue.send(inputDTO);
 					
 			} catch (InterruptedException e) {
 				System.out.println("Adding Thread was interrupted");
 			} 
 			
-			return isAdded;
+			return false;
 		}
 }

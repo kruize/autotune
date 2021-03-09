@@ -14,19 +14,24 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.queue;
+package com.autotune.utils;
+
 /**
- * AutotuneQueue is an interface having three main contracts
- * send method: it send data to the AutotuneQueue 
- * get method: recieved data from AutotuneQueue
- * getName method: return the name of the component currently operating on AutotuneDTO object
+ * This is a Utility class at the Autotune level for common constants, functions etc.
  * @author bipkumar
+ *
  */
-public interface AutotuneQueue {
+public final class AutotuneUtil {
 	
-	public boolean send(AutotuneDTO data) throws InterruptedException;
+	// Initial capacity of the queue
+	public static int INITIAL_QUEUE_CAPACITY = 50;
 	
-	public AutotuneDTO get() throws InterruptedException;
+	// Blocking queue names used in Autotune
+	public enum Operation {
+		ADD, UPDATE, DELETE
+	}
 	
-	public String getName();
+	public enum QueueName {
+		RECMGRQUEUE, EXPMGRQUEUE
+	}
 }

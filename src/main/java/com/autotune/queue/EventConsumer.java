@@ -16,22 +16,28 @@
 package com.autotune.queue;
 
 import java.util.concurrent.Callable;
-
+/**
+ * EventConsumer is a Callable run in a separate thread
+ * and receive data from AutotuneQueue.
+ * @author bipkumar
+ *
+ */
 public class EventConsumer implements Callable<AutotuneDTO> {
 	private final AutotuneQueue queue;
 	private AutotuneDTO taskDto;
-    public EventConsumer(AutotuneQueue queue) {
-        this.queue = queue;
-    }
+
+	public EventConsumer(AutotuneQueue queue) {
+		this.queue = queue;
+	}
 
 	@Override
 	public AutotuneDTO call() throws Exception {
-        try {
-        	taskDto = queue.get();
-            
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+		try {
+			taskDto = queue.get();
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		return taskDto;
 	}
 }

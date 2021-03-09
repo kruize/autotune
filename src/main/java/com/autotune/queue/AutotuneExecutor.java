@@ -20,9 +20,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * AutotuneExector is an abstraction of ExecutorService,
+ * if you will not specify the default size it will create a
+ * fixed size thread pool.
+ * @author bipkumar
+ */
+
 public class AutotuneExecutor {
 	
-	private final int DEFAULT_POOL_SIZE=5;
+	/**
+	 * Default pool size = 5, it can be configured with new size while 
+	 * Initializing the AutotuneExecutor.
+	 */
+	private final int DEFAULT_POOL_SIZE = 5;
+	
 	private ExecutorService executorService=null;
 	
 	public AutotuneExecutor(int poolSize) {
@@ -35,7 +47,7 @@ public class AutotuneExecutor {
 	}
 	
 	public Future<AutotuneDTO> submitTask(Callable<AutotuneDTO> task) {
-		if(null != this.executorService ) {
+		if (null != this.executorService) {
 			return executorService.submit(task);
 		}
 		return null;
