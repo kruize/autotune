@@ -28,7 +28,7 @@ from bayes_optuna import optuna_hpo
 # objective_function (str): The objective function that is being optimized.
 # tunables (list): A list containing the details of each tunable in a dictionary format.
 # value_type (string): Value type of the objective function.
-application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type = get_all_tunables()
+application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type = get_all_tunables(search_space_json)
 
 if hpo_algo_impl in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
     optuna_hpo.recommend(application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type)

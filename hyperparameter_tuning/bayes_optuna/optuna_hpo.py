@@ -16,6 +16,7 @@ limitations under the License.
 
 import optuna
 
+import json
 import os
 
 from experiment import perform_experiment
@@ -90,6 +91,9 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
         objective_function (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
         value_type (string): Value type of the objective function.
+
+    Returns:
+        recommended_config (json): A JSON containing the recommended config.
     """
     # Set the logging level for the Optuna’s root logger
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -147,3 +151,5 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
     recommended_config["optimal_value"] = optimal_value
 
     logger.info("Recommended config: " + str(recommended_config))
+
+    return json.dumps(recommended_config)
