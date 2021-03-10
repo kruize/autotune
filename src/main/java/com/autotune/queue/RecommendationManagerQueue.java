@@ -20,39 +20,38 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import com.autotune.utils.AutotuneUtil;
 import com.autotune.utils.AutotuneUtil.QueueName;
-
 /**
- * ExpMgrQueue is singleton concrete implementation of AutotuneQueue for Experiment Manager
- *  * @author bipkumar
+ * RecMgrQueue is singleton concrete implementation of AutotuneQueue for Recommendation Manager.
+ * @author bipkumar
  *
  */
-public class ExpMgrQueue extends AutotuneQueueImpl implements Serializable {
+public class RecommendationManagerQueue extends AutotuneQueueImpl implements Serializable {
 	
 	private static final long serialVersionUID = -6045964856984857449L;
-	private static ExpMgrQueue instance;
+	private static RecommendationManagerQueue instance;
 
-	private ExpMgrQueue()
+	private RecommendationManagerQueue()
 	{
-		name = QueueName.EXPMGRQUEUE.name();
+		name = QueueName.RECMGRQUEUE.name();
 		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtil.INITIAL_QUEUE_CAPACITY);
 	}
 
-	public static ExpMgrQueue getInstance()
+	public static RecommendationManagerQueue getInstance()
 	{
 		if (instance == null)
 		{
-			synchronized(ExpMgrQueue.class)
+			synchronized(RecommendationManagerQueue.class)
 			{
 				if (instance == null)
 				{
-					instance = new ExpMgrQueue();
+					instance = new RecommendationManagerQueue();
 				}
 			}            
 		}
 
 		return instance;
 	} 
-	
+
 	// implement this method to avoid the creating the copy of object from a external stream.
 	private Object readResolve() {
 		return getInstance();

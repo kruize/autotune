@@ -16,6 +16,9 @@
 
 package com.autotune.utils;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * This is a Utility class at the Autotune level for common constants, functions etc.
  * @author bipkumar
@@ -23,6 +26,7 @@ package com.autotune.utils;
  */
 public final class AutotuneUtil {
 	
+	private final static String URL_REGEX = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 	// Initial capacity of the queue
 	public static int INITIAL_QUEUE_CAPACITY = 50;
 	
@@ -33,5 +37,20 @@ public final class AutotuneUtil {
 	
 	public enum QueueName {
 		RECMGRQUEUE, EXPMGRQUEUE
+	}
+	
+	/**
+	 * Generic URL pattern validator for validating the url
+	 * @param url as String of type https, ftp, file
+	 * @return true if input url is valid else return false
+	 */
+	public static boolean isValidURL(String url) {
+
+		Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
+		if (url == null || url == "") {
+			return false;
+		}
+		Matcher matcher = URL_PATTERN.matcher(url);
+		return matcher.matches();
 	}
 }

@@ -32,10 +32,10 @@ public class AutotuneQueueFactory {
 			return null;
 		}
 		if (queueName.equalsIgnoreCase(QueueName.RECMGRQUEUE.name())) {
-			return RecMgrQueue.getInstance();
+			return RecommendationManagerQueue.getInstance();
 			
 		} else if (queueName.equalsIgnoreCase(QueueName.EXPMGRQUEUE.name())) {
-			return ExpMgrQueue.getInstance();
+			return ExperimentManagerQueue.getInstance();
 		}
 		
 		return null;
