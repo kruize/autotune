@@ -67,9 +67,9 @@ public class ValidateAutotuneObject
 		}
 
 		// Check if hpo_algo_impl is supported
-		if (!AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(slaInfo.getHpoAlgoImpl())) {
-			errorString.append(DAErrorConstants.AutotuneObjectErrors.HPO_ALGO_NOT_SUPPORTED);
-		}
+//		if (!AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(slaInfo.getHpoAlgoImpl())) {
+//			errorString.append(DAErrorConstants.AutotuneObjectErrors.HPO_ALGO_NOT_SUPPORTED);
+//		}
 
 		// Check if objective_function exists
 		if (slaInfo.getObjectiveFunction() == null || slaInfo.getObjectiveFunction().isEmpty()) {

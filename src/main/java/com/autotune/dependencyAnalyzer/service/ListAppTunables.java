@@ -19,7 +19,7 @@ import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.datasource.DataSource;
 import com.autotune.dependencyAnalyzer.datasource.DataSourceFactory;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
-import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
+import com.autotune.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
 import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
@@ -182,7 +182,7 @@ public class ListAppTunables extends HttpServlet
 					tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
+					tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, 0);
 					try {
 						String query = DAConstants.NONE;
 						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());

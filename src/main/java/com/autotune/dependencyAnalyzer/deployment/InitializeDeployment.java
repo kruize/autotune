@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.deployment;
 
+import com.autotune.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.datasource.DataSourceFactory;
 import com.autotune.dependencyAnalyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;

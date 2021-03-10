@@ -17,6 +17,7 @@ package com.autotune;
 
 import com.autotune.dependencyAnalyzer.DependencyAnalyzer;
 import com.autotune.dependencyAnalyzer.util.ServerContext;
+import com.autotune.recommendation_manager.RecommendationManager;
 import com.autotune.service.HealthService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -30,18 +31,37 @@ public class Autotune
 	private static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
+	public static Server server = new Server(PORT);
+
 	public static void main(String[] args) {
 		ServletContextHandler context = null;
 
 		disableServerLogging();
-
-		Server server = new Server(PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
+		LOGGER.info("Starting initialize");
+		RecommendationManager recommendationManager = new RecommendationManager();
+		Thread recMgrThread = new Thread(recommendationManager);
+		recMgrThread.start();
 		DependencyAnalyzer.start(context);
+
+/*
+		DAQueueProcessor daQueueProcessor = new DAQueueProcessor();
+		AutotuneDTO autotuneDTO = new AutotuneDTO();
+		autotuneDTO.setUrl(server.getURI().getFragment() + " " + server.getURI().getHost() + ":" + server.getURI().getPort());
+		autotuneDTO.setName("ListAppTunables path");
+		daQueueProcessor.send(autotuneDTO, EMUtils.QueueName.RECMGRQUEUE.name());
+		LOGGER.info("Sent queue");
+		AutotuneDTO autotuneDTO1 = new AutotuneDTO();
+		autotuneDTO1.setUrl(server.getURI().getHost() + ":" + server.getURI().getPort());
+		autotuneDTO1.setName("ListAppTunables path bolte mia");
+		daQueueProcessor.send(autotuneDTO1, EMUtils.QueueName.RECMGRQUEUE.name());
+		LOGGER.info("Sent queue again");
+*/
+
 		try {
 			server.start();
 		} catch (Exception e) {

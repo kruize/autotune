@@ -25,7 +25,7 @@ public class QueueProcessorFactory {
 		QueueProcessor processor= null;
 		switch (proc) {
 			case DAPROCESSOR: 
-				processor = new DAQueueProcessor();
+				processor = new QueueProcessorImpl();
 				break;
 			case MLPROCESSOR:
 				processor = new QueueMLProcessor();

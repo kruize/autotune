@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.dependencyAnalyzer.service;
+package com.autotune.recommendation_manager.service;
 
-import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
-import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment;
-import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneConfig;
-import com.autotune.dependencyAnalyzer.k8sObjects.AutotuneObject;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
+import com.autotune.recommendation_manager.ApplicationSearchSpace;
+import com.autotune.recommendation_manager.ApplicationTunable;
+import com.autotune.recommendation_manager.RecommendationManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -73,18 +72,19 @@ public class SearchSpace extends HttpServlet
 
         String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
 
-        for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+        getSearchSpace(outputJsonArray, applicationName);
+        resp.getWriter().println(outputJsonArray.toString(4));
+    }
 
-            if (applicationName == null) {
-                //No application parameter, generate search space for all applications
-                for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, application);
-                }
-            } else {
-                if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(applicationName)) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName);
-                }
+    public void getSearchSpace(JSONArray outputJsonArray, String applicationName) {
+        if (applicationName == null) {
+            //No application parameter, generate search space for all applications
+            for (String application : RecommendationManager.applicationSearchSpaceMap.keySet()) {
+                addApplicationToSearchSpace(outputJsonArray, application);
+            }
+        } else {
+            if (RecommendationManager.applicationSearchSpaceMap.containsKey(applicationName)) {
+                addApplicationToSearchSpace(outputJsonArray, applicationName);
             }
         }
 
@@ -94,33 +94,27 @@ public class SearchSpace extends HttpServlet
             else
                 outputJsonArray.put("Error: Application " + applicationName + " not found!");
         }
-        resp.getWriter().println(outputJsonArray.toString(4));
     }
 
-    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application) {
+    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String application) {
         JSONObject applicationJson = new JSONObject();
-        ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap
-                .get(autotuneObjectKey).get(application);
+        ApplicationSearchSpace applicationSearchSpace = RecommendationManager.applicationSearchSpaceMap.get(application);
 
         applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, applicationSearchSpace.getObjectiveFunction());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, applicationSearchSpace.getDirection());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, "hpo_algo");
 
         JSONArray tunablesJsonArray = new JSONArray();
-        for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
-            AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
-            for (Tunable tunable : autotuneConfig.getTunables()) {
-                JSONObject tunableJson = new JSONObject();
-                tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
+        for (ApplicationTunable applicationTunable : applicationSearchSpace.getApplicationTunables()) {
+            JSONObject tunableJson = new JSONObject();
+            tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, applicationTunable.getName());
+            tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, applicationTunable.getUpperBound());
+            tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, applicationTunable.getLowerBound());
+            tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, applicationTunable.getValueType());
+            tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, 0);
 
-                tunablesJsonArray.put(tunableJson);
-            }
+            tunablesJsonArray.put(tunableJson);
         }
 
         applicationJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);

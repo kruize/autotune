@@ -90,6 +90,13 @@ public class AutotuneDTO implements Serializable {
 
 	@Override
 	public String toString() {
-		return "id=" + id + ", name=" + name + ", processorName=" + processorName + ", url=" + url + ", infoMessage="+infoMessage.toString() + ", errorMessage=" +errorMessage;
+		return "AutotuneDTO{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", url='" + url + '\'' +
+				", infoMessage=" + infoMessage +
+				", errorMessage=" + errorMessage +
+				", processorName=" + processorName +
+				'}';
 	}
 }

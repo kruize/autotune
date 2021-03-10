@@ -33,7 +33,6 @@ public class ExpMgrQueueProcessor implements QueueProcessor {
 		executorService = new AutotuneExecutor();
 	}
 	
-	@Override
 	public void process() {
 		
 		EventConsumer recMgrEventConsumer = new EventConsumer(AutotuneQueueFactory.getQueue(QueueName.EXPMGRQUEUE.name()));
@@ -62,6 +61,15 @@ public class ExpMgrQueueProcessor implements QueueProcessor {
 			executorService.shutdown();
 		}
 	}
-	
-	
+
+	@Override
+	public void send(AutotuneDTO autotuneDTO, String queueName) {
+
+	}
+
+	@Override
+	public AutotuneDTO receive(String queueName) {
+
+		return null;
+	}
 }
