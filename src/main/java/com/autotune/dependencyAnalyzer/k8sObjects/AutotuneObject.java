@@ -27,14 +27,14 @@ import java.util.HashMap;
  */
 public final class AutotuneObject
 {
-	private final int id;
+	private final String id;
 	private final String name;
 	private final String namespace;
 	private final String mode;
 	private final SlaInfo slaInfo;
 	private final SelectorInfo selectorInfo;
 
-	public AutotuneObject(int id,
+	public AutotuneObject(String id,
 			String name,
 			String namespace,
 			String mode,
@@ -80,7 +80,7 @@ public final class AutotuneObject
 		return namespace;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 

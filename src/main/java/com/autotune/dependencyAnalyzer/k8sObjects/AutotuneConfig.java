@@ -30,7 +30,7 @@ import java.util.HashMap;
  */
 public final class AutotuneConfig
 {
-	private final int id;
+	private final String id;
 	private final int level;
 	private final String name;
 	private final String layerName;
@@ -50,7 +50,7 @@ public final class AutotuneConfig
 
 	private final ArrayList<Tunable> tunables;
 
-	public AutotuneConfig(int id, String name,
+	public AutotuneConfig(String id, String name,
 			String layerName,
 			int level,
 			String details,
@@ -145,7 +145,7 @@ public final class AutotuneConfig
 		return layerPresenceLabelValue;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 

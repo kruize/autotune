@@ -330,7 +330,7 @@ public class AutotuneDeployment
 					", slaInfo=" + slaInfo +
 					", selectorInfo=" + selectorInfo +
 					'}';
-			int id = Util.generateID(idString);
+			String id = Util.generateID(idString);
 
 			return new AutotuneObject(id,
 					name,
@@ -481,7 +481,7 @@ public class AutotuneDeployment
 					", tunables=" + tunableArrayList +
 					'}';
 
-			int id = Util.generateID(idString);
+			String id = Util.generateID(idString);
 			return new AutotuneConfig(id, name,
 					layerName,
 					level,
@@ -600,7 +600,6 @@ public class AutotuneDeployment
 		//Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
-			// TODO SHOULD ALL CHILDREN HAVE SAME ID?
 			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getId(),
 					autotuneConfig.getName(),
 					autotuneConfig.getLayerName(),

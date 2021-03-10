@@ -46,9 +46,9 @@ public final class SlaInfo
 	private final ArrayList<FunctionVariable> functionVariables;
 
 	public SlaInfo(String slaClass,
-			String objectiveFunction,
-			String direction,
-			ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
+		String objectiveFunction,
+		String direction,
+		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
 		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
 			this.slaClass = slaClass;
 		else
