@@ -16,52 +16,54 @@
 
 package com.autotune.queueprocessor;
 
+import com.autotune.queue.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-import com.autotune.em.utils.EMUtils.QueueName;
-import com.autotune.queue.AutotuneDTO;
-import com.autotune.queue.AutotuneQueue;
-import com.autotune.queue.AutotuneQueueFactory;
-import com.autotune.queue.EventProducer;
+public class QueueProcessorImpl implements QueueProcessor {
 
-public class DAQueueProcessor implements QueueProcessor {
-	
-	private AutotuneQueue recMgrQueue;
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger(QueueProcessorImpl.class);
+
 	@Override
-	public void process() {
-		
-		AutotuneQueueFactory queueFactory = new AutotuneQueueFactory();
-		recMgrQueue = queueFactory.getQueue(QueueName.RECMGRQUEUE.name());
-		
-	    AutotuneDTO newDTO = new AutotuneDTO();
-	    newDTO.setId(1000);
-	    newDTO.setUrl("https://localhost:8080/recconfig/");
-	    newDTO.setName("DA-Processor");
-	   
-	    EventProducer eventProducer = new EventProducer(recMgrQueue, newDTO);
+	public void send(AutotuneDTO autotuneDTO, String queueName) {
+		AutotuneQueue queue = AutotuneQueueFactory.getQueue(queueName);
+
+		EventProducer eventProducer = new EventProducer(queue, autotuneDTO);
     	FutureTask<Boolean> addToQueueTask = new FutureTask<Boolean>(eventProducer);
     	Thread t = new Thread(addToQueueTask);
     	t.start();
-    	boolean isAdded=false; 
-    	
-    	try {
-    		while(true) {
-    			if(addToQueueTask.isDone()) {
-	    			isAdded = (Boolean)addToQueueTask.get();
-	    			break;
-    			}
-    		}
-    		
-			
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
+
+		while(true) {
+			if(addToQueueTask.isDone()) {
+				LOGGER.info("Queue: sent to {}", queueName);
+				break;
+			}
 		}
-    	
-    	// Initializing Recommendation Manager 
-		RecMgrQueueProcessor recMgrProcess = new RecMgrQueueProcessor();
-		recMgrProcess.process();
 	}
 
+	@Override
+	public AutotuneDTO receive(String queueName) {
+		EventConsumer consumerEvnt = new EventConsumer(AutotuneQueueFactory.getQueue(queueName));
+		FutureTask<AutotuneDTO> recieveFromQueueTask = new FutureTask<>(consumerEvnt);
+		Thread t = new Thread(recieveFromQueueTask);
+		t.start();
+		AutotuneDTO autotuneDTO = null;
+
+		try {
+			while(true) {
+				if (recieveFromQueueTask.isDone()) {
+					autotuneDTO = recieveFromQueueTask.get();
+					return autotuneDTO;
+				}
+				Thread.sleep(100);
+			}
+
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			return autotuneDTO;
+		}
+	}
 }

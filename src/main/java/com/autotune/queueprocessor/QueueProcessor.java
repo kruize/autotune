@@ -16,7 +16,9 @@
 
 package com.autotune.queueprocessor;
 
+import com.autotune.queue.AutotuneDTO;
+
 public interface QueueProcessor {
-	
-	public void process();
+	void send(AutotuneDTO autotuneDTO, String queueName);
+	AutotuneDTO receive(String queueName);
 }

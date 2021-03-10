@@ -17,7 +17,7 @@ package com.autotune.dependencyAnalyzer.datasource;
 
 import com.autotune.dependencyAnalyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
-import com.autotune.dependencyAnalyzer.util.HttpUtil;
+import com.autotune.util.HttpUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

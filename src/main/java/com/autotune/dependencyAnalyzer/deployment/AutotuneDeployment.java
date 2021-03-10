@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.deployment;
 
+import com.autotune.Autotune;
+import com.autotune.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.datasource.DataSource;
@@ -26,6 +28,9 @@ import com.autotune.dependencyAnalyzer.k8sObjects.*;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 import com.autotune.dependencyAnalyzer.variables.Variables;
+import com.autotune.em.utils.EMUtils;
+import com.autotune.queue.AutotuneDTO;
+import com.autotune.queueprocessor.QueueProcessorImpl;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -91,6 +96,7 @@ public class AutotuneDeployment
 						for (String autotuneConfig : autotuneConfigMap.keySet()) {
 							addLayerInfo(autotuneConfigMap.get(autotuneConfig));
 						}
+						updateSearchSpace();
 						break;
 					default:
 						break;
@@ -113,6 +119,7 @@ public class AutotuneDeployment
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
 							LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+							updateSearchSpace();
 						}
 						break;
 					case "MODIFIED":
@@ -122,6 +129,7 @@ public class AutotuneDeployment
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
 							LOGGER.info("Added modified autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+							updateSearchSpace();
 						}
 						break;
 					case "DELETED":
@@ -138,6 +146,15 @@ public class AutotuneDeployment
 		/* Register custom watcher for autotune object and autotuneconfig object*/
 		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+	}
+
+	private static void updateSearchSpace() {
+		QueueProcessorImpl queueProcessorImpl = new QueueProcessorImpl();
+
+		AutotuneDTO autotuneDTO = new AutotuneDTO();
+		autotuneDTO.setName("ListAppTunables");
+		autotuneDTO.setUrl(DAConstants.HTTP_PROTOCOL + "://" + Autotune.server.getURI().getHost() + ":" + Autotune.server.getURI().getPort() + "/listAppTunables");
+		queueProcessorImpl.send(autotuneDTO, EMUtils.QueueName.RECMGRQUEUE.name());
 	}
 
 	/**

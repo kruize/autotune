@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.datasource;
 
-import com.autotune.dependencyAnalyzer.deployment.DeploymentInfo;
+import com.autotune.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.dependencyAnalyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.dependencyAnalyzer.util.DAConstants;

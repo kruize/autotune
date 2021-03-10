@@ -20,7 +20,6 @@ import com.autotune.queue.AutotuneDTO;
 
 public class QueueMLProcessor implements QueueProcessor {
 	
-	@Override
 	public void process() {
 		// TODO Auto-generated method stub
 		System.out.println("In ML Processor");
@@ -32,5 +31,16 @@ public class QueueMLProcessor implements QueueProcessor {
 		// ML business logic
 		
 		return mlInputDTO;
+	}
+
+	@Override
+	public void send(AutotuneDTO autotuneDTO, String queueName) {
+
+	}
+
+	@Override
+	public AutotuneDTO receive(String queueName) {
+
+		return null;
 	}
 }

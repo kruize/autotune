@@ -28,7 +28,7 @@ import com.autotune.queue.EventProducer;
 public class RecMgrQueueProcessor implements QueueProcessor {
 
 	@Override
-	public void process() {
+	public AutotuneDTO receive(String queueName) {
 		
 		EventConsumer consumerEvnt = new EventConsumer(AutotuneQueueFactory.getQueue(QueueName.RECMGRQUEUE.name()));
 		FutureTask<AutotuneDTO> recieveFromQueueTask = new FutureTask<AutotuneDTO>(consumerEvnt);
@@ -60,7 +60,7 @@ public class RecMgrQueueProcessor implements QueueProcessor {
 			
 			while(true) {
 				if(expMgrTask.isDone()) {
-					isAdded =(boolean) expMgrTask.get(); 
+					isAdded =(boolean) expMgrTask.get();
 					break;
 				}
 			}
@@ -73,9 +73,10 @@ public class RecMgrQueueProcessor implements QueueProcessor {
 		
 		ExpMgrQueueProcessor expMgrProcessor = new ExpMgrQueueProcessor();
 		expMgrProcessor.process();
-		
+		return recMgrInputDTO;
 	}
 
-
-
+	@Override
+	public void send(AutotuneDTO autotuneDTO, String queueName) {
+	}
 }
