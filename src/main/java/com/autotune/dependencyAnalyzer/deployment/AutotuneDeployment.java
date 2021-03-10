@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.dependencyAnalyzer.deployment;
 
+import com.autotune.Autotune;
+import com.autotune.DeploymentInfo;
 import com.autotune.dependencyAnalyzer.application.ApplicationServiceStack;
 import com.autotune.dependencyAnalyzer.application.Tunable;
 import com.autotune.dependencyAnalyzer.datasource.DataSource;
@@ -26,6 +28,9 @@ import com.autotune.dependencyAnalyzer.k8sObjects.*;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
 import com.autotune.dependencyAnalyzer.variables.Variables;
+import com.autotune.em.utils.EMUtils;
+import com.autotune.queue.AutotuneDTO;
+import com.autotune.queueprocessor.QueueProcessorImpl;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -91,6 +96,7 @@ public class AutotuneDeployment
 						for (String autotuneConfig : autotuneConfigMap.keySet()) {
 							addLayerInfo(autotuneConfigMap.get(autotuneConfig));
 						}
+						updateSearchSpace();
 						break;
 					default:
 						break;
@@ -113,6 +119,7 @@ public class AutotuneDeployment
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
 							LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+							updateSearchSpace();
 						}
 						break;
 					case "MODIFIED":
@@ -122,6 +129,7 @@ public class AutotuneDeployment
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
 							LOGGER.info("Added modified autotuneconfig " + autotuneConfig.getName());
 							addLayerInfo(autotuneConfig);
+							updateSearchSpace();
 						}
 						break;
 					case "DELETED":
@@ -138,6 +146,15 @@ public class AutotuneDeployment
 		/* Register custom watcher for autotune object and autotuneconfig object*/
 		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+	}
+
+	private static void updateSearchSpace() {
+		QueueProcessorImpl queueProcessorImpl = new QueueProcessorImpl();
+
+		AutotuneDTO autotuneDTO = new AutotuneDTO();
+		autotuneDTO.setName("ListAppTunables");
+		autotuneDTO.setUrl(DAConstants.HTTP_PROTOCOL + "://" + Autotune.server.getURI().getHost() + ":" + Autotune.server.getURI().getPort() + "/listAppTunables");
+		queueProcessorImpl.send(autotuneDTO, EMUtils.QueueName.RECMGRQUEUE.name());
 	}
 
 	/**
@@ -220,10 +237,12 @@ public class AutotuneDeployment
 			String sla_class = null;
 			String direction = null;
 			String objectiveFunction = null;
+			String hpoAlgoImpl = null;
 			if (specJson != null) {
 				slaJson = specJson.optJSONObject(DAConstants.AutotuneObjectConstants.SLA);
 				sla_class = slaJson.optString(DAConstants.AutotuneObjectConstants.SLA_CLASS);
 				direction = slaJson.optString(DAConstants.AutotuneObjectConstants.DIRECTION);
+				hpoAlgoImpl = slaJson.optString(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
 				objectiveFunction = slaJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
@@ -251,6 +270,7 @@ public class AutotuneDeployment
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
 					direction,
+					hpoAlgoImpl,
 					functionVariableArrayList);
 
 			JSONObject selectorJson = null;
@@ -396,6 +416,7 @@ public class AutotuneDeployment
 				String tunableValueType = tunableJson.optString(DAConstants.AutotuneConfigConstants.VALUE_TYPE);
 				String upperBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
 				String lowerBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
+				double step = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.STEP);
 
 				ArrayList<String> slaClassList = new ArrayList<>();
 
@@ -407,7 +428,7 @@ public class AutotuneDeployment
 
 				Tunable tunable;
 				try {
-					tunable = new Tunable(tunableName, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
+					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
 					e.printStackTrace();
@@ -520,6 +541,7 @@ public class AutotuneDeployment
 					queries.replace(datasource, query);
 				}
 				Tunable tunableCopy = new Tunable(tunable.getName(),
+						tunable.getStep(),
 						tunable.getUpperBound(),
 						tunable.getLowerBound(),
 						tunable.getValueType(),

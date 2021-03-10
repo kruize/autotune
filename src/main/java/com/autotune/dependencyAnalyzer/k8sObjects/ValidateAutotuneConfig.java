@@ -76,6 +76,10 @@ public class ValidateAutotuneConfig
 					if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
 						errorString.append(DAErrorConstants.AutotuneConfigErrors.INVALID_SLA_CLASS).append(tunable.getName()).append("\n");
 					}
+
+					if (tunable.getStep() == 0) {
+						errorString.append(DAErrorConstants.AutotuneConfigErrors.ZERO_STEP);
+					}
 				}
 			}
 		}
