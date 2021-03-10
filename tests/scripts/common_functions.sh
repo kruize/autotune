@@ -36,10 +36,16 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests")
+modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
 AUTOTUNE_IMAGE="kruize/autotune:test"
 matched=0
 setup=1
+# Path to the directory containing yaml files
+MANIFESTS="${PWD}/tests/autotune_test_yamls/manifests"
+api_yaml="api_test_yamls"
+module="da"
+api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -354,12 +360,12 @@ function run_test_case() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "                    Running Testcase ${test}">> ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
-	echo "*******----------- Running test for ${testcase} ----------*******"| tee  ${LOG}
+	echo "*******----------- Running test for ${testcase} ----------*******"| tee -a ${LOG}
 	
 	# create autotune setup
-	echo -n "Deploying autotune..."| tee  ${LOG}
+	echo -n "Deploying autotune..."| tee -a ${LOG}
 	setup >> ${SETUP_LOG} 2>&1
-	echo "done"| tee  ${LOG}
+	echo "done"| tee -a ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
