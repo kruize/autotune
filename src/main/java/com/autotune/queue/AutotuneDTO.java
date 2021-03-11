@@ -79,12 +79,8 @@ public class AutotuneDTO implements Serializable {
 	}
 
 	public void setUrl(String url) {
-		if (url == null || url == "") {
-			errorMessage.append("Provided url is null or empty");
-			LOGGER.error("Provided url is null or empty");
-		}
 		if (! AutotuneUtil.isValidURL(url)) {
-			errorMessage.append("\n URL is not valid");
+			errorMessage.append("\n URL is not valid or empty");
 			LOGGER.error("URL is not valid");
 		}
 		this.url = url;

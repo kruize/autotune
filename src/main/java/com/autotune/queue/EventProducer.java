@@ -34,13 +34,13 @@ public class EventProducer implements Callable {
 	
 	@Override
 	public Boolean call() {
-			try {
-				return queue.send(inputDTO);
-					
-			} catch (InterruptedException e) {
-				System.out.println("Adding Thread was interrupted");
-			} 
-			
-			return false;
+		try {
+			return queue.send(inputDTO);
+
+		} catch (InterruptedException e) {
+			System.out.println("Adding Thread was interrupted");
 		}
+
+		return false;
+	}
 }
