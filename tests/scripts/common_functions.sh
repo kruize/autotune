@@ -36,10 +36,12 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity")
 modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
+
 AUTOTUNE_IMAGE="kruize/autotune:test"
 matched=0
+sanity=0
 setup=1
 # Path to the directory containing yaml files
 MANIFESTS="${PWD}/tests/autotune_test_yamls/manifests"
@@ -114,13 +116,14 @@ function deploy_autotune() {
 # Remove the autotune setup
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
+	echo  "Removing Autotune dependencies..."
 	pushd ${AUTOTUNE_REPO} > /dev/null
-	pushd autotune/ > /dev/null
-	echo "${PWD}"
+	pushd autotune/ > /dev/null 2>&1
 	cmd="./deploy.sh -c ${cluster_type} -t"
 	echo "CMD= ${cmd}"
-	${cmd}
-	popd
+	${cmd} >> ${SETUP_LOG} 2>&1
+	popd > /dev/null
+	echo "done"
 }
 
 # list of test cases supported 
@@ -243,8 +246,8 @@ function app_cleanup() {
 	app_name=$1
 	set_app_folder ${app_name}
 	echo
-	echo "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type}
+	echo -n "Removing ${app_name} app..."
+	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${SETUP_LOG} 2>&1
 	echo "done"
 }
 
@@ -367,6 +370,11 @@ function run_test_case() {
 	setup >> ${SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
 	
+	# create autotune setup
+	echo -n "Deploying autotune..."| tee  ${LOG}
+	setup >> ${SETUP_LOG} 2>&1
+	echo "done"| tee  ${LOG}
+	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml -n ${NAMESPACE}"
@@ -415,7 +423,21 @@ function run_test() {
 		echo "                    Running Testcases for ${test}"
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		typeset -n var="${test}_testcases"
-		for testcase in ${var[@]}
+		
+		# check if is the sanity test , if so then perform only the sanity bucket list
+		test_var=()
+		if [ "${sanity}" -eq "1" ]; then
+			for testcase in ${var[@]}
+			do
+				if [[ "${testcase}" == invalid* || "${testcase}" == valid* || "${testcase}" == blank* ]]; then 
+					test_var+=(${testcase})
+				fi
+			done
+		else
+			test_var+=(${var[@]})
+		fi
+		
+		for testcase in ${test_var[@]}
 		do 
 			yaml=${path}/${test}/${testcase}
 			typeset -n autotune_object="${test}_autotune_objects[${testcase}]"
@@ -490,7 +512,6 @@ function compare_json() {
 	fi
 }
 
-
 # Create the expected search space json
 # Input: application name
 function create_expected_searchspace_json() {
@@ -558,7 +579,6 @@ function create_expected_searchspace_json() {
 	cat ${file_name}  | tee -a ${LOG}
 	echo "" | tee -a ${LOG}
 }
-
 
 # Run the curl command passed and capture the json output in a file
 # Input: curl command, json file name

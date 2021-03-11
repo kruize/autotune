@@ -84,9 +84,11 @@ function functional_test() {
 	# perform the application autotune yaml tests 
 	app_autotune_yaml_tests > >(tee "${RESULTS}/app_autotune_yaml_tests.log") 2>&1
 
+	testcase=""
 	# perform the autotune config yaml tests
 	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
-
+	
+	testcase=""
 	# perform the basic api tests
 	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
 	
@@ -101,7 +103,12 @@ fi
 
 # Perform the specific testsuite if specified 
 if [ ! -z "${testsuite}" ]; then
-	${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
+	if [ "${testsuite}" == "sanity" ]; then
+		sanity=1
+		functional_test 
+	else
+		${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
+	fi
 elif [[ -z "${testcase}" && -z "${testsuite}"  ]]; then
 	functional_test
 fi
