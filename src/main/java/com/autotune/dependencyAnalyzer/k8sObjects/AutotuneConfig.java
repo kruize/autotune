@@ -30,6 +30,7 @@ import java.util.HashMap;
  */
 public final class AutotuneConfig
 {
+	private final String id;
 	private final int level;
 	private final String name;
 	private final String layerName;
@@ -49,7 +50,7 @@ public final class AutotuneConfig
 
 	private final ArrayList<Tunable> tunables;
 
-	public AutotuneConfig(String name,
+	public AutotuneConfig(String id, String name,
 			String layerName,
 			int level,
 			String details,
@@ -59,6 +60,7 @@ public final class AutotuneConfig
 			String layerPresenceLabel,
 			String layerPresenceLabelValue,
 			ArrayList<Tunable> tunables) throws InvalidValueException {
+		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneConfigConstants.NAME, name);
 		map.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
@@ -89,6 +91,7 @@ public final class AutotuneConfig
 	}
 
 	public AutotuneConfig(AutotuneConfig copy) {
+		this.id = copy.getId();
 		this.name = copy.getName();
 		this.layerName = copy.getLayerName();
 		this.level = copy.getLevel();
@@ -142,14 +145,21 @@ public final class AutotuneConfig
 		return layerPresenceLabelValue;
 	}
 
+	public String getId() {
+		return id;
+	}
+
 	@Override
 	public String toString() {
 		return "AutotuneConfig{" +
 				"level=" + level +
 				", name='" + name + '\'' +
-				", details='" + details + '\'' +
-				", levelPresenceQuery='" + layerPresenceQuery + '\'' +
-				", levelPresenceKey='" + layerPresenceKey + '\'' +
+				", layerName='" + layerName + '\'' +
+				", presence='" + presence + '\'' +
+				", layerPresenceKey='" + layerPresenceKey + '\'' +
+				", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+				", layerPresenceLabel='" + layerPresenceLabel + '\'' +
+				", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
 				", tunables=" + tunables +
 				'}';
 	}

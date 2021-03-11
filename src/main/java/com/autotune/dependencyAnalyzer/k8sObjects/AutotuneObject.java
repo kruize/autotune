@@ -27,17 +27,20 @@ import java.util.HashMap;
  */
 public final class AutotuneObject
 {
+	private final String id;
 	private final String name;
 	private final String namespace;
 	private final String mode;
 	private final SlaInfo slaInfo;
 	private final SelectorInfo selectorInfo;
 
-	public AutotuneObject(String name,
+	public AutotuneObject(String id,
+			String name,
 			String namespace,
 			String mode,
 			SlaInfo slaInfo,
 			SelectorInfo selectorInfo) throws InvalidValueException {
+		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneObjectConstants.NAME, name);
 		map.put(DAConstants.AutotuneObjectConstants.NAMESPACE, namespace);
@@ -75,6 +78,10 @@ public final class AutotuneObject
 
 	public String getNamespace() {
 		return namespace;
+	}
+
+	public String getId() {
+		return id;
 	}
 
 	@Override

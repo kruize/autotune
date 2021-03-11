@@ -92,6 +92,7 @@ public class ListApplications extends HttpServlet
         jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
         jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
         jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
 
         outputJsonArray.put(jsonObject);
     }

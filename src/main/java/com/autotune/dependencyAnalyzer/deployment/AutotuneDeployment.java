@@ -25,6 +25,7 @@ import com.autotune.dependencyAnalyzer.exceptions.MonitoringAgentNotFoundExcepti
 import com.autotune.dependencyAnalyzer.k8sObjects.*;
 import com.autotune.dependencyAnalyzer.util.DAConstants;
 import com.autotune.dependencyAnalyzer.util.DAErrorConstants;
+import com.autotune.dependencyAnalyzer.util.Util;
 import com.autotune.dependencyAnalyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -84,14 +85,29 @@ public class AutotuneDeployment
 		Watcher<String> autotuneObjectWatcher = new Watcher<>() {
 			@Override
 			public void eventReceived(Action action, String resource) {
+				AutotuneObject autotuneObject = null;
+
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
-						autotuneDeployment.addAutotuneObjectToMap(resource);
-						autotuneDeployment.matchPodsToAutotuneObject(client);
-						for (String autotuneConfig : autotuneConfigMap.keySet()) {
-							addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						if (autotuneObject != null) {
+							addAutotuneObject(autotuneObject, autotuneDeployment, client);
+							LOGGER.info("Added autotune object " + autotuneObject.getName());
 						}
 						break;
+					case "MODIFIED":
+						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						if (autotuneObject != null) {
+							// Check if any of the values have changed from the existing object in the map
+							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != autotuneObject.getId()) {
+								deleteExistingAutotuneObject(resource);
+								addAutotuneObject(autotuneObject, autotuneDeployment, client);
+								LOGGER.info("Modified autotune object {}", autotuneObject.getName());
+							}
+						}
+						break;
+					case "DELETED":
+						deleteExistingAutotuneObject(resource);
 					default:
 						break;
 				}
@@ -138,6 +154,35 @@ public class AutotuneDeployment
 		/* Register custom watcher for autotune object and autotuneconfig object*/
 		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
 		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+	}
+
+	/**
+	 * Add autotuneobject to monitoring map and match pods and autotuneconfigs
+	 * @param autotuneObject
+	 * @param autotuneDeployment
+	 * @param client
+	 */
+	private static void addAutotuneObject(AutotuneObject autotuneObject, AutotuneDeployment autotuneDeployment, KubernetesClient client) {
+		autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+		autotuneDeployment.matchPodsToAutotuneObject(client);
+
+		for (String autotuneConfig : autotuneConfigMap.keySet()) {
+			addLayerInfo(autotuneConfigMap.get(autotuneConfig));
+		}
+	}
+
+	/**
+	 * Delete autotuneobject that's currently monitored
+	 * @param autotuneObject
+	 */
+	private static void deleteExistingAutotuneObject(String autotuneObject) {
+		JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
+		String name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
+				.optString(DAConstants.AutotuneObjectConstants.NAME);
+
+		autotuneObjectMap.remove(name);
+		applicationServiceStackMap.remove(name);
+		LOGGER.info("Deleted autotune object {}", name);
 	}
 
 	/**
@@ -204,7 +249,7 @@ public class AutotuneDeployment
 	 *
 	 * @param autotuneObject JSON string of the autotune object
 	 */
-	private void addAutotuneObjectToMap(String autotuneObject) {
+	private AutotuneObject getAutotuneObject(String autotuneObject) {
 		try {
 			JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
 
@@ -277,18 +322,27 @@ public class AutotuneDeployment
 			namespace = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
 					.optString(DAConstants.AutotuneObjectConstants.NAMESPACE);
 
-			AutotuneObject autotuneObjectInfo = new AutotuneObject(name,
+			// Generate string of all fields we want to use for ID. This is the same as toString() for later comparison
+			String idString = "AutotuneObject{" +
+					"name='" + name + '\'' +
+					", namespace='" + namespace + '\'' +
+					", mode='" + mode + '\'' +
+					", slaInfo=" + slaInfo +
+					", selectorInfo=" + selectorInfo +
+					'}';
+			String id = Util.generateID(idString);
+
+			return new AutotuneObject(id,
+					name,
 					namespace,
 					mode,
 					slaInfo,
 					selectorInfo
 			);
 
-			autotuneObjectMap.put(name, autotuneObjectInfo);
-			LOGGER.info("Added autotune object " + name);
-
 		} catch (InvalidValueException | NullPointerException | JSONException e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
@@ -414,7 +468,21 @@ public class AutotuneDeployment
 				}
 			}
 
-			return new AutotuneConfig(name,
+			// Generate string of all fields we want to use for ID. This is the same as toString() for later comparison
+			String idString = "AutotuneConfig{" +
+					"level=" + level +
+					", name='" + name + '\'' +
+					", layerName='" + layerName + '\'' +
+					", presence='" + presence + '\'' +
+					", layerPresenceKey='" + layerPresenceKey + '\'' +
+					", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+					", layerPresenceLabel='" + layerPresenceLabel + '\'' +
+					", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
+					", tunables=" + tunableArrayList +
+					'}';
+
+			String id = Util.generateID(idString);
+			return new AutotuneConfig(id, name,
 					layerName,
 					level,
 					details,
@@ -532,7 +600,8 @@ public class AutotuneDeployment
 		//Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
-			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getName(),
+			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getId(),
+					autotuneConfig.getName(),
 					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
