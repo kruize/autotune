@@ -1,19 +1,3 @@
-"""
-Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import json
 
 
@@ -40,12 +24,11 @@ def get_all_tunables(search_space_json):
     # "hpo_algo_impl": "optuna_tpe", "tunables": [{"name": "cpu_request", "value_type": "double", "upper_bound": 6,
     # "lower_bound": 1, "step": 0.01}, {"name": "memory_request", "value_type": "integer", "upper_bound": 1024,
     # "lower_bound": 100, "step": 1}]}
-    search_space = json.loads(search_space_json)
-    id = search_space["id"]
-    application_name = search_space["application_name"]
-    objective_function = search_space["objective_function"]
-    value_type = search_space["value_type"]
-    direction = search_space["direction"]
-    hpo_algo_impl = search_space["hpo_algo_impl"]
-    tunables = search_space["tunables"]
+    id = search_space_json["id"]
+    application_name = search_space_json["application_name"]
+    objective_function = search_space_json["objective_function"]
+    value_type = search_space_json["value_type"]
+    direction = search_space_json["direction"]
+    hpo_algo_impl = search_space_json["hpo_algo_impl"]
+    tunables = search_space_json["tunables"]
     return application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type
