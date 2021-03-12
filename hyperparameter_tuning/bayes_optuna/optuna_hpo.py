@@ -19,7 +19,6 @@ import optuna
 import json
 import os
 
-from experiment import perform_experiment
 from logger import get_logger
 
 n_trials = int(os.getenv("N_TRIALS"))
@@ -30,7 +29,22 @@ logger = get_logger(__name__)
 trials = []
 
 
-class Objective(object):
+class TrialDetails:
+    trial_number = -1
+    trial_json_object = {}
+    trial_result_received = -1
+    trial_result = ""
+    result_value_type = ""
+    result_value = 0
+
+
+def perform_experiment(experiment_tunables):
+    while TrialDetails.trial_result_received == -1:
+        continue
+    return TrialDetails.result_value, TrialDetails.trial_result
+
+
+class Objective(TrialDetails):
     """
     A class used to define search space and return the actual sla value.
 
@@ -46,6 +60,8 @@ class Objective(object):
 
         experiment_tunables = []
         config = {}
+
+        TrialDetails.trial_number += 1
 
         # Define search space
         for tunable in self.tunables:
@@ -66,7 +82,11 @@ class Objective(object):
 
         logger.debug("Experiment tunables: " + str(experiment_tunables))
 
+        TrialDetails.trial_json_object = experiment_tunables
+
         actual_sla_value, experiment_status = perform_experiment(experiment_tunables)
+
+        TrialDetails.trial_result_received = -1
 
         config["experiment_status"] = experiment_status
 
@@ -152,4 +172,4 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
 
     logger.info("Recommended config: " + str(recommended_config))
 
-    return json.dumps(recommended_config)
+    # return json.dumps(recommended_config)
