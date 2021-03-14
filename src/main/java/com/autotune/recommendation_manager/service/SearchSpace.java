@@ -70,21 +70,21 @@ public class SearchSpace extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+        String id = req.getParameter(DAConstants.AutotuneObjectConstants.ID);
 
-        getSearchSpace(outputJsonArray, applicationName);
+        getSearchSpace(outputJsonArray, id);
         resp.getWriter().println(outputJsonArray.toString(4));
     }
 
-    public void getSearchSpace(JSONArray outputJsonArray, String applicationName) {
-        if (applicationName == null) {
+    public void getSearchSpace(JSONArray outputJsonArray, String id) {
+        if (id == null) {
             //No application parameter, generate search space for all applications
             for (String application : RecommendationManager.applicationSearchSpaceMap.keySet()) {
                 addApplicationToSearchSpace(outputJsonArray, application);
             }
         } else {
-            if (RecommendationManager.applicationSearchSpaceMap.containsKey(applicationName)) {
-                addApplicationToSearchSpace(outputJsonArray, applicationName);
+            if (RecommendationManager.applicationSearchSpaceMap.containsKey(id)) {
+                addApplicationToSearchSpace(outputJsonArray, id);
             }
         }
 
@@ -92,7 +92,7 @@ public class SearchSpace extends HttpServlet
             if (AutotuneDeployment.autotuneObjectMap.isEmpty())
                 outputJsonArray.put("Error: No objects of kind Autotune found!");
             else
-                outputJsonArray.put("Error: Application " + applicationName + " not found!");
+                outputJsonArray.put("Error: Application " + id + " not found!");
         }
     }
 
@@ -103,7 +103,7 @@ public class SearchSpace extends HttpServlet
         applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
         applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, applicationSearchSpace.getObjectiveFunction());
         applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, applicationSearchSpace.getDirection());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, "hpo_algo");
+        applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, applicationSearchSpace.getHpoAlgoImpl());
 
         JSONArray tunablesJsonArray = new JSONArray();
         for (ApplicationTunable applicationTunable : applicationSearchSpace.getApplicationTunables()) {

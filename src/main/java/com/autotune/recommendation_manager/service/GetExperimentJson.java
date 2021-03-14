@@ -1,6 +1,6 @@
 package com.autotune.recommendation_manager.service;
 
-import org.json.JSONArray;
+import com.autotune.recommendation_manager.RecommendationManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,15 +13,6 @@ public class GetExperimentJson extends HttpServlet
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		String id = req.getParameter("id");
-		JSONArray jsonArray = new JSONArray();
-		SearchSpace searchSpace = new SearchSpace();
-		searchSpace.getSearchSpace(jsonArray, id);
-
-		output = pythonInterpreter.call(API(id, jsonArray));
-
-		/*
-		experiment object : trials and data
-		
-		 */
+		resp.getWriter().print(RecommendationManager.trialMap.get(id));
 	}
 }

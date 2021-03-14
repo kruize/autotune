@@ -9,20 +9,17 @@ public class ApplicationSearchSpace
 	String objectiveFunction;
 	String hpoAlgoImpl;
 	String direction;
+	String valueType;
 
 	ArrayList<ApplicationTunable> applicationTunables;
 
-	public ApplicationSearchSpace(String id,
-			String applicationName,
-			String objectiveFunction,
-			String hpoAlgoImpl,
-			String direction,
-			ArrayList<ApplicationTunable> applicationTunables) {
+	public ApplicationSearchSpace(String id, String applicationName, String objectiveFunction, String hpoAlgoImpl, String direction, String valueType, ArrayList<ApplicationTunable> applicationTunables) {
 		this.id = id;
 		this.applicationName = applicationName;
 		this.objectiveFunction = objectiveFunction;
 		this.hpoAlgoImpl = hpoAlgoImpl;
 		this.direction = direction;
+		this.valueType = valueType;
 		this.applicationTunables = applicationTunables;
 	}
 
@@ -72,5 +69,13 @@ public class ApplicationSearchSpace
 
 	public void setApplicationTunables(ArrayList<ApplicationTunable> applicationTunables) {
 		this.applicationTunables = applicationTunables;
+	}
+
+	public String getValueType() {
+		return valueType;
+	}
+
+	public void setValueType(String valueType) {
+		this.valueType = valueType;
 	}
 }

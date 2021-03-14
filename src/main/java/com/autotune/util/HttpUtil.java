@@ -19,11 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -110,5 +110,30 @@ public class HttpUtil
 		assert sslContext != null;
 		HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+	}
+
+	public static String postRequest(URL url, String content) {
+		try {
+			URLConnection connection = url.openConnection();
+			HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
+			httpURLConnection.setRequestMethod("POST");
+			httpURLConnection.setDoOutput(true);
+
+			byte[] out = content.getBytes(StandardCharsets.UTF_8);
+			int length = out.length;
+
+			httpURLConnection.setFixedLengthStreamingMode(length);
+			httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+			httpURLConnection.connect();
+			try(OutputStream outputStream = httpURLConnection.getOutputStream()) {
+				outputStream.write(out);
+			}
+			String data = getDataFromConnection(httpURLConnection);
+			return data;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "";
+		}
 	}
 }

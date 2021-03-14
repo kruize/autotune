@@ -312,6 +312,10 @@ public class AutotuneDeployment
 				functionVariableArrayList.add(functionVariable);
 			}
 
+			//TODO Default value
+			if (hpoAlgoImpl == null || hpoAlgoImpl.isEmpty()) {
+				hpoAlgoImpl = "optuna_tpe";
+			}
 			slaInfo = new SlaInfo(sla_class,
 					objectiveFunction,
 					direction,
