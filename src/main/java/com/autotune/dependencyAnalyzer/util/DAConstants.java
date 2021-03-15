@@ -81,7 +81,6 @@ public class DAConstants
 		public static final String NAMESPACE = "namespace";
 		public static final String ID = "id";
 		public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
-		public static final String ID = "id";
 	}
 
 	/**

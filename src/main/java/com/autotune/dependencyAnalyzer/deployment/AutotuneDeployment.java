@@ -472,8 +472,8 @@ public class AutotuneDeployment
 
 				String tunableName = tunableJson.optString(DAConstants.AutotuneConfigConstants.NAME);
 				String tunableValueType = tunableJson.optString(DAConstants.AutotuneConfigConstants.VALUE_TYPE);
-				String upperBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
-				String lowerBound = tunableJson.optString(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
+				double upperBound = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
+				double lowerBound = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
 				double step = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.STEP);
 
 				ArrayList<String> slaClassList = new ArrayList<>();

@@ -79,8 +79,8 @@ public class SearchSpace extends HttpServlet
     public void getSearchSpace(JSONArray outputJsonArray, String id) {
         if (id == null) {
             //No application parameter, generate search space for all applications
-            for (String application : RecommendationManager.applicationSearchSpaceMap.keySet()) {
-                addApplicationToSearchSpace(outputJsonArray, application);
+            for (String applicationID : RecommendationManager.applicationSearchSpaceMap.keySet()) {
+                addApplicationToSearchSpace(outputJsonArray, applicationID);
             }
         } else {
             if (RecommendationManager.applicationSearchSpaceMap.containsKey(id)) {
@@ -96,11 +96,13 @@ public class SearchSpace extends HttpServlet
         }
     }
 
-    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String application) {
+    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String id) {
         JSONObject applicationJson = new JSONObject();
-        ApplicationSearchSpace applicationSearchSpace = RecommendationManager.applicationSearchSpaceMap.get(application);
+        ApplicationSearchSpace applicationSearchSpace = RecommendationManager.applicationSearchSpaceMap.get(id);
 
-        applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
+        applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, applicationSearchSpace.getApplicationName());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.ID, applicationSearchSpace.getId());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.VALUE_TYPE, applicationSearchSpace.getValueType());
         applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, applicationSearchSpace.getObjectiveFunction());
         applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, applicationSearchSpace.getDirection());
         applicationJson.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, applicationSearchSpace.getHpoAlgoImpl());
@@ -112,7 +114,7 @@ public class SearchSpace extends HttpServlet
             tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, applicationTunable.getUpperBound());
             tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, applicationTunable.getLowerBound());
             tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, applicationTunable.getValueType());
-            tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, 0);
+            tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, applicationTunable.getStep());
 
             tunablesJsonArray.put(tunableJson);
         }

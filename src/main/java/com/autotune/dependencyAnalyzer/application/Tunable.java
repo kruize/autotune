@@ -44,8 +44,8 @@ public class Tunable
 	private String name;
 	private double step;
 	private String valueType;
-	private String upperBound;
-	private String lowerBound;
+	private double upperBound;
+	private double lowerBound;
 	private String description;
 	private Map<String, String> queries;
 
@@ -58,8 +58,8 @@ public class Tunable
 
 	public Tunable(String name,
 				   double step,
-				   String upperBound,
-				   String lowerBound,
+				   double upperBound,
+				   double lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> slaClassList) throws InvalidBoundsException {
@@ -69,7 +69,7 @@ public class Tunable
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
 		this.step = step;
 
-		if (upperBound != null && lowerBound != null) {
+		if (upperBound > 0 && lowerBound > 0) {
 			this.lowerBound = lowerBound;
 			this.upperBound = upperBound;
 		} else throw new InvalidBoundsException();
@@ -97,19 +97,19 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public String getUpperBound() {
+	public double getUpperBound() {
 		return upperBound;
 	}
 
-	public void setUpperBound(String upperBound) {
+	public void setUpperBound(double upperBound) {
 		this.upperBound = upperBound;
 	}
 
-	public String getLowerBound() {
+	public double getLowerBound() {
 		return lowerBound;
 	}
 
-	public void setLowerBound(String lowerBound) {
+	public void setLowerBound(double lowerBound) {
 			this.lowerBound = lowerBound;
 	}
 

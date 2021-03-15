@@ -182,7 +182,7 @@ public class ListAppTunables extends HttpServlet
 					tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
 					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, 0);
+					tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 					try {
 						String query = DAConstants.NONE;
 						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());

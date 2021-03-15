@@ -1,4 +1,6 @@
-package com.autotune.recommendation_manager;
+package com.autotune.experiment_manager;
+
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -11,4 +13,5 @@ public class Config
 	 * Value is a key-value pair of tunables and its recommended values.
 	 */
 	Map<String, Map<String, String>> tunablesConfig;
+	JSONObject specJson = new JSONObject();
 }

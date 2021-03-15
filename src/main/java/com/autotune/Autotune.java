@@ -17,6 +17,7 @@ package com.autotune;
 
 import com.autotune.dependencyAnalyzer.DependencyAnalyzer;
 import com.autotune.dependencyAnalyzer.util.ServerContext;
+import com.autotune.experiment_manager.ExperimentManager;
 import com.autotune.recommendation_manager.RecommendationManager;
 import com.autotune.service.HealthService;
 import org.eclipse.jetty.server.Server;
@@ -42,10 +43,8 @@ public class Autotune
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		LOGGER.info("Starting initialize");
-		RecommendationManager recommendationManager = new RecommendationManager();
-		Thread recMgrThread = new Thread(recommendationManager);
-		recMgrThread.start();
+		ExperimentManager.start(context);
+		RecommendationManager.start(context);
 		DependencyAnalyzer.start(context);
 
 /*
