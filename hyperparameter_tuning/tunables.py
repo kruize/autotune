@@ -24,6 +24,7 @@ def get_all_tunables(search_space_json):
     # "hpo_algo_impl": "optuna_tpe", "tunables": [{"name": "cpu_request", "value_type": "double", "upper_bound": 6,
     # "lower_bound": 1, "step": 0.01}, {"name": "memory_request", "value_type": "integer", "upper_bound": 1024,
     # "lower_bound": 100, "step": 1}]}
+    search_space_json = search_space_json[0]
     id = search_space_json["id"]
     application_name = search_space_json["application_name"]
     objective_function = search_space_json["objective_function"]
