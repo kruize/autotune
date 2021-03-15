@@ -169,6 +169,4 @@ function minikube_terminate() {
 
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_RB_MANIFEST}
-
-	rm -rf minikube_downloads
 }
