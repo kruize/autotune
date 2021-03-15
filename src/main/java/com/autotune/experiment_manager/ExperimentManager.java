@@ -22,7 +22,7 @@ public class ExperimentManager implements Runnable
 	private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentManager.class);
 	public static final Map<String, Trial> trialsMap = new HashMap<>();
 	public static void start(ServletContextHandler contextHandler) {
-		contextHandler.addServlet(GetTrials.class, "/getTrials");
+		contextHandler.addServlet(GetTrials.class, "/listTrials");
 		ExperimentManager experimentManager = new ExperimentManager();
 		Thread exprManagerThread = new Thread(experimentManager);
 		exprManagerThread.start();
@@ -73,7 +73,7 @@ public class ExperimentManager implements Runnable
 			JSONArray updateConfig = experimentJson.getJSONArray("update_config");
 
 			Config containerConfig = ContainerConfig.getConfig(updateConfig);
-			Config hotspotConfig = HotspotConfig.getConfig(updateConfig);
+			Config hotspotConfig = EnvConfig.getConfig(updateConfig);
 
 			Trial trial = new Trial();
 			trial.id = id;

@@ -23,12 +23,13 @@ import java.util.Map;
 public class RecommendationManager implements Runnable
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationManager.class);
+	private static final int MAX_NUMBER_OF_TRIALS = 5;
 	public static HashMap<String, ApplicationSearchSpace> applicationSearchSpaceMap = new HashMap<>();
 	public static Map<String, Map <String, Double>> tunablesMap = new HashMap<>();
 	private static int trialNumber;
 
 	public static void start(ServletContextHandler contextHandler) {
-		contextHandler.addServlet(GetExperimentJson.class, "/getExperiments");
+		contextHandler.addServlet(GetExperimentJson.class, "/listExperiments");
 		RecommendationManager recommendationManager = new RecommendationManager();
 		Thread recMgrThread = new Thread(recommendationManager);
 		recMgrThread.start();
@@ -69,7 +70,10 @@ public class RecommendationManager implements Runnable
 
 				try {
 					String result = HttpUtil.postRequest(new URL(experimentTrials), jsonObject.toString());
-					LOGGER.info("Result of 2nd post is {}", result);
+					LOGGER.info("API 2 POST response: {}", result);
+					if (trialNumber < MAX_NUMBER_OF_TRIALS - 1) {
+						startExperiment();
+					}
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}

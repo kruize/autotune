@@ -3,7 +3,7 @@ package com.autotune.experiment_manager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class HotspotConfig
+public class EnvConfig
 {
 	public static Config getConfig(JSONArray updateConfig) {
 		for (Object object : updateConfig) {
@@ -12,8 +12,8 @@ public class HotspotConfig
 		}
 
 		Config config = new Config();
-		config.configName = "update java envs";
-		config.layer = "hotspot";
+		config.configName = "update envs";
+		config.layer = "container";
 
 		JSONObject specJson = new JSONObject();
 		JSONObject hotspotJson = new JSONObject();
