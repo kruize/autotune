@@ -614,6 +614,7 @@ function create_expected_searchspace_json() {
 			done
 		done
 		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
 			printf '\n } \n' >> ${file_name}
