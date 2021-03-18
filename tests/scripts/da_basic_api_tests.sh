@@ -85,7 +85,7 @@ function basic_api_tests() {
 	sleep 5
 
 	# Get the application pods
-	app_name=$(kubectl get pod | grep petclinic-sample-0 | awk '{print $1}')
+	application_name=$(kubectl get pod | grep petclinic-sample-0 | awk '{print $1}')
 	app_pod_names=$(kubectl get pod | grep petclinic | cut -d " " -f1)
 	
 	# Add label to your application pods for autotune to monitor
@@ -107,21 +107,21 @@ function basic_api_tests() {
 
 	   listapplications|all) 
 		# test listapplication API for specific application
-		listapplications_test ${app_name} 
+		listapplications_test ${application_name} 
 	
 		# test listapplication API for all applications
 		listapplications_test
 		;;&	
 	   listapplayer|all)
 		# test listapplayer API for specific application
-		listapplayer_test ${app_name}
+		listapplayer_test ${application_name}
 	
 		# test listapplayer API for all applications
 		listapplayer_test
 		;;&
 	   searchspace|all)
 		# test searchSpace API for specific application
-		searchspace_test ${app_name}
+		searchspace_test ${application_name}
 	
 		# test searchSpace API for all applications
 		searchspace_test
@@ -142,10 +142,10 @@ function basic_api_tests() {
 	    listapptunables|all)
 		# test listapptunables API for specific application and specific layer
 		layer="container"
-		listapptunables_test ${app_name} ${layer}
+		listapptunables_test ${application_name} ${layer}
 
 		# test listapptunables API for specific application
-		listapptunables_test ${app_name}
+		listapptunables_test ${application_name}
 
 		# test listapptunables API for all applications	
 		listapptunables_test

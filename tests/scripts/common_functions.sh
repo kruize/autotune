@@ -495,7 +495,7 @@ function run_test() {
 		done
 		echo ""
 	done
-	
+	other_tests="${object}_other"
 	# perform other test cases
 	LOG_DIR="${TEST_SUITE_DIR}/${other_tests}"
 	mkdir ${LOG_DIR}
@@ -772,6 +772,7 @@ function create_expected_listapptunables_json() {
 					printf '\n }], \n' >> ${file_name}
 				fi
 			done
+			printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].layers[].id')',' >> ${file_name}
 			printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)','  >> ${file_name}
 			printf '\n' >> ${file_name}
 			echo '         "layer_details": '$(cat ${layer_json} | jq .details)''  >> ${file_name}
@@ -783,6 +784,7 @@ function create_expected_listapptunables_json() {
 		done
 
 		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
 			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}]' >> ${file_name}
 		else
@@ -868,7 +870,8 @@ function create_expected_listautotunetunables_json() {
 	sla_class=$1
 	layer_name=$2
 	file_name="${LOG_DIR}/expected_list_tunables.json"
-
+	layer_count=0
+	
 	if [ -z "${sla_class}" ]; then
 		sla_class=("response_time" "throughput" "resource_usage")
 	fi
@@ -913,6 +916,7 @@ function create_expected_listautotunetunables_json() {
 				fi
 			done
 		done
+		printf '\n         "id": '$(cat ${json_file} | jq '.['${layer_count}'].id')',' >> ${file_name}
 		printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)','  >> 	${file_name}
 		printf '\n' >> ${file_name}
 		echo '         "layer_details": '$(cat ${layer_json} | jq .details)''  >> ${file_name}
@@ -921,6 +925,7 @@ function create_expected_listautotunetunables_json() {
 		else
 			printf '}, \n' >> ${file_name}
 		fi
+		((layer_count++))
 	done
 
 	printf ']\n' >> ${file_name}
@@ -1038,6 +1043,7 @@ function create_expected_listapplayer_json() {
 			layer_json="${AUTOTUNE_CONFIG_JSONS_DIR}/${layer}.json"
 			((layercount--))
 			printf '{\n         "layer_level": '$(cat ${layer_json} | jq .layer_level)',' >> ${file_name}
+			printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].layers[].id')',' >> ${file_name}
 			printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)',' >> ${file_name}
 			printf '\n' >> ${file_name}
 			echo '         "layer_details": '$(cat ${layer_json} | jq .details)'' >> ${file_name}
@@ -1048,6 +1054,7 @@ function create_expected_listapplayer_json() {
 			fi
 		done
 		printf '\n    "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
 			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}' >> ${file_name}
 		else
@@ -1142,6 +1149,7 @@ function create_expected_listapplication_json() {
 		printf '{\n  "application_name": "'${app}'",' >> ${file_name}
 		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
 		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
 			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}' >> ${file_name}
 		else

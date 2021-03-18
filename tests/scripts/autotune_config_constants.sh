@@ -47,9 +47,6 @@ autotune_config_tests=("layer_name"
 "tunable_sla_class" 
 "tunables") 
 
-# other tests for autotune config yaml 
-other_tests=("other")
-
 # tests for layer name
 layer_name_testcases=("blank-layer-name" 
 "no-layer-name" 
@@ -201,7 +198,7 @@ tunables_testcases=("interchanged-bound"
 "valid-tunables")
 
 # other test cases
-other_testcases=("incomplete-autotuneconfig" )
+autotuneconfig_other_testcases=("incomplete-autotuneconfig" )
 
 # Expected autotune object for layer name
 declare -A layer_name_autotune_objects
@@ -522,9 +519,9 @@ tunables_expected_log_msgs=([interchanged-bound]='validation from da'
  [valid-tunables]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunables' )
 
 # Expected autotune object for other test cases
-declare -A other_autotune_objects
-other_autotune_objects=([incomplete-autotuneconfig]='false')
+declare -A autotuneconfig_other_autotune_objects
+autotuneconfig_other_autotune_objects=([incomplete-autotuneconfig]='false')
 # Expected log message for other test cases
-declare -A other_expected_log_msgs
-other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/${other_tests[0]}/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
+declare -A autotuneconfig_other_expected_log_msgs
+autotuneconfig_other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/autotuneconfig_other/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
 

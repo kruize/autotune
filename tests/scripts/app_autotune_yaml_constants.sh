@@ -40,9 +40,6 @@ app_autotune_tests=("objective_function"
 "label" 
 "labelvalue" )
 
-# other tests for autotune yaml 
-other_tests=("other")
-
 # tests for objective function 
 objective_function_testcases=("blank-objective-function" 
 "invalid-objective-function" 
@@ -136,7 +133,7 @@ labelvalue_testcases=("blank-labelvalue"
 "valid-labelvalue")
 
 # other test cases
-other_testcases=("incomplete-autotune" 
+autotune_other_testcases=("incomplete-autotune" 
 "invalid-direction-for-slaclass" )
 
 # Expected autotune object for objective function
@@ -306,7 +303,7 @@ label_autotune_objects=([blank-label]='true'
 [valid-label]='true')
 # Expected log message for label
 declare -A label_expected_log_msgs
-label_expected_log_msgs=([blank-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: label:   not supported' 
+label_expected_log_msgs=([blank-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel in selector' 
 [invalid-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: label:   not supported' 
 [no-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel' 
 [no-label-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel' 
@@ -325,7 +322,7 @@ labelvalue_autotune_objects=([blank-labelvalue]='true'
 [valid-labelvalue]='true')
 # Expected log message for label value
 declare -A labelvalue_expected_log_msgs
-labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: labelvalue:   not supported' 
+labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid or blank MatchLabelValue in selector' 
 [invalid-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: labelvalue:   not supported' 
 [no-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabelValue' 
 [no-labelvalue-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabelValue' 
@@ -334,10 +331,10 @@ labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyze
 [valid-labelvalue]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-labelvalue' )
 
 # Expected autotune object for other test cases
-declare -A other_autotune_objects
-other_autotune_objects=([incomplete-autotune]='false' 
+declare -A autotune_other_autotune_objects
+autotune_other_autotune_objects=([incomplete-autotune]='false' 
 [invalid-direction-for-slaclass]='true')
 # Expected log message for other test cases
-declare -A other_expected_log_msgs
-other_expected_log_msgs=([incomplete-autotune]='error: error validating "'${path}/${other_tests[0]}/incomplete-autotune.yaml'": error validating data: ValidationError(Autotune): missing required field "spec" in com.recommender.v1.Autotune; if you choose to ignore these errors, turn validation off with --validate=false' 
+declare -A autotune_other_expected_log_msgs
+autotune_other_expected_log_msgs=([incomplete-autotune]='error: error validating "'${path}/autotune_other/incomplete-autotune.yaml'": error validating data: ValidationError(Autotune): missing required field "spec" in com.recommender.v1.Autotune; if you choose to ignore these errors, turn validation off with --validate=false' 
 [invalid-direction-for-slaclass]='validation from da')
