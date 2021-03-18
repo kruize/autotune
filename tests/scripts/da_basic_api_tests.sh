@@ -19,7 +19,7 @@
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-pushd ${CURRENT_DIR}/.. >> setup.log
+pushd ${CURRENT_DIR}/.. >> /dev/null
 
 # Path to the directory containing yaml files
 MANIFESTS="${PWD}/autotune_test_yamls/manifests"
@@ -29,6 +29,7 @@ YAML_PATH=${MANIFESTS}/${module}/${api_autotune_yaml}
 
 # Main function that calls all the other tests to test the Autotune APIs 
 function basic_api_tests() {
+	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS_FAILED=0
 	TESTS_PASSED=0
@@ -161,7 +162,10 @@ function basic_api_tests() {
 
 	# Cleanup autotune
 	autotune_cleanup ${cluster_type}
-
+	
+	end_time=$(get_date)
+	elapsed_time=$(time_diff "${start_time}" "${end_time}")
+	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES}
+	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
 }

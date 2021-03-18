@@ -26,6 +26,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 # application autotune yaml tests
 # output: Run the test cases for autotune config yaml
 function autotune_config_yaml_tests() {
+	start_time=$(get_date)
 	# create the result directory for given testsuite
 	TEST_SUITE_DIR="${RESULTS}/${FUNCNAME}"
 	mkdir ${TEST_SUITE_DIR}
@@ -53,8 +54,11 @@ function autotune_config_yaml_tests() {
 	# perform the tests for autotuneconfig yamls
 	run_test "${testtorun}" autotuneconfig ${yaml_path}
 	
+	end_time=$(get_date)
+	elapsed_time=$(time_diff "${start_time}" "${end_time}")
+	
 	# Summary of the test suite
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES} 
+	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
 	
 	# Check if any test failed in the testsuite if so add the testsuite to FAILED_TEST_SUITE array
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
