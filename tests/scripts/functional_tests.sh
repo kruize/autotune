@@ -28,6 +28,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/da_autotune_config_yaml_tests.sh
 . ${SCRIPTS_DIR}/da_basic_api_tests.sh
 . ${SCRIPTS_DIR}/modify_autotune_config_tests.sh
+. ${SCRIPTS_DIR}/configmap_yaml_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -79,6 +80,18 @@ mkdir ${RESULTS}
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 
+CONFIGMAP="${RESULTS}/test_configmap"
+mkdir ${CONFIGMAP}
+
+# Replace configmap logging level to debug for testing purpose
+find="info"
+replace="debug"
+config_yaml="${CONFIGMAP}/${cluster_type}-config.yaml"
+cp "${configmap}/${cluster_type}-config.yaml" "${config_yaml}"
+
+# Update the config map yaml with specified field
+update_yaml ${find} ${replace} ${config_yaml}
+
 # Set of functional tests to be performed 
 # input: Result directory to store the functional test results
 # output: Perform the set of functional tests
@@ -102,6 +115,10 @@ function functional_test() {
 		testcase=""
 		# Modify existing autotuneconfig yamls and check for API results
 		modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
+	
+		testcase=""
+		# perform the configmap yaml tests
+		configmap_yaml_tests > >(tee "${RESULTS}/configmap_yaml_tests.log") 2>&1
 	fi
 }
 
