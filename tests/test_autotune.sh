@@ -174,6 +174,11 @@ fi
 if [ -z "${APP_REPO}" ]; then
 	echo "Error: Do specify the benchmarks directory path"
 	usage
+else
+	if [ ! -d "${APP_REPO}" ]; then
+		echo "Error: benchmark directory does not exists"
+		usage
+	fi
 fi
 
 if [ "${setup}" -ne "0" ]; then
@@ -184,4 +189,5 @@ if [ "${setup}" -ne "0" ]; then
 	echo ""
 else
 	autotune_cleanup
+	prometheus_cleanup
 fi

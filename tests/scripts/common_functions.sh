@@ -96,6 +96,15 @@ function setup() {
 	esac
 }
 
+# Check if the prometheus is already deployed , if not invoke the script to deploy prometheus on minikube
+function setup_prometheus() {
+	kubectl_cmd="kubectl"
+	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
+	if [ "${prometheus_pod_running}" == "" ]; then
+		./scripts/prometheus_on_minikube.sh -as
+	fi
+}
+
 # Deploy autotune
 # input: cluster type , autotune image
 # output: Deploy autotune based on the parameter passed
@@ -103,6 +112,13 @@ function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
 	pushd ${AUTOTUNE_REPO} > /dev/null
+	
+	# Check if the cluster_type is minikube., if so deploy prometheus
+	if [ "${cluster_type}" == "minikube" ]; then
+		echo "Installing Prometheus on minikube" >/dev/stderr
+		setup_prometheus >> ${SETUP_LOG} 2>&1
+	fi
+	
 	echo "Deploying autotune"
 	if [ -z "${AUTOTUNE_IMAGE}" ]; then
 		cmd="./deploy.sh -c ${cluster_type}"
@@ -111,6 +127,14 @@ function deploy_autotune() {
 	fi	
 	echo "CMD= ${cmd}"
 	${cmd}
+	
+	status="$?"
+	# Check if autotune is deployed 
+	if [ "${status}" -eq "1" ]; then
+		echo "Error deploying autotune" >/dev/stderr
+		echo "See ${PWD}/tests/setup.log for more info" >/dev/stderr
+		exit -1
+	fi
 }
 
 # Remove the autotune setup
@@ -124,6 +148,17 @@ function autotune_cleanup() {
 	${cmd} >> ${SETUP_LOG} 2>&1
 	popd > /dev/null
 	echo "done"
+}
+
+# Remove the prometheus setup
+# output: Remove all the prometheus dependencies
+function prometheus_cleanup() {
+	pushd autotune > /dev/null
+	kubectl_cmd="kubectl"
+	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1"| awk '{print $4}')
+	if [ "${prometheus_pod_running}" == "Running" ]; then
+		./scripts/prometheus_on_minikube.sh -t
+	fi
 }
 
 # list of test cases supported 
@@ -369,11 +404,6 @@ function run_test_case() {
 	echo -n "Deploying autotune..."| tee -a ${LOG}
 	setup >> ${SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
-	
-	# create autotune setup
-	echo -n "Deploying autotune..."| tee  ${LOG}
-	setup >> ${SETUP_LOG} 2>&1
-	echo "done"| tee  ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
