@@ -38,12 +38,10 @@ class Objective(object):
     A class used to define search space and return the actual sla value.
 
     Parameters:
-        sla_class (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
     """
 
-    def __init__(self, sla_class, tunables):
-        self.sla_class = sla_class
+    def __init__(self, tunables):
         self.tunables = tunables
 
     def __call__(self, trial):
@@ -84,15 +82,18 @@ class Objective(object):
         return actual_sla_value
 
 
-def recommend(direction, ml_algo_impl, sla_class, tunables):
+def recommend(application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type):
     """
     Perform Bayesian Optimization with Optuna using the appropriate sampler and recommend the best config.
 
     Parameters:
+        application_name (str): The name of the application that is being optimized.
         direction (str): Direction of optimization, minimize or maximize.
-        ml_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
-        sla_class (str): The objective function that is being optimized.
+        hpo_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
+        id (str): The id of the application that is being optimized.
+        objective_function (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
+        value_type (string): Value type of the objective function.
     """
     # Set the logging level for the Optuna’s root logger
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -102,18 +103,18 @@ def recommend(direction, ml_algo_impl, sla_class, tunables):
     optuna.logging.disable_default_handler()
 
     # Choose a sampler based on the value of ml_algo_impl
-    if ml_algo_impl == "optuna_tpe":
+    if hpo_algo_impl == "optuna_tpe":
         sampler = optuna.samplers.TPESampler()
-    elif ml_algo_impl == "optuna_tpe_multivariate":
+    elif hpo_algo_impl == "optuna_tpe_multivariate":
         sampler = optuna.samplers.TPESampler(multivariate=True)
-    elif ml_algo_impl == "optuna_skopt":
+    elif hpo_algo_impl == "optuna_skopt":
         sampler = optuna.integration.SkoptSampler()
 
     # Create a study object
     study = optuna.create_study(direction=direction, sampler=sampler)
 
     # Execute an optimization by using an 'Objective' instance
-    study.optimize(Objective(sla_class, tunables), n_trials=n_trials, n_jobs=n_jobs)
+    study.optimize(Objective(tunables), n_trials=n_trials, n_jobs=n_jobs)
 
     # Get the best parameter
     logger.info("Best parameter: " + str(study.best_params))
@@ -124,14 +125,29 @@ def recommend(direction, ml_algo_impl, sla_class, tunables):
 
     logger.debug("All trials: " + str(trials))
 
-    best_config = {}
+    recommended_config = {}
 
-    optimal_value = {
-        "tunables": study.best_params,
-        "sla": study.best_value
-    }
+    optimal_value = {"objective_function": {
+        "name": objective_function,
+        "value": study.best_value,
+        "value_type": value_type
+    }, "tunables": []}
 
-    best_config["sla_class"] = sla_class
-    best_config["optimal_value"] = optimal_value
+    for tunable in tunables:
+        for key, value in study.best_params.items():
+            if key == tunable["name"]:
+                tunable_value = value
+        optimal_value["tunables"].append(
+            {
+                "name": tunable["name"],
+                "value": tunable_value,
+                "value_type": tunable["value_type"]
+            }
+        )
 
-    logger.info("Best config: " + str(best_config))
+    recommended_config["id"] = id
+    recommended_config["application_name"] = application_name
+    recommended_config["direction"] = direction
+    recommended_config["optimal_value"] = optimal_value
+
+    logger.info("Recommended config: " + str(recommended_config))
