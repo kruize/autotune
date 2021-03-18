@@ -77,6 +77,8 @@ mkdir -p "${RESULTS_DIR}"
 RESULTS="${RESULTS_DIR}/${tctype}"
 mkdir ${RESULTS}
 
+SETUP_LOG="${TEST_DIR}/setup.log"
+
 # Set of functional tests to be performed 
 # input: Result directory to store the functional test results
 # output: Perform the set of functional tests
@@ -88,12 +90,19 @@ function functional_test() {
 	# perform the autotune config yaml tests
 	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
 	
-	testcase=""
-	# perform the basic api tests
-	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-	
-	# Modify existing autotuneconfig yamls and check for API results
-	modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
+	if [ "${sanity}" -eq "1" ]; then
+		testcase=""
+		# perform the basic api tests
+		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
+	else
+		testcase=""
+		# perform the basic api tests
+		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
+		
+		testcase=""
+		# Modify existing autotuneconfig yamls and check for API results
+		modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
+	fi
 }
 
 # If testsuite is not specified perform the set of functional tests

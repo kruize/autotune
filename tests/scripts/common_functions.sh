@@ -24,7 +24,6 @@ TEST_DIR=${PWD}
 pushd ${TEST_DIR}/..  > /dev/null
 
 AUTOTUNE_REPO="${PWD}"
-SETUP_LOG="${TEST_DIR}/setup.log"
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
 TOTAL_TESTS_PASSED=0
@@ -40,6 +39,7 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_
 modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune:test"
+total_time=0
 matched=0
 sanity=0
 setup=1
@@ -68,6 +68,19 @@ function check_prereq() {
 		echo "Error: jq is not installed."
 		exit 1
 	fi
+}
+
+# get date in format
+function get_date() {
+	date "+%Y-%m-%d %H:%M:%S"
+}
+
+function time_diff() {
+	ssec=`date --utc --date "$1" +%s`
+	esec=`date --utc --date "$2" +%s`
+
+	diffsec=$(($esec-$ssec))
+	echo $diffsec
 }
 
 # Set up the autotune 
@@ -206,8 +219,11 @@ function check_test_case() {
 function testsuitesummary() {
 	TEST_SUITE_NAME=$1
 	FAILED_CASES=$2
+	elapsed_time=$3
+	((total_time=total_time+elapsed_time))
 	echo 
 	echo "########### Results Summary of the test suite ${TEST_SUITE_NAME} ##########"
+	echo "${TEST_SUITE_NAME} took ${elapsed_time} seconds"
 	echo "Number of tests performed ${TESTS}"
 	echo "Number of tests passed ${TESTS_PASSED}"
 	echo "Number of tests failed ${TESTS_FAILED}"
@@ -234,6 +250,7 @@ function testsuitesummary() {
 # output: summary of the overall tests performed
 function overallsummary(){
 	FAILED_TEST_SUITES=$1
+	echo "Total time taken to perform the test ${total_time} seconds"
 	echo "Total Number of test suites performed ${TOTAL_TEST_SUITES}"
 	echo "Total Number of tests performed ${TOTAL_TESTS}"
 	echo "Total Number of tests passed ${TOTAL_TESTS_PASSED}"
@@ -388,6 +405,7 @@ function validate_yaml () {
 function run_test_case() {
 	LOG="${LOG_DIR}/${testcase}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${testcase}-autotune.log"
+	AUTOTUNE_SETUP_LOG="${LOG_DIR}/${testcase}-setup.log"
 	((TOTAL_TESTS++))
 	((TESTS++))
 	object=$1
@@ -402,7 +420,7 @@ function run_test_case() {
 	
 	# create autotune setup
 	echo -n "Deploying autotune..."| tee -a ${LOG}
-	setup >> ${SETUP_LOG} 2>&1
+	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
 	
 	# Apply the yaml file 
@@ -605,9 +623,9 @@ function create_expected_searchspace_json() {
 		((count++))
 	done
 	printf ']' >> ${file_name}
-	echo "expected json"  | tee -a ${LOG}
-	cat ${file_name}  | tee -a ${LOG}
-	echo "" | tee -a ${LOG}
+	echo "expected json"  >> ${LOG}
+	cat ${file_name}  >> ${LOG}
+	echo "" >> ${LOG}
 }
 
 # Run the curl command passed and capture the json output in a file
@@ -619,9 +637,9 @@ function run_curl_cmd() {
 	echo "***** Curl cmd = ${cmd} json file = ${json_file}"
 	echo "Curl cmd=${cmd}" | tee -a ${LOG}
 	${cmd} > ${json_file}
-	echo "actual json" | tee -a ${LOG}
-	cat ${json_file} | tee -a ${LOG}
-	echo "" | tee -a ${LOG}
+	echo "actual json" >> ${LOG}
+	cat ${json_file} >> ${LOG}
+	echo "" >> ${LOG}
 }
 
 # Get the actual search space json
@@ -772,9 +790,9 @@ function create_expected_listapptunables_json() {
 		fi
 		((count++))
 	done
-	echo "expected json" | tee -a ${LOG}
-	cat ${file_name} | tee -a ${LOG}
-	echo ""  | tee -a ${LOG}
+	echo "expected json" >> ${LOG}
+	cat ${file_name} >> ${LOG}
+	echo ""  >> ${LOG}
 }
 
 # Get listAppTunables json
@@ -907,9 +925,9 @@ function create_expected_listautotunetunables_json() {
 
 	printf ']\n' >> ${file_name}
 
-	echo "expectd json" | tee -a ${LOG}
-	cat ${file_name} | tee -a ${LOG}
-	echo "" | tee -a ${LOG}
+	echo "expectd json" >> ${LOG}
+	cat ${file_name} >> ${LOG}
+	echo "" >> ${LOG}
 }
 
 # Get listAutotuneTunables json
@@ -1038,9 +1056,9 @@ function create_expected_listapplayer_json() {
 		((count++))
 	done
 	printf ']' >> ${file_name}
-	echo "expected json" | tee -a ${LOG}
-	cat ${file_name} | tee -a ${LOG}
-	echo "" | tee -a ${LOG}
+	echo "expected json" >> ${LOG}
+	cat ${file_name} >> ${LOG}
+	echo "" >> ${LOG}
 }
 
 # Get the listAppLayer json
@@ -1132,9 +1150,9 @@ function create_expected_listapplication_json() {
 		((count++))
 	done
 	printf ']' >> ${file_name}
-	echo "expected json" | tee -a ${LOG}
-	cat ${file_name} | tee -a ${LOG}
-	echo "" | tee -a ${LOG}
+	echo "expected json" >> ${LOG}
+	cat ${file_name} >> ${LOG}
+	echo "" >> ${LOG}
 }
 
 # Get listApplication json
@@ -1200,7 +1218,7 @@ function label_pods() {
 	for app in ${_app_pod_names[@]}
 	do
 		label=${_label_names[inst]}
-		echo "Adding label $label to pod $app..."
+		echo "Adding label ${label} to pod ${app}..."
 		# change the label of the pod based on number of instances created
 		kubectl label pod ${app} app.kubernetes.io/name=${label}  --overwrite=true
 		((inst++))
@@ -1222,8 +1240,8 @@ function get_autotune_jsons() {
 	# Create autotune object
 	for autotune in "${autotune_names[@]}"
 	do
-		echo "Applying autotune yaml $autotune..."
-		kubectl apply -f ${YAML_PATH}/${autotune}.yaml >> setup.log
+		echo "Applying autotune yaml ${autotune}..."
+		kubectl apply -f ${YAML_PATH}/${autotune}.yaml >> ${TEST_SUITE_DIR}/setup.log
 		kubectl get autotune/${autotune} -o json > ${AUTOTUNE_JSONS_DIR}/${autotune}.json
 
 		if [ -z "${AUTOTUNE_JSONS_DIR}/${autotune}.json" ]; then

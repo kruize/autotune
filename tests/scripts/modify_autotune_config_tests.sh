@@ -22,6 +22,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 
 # Modify the existing autotuneconfig and check for API results
 function modify_autotune_config_tests() {
+	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS_FAILED=0
 	TESTS_PASSED=0
@@ -78,6 +79,9 @@ function modify_autotune_config_tests() {
 	# Cleanup autotune
 	autotune_cleanup  | tee -a ${LOG}
 	
+	end_time=$(get_date)
+	elapsed_time=$(time_diff "${start_time}" "${end_time}")
+	
 	FAILED=()
 	for fail in ${FAILED_CASES[@]}
 	do
@@ -88,7 +92,7 @@ function modify_autotune_config_tests() {
 	FAILED_CASES=("${FAILED[@]}")
 	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES}
+	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
 }
 
 # Perform the tests for Modify existing autotuneconfig 
