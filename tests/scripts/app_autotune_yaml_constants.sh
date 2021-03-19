@@ -145,6 +145,7 @@ objective_function_autotune_objects=([blank-objective-function]='true'
 [null-objective-function]='false' 
 [numerical-objective-function]='false' 
 [valid-objective-function]='true')
+
 # Expected log message for objective function
 declare -A objective_function_expected_log_msgs
 objective_function_expected_log_msgs=([blank-objective-function]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable transaction_response_time missing in objective_function' 
@@ -166,6 +167,7 @@ sla_class_autotune_objects=([blank-slaclass]='true'
 [null-slaclass]='true' 
 [numerical-slaclass-value]='false' 
 [valid-slaclass]='true')
+
 # Expected log message for sla class
 declare -A sla_class_expected_log_msgs
 sla_class_expected_log_msgs=([blank-slaclass]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object blank-slaclass' 
@@ -187,6 +189,7 @@ direction_autotune_objects=([blank-direction]='true'
 [null-direction]='false' 
 [numerical-direction]='false' 
 [valid-direction]='true')
+
 # Expected log message for direction
 declare -A direction_expected_log_msgs
 direction_expected_log_msgs=([blank-direction]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid direction for autotune kind' 
@@ -206,6 +209,7 @@ function_variable_name_autotune_objects=([blank-function-variable-name]='true'
 [null-function-variable-name]='false' 
 [numerical-function-variable-name]='false' 
 [valid-function-variable-name]='true')
+
 # Expected log message for function variable name
 declare -A function_variable_name_expected_log_msgs
 function_variable_name_expected_log_msgs=([blank-function-variable-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable   missing in objective_function' 
@@ -225,6 +229,7 @@ function_variable_query_autotune_objects=([blank-function-variable-query]='true'
 [null-function-variable-query]='false' 
 [numerical-function-variable-query]='false' 
 [valid-function-variable-query]='true')
+
 # Expected log message for function variable query
 declare -A function_variable_query_expected_log_msgs
 function_variable_query_expected_log_msgs=([blank-function-variable-query]='validation from da' 
@@ -244,6 +249,7 @@ function_variable_datasource_autotune_objects=([blank-function-variable-datasour
 [null-function-variable-datasource]='true' 
 [numerical-function-variable-datasource]='false' 
 [valid-function-variable-datasource]='true')
+
 # Expected log message for sla function variable datasource
 declare -A function_variable_datasource_expected_log_msgs
 function_variable_datasource_expected_log_msgs=([blank-function-variable-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported' 
@@ -263,6 +269,7 @@ function_variable_value_type_autotune_objects=([blank-function-variable-value-ty
 [null-function-variable-value-type]='false' 
 [numerical-function-variable-value-type]='false' 
 [valid-function-variable-value-type]='true')
+
 # Expected log message for function variable value type
 declare -A function_variable_value_type_expected_log_msgs
 function_variable_value_type_expected_log_msgs=([blank-function-variable-value-type]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time value_type not supported' 
@@ -282,6 +289,7 @@ mode_autotune_objects=([blank-mode]='true'
 [null-mode]='false' 
 [numerical-mode]='false' 
 [valid-mode]='true')
+
 # Expected log message for mode
 declare -A mode_expected_log_msgs
 mode_expected_log_msgs=([blank-mode]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Autotune object mode not supported' 
@@ -301,6 +309,7 @@ label_autotune_objects=([blank-label]='true'
 [null-label]='true' 
 [numerical-label]='false' 
 [valid-label]='true')
+
 # Expected log message for label
 declare -A label_expected_log_msgs
 label_expected_log_msgs=([blank-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel in selector' 
@@ -320,6 +329,7 @@ labelvalue_autotune_objects=([blank-labelvalue]='true'
 [null-labelvalue]='true' 
 [numerical-labelvalue]='false' 
 [valid-labelvalue]='true')
+
 # Expected log message for label value
 declare -A labelvalue_expected_log_msgs
 labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid or blank MatchLabelValue in selector' 
@@ -334,6 +344,7 @@ labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyze
 declare -A autotune_other_autotune_objects
 autotune_other_autotune_objects=([incomplete-autotune]='false' 
 [invalid-direction-for-slaclass]='true')
+
 # Expected log message for other test cases
 declare -A autotune_other_expected_log_msgs
 autotune_other_expected_log_msgs=([incomplete-autotune]='error: error validating "'${path}/autotune_other/incomplete-autotune.yaml'": error validating data: ValidationError(Autotune): missing required field "spec" in com.recommender.v1.Autotune; if you choose to ignore these errors, turn validation off with --validate=false' 
