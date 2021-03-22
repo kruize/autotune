@@ -19,12 +19,6 @@ limitations under the License.
 
 from tunables import get_all_tunables
 
-from install_package import install
-
-install('python-dotenv')
-install('optuna')
-install('scikit-optimize')
-
 from bayes_optuna import optuna_hpo
 
 # application_name (str): The name of the application that is being optimized.

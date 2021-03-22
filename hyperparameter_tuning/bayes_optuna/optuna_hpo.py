@@ -21,12 +21,8 @@ import os
 from experiment import perform_experiment
 from logger import get_logger
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-n_trials = int(os.getenv("n_trials"))
-n_jobs = int(os.getenv("n_jobs"))
+n_trials = int(os.getenv("N_TRIALS"))
+n_jobs = int(os.getenv("N_JOBS"))
 
 logger = get_logger(__name__)
 
