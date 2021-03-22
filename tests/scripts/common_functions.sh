@@ -148,10 +148,13 @@ function deploy_autotune() {
 	fi
 	
 	echo "Deploying autotune"
-	if [ -z "${AUTOTUNE_IMAGE}" ! -z "${CONFIGMAP_DIR}" ]; then
+	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
+	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
+	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR}"
+	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP}"
 	fi	
