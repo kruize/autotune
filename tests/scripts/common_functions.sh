@@ -35,7 +35,7 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests")
 modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune:test"
@@ -48,6 +48,9 @@ MANIFESTS="${PWD}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
 module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
+
+# Path to the directory containing yaml files
+configmap="${PWD}/manifests/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -83,8 +86,18 @@ function time_diff() {
 	echo $diffsec
 }
 
+# Update the config map yaml with specified field
+function update_yaml() {
+	find=$1
+	replace=$2
+	config_yaml=$3
+	sed -i 's/'${find}'/'${replace}'/g' ${config_yaml}
+}
+
 # Set up the autotune 
 function setup() {
+	CONFIGMAP_DIR=$1
+	
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
 	
@@ -96,7 +109,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  ${cluster_type} ${AUTOTUNE_DOCKER_IMAGE}
+	deploy_autotune  ${cluster_type} ${AUTOTUNE_DOCKER_IMAGE} ${CONFIGMAP_DIR}
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -124,6 +137,8 @@ function setup_prometheus() {
 function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
+	CONFIGMAP_DIR=$3
+	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
 	# Check if the cluster_type is minikube., if so deploy prometheus
@@ -133,10 +148,15 @@ function deploy_autotune() {
 	fi
 	
 	echo "Deploying autotune"
-	if [ -z "${AUTOTUNE_IMAGE}" ]; then
-		cmd="./deploy.sh -c ${cluster_type}"
-	else
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE}"
+	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
+	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
+		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
+	# if both autotune image and configmap  is passed
+	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR}"
+	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
+	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP}"
 	fi	
 	echo "CMD= ${cmd}"
 	${cmd}
@@ -218,8 +238,8 @@ function check_test_case() {
 # output: summary of the specified test suite
 function testsuitesummary() {
 	TEST_SUITE_NAME=$1
-	FAILED_CASES=$2
-	elapsed_time=$3
+	elapsed_time=$2
+	FAILED_CASES=$3
 	((total_time=total_time+elapsed_time))
 	echo 
 	echo "########### Results Summary of the test suite ${TEST_SUITE_NAME} ##########"
