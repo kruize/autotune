@@ -47,9 +47,6 @@ autotune_config_tests=("layer_name"
 "tunable_sla_class" 
 "tunables") 
 
-# other tests for autotune config yaml 
-other_tests=("other")
-
 # tests for layer name
 layer_name_testcases=("blank-layer-name" 
 "no-layer-name" 
@@ -201,7 +198,7 @@ tunables_testcases=("interchanged-bound"
 "valid-tunables")
 
 # other test cases
-other_testcases=("incomplete-autotuneconfig" )
+autotuneconfig_other_testcases=("incomplete-autotuneconfig" )
 
 # Expected autotune object for layer name
 declare -A layer_name_autotune_objects
@@ -211,6 +208,7 @@ layer_name_autotune_objects=([blank-layer-name]='true'
 [null-layer-name]='false' 
 [numerical-layer-name]='false' 
 [valid-layer-name]='true')
+
 # Expected log message for layer-name
 declare -A layer_name_expected_log_msgs
 layer_name_expected_log_msgs=([blank-layer-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: AutotuneConfig object name cannot be null or empty' 
@@ -229,6 +227,7 @@ layer_level_autotune_objects=([char-layer-level]='false'
 [null-layer-level]='false' 
 [char-layer-level]='false' 
 [valid-layer-level]='true')
+
 # Expected log message for layer-level
 declare -A layer_level_expected_log_msgs
 layer_level_expected_log_msgs=([char-layer-level]='error: error validating "'${yaml_path}/${autotune_config_tests[1]}/char-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig.layer_level): invalid type for com.recommender.v1.AutotuneConfig.layer_level: got "string", expected "integer"; if you choose to ignore these errors, turn validation off with --validate=false' 
@@ -247,6 +246,7 @@ presence_autotune_objects=([blank-presence]='true'
 [null-presence]='true' 
 [numerical-presence]='false' 
 [valid-presence]='true')
+
 #Expected log message for presence
 declare -A presence_expected_log_msgs
 presence_expected_log_msgs=([blank-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
@@ -266,6 +266,7 @@ layer_presence_query_datasource_autotune_objects=([blank-layer-presence-query-da
 [null-layer-presence-query-datasource]='false' 
 [numerical-layer-presence-query-datasource]='false' 
 [valid-layer-presence-query-datasource]='true')
+
 #Expected log message for layer preseence query
 declare -A layer_presence_query_datasource_expected_log_msgs
 layer_presence_query_datasource_expected_log_msgs=([blank-layer-presence-query-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel' 
@@ -285,6 +286,7 @@ layer_presence_query_autotune_objects=([blank-layer-presence-query]='true'
 [null-layer-presence-query]='false' 
 [numerical-layer-presence-query]='false' 
 [valid-layer-presence-query]='true')
+
 #Expected log message for layer presence query
 declare -A layer_presence_query_expected_log_msgs
 layer_presence_query_expected_log_msgs=([blank-layer-presence-query]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Could not get the applications for the layer blank-layer-presence-query' 
@@ -304,6 +306,7 @@ layer_presence_query_key_autotune_objects=([blank-layer-presence-query-key]='tru
 [null-layer-presence-query-key]='false' 
 [numerical-layer-presence-query-key]='false' 
 [valid-layer-presence-query-key]='true')
+
 # Expected autotune object for layer presence query key
 declare -A layer_presence_query_key_expected_log_msgs
 layer_presence_query_key_expected_log_msgs=([blank-layer-presence-query-key]='validation from da' 
@@ -323,6 +326,7 @@ layer_presence_label_name_autotune_objects=([blank-layer-presence-label-name]='t
 [null-layer-presence-label-name]='false' 
 [numerical-layer-presence-label-name]='false' 
 [valid-layer-presence-label-name]='true')
+
 # Expected log message for layer presence label name
 declare -A layer_presence_label_name_expected_log_msgs
 layer_presence_label_name_expected_log_msgs=([blank-layer-presence-label-name]='validation from da' 
@@ -342,6 +346,7 @@ layer_presence_labelvalue_autotune_objects=([blank-layer-presence-labelvalue]='t
 [null-layer-presence-labelvalue]='false' 
 [numerical-layer-presence-labelvalue]='false' 
 [valid-layer-presence-labelvalue]='true')
+
 # Expected log message for layer-presence-labelvalue
 declare -A layer_presence_labelvalue_expected_log_msgs
 layer_presence_labelvalue_expected_log_msgs=([blank-layer-presence-labelvalue]='Validation from da' 
@@ -363,6 +368,7 @@ layer_presence_autotune_objects=([complete-layer-presence]='true'
 [only-label-layer-presence]='true' 
 [only-query-layer-presence]='true' 
 [valid-layer-presence]='true')
+
 # Expected log message for layer presence
 declare -A layer_presence_expected_log_msgs
 layer_presence_expected_log_msgs=([complete-layer-presence]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Both layerPresenceQuery and layerPresenceLabel cannot be set' 
@@ -382,6 +388,7 @@ tunable_name_autotune_objects=([blank-tunable-name]='true'
 [null-tunable-name]='false' 
 [numerical-tunable-name]='false' 
 [valid-tunable-name]='true')
+
 # Expected log message for tunable-name
 declare -A tunable_name_expected_log_msgs
 tunable_name_expected_log_msgs=([blank-tunable-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Tunable name cannot be empty' 
@@ -399,6 +406,7 @@ tunable_value_type_autotune_objects=([blank-tunable-value-type]='true'
 [null-tunable-value-type]='false' 
 [numerical-tunable-value-type]='false' 
 [valid-tunable-value-type]='true')
+
 # Expected log message for tunable-value-type
 declare -A tunable_value_type_expected_log_msgs
 tunable_value_type_expected_log_msgs=([blank-tunable-value-type]='Validation from da' 
@@ -418,6 +426,7 @@ tunable_upper_bound_autotune_objects=([blank-tunable-upper-bound]='true'
 [null-tunable-upper-bound]='false' 
 [char-tunable-upper-bound]='false' 
 [valid-tunable-upper-bound]='true')
+
 # Expected log message for tunable-upper-bound
 declare -A tunable_upper_bound_expected_log_msgs
 tunable_upper_bound_expected_log_msgs=([blank-tunable-upper-bound]='Validation from da' 
@@ -437,6 +446,7 @@ tunable_lower_bound_autotune_objects=([blank-tunable-lower-bound]='true'
 [null-tunable-lower-bound]='false' 
 [char-tunable-lower-bound]='false' 
 [valid-tunable-lower-bound]='true')
+
 # Expected log message for tunable-lower-bound
 declare -A tunable_lower_bound_expected_log_msgs
 tunable_lower_bound_expected_log_msgs=([blank-tunable-lower-bound]='validation from da' 
@@ -456,6 +466,7 @@ tunable_query_autotune_objects=([blank-tunable-query]='true'
 [null-tunable-query]='false' 
 [numerical-tunable-query]='false' 
 [valid-tunable-query]='true')
+
 # Expected log message for tunable query
 declare -A tunable_query_expected_log_msgs
 tunable_query_expected_log_msgs=([blank-tunable-query]='validation from da' 
@@ -475,6 +486,7 @@ tunable_datasource_name_autotune_objects=([blank-tunable-datasource-name]='true'
 [null-tunable-datasource-name]='true' 
 [numerical-tunable-datasource-name]='false' 
 [valid-tunable-datasource-name]='true')
+
 # Expected log message for tunable-query
 declare -A tunable_datasource_name_expected_log_msgs
 tunable_datasource_name_expected_log_msgs=([blank-tunable-datasource-name]='error from da' 
@@ -495,6 +507,7 @@ tunable_sla_class_autotune_objects=([blank-tunable-sla-class]='true'
 [null-tunable-sla-class]='false' 
 [numerical-tunable-sla-value]='false' 
 [valid-tunable-sla-class]='true')
+
 # Expected log message for sla class
 declare -A tunable_sla_class_expected_log_msgs
 tunable_sla_class_expected_log_msgs=([blank-tunable-sla-class]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid sla_class for tunable memoryRequest' 
@@ -513,6 +526,7 @@ tunables_autotune_objects=([interchanged-bound]='true'
 [no-tunables-queries]='true' 
 [no-tunables-sla-class]='false' 
 [valid-tunables]='true')
+
 # Expected log message for tunable-query
 declare -A tunables_expected_log_msgs
 tunables_expected_log_msgs=([interchanged-bound]='validation from da' 
@@ -522,9 +536,10 @@ tunables_expected_log_msgs=([interchanged-bound]='validation from da'
  [valid-tunables]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotuneconfig valid-tunables' )
 
 # Expected autotune object for other test cases
-declare -A other_autotune_objects
-other_autotune_objects=([incomplete-autotuneconfig]='false')
+declare -A autotuneconfig_other_autotune_objects
+autotuneconfig_other_autotune_objects=([incomplete-autotuneconfig]='false')
+
 # Expected log message for other test cases
-declare -A other_expected_log_msgs
-other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/${other_tests[0]}/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
+declare -A autotuneconfig_other_expected_log_msgs
+autotuneconfig_other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/autotuneconfig_other/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
 
