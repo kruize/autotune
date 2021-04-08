@@ -35,7 +35,8 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests" "autotune_id_tests")
+
 modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune:test"
@@ -143,8 +144,8 @@ function deploy_autotune() {
 	
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
-		echo "Installing Prometheus on minikube" >/dev/stderr
-		setup_prometheus >> ${SETUP_LOG} 2>&1
+		echo "Installing Prometheus on minikube"
+		setup_prometheus
 	fi
 	
 	echo "Deploying autotune"
@@ -164,8 +165,7 @@ function deploy_autotune() {
 	status="$?"
 	# Check if autotune is deployed 
 	if [ "${status}" -eq "1" ]; then
-		echo "Error deploying autotune" >/dev/stderr
-		echo "See ${PWD}/tests/setup.log for more info" >/dev/stderr
+		echo "Error deploying autotune"
 		exit -1
 	fi
 }
@@ -178,7 +178,7 @@ function autotune_cleanup() {
 	pushd autotune/ > /dev/null 2>&1
 	cmd="./deploy.sh -c ${cluster_type} -t"
 	echo "CMD= ${cmd}"
-	${cmd} >> ${SETUP_LOG} 2>&1
+	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	popd > /dev/null
 	echo "done"
 }
@@ -319,7 +319,7 @@ function app_cleanup() {
 	set_app_folder ${app_name}
 	echo
 	echo -n "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${SETUP_LOG} 2>&1
+	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done"
 }
 
@@ -341,9 +341,9 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${SETUP_LOG}
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${SETUP_LOG}
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 	echo "done"
 }
@@ -455,16 +455,14 @@ function run_test_case() {
 	echo "${kubectl_log_msg}" > kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
 	
-	# get the log of the autotune pod
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
-		status=$(kubectl get ${object} -n ${NAMESPACE} | grep "${testcase}" | cut -d " " -f1) >> ${SETUP_LOG} 2>&1
+		status=$(kubectl get ${object} -n ${NAMESPACE} | grep "${testcase}" | cut -d " " -f1)
 	else
-		status=$(kubectl get ${object} | grep "${testcase}" | cut -d " " -f1) >> ${SETUP_LOG} 2>&1
+		status=$(kubectl get ${object} | grep "${testcase}" | cut -d " " -f1)
 	fi
 	
 	# check if the expected message is matching with the actual message
@@ -654,9 +652,9 @@ function create_expected_searchspace_json() {
 function run_curl_cmd() {
 	cmd=$1
 	json_file=$2
-
-	echo "***** Curl cmd = ${cmd} json file = ${json_file}"
+ 
 	echo "Curl cmd=${cmd}" | tee -a ${LOG}
+	echo "json file = ${json_file}" | tee -a ${LOG}
 	${cmd} > ${json_file}
 	echo "actual json" >> ${LOG}
 	cat ${json_file} >> ${LOG}
@@ -696,9 +694,8 @@ function searchspace_test() {
 	LOG="${LOG_DIR}/${test_name}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee  -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee  -a ${LOG}
@@ -860,9 +857,9 @@ function listapptunables_test() {
 
 	LOG="${LOG_DIR}/${test_name}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${FUNCNAME}" | tee -a ${LOG}
@@ -999,9 +996,9 @@ function list_autotune_tunables_test() {
 	LOG="${LOG_DIR}/${test_name}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
+	
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee -a ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
@@ -1124,9 +1121,8 @@ function listapplayer_test() {
 	LOG="${LOG_DIR}/${test_name}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee  -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee  -a ${LOG}
@@ -1217,9 +1213,9 @@ function listapplications_test() {
 
 	LOG="${LOG_DIR}/${test_name}.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
+	
+	# get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_LOG}
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee -a ${LOG}
@@ -1297,4 +1293,120 @@ function get_autotune_config_jsons() {
 		fi
 	done
 	echo ""
+}
+
+# Test to check the uniqueness of the ids
+# output: set the flag to 1 if the ids are not unique
+function uniqueness_test() {
+	test_array=("$@")
+	flag=0
+	# If element of test_array is not in seen, then store in seen array. If the array elemen is already in seen then do not store it in seen array. UniqueNum is the number of array elements with unique values.
+	uniqueNum=$(printf '%s\n' "${test_array[@]}"|awk '!($0 in seen){seen[$0];c++} END {print c}')
+	
+	if [ "${uniqueNum}" != "${#test_array[@]}" ]; then
+		flag=1		
+	fi
+}
+
+# Display the result based on the actual flag value
+# input: Expected behaviour, test name and actual flag value
+function display_result() {
+	expected_behaviour=$1
+	_id_test_name_=$2
+	actual_flag=$3
+	((TOTAL_TESTS++))
+	((TESTS++))
+	
+	echo "Expected behaviour: ${expected_behaviour}" | tee -a ${LOG}
+	if [ "${actual_flag}" -eq "0" ]; then
+		((TESTS_PASSED++))
+		((TOTAL_TESTS_PASSED++))
+		echo "Expected behaviour found" | tee -a ${LOG}
+		echo "Test passed" | tee -a ${LOG}
+	else
+		((TESTS_FAILED++))
+		((TOTAL_TESTS_FAILED++))
+		FAILED_CASES+=(${_id_test_name_})
+		echo "Expected behaviour not found" | tee -a ${LOG}
+		echo "Test failed" | tee -a ${LOG}
+	fi
+}
+
+# Get the autotune pod log
+# input : Log file path to store the pod information
+function get_autotune_pod_log() {
+	log=$1
+	
+	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	echo "${pod_log_msg}" > "${log}"
+}
+
+# Deploy the application dependencies
+# input: id test name
+# output: deploy the benchmark application, label the application pods and deploy the required autotune objects.
+function deploy_app_dependencies() {
+	eval "declare -A app_array="${1#*=}
+	yaml_dir=$2
+	autotune_names_count=0
+	autotune_names=()
+	app_pod_names=()
+	label_names=()
+	
+	# deploy benchmark applications
+	for key in "${!app_array[@]}"
+	do
+		deploy_app ${APP_REPO} ${key} ${app_array[${key}]}
+		
+		# Sleep for sometime for application pods to be up
+		sleep 10
+		
+		inst_count=0
+		while [ "${inst_count}" -lt "${app_array[${key}]}" ]
+		do
+			autotune_names+=("${key}-autotune-${inst_count}")
+			label_names+=("${key}-deployment-${inst_count}")
+	
+			case "${key}" in
+			petclinic)
+				AUTOTUNE_YAML="${APP_REPO}/spring-petclinic/autotune/autotune-http_resp_time.yaml"
+				;;
+			galaxies)
+				AUTOTUNE_YAML="${APP_REPO}/galaxies/autotune/autotune-app_resp_time.yaml"
+				;;
+			esac
+			
+			test_yaml="${yaml_dir}/${autotune_names[autotune_names_count]}.yaml"
+			sed 's/'${key}'-deployment/'${key}'-deployment-'${inst_count}'/g' ${AUTOTUNE_YAML} > ${test_yaml}
+			sed -i 's/'${key}'-autotune/'${key}'-autotune-'${inst_count}'/g' ${test_yaml}
+			((inst_count++))
+			((autotune_names_count++))
+		done
+		# Get the application pods
+		application_name=$(kubectl get pod | grep galaxies-sample-0 | grep "Running" | awk '{print $1}')
+		app_pod_names+=$(kubectl get pod | grep ${key} | grep "Running" | cut -d " " -f1| tr '\n' ' ')
+	done
+	
+	IFR=' ' read -r -a app_pod_names <<< ${app_pod_names}
+	# Add label to your application pods for autotune to monitor
+	label_pods app_pod_names label_names
+	
+	echo "yaml dir= ${yaml_dir}" | tee -a ${LOG}
+	echo -n "Applying application autotune yaml..." | tee -a ${LOG}
+	kubectl apply -f ${yaml_dir} >> ${AUTOTUNE_SETUP_LOG}
+	echo "done" | tee -a ${LOG}
+}
+
+
+# Match the old id with the new id
+function match_ids() {
+	matched_count=0
+	new_id_count=0
+	for old in "${old_id_[@]}"
+	do
+		if [ "${old}" == "${new_id_[new_id_count]}" ]; then
+			((matched_count++))
+		fi
+		((new_id_count++))
+	done
 }
