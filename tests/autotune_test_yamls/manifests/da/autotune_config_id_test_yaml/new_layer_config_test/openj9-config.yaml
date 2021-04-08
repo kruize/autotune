@@ -1,0 +1,23 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "openj9"
+layer_name: openj9
+layer_level: 0
+details: java openj9 tunables
+layerPresence:
+  # This layer is assumed to be available by default for all applications.
+  presence: always
+tunables:
+  - name: javaHeap
+    value_type: double
+    upper_bound: '250M'
+    lower_bound: '100M'
+    queries:
+      datasource:
+        - name: 'prometheus'
+          query: 'jvm_memory_used_bytes{area=\"heap\",id=\"nursery-allocate\", $POD_LABEL$="$POD$"}'
+    sla_class:
+      - response_time
+      - throughput
+      - resource_usage

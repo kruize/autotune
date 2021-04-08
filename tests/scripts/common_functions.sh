@@ -18,10 +18,10 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-pushd ${CURRENT_DIR}/.. > /dev/null
+pushd ${CURRENT_DIR}/.. >> /dev/null
 
 TEST_DIR=${PWD}
-pushd ${TEST_DIR}/..  > /dev/null
+pushd ${TEST_DIR}/..  >> /dev/null
 
 AUTOTUNE_REPO="${PWD}"
 SETUP_LOG="${TEST_DIR}/setup.log"
@@ -36,7 +36,7 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests" "autotune_id_tests")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests" "autotune_layer_config_id_tests")
 
 modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
 
@@ -145,8 +145,8 @@ function deploy_autotune() {
 	
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
-		echo "Installing Prometheus on minikube"
-		setup_prometheus
+		echo "Installing Prometheus on minikube" >>/dev/stderr
+		setup_prometheus >> ${SETUP_LOG} 2>&1
 	fi
 	
 	echo "Deploying autotune"
@@ -166,7 +166,8 @@ function deploy_autotune() {
 	status="$?"
 	# Check if autotune is deployed 
 	if [ "${status}" -eq "1" ]; then
-		echo "Error deploying autotune"
+		echo "Error deploying autotune" >>/dev/stderr
+		echo "See ${PWD}/tests/setup.log for more info" >>/dev/stderr
 		exit -1
 	fi
 }
@@ -1322,7 +1323,6 @@ function display_result() {
 	actual_flag=$3
 	((TOTAL_TESTS++))
 	((TESTS++))
-	
 	echo "Expected behaviour: ${expected_behaviour}" | tee -a ${LOG}
 	if [ "${actual_flag}" -eq "0" ]; then
 		((TESTS_PASSED++))
@@ -1336,16 +1336,6 @@ function display_result() {
 		echo "Expected behaviour not found" | tee -a ${LOG}
 		echo "Test failed" | tee -a ${LOG}
 	fi
-}
-
-# Get the autotune pod log
-# input : Log file path to store the pod information
-function get_autotune_pod_log() {
-	log=$1
-	
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	echo "${pod_log_msg}" > "${log}"
 }
 
 # Deploy the application dependencies
@@ -1403,7 +1393,6 @@ function deploy_app_dependencies() {
 	echo "done" | tee -a ${LOG}
 }
 
-
 # Match the old id with the new id
 function match_ids() {
 	matched_count=0
@@ -1415,4 +1404,14 @@ function match_ids() {
 		fi
 		((new_id_count++))
 	done
+}
+
+# Get the autotune pod log
+# input : Log file path to store the pod information
+function get_autotune_pod_log() {
+	log=$1
+
+	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	echo "${pod_log_msg}" > "${log}"
 }
