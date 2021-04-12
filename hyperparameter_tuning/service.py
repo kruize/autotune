@@ -35,6 +35,13 @@ server_port = 8085
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
+    """
+    A class used to handle the HTTP requests that arrive at the server.
+
+    The handler will parse the request and the headers, then call a method specific to the request type. The method name
+    is constructed from the request. For example, for the request method GET, the do_GET() method will be called.
+    """
+
     def _set_response(self, status_code, return_value):
         # TODO: add status_message
         self.send_response(status_code)
@@ -43,6 +50,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(return_value.encode('utf-8'))
 
     def do_POST(self):
+        """Serve a POST request."""
         if re.search(api_endpoint + "$", self.path):
             content_type, params = cgi.parse_header(self.headers.get('content-type'))
             if content_type == 'application/json':
@@ -80,6 +88,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self._set_response(403, "-1")
 
     def do_GET(self):
+        """Serve a GET request."""
         if re.search(api_endpoint, self.path):
             query = parse_qs(urlparse(self.path).query)
             if ("id" in query and "trial_number" in query and query["id"][0] in autotune_object_ids.keys() and
@@ -107,6 +116,7 @@ def get_search_create_study(id_, operation, url):
 
 
 def get_search_space(id_, url):
+    """Perform a GET request and return the search space json."""
     params = {"id": id_}
     r = requests.get(url, params)
     search_space_json = r.json()
@@ -114,18 +124,21 @@ def get_search_space(id_, url):
 
 
 def get_trial_number(id_):
+    """Return the trial number."""
     if autotune_object_ids[id_] in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
         trial_number = optuna_hpo.TrialDetails.trial_number
     return trial_number
 
 
 def get_trial_json_object(id_):
+    """Return the trial json object."""
     if autotune_object_ids[id_] in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
         trial_json_object = json.dumps(optuna_hpo.TrialDetails.trial_json_object)
     return trial_json_object
 
 
 def set_result(id_, trial_result, result_value_type, result_value):
+    """Set the details of a trial."""
     if autotune_object_ids[id_] in ("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt"):
         optuna_hpo.TrialDetails.trial_result = trial_result
         optuna_hpo.TrialDetails.result_value_type = result_value_type

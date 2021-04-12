@@ -29,6 +29,11 @@ trials = []
 
 
 class TrialDetails:
+    """
+    A class containing the details of a trial such as trial number, tunable values suggested by Optuna, status of the
+    experiment and the objective function value type and value.
+    """
+
     trial_number = -1
     trial_json_object = {}
     trial_result_received = -1
