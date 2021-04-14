@@ -59,27 +59,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 json_object = json.loads(str_object)
                 # TODO: validate structure of json_object for each operation
                 if json_object["operation"] == "EXP_TRIAL_GENERATE_NEW":
-                    if json_object["id"] not in autotune_object_ids.keys():
-                        get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
-                        trial_number = get_trial_number(json_object["id"])
-                        self._set_response(200, str(trial_number))
-                    else:
-                        self._set_response(400, "-1")
+                    self.handle_generate_new_operation(json_object)
                 elif json_object["operation"] == "EXP_TRIAL_GENERATE_SUBSEQUENT":
-                    if json_object["id"] in autotune_object_ids.keys():
-                        get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
-                        trial_number = get_trial_number(json_object["id"])
-                        self._set_response(200, str(trial_number))
-                    else:
-                        self._set_response(400, "-1")
+                    self.handle_generate_subsequent_operation(json_object)
                 elif json_object["operation"] == "EXP_TRIAL_RESULT":
-                    if (json_object["id"] in autotune_object_ids.keys() and
-                            json_object["trial_number"] == get_trial_number(json_object["id"])):
-                        set_result(json_object["id"], json_object["trial_result"], json_object["result_value_type"],
-                                   json_object["result_value"])
-                        self._set_response(200, "0")
-                    else:
-                        self._set_response(400, "-1")
+                    self.handle_result_operation(json_object)
                 else:
                     self._set_response(400, "-1")
             else:
@@ -99,6 +83,34 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self._set_response(404, "-1")
         else:
             self._set_response(403, "-1")
+
+    def handle_generate_new_operation(self, json_object):
+        """Process EXP_TRIAL_GENERATE_NEW operation."""
+        if json_object["id"] not in autotune_object_ids.keys():
+            get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
+            trial_number = get_trial_number(json_object["id"])
+            self._set_response(200, str(trial_number))
+        else:
+            self._set_response(400, "-1")
+
+    def handle_generate_subsequent_operation(self, json_object):
+        """Process EXP_TRIAL_GENERATE_SUBSEQUENT operation."""
+        if json_object["id"] in autotune_object_ids.keys():
+            get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
+            trial_number = get_trial_number(json_object["id"])
+            self._set_response(200, str(trial_number))
+        else:
+            self._set_response(400, "-1")
+
+    def handle_result_operation(self, json_object):
+        """Process EXP_TRIAL_RESULT operation."""
+        if (json_object["id"] in autotune_object_ids.keys() and
+                json_object["trial_number"] == get_trial_number(json_object["id"])):
+            set_result(json_object["id"], json_object["trial_result"], json_object["result_value_type"],
+                       json_object["result_value"])
+            self._set_response(200, "0")
+        else:
+            self._set_response(400, "-1")
 
 
 def get_search_create_study(id_, operation, url):
