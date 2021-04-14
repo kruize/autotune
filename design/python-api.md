@@ -27,8 +27,8 @@ The Python REST API design is as follows:
     | Status code | Response body |
     | --- | --- |
     | 200 | trial_number |
-    | 400 | 1 |
-    | 403 | 1 |
+    | 400 | -1 |
+    | 403 | -1 |
 
 -   Send result of a trial to Python.
     
@@ -56,8 +56,8 @@ The Python REST API design is as follows:
     | Status code | Response body |
     | --- | --- |
     | 200 | 1 |
-    | 400 | 1 |
-    | 403 | 1 |
+    | 400 | -1 |
+    | 403 | -1 |
 
 -   Get trial JSON object.
     
@@ -65,7 +65,7 @@ The Python REST API design is as follows:
     
     Example Request:
     
-    `curl -H 'Accept: application/json' http://<URL>:<PORT>/experiment_trials?id='sha256sum'&trial_number=0`
+    `curl -H 'Accept: application/json' 'http://<URL>:<PORT>/experiment_trials?id=sha256sum&trial_number=0'`
     
     Example Response:
     
