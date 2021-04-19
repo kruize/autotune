@@ -14,45 +14,49 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.experimentmanager.fsm.api;
-
-import java.util.Date;
-
-import com.autotune.experimentmanager.utils.EMUtils;
-
+package com.autotune.experimentManager.finiteStateMachine.api;
 /**
- * This class sets the default name and timestamp.
+ * Experiment manager Finite state is used to create to uniquely identify the sate.
  * @author Bipin Kumar
+ *
  */
+public class EMState {
 
-public abstract class EMAbstractEvent implements EMEvent {
+    /*
+     * States have unique name within a Easy States FSM instance
+     */
+    private final String name;
 
-    protected String name;
-    protected long timestamp;
-
-    protected EMAbstractEvent() {
-        this.name = EMUtils.DEFAULT_EVENT_NAME;
-        timestamp = System.currentTimeMillis();
-    }
-
-    protected EMAbstractEvent(final String name) {
+    /**
+     * Create a new {@link EMState}.
+     *
+     * @param name of the state
+     */
+    public EMState(final String name) {
         this.name = name;
-        timestamp = System.currentTimeMillis();
     }
 
-    public String getEMEventName() {
+    /**
+     * Get state name.
+     * @return state name
+     */
+    public String getName() {
         return name;
     }
 
-    public long getEMEventTimestamp() {
-        return timestamp;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EMState state = (EMState) o;
+
+        return name.equals(state.name);
+
     }
 
     @Override
-    public String toString() {
-        return "Event" +
-                "{name='" + name + '\'' +
-                ", timestamp=" + new Date(timestamp) +
-                '}';
+    public int hashCode() {
+        return name.hashCode();
     }
 }

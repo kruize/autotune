@@ -14,26 +14,24 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.experimentmanager.fsm.api;
+package com.autotune.experimentManager.finiteStateMachine.api;
+
+import com.autotune.experimentManager.finiteStateMachine.api.EMEvent;
 
 /**
- * This is a top level interface for Autotune Finite state machine.
+ * Top level Handler for Autotune finite state machine
+ * Each sub class implementation should implement the handleEvent() method
+ * provide the business logic on a particular event.
  * @author Bipin Kumar
+ *
  */
 
-public interface EMEvent {
-
+public interface EMEventHandler<E extends EMEvent> {
     /**
-     * Name of the experiment manager event.
-     *
-     * @return event name of experiment manager
+     * Event Handler method to execute when an event occurs in the experiment manager.
+     * @param event the triggered event
+     * @throws Exception thrown if a problem occurs during action performing
      */
-    String getEMEventName();
 
-    /**
-     * Timestamp of the event.
-     *
-     * @return event timestamp
-     */
-    long getEMEventTimestamp();
+    void handleEvent(E event) throws Exception;
 }
