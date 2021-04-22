@@ -18,14 +18,14 @@ package com.autotune.experimentManager.utils;
 
 /**
  * Utility class for keeping the experiment manager specific constants, common code, utility functions etc.
- * @author Bipin Kumar
  */
 
 public final class EMUtils {
+
     private EMUtils() {
 
     }
 
     public static final String DEFAULT_EVENT_NAME = "event";
-
+    public static final String DEFAULT_TRANSITION_NAME = "transition";
 }

@@ -18,7 +18,6 @@ package com.autotune.experimentManager.finiteStateMachine.api;
 
 /**
  * This is a top level interface for Autotune Finite state machine.
- * @author Bipin Kumar
  */
 
 public interface EMEvent {

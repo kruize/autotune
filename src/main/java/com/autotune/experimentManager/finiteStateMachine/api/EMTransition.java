@@ -22,8 +22,6 @@ import com.autotune.experimentManager.finiteStateMachine.api.EMEvent;
 
 /**
  * EMTransition create a transition from one state to other state.
- * @author Bipin Kumar
- *
  */
 
 public interface EMTransition {

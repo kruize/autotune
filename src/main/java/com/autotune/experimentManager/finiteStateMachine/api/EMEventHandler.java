@@ -22,8 +22,6 @@ import com.autotune.experimentManager.finiteStateMachine.api.EMEvent;
  * Top level Handler for Autotune finite state machine
  * Each sub class implementation should implement the handleEvent() method
  * provide the business logic on a particular event.
- * @author Bipin Kumar
- *
  */
 
 public interface EMEventHandler<E extends EMEvent> {
