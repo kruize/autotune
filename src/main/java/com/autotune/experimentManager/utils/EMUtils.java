@@ -22,10 +22,11 @@ package com.autotune.experimentManager.utils;
  */
 
 public final class EMUtils {
+
     private EMUtils() {
 
     }
 
     public static final String DEFAULT_EVENT_NAME = "event";
-
+    public static final String DEFAULT_TRANSITION_NAME = "transition";
 }
