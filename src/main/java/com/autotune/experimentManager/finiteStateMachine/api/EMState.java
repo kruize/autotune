@@ -17,8 +17,6 @@
 package com.autotune.experimentManager.finiteStateMachine.api;
 /**
  * Experiment manager Finite state is used to create to uniquely identify the sate.
- * @author Bipin Kumar
- *
  */
 public class EMState {
 

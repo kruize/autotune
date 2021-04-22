@@ -16,9 +16,12 @@
 
 package com.autotune.experimentManager.utils;
 
+import com.autotune.experimentManager.finiteStateMachine.api.EMState;
+
+import java.util.Set;
+
 /**
  * Utility class for keeping the experiment manager specific constants, common code, utility functions etc.
- * @author Bipin Kumar
  */
 
 public final class EMUtils {
@@ -29,4 +32,12 @@ public final class EMUtils {
 
     public static final String DEFAULT_EVENT_NAME = "event";
     public static final String DEFAULT_TRANSITION_NAME = "transition";
+
+    public static String dumpFSMStates(final Set<EMState> states) {
+        StringBuilder result = new StringBuilder();
+        for (EMState state : states) {
+            result.append(state.getName()).append(";");
+        }
+        return result.toString();
+    }
 }

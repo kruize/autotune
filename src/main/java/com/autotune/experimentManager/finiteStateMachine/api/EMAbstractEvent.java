@@ -22,7 +22,6 @@ import com.autotune.experimentManager.utils.EMUtils;
 
 /**
  * This class sets the default name and timestamp.
- * @author Bipin Kumar
  */
 
 public abstract class EMAbstractEvent implements EMEvent {
