@@ -40,9 +40,39 @@
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Modify the layer config and apply
-  - Validate if the modified config is reflected in the JSON output from listAutotuneTunables Autotune API  
+  - Validate if the modified config is reflected in the JSON output from listAutotuneTunables Autotune API
 
+- **ConfigMap yaml tests**
 
+  Here we modify the configmap yaml and validate if the behaviour is reflected in autotune. We also check if autotune identifies invalid configurations well by giving out appropriate error messages to the users.
+  The test does the following:
+  - Modify the configmap yaml
+  - Deploys autotune and its dependencies using the deploy script from the autotune repo
+  - Checks if autotune validates the configmap yaml
+  
+- **Autotune object id tests**
+
+  Here we validate the autotune object id for different scenarios.
+  The test does the following:
+  - Deploys autotune and its dependencies using the deploy script from the autotune repo
+  - Deploys benchmark applications and requried application autotune yamls
+  - Validate autotune id for following scenarios:
+  	1. Check the uniqueness of the autotune object ids
+  	2. Check if re-applying the autotune object without modifying yaml changes the autotune object id
+  	3. Update and apply the application autotune yaml and compare the ids
+  	4. Deploy multiple applications and check if the autotune object ids are unique
+    
+- **Autotune layer config object id tests**
+
+  Here we validate the autotune layer config object id for different scenarios.
+  The test does the following:
+  - Deploys autotune and its dependencies using the deploy script from the autotune repo
+  - Validate autotune layer config id for following scenarios:
+  	1. Check the uniqueness of the autotune layer config ids
+  	2. Re-apply the layer config without modifying yaml and check if both the ids are same
+  	3. Update and apply the layer config yaml and compare the ids
+  	4. Apply new layer config and validate the id
+  
 ## Supported Clusters
 - Minikube
 

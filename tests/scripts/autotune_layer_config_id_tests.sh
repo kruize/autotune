@@ -77,7 +77,7 @@ function autotune_layer_config_id_tests() {
 	# Remove the duplicates
 	FAILED_CASES=( $(printf '%s\n' "${FAILED_CASES[@]}" | uniq ) )
 	
-	# print the testsuite summary
+	# Print the testsuite summary
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES} 
 }
 
@@ -96,7 +96,7 @@ function get_config_id() {
 	done
 	config_id="${layer_config_id[test_name]}"
 	
-	# convert config_id into an array
+	# Convert config_id into an array
 	IFS=' ' read -r -a config_id <<<  ${config_id}
 }
 
@@ -377,17 +377,17 @@ function perform_layer_config_id_test() {
 	validate_autotune_tunables_api ${test_}
 }
 
-# Test to check the uniqueness of the autotune object ids
+# Test to check the uniqueness of the autotune layer config object ids
 function check_uniqueness_test() {
 	perform_layer_config_id_test ${FUNCNAME}
 }
 
-# Test to check if re-applying the autotune object without modifying yaml, changes the autotune object id
+# Re-apply the layer config without modifying yaml and check if both the ids are same
 function re_apply_config_test() {
 	perform_layer_config_id_test ${FUNCNAME}
 }
 
-# Update and apply the application autotune yaml and compare the ids
+# Update and apply the layer config yaml and compare the ids
 function update_layer_config_yaml_test() {
 	# copy the config yamls 
 	config_yaml="${TEST_SUITE_DIR}/${FUNCNAME}/yamls"
@@ -397,7 +397,7 @@ function update_layer_config_yaml_test() {
 	perform_layer_config_id_test ${FUNCNAME}
 }
 
-# Deploy multiple applications and check if the autotune object ids are unique
+# Apply new layer config and validate the id
 function new_layer_config_test() {
 	new_config_yaml="${autotune_dir}/tests/autotune_test_yamls/manifests/da/autotune_config_id_test_yaml/new_layer_config_test/openj9-config.yaml"
 	perform_layer_config_id_test ${FUNCNAME}
