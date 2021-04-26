@@ -14,29 +14,31 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.experimentManager.finiteStateMachine.api;
+package com.autotune.experimentManager.finiteStateMachine.events;
 
+import com.autotune.experimentManager.finiteStateMachine.api.EMAbstractEvent;
 import com.autotune.experimentManager.finiteStateMachine.objects.ExperimentTrialObject;
 
 /**
- * This is a top level interface for Autotune Finite state machine.
+ * RecommendedConfigReceiveEvent trigger when recommendation manager send the recommended tunnables configuration
+ * to experiment manager.
  */
 
-public interface EMEvent {
+public class RecommendedConfigReceiveEvent extends EMAbstractEvent {
+    private ExperimentTrialObject data;
 
-    /**
-     * Name of the experiment manager event.
-     *
-     * @return event name of experiment manager
-     */
-    String getEMEventName();
+    public RecommendedConfigReceiveEvent(ExperimentTrialObject data) {
+        super("ConfigurationReceiveEvent");
+        this.data = data;
 
-    /**
-     * Timestamp of the event.
-     *
-     * @return event timestamp
-     */
-    long getEMEventTimestamp();
+    }
 
-    ExperimentTrialObject getData();
+    public RecommendedConfigReceiveEvent(String name) {
+        super(name);
+    }
+
+    @Override
+    public ExperimentTrialObject getData() {
+        return this.data;
+    }
 }

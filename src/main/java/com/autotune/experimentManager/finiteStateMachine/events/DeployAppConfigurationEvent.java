@@ -14,29 +14,30 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.experimentManager.finiteStateMachine.api;
+package com.autotune.experimentManager.finiteStateMachine.events;
 
+import com.autotune.experimentManager.finiteStateMachine.api.EMAbstractEvent;
 import com.autotune.experimentManager.finiteStateMachine.objects.ExperimentTrialObject;
 
 /**
- * This is a top level interface for Autotune Finite state machine.
+ * DeployAppConfigurationEvent trigger when you would like to create a deployment of the configuration received from the
+ * recommendation manager.
  */
 
-public interface EMEvent {
+public class DeployAppConfigurationEvent extends EMAbstractEvent {
+    private ExperimentTrialObject data;
 
-    /**
-     * Name of the experiment manager event.
-     *
-     * @return event name of experiment manager
-     */
-    String getEMEventName();
+    public DeployAppConfigurationEvent(ExperimentTrialObject data) {
+        super("DeployConfigurationEvent");
+        this.data = data;
+    }
 
-    /**
-     * Timestamp of the event.
-     *
-     * @return event timestamp
-     */
-    long getEMEventTimestamp();
+    public DeployAppConfigurationEvent(String name) {
+        super(name);
+    }
 
-    ExperimentTrialObject getData();
+    @Override
+    public ExperimentTrialObject getData() {
+        return data;
+    }
 }
