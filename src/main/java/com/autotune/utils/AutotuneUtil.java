@@ -16,8 +16,18 @@
 
 package com.autotune.utils;
 
+import org.json.JSONObject;
+
+import javax.net.ssl.HttpsURLConnection;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * This is a Utility class at the Autotune level for common constants, functions etc.
@@ -52,5 +62,31 @@ public final class AutotuneUtil {
 		}
 		Matcher matcher = URL_PATTERN.matcher(url);
 		return matcher.matches();
+	}
+
+	public static JSONObject retriveDataFromURL(String httpsURL) {
+		JSONObject jsonObj = null;
+		if (!isValidURL(httpsURL)) {
+			System.out.println("URL is not valid or null.");
+			return null;
+		}
+		try {
+			URL myUrl = new URL(httpsURL);
+			HttpsURLConnection conn = (HttpsURLConnection) myUrl.openConnection();
+			InputStream inStream = conn.getInputStream();
+
+			if (inStream == null) {
+				throw new IllegalArgumentException("file not found! ");
+			} else {
+				String inputJsonStr = new BufferedReader(new InputStreamReader(inStream, StandardCharsets.UTF_8))
+						.lines().collect(Collectors.joining("\n"));
+
+				jsonObj = new JSONObject(inputJsonStr);
+			}
+
+		} catch (IOException e) {
+
+		}
+		return jsonObj;
 	}
 }
