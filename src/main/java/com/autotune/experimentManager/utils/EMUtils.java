@@ -30,6 +30,16 @@ public final class EMUtils {
 
     }
 
+    // experiment manager finite state machine states
+    public enum EMFSMStates {
+        RECOMMENDED_CONFIG_STATE, DEPLOYED_RECOMMENDED_CONFIG_STATE, LOAD_APPEARING_STATE, COLLECT_MATRIX_STATE, BENCH_MARK_RESULT_STATE, USER_RESPONSE_STATE
+    }
+
+    // experiment manager transmission
+    public enum EMFSMTransition {
+        RECOMMENDED_CONFIG_TRANS, DEPLOYED_RECOMMENDED_CONFIG_TRANS, LOAD_APPEARING_TRANS, COLLECT_MATRIX_TRANS, BENCH_MARK_RESULT_TRANS, USER_RESPONSE_TRANS
+    }
+
     public static final String DEFAULT_EVENT_NAME = "event";
     public static final String DEFAULT_TRANSITION_NAME = "transition";
     public static String NAMESPACE="default";
