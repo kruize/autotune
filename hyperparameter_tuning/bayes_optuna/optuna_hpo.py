@@ -17,6 +17,7 @@ limitations under the License.
 import optuna
 
 import os
+import time
 
 from logger import get_logger
 
@@ -43,8 +44,9 @@ class TrialDetails:
 
 
 def perform_experiment():
+    # Loop to be replaced by a queueing mechanism to determine if the result has been received
     while TrialDetails.trial_result_received == -1:
-        continue
+        time.sleep(10)
     return TrialDetails.result_value, TrialDetails.trial_result
 
 
