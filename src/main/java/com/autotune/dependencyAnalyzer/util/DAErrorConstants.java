@@ -30,6 +30,7 @@ public class DAErrorConstants
 		public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
 		public static final String INVALID_SLA_CLASS = "Invalid sla_class for tunable ";
 		public static final String TUNABLE_NAME_EMPTY = "Tunable name cannot be empty";
+		public static final String ZERO_STEP = "Tunable step cannot be 0";
 	}
 
 	public static class AutotuneObjectErrors {
@@ -41,5 +42,6 @@ public class DAErrorConstants
 		public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
 		public static final String MODE_NOT_SUPPORTED = "Autotune object mode not supported\n";
+		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm not supported\n";
 	}
 }
