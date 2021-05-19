@@ -58,7 +58,7 @@ function autotune_config_yaml_tests() {
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 	
 	# Summary of the test suite
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
+	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
 	
 	# Check if any test failed in the testsuite if so add the testsuite to FAILED_TEST_SUITE array
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
