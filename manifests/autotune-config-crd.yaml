@@ -97,7 +97,7 @@ spec:
                   description: 'Upper bound of the recommendations generated for the tunable'
                   type: number
                 lower_bound:
-                  description: 'Upper bound of the recommendations generated for the tunable'
+                  description: 'Lower bound of the recommendations generated for the tunable'
                   type: number
                 value_type:
                   description: 'Value type of the query response (double, string, int)'

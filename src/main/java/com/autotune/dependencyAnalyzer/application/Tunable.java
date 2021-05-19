@@ -29,9 +29,9 @@ import java.util.Objects;
  * Example:
  * - name: <Tunable>
  *   value_type: double
- *   upper_bound: '4.0'
- *   lower_bound: '2.0'
- *   step: '0.01'
+ *   upper_bound: 4.0
+ *   lower_bound: 2.0
+ *   step: 0.01
  *   queries:
  *     datasource:
  *     - name: 'prometheus'
@@ -68,12 +68,22 @@ public class Tunable
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
-		this.step = step;
+		this.step = Objects.requireNonNull(step, "step cannot be null");
 
-		if (upperBound > 0 && lowerBound >= 0) {
-			this.lowerBound = lowerBound;
-			this.upperBound = upperBound;
-		} else throw new InvalidBoundsException();
+		/*
+		 * Bounds cannot be negative.
+		 * upperBound has to be greater than lowerBound.
+		 * step has to be lesser than or equal to the difference between the two bounds.
+		 */
+		if (upperBound < 0 ||
+			lowerBound < 0 ||
+			lowerBound >= upperBound ||
+			step > (upperBound - lowerBound)
+		   ) {
+			throw new InvalidBoundsException();
+		}
+		this.lowerBound = lowerBound;
+		this.upperBound = upperBound;
 	}
 
 	public Tunable(Tunable copy) {
