@@ -29,8 +29,9 @@ import java.util.Objects;
  * Example:
  * - name: <Tunable>
  *   value_type: double
- *   upper_bound: '4.0'
- *   lower_bound: '2.0'
+ *   upper_bound: 4.0
+ *   lower_bound: 2.0
+ *   step: 0.01
  *   queries:
  *     datasource:
  *     - name: 'prometheus'
@@ -42,9 +43,10 @@ import java.util.Objects;
 public class Tunable
 {
 	private String name;
-	private String upperBound;
-	private String lowerBound;
+	private double step;
 	private String valueType;
+	private double upperBound;
+	private double lowerBound;
 	private String description;
 	private Map<String, String> queries;
 
@@ -56,8 +58,9 @@ public class Tunable
 	public ArrayList<String> slaClassList;
 
 	public Tunable(String name,
-				   String upperBound,
-				   String lowerBound,
+				   double step,
+				   double upperBound,
+				   double lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> slaClassList) throws InvalidBoundsException {
@@ -65,15 +68,27 @@ public class Tunable
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
 		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
+		this.step = Objects.requireNonNull(step, "step cannot be null");
 
-		if (upperBound != null && lowerBound != null) {
-			this.lowerBound = lowerBound;
-			this.upperBound = upperBound;
-		} else throw new InvalidBoundsException();
+		/*
+		 * Bounds cannot be negative.
+		 * upperBound has to be greater than lowerBound.
+		 * step has to be lesser than or equal to the difference between the two bounds.
+		 */
+		if (upperBound < 0 ||
+			lowerBound < 0 ||
+			lowerBound >= upperBound ||
+			step > (upperBound - lowerBound)
+		   ) {
+			throw new InvalidBoundsException();
+		}
+		this.lowerBound = lowerBound;
+		this.upperBound = upperBound;
 	}
 
 	public Tunable(Tunable copy) {
 		this.name = copy.name;
+		this.step = copy.step;
 		this.upperBound = copy.upperBound;
 		this.lowerBound = copy.lowerBound;
 		this.valueType = copy.valueType;
@@ -93,19 +108,19 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public String getUpperBound() {
+	public double getUpperBound() {
 		return upperBound;
 	}
 
-	public void setUpperBound(String upperBound) {
+	public void setUpperBound(double upperBound) {
 		this.upperBound = upperBound;
 	}
 
-	public String getLowerBound() {
+	public double getLowerBound() {
 		return lowerBound;
 	}
 
-	public void setLowerBound(String lowerBound) {
+	public void setLowerBound(double lowerBound) {
 			this.lowerBound = lowerBound;
 	}
 
@@ -144,15 +159,24 @@ public class Tunable
 		this.slaClassList = slaClassList;
 	}
 
+	public double getStep() {
+		return step;
+	}
+
+	public void setStep(double step) {
+		this.step = step;
+	}
+
 	@Override
 	public String toString() {
 		return "Tunable{" +
 				"name='" + name + '\'' +
+				", step=" + step +
+				", valueType='" + valueType + '\'' +
 				", upperBound='" + upperBound + '\'' +
 				", lowerBound='" + lowerBound + '\'' +
-				", valueType='" + valueType + '\'' +
 				", description='" + description + '\'' +
-				", queries='" + queries + '\'' +
+				", queries=" + queries +
 				", slaClassList=" + slaClassList +
 				'}';
 	}

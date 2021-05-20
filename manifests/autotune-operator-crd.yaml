@@ -62,6 +62,9 @@ spec:
                       - name
                       - query
                       - value_type
+                  hpo_algo_impl:
+                    description: 'HPO algorithm to use'
+                    type: string
                 required:
                 - objective_function
                 - direction

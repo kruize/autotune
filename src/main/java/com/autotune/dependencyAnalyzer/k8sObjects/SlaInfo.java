@@ -28,6 +28,7 @@ import java.util.ArrayList;
  *     objective_function: "transaction_response_time"
  *     sla_class: "response_time"
  *     direction: "minimize"
+ *     hpo_algo_impl: "optuna_tpe"
  *     function_variables:
  *     - name: "transaction_response_time"
  *       query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
@@ -43,11 +44,13 @@ public final class SlaInfo
 	private final String slaClass;
 	private final String objectiveFunction;
 	private final String direction;
+	private final String hpoAlgoImpl;
 	private final ArrayList<FunctionVariable> functionVariables;
 
 	public SlaInfo(String slaClass,
 		String objectiveFunction,
 		String direction,
+		String hpoAlgoImpl,
 		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
 		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
 			this.slaClass = slaClass;
@@ -57,7 +60,13 @@ public final class SlaInfo
 
 		if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
 			this.direction = direction;
-		else throw new InvalidValueException("Invalid direction for autotune kind");
+		else
+			throw new InvalidValueException("Invalid direction for autotune kind");
+
+		if (AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
+			this.hpoAlgoImpl = hpoAlgoImpl;
+		else
+			throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
 
 		this.functionVariables = new ArrayList<>(functionVariables);
 	}
@@ -66,6 +75,7 @@ public final class SlaInfo
 		this.slaClass = copy.getSlaClass();
 		this.objectiveFunction = copy.getObjectiveFunction();
 		this.direction = copy.getDirection();
+		this.hpoAlgoImpl = copy.getHpoAlgoImpl();
 
 		this.functionVariables = new ArrayList<>(copy.getFunctionVariables());
 
@@ -87,12 +97,17 @@ public final class SlaInfo
 		return new ArrayList<>(functionVariables);
 	}
 
+	public String getHpoAlgoImpl() {
+		return hpoAlgoImpl;
+	}
+
 	@Override
 	public String toString() {
 		return "SlaInfo{" +
 				"slaClass='" + slaClass + '\'' +
 				", objectiveFunction='" + objectiveFunction + '\'' +
 				", direction='" + direction + '\'' +
+				", hpoAlgoImpl='" + this.hpoAlgoImpl + '\'' +
 				", functionVariables=" + functionVariables +
 				'}';
 	}

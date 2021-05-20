@@ -80,6 +80,9 @@ public class DAConstants
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
 		public static final String ID = "id";
+		public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
+
+		public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
 	}
 
 	/**
@@ -117,6 +120,7 @@ public class DAConstants
 		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
 		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
 		public static final String ID = "id";
+		public static final String STEP = "step";
 	}
 
 	/**

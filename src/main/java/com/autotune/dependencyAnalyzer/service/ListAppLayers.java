@@ -121,6 +121,7 @@ public class ListAppLayers extends HttpServlet
 		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
