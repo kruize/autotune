@@ -17,8 +17,8 @@ limitations under the License.
 import optuna
 
 import os
+import time
 
-from experiment import perform_experiment
 from logger import get_logger
 
 n_trials = int(os.getenv("N_TRIALS"))
@@ -29,7 +29,28 @@ logger = get_logger(__name__)
 trials = []
 
 
-class Objective(object):
+class TrialDetails:
+    """
+    A class containing the details of a trial such as trial number, tunable values suggested by Optuna, status of the
+    experiment and the objective function value type and value.
+    """
+
+    trial_number = -1
+    trial_json_object = {}
+    trial_result_received = -1
+    trial_result = ""
+    result_value_type = ""
+    result_value = 0
+
+
+def perform_experiment():
+    # Loop to be replaced by a queueing mechanism to determine if the result has been received
+    while TrialDetails.trial_result_received == -1:
+        time.sleep(10)
+    return TrialDetails.result_value, TrialDetails.trial_result
+
+
+class Objective(TrialDetails):
     """
     A class used to define search space and return the actual sla value.
 
@@ -45,6 +66,8 @@ class Objective(object):
 
         experiment_tunables = []
         config = {}
+
+        TrialDetails.trial_number += 1
 
         # Define search space
         for tunable in self.tunables:
@@ -65,7 +88,11 @@ class Objective(object):
 
         logger.debug("Experiment tunables: " + str(experiment_tunables))
 
-        actual_sla_value, experiment_status = perform_experiment(experiment_tunables)
+        TrialDetails.trial_json_object = experiment_tunables
+
+        actual_sla_value, experiment_status = perform_experiment()
+
+        TrialDetails.trial_result_received = -1
 
         config["experiment_status"] = experiment_status
 
@@ -78,7 +105,7 @@ class Objective(object):
         return actual_sla_value
 
 
-def recommend(application_name, direction, hpo_algo_impl, id, objective_function, tunables, value_type):
+def recommend(application_name, direction, hpo_algo_impl, id_, objective_function, tunables, value_type):
     """
     Perform Bayesian Optimization with Optuna using the appropriate sampler and recommend the best config.
 
@@ -86,7 +113,7 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
         application_name (str): The name of the application that is being optimized.
         direction (str): Direction of optimization, minimize or maximize.
         hpo_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
-        id (str): The id of the application that is being optimized.
+        id_ (str): The id of the application that is being optimized.
         objective_function (str): The objective function that is being optimized.
         tunables (list): A list containing the details of each tunable in a dictionary format.
         value_type (string): Value type of the objective function.
@@ -112,6 +139,8 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
     # Execute an optimization by using an 'Objective' instance
     study.optimize(Objective(tunables), n_trials=n_trials, n_jobs=n_jobs)
 
+    TrialDetails.trial_number = -1
+
     # Get the best parameter
     logger.info("Best parameter: " + str(study.best_params))
     # Get the best value
@@ -121,6 +150,7 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
 
     logger.debug("All trials: " + str(trials))
 
+    # recommended_config (json): A JSON containing the recommended config.
     recommended_config = {}
 
     optimal_value = {"objective_function": {
@@ -141,7 +171,7 @@ def recommend(application_name, direction, hpo_algo_impl, id, objective_function
             }
         )
 
-    recommended_config["id"] = id
+    recommended_config["id"] = id_
     recommended_config["application_name"] = application_name
     recommended_config["direction"] = direction
     recommended_config["optimal_value"] = optimal_value

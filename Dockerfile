@@ -76,7 +76,7 @@ RUN microdnf -y install shadow-utils \
 USER 1001
 
 # Install optuna to the default user
-RUN python3 -m pip install --user optuna scikit-optimize
+RUN python3 -m pip install --user optuna requests scikit-optimize
 
 # Copy ML hyperparameter tuning code
 COPY --chown=1001:0 hyperparameter_tuning /opt/app/hyperparameter_tuning/
