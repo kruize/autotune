@@ -11,8 +11,8 @@ layerPresence:
 tunables:
   - name: javaHeap
     value_type: double
-    upper_bound: '250M'
-    lower_bound: '100M'
+    upper_bound: 250
+    lower_bound: 100
     queries:
       datasource:
         - name: 'prometheus'
