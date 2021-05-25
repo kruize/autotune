@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune;
 
-import com.autotune.dependencyAnalyzer.DependencyAnalyzer;
-import com.autotune.dependencyAnalyzer.util.ServerContext;
+import com.autotune.analyzer.analyzer;
+import com.autotune.analyzer.utils.ServerContext;
 import com.autotune.service.HealthService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -41,7 +41,7 @@ public class Autotune
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		DependencyAnalyzer.start(context);
+		analyzer.start(context);
 		try {
 			server.start();
 		} catch (Exception e) {

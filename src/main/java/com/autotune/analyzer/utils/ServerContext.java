@@ -13,39 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.queue;
-
-import java.util.concurrent.BlockingQueue;
+package com.autotune.analyzer.utils;
 
 /**
- * AutotuneQueueImpl is default implementation of the AutotuneQueue contracts
- * @author bipkumar
- *
+ * Holds the server context of the dependency analyzer.
  */
-public abstract class AutotuneQueueImpl implements AutotuneQueue {
-	
-	protected BlockingQueue<AutotuneDTO> queue = null;
-	protected String name = "";
-	
-	@Override
-	public boolean send(AutotuneDTO data) throws InterruptedException {
-		if (queue != null) {
-			return queue.offer(data);
-		}
-			
-		return false;
-	}
-
-	@Override
-	public AutotuneDTO get() throws InterruptedException {
-		if (queue != null)
-			return queue.take();
-		
-		return null;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
+public class ServerContext
+{
+	public static final String ROOT_CONTEXT = "/";
+	public static final String LIST_APPLICATIONS = ROOT_CONTEXT + "listApplications";
+	public static final String LIST_APP_LAYERS = ROOT_CONTEXT + "listAppLayers";
+	public static final String LIST_APP_TUNABLES = ROOT_CONTEXT + "listAppTunables";
+	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
+	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
 }

@@ -13,39 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.queue;
+package com.autotune.analyzer.exceptions;
 
-import java.util.concurrent.BlockingQueue;
-
-/**
- * AutotuneQueueImpl is default implementation of the AutotuneQueue contracts
- * @author bipkumar
- *
- */
-public abstract class AutotuneQueueImpl implements AutotuneQueue {
-	
-	protected BlockingQueue<AutotuneDTO> queue = null;
-	protected String name = "";
-	
-	@Override
-	public boolean send(AutotuneDTO data) throws InterruptedException {
-		if (queue != null) {
-			return queue.offer(data);
-		}
-			
-		return false;
+public class K8sTypeNotSupportedException extends Throwable
+{
+	public K8sTypeNotSupportedException() {
 	}
 
-	@Override
-	public AutotuneDTO get() throws InterruptedException {
-		if (queue != null)
-			return queue.take();
-		
-		return null;
-	}
-
-	@Override
-	public String getName() {
-		return name;
+	public K8sTypeNotSupportedException(String message) {
+		super(message);
 	}
 }

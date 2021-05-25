@@ -18,8 +18,8 @@ package com.autotune.queue;
 import java.io.Serializable;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.autotune.utils.AutotuneUtil;
-import com.autotune.utils.AutotuneUtil.QueueName;
+import com.autotune.utils.AutotuneUtils;
+import com.autotune.utils.AutotuneUtils.QueueName;
 
 /**
  * ExpMgrQueue is singleton concrete implementation of AutotuneQueue for Experiment Manager
@@ -34,7 +34,7 @@ public class ExperimentManagerQueue extends AutotuneQueueImpl implements Seriali
 	private ExperimentManagerQueue()
 	{
 		name = QueueName.EXPMGRQUEUE.name();
-		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtil.INITIAL_QUEUE_CAPACITY);
+		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtils.INITIAL_QUEUE_CAPACITY);
 	}
 
 	public static ExperimentManagerQueue getInstance()
