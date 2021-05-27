@@ -1,0 +1,75 @@
+{
+   "trials": {
+      "id": "101383821",
+      "app-version": "v1",
+      "deployment_name": "petclinic-sample-0",
+      "trial_num": 1,
+      "trial_run": "15mins",
+      "trial_measurement_time": "3mins",
+      "metrics": [
+         {
+            "name": "obj_fun_var1",
+            "query": "obj_fun_var1_query",
+            "datasource": "prometheus"
+         },
+         {
+            "name": "obj_fun_var2",
+            "query": "obj_fun_var2_query",
+            "datasource": "prometheus"
+         },
+         {
+            "name": "obj_fun_var3",
+            "query": "obj_fun_var3_query",
+            "datasource": "prometheus"
+         },
+         {
+            "name": "cpuRequest",
+            "query": "cpuRequest_query",
+            "datasource": "prometheus"
+         },
+         {
+            "name": "memRequest",
+            "query": "memRequest_query",
+            "datasource": "prometheus"
+         }
+      ],
+      "update_config": [
+         {
+            "name": "update requests and limits",
+            "spec": {
+               "template": {
+                  "spec": {
+                     "container": {
+                        "resources": {
+                           "requests": {
+                              "cpu": 2,
+                              "memory": "512Mi"
+                           },
+                           "limits": {
+                              "cpu": 3,
+                              "memory": "1024Mi"
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         },
+         {
+            "name": "update env",
+            "spec": {
+               "template": {
+                  "spec": {
+                     "container": {
+                        "env": {
+                           "JVM_OPTIONS": "-XX:MaxInlineLevel=23",
+                           "JVM_ARGS": "-XX:MaxInlineLevel=23"
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      ]
+   }
+}
