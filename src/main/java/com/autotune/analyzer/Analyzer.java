@@ -24,7 +24,7 @@ import com.autotune.analyzer.services.*;
 import com.autotune.analyzer.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class analyzer
+public class Analyzer
 {
 	public static void start(ServletContextHandler contextHandler) {
 		try {
