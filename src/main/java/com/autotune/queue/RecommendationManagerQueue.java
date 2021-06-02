@@ -18,8 +18,8 @@ package com.autotune.queue;
 import java.io.Serializable;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.autotune.utils.AutotuneUtil;
-import com.autotune.utils.AutotuneUtil.QueueName;
+import com.autotune.utils.AutotuneUtils;
+import com.autotune.utils.AutotuneUtils.QueueName;
 /**
  * RecMgrQueue is singleton concrete implementation of AutotuneQueue for Recommendation Manager.
  * @author bipkumar
@@ -33,7 +33,7 @@ public class RecommendationManagerQueue extends AutotuneQueueImpl implements Ser
 	private RecommendationManagerQueue()
 	{
 		name = QueueName.RECMGRQUEUE.name();
-		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtil.INITIAL_QUEUE_CAPACITY);
+		queue = new LinkedBlockingQueue<AutotuneDTO>(AutotuneUtils.INITIAL_QUEUE_CAPACITY);
 	}
 
 	public static RecommendationManagerQueue getInstance()

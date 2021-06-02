@@ -13,39 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.queue;
+package com.autotune.analyzer.utils;
 
-import java.util.concurrent.BlockingQueue;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 /**
- * AutotuneQueueImpl is default implementation of the AutotuneQueue contracts
- * @author bipkumar
- *
+ * Contains methods that are of general utility in the codebase
  */
-public abstract class AutotuneQueueImpl implements AutotuneQueue {
-	
-	protected BlockingQueue<AutotuneDTO> queue = null;
-	protected String name = "";
-	
-	@Override
-	public boolean send(AutotuneDTO data) throws InterruptedException {
-		if (queue != null) {
-			return queue.offer(data);
+public class Utils
+{
+	public static String generateID(Object object) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(object.toString().getBytes(StandardCharsets.UTF_8));
+
+			StringBuffer hexString = new StringBuffer();
+
+			for (int i = 0; i < hash.length; i++) {
+				String hex = Integer.toHexString(0xff & hash[i]);
+				if (hex.length() == 1) hexString.append('0');
+				hexString.append(hex);
+			}
+
+			return hexString.toString();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
-			
-		return false;
-	}
-
-	@Override
-	public AutotuneDTO get() throws InterruptedException {
-		if (queue != null)
-			return queue.take();
-		
-		return null;
-	}
-
-	@Override
-	public String getName() {
-		return name;
 	}
 }
