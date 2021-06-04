@@ -1,0 +1,23 @@
+apiVersion: "recommender.com/v1"
+kind: Autotune
+metadata:
+  name: "valid-hpo-algo-impl"
+  namespace: "default"
+spec:
+  sla:
+    objective_function: "transaction_response_time"
+    sla_class: "response_time"
+    direction: "minimize"
+    hpo_algo_impl: "optuna_tpe"
+    function_variables:
+    - name: "transaction_response_time"
+      query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
+      datasource: "prometheus"
+      value_type: "double"
+  mode: "show"
+  selector:
+    matchLabel: "app.kubernetes.io/name"
+    matchLabelValue: "petclinic-deployment"
+    matchRoute: ""
+    matchURI: ""
+    matchService: ""
