@@ -18,7 +18,7 @@ package com.autotune.analyzer.utils;
 /**
  * Holds constants used in other parts of the codebase
  */
-public class AnalyzerConstants
+public class DAConstants
 {
 	// Used to parse autotune configmaps
 	public static final String K8S_TYPE = "K8S_TYPE";
