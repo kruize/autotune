@@ -28,7 +28,7 @@ function usage() {
 	echo "Usage: $0 [-d] [-v version_string] [-t docker_image_name]"
 	echo " -d: build in dev friendly mode"
 	echo " -v: build as specific autotune version"
-	echo " -t: build with specific docker image tag"
+	echo " -t: build with specific docker image name"
 	exit -1
 }
 
