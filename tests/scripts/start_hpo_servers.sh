@@ -20,7 +20,7 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}"
 
-PATH_TO_PYTHON_SERVICE=${SCRIPTS_DIR}/../../hyperparameter_tuning
+PATH_TO_HPO_SERVICE=${SCRIPTS_DIR}/../../hyperparameter_tuning
 PATH_TO_SEARCHSPACE=${SCRIPTS_DIR}
 
 SEARCH_SPACE_JSON=${SCRIPTS_DIR}/../resources/searchspace_jsons/searchspace.json
@@ -51,14 +51,12 @@ if [ -z "${log_dir}" ]; then
         log_dir="${HOME}"
 fi
 
-
 function usage() {
 	echo ""
 	echo "Usage: $0 -p log_dir -j <search space json> [-s] [-t]" 
 	echo "Where -s = start(default), -t = terminate" 
 	echo ""
 	exit -1
-
 }
 
 function start_servers() {
@@ -72,7 +70,7 @@ function start_servers() {
 
 	# Start the HPO REST API service 
 	echo "Starting HPO REST API service..."
-	nohup python3 ${PATH_TO_PYTHON_SERVICE}/service.py  &> ${log_dir}/service.log &
+	nohup python3 ${PATH_TO_HPO_SERVICE}/service.py  &> ${log_dir}/service.log &
 }
 
 function stop_servers() {
