@@ -17,13 +17,18 @@
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
+DOCKERFILE="Dockerfile"
 AUTOTUNE_DOCKER_REPO="kruize/autotune"
 # Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
+DEV_MODE=0
 
 function usage() {
-	echo "Usage: $0 [-v version_string] [-t docker_image_name]"
+	echo "Usage: $0 [-d] [-v version_string] [-t docker_image_name]"
+	echo " -d: build in dev friendly mode"
+	echo " -v: build as specific autotune version"
+	echo " -t: build with specific docker image name"
 	exit -1
 }
 
@@ -46,15 +51,26 @@ function cleanup() {
 	echo "done"
 }
 
+function set_tags() {
+	DOCKER_REPO=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
+	DOCKER_TAG=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $2 }')
+	if [ -z "${DOCKER_TAG}" ]; then
+		DOCKER_TAG="latest"
+	fi
+}
+
 # Iterate through the commandline options
-while getopts t:v: gopts
+while getopts dt:v: gopts
 do
 	case ${gopts} in
-	v)
-		AUTOTUNE_VERSION="${OPTARG}"
+	d)
+		DEV_MODE=1
 		;;
 	t)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
+		;;
+	v)
+		AUTOTUNE_VERSION="${OPTARG}"
 		;;
 	[?])
 		usage
@@ -62,17 +78,13 @@ do
 done
 
 git pull
-cleanup
-
-DOCKER_REPO=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
-DOCKER_TAG=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $2 }')
-if [ -z "${DOCKER_TAG}" ]; then
-	DOCKER_TAG="latest"
-fi
-
+set_tags
 # Build the docker image with the given version string
-DOCKERFILE="Dockerfile"
-docker build --pull --no-cache --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${DOCKERFILE} .
+if [ ${DEV_MODE} -eq 0 ]; then
+	cleanup
+	docker build --pull --no-cache --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${DOCKERFILE} .
+else
+	docker build --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${DOCKERFILE} .
+fi
 check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
-
 docker images | grep -e "TAG" -e "${DOCKER_REPO}" | grep "${DOCKER_TAG}"
