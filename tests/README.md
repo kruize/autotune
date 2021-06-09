@@ -12,6 +12,7 @@
 - **Application autotune yaml tests**
 
   Here we validate if a user is able to add an autotune object for the application that needs to be monitored by autotune and if autotune rejects the invalid autotune yamls with appropriate error messages.
+   
    The test does the following:
    - Deploys autotune and its dependencies using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
    - Applies the application autotune yaml 
@@ -20,6 +21,7 @@
 - **Autotune config yaml tests**
 
   Here we validate if a user can add a new autotune layer configuration with the required tunables or modify the existing layer configuration. We also check if autotune handles invalid configurations well giving out appropriate error messages to the users.
+   
    The test does the following:
    - Deploys autotune and its dependencies using the deploy script from the autotune repo
    - Applies the autotune config yaml 
@@ -28,6 +30,7 @@
 - **Basic API tests**
 
   Here we validate all the [Autotune REST APIs](https://github.com/kruize/autotune/blob/master/design/API.md).
+  
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Deploys multiple instances of spring petclinic application 
@@ -37,6 +40,7 @@
 - **Modify autotune config tests**
 
   Here we modify the layer config and validate the listAutotuneTunables Autotune REST API.
+  
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Modify the layer config and apply
@@ -45,6 +49,7 @@
 - **ConfigMap yaml tests**
 
   Here we modify the configmap yaml and validate if the behaviour is reflected in autotune. We also check if autotune identifies invalid configurations well by giving out appropriate error messages to the users.
+  
   The test does the following:
   - Modifies the configmap yaml
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
@@ -59,6 +64,7 @@
 - **Autotune object id tests**
 
   Here we validate the autotune object id for different scenarios.
+  
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Deploys benchmark applications and requried application autotune yamls
@@ -71,6 +77,7 @@
 - **Autotune layer config object id tests**
 
   Here we validate the autotune layer config object id for different scenarios.
+  
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Validate autotune layer config id for following scenarios:
@@ -78,6 +85,18 @@
   	2. Re-apply the layer config without modifying yaml and check if both the ids are same
   	3. Update and apply the layer config yaml and compare the ids
   	4. Apply new layer config and validate the id
+
+- **RM-HPO API tests**
+
+  Here we validate the RM-HPO REST API.
+  
+  The test does the following:
+
+  - Start HPO service using mock [script](/tests/scripts/start_hpo_servers.sh)
+  - Validate HPO result for following scenarios:
+  	1. Post invalid experiments and validate the results
+  	2. Post the same experiment again with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result
+  	3. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
   
 ## Supported Clusters
 - Minikube

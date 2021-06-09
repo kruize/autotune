@@ -31,6 +31,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/configmap_yaml_tests.sh
 . ${SCRIPTS_DIR}/autotune_id_tests.sh
 . ${SCRIPTS_DIR}/autotune_layer_config_id_tests.sh
+. ${SCRIPTS_DIR}/rm_hpo_api_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -129,6 +130,10 @@ function functional_test() {
 		testcase=""	
 		# validate the autotune config object id
 		autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
+
+		testcase=""
+		# perform the RM-HPO API tests
+		rm_hpo_api_tests > >(tee "${RESULTS}/rm_hpo_api_tests.log") 2>&1
 	fi
 }
 
