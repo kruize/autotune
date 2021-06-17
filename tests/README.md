@@ -100,21 +100,17 @@
   	4. Query the API with different invalid combination of experiment id and trial number
   	5. Query the API for valid experiment id and trial number and validate the result
   	6. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial. Now query the API using that trial number and validate the result
-  
+  	7. Post invalid experiment results and validate the result
+  	8. Post duplicate experiment results and validate the result
+  	9. Post different results for the same id and validate the result
+
 ## Supported Clusters
 - Minikube
 
 ## Prerequisites for running the tests:
 
 - Minikube setup 
-- Tools like docker, kubectl, and jq 
-- Install Prometheus on minikube
-
-To install prometheus on minikube, run the below command:
-
-```
-<AUTOTUNE_REPO>/scripts/prometheus_on_minikube.sh -as
-```
+- Tools like docker, kubectl, and jq
 
 Clone the kruize/benchmarks repo using the below command:
 

@@ -34,7 +34,7 @@ function rm_hpo_api_tests() {
 	TESTS=0
 	((TOTAL_TEST_SUITES++))
 
-	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json")
+	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json" "rm_hpo_post_exp_result")  
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -93,7 +93,7 @@ function rm_hpo_api_tests() {
 # output: Create the Curl command with given JSON and get the result
 function post_experiment_json() {
 	json_array_=$1
-	
+
 	content='curl -H "Content-Type: application/json"'
 	post_cmd=$(curl -H "Content-Type: application/json" -d "${json_array_}"  http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
 	# Example curl command: curl -H "Content-Type: application/json" -d {"id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
@@ -134,17 +134,24 @@ function check_server_status() {
 	fi
 }
 
-# Post valid and invalid experiments to RM-HPO /experiment_trials API and validate result
+# Do a post with experment resluts having invalid fields
 # input: Test name
-# output: get the JSON, post it to HPO and compare the result
-function run_post_experiment_tests(){
+# output: get the experment resluts, post it to HPO and compare the result
+function run_post_tests(){
 	__test_name__=$1
-	for post_test in "${run_post_experiment_tests[@]}"
+	
+	if [ "${__test_name__}" == "rm_hpo_post_experiment" ]; then
+		exp_tests=("${run_post_experiment_tests[@]}")
+	else
+		exp_tests=("${run_post_exp_result_tests[@]}")
+	fi
+	
+	for post_test in "${exp_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${post_test}"
 		mkdir -p ${TESTS_}
 		LOG_="${TEST_DIR}/${post_test}.log"
-		
+
 		echo "************************************* ${post_test} Test ****************************************" | tee -a ${LOG_} ${LOG}
 		echo "" | tee -a ${LOG_} ${LOG}
 
@@ -163,19 +170,38 @@ function run_post_experiment_tests(){
 				# Start the HPO servers
 				${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
 		esac
-		
+
+		# Start the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
-		
+
 		# Check if the servers have started
 		check_server_status
-		
+
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
-		
-		create_post_exp_json_array ${current_id}
-		post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
-	
+
+		# Post a valid experiment to RM-HPO /experiment_trials API.
+		exp="valid-experiment"
+		if [ "${__test_name__}" == "rm_hpo_post_exp_result" ]; then
+			# Post the experiment JSON to RM-HPO /experiment_trials API
+			create_post_exp_json_array ${current_id}
+			post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+			trial_num="${response}"
+			
+			# Post the experiment result to RM-HPO /experiment_trials API
+			create_post_exp_result_json_array ${current_id} ${trial_num}
+			post_experiment_trial "${rm_hpo_post_exp_result_json[$post_test]}"
+			expected_log_msg="${rm_hpo_exp_result_error_messages[${post_test}]}"
+		else
+			# Post the experiment JSON to RM-HPO /experiment_trials API
+			create_post_exp_json_array ${current_id}
+			post_experiment_json "${rm_hpo_post_experiment_json[$post_test]}"
+			expected_log_msg="${rm_hpo_error_messages[${post_test}]}"
+		fi
+
 		if [[ "${post_test}" == valid* ]]; then
 			expected_result_="200"
 			expected_behaviour="RESPONSE_CODE = 200 OK"
@@ -183,10 +209,9 @@ function run_post_experiment_tests(){
 			expected_result_="^4[0-9][0-9]"
 			expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 		fi
-		
+
 		actual_result="${http_code}"
 		if [[ "${http_code}" -eq "000" ]]; then
-			expected_log_msg="${rm_hpo_error_messages[${exp}]}"
 			if grep -q "${expected_log_msg}" "${TESTS_}/service.log" ; then
 				failed=0 
 			else
@@ -199,16 +224,17 @@ function run_post_experiment_tests(){
 			compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 		fi
 		echo ""
-		
+
 		# Stop the HPO servers
 		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
-		
-		# Sleep for few seconds to reduce the ambiguity
-		sleep 2
-		
-		echo "" | tee -a ${LOG_} ${LOG}
-	done
 
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 5
+
+		echo "" | tee -a ${LOG_} ${LOG}
+
+	done
+	
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 }
 
@@ -237,11 +263,11 @@ function post_duplicate_experiments() {
 	else
 		failed=1
 		expected_result_="200"
-		expected_behaviour="RESPONSE_CODE = 200 OK"
-		((TOTAL_TESTS++))
-		((TESTS++))
-		error_message ${failed}
-	fi
+	expected_behaviour="RESPONSE_CODE = 200 OK"
+	((TOTAL_TESTS++))
+	((TESTS++))
+	error_message ${failed}
+fi
 }
 
 # Post the experiment result to HPO module
@@ -576,11 +602,157 @@ function get_trial_json_valid_tests() {
 		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
 		echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 	done
+=======
+# Post the experiment result to HPO
+# input: Experiment result
+# output: Create the Curl command with given JSON and get the result
+function post_experiment_trial() {
+	exp_result=$1
+
+	content_='curl -H "Content-Type: application/json"'
+	_post_=$(curl -H "Content-Type: application/json" -d "${exp_result}" http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
+	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
+	post_exp_result_cmd="${content_} -d ${exp_result} http://localhost:8085/experiment_trials -w '\n%{http_code}'"
+
+	echo "" | tee -a ${LOG_} ${LOG}
+	echo "Command used to post the experiment result= ${post_exp_result_cmd}" | tee -a ${LOG_} ${LOG}
+	echo "" | tee -a ${LOG_} ${LOG}
+
+	echo "${_post_}" >> ${LOG_} ${LOG}
+
+	http_code=$(tail -n1 <<< "${_post_}")
+	response=$(echo -e "${_post_}" | tail -2 | head -1)
+	echo "Response is ${response}" >> ${LOG_} ${LOG}
+}
+
+# Post same result multiple times for the same id & trial number
+function post_duplicate_exp_result() {
+	# Post a valid experiment to RM-HPO /experiment_trials API.
+	exp="valid-experiment"
+	create_post_exp_json_array ${current_id}
+	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+	trial_num="${response}"
+
+	if [ "${http_code}" == "200" ]; then
+		failed=0
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 5
+
+		# Post a valid experiment result to RM-HPO /experiment_trials API.
+		exp_result="valid-experiment-result"
+		
+		echo -n "Post the experiment result to HPO..."
+		create_post_exp_result_json_array ${current_id} ${trial_num}
+		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 5
+
+		# Post the duplicate experiment result to RM-HPO /experiment_trials API.
+		echo -n "Post the same experiment result to HPO again for the same id and trial number..."
+		create_post_exp_result_json_array ${current_id} ${trial_num}
+		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+
+		actual_result="${http_code}"
+		expected_result_="^4[0-9][0-9]"
+		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
+
+		compare_result ${FUNCNAME} ${expected_result_} "${expected_behaviour}"
+	else
+		failed=1
+		expected_result_="200"
+		expected_behaviour="RESPONSE_CODE = 200 OK"
+		((TOTAL_TESTS++))
+		((TESTS++))
+		error_message ${failed}
+	fi
+}
+
+# Post different results for the same id & trial number
+function post_same_id_different_exp_result() {
+	# Post a valid experiment to RM-HPO /experiment_trials API.
+	exp="valid-experiment"
+	create_post_exp_json_array ${current_id}
+	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+	trial_num="${response}"
+
+	if [ "${http_code}" == "200" ]; then
+		failed=0
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 5
+
+		# Post a valid experiment result to RM-HPO /experiment_trials API.
+		exp_result="valid-experiment-result"
+		echo -n "Post the experiment result to HPO..."
+		create_post_exp_result_json_array ${current_id} ${trial_num}
+		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 5
+
+		# Post a different valid experiment result for the same id and trial number to RM-HPO /experiment_trials API.
+		exp_result="valid-different-result"
+		echo -n "Post the differnt experiment result to HPO again for the same id and trial number..."
+		create_post_exp_result_json_array ${current_id} ${trial_num}
+		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+
+		actual_result="${http_code}"
+		expected_result_="^4[0-9][0-9]"
+		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
+
+		compare_result ${FUNCNAME} ${expected_result_} "${expected_behaviour}"
+	else
+		failed=1
+		expected_result_="200"
+		expected_behaviour="RESPONSE_CODE = 200 OK"
+		((TOTAL_TESTS++))
+		((TESTS++))
+		error_message ${failed}
+	fi
+}
+
+# Other RM-HPO post result tests
+function other_exp_result_post_tests() {
+	__test_name__=$1
+
+	for operation in "${other_exp_result_post_tests_[@]}"
+	do
+		TESTS_="${TEST_DIR}/${operation}"
+		mkdir -p ${TESTS_}
+		LOG_="${TEST_DIR}/${operation}.log"
+		echo "************************************* ${operation} Test ****************************************" | tee -a ${LOG_} ${LOG}
+
+		# Start the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 2
+
+		# Check if the servers have started
+		check_server_status
+
+		# Get the id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+
+		operation=$(echo ${operation//-/_})
+		${operation}
+		echo ""
+
+		# Stop the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 2
+
+		echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
+	done	
 }
 
 # Tests for RM-HPO POST experiment
 function rm_hpo_post_experiment() {
-	run_post_experiment_tests ${FUNCNAME}
+	run_post_tests ${FUNCNAME}
 	other_post_experiment_tests ${FUNCNAME}
 }
 
@@ -591,3 +763,12 @@ function rm_hpo_get_trial_json(){
 		${test} "${FUNCNAME}"
 	done 
 }
+
+# Tests for RM-HPO POST experiment
+function rm_hpo_post_exp_result() {
+	valid_exp="valid-experiment"
+	valid_exp_result="valid-experiment-result"
+	run_post_tests ${FUNCNAME}
+	other_exp_result_post_tests ${FUNCNAME}
+}
+
