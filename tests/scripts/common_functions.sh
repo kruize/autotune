@@ -455,17 +455,28 @@ function run_test_case() {
 	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
 	
+	# Expose prometheus as nodeport and get the url
+	expose_prometheus
+	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml -n ${NAMESPACE}"
 	else
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml" 
 	fi
+	
 	echo "CMD=${kubectl_cmd}">>${LOG}
-	kubectl_log_msg=$(${kubectl_cmd} 2>&1) 
-	err_exit "Error: Issue in deploying ${object} object"
+	
+	# Replace PROMETHEUS_URL keyword by actual URL
+	sed -i "s|PROMETHEUS_URL|${prometheus_url}|g" ${yaml}.yaml
+	
+	# Apply the yaml
+	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
+	err_exit "Error: Issue in deploying ${object} object" 
 	echo "${kubectl_log_msg}" > kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
+	
+	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
 	
 	# get autotune pod log
 	get_autotune_pod_log ${AUTOTUNE_LOG}
@@ -542,6 +553,9 @@ function run_test() {
 		echo
 	done
 	echo ""
+	
+	# Delete the prometheus service
+	kubectl delete svc prometheus-svc -n monitoring
 }
 
 # Form the curl command based on the cluster type
@@ -1411,6 +1425,7 @@ function match_ids() {
 	done
 }
 
+<<<<<<< HEAD
 # Get the autotune pod log
 # input : Log file path to store the pod information
 function get_autotune_pod_log() {
@@ -1419,6 +1434,20 @@ function get_autotune_pod_log() {
 	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
 	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" > "${log}"
+=======
+# Expose prometheus as nodeport and get the url
+function expose_prometheus() {
+	if [ "${cluster_type}" == "minikube" ]; then
+		exposed=$(kubectl get svc -n monitoring | grep "prometheus-svc")
+		
+		# Check if the service already exposed, If not then expose the service
+		if [ -z "${exposed}" ]; then
+			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-svc -n monitoring >> ${LOG} 2>&1
+		fi
+		
+		prometheus_url=$(minikube service list | grep "prometheus-svc" | awk '{print $8}')
+	fi
+>>>>>>> Add test to validate datasource name and datasource url
 }
 
 # Compare the actual result with the expected result
