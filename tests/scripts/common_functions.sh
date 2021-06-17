@@ -36,9 +36,19 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
-TEST_SUITE_ARRAY=("app_autotune_yaml_tests" "autotune_config_yaml_tests" "basic_api_tests" "modify_autotune_config_tests" "sanity" "configmap_yaml_tests" "autotune_layer_config_id_tests")
+TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
+"autotune_config_yaml_tests"
+"basic_api_tests"
+"modify_autotune_config_tests"
+"sanity"
+"configmap_yaml_tests"
+"rm_hpo_api_tests")
 
-modify_autotune_config_tests=("add_new_tunable" "apply_null_tunable" "remove_tunable" "change_bound" "multiple_tunables")
+modify_autotune_config_tests=("add_new_tunable"
+"apply_null_tunable"
+"remove_tunable"
+"change_bound"
+"multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune:test"
 total_time=0
@@ -444,11 +454,6 @@ function run_test_case() {
 	echo -n "Deploying autotune..."| tee -a ${LOG}
 	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done"| tee -a ${LOG}
-	
-	# create autotune setup
-	echo -n "Deploying autotune..."| tee  ${LOG}
-	setup >> ${SETUP_LOG} 2>&1
-	echo "done"| tee  ${LOG}
 	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
@@ -1414,4 +1419,19 @@ function get_autotune_pod_log() {
 	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
 	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" > "${log}"
+}
+
+# Compare the actual result with the expected result
+# input: Test name, expected result 
+function compare_result() {
+	failed=0
+	__test__=$1
+	expected_result=$2
+	expected_behaviour=$3
+	
+	if [[ ! ${actual_result} =~ ${expected_result} ]]; then
+		failed=1
+	fi
+	
+	display_result "${expected_behaviour}" ${__test__} ${failed}
 }
