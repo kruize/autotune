@@ -1424,14 +1424,14 @@ function get_autotune_pod_log() {
 # Compare the actual result with the expected result
 # input: Test name, expected result 
 function compare_result() {
-	flag=0
+	failed=0
 	__test__=$1
 	expected_result=$2
 	expected_behaviour=$3
 	
 	if [[ ! ${actual_result} =~ ${expected_result} ]]; then
-		flag=1
+		failed=1
 	fi
 	
-	display_result "${expected_behaviour}" ${__test__} ${flag}
+	display_result "${expected_behaviour}" ${__test__} ${failed}
 }

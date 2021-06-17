@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-##### Constants for HPO API tests #####
+##### Constants for RM-HPO API tests #####
 #
 
-# Breif description about the autotune id tests
+# Breif description about the RM-HPO API tests
 declare -A rm_hpo_api_test_description
 rm_hpo_api_test_description=([rm_hpo_post_experiment]="Start the required HPO services, post a json from recommendation manager to HPO code with various combinations and validate the result"
 [rm_hpo_get_trial_json]="Start the required HPO services and query HPO using different combinations of id and trial_number and validate the result" 
