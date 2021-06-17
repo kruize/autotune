@@ -30,6 +30,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/modify_autotune_config_tests.sh
 . ${SCRIPTS_DIR}/configmap_yaml_tests.sh
 . ${SCRIPTS_DIR}/autotune_id_tests.sh
+. ${SCRIPTS_DIR}/autotune_layer_config_id_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -124,6 +125,10 @@ function functional_test() {
 		testcase=""
 		# validate the autotune object id
 		autotune_id_tests > >(tee "${RESULTS}/autotune_id_tests.log") 2>&1
+		
+		testcase=""	
+		# validate the autotune config object id
+		autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
 	fi
 }
 
