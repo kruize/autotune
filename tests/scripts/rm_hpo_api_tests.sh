@@ -33,19 +33,19 @@ function rm_hpo_api_tests() {
 	TESTS_PASSED=0
 	TESTS=0
 	((TOTAL_TEST_SUITES++))
-	
-	rm_hpo_api_tests=("rm_hpo_post_experiment")
-	
+
+	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json_tests")
+
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "rm_hpo_api"
 	fi
-	
+
 	# create the result directory for given testsuite
 	echo ""
 	TEST_SUITE_DIR="${RESULTS}/rm_hpo_api_tests"
 	mkdir -p ${TEST_SUITE_DIR}
-	
+
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
 		testtorun=("${rm_hpo_api_tests[@]}")
@@ -69,7 +69,7 @@ function rm_hpo_api_tests() {
 		echo " " | tee -a ${LOG}
 		echo "Test description: ${rm_hpo_api_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
-		
+
 		# Perform the test
 		${test}
 	done
@@ -77,7 +77,7 @@ function rm_hpo_api_tests() {
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
 	fi
-	
+
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 
@@ -98,23 +98,24 @@ function post_experiment_json() {
 	post_cmd=$(curl -H "Content-Type: application/json" -d "${json_array_}"  http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
 	# Example curl command: curl -H "Content-Type: application/json" -d {"id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
 	post_experiment_cmd="${content} -d ${json_array_}  http://localhost:8085/experiment_trials -w '\n%{http_code}'"
-	
+
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment= ${post_experiment_cmd}" | tee -a ${LOG_} ${LOG}
 	echo "" | tee -a ${LOG_} ${LOG}
-	
+
 	echo "${post_cmd}" >> ${LOG_} ${LOG}
-	
+
 	http_code=$(tail -n1 <<< "${post_cmd}")
 	response=$(echo -e "${post_cmd}" | tail -2 | head -1)
-	
+
 	echo "Response is ${response}" >> ${LOG_} ${LOG}
 }
 
+# Check if the servers have started
 function check_server_status() {
 	searchspace_log_msg="Starting server at http://localhost:8080"
 	service_log_msg="Starting server at http://localhost:8085"
-	
+
 	echo ""
 	if grep -q "${searchspace_log_msg}" "${TESTS_}/searchspace.log" ; then
 		echo "Searchspace service started successfully..." | tee -a ${LOG_} ${LOG}
@@ -123,7 +124,7 @@ function check_server_status() {
 		echo "See ${TESTS_}/searchspace.log for more details" | tee -a ${LOG_} ${LOG}
 		exit 0
 	fi
-	
+
 	if grep -q "${service_log_msg}" "${TESTS_}/service.log" ; then
 		echo "HPO REST API service started successfully..." | tee -a ${LOG_} ${LOG}
 	else
@@ -328,8 +329,245 @@ function other_post_experiment_tests() {
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}	
 }
 
+#Generate the curl command based on the test name passed and get the result by querying it.
+# input: Test name
+function run_exp_trial_test() {
+	exp_trial=$1
+	trial_num=$2
+	curl="curl -H 'Accept: application/json'"
+	url="http://localhost:8085/experiment_trials"
+	case "${exp_trial}" in
+		invalid-id)
+			get_trial_json=$(${curl} ''${url}'?id=124365213472&trial_number=0'  -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id=124365213472&trial_number=0' -w '\n%{http_code}'"
+			;;
+		empty-id)
+			get_trial_json=$(${curl} ''${url}'?id= &trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id= &trial_number=0' -w '\n%{http_code}'"
+			;;
+		no-id)
+			get_trial_json=$(${curl} ''${url}'?trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?trial_number=0' -w '\n%{http_code}'"
+			;;
+		null-id)
+			get_trial_json=$(${curl} ''${url}'?id=null &trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id=null &trial_number=0' -w '\n%{http_code}'"
+			;;
+		only-valid-id)
+			get_trial_json=$(${curl} ''${url}'?id='${current_id}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id='${current_id}'' -w '\n%{http_code}'"
+			;;
+		invalid-trial-number)
+			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}'"
+			;;
+		empty-trial-number)
+			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=' -w '\n%{http_code}'"
+			;;
+		no-trial-number)
+			get_trial_json=$(${curl} ''${url}'?id='${current_id}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id='${current_id}'' -w '\n%{http_code}'"
+			;;
+		null-trial-number)
+			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=null' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=null' -w '\n%{http_code}'"
+			;;
+		only-valid-trial-number)
+			get_trial_json=$(${curl} ''${url}'?trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?trial_number=0' -w '\n%{http_code}'"
+			;;
+		valid-exp-trial)
+			get_trial_json=$(${curl} ''${url}'?id=a123&trial_number='${trial_num}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?id=a123&trial_number=${trial_num}' -w '\n%{http_code}'"
+			;;
+	esac
+	
+	echo "command used to query the experiment_trial API = ${get_trial_json_cmd}" | tee -a ${LOG_} ${LOG}
+	echo "" | tee -a ${LOG_} ${LOG}
+	echo "${get_trial_json}" >> ${LOG_} ${LOG}
+	http_code=$(tail -n1 <<< "${get_trial_json}")
+	response=$(echo -e "${get_trial_json}" | tail -2 | head -1)
+	response=$(echo ${response} | cut -c 4-)
+	echo "${response}" > ${result}
+}
+
+# validate obtaining trial json from RM-HPO /experiment_trials API for invalid queries
+# input: test name 
+function get_trial_json_invalid_tests() {
+	__test_name__=$1
+	IFS=' ' read -r -a get_trial_json_invalid_tests <<<  ${rm_hpo_get_trial_json_tests_[$FUNCNAME]}
+	for exp_trial in "${get_trial_json_invalid_tests[@]}"
+	do
+		TESTS_="${TEST_DIR}/${exp_trial}"
+		mkdir -p ${TESTS_}
+		LOG_="${TEST_DIR}/${exp_trial}.log"
+		result="${TESTS_}/${exp_trial}_result.log"
+		echo "************************************* ${exp_trial} Test ****************************************" | tee -a ${LOG_} ${LOG}
+		
+		# Start the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+		
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 2
+		
+		# Check if the servers have started
+		check_server_status
+
+		# Get the id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+
+		create_post_exp_json_array ${current_id}
+		post_experiment_json "${rm_hpo_post_experiment_json[$experiment]}"
+
+		run_exp_trial_test ${exp_trial}
+
+		actual_result="${http_code}"
+		
+		expected_result_="^4[0-9][0-9]"
+		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
+
+		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+		echo ""
+		
+		# Stop the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+	done
+	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
+}
+
+# Validate if the actual tunable name is matching with the tunable name returned by dependency analyzer
+function validate_tunable_name() {
+	failed=0
+	if [ "${actual_tunable_name}" != "${tunable_name}" ]; then
+		failed=1
+	fi
+	expected_behaviour="Actual Tunable name should match with the tunable name returned by dependency analyzer"
+	display_result "${expected_behaviour}" ${FUNCNAME} ${failed}
+}
+
+# Validate if Actual Tunable value is within the given range
+function validate_tunable_value(){
+	failed=0
+	
+ 	if [[ $(bc <<< "${actual_tunable_value} >= ${lowerbound} && ${actual_tunable_value} <= ${upperbound}") == 0 ]]; then
+ 		failed=1
+	fi
+	expected_behaviour="Actual Tunable value should be within the given range"
+	display_result "${expected_behaviour}" ${FUNCNAME} ${failed}
+}
+
+# Validate the trial json returned by RM-HPO GET operation
+function validate_exp_trial() {
+	# Sort the actual json based on tunable name
+	echo "$(cat ${result} | jq  'sort_by(.tunable_name)')" > ${result}
+
+	# Sort the json based on tunable name
+	echo "$(jq '[.[].tunables[] | {lower_bound: .lower_bound, name: .name, upper_bound: .upper_bound}] | sort_by(.name)' ${SEARCH_SPACE_JSON})" > ${parse_json}
+
+	expected_tunables=$(cat ${parse_json} | jq '. | length')
+	actual_tunables=$(cat ${result}  | jq '. | length')
+	
+	echo "___________________________________ Validate experiment trial __________________________________________"
+	
+	if [ "${expected_tunables}" -ne "${actual_tunables}" ]; then
+		failed=1
+	else
+		while [ "${tunable_count}" -lt "${expected_tunables}" ]
+		do
+			upperbound=$(cat ${parse_json} | jq '.['${tunable_count}'].upper_bound' | tr -d '""' | tr -d 'M')
+			lowerbound=$(cat ${parse_json} | jq '.['${tunable_count}'].lower_bound' | tr -d '""' | tr -d 'M')
+			tunable_name=$(cat ${parse_json} | jq '.['${tunable_count}'].name')
+			actual_tunable_name=$(cat ${result} | jq '.['${tunable_count}'].tunable_name')
+			actual_tunable_value=$(cat ${result} | jq '.['${tunable_count}'].tunable_value')
+
+			echo "" | tee -a ${LOG_} ${LOG}
+			echo "Validating the tunable name ${actual_tunable_name}..." | tee -a ${LOG_} ${LOG}
+			# validate the tunable name
+			validate_tunable_name
+			echo "" | tee -a ${LOG_} ${LOG}
+
+			echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG_} ${LOG}
+			echo "" | tee -a ${LOG_} ${LOG}
+			echo "Validating the tunable value for ${actual_tunable_name}..." | tee -a ${LOG_} ${LOG}
+			# validate the tunable value
+			validate_tunable_value
+			echo "" | tee -a ${LOG_} ${LOG}
+			echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG_} ${LOG}
+			((tunable_count++))
+		done
+	fi
+	echo ""
+}
+
+# Validate the trial JSON returned by RM-HPO GET API
+# input: test name
+function get_trial_json_valid_tests() {
+	__test_name__=$1
+
+	IFS=' ' read -r -a get_trial_json_valid_tests <<<  ${rm_hpo_get_trial_json_tests_[$FUNCNAME]}
+	for exp_trial in "${get_trial_json_valid_tests[@]}"
+	do
+		tunable_count=0
+		TESTS_="${TEST_DIR}/${FUNCNAME}"
+		mkdir -p ${TESTS_}
+		LOG_="${TEST_DIR}/${FUNCNAME}.log"
+		result="${TESTS_}/${exp_trial}_result.log"
+		parse_json="${TESTS_}/${exp_trial}_actual_json.json"
+		echo "************************************* ${exp_trial} Test ****************************************" | tee -a ${LOG_} ${LOG}
+	
+		# Start the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+		
+		# Sleep for few seconds to reduce the ambiguity
+		sleep 2
+	
+		# Check if the servers have started
+		check_server_status
+			
+		# Get the id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		
+		if [ "${exp_trial}" == "valid-exp-trial" ]; then
+			create_post_exp_json_array ${current_id}
+			post_experiment_json "${rm_hpo_post_experiment_json[$experiment]}"
+			trial_num="${response}"
+		else
+			exp="valid-experiment"	
+			operation_generate_subsequent
+			trial_num="${response}"
+		fi
+		
+		run_exp_trial_test "valid-exp-trial" "${trial_num}"
+
+		actual_result="${http_code}"
+		
+		expected_result_="200"
+		expected_behaviour="RESPONSE_CODE = 200 OK"
+
+		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+		
+		if [ "${failed}" -eq 0 ]; then
+			validate_exp_trial
+		fi
+		
+		# Stop the HPO servers
+		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
+	done
+}
+
 # Tests for RM-HPO POST experiment
 function rm_hpo_post_experiment() {
 	invalid_post ${FUNCNAME}
 	other_post_experiment_tests ${FUNCNAME}
+}
+
+# Tests for RM-HPO GET trial JSON API
+function rm_hpo_get_trial_json_tests(){
+	experiment="valid-experiment"
+	for test in "${!rm_hpo_get_trial_json_tests_[@]}"
+	do
+		${test} "${FUNCNAME}"
+	done 
 }

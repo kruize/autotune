@@ -182,7 +182,7 @@ objective_function_expected_log_msgs=([blank-objective-function]='com.autotune.d
 [no-objective-function]='error: error validating "'${path}/${app_autotune_tests[0]}/no-objective-function.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
 [no-objective-function-value]='error: error validating "'${path}/${app_autotune_tests[0]}/no-objective-function-value.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
 [null-objective-function]='error: error validating "'${path}/${app_autotune_tests[0]}/null-objective-function.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-objective-function]='The Autotune "numerical-objective-function" is invalid: spec.sla.objective_function: Invalid value: "integer": spec.sla.objective_function in body must be of type string: "integer"'
+[numerical-objective-function]='The Autotune "numerical-objective-function" is invalid: spec.sla.objective_function: Invalid value: "integer": spec.sla.objective_function in body must be of type string: "integer"')
 
 # Expected autotune object for sla class
 declare -A sla_class_autotune_objects

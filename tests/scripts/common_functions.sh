@@ -1342,6 +1342,7 @@ function display_result() {
 	actual_flag=$3
 	((TOTAL_TESTS++))
 	((TESTS++))
+
 	echo "Expected behaviour: ${expected_behaviour}" | tee -a ${LOG}
 	if [ "${actual_flag}" -eq "0" ]; then
 		((TESTS_PASSED++))
@@ -1456,10 +1457,10 @@ function compare_result() {
 	__test__=$1
 	expected_result=$2
 	expected_behaviour=$3
-	
+
 	if [[ ! ${actual_result} =~ ${expected_result} ]]; then
 		failed=1
 	fi
-	
+
 	display_result "${expected_behaviour}" ${__test__} ${failed}
 }
