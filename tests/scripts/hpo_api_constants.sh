@@ -20,8 +20,8 @@
 # Breif description about the RM-HPO API tests
 declare -A rm_hpo_api_test_description
 rm_hpo_api_test_description=([rm_hpo_post_experiment]="Start the required HPO services, post a json from recommendation manager to HPO code with various combinations and validate the result"
-[rm_hpo_get_trial_json_tests]="Start the required HPO services and query HPO using different combinations of id and trial_number and validate the result" 
-[rm_hpo_post_exp_result]="Start the required HPO services, query the experiment manager and post the result from recommendation manager to HPO and validate the result")
+                             [rm_hpo_get_trial_json]="Start the required HPO services and query HPO using different combinations of id and trial_number and validate the result" 
+                             [rm_hpo_post_exp_result]="Start the required HPO services, query the experiment manager and post the result from recommendation manager to HPO and validate the result")
 
 # Tests to be carried out for RM-HPO (RM-Recommendation Manager module HPO-Hyper Parameter Optimization module)
 invalid_post_tests=("invalid-id"
@@ -47,8 +47,9 @@ invalid_post_tests=("invalid-id"
 other_post_experiment_tests=("post-duplicate-experiments" "operation-generate-subsequent")
 
 # Tests to be carried out for RM-HPO (RM-Recommendation manager module HPO-Hyper Parameter Optimization module) GET operation
-declare -A rm_hpo_get_trial_json_tests_
-rm_hpo_get_trial_json_tests_=([get_trial_json_invalid_tests]='invalid-id empty-id no-id null-id only-valid-id invalid-trial-number empty-trial-number no-trial-number null-trial-number only-valid-trial-number' [get_trial_json_valid_tests]='valid-exp-trial valid-exp-trial-generate-subsequent')
+declare -A rm_hpo_get_trial_json_tests
+rm_hpo_get_trial_json_tests=([get_trial_json_invalid_tests]='invalid-id empty-id no-id null-id only-valid-id invalid-trial-number empty-trial-number no-trial-number null-trial-number only-valid-trial-number'
+                             [get_trial_json_valid_tests]='valid-exp-trial valid-exp-trial-generate-subsequent')
 
 declare -A rm_hpo_post_experiment_json
 # Json array for different test cases

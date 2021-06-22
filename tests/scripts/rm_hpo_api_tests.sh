@@ -34,7 +34,7 @@ function rm_hpo_api_tests() {
 	TESTS=0
 	((TOTAL_TEST_SUITES++))
 
-	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json_tests")
+	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -331,7 +331,7 @@ function other_post_experiment_tests() {
 
 #Generate the curl command based on the test name passed and get the result by querying it.
 # input: Test name
-function run_exp_trial_test() {
+function run_get_trial_json_test() {
 	exp_trial=$1
 	trial_num=$2
 	curl="curl -H 'Accept: application/json'"
@@ -396,7 +396,7 @@ function run_exp_trial_test() {
 # input: test name 
 function get_trial_json_invalid_tests() {
 	__test_name__=$1
-	IFS=' ' read -r -a get_trial_json_invalid_tests <<<  ${rm_hpo_get_trial_json_tests_[$FUNCNAME]}
+	IFS=' ' read -r -a get_trial_json_invalid_tests <<<  ${rm_hpo_get_trial_json_tests[$FUNCNAME]}
 	for exp_trial in "${get_trial_json_invalid_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${exp_trial}"
@@ -420,7 +420,7 @@ function get_trial_json_invalid_tests() {
 		create_post_exp_json_array ${current_id}
 		post_experiment_json "${rm_hpo_post_experiment_json[$experiment]}"
 
-		run_exp_trial_test ${exp_trial}
+		run_get_trial_json_test ${exp_trial}
 
 		actual_result="${http_code}"
 		
@@ -443,7 +443,7 @@ function validate_tunable_name() {
 		failed=1
 	fi
 	expected_behaviour="Actual Tunable name should match with the tunable name returned by dependency analyzer"
-	display_result "${expected_behaviour}" ${FUNCNAME} ${failed}
+	display_result "${expected_behaviour}" ${__test_name__} ${failed}
 }
 
 # Validate if Actual Tunable value is within the given range
@@ -454,11 +454,12 @@ function validate_tunable_value(){
  		failed=1
 	fi
 	expected_behaviour="Actual Tunable value should be within the given range"
-	display_result "${expected_behaviour}" ${FUNCNAME} ${failed}
+	display_result "${expected_behaviour}" ${__test_name__} ${failed}
 }
 
 # Validate the trial json returned by RM-HPO GET operation
 function validate_exp_trial() {
+	tunable_count=0
 	# Sort the actual json based on tunable name
 	echo "$(cat ${result} | jq  'sort_by(.tunable_name)')" > ${result}
 
@@ -468,15 +469,28 @@ function validate_exp_trial() {
 	expected_tunables=$(cat ${parse_json} | jq '. | length')
 	actual_tunables=$(cat ${result}  | jq '. | length')
 	
-	echo "___________________________________ Validate experiment trial __________________________________________"
+	echo "___________________________________ Validate experiment trial __________________________________________" | tee -a ${LOG_} ${LOG}
+	echo "" | tee -a ${LOG_} ${LOG}
 	
 	if [ "${expected_tunables}" -ne "${actual_tunables}" ]; then
 		failed=1
+		expected_behaviour="Number of expected and actual tunables should be same"
+		display_result "${expected_behaviour}" ${__test_name__} ${failed}
+		
+		echo "" | tee -a ${LOG_} ${LOG}
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG_} ${LOG}
 	else
+		failed=0
+		expected_behaviour="Number of expected and actual tunables should be same"
+		display_result "${expected_behaviour}" ${__test_name__} ${failed}
+		
+		echo "" | tee -a ${LOG_} ${LOG}
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG_} ${LOG}
+		
 		while [ "${tunable_count}" -lt "${expected_tunables}" ]
 		do
-			upperbound=$(cat ${parse_json} | jq '.['${tunable_count}'].upper_bound' | tr -d '""' | tr -d 'M')
-			lowerbound=$(cat ${parse_json} | jq '.['${tunable_count}'].lower_bound' | tr -d '""' | tr -d 'M')
+			upperbound=$(cat ${parse_json} | jq '.['${tunable_count}'].upper_bound')
+			lowerbound=$(cat ${parse_json} | jq '.['${tunable_count}'].lower_bound')
 			tunable_name=$(cat ${parse_json} | jq '.['${tunable_count}'].name')
 			actual_tunable_name=$(cat ${result} | jq '.['${tunable_count}'].tunable_name')
 			actual_tunable_value=$(cat ${result} | jq '.['${tunable_count}'].tunable_value')
@@ -505,10 +519,9 @@ function validate_exp_trial() {
 function get_trial_json_valid_tests() {
 	__test_name__=$1
 
-	IFS=' ' read -r -a get_trial_json_valid_tests <<<  ${rm_hpo_get_trial_json_tests_[$FUNCNAME]}
+	IFS=' ' read -r -a get_trial_json_valid_tests <<<  ${rm_hpo_get_trial_json_tests[$FUNCNAME]}
 	for exp_trial in "${get_trial_json_valid_tests[@]}"
 	do
-		tunable_count=0
 		TESTS_="${TEST_DIR}/${FUNCNAME}"
 		mkdir -p ${TESTS_}
 		LOG_="${TEST_DIR}/${FUNCNAME}.log"
@@ -538,7 +551,7 @@ function get_trial_json_valid_tests() {
 			trial_num="${response}"
 		fi
 		
-		run_exp_trial_test "valid-exp-trial" "${trial_num}"
+		run_get_trial_json_test "valid-exp-trial" "${trial_num}"
 
 		actual_result="${http_code}"
 		
@@ -564,9 +577,9 @@ function rm_hpo_post_experiment() {
 }
 
 # Tests for RM-HPO GET trial JSON API
-function rm_hpo_get_trial_json_tests(){
+function rm_hpo_get_trial_json(){
 	experiment="valid-experiment"
-	for test in "${!rm_hpo_get_trial_json_tests_[@]}"
+	for test in "${!rm_hpo_get_trial_json_tests[@]}"
 	do
 		${test} "${FUNCNAME}"
 	done 
