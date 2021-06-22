@@ -20,8 +20,8 @@ tunables:
 - name: MaxInlineLevel
   description: 'maximum number of nested calls that are inlined. Default is 9'
   value_type: integer
-  upper_bound: "50"
-  lower_bound: "9"
+  upper_bound: 50
+  lower_bound: 9
   sla_class:
   - response_time
   - throughput
