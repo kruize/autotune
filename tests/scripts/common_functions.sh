@@ -1425,7 +1425,6 @@ function match_ids() {
 	done
 }
 
-<<<<<<< HEAD
 # Get the autotune pod log
 # input : Log file path to store the pod information
 function get_autotune_pod_log() {
@@ -1434,7 +1433,8 @@ function get_autotune_pod_log() {
 	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
 	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" > "${log}"
-=======
+}
+
 # Expose prometheus as nodeport and get the url
 function expose_prometheus() {
 	if [ "${cluster_type}" == "minikube" ]; then
@@ -1447,7 +1447,6 @@ function expose_prometheus() {
 		
 		prometheus_url=$(minikube service list | grep "prometheus-svc" | awk '{print $8}')
 	fi
->>>>>>> Add test to validate datasource name and datasource url
 }
 
 # Compare the actual result with the expected result
