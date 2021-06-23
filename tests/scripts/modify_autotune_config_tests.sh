@@ -35,7 +35,7 @@ function modify_autotune_config_tests() {
 	TESTS_DIR="${RESULTS}/${FUNCNAME}"
 	AUTOTUNE_CONFIG_JSONS_DIR="${TESTS_DIR}/autotuneconfig_jsons"
 	mkdir -p ${AUTOTUNE_CONFIG_JSONS_DIR}
-	SETUP="${TESTS_DIR}/setup.log"
+	AUTOTUNE_SETUP_LOG="${TESTS_DIR}/setup.log"
 	AUTOTUNE_LOG="${TESTS_DIR}/${FUNCNAME}_autotune.log"
 	YAML="${api_yaml_path}/${FUNCNAME}"
 	((TOTAL_TEST_SUITES++))
@@ -46,7 +46,7 @@ function modify_autotune_config_tests() {
 
 	# Set up the autotune
 	echo -n "Deploying autotune..." | tee -a ${LOG}
-	setup >> ${SETUP} 2>&1
+	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "done" | tee -a ${LOG}
 
 	# Giving a sleep for autotune pod to be up and running
@@ -92,7 +92,7 @@ function modify_autotune_config_tests() {
 	FAILED_CASES=("${FAILED[@]}")
 	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
+	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
 }
 
 # Perform the tests for Modify existing autotuneconfig 

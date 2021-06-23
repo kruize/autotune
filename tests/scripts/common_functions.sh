@@ -42,6 +42,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "modify_autotune_config_tests"
 "sanity"
 "configmap_yaml_tests"
+"autotune_id_tests"
+"autotune_layer_config_id_tests"
 "rm_hpo_api_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
@@ -109,6 +111,7 @@ function update_yaml() {
 # Set up the autotune 
 function setup() {
 	CONFIGMAP_DIR=$1
+	configmap_test=$2
 	
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
@@ -174,8 +177,8 @@ function deploy_autotune() {
 	${cmd}
 	
 	status="$?"
-	# Check if autotune is deployed 
-	if [ "${status}" -eq "1" ]; then
+	# Check if autotune is deployed(Ignore in case of configmap_yaml_tests)
+	if [[ "${status}" -eq "1" && "${configmap_test}" != "1" ]]; then
 		echo "Error deploying autotune" >>/dev/stderr
 		echo "See ${PWD}/tests/setup.log for more info" >>/dev/stderr
 		exit -1
@@ -555,7 +558,7 @@ function run_test() {
 	echo ""
 	
 	# Delete the prometheus service
-	kubectl delete svc prometheus-svc -n monitoring
+	kubectl delete svc prometheus-test -n monitoring
 }
 
 # Form the curl command based on the cluster type
@@ -1444,14 +1447,14 @@ function get_autotune_pod_log() {
 # Expose prometheus as nodeport and get the url
 function expose_prometheus() {
 	if [ "${cluster_type}" == "minikube" ]; then
-		exposed=$(kubectl get svc -n monitoring | grep "prometheus-svc")
+		exposed=$(kubectl get svc -n monitoring | grep "prometheus-test")
 		
 		# Check if the service already exposed, If not then expose the service
 		if [ -z "${exposed}" ]; then
-			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-svc -n monitoring >> ${LOG} 2>&1
+			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-test -n monitoring >> ${LOG} 2>&1
 		fi
 		
-		prometheus_url=$(minikube service list | grep "prometheus-svc" | awk '{print $8}')
+		prometheus_url=$(minikube service list | grep "prometheus-test" | awk '{print $8}')
 	fi
 }
 

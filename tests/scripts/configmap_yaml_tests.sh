@@ -70,6 +70,7 @@ function configmap_yaml_tests() {
 		do
 			LOG="${LOG_DIR}/${testcase}.log"
 			AUTOTUNE_LOG="${LOG_DIR}/${testcase}-autotune.log"
+			AUTOTUNE_SETUP_LOG="${LOG_DIR}/setup.log"
 			((TOTAL_TESTS++))
 			((TESTS++))
 		
@@ -88,7 +89,7 @@ function configmap_yaml_tests() {
 			
 			#create autotune setup
 			echo -n "Deploying autotune..."| tee -a ${LOG}
-			setup ${LOG_DIR} >> ${SETUP_LOG} 2>&1
+			setup ${LOG_DIR} "1" >> ${AUTOTUNE_SETUP_LOG} 2>&1
 			echo "done"| tee -a  ${LOG}
 		
 			# get the log of the autotune pod

@@ -47,6 +47,7 @@ function basic_api_tests() {
 	TEST_SUITE_DIR="${RESULTS}/basic_api_tests"
 	AUTOTUNE_JSONS_DIR="${TEST_SUITE_DIR}/autotune_jsons"
 	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
+	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
 	mkdir -p ${AUTOTUNE_JSONS_DIR}
@@ -65,7 +66,7 @@ function basic_api_tests() {
 	
 	# create the autotune setup
 	echo "Setting up autotune..."
-	setup >> ${TEST_SUITE_DIR}/setup.log 2>&1
+	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "Setting up autotune...Done"
 	
 	# Giving a sleep for autotune pod to be up and running
@@ -167,5 +168,5 @@ function basic_api_tests() {
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
+	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
 }
