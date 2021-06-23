@@ -186,11 +186,11 @@ function update_layer_config() {
 	
 		find_upper_bound="${upper_bound}"
 		case "${find_upper_bound}" in
-			300M)
-				replace_upper_bound="350M"
+			300)
+				replace_upper_bound="350"
 				;;
-			350M)
-				replace_upper_bound="300M"
+			350)
+				replace_upper_bound="300"
 				;;
 			50)
 				replace_upper_bound="60"
@@ -208,11 +208,11 @@ function update_layer_config() {
 	
 		find_lower_bound="${lower_bound}"
 		case "${find_lower_bound}" in
-			150M)
-				replace_lower_bound="200M"
+			150)
+				replace_lower_bound="200"
 				;;
-			200M)
-				replace_lower_bound="150M"
+			200)
+				replace_lower_bound="150"
 				;;
 			9)
 				replace_lower_bound="10"
@@ -228,8 +228,8 @@ function update_layer_config() {
 				;;
 		esac
 		
-		sed -i 's/'${find_upper_bound}'/'${replace_upper_bound}'/g' ${test_layer_config}
-		sed -i 's/'${find_lower_bound}'/'${replace_lower_bound}'/g' ${test_layer_config}
+		sed -i 's/upper_bound: '${find_upper_bound}'/upper_bound: '${replace_upper_bound}'/g' ${test_layer_config}
+		sed -i 's/lower_bound: '${find_lower_bound}'/lower_bound: '${replace_lower_bound}'/g' ${test_layer_config}
 		echo "Applying autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
 		kubectl apply -f ${test_layer_config} -n monitoring | tee -a ${LOG}
 		echo "done" | tee -a ${LOG}

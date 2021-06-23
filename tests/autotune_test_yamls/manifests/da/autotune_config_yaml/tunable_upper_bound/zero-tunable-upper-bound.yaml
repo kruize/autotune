@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "AutotuneConfig"
 metadata:
-  name: "no-tunables-queries"
+  name: "zero-tunable-upper-bound"
 layer_name: container
 layer_level: 0
 details: generic container tunables
@@ -11,8 +11,12 @@ layerPresence:
 tunables:
   - name: memoryRequest
     value_type: double
-    upper_bound: 300
+    upper_bound: 00
     lower_bound: 150
+    queries:
+      datasource:
+        - name: 'prometheus'
+          query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
     sla_class:
       - response_time
       - throughput
