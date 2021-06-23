@@ -171,9 +171,6 @@ function run_post_tests(){
 				${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
 		esac
 
-		# Start the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
-
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
 
@@ -658,7 +655,7 @@ function post_duplicate_exp_result() {
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${FUNCNAME} ${expected_result_} "${expected_behaviour}"
+		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 	else
 		failed=1
 		expected_result_="200"
@@ -702,7 +699,7 @@ function post_same_id_different_exp_result() {
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${FUNCNAME} ${expected_result_} "${expected_behaviour}"
+		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 	else
 		failed=1
 		expected_result_="200"
