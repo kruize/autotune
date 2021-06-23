@@ -649,7 +649,8 @@ function create_expected_searchspace_json() {
 				printf '\n {\n\t\t"value_type": '$(cat ${layer_json} | jq .tunables[${length}].value_type)',' >> ${file_name}
 				printf '\n\t\t"lower_bound": '$(cat ${layer_json} | jq .tunables[${length}].lower_bound)',' >> ${file_name}
 				printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',' >> ${file_name}
-				printf '\n\t\t"upper_bound": '$(cat ${layer_json} | jq .tunables[${length}].upper_bound)'' >> ${file_name}
+				printf '\n\t\t"upper_bound": '$(cat ${layer_json} | jq .tunables[${length}].upper_bound)',' >> ${file_name}
+				printf '\n\t\t"step": '$(cat ${layer_json} | jq .tunables[${length}].step)'' >> ${file_name}
 				if [ "${length}" -ne 0 ]; then
 					printf '\n\t }, \n' >> ${file_name}
 				else
@@ -765,6 +766,7 @@ function create_expected_listapptunables_json() {
 		((index--))
 		printf '{\n  "application_name": "'${app}'",' >> ${file_name}
 		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
 		printf '\n  "function_variables": [{' >> ${file_name}
 		printf '\n      "value_type": '$(cat ${autotune_json} | jq '.spec.sla.function_variables[].value_type')','  >> ${file_name}
 		printf '\n      "name": '$(cat ${autotune_json} | jq '.spec.sla.function_variables[].name')','  >> ${file_name}
@@ -803,6 +805,7 @@ function create_expected_listapptunables_json() {
 				printf '{\n\t\t"value_type": '$(cat ${layer_json} | jq .tunables[${length}].value_type)',' >> ${file_name}
 				printf '\n\t\t"lower_bound": '$(cat ${layer_json} | jq .tunables[${length}].lower_bound)',' >> ${file_name}
 				printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',\n' >> ${file_name}
+				printf '\n\t\t"step": '$(cat ${layer_json} | jq .tunables[${length}].step)',\n' >> ${file_name}
 				query=$(cat ${layer_json} |jq .tunables[${length}].queries.datasource[].query)
 				query=$(echo ${query} | sed 's/","/,/g; s/^"\|"$//g')
 				query=$(echo "${query/\$CONTAINER_LABEL$/${layer}}")
@@ -951,6 +954,7 @@ function create_expected_listautotunetunables_json() {
 					printf '{\n\t\t"value_type": '$(cat ${layer_json} | jq .tunables[${length}].value_type)',' >> ${file_name}
 					printf '\n\t\t"lower_bound": '$(cat ${layer_json} | jq .tunables[${length}].lower_bound)',' >> ${file_name}
 					printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',' >> ${file_name}
+					printf '\n\t\t"step": '$(cat ${layer_json} | jq .tunables[${length}].step)',' >> ${file_name}
 					printf '\n\t\t"upper_bound": '$(cat ${layer_json} | jq .tunables[${length}].upper_bound)'' >> ${file_name}
 					if [ "${length}" -ne 0 ]; then
 						printf '\n }, \n' >> ${file_name}
@@ -977,6 +981,7 @@ function create_expected_listautotunetunables_json() {
 	echo "expectd json" >> ${LOG}
 	cat ${file_name} >> ${LOG}
 	echo "" >> ${LOG}
+	layer_name=("")
 }
 
 # Get listAutotuneTunables json
@@ -1074,6 +1079,7 @@ function create_expected_listapplayer_json() {
 		# do comparision of actual and expected name
 		objectve_function=$(cat ${autotune_json} | jq '.spec.sla.objective_function')
 		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_names=${layer_configs[$deploy]}
 		IFS=',' read -r -a layer_name <<<  ${layer_name}
