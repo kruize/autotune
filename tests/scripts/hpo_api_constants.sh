@@ -24,7 +24,7 @@ rm_hpo_api_test_description=([rm_hpo_post_experiment]="Start the required HPO se
                              [rm_hpo_post_exp_result]="Start the required HPO services, query the experiment manager and post the result from recommendation manager to HPO and validate the result")
 
 # Tests to be carried out for RM-HPO (RM-Recommendation Manager module HPO-Hyper Parameter Optimization module)
-invalid_post_tests=("invalid-id"
+run_post_experiment_tests=("invalid-id"
 "empty-id"
 "no-id"
 "null-id"

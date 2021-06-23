@@ -134,12 +134,12 @@ function check_server_status() {
 	fi
 }
 
-# Do a post with JSON array having invalid fields
+# Post valid and invalid experiments to RM-HPO /experiment_trials API and validate result
 # input: Test name
 # output: get the JSON, post it to HPO and compare the result
-function invalid_post_experiment_tests(){
+function run_post_experiment_tests(){
 	__test_name__=$1
-	for post_test in "${invalid_post_tests[@]}"
+	for post_test in "${run_post_experiment_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${post_test}"
 		mkdir -p ${TESTS_}
@@ -245,7 +245,7 @@ function post_duplicate_experiments() {
 }
 
 # Post the experiment result to HPO module
-# input: Experiment result
+# input: Trial Number
 # output: Create the Curl command with given JSON and get the result
 function post_exp_trial_result() {
 	trial_num=$1
@@ -291,7 +291,10 @@ function operation_generate_subsequent() {
 	compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 }
 
-# Other RM-HPO post experiment tests
+# The test does the following: 
+# * Post the same experiment again with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result.
+# * Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
+# input: Test name
 function other_post_experiment_tests() {
 	__test_name__=$1
 	exp="valid-experiment"
@@ -329,8 +332,8 @@ function other_post_experiment_tests() {
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}	
 }
 
-#Generate the curl command based on the test name passed and get the result by querying it.
-# input: Test name
+# Generate the curl command based on the test name passed and get the result by querying it.
+# input: Test name and Trial number
 function run_get_trial_json_test() {
 	exp_trial=$1
 	trial_num=$2
@@ -418,7 +421,10 @@ function get_trial_json_invalid_tests() {
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
 
 		create_post_exp_json_array ${current_id}
-		post_experiment_json "${rm_hpo_post_experiment_json[$experiment]}"
+		
+		# Post a valid experiment to RM-HPO /experiment_trials API.
+		exp="valid-experiment"
+		post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
 
 		run_get_trial_json_test ${exp_trial}
 
@@ -514,7 +520,7 @@ function validate_exp_trial() {
 	echo ""
 }
 
-# Validate the trial JSON returned by RM-HPO GET API
+# Post a valid experiment to RM-HPO /experiment_trials API, Query it using valid experiment id and trial number and validate the result.
 # input: test name
 function get_trial_json_valid_tests() {
 	__test_name__=$1
@@ -540,17 +546,19 @@ function get_trial_json_valid_tests() {
 			
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
-		
+
+		# Post a valid experiment to RM-HPO /experiment_trials API.
+		exp="valid-experiment"
 		if [ "${exp_trial}" == "valid-exp-trial" ]; then
 			create_post_exp_json_array ${current_id}
-			post_experiment_json "${rm_hpo_post_experiment_json[$experiment]}"
+			post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
 			trial_num="${response}"
 		else
-			exp="valid-experiment"	
 			operation_generate_subsequent
 			trial_num="${response}"
 		fi
 		
+		# Query the RM-HPO /experiment_trials API for valid experiment id and trial number and get the result.
 		run_get_trial_json_test "valid-exp-trial" "${trial_num}"
 
 		actual_result="${http_code}"
@@ -572,13 +580,12 @@ function get_trial_json_valid_tests() {
 
 # Tests for RM-HPO POST experiment
 function rm_hpo_post_experiment() {
-	invalid_post_experiment_tests ${FUNCNAME}
+	run_post_experiment_tests ${FUNCNAME}
 	other_post_experiment_tests ${FUNCNAME}
 }
 
 # Tests for RM-HPO GET trial JSON API
 function rm_hpo_get_trial_json(){
-	experiment="valid-experiment"
 	for test in "${!rm_hpo_get_trial_json_tests[@]}"
 	do
 		${test} "${FUNCNAME}"
