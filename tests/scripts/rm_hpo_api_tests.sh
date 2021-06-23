@@ -137,7 +137,7 @@ function check_server_status() {
 # Do a post with JSON array having invalid fields
 # input: Test name
 # output: get the JSON, post it to HPO and compare the result
-function invalid_post(){
+function invalid_post_experiment_tests(){
 	__test_name__=$1
 	for post_test in "${invalid_post_tests[@]}"
 	do
@@ -572,7 +572,7 @@ function get_trial_json_valid_tests() {
 
 # Tests for RM-HPO POST experiment
 function rm_hpo_post_experiment() {
-	invalid_post ${FUNCNAME}
+	invalid_post_experiment_tests ${FUNCNAME}
 	other_post_experiment_tests ${FUNCNAME}
 }
 
