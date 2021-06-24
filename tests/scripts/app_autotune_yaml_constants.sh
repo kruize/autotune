@@ -27,6 +27,8 @@ app_autotune_yaml="app_autotune_yaml"
 testcase_matched=0
 module="da"
 path="${MANIFESTS}/${module}/${app_autotune_yaml}"
+autotune_object_create_msg="com.autotune.analyzer.deployment.AutotuneDeployment - Added autotune object"
+autotune_exception="com.autotune.analyzer.exceptions.InvalidValueException:"
 
 # testcases for application autotune yaml
 app_autotune_tests=("objective_function"
@@ -177,12 +179,15 @@ objective_function_autotune_objects=([blank-objective-function]='true'
 
 # Expected log message for objective function
 declare -A objective_function_expected_log_msgs
-objective_function_expected_log_msgs=([blank-objective-function]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable transaction_response_time missing in objective_function' 
-[invalid-objective-function]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable transaction_response_time missing in objective_function'
-[no-objective-function]='error: error validating "'${path}/${app_autotune_tests[0]}/no-objective-function.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-objective-function-value]='error: error validating "'${path}/${app_autotune_tests[0]}/no-objective-function-value.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-objective-function]='error: error validating "'${path}/${app_autotune_tests[0]}/null-objective-function.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-objective-function]='The Autotune "numerical-objective-function" is invalid: spec.sla.objective_function: Invalid value: "integer": spec.sla.objective_function in body must be of type string: "integer"'
+yaml_test_path="${path}/${app_autotune_tests[0]}"
+obj_fun_kubectl_error=': error validating data: ValidationError(Autotune.spec.sla): missing required field "objective_function" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
+objective_function_expected_log_msgs=([blank-objective-function]=''${autotune_exception}' function_variable transaction_response_time missing in objective_function' 
+[invalid-objective-function]=''${autotune_exception}' function_variable transaction_response_time missing in objective_function' 
+[no-objective-function]='error: error validating "'${yaml_test_path}/no-objective-function.yaml'"'${obj_fun_kubectl_error}'' 
+[no-objective-function-value]='error: error validating "'${yaml_test_path}/no-objective-function-value.yaml'"'${obj_fun_kubectl_error}'' 
+[null-objective-function]='error: error validating "'${yaml_test_path}/null-objective-function.yaml'"'${obj_fun_kubectl_error}'' 
+[numerical-objective-function]='The Autotune "numerical-objective-function" is invalid: spec.sla.objective_function: Invalid value: "integer": spec.sla.objective_function in body must be of type string: "integer"' 
+[valid-objective-function]=''${autotune_object_create_msg}' valid-objective-function')
 
 # Expected autotune object for sla class
 declare -A sla_class_autotune_objects
@@ -198,15 +203,17 @@ sla_class_autotune_objects=([blank-slaclass]='true'
 
 # Expected log message for sla class
 declare -A sla_class_expected_log_msgs
-sla_class_expected_log_msgs=([blank-slaclass]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object blank-slaclass'
-[invalid-slaclass]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: sla_class: rgyedg not supported'
-[no-sla]='error: error validating "'${path}/${app_autotune_tests[1]}/no-sla.yaml'": error validating data: ValidationError(Autotune.spec): missing required field "sla" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-slaclass]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object no-slaclass'
-[no-sla-value]='error: error validating "'${path}/${app_autotune_tests[1]}/no-sla-value.yaml'": error validating data: ValidationError(Autotune.spec): missing required field "sla" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-slaclass-value]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object no-slaclass-value-slaclass'
-[null-slaclass]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object null-slaclass'
-[numerical-slaclass]='The Autotune "numerical-slaclass" is invalid: spec.sla.sla_class: Invalid value: "integer": spec.sla.sla_class in body must be of type string: "integer"'
-[valid-slaclass]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-slaclass')
+yaml_test_path="${path}/${app_autotune_tests[1]}"
+sla_kubectl_error=': error validating data: ValidationError(Autotune.spec): missing required field "sla" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
+sla_class_expected_log_msgs=([blank-slaclass]=''${autotune_object_create_msg}' blank-slaclass' 
+[invalid-slaclass]=''${autotune_exception}' sla_class: rgyedg not supported' 
+[no-sla]='error: error validating "'${yaml_test_path}/no-sla.yaml'"'${sla_kubectl_error}''
+[no-slaclass]=''${autotune_object_create_msg}' no-slaclass'
+[no-sla-value]='error: error validating "'${yaml_test_path}/no-sla-value.yaml'"'${sla_kubectl_error}'' 
+[no-slaclass-value]=''${autotune_object_create_msg}' no-slaclass-value' 
+[null-slaclass]=''${autotune_object_create_msg}' null-slaclass' 
+[numerical-slaclass]='The Autotune "numerical-slaclass" is invalid: spec.sla.sla_class: Invalid value: "integer": spec.sla.sla_class in body must be of type string: "integer"' 
+[valid-slaclass]=''${autotune_object_create_msg}' valid-slaclass')
 
 # Expected autotune object for direction
 declare -A direction_autotune_objects
@@ -220,13 +227,15 @@ direction_autotune_objects=([blank-direction]='true'
 
 # Expected log message for direction
 declare -A direction_expected_log_msgs
-direction_expected_log_msgs=([blank-direction]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid direction for autotune kind'
-[invalid-direction]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid direction for autotune kind'
-[no-direction]='error: error validating "'${path}/${app_autotune_tests[2]}/no-direction.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "direction" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-direction-value]='error: error validating "'${path}/${app_autotune_tests[2]}/no-direction-value.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "direction" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-direction]='error: error validating "'${path}/${app_autotune_tests[2]}/null-direction.yaml'": error validating data: ValidationError(Autotune.spec.sla): missing required field "direction" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-direction]='The Autotune "numerical-direction" is invalid: spec.sla.direction: Invalid value: "integer": spec.sla.direction in body must be of type string: "integer"'
-[valid-direction]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-direction')
+yaml_test_path="${path}/${app_autotune_tests[2]}"
+direction_kubectl_error=': error validating data: ValidationError(Autotune.spec.sla): missing required field "direction" in com.recommender.v1.Autotune.spec.sla; if you choose to ignore these errors, turn validation off with --validate=false'
+direction_expected_log_msgs=([blank-direction]=''${autotune_exception}' Invalid direction for autotune kind' 
+[invalid-direction]=''${autotune_exception}' Invalid direction for autotune kind' 
+[no-direction]='error: error validating "'${yaml_test_path}/no-direction.yaml'"'${direction_kubectl_error}'' 
+[no-direction-value]='error: error validating "'${yaml_test_path}/no-direction-value.yaml'"'${direction_kubectl_error}'' 
+[null-direction]='error: error validating "'${yaml_test_path}/null-direction.yaml'"'${direction_kubectl_error}'' 
+[numerical-direction]='The Autotune "numerical-direction" is invalid: spec.sla.direction: Invalid value: "integer": spec.sla.direction in body must be of type string: "integer"' 
+[valid-direction]=''${autotune_object_create_msg}' valid-direction')
 
 # Expected autotune object for function variable name
 declare -A function_variable_name_autotune_objects
@@ -240,13 +249,15 @@ function_variable_name_autotune_objects=([blank-function-variable-name]='true'
 
 # Expected log message for function variable name
 declare -A function_variable_name_expected_log_msgs
-function_variable_name_expected_log_msgs=([blank-function-variable-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable   missing in objective_function'
-[invalid-function-variable-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable transme missing in objective_function'
-[no-function-variable-name]='error: error validating "'${path}/${app_autotune_tests[3]}/no-function-variable-name.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables): invalid type for com.recommender.v1.Autotune.spec.sla.function_variables: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-function-variable-name-value]='error: error validating "'${path}/${app_autotune_tests[3]}/no-function-variable-name-value.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "name" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-function-variable-name]='error: error validating "'${path}/${app_autotune_tests[3]}/null-function-variable-name.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "name" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-function-variable-name]='The Autotune "numerical-function-variable-name" is invalid: spec.sla.function_variables.name: Invalid value: "integer": spec.sla.function_variables.name in body must be of type string: "integer"'
-[valid-function-variable-name]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-function-variable-name')
+yaml_test_path="${path}/${app_autotune_tests[3]}"
+fun_var_name_kubectl_error=': error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "name" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
+function_variable_name_expected_log_msgs=([blank-function-variable-name]=''${autotune_exception}' function_variable   missing in objective_function' 
+[invalid-function-variable-name]=''${autotune_exception}' function_variable transme missing in objective_function' 
+[no-function-variable-name]='error: error validating "'${yaml_test_path}/no-function-variable-name.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables): invalid type for com.recommender.v1.Autotune.spec.sla.function_variables: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
+[no-function-variable-name-value]='error: error validating "'${yaml_test_path}/no-function-variable-name-value.yaml'"'${fun_var_name_kubectl_error}'' 
+[null-function-variable-name]='error: error validating "'${yaml_test_path}/null-function-variable-name.yaml'"'${fun_var_name_kubectl_error}'' 
+[numerical-function-variable-name]='The Autotune "numerical-function-variable-name" is invalid: spec.sla.function_variables.name: Invalid value: "integer": spec.sla.function_variables.name in body must be of type string: "integer"' 
+[valid-function-variable-name]=''${autotune_object_create_msg}' valid-function-variable-name')
 
 # Expected autotune object for function variable query
 declare -A function_variable_query_autotune_objects
@@ -260,13 +271,15 @@ function_variable_query_autotune_objects=([blank-function-variable-query]='true'
 
 # Expected log message for function variable query
 declare -A function_variable_query_expected_log_msgs
-function_variable_query_expected_log_msgs=([blank-function-variable-query]='validation from da'
-[invalid-function-variable-query]='validation from da'
-[no-function-variable-query]='error: error validating "'${path}/${app_autotune_tests[4]}/no-function-variable-query.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "query" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-function-variable-query-value]='error: error validating "'${path}/${app_autotune_tests[4]}/no-function-variable-query-value.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "query" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-function-variable-query]='error: error validating "'${path}/${app_autotune_tests[4]}/null-function-variable-query.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "query" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-function-variable-query]='The Autotune "numerical-function-variable-query" is invalid: spec.sla.function_variables.query: Invalid value: "integer": spec.sla.function_variables.query in body must be of type string: "integer"'
-[valid-function-variable-query]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-function-variable-query')
+yaml_test_path="${path}/${app_autotune_tests[4]}"
+fun_var_query_kubectl_error=': error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "query" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
+function_variable_query_expected_log_msgs=([blank-function-variable-query]='validation from da' 
+[invalid-function-variable-query]='validation from da' 
+[no-function-variable-query]='error: error validating "'${yaml_test_path}/no-function-variable-query.yaml'"'${fun_var_query_kubectl_error}'' 
+[no-function-variable-query-value]='error: error validating "'${yaml_test_path}/no-function-variable-query-value.yaml'"'${fun_var_query_kubectl_error}'' 
+[null-function-variable-query]='error: error validating "'${yaml_test_path}/null-function-variable-query.yaml'"'${fun_var_query_kubectl_error}'' 
+[numerical-function-variable-query]='The Autotune "numerical-function-variable-query" is invalid: spec.sla.function_variables.query: Invalid value: "integer": spec.sla.function_variables.query in body must be of type string: "integer"' 
+[valid-function-variable-query]=''${autotune_object_create_msg}' valid-function-variable-query')
 
 # Expected autotune object for function variable datasource
 declare -A function_variable_datasource_autotune_objects
@@ -280,13 +293,14 @@ function_variable_datasource_autotune_objects=([blank-function-variable-datasour
 
 # Expected log message for sla function variable datasource
 declare -A function_variable_datasource_expected_log_msgs
-function_variable_datasource_expected_log_msgs=([blank-function-variable-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported'
-[invalid-function-variable-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported'
-[no-function-variable-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported'
-[no-function-variable-datasource-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported'
-[null-function-variable-datasource]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time datasource not supported'
-[numerical-function-variable-datasource]='The Autotune "numerical-function-variable-datasource" is invalid: spec.sla.function_variables.datasource: Invalid value: "integer": spec.sla.function_variables.datasource in body must be of type string: "integer"'
-[valid-function-variable-datasource]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-function-variable-datasource')
+function_var_exception="${autotune_exception} function_variable: transaction_response_time datasource not supported"
+function_variable_datasource_expected_log_msgs=([blank-function-variable-datasource]=''${function_var_exception}'' 
+[invalid-function-variable-datasource]=''${function_var_exception}'' 
+[no-function-variable-datasource]=''${function_var_exception}'' 
+[no-function-variable-datasource-value]=''${function_var_exception}'' 
+[null-function-variable-datasource]=''${function_var_exception}'' 
+[numerical-function-variable-datasource]='The Autotune "numerical-function-variable-datasource" is invalid: spec.sla.function_variables.datasource: Invalid value: "integer": spec.sla.function_variables.datasource in body must be of type string: "integer"' 
+[valid-function-variable-datasource]=''${autotune_object_create_msg}' valid-function-variable-datasource' )
 
 # Expected autotune object for function variable value type
 declare -A function_variable_value_type_autotune_objects
@@ -300,13 +314,15 @@ function_variable_value_type_autotune_objects=([blank-function-variable-value-ty
 
 # Expected log message for function variable value type
 declare -A function_variable_value_type_expected_log_msgs
-function_variable_value_type_expected_log_msgs=([blank-function-variable-value-type]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time value_type not supported'
-[invalid-function-variable-value-type]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: function_variable: transaction_response_time value_type not supported'
-[no-function-variable-value-type]='error: error validating "'${path}/${app_autotune_tests[6]}/no-function-variable-value-type.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "value_type" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-function-variable-value-type-value]='error: error validating "'${path}/${app_autotune_tests[6]}/no-function-variable-value-type-value.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "value_type" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-function-variable-value-type]='error: error validating "'${path}/${app_autotune_tests[6]}/null-function-variable-value-type.yaml'": error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "value_type" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-function-variable-value-type]='The Autotune "numerical-function-variable-value-type" is invalid: spec.sla.function_variables.value_type: Invalid value: "integer": spec.sla.function_variables.value_type in body must be of type string: "integer"'
-[valid-function-variable-value-type]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-function-variable-value-type')
+yaml_test_path="${path}/${app_autotune_tests[6]}"
+fun_var_type_kubectl_error=': error validating data: ValidationError(Autotune.spec.sla.function_variables\[0\]): missing required field "value_type" in com.recommender.v1.Autotune.spec.sla.function_variables; if you choose to ignore these errors, turn validation off with --validate=false'
+function_variable_value_type_expected_log_msgs=([blank-function-variable-value-type]=''${autotune_exception}' function_variable: transaction_response_time value_type not supported' 
+[invalid-function-variable-value-type]=''${autotune_exception}' function_variable: transaction_response_time value_type not supported' 
+[no-function-variable-value-type]='error: error validating "'${yaml_test_path}/no-function-variable-value-type.yaml'"'${fun_var_type_kubectl_error}'' 
+[no-function-variable-value-type-value]='error: error validating "'${yaml_test_path}/no-function-variable-value-type-value.yaml'"'${fun_var_type_kubectl_error}'' 
+[null-function-variable-value-type]='error: error validating "'${yaml_test_path}/null-function-variable-value-type.yaml'"'${fun_var_type_kubectl_error}'' 
+[numerical-function-variable-value-type]='The Autotune "numerical-function-variable-value-type" is invalid: spec.sla.function_variables.value_type: Invalid value: "integer": spec.sla.function_variables.value_type in body must be of type string: "integer"' 
+[valid-function-variable-value-type]=''${autotune_object_create_msg}' valid-function-variable-value-type' )
 
 # Expected autotune object for hpo_algo_impl
 declare -A hpo_algo_impl_autotune_objects
@@ -319,12 +335,12 @@ hpo_algo_impl_autotune_objects=([blank-hpo-algo-impl]='true'
 
 # Expected log message for hpo_algo_impl
 declare -A hpo_algo_impl_expected_log_msgs
-hpo_algo_impl_expected_log_msgs=([blank-hpo-algo-impl]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Hyperparameter Optimization Algorithm   not supported'
-[invalid-hpo-algo-impl]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Hyperparameter Optimization Algorithm xyz not supported'
+hpo_algo_impl_expected_log_msgs=([blank-hpo-algo-impl]=''${autotune_exception}' Hyperparameter Optimization Algorithm   not supported'
+[invalid-hpo-algo-impl]=''${autotune_exception}' Hyperparameter Optimization Algorithm xyz not supported'
 [no-hpo-algo-impl-value]='validation from da'
 [null-hpo-algo-impl]='validation from da'
 [numerical-hpo-algo-impl]='The Autotune "numerical-hpo-algo-impl" is invalid: spec.sla.hpo_algo_impl: Invalid value: "integer": spec.sla.hpo_algo_impl in body must be of type string: "integer"'
-[valid-hpo-algo-impl]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-hpo-algo-impl')
+[valid-hpo-algo-impl]=''${autotune_object_create_msg}' valid-hpo-algo-impl')
 
 # Expected autotune object for mode
 declare -A mode_autotune_objects
@@ -338,13 +354,15 @@ mode_autotune_objects=([blank-mode]='true'
 
 # Expected log message for mode
 declare -A mode_expected_log_msgs
-mode_expected_log_msgs=([blank-mode]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Autotune object mode not supported'
-[invalid-mode]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Autotune object mode not supported'
-[no-mode]='error: error validating "'${path}/${app_autotune_tests[8]}/no-mode.yaml'": error validating data: ValidationError(Autotune.spec): missing required field "mode" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-mode-value]='error: error validating "'${path}/${app_autotune_tests[8]}/no-mode-value.yaml'": error validating data: ValidationError(Autotune.spec): missing required field "mode" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-mode]='error: error validating "'${path}/${app_autotune_tests[8]}/null-mode.yaml'": error validating data: ValidationError(Autotune.spec): missing required field "mode" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-[numerical-mode]='The Autotune "numerical-mode" is invalid: spec.mode: Invalid value: "integer": spec.mode in body must be of type string: "integer"'
-[valid-mode]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-mode')
+yaml_test_path="${path}/${app_autotune_tests[8]}"
+mode_kubectl_error=': error validating data: ValidationError(Autotune.spec): missing required field "mode" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
+mode_expected_log_msgs=([blank-mode]=''${autotune_exception}' Autotune object mode not supported' 
+[invalid-mode]=''${autotune_exception}' Autotune object mode not supported' 
+[no-mode]='error: error validating "'${yaml_test_path}/no-mode.yaml'"'${mode_kubectl_error}'' 
+[no-mode-value]='error: error validating "'${yaml_test_path}/no-mode-value.yaml'"'${mode_kubectl_error}'' 
+[null-mode]='error: error validating "'${yaml_test_path}/null-mode.yaml'"'${mode_kubectl_error}'' 
+[numerical-mode]='The Autotune "numerical-mode" is invalid: spec.mode: Invalid value: "integer": spec.mode in body must be of type string: "integer"' 
+[valid-mode]=''${autotune_object_create_msg}' valid-mode' )
 
 # Expected autotune object for label
 declare -A label_autotune_objects
@@ -358,13 +376,14 @@ label_autotune_objects=([blank-label]='true'
 
 # Expected log message for label
 declare -A label_expected_log_msgs
-label_expected_log_msgs=([blank-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: label:   not supported'
-[invalid-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: label:   not supported'
-[no-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel'
-[no-label-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel'
-[null-label]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabel'
-[numerical-label]='The Autotune "numerical-label" is invalid: spec.selector.matchLabel: Invalid value: "integer": spec.selector.matchLabel in body must be of type string: "integer"'
-[valid-label]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-label')
+exception_invalid_label=''${autotune_exception}' Invalid MatchLabel'
+label_expected_log_msgs=([blank-label]=''${exception_invalid_label}' in selector' 
+[invalid-label]=''${autotune_exception}' label:   not supported' 
+[no-label]=''${exception_invalid_label}'' 
+[no-label-value]=''${exception_invalid_label}'' 
+[null-label]=''${exception_invalid_label}'' 
+[numerical-label]='The Autotune "numerical-label" is invalid: spec.selector.matchLabel: Invalid value: "integer": spec.selector.matchLabel in body must be of type string: "integer"' 
+[valid-label]=''${autotune_object_create_msg}' valid-label' )
 
 # Expected autotune object for label value
 declare -A labelvalue_autotune_objects
@@ -378,13 +397,13 @@ labelvalue_autotune_objects=([blank-labelvalue]='true'
 
 # Expected log message for label value
 declare -A labelvalue_expected_log_msgs
-labelvalue_expected_log_msgs=([blank-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: labelvalue:   not supported'
-[invalid-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: labelvalue:   not supported'
-[no-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabelValue'
-[no-labelvalue-value]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabelValue'
-[null-labelvalue]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: Invalid MatchLabelValue'
-[numerical-labelvalue]='The Autotune "numerical-labelvalue" is invalid: spec.selector.matchLabelValue: Invalid value: "integer": spec.selector.matchLabelValue in body must be of type string: "integer"'
-[valid-labelvalue]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-labelvalue')
+labelvalue_expected_log_msgs=([blank-labelvalue]=''${autotune_exception}' Invalid or blank MatchLabelValue in selector' 
+[invalid-labelvalue]=''${autotune_exception}' labelvalue:   not supported' 
+[no-labelvalue]=''${exception_invalid_label}'Value' 
+[no-labelvalue-value]=''${exception_invalid_label}'Value' 
+[null-labelvalue]=''${exception_invalid_label}'Value' 
+[numerical-labelvalue]='The Autotune "numerical-labelvalue" is invalid: spec.selector.matchLabelValue: Invalid value: "integer": spec.selector.matchLabelValue in body must be of type string: "integer"' 
+[valid-labelvalue]=''${autotune_object_create_msg}' valid-labelvalue' )
 
 # Expected autotune object for datasource name
 declare -A datasource_name_autotune_objects
@@ -398,13 +417,15 @@ datasource_name_autotune_objects=([blank-datasource-name]='true'
 
 # Expected log message for datasource name
 declare -A datasource_name_expected_log_msgs
-datasource_name_expected_log_msgs=([blank-datasource-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: datasource-name:   not supported'
-[invalid-datasource-name]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: datasource-name:   not supported'
-[no-datasource-name]='error: error validating "'${path}/${app_autotune_tests[11]}/no-datasource-name.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "name" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-datasource-name-value]='error: error validating "'${path}/${app_autotune_tests[11]}/no-datasource-name-value.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "name" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-datasource-name]='error: error validating "'${path}/${app_autotune_tests[11]}/null-datasource-name.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "name" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+yaml_test_path="${path}/${app_autotune_tests[11]}"
+datasource_name_kubectl_error=': error validating data: ValidationError(Autotune.spec.datasource): missing required field "name" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+datasource_name_expected_log_msgs=([blank-datasource-name]=''${autotune_exception}' datasource-name:   not supported'
+[invalid-datasource-name]=''${autotune_exception}' datasource-name:   not supported'
+[no-datasource-name]='error: error validating "'${yaml_test_path}/no-datasource-name.yaml'"'${datasource_name_kubectl_error}''
+[no-datasource-name-value]='error: error validating "'${yaml_test_path}/no-datasource-name-value.yaml'"'${datasource_name_kubectl_error}''
+[null-datasource-name]='error: error validating "'${yaml_test_path}/null-datasource-name.yaml'"'${datasource_name_kubectl_error}''
 [numerical-datasource-name]='The Autotune "numerical-datasource-name" is invalid: spec.datasource.name: Invalid value: "integer": spec.datasource.name in body must be of type string: "integer"'
-[valid-datasource-name]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-datasource-name')
+[valid-datasource-name]=''${autotune_object_create_msg}' valid-datasource-name')
 
 # Expected autotune object for datasource url
 declare -A datasource_url_autotune_objects
@@ -418,13 +439,15 @@ datasource_url_autotune_objects=([blank-datasource-url]='true'
 
 # Expected log message for datasource url
 declare -A datasource_url_expected_log_msgs
-datasource_url_expected_log_msgs=([blank-datasource-url]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: datasource-url:   not supported'
-[invalid-datasource-url]='com.autotune.dependencyAnalyzer.exceptions.InvalidValueException: datasource-name:   not supported'
-[no-datasource-url]='error: error validating "'${path}/${app_autotune_tests[12]}/no-datasource-url.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "value" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-[no-datasource-url-value]='error: error validating "'${path}/${app_autotune_tests[12]}/no-datasource-url-value.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "value" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-[null-datasource-url]='error: error validating "'${path}/${app_autotune_tests[12]}/null-datasource-url.yaml'": error validating data: ValidationError(Autotune.spec.datasource): missing required field "value" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+yaml_test_path="${path}/${app_autotune_tests[12]}"
+datasource_url_kubectl_error=': error validating data: ValidationError(Autotune.spec.datasource): missing required field "value" in com.recommender.v1.Autotune.spec.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+datasource_url_expected_log_msgs=([blank-datasource-url]=''${autotune_exception}' datasource-url:   not supported'
+[invalid-datasource-url]=''${autotune_exception}' datasource-url:   not supported'
+[no-datasource-url]='error: error validating "'${yaml_test_path}/no-datasource-url.yaml'"'${datasource_url_kubectl_error}''
+[no-datasource-url-value]='error: error validating "'${yaml_test_path}/no-datasource-url-value.yaml'"'${datasource_url_kubectl_error}''
+[null-datasource-url]='error: error validating "'${yaml_test_path}/null-datasource-url.yaml'"'${datasource_url_kubectl_error}''
 [numerical-datasource-url]='The Autotune "numerical-datasource-url" is invalid: spec.datasource.value: Invalid value: "integer": spec.datasource.value in body must be of type string: "integer"'
-[valid-datasource-url]='com.autotune.dependencyAnalyzer.deployment.AutotuneDeployment - Added autotune object valid-datasource-url')
+[valid-datasource-url]=''${autotune_object_create_msg}' valid-datasource-url')
 
 # Expected autotune object for other test cases
 declare -A autotune_other_autotune_objects
