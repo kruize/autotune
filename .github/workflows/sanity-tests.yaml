@@ -1,0 +1,60 @@
+name: Sanity tests 
+
+on:
+  schedule:
+  - cron: "0 0 * * *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  sanity_tests:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout autotune
+        uses: actions/checkout@v2
+        with:
+          repository: kruize/autotune
+          path: autotune
+
+      - name: Checkout benchmarks
+        uses: actions/checkout@v2
+        with:
+          repository: kruize/benchmarks
+          path: benchmarks
+
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+
+      - name: Start minikube
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system      
+
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube  
+          cd autotune/scripts
+          ./prometheus_on_minikube.sh -as    
+
+      - name: Run Sanity tests
+        run: |
+          echo Running Sanity tests
+          cd autotune/tests
+          ./test_autotune.sh -c minikube -i kruize/autotune:test --tctype=functional --testsuite=sanity --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
+          cd ${GITHUB_WORKSPACE}
+          ls
+          tar cvf autotune_test_results.tar autotune_test_results
+          ls
+
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+           name: autotune-results
+           path: ./autotune_test_results.tar
+           retention-days: 2
