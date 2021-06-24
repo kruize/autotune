@@ -61,7 +61,7 @@ function configmap_yaml_tests() {
 		
 		LOG_DIR="${TEST_SUITE_DIR}/${test}"
 		mkdir ${LOG_DIR}
-		config_yaml="${LOG_DIR}/${cluster_type}-config.yaml"
+		configmap_yaml="${LOG_DIR}/${cluster_type}-config.yaml"
 		yaml_dir="${LOG_DIR}/yamls"
 		mkdir ${yaml_dir}
 		
@@ -79,17 +79,20 @@ function configmap_yaml_tests() {
 			typeset -n replace="${test}_replace[${testcase}]"
 			
 			# Copy the configmap yaml 
-			cp "${configmap}/${cluster_type}-config.yaml" "${config_yaml}"
+			cp "${configmap}/${cluster_type}-config.yaml" "${configmap_yaml}"
 			
 			# Update the config map yaml with specified field
-			update_yaml ${find} ${replace} ${config_yaml}
+			update_yaml ${find} ${replace} ${configmap_yaml}
 			
 			# Keep a copy of the yaml used for the test
-			cp "${config_yaml}" "${yaml_dir}/${testcase}.yaml"
-			
+			cp "${configmap_yaml}" "${yaml_dir}/${testcase}.yaml"
+
+			# Set a flag and pass it along with configmap directory to tell the setup routine to ignore the autotune deployment status check
+			ignore_deployment_status_check="1"
+
 			#create autotune setup
 			echo -n "Deploying autotune..."| tee -a ${LOG}
-			setup ${LOG_DIR} "1" >> ${AUTOTUNE_SETUP_LOG} 2>&1
+			setup ${LOG_DIR} ${ignore_deployment_status_check} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 			echo "done"| tee -a  ${LOG}
 		
 			# get the log of the autotune pod
@@ -108,7 +111,7 @@ function configmap_yaml_tests() {
 			echo "" | tee -a  ${LOG}
 			echo "-------------------------------------------------------------------" | tee -a  ${LOG}
 		done
-		rm -r ${config_yaml}
+		rm -r ${configmap_yaml}
 	done
 	
 	end_time=$(get_date)

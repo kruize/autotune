@@ -18,13 +18,8 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-pushd ${CURRENT_DIR}/.. >> /dev/null
+AUTOTUNE_REPO="${CURRENT_DIR}/../.."
 
-TEST_DIR=${PWD}
-pushd ${TEST_DIR}/..  >> /dev/null
-
-AUTOTUNE_REPO="${PWD}"
-SETUP_LOG="${TEST_DIR}/setup.log"
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
 TOTAL_TESTS_PASSED=0
@@ -58,13 +53,13 @@ matched=0
 sanity=0
 setup=1
 # Path to the directory containing yaml files
-MANIFESTS="${PWD}/tests/autotune_test_yamls/manifests"
+MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
 module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # Path to the directory containing yaml files
-configmap="${PWD}/manifests/configmaps"
+configmap="${AUTOTUNE_REPO}/manifests/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -101,6 +96,7 @@ function time_diff() {
 }
 
 # Update the config map yaml with specified field
+# input: String to find and string to replace it with
 function update_yaml() {
 	find=$1
 	replace=$2
@@ -109,9 +105,10 @@ function update_yaml() {
 }
 
 # Set up the autotune 
+# input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
 function setup() {
 	CONFIGMAP_DIR=$1
-	configmap_test=$2
+	ignore_deployment_status_check=$2
 	
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
@@ -159,7 +156,7 @@ function deploy_autotune() {
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
 		echo "Installing Prometheus on minikube" >>/dev/stderr
-		setup_prometheus >> ${SETUP_LOG} 2>&1
+		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 	
 	echo "Deploying autotune"
@@ -177,10 +174,12 @@ function deploy_autotune() {
 	${cmd}
 	
 	status="$?"
-	# Check if autotune is deployed(Ignore in case of configmap_yaml_tests)
-	if [[ "${status}" -eq "1" && "${configmap_test}" != "1" ]]; then
+	# Check if autotune is deployed.
+	# Ignore the status check if ignore_deployment_status_check is set to "1".
+	# In case of configmap yaml tests we need not check if autotune has deployed properly during the setup since it is done as part of the test.
+	if [[ "${status}" -eq "1" && "${ignore_deployment_status_check}" != "1" ]]; then
 		echo "Error deploying autotune" >>/dev/stderr
-		echo "See ${PWD}/tests/setup.log for more info" >>/dev/stderr
+		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
 	fi
 }
