@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 #
-##### Script for validating RM-HPO APIs #####
+##### Script for validating HPO (Hyper Parameter Optimization) /experiment_trials API #####
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
@@ -25,8 +25,8 @@ SEARCH_SPACE_JSON="${CURRENT_DIR}/../resources/searchspace_jsons/searchspace.jso
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/hpo_api_constants.sh
 
-# Tests to validate the RM-HPO APIs
-function rm_hpo_api_tests() {
+# Tests to validate the HPO APIs
+function hpo_api_tests() {
 	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS_FAILED=0
@@ -34,21 +34,21 @@ function rm_hpo_api_tests() {
 	TESTS=0
 	((TOTAL_TEST_SUITES++))
 
-	rm_hpo_api_tests=("rm_hpo_post_experiment" "rm_hpo_get_trial_json" "rm_hpo_post_exp_result")  
+	hpo_api_tests=("hpo_post_experiment"  "hpo_get_trial_json" "hpo_post_exp_result")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
-		check_test_case "rm_hpo_api"
+		check_test_case "hpo_api"
 	fi
 
 	# create the result directory for given testsuite
 	echo ""
-	TEST_SUITE_DIR="${RESULTS}/rm_hpo_api_tests"
+	TEST_SUITE_DIR="${RESULTS}/hpo_api_tests"
 	mkdir -p ${TEST_SUITE_DIR}
 
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
-		testtorun=("${rm_hpo_api_tests[@]}")
+		testtorun=("${hpo_api_tests[@]}")
 	else
 		testtorun=${testcase}
 	fi
@@ -67,7 +67,7 @@ function rm_hpo_api_tests() {
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a ${LOG}
 
 		echo " " | tee -a ${LOG}
-		echo "Test description: ${rm_hpo_api_test_description[$test]}" | tee -a ${LOG}
+		echo "Test description: ${hpo_api_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 
 		# Perform the test
@@ -134,13 +134,14 @@ function check_server_status() {
 	fi
 }
 
-# Do a post with experment resluts having invalid fields
+# The test does the following:
+# In case of hpo_post_experiment test, Post valid and invalid experments to HPO /experiment_trials API and validate the reslut
+# In case of hpo_post_exp_result test, Post valid and invalid experiment results to HPO /experiment_trials API and validate the result
 # input: Test name
-# output: get the experment resluts, post it to HPO and compare the result
 function run_post_tests(){
-	__test_name__=$1
+	hpo_test_name=$1
 	
-	if [ "${__test_name__}" == "rm_hpo_post_experiment" ]; then
+	if [ "${hpo_test_name}" == "hpo_post_experiment" ]; then
 		exp_tests=("${run_post_experiment_tests[@]}")
 	else
 		exp_tests=("${run_post_exp_result_tests[@]}")
@@ -180,23 +181,22 @@ function run_post_tests(){
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
 
-		# Post a valid experiment to RM-HPO /experiment_trials API.
-		exp="valid-experiment"
-		if [ "${__test_name__}" == "rm_hpo_post_exp_result" ]; then
-			# Post the experiment JSON to RM-HPO /experiment_trials API
+		if [ "${hpo_test_name}" == "hpo_post_exp_result" ]; then
+			exp="valid-experiment"
+			# Post the experiment JSON to HPO /experiment_trials API
 			create_post_exp_json_array ${current_id}
-			post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+			post_experiment_json "${hpo_post_experiment_json[$exp]}"
 			trial_num="${response}"
 			
-			# Post the experiment result to RM-HPO /experiment_trials API
+			# Post the experiment result to HPO /experiment_trials API
 			create_post_exp_result_json_array ${current_id} ${trial_num}
-			post_experiment_trial "${rm_hpo_post_exp_result_json[$post_test]}"
-			expected_log_msg="${rm_hpo_exp_result_error_messages[${post_test}]}"
+			post_experiment_result_json "${hpo_post_exp_result_json[$post_test]}"
+			expected_log_msg="${hpo_exp_result_error_messages[$post_test]}"
 		else
-			# Post the experiment JSON to RM-HPO /experiment_trials API
+			# Post the experiment JSON to HPO /experiment_trials API
 			create_post_exp_json_array ${current_id}
-			post_experiment_json "${rm_hpo_post_experiment_json[$post_test]}"
-			expected_log_msg="${rm_hpo_error_messages[${post_test}]}"
+			post_experiment_json "${hpo_post_experiment_json[$exp]}"
+			expected_log_msg="${hpo_error_messages[$post_test]}"
 		fi
 
 		if [[ "${post_test}" == valid* ]]; then
@@ -218,7 +218,7 @@ function run_post_tests(){
 			((TESTS++))
 			error_message ${failed}
 		else
-			compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+			compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
 		fi
 		echo ""
 
@@ -237,9 +237,8 @@ function run_post_tests(){
 
 # Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_NEW" and check if experiments have started from the begining
 function post_duplicate_experiments() {
-	flag=0
 	create_post_exp_json_array ${current_id}
-	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	
 	if [ "${http_code}" == "200" ]; then
 		failed=0
@@ -250,68 +249,50 @@ function post_duplicate_experiments() {
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
 		
-		post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+		post_experiment_json "${hpo_post_experiment_json[$exp]}"
 		
 		actual_result="${http_code}"
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 	
-		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
 	else
 		failed=1
-		expected_result_="200"
-	expected_behaviour="RESPONSE_CODE = 200 OK"
-	((TOTAL_TESTS++))
-	((TESTS++))
-	error_message ${failed}
-fi
-}
-
-# Post the experiment result to HPO module
-# input: Trial Number
-# output: Create the Curl command with given JSON and get the result
-function post_exp_trial_result() {
-	trial_num=$1
-	exp_result='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
-	_post_=$(curl -H "Content-Type: application/json" -d "${exp_result}" http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
-	post_exp_result_cmd='curl -H "Content-Type: application/json" -d '${exp_result}' http://localhost:8085/experiment_trials -w '\n%{http_code}''
-
-	echo "" | tee -a ${LOG_} ${LOG}
-	echo "Command used to post the experiment result= ${post_exp_result_cmd}" | tee -a ${LOG_} ${LOG}
-	echo "" | tee -a ${LOG_} ${LOG}
-
-	echo "${_post_}" >> ${LOG_} ${LOG}
-
-	http_code=$(tail -n1 <<< "${_post_}")
-	response=$(echo -e "${_post_}" | tail -2 | head -1)
-	
-	echo "Response is ${response}" >> ${LOG_} ${LOG}
+		expected_behaviour="RESPONSE_CODE = 200 OK"
+		echo "Posting valid experiment failed"
+		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
+	fi
 }
 
 # Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_SUBSEQUENT" and check if same experiment continues
 function operation_generate_subsequent() {
 	create_post_exp_json_array ${current_id}
-	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
-	
-	# Sleep for few seconds to reduce the ambiguity
-	sleep 5
-	
+	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
-	post_exp_trial_result ${trial_num}
-	
+
 	# Sleep for few seconds to reduce the ambiguity
 	sleep 5
-	
+
+	# Post a valid experiment result to HPO /experiment_trials API.
+	echo -n "Post a valid experiment result to HPO..." | tee -a ${LOG_} ${LOG}
+	experiment_result="valid-experiment-result"
+	create_post_exp_result_json_array ${current_id} ${trial_num}
+	post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
+
+	# Sleep for few seconds to reduce the ambiguity
+	sleep 5
+
 	# Post the json with same Id having "operation: EXP_TRIAL_GENERATE_SUBSEQUENT"
 	echo "Post the json with same Id having operation: EXP_TRIAL_GENERATE_SUBSEQUENT" | tee -a ${LOG_} ${LOG}
 	exp="generate-subsequent"
-	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
-	
+	post_experiment_json "${hpo_post_experiment_json[$exp]}"
+
 	actual_result="${response}"
+	echo "actual_result ${actual_result}"
 	expected_result_=$(($trial_num+1))
 	expected_behaviour="trial_number = '${expected_result_}'"
-	
-	compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+
+	compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
 }
 
 # The test does the following: 
@@ -319,7 +300,7 @@ function operation_generate_subsequent() {
 # * Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
 # input: Test name
 function other_post_experiment_tests() {
-	__test_name__=$1
+	hpo_test_name=$1
 	exp="valid-experiment"
 	
 	for operation in "${other_post_experiment_tests[@]}"
@@ -599,35 +580,36 @@ function get_trial_json_valid_tests() {
 		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
 		echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 	done
-=======
-# Post the experiment result to HPO
+}
+
+# Post the experiment result to HPO /experiment_trials API
 # input: Experiment result
 # output: Create the Curl command with given JSON and get the result
-function post_experiment_trial() {
+function post_experiment_result_json() {
 	exp_result=$1
 
-	content_='curl -H "Content-Type: application/json"'
-	_post_=$(curl -H "Content-Type: application/json" -d "${exp_result}" http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
+	content='curl -H "Content-Type: application/json"'
+	post_result=$(curl -H "Content-Type: application/json" -d "${exp_result}" http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
 	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
-	post_exp_result_cmd="${content_} -d ${exp_result} http://localhost:8085/experiment_trials -w '\n%{http_code}'"
+	post_exp_result_cmd="${content} -d ${exp_result} http://localhost:8085/experiment_trials -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment result= ${post_exp_result_cmd}" | tee -a ${LOG_} ${LOG}
 	echo "" | tee -a ${LOG_} ${LOG}
 
-	echo "${_post_}" >> ${LOG_} ${LOG}
+	echo "${post_result}" >> ${LOG_} ${LOG}
 
-	http_code=$(tail -n1 <<< "${_post_}")
-	response=$(echo -e "${_post_}" | tail -2 | head -1)
+	http_code=$(tail -n1 <<< "${post_result}")
+	response=$(echo -e "${post_result}" | tail -2 | head -1)
 	echo "Response is ${response}" >> ${LOG_} ${LOG}
 }
 
-# Post same result multiple times for the same id & trial number
+# # Post duplicate experiment results to HPO /experiment_trials API and validate the result
 function post_duplicate_exp_result() {
-	# Post a valid experiment to RM-HPO /experiment_trials API.
+	# Post a valid experiment to HPO /experiment_trials API.
 	exp="valid-experiment"
 	create_post_exp_json_array ${current_id}
-	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
 
 	if [ "${http_code}" == "200" ]; then
@@ -636,42 +618,40 @@ function post_duplicate_exp_result() {
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
 
-		# Post a valid experiment result to RM-HPO /experiment_trials API.
-		exp_result="valid-experiment-result"
-		
+		# Post a valid experiment result to HPO /experiment_trials API.
+		experiment_result="valid-experiment-result"
+	
 		echo -n "Post the experiment result to HPO..."
 		create_post_exp_result_json_array ${current_id} ${trial_num}
-		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
 
-		# Post the duplicate experiment result to RM-HPO /experiment_trials API.
+		# Post the duplicate experiment result to HPO /experiment_trials API.
 		echo -n "Post the same experiment result to HPO again for the same id and trial number..."
 		create_post_exp_result_json_array ${current_id} ${trial_num}
-		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		actual_result="${http_code}"
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
 	else
 		failed=1
-		expected_result_="200"
 		expected_behaviour="RESPONSE_CODE = 200 OK"
-		((TOTAL_TESTS++))
-		((TESTS++))
-		error_message ${failed}
+		echo "Posting valid experiment failed"
+		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
 	fi
 }
 
-# Post different results for the same id & trial number
+# Post different experiment results to HPO /experiment_trials API for the same experiment id and validate the result
 function post_same_id_different_exp_result() {
-	# Post a valid experiment to RM-HPO /experiment_trials API.
+	# Post a valid experiment to HPO /experiment_trials API.
 	exp="valid-experiment"
 	create_post_exp_json_array ${current_id}
-	post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
 
 	if [ "${http_code}" == "200" ]; then
@@ -680,41 +660,42 @@ function post_same_id_different_exp_result() {
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
 
-		# Post a valid experiment result to RM-HPO /experiment_trials API.
-		exp_result="valid-experiment-result"
+		# Post a valid experiment result to HPO /experiment_trials API.
+		experiment_result="valid-experiment-result"
 		echo -n "Post the experiment result to HPO..."
 		create_post_exp_result_json_array ${current_id} ${trial_num}
-		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
 
-		# Post a different valid experiment result for the same id and trial number to RM-HPO /experiment_trials API.
-		exp_result="valid-different-result"
+		# Post a different valid experiment result for the same id and trial number to HPO /experiment_trials API.
+		experiment_result="valid-different-result"
 		echo -n "Post the differnt experiment result to HPO again for the same id and trial number..."
 		create_post_exp_result_json_array ${current_id} ${trial_num}
-		post_experiment_trial "${rm_hpo_post_exp_result_json[$exp_result]}"
+		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		actual_result="${http_code}"
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
+		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
 	else
 		failed=1
-		expected_result_="200"
 		expected_behaviour="RESPONSE_CODE = 200 OK"
-		((TOTAL_TESTS++))
-		((TESTS++))
-		error_message ${failed}
+		echo "Posting valid experiment failed"
+		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
 	fi
 }
 
-# Other RM-HPO post result tests
+# The test does the following:
+# * Post duplicate experiment results to HPO /experiment_trials API and validate the result
+# * Post different experiment results to HPO /experiment_trials API for the same experiment id and validate the result
+# input: Test name
 function other_exp_result_post_tests() {
-	__test_name__=$1
+	hpo_test_name=$1
 
-	for operation in "${other_exp_result_post_tests_[@]}"
+	for operation in "${other_exp_result_post_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${operation}"
 		mkdir -p ${TESTS_}
@@ -747,8 +728,8 @@ function other_exp_result_post_tests() {
 	done	
 }
 
-# Tests for RM-HPO POST experiment
-function rm_hpo_post_experiment() {
+# Tests for HPO /experiment_trials API POST experiment
+function hpo_post_experiment() {
 	run_post_tests ${FUNCNAME}
 	other_post_experiment_tests ${FUNCNAME}
 }
@@ -761,10 +742,8 @@ function rm_hpo_get_trial_json(){
 	done 
 }
 
-# Tests for RM-HPO POST experiment
-function rm_hpo_post_exp_result() {
-	valid_exp="valid-experiment"
-	valid_exp_result="valid-experiment-result"
+# Tests for HPO /experiment_trials API POST experiment results
+function hpo_post_exp_result() {
 	run_post_tests ${FUNCNAME}
 	other_exp_result_post_tests ${FUNCNAME}
 }

@@ -86,23 +86,23 @@
   	3. Update and apply the layer config yaml and compare the ids
   	4. Apply new layer config and validate the id
 
-- **RM-HPO API tests**
+- **HPO (Hyper Parameter Optimization) API tests**
 
-  Here we validate the RM-HPO REST API.
+  Here we validate the HPO /experiment_trials API.
   
   The test does the following:
 
   - Start HPO service using mock [script](/tests/scripts/start_hpo_servers.sh)
   - Validate HPO result for following scenarios:
-  	1. Post invalid experiments and validate the results
-  	2. Post the same experiment again with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result
-  	3. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
-  	4. Query the API with different invalid combination of experiment id and trial number
-  	5. Query the API for valid experiment id and trial number and validate the result
-  	6. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial. Now query the API using that trial number and validate the result
-  	7. Post invalid experiment results and validate the result
-  	8. Post duplicate experiment results and validate the result
-  	9. Post different results for the same id and validate the result
+  	1. Post invalid and valid experiments to HPO /experiment_trials API and validate the results
+  	2. Post the same experiment again to HPO /experiment_trials API with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result
+  	3. Post the same experiment again to HPO /experiment_trials API with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
+  	4. Query the HPO /experiment_trials API with different invalid combination of experiment id and trial number
+  	5. Query the HPO /experiment_trials API for valid experiment id and trial number and validate the result
+  	6. Post the same experiment again to HPO /experiment_trials API with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial. Now query the API using that trial number and validate the result
+  	7. Post invalid and valid experiment results to HPO /experiment_trials API and validate the result
+  	8. Post duplicate experiment results to HPO /experiment_trials API and validate the result
+  	9. Post different experiment results to HPO /experiment_trials API for the same experiment id and validate the result
 
 ## Supported Clusters
 - Minikube
