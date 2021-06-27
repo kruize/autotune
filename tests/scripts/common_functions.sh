@@ -184,28 +184,36 @@ function deploy_autotune() {
 	fi
 }
 
-# Remove the autotune setup
-# output: Remove all the autotune dependencies
-function autotune_cleanup() {
-	echo  "Removing Autotune dependencies..."
-	pushd ${AUTOTUNE_REPO} > /dev/null
-	pushd autotune/ > /dev/null 2>&1
-	cmd="./deploy.sh -c ${cluster_type} -t"
-	echo "CMD= ${cmd}"
-	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
-	popd > /dev/null
-	echo "done"
-}
-
 # Remove the prometheus setup
 # output: Remove all the prometheus dependencies
 function prometheus_cleanup() {
-	pushd autotune > /dev/null
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1"| awk '{print $4}')
 	if [ "${prometheus_pod_running}" == "Running" ]; then
 		./scripts/prometheus_on_minikube.sh -t
 	fi
+}
+
+# Remove the autotune setup
+# output: Remove all the autotune dependencies
+function autotune_cleanup() {
+	RESULTS_LOG=$1
+	
+	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
+	if [ ! -z "${result_dir}" ]; then
+		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
+		AUTOTUNE_REPO="${AUTOTUNE_REPO}/autotune"
+	fi
+	
+	echo  "Removing Autotune dependencies..."
+	pushd ${AUTOTUNE_REPO} > /dev/null
+	cmd="./deploy.sh -c ${cluster_type} -t"
+	echo "CMD= ${cmd}"
+	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	# Remove the prometheus setup
+	prometheus_cleanup
+	popd > /dev/null
+	echo "done"
 }
 
 # list of test cases supported 
@@ -557,7 +565,7 @@ function run_test() {
 	echo ""
 	
 	# Delete the prometheus service
-	kubectl delete svc prometheus-test -n monitoring
+	kubectl delete svc prometheus-test -n ${NAMESPACE}
 }
 
 # Form the curl command based on the cluster type
@@ -1446,11 +1454,11 @@ function get_autotune_pod_log() {
 # Expose prometheus as nodeport and get the url
 function expose_prometheus() {
 	if [ "${cluster_type}" == "minikube" ]; then
-		exposed=$(kubectl get svc -n monitoring | grep "prometheus-test")
+		exposed=$(kubectl get svc -n ${NAMESPACE} | grep "prometheus-test")
 		
 		# Check if the service already exposed, If not then expose the service
 		if [ -z "${exposed}" ]; then
-			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-test -n monitoring >> ${LOG} 2>&1
+			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-test -n ${NAMESPACE} >> ${LOG} 2>&1
 		fi
 		
 		prometheus_url=$(minikube service list | grep "prometheus-test" | awk '{print $8}')

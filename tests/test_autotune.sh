@@ -188,6 +188,5 @@ if [ "${setup}" -ne "0" ]; then
 	echo "########################################################################"
 	echo ""
 else
-	autotune_cleanup
-	prometheus_cleanup
+	autotune_cleanup ${resultsdir}
 fi
