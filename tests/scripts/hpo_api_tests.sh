@@ -135,8 +135,8 @@ function check_server_status() {
 }
 
 # The test does the following:
-# In case of hpo_post_experiment test, Post valid and invalid experments to HPO /experiment_trials API and validate the reslut
-# In case of hpo_post_exp_result test, Post valid and invalid experiment results to HPO /experiment_trials API and validate the result
+# In case of hpo_post_experiment test, Post valid and invalid experiments to HPO /experiment_trials API and validate the reslut
+# In case of hpo_post_exp_result test, Post valid and invalid experiments results to HPO /experiment_trials API and validate the result
 # input: Test name
 function run_post_tests(){
 	hpo_test_name=$1
@@ -184,17 +184,17 @@ function run_post_tests(){
 		if [ "${hpo_test_name}" == "hpo_post_exp_result" ]; then
 			exp="valid-experiment"
 			# Post the experiment JSON to HPO /experiment_trials API
-			create_post_exp_json_array ${current_id}
+			create_post_exp_json_array "${current_id}"
 			post_experiment_json "${hpo_post_experiment_json[$exp]}"
 			trial_num="${response}"
 			
 			# Post the experiment result to HPO /experiment_trials API
-			create_post_exp_result_json_array ${current_id} ${trial_num}
+			create_post_exp_result_json_array "${current_id}" "${trial_num}"
 			post_experiment_result_json "${hpo_post_exp_result_json[$post_test]}"
 			expected_log_msg="${hpo_exp_result_error_messages[$post_test]}"
 		else
 			# Post the experiment JSON to HPO /experiment_trials API
-			create_post_exp_json_array ${current_id}
+			create_post_exp_json_array "${current_id}"
 			post_experiment_json "${hpo_post_experiment_json[$exp]}"
 			expected_log_msg="${hpo_error_messages[$post_test]}"
 		fi
@@ -216,9 +216,9 @@ function run_post_tests(){
 			fi
 			((TOTAL_TESTS++))
 			((TESTS++))
-			error_message ${failed}
+			error_message "${failed}"
 		else
-			compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
+			compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 		fi
 		echo ""
 
@@ -235,9 +235,9 @@ function run_post_tests(){
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 }
 
-# Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_NEW" and check if experiments have started from the begining
+# Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_NEW" and check if experiments have started from the beginning
 function post_duplicate_experiments() {
-	create_post_exp_json_array ${current_id}
+	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	
 	if [ "${http_code}" == "200" ]; then
@@ -255,18 +255,18 @@ function post_duplicate_experiments() {
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 	
-		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
+		compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 	else
 		failed=1
 		expected_behaviour="RESPONSE_CODE = 200 OK"
 		echo "Posting valid experiment failed"
-		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
+		display_result "${expected_behaviour}" "${hpo_test_name}" "${failed}"
 	fi
 }
 
 # Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_SUBSEQUENT" and check if same experiment continues
 function operation_generate_subsequent() {
-	create_post_exp_json_array ${current_id}
+	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
 
@@ -276,7 +276,7 @@ function operation_generate_subsequent() {
 	# Post a valid experiment result to HPO /experiment_trials API.
 	echo -n "Post a valid experiment result to HPO..." | tee -a ${LOG_} ${LOG}
 	experiment_result="valid-experiment-result"
-	create_post_exp_result_json_array ${current_id} ${trial_num}
+	create_post_exp_result_json_array "${current_id}" "${trial_num}"
 	post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 	# Sleep for few seconds to reduce the ambiguity
@@ -292,7 +292,7 @@ function operation_generate_subsequent() {
 	expected_result_=$(($trial_num+1))
 	expected_behaviour="trial_number = '${expected_result_}'"
 
-	compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
+	compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 }
 
 # The test does the following: 
@@ -604,11 +604,11 @@ function post_experiment_result_json() {
 	echo "Response is ${response}" >> ${LOG_} ${LOG}
 }
 
-# # Post duplicate experiment results to HPO /experiment_trials API and validate the result
+# Post duplicate experiment results to HPO /experiment_trials API and validate the result
 function post_duplicate_exp_result() {
 	# Post a valid experiment to HPO /experiment_trials API.
 	exp="valid-experiment"
-	create_post_exp_json_array ${current_id}
+	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
 
@@ -622,7 +622,7 @@ function post_duplicate_exp_result() {
 		experiment_result="valid-experiment-result"
 	
 		echo -n "Post the experiment result to HPO..."
-		create_post_exp_result_json_array ${current_id} ${trial_num}
+		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		# Sleep for few seconds to reduce the ambiguity
@@ -630,19 +630,19 @@ function post_duplicate_exp_result() {
 
 		# Post the duplicate experiment result to HPO /experiment_trials API.
 		echo -n "Post the same experiment result to HPO again for the same id and trial number..."
-		create_post_exp_result_json_array ${current_id} ${trial_num}
+		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		actual_result="${http_code}"
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
+		compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 	else
 		failed=1
 		expected_behaviour="RESPONSE_CODE = 200 OK"
 		echo "Posting valid experiment failed"
-		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
+		display_result "${expected_behaviour}" "${hpo_test_name}" "${failed}"
 	fi
 }
 
@@ -650,7 +650,7 @@ function post_duplicate_exp_result() {
 function post_same_id_different_exp_result() {
 	# Post a valid experiment to HPO /experiment_trials API.
 	exp="valid-experiment"
-	create_post_exp_json_array ${current_id}
+	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
 	trial_num="${response}"
 
@@ -663,7 +663,7 @@ function post_same_id_different_exp_result() {
 		# Post a valid experiment result to HPO /experiment_trials API.
 		experiment_result="valid-experiment-result"
 		echo -n "Post the experiment result to HPO..."
-		create_post_exp_result_json_array ${current_id} ${trial_num}
+		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		# Sleep for few seconds to reduce the ambiguity
@@ -672,19 +672,19 @@ function post_same_id_different_exp_result() {
 		# Post a different valid experiment result for the same id and trial number to HPO /experiment_trials API.
 		experiment_result="valid-different-result"
 		echo -n "Post the differnt experiment result to HPO again for the same id and trial number..."
-		create_post_exp_result_json_array ${current_id} ${trial_num}
+		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
 		actual_result="${http_code}"
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
-		compare_result ${hpo_test_name} ${expected_result_} "${expected_behaviour}"
+		compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 	else
 		failed=1
 		expected_behaviour="RESPONSE_CODE = 200 OK"
 		echo "Posting valid experiment failed"
-		display_result "${expected_behaviour}" ${hpo_test_name} ${failed}
+		display_result "${expected_behaviour}" "${hpo_test_name}" "${failed}"
 	fi
 }
 
