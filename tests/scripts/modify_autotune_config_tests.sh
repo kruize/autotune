@@ -29,7 +29,7 @@ function modify_autotune_config_tests() {
 	TESTS=0
 
 	if [ ! -z "${testcase}" ]; then
-		check_test_case modify_autotune_config
+		check_test_case "modify_autotune_config"
 	fi
 	
 	TESTS_DIR="${RESULTS}/${FUNCNAME}"
@@ -92,7 +92,7 @@ function modify_autotune_config_tests() {
 	FAILED_CASES=("${FAILED[@]}")
 	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
+	testsuitesummary "${FUNCNAME}" "${elapsed_time}" "${FAILED_CASES}"
 }
 
 # Perform the tests for Modify existing autotuneconfig 
@@ -118,7 +118,7 @@ function perform_test() {
 	IFS=' ' read -r -a autotune_config_names <<<  ${autotune_config_names}
 	
 	# Get the autotune config jsons
-	get_autotune_config_jsons ${AUTOTUNE_CONFIG_JSONS_DIR} ${autotune_config_names[@]}
+	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}" "${autotune_config_names[@]}"
 	
 	validate_list_autotune_tunables > >(tee "${LOG}") 2>&1
 	echo " " | tee -a ${LOG}
@@ -130,27 +130,27 @@ function perform_test() {
 
 # Test to add new tunable to existing autotuneconfig
 function add_new_tunable() {
-	perform_test ${FUNCNAME} 
+	perform_test "${FUNCNAME}" 
 }
 
 # Test to replace tunable name by null value to exiting autotuneconfig
 function apply_null_tunable() {
-	perform_test ${FUNCNAME}
+	perform_test "${FUNCNAME}"
 }
 
 # Test to remove tunable from exiting autotuneconfig and check for API result
 function remove_tunable() {
-	perform_test ${FUNCNAME}
+	perform_test "${FUNCNAME}"
 }
 
 # Test to change tunable bound of exiting autotuneconfig and check for API result
 function change_bound() {
-	perform_test ${FUNCNAME}
+	perform_test "${FUNCNAME}"
 }
 
 # Test to add multiple tunables to exiting autotuneconfig and check for API result
 function multiple_tunables() {
-	perform_test ${FUNCNAME}
+	perform_test "${FUNCNAME}"
 }
 
 # Validate listAutotuneTunabels API 
@@ -158,10 +158,10 @@ function validate_list_autotune_tunables() {
 	# test listAutotuneTunables API for specific sla_class and layer
 	sla_class="response_time"
 	layer="container"
-	list_autotune_tunables_test ${sla_class} ${layer}
+	list_autotune_tunables_test "${sla_class}" "${layer}"
 
 	# test listAutotuneTunables API for specific sla_class
-	list_autotune_tunables_test ${sla_class} 
+	list_autotune_tunables_test "${sla_class}" 
 	
 	# test listautotunetunables API for all layers
 	list_autotune_tunables_test

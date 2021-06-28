@@ -188,5 +188,5 @@ if [ "${setup}" -ne "0" ]; then
 	echo "########################################################################"
 	echo ""
 else
-	autotune_cleanup ${resultsdir}
+	autotune_cleanup "${resultsdir}"
 fi

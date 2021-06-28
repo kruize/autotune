@@ -121,7 +121,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  ${cluster_type} ${AUTOTUNE_DOCKER_IMAGE} ${CONFIGMAP_DIR}
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -326,7 +326,7 @@ function run_jmeter_load() {
 	app_name=$1
 	num_instances=$2
 	MAX_LOOP=2
-	set_app_folder ${app_name}
+	set_app_folder "${app_name}"
 	echo
 	echo "Starting ${app_name} jmeter workload..."
 	# Invoke the jmeter load script
@@ -338,7 +338,7 @@ function run_jmeter_load() {
 # output: Remove the instances of specified application 
 function app_cleanup() {
 	app_name=$1
-	set_app_folder ${app_name}
+	set_app_folder "${app_name}"
 	echo
 	echo -n "Removing ${app_name} app..."
 	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
@@ -353,7 +353,7 @@ function deploy_app() {
 	app_name=$2
 	num_instances=$3
 	
-	set_app_folder ${app_name}	
+	set_app_folder "${app_name}"	
 	
 	if [ ${num_instances} == 1 ]; then
 		echo "Deploying ${num_instances} instance of ${app_name} app..."
@@ -413,29 +413,29 @@ function validate_yaml () {
 			echo "${object} object ${testcase} got created" | tee -a ${LOG}
 			if  grep -q "${expected_log_msg}" "${AUTOTUNE_LOG}" ; then
 				failed=0
-				error_message  ${failed} 
+				error_message "${failed}" 
 			else
 				failed=1
-				error_message  ${failed} 
+				error_message "${failed}" 
 			fi
 		else
 			echo "${object} object ${testcase} did not get created" | tee -a ${LOG}
 			failed=1
-			error_message ${failed}
+			error_message "${failed}" 
 		fi
 	else
 		if [ ! -z "${status}" ]; then
 			echo "${object} object ${testcase} got created" | tee -a ${LOG}
 			failed=1
-			error_message ${failed} 
+			error_message "${failed}"  
 		else	
 			echo "${object} object ${testcase} did not get created" | tee -a ${LOG}
 			if grep -q "${expected_log_msg}" "kubectl.log" ; then
 				failed=0
-				error_message ${failed}  
+				error_message "${failed}"  
 			else
 				failed=1
-				error_message ${failed} 
+				error_message "${failed}" 
 			fi
 		fi 
 	fi
@@ -489,7 +489,7 @@ function run_test_case() {
 	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
 	
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
@@ -541,7 +541,7 @@ function run_test() {
 			yaml=${path}/${test}/${testcase}
 			typeset -n autotune_object="${test}_autotune_objects[${testcase}]"
 			typeset -n expected_log_msg="${test}_expected_log_msgs[${testcase}]"
-			run_test_case ${object} ${testcase} ${yaml} 
+			run_test_case "${object}" "${testcase}" "${yaml}" 
 			echo
 		done
 		echo ""
@@ -559,7 +559,7 @@ function run_test() {
 		yaml=${path}/${other_tests}/${testcase}
 		typeset -n autotune_object="${other_tests}_autotune_objects[${testcase}]"
 		typeset -n expected_log_msg="${other_tests}_expected_log_msgs[${testcase}]"
-		run_test_case ${object} ${testcase} ${yaml} 
+		run_test_case "${object}" "${testcase}" "${yaml}" 
 		echo
 	done
 	echo ""
@@ -709,7 +709,7 @@ function get_searchspace_json() {
 	fi
 
 	json_file="${LOG_DIR}/actual_searchspace.json"
-	run_curl_cmd "${cmd}" ${json_file}
+	run_curl_cmd "${cmd}" "${json_file}"
 }
 
 # Tests the searchSpace Autotune API
@@ -732,7 +732,7 @@ function searchspace_test() {
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee  -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee  -a ${LOG}
@@ -742,10 +742,10 @@ function searchspace_test() {
 		get_searchspace_json
 		create_expected_searchspace_json
 	else
-		get_searchspace_json ${app_name}
-		create_expected_searchspace_json ${app_name}
+		get_searchspace_json "${app_name}"
+		create_expected_searchspace_json "${app_name}"
 	fi
-	compare_json ${LOG_DIR}/actual_searchspace.json ${LOG_DIR}/expected_searchspace.json ${test_name}
+	compare_json "${LOG_DIR}/actual_searchspace.json" "${LOG_DIR}/expected_searchspace.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -869,7 +869,7 @@ function get_listapptunables_json() {
 	fi
 
 	json_file="${LOG_DIR}/actual_listapptunables.json"
-	run_curl_cmd "${cmd}" ${json_file}
+	run_curl_cmd "${cmd}" "${json_file}"
 }
 
 # Test listAppTunables Autotune API
@@ -898,7 +898,7 @@ function listapptunables_test() {
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 	
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${FUNCNAME}" | tee -a ${LOG}
@@ -909,15 +909,15 @@ function listapptunables_test() {
 		create_expected_listapptunables_json
 	elif [[ ! -z ${app_name} && ! -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for specific application and specific layer----------*******" | tee -a ${LOG}
-		get_listapptunables_json ${app_name} ${layer_name}
-		create_expected_listapptunables_json ${app_name} ${layer_name}
+		get_listapptunables_json "${app_name}" "${layer_name}"
+		create_expected_listapptunables_json "${app_name}" "${layer_name}"
 	elif [[ ! -z ${app_name} && -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for specified application----------*******" | tee -a ${LOG}
-		get_listapptunables_json ${app_name}
-		create_expected_listapptunables_json ${app_name}
+		get_listapptunables_json "${app_name}"
+		create_expected_listapptunables_json "${app_name}"
 	fi
 
-	compare_json ${LOG_DIR}/actual_listapptunables.json ${LOG_DIR}/expected_listapptunables.json ${test_name}
+	compare_json "${LOG_DIR}/actual_listapptunables.json" "${LOG_DIR}/expected_listapptunables.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -1009,7 +1009,7 @@ function get_list_autotune_tunables_json() {
 	fi
 
 	json_file="${LOG_DIR}/actual_list_tunables.json"
-	run_curl_cmd "${cmd}" ${json_file}
+	run_curl_cmd "${cmd}" "${json_file}"
 }
 
 # Test listAutotuneTunables Autotune API
@@ -1038,7 +1038,7 @@ function list_autotune_tunables_test() {
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 	
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee -a ${LOG}
@@ -1049,14 +1049,14 @@ function list_autotune_tunables_test() {
 		create_expected_listautotunetunables_json
 	elif [[ ! -z "${sla_class}" && -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for specified sla ----------*******" | tee -a ${LOG}
-		get_list_autotune_tunables_json ${sla_class}
-		create_expected_listautotunetunables_json ${sla_class}
+		get_list_autotune_tunables_json "${sla_class}"
+		create_expected_listautotunetunables_json "${sla_class}"
 	elif [[ ! -z "${sla_class}" && ! -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for specified sla and specific layer ----------*******" | tee -a ${LOG}
-		get_list_autotune_tunables_json ${sla_class} ${layer_name}
-		create_expected_listautotunetunables_json ${sla_class} ${layer_name}
+		get_list_autotune_tunables_json "${sla_class}" "${layer_name}"
+		create_expected_listautotunetunables_json "${sla_class}" "${layer_name}"
 	fi
-	compare_json ${LOG_DIR}/actual_list_tunables.json ${LOG_DIR}/expected_list_tunables.json ${test_name}
+	compare_json "${LOG_DIR}/actual_list_tunables.json" "${LOG_DIR}/expected_list_tunables.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -1140,7 +1140,7 @@ function get_listapplayer_json() {
 
 
 	json_file="${LOG_DIR}/actual_listapplayer.json"
-	run_curl_cmd "${cmd}" ${json_file}
+	run_curl_cmd "${cmd}" "${json_file}"
 }
 
 # Test listAppLayer Autotune API
@@ -1164,7 +1164,7 @@ function listapplayer_test() {
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee  -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee  -a ${LOG}
@@ -1174,10 +1174,10 @@ function listapplayer_test() {
 		get_listapplayer_json
 		create_expected_listapplayer_json
 	else
-		get_listapplayer_json ${app_name}
-		create_expected_listapplayer_json  ${app_name}
+		get_listapplayer_json "${app_name}"
+		create_expected_listapplayer_json "${app_name}"
 	fi
-	compare_json ${LOG_DIR}/actual_listapplayer.json ${LOG_DIR}/expected_listapplayer.json ${test_name}
+	compare_json "${LOG_DIR}/actual_listapplayer.json" "${LOG_DIR}/expected_listapplayer.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -1233,7 +1233,7 @@ function get_listapplication_json() {
 	fi
 
 	json_file="${LOG_DIR}/actual_listapp.json"
-	run_curl_cmd "${cmd}" ${json_file}
+	run_curl_cmd "${cmd}" "${json_file}"
 }
 
 # Test lisApplications Autotune API
@@ -1257,7 +1257,7 @@ function listapplications_test() {
 	AUTOTUNE_LOG="${LOG_DIR}/${test_name}_autotune.log"
 	
 	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	get_autotune_pod_log "${AUTOTUNE_LOG}"
 
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee -a ${LOG}
@@ -1268,10 +1268,10 @@ function listapplications_test() {
 		create_expected_listapplication_json
 	else
 		echo "*******----------- ${test_name} for specified application - ${app_name}----------*******" | tee -a ${LOG}
-		get_listapplication_json ${app_name}
-		create_expected_listapplication_json ${app_name}
+		get_listapplication_json "${app_name}"
+		create_expected_listapplication_json "${app_name}"
 	fi
-	compare_json ${LOG_DIR}/actual_listapp.json ${LOG_DIR}/expected_listapp.json ${test_name}
+	compare_json "${LOG_DIR}/actual_listapp.json" "${LOG_DIR}/expected_listapp.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -1477,5 +1477,5 @@ function compare_result() {
 		failed=1
 	fi
 	
-	display_result "${expected_behaviour}" ${__test__} ${failed}
+	display_result "${expected_behaviour}" "${__test__}" "${failed}"
 }
