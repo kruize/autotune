@@ -97,6 +97,9 @@
   	1. Post invalid experiments and validate the results
   	2. Post the same experiment again with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result
   	3. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
+  	4. Query the API with different invalid combination of experiment id and trial number
+  	5. Query the API for valid experiment id and trial number and validate the result
+  	6. Post the same experiment again with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial. Now query the API using that trial number and validate the result
   
 ## Supported Clusters
 - Minikube
