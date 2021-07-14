@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-##### Constants for RM-HPO API tests #####
+##### Constants for HPO API tests #####
 #
 
-# Breif description about the RM-HPO API tests
-declare -A rm_hpo_api_test_description
-rm_hpo_api_test_description=([rm_hpo_post_experiment]="Start the required HPO services, post a json from recommendation manager to HPO code with various combinations and validate the result"
-                             [rm_hpo_get_trial_json]="Start the required HPO services and query HPO using different combinations of id and trial_number and validate the result" 
-                             [rm_hpo_post_exp_result]="Start the required HPO services, query the experiment manager and post the result from recommendation manager to HPO and validate the result")
+# Breif description about the HPO API tests
+declare -A hpo_api_test_description
+hpo_api_test_description=([hpo_post_experiment]="Start the required HPO services, post an experiment json to HPO /experiment_trials API with various combinations and validate the result"
+                          [hpo_get_trial_json]="Start the required HPO services post a valid experiment json to HPO /experiment_trials API, query the API using different combinations of experiment id and trial_number and validate the result" 
+                          [hpo_post_exp_result]="Start the required HPO services,  post a valid experiment json to HPO /experiment_trials API and then post valid and invalid combinations of experiment result to the API and validate the result")
 
-# Tests to be carried out for RM-HPO (RM-Recommendation Manager module HPO-Hyper Parameter Optimization module)
+# Tests to be carried out for HPO (Hyper Parameter Optimization) module API to post an experiment
 run_post_experiment_tests=("invalid-id"
 "empty-id"
 "no-id"
@@ -46,18 +46,52 @@ run_post_experiment_tests=("invalid-id"
 
 other_post_experiment_tests=("post-duplicate-experiments" "operation-generate-subsequent")
 
-# Tests to be carried out for RM-HPO (RM-Recommendation manager module HPO-Hyper Parameter Optimization module) GET operation
+# Tests to be carried out for HPO module API to get trial json  
 declare -A rm_hpo_get_trial_json_tests
 rm_hpo_get_trial_json_tests=([get_trial_json_invalid_tests]='invalid-id empty-id no-id null-id only-valid-id invalid-trial-number empty-trial-number no-trial-number null-trial-number only-valid-trial-number'
                              [get_trial_json_valid_tests]='valid-exp-trial valid-exp-trial-generate-subsequent')
 
-declare -A rm_hpo_post_experiment_json
+# Tests to be carried out for HPO module API to post experiment results 
+run_post_exp_result_tests=("invalid-id"
+"empty-id"
+"no-id"
+"null-id"
+"multiple-id"
+"invalid-trial-number"
+"no-trial-number"
+"null-trial-number"
+"multiple-trial-number"
+"invalid-trial-result"
+"empty-trial-result"
+"no-trial-result"
+"null-trial-result"
+"multiple-trial-result"
+"invalid-result-value-type"
+"empty-result-value-type"
+"no-result-value-type"
+"null-result-value-type"
+"multiple-result-value-type"
+"invalid-result-value"
+"no-result-value"
+"null-result-value"
+"multiple-result-value"
+"invalid-operation"
+"empty-operation"
+"no-operation"
+"null-operation"
+"multiple-operation"
+"valid-experiment-result"
+"additional-field")
+
+other_exp_result_post_tests=("post-duplicate-exp-result" "post-same-id-different-exp-result")
+
+declare -A hpo_post_experiment_json
 # Json array for different test cases
 # input: Current autotune object id
 # output: Generate the json array with given id
 function create_post_exp_json_array() {
 	current_id=$1
-	rm_hpo_post_experiment_json=([invalid-id]='{"id" : "0123456789012345678901234567890123456789012345678901234567890123456789", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}'
+	hpo_post_experiment_json=([invalid-id]='{"id" : "0123456789012345678901234567890123456789012345678901234567890123456789", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}'
 	[empty-id]='{"id" : " ", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}'
 	[no-id]='{"url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}'
 	[null-id]='{"id" : null, "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}'
@@ -77,8 +111,8 @@ function create_post_exp_json_array() {
 	[generate-subsequent]='{"id" : "'${current_id}'", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_SUBSEQUENT" }')
 }
 
-declare -A rm_hpo_error_messages
-rm_hpo_error_messages=([invalid-id]="KeyError: '0123456789012345678901234567890123456789012345678901234567890123456789'"
+declare -A hpo_error_messages
+hpo_error_messages=([invalid-id]="KeyError: '0123456789012345678901234567890123456789012345678901234567890123456789'"
 [empty-id]="KeyError: ' '"
 [no-id]="KeyError: 'id'"
 [null-id]="KeyError: None"
@@ -86,3 +120,52 @@ rm_hpo_error_messages=([invalid-id]="KeyError: '01234567890123456789012345678901
 [no-url]="KeyError: 'url'"
 [null-url]="Invalid URL 'None'"
 [no-operation]="KeyError: 'operation'")
+
+declare -A hpo_post_exp_result_json
+# Experiment results for different test cases
+# input: Current autotune object id
+# output: Generate the experiment result with given id
+function create_post_exp_result_json_array() {
+	current_id=$1
+	trial_num=$2
+	hpo_post_exp_result_json=([invalid-id]='{"id" : "xyz", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[empty-id]='{"id" : " ", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[no-id]='{"trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[null-id]='{"id" : null, "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[multiple-id]='{"id" : "'${current_id}'", "id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[invalid-trial-number]='{"id" : "'${current_id}'", "trial_number": 10000, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[no-trial-number]='{"id" : "'${current_id}'", "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[null-trial-number]='{"id" : "'${current_id}'", "trial_number": null, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[multiple-trial-number]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_number": 1, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[invalid-trial-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "xyz", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[empty-trial-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": " ", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[no-trial-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[null-trial-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": null, "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[multiple-trial-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "trial_result": "failure", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[invalid-result-value-type]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "xyz", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[empty-result-value-type]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": " ", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[no-result-value-type]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[null-result-value-type]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": null, "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[multiple-result-value-type]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value_type": "int", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[invalid-result-value]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": -98.68, "operation" : "EXP_TRIAL_RESULT"}'
+	[no-result-value]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "operation" : "EXP_TRIAL_RESULT"}'
+	[null-result-value]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": null, "operation" : "EXP_TRIAL_RESULT"}'
+	[multiple-result-value]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78,  "result_value": 96.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[invalid-operation]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "xyz"}'
+	[empty-operation]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : " "}'
+	[no-operation]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78}'
+	[null-operation]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : null}'
+	[multiple-operation]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT", "operation" : "EXP_TRIAL_RESULT"}'
+	[additional-field]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT", "tunable_name" : "cpuRequest"}'
+	[valid-experiment-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"}'
+	[valid-different-result]='{"id" : "'${current_id}'", "trial_number": '${trial_num}', "trial_result": "success", "result_value_type": "double", "result_value": 89.78, "operation" : "EXP_TRIAL_RESULT"}')
+}
+
+declare -A hpo_exp_result_error_messages
+hpo_exp_result_error_messages=([no-id]="KeyError: 'id'"
+[no-trial-number]="KeyError: 'trial_number'"
+[no-trial-result]="KeyError: 'trial_result'"
+[no-result-value-type]="KeyError: 'result_value_type'"
+[no-result-value]="KeyError: 'result_value'"
+[no-operation]="KeyError: 'operation'")
+
