@@ -47,6 +47,7 @@ function basic_api_tests() {
 	TEST_SUITE_DIR="${RESULTS}/basic_api_tests"
 	AUTOTUNE_JSONS_DIR="${TEST_SUITE_DIR}/autotune_jsons"
 	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
+	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
 	mkdir -p ${AUTOTUNE_JSONS_DIR}
@@ -65,7 +66,7 @@ function basic_api_tests() {
 	
 	# create the autotune setup
 	echo "Setting up autotune..."
-	setup >> ${TEST_SUITE_DIR}/setup.log 2>&1
+	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "Setting up autotune...Done"
 	
 	# Giving a sleep for autotune pod to be up and running
@@ -79,7 +80,7 @@ function basic_api_tests() {
 	form_curl_cmd
 
 	# Deploy petclinic application instances	
-	deploy_app ${APP_REPO} petclinic 3
+	deploy_app "${APP_REPO}" "petclinic" "3"
 
 	# Sleep for sometime for application pods to be up
 	sleep 5
@@ -93,8 +94,8 @@ function basic_api_tests() {
 	label_pods app_pod_names label_names
 	
 	# Get the autotune jsons and autotune config jsons
-	get_autotune_jsons ${AUTOTUNE_JSONS_DIR} ${YAML_PATH} ${autotune_names[@]}
-	get_autotune_config_jsons ${AUTOTUNE_CONFIG_JSONS_DIR} ${autotune_config_names[@]}
+	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}" "${YAML_PATH}" "${autotune_names[@]}"
+	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}" "${autotune_config_names[@]}"
 
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
@@ -107,21 +108,21 @@ function basic_api_tests() {
 
 	   listapplications|all) 
 		# test listapplication API for specific application
-		listapplications_test ${application_name} 
+		listapplications_test "${application_name}" 
 	
 		# test listapplication API for all applications
 		listapplications_test
 		;;&	
 	   listapplayer|all)
 		# test listapplayer API for specific application
-		listapplayer_test ${application_name}
+		listapplayer_test "${application_name}"
 	
 		# test listapplayer API for all applications
 		listapplayer_test
 		;;&
 	   searchspace|all)
 		# test searchSpace API for specific application
-		searchspace_test ${application_name}
+		searchspace_test "${application_name}"
 	
 		# test searchSpace API for all applications
 		searchspace_test
@@ -130,11 +131,11 @@ function basic_api_tests() {
 		# test listAutotuneTunables API for specific sla_class and layer
 		sla_class="response_time"
 		layer="container"
-		list_autotune_tunables_test ${sla_class} ${layer}
+		list_autotune_tunables_test "${sla_class}" "${layer}"
 
 		# test listAutotuneTunables API for specific sla_class
 		sla_class="response_time"
-		list_autotune_tunables_test ${sla_class} 
+		list_autotune_tunables_test "${sla_class}" 
 	
 		# test listAutotuneTunables API for all layers
 		list_autotune_tunables_test
@@ -142,10 +143,10 @@ function basic_api_tests() {
 	    listapptunables|all)
 		# test listapptunables API for specific application and specific layer
 		layer="container"
-		listapptunables_test ${application_name} ${layer}
+		listapptunables_test "${application_name}" "${layer}"
 
 		# test listapptunables API for specific application
-		listapptunables_test ${application_name}
+		listapptunables_test "${application_name}"
 
 		# test listapptunables API for all applications	
 		listapptunables_test
@@ -161,11 +162,11 @@ function basic_api_tests() {
 	app_cleanup "petclinic"
 
 	# Cleanup autotune
-	autotune_cleanup ${cluster_type}
+	autotune_cleanup "${cluster_type}"
 	
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 	
 	# print the testsuite summary
-	testsuitesummary ${FUNCNAME} ${FAILED_CASES} ${elapsed_time}
+	testsuitesummary "${FUNCNAME}" "${elapsed_time}" "${FAILED_CASES}"
 }
