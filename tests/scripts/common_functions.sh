@@ -39,7 +39,7 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "configmap_yaml_tests"
 "autotune_id_tests"
 "autotune_layer_config_id_tests"
-"rm_hpo_api_tests")
+"hpo_api_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
