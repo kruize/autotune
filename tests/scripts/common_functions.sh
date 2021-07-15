@@ -18,13 +18,8 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-pushd ${CURRENT_DIR}/.. >> /dev/null
+AUTOTUNE_REPO="${CURRENT_DIR}/../.."
 
-TEST_DIR=${PWD}
-pushd ${TEST_DIR}/..  >> /dev/null
-
-AUTOTUNE_REPO="${PWD}"
-SETUP_LOG="${TEST_DIR}/setup.log"
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
 TOTAL_TESTS_PASSED=0
@@ -42,7 +37,9 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "modify_autotune_config_tests"
 "sanity"
 "configmap_yaml_tests"
-"hpo_api_tests")
+"autotune_id_tests"
+"autotune_layer_config_id_tests"
+"rm_hpo_api_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -56,13 +53,13 @@ matched=0
 sanity=0
 setup=1
 # Path to the directory containing yaml files
-MANIFESTS="${PWD}/tests/autotune_test_yamls/manifests"
+MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
 module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # Path to the directory containing yaml files
-configmap="${PWD}/manifests/configmaps"
+configmap="${AUTOTUNE_REPO}/manifests/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -99,6 +96,7 @@ function time_diff() {
 }
 
 # Update the config map yaml with specified field
+# input: String to find and string to replace it with
 function update_yaml() {
 	find=$1
 	replace=$2
@@ -107,8 +105,10 @@ function update_yaml() {
 }
 
 # Set up the autotune 
+# input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
 function setup() {
 	CONFIGMAP_DIR=$1
+	ignore_deployment_status_check=$2
 	
 	# remove the existing autotune objects
 	autotune_cleanup ${cluster_type}
@@ -156,7 +156,7 @@ function deploy_autotune() {
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
 		echo "Installing Prometheus on minikube" >>/dev/stderr
-		setup_prometheus >> ${SETUP_LOG} 2>&1
+		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 	
 	echo "Deploying autotune"
@@ -174,10 +174,10 @@ function deploy_autotune() {
 	${cmd}
 	
 	status="$?"
-	# Check if autotune is deployed 
-	if [ "${status}" -eq "1" ]; then
+	# Check if autotune is deployed. Ignore the status check if ignore_deployment_status_check is set to "1". In case of configmap yaml tests we need not check if autotune has deployed properly during the setup since it is done as part of the test.
+	if [[ "${status}" -eq "1" && "${ignore_deployment_status_check}" != "1" ]]; then
 		echo "Error deploying autotune" >>/dev/stderr
-		echo "See ${PWD}/tests/setup.log for more info" >>/dev/stderr
+		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
 	fi
 }
@@ -212,6 +212,7 @@ function prometheus_cleanup() {
 function test_case_usage() {
 	checkfor=$1
 	typeset -n da_tests="${checkfor}_tests"
+	echo
 	echo "Supported Test cases are:"
 	for tests in "${da_tests[@]}"
 	do
@@ -436,8 +437,8 @@ function validate_yaml () {
 # output: run the testcase and display the summary of the testcase
 function run_test_case() {
 	LOG="${LOG_DIR}/${testcase}.log"
+	AUTOTUNE_POD_LOG="${TEST_SUITE_DIR}/autotune.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${testcase}-autotune.log"
-	AUTOTUNE_SETUP_LOG="${LOG_DIR}/${testcase}-setup.log"
 	((TOTAL_TESTS++))
 	((TESTS++))
 	object=$1
@@ -450,14 +451,6 @@ function run_test_case() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "*******----------- Running test for ${testcase} ----------*******"| tee -a ${LOG}
 	
-	# create autotune setup
-	echo -n "Deploying autotune..."| tee -a ${LOG}
-	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
-	echo "done"| tee -a ${LOG}
-	
-	# Expose prometheus as nodeport and get the url
-	expose_prometheus
-	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml -n ${NAMESPACE}"
@@ -466,9 +459,18 @@ function run_test_case() {
 	fi
 	
 	echo "CMD=${kubectl_cmd}">>${LOG}
+
+	# Expose prometheus as nodeport and get the url
+	expose_prometheus
 	
 	# Replace PROMETHEUS_URL keyword by actual URL
 	sed -i "s|PROMETHEUS_URL|${prometheus_url}|g" ${yaml}.yaml
+	
+	# Get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_POD_LOG}
+	
+	# Get the length of the pod log before applying the yaml
+	log_length_before_test=$(cat ${AUTOTUNE_POD_LOG} | wc -l)
 	
 	# Apply the yaml
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
@@ -478,8 +480,20 @@ function run_test_case() {
 	
 	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
 	
-	# get autotune pod log
-	get_autotune_pod_log ${AUTOTUNE_LOG}
+	# Wait for 0.2 seconds to get the complete autotune pod log
+	sleep 0.2
+	
+	# Get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_POD_LOG}
+	
+	# Extract the lines from the pod log after log_length_before_test
+	extract_lines=`expr ${log_length_before_test} + 1`
+	cat ${AUTOTUNE_POD_LOG} | tail -n +${extract_lines} > ${AUTOTUNE_LOG}
+	
+	echo ""
+	echo "log_length_before_test ${log_length_before_test}"
+	echo "extract_lines ${extract_lines}"
+	echo ""
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
@@ -555,7 +569,7 @@ function run_test() {
 	echo ""
 	
 	# Delete the prometheus service
-	kubectl delete svc prometheus-svc -n monitoring
+	kubectl delete svc prometheus-test -n monitoring
 }
 
 # Form the curl command based on the cluster type
@@ -1079,7 +1093,7 @@ function create_expected_listapplayer_json() {
 		# do comparision of actual and expected name
 		objectve_function=$(cat ${autotune_json} | jq '.spec.sla.objective_function')
 		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
-		printf '\n    "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_names=${layer_configs[$deploy]}
 		IFS=',' read -r -a layer_name <<<  ${layer_name}
@@ -1348,7 +1362,6 @@ function display_result() {
 	actual_flag=$3
 	((TOTAL_TESTS++))
 	((TESTS++))
-
 	echo "Expected behaviour: ${expected_behaviour}" | tee -a ${LOG}
 	if [ "${actual_flag}" -eq "0" ]; then
 		((TESTS_PASSED++))
@@ -1445,14 +1458,14 @@ function get_autotune_pod_log() {
 # Expose prometheus as nodeport and get the url
 function expose_prometheus() {
 	if [ "${cluster_type}" == "minikube" ]; then
-		exposed=$(kubectl get svc -n monitoring | grep "prometheus-svc")
+		exposed=$(kubectl get svc -n monitoring | grep "prometheus-test")
 		
 		# Check if the service already exposed, If not then expose the service
 		if [ -z "${exposed}" ]; then
-			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-svc -n monitoring >> ${LOG} 2>&1
+			kubectl expose service prometheus-k8s --type=NodePort --target-port=9090 --name=prometheus-test -n monitoring >> ${LOG} 2>&1
 		fi
 		
-		prometheus_url=$(minikube service list | grep "prometheus-svc" | awk '{print $8}')
+		prometheus_url=$(minikube service list | grep "prometheus-test" | awk '{print $8}')
 	fi
 }
 
@@ -1463,10 +1476,10 @@ function compare_result() {
 	__test__=$1
 	expected_result=$2
 	expected_behaviour=$3
-
+	
 	if [[ ! ${actual_result} =~ ${expected_result} ]]; then
 		failed=1
 	fi
-
+	
 	display_result "${expected_behaviour}" ${__test__} ${failed}
 }
