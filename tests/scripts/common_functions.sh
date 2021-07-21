@@ -222,6 +222,7 @@ function autotune_cleanup() {
 function test_case_usage() {
 	checkfor=$1
 	typeset -n da_tests="${checkfor}_tests"
+	echo
 	echo "Supported Test cases are:"
 	for tests in "${da_tests[@]}"
 	do
@@ -446,8 +447,8 @@ function validate_yaml () {
 # output: run the testcase and display the summary of the testcase
 function run_test_case() {
 	LOG="${LOG_DIR}/${testcase}.log"
+	AUTOTUNE_POD_LOG="${TEST_SUITE_DIR}/autotune.log"
 	AUTOTUNE_LOG="${LOG_DIR}/${testcase}-autotune.log"
-	AUTOTUNE_SETUP_LOG="${LOG_DIR}/${testcase}-setup.log"
 	((TOTAL_TESTS++))
 	((TESTS++))
 	object=$1
@@ -460,14 +461,6 @@ function run_test_case() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">> ${LOG}
 	echo "*******----------- Running test for ${testcase} ----------*******"| tee -a ${LOG}
 	
-	# create autotune setup
-	echo -n "Deploying autotune..."| tee -a ${LOG}
-	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
-	echo "done"| tee -a ${LOG}
-	
-	# Expose prometheus as nodeport and get the url
-	expose_prometheus
-	
 	# Apply the yaml file 
 	if [ "${object}" == "autotuneconfig" ]; then
 		kubectl_cmd="kubectl apply -f ${yaml}.yaml -n ${NAMESPACE}"
@@ -476,9 +469,18 @@ function run_test_case() {
 	fi
 	
 	echo "CMD=${kubectl_cmd}">>${LOG}
+
+	# Expose prometheus as nodeport and get the url
+	expose_prometheus
 	
 	# Replace PROMETHEUS_URL keyword by actual URL
 	sed -i "s|PROMETHEUS_URL|${prometheus_url}|g" ${yaml}.yaml
+	
+	# Get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_POD_LOG}
+	
+	# Get the length of the pod log before applying the yaml
+	log_length_before_test=$(cat ${AUTOTUNE_POD_LOG} | wc -l)
 	
 	# Apply the yaml
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
@@ -488,8 +490,20 @@ function run_test_case() {
 	
 	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
 	
-	# get autotune pod log
-	get_autotune_pod_log "${AUTOTUNE_LOG}"
+	# Wait for 0.2 seconds to get the complete autotune pod log
+	sleep 0.2
+	
+	# Get autotune pod log
+	get_autotune_pod_log ${AUTOTUNE_POD_LOG}
+	
+	# Extract the lines from the pod log after log_length_before_test
+	extract_lines=`expr ${log_length_before_test} + 1`
+	cat ${AUTOTUNE_POD_LOG} | tail -n +${extract_lines} > ${AUTOTUNE_LOG}
+	
+	echo ""
+	echo "log_length_before_test ${log_length_before_test}"
+	echo "extract_lines ${extract_lines}"
+	echo ""
 	
 	# check if autotune/autotuneconfig object has got created
 	if [ "${object}" == "autotuneconfig" ]; then
@@ -1089,7 +1103,7 @@ function create_expected_listapplayer_json() {
 		# do comparision of actual and expected name
 		objectve_function=$(cat ${autotune_json} | jq '.spec.sla.objective_function')
 		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
-		printf '\n    "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_names=${layer_configs[$deploy]}
 		IFS=',' read -r -a layer_name <<<  ${layer_name}
@@ -1358,7 +1372,6 @@ function display_result() {
 	actual_flag=$3
 	((TOTAL_TESTS++))
 	((TESTS++))
-
 	echo "Expected behaviour: ${expected_behaviour}" | tee -a ${LOG}
 	if [ "${actual_flag}" -eq "0" ]; then
 		((TESTS_PASSED++))
@@ -1473,9 +1486,10 @@ function compare_result() {
 	__test__=$1
 	expected_result=$2
 	expected_behaviour=$3
-
+	
 	if [[ ! ${actual_result} =~ ${expected_result} ]]; then
 		failed=1
 	fi
+
 	display_result "${expected_behaviour}" "${__test__}" "${failed}"
 }

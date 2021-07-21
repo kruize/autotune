@@ -30,6 +30,7 @@ function autotune_config_yaml_tests() {
 	# create the result directory for given testsuite
 	TEST_SUITE_DIR="${RESULTS}/${FUNCNAME}"
 	mkdir ${TEST_SUITE_DIR}
+	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 	
 	if [ ! -z "${testcase}" ]; then
 		check_test_case autotune_config
@@ -50,7 +51,12 @@ function autotune_config_yaml_tests() {
 	else
 		testtorun=${testcase}
 	fi
-	
+
+	# create autotune setup
+	echo -n "Deploying autotune..."| tee -a ${LOG}
+	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	echo "done"| tee -a ${LOG}
+
 	# perform the tests for autotuneconfig yamls
 	run_test "${testtorun}" autotuneconfig ${yaml_path}
 	
