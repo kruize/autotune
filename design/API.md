@@ -327,3 +327,240 @@ Get the status of autotune.
 ```
 Healthy
 ```
+
+##  createExperiment
+Launch an experiment for a particular deployment with a config recommended by the Recommendation Manager 
+
+**Request**
+`GET /createExperiment`
+
+`curl -H 'Accept: application/json' -d <INPUT JSON> http://<URL>:<PORT>/createExperiment`
+
+*Description:*
+
+The API endpoint `createExperiment` expects the data object of type `JSON` with a structure as shown
+below. The Input Json holds details of the configuration to try, settings to that particular deployment
+and the details of the deployment.
+
+*Sections:* 
+    
+    - Metadata
+    - Info
+    - Settings
+    - Deployments
+
+Metadata section consists of params like `experiment_id`, `application_name`, `app-version` etc which are top level info points for the experiment
+
+Info section consists of the trial information details like `trial_id`, `trial_num`
+
+Settings section consists of 2 sub-sections 
+
+    - trial_settings
+    - deployment_settings
+
+Trial Settings consists of setting related to trial like 
+
+trial_run : How long a trial experiment should run for ?
+trial_measurement_time : At what time the metrics should be gathered before the end of trial ?
+
+Deployment Settings consists of settings related to deployment like
+
+deployment_policy : What's the type of policy ? (newDeployment / rollingUpdate), target environment (dev / qa / prod)
+deployment_tracking : Which deployments to track (either prod or training or both)
+
+Deployments section consists of the deployments to track and also their respective configs
+
+*Sample Input JSON:*
+
+```
+{
+  "experiment_id": "2190310A384BC90EF",
+  "namespace": "default",
+  "application_name": "petclinic-sample",
+  "app-version": "v1",
+  "info": {
+    "trial_id": "",
+    "trial_num": 1
+  },
+  "settings": {
+    "trial_settings": {
+      "trial_run": "15mins",
+      "trial_measurement_time": "3mins"
+    },
+    "deployment_settings": {
+      "deployment_policy" : {
+        "type" : "rollingUpdate",
+        "target_env" : "qa",
+        "agent" : "EM"
+      },
+      "deployment_tracking": {
+        "trackers": [
+          "training",
+          "production"
+        ]
+      }
+    }
+  },
+  "deployments": [
+    {
+      "type" : "training",
+      "parent_deployment_name": "petclinic-sample",
+      "training_deployment_name": "petclinic-sample",
+      "namespace" : "default",
+      "state": "",
+      "result": "",
+      "result_info": "",
+      "result_error": "",
+      "metrics": [
+        {
+          "name": "request_sum",
+          "query": "request_sum_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "request_count",
+          "query": "request_count_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "hotspot_function",
+          "query": "hotspot_function_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "cpuRequest",
+          "query": "cpuRequest_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "memRequest",
+          "query": "memRequest_query",
+          "datasource": "prometheus"
+        }
+      ],
+      "config": [
+        {
+          "name": "update requests and limits",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "resources": {
+                    "requests": {
+                      "cpu": 2,
+                      "memory": "512Mi"
+                    },
+                    "limits": {
+                      "cpu": 3,
+                      "memory": "1024Mi"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "update env",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "env": {
+                    "JVM_OPTIONS": "-XX:MaxInlineLevel=23",
+                    "JVM_ARGS": "-XX:MaxInlineLevel=23"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type" : "production",
+      "deployment_name": "petclinic-sample-1",
+      "state": "",
+      "result": "",
+      "result_info": "",
+      "result_error": "",
+      "metrics": [
+        {
+          "name": "request_sum",
+          "query": "request_sum_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "request_count",
+          "query": "request_count_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "hotspot_function",
+          "query": "hotspot_function_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "cpuRequest",
+          "query": "cpuRequest_query",
+          "datasource": "prometheus"
+        },
+        {
+          "name": "memRequest",
+          "query": "memRequest_query",
+          "datasource": "prometheus"
+        }
+      ],
+      "config": [
+        {
+          "name": "update requests and limits",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "resources": {
+                    "requests": {
+                      "cpu": 2,
+                      "memory": "512Mi"
+                    },
+                    "limits": {
+                      "cpu": 3,
+                      "memory": "1024Mi"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "update env",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "env": {
+                    "JVM_OPTIONS": "-XX:MaxInlineLevel=23",
+                    "JVM_ARGS": "-XX:MaxInlineLevel=23"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response**
+
+The Endpoint returns the `runId` (Which is specific to EM) of the experiment
+which we can use to track the status of the experiment
+
+```
+{
+    'runId' : 'ccffab17-0ce5-43bc-96a5-5d9ef5fca075'
+}
+```
