@@ -564,3 +564,31 @@ which we can use to track the status of the experiment
     'runId' : 'ccffab17-0ce5-43bc-96a5-5d9ef5fca075'
 }
 ```
+
+##  getTrialStatus
+Get the status of the experiment by passing `runId` to the endpoint.
+
+**Request**
+`GET /getTrialStatus`
+
+`curl -H 'Accept: application/json' -d <INPUT JSON> http://<URL>:<PORT>/getTrialStatus`
+
+*Description:*
+
+The `getTrialStatus` endpoint expects a input json which holds the `runId` and returns the status of a particular experiment run if the id is valid.
+
+*Sample Input JSON:*
+
+```
+{
+    'runId' : 'ccffab17-0ce5-43bc-96a5-5d9ef5fca075'
+}
+```
+
+**Response**
+
+```
+{
+    'status' : <STATUS OF EXPERIMENT [CREATED | IN_PROGRESS | COMPLETED]>
+}
+```
