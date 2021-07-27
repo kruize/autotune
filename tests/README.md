@@ -130,7 +130,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] 
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] 
 ```
 
 Where values for test_autotune.sh are:
@@ -139,8 +139,9 @@ Where values for test_autotune.sh are:
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
                         [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune:test
 			[ -r ] : Location of benchmarks
-			[ -- tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)
-			[ -- testsuite ] : Testsuite to run. Use testsuite=help, to list the supported testsuites
+			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)
+			[ --testmodule ]: Module to be tested. Use testmodule=help, to list the modules to be tested
+			[ --testsuite ] : Testsuite to run. Use testsuite=help, to list the supported testsuites
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
@@ -155,3 +156,12 @@ For example,
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results
 ```
 
+To run all tests for dependency analyzer (da) module execute the below command:
+```
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testmodule=da -r /home/benchmarks --resultsdir=/home/results
+```
+
+To run all tests for Hyperparameter Optimization (hpo) module execute the below command:
+```
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testmodule=hpo /home/benchmarks --resultsdir=/home/results
+```

@@ -20,22 +20,35 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/common_functions.sh
+. ${SCRIPTS_DIR}/common/common_functions.sh
 
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
+	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
 	echo ""
 	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results"
+	echo "Example: $0 -c minikube --testmodule=hpo -r /home/benchmarks --resultsdir=/home/results"
 	echo ""
+	test_module_usage
 	test_suite_usage
 	echo ""
 	exit -1
 }
 
+# List of testmodules supported
+# output: Display the names of the supported test module
+function test_module_usage() {
+	echo "Supported Test modules are:"
+	for array in "${TEST_MODULE_ARRAY[@]}"
+	do
+		echo "		           ${array}"
+	done
+	exit -1
+}
+
 # List of testsuites supported
-# ouput: Display the names of the supported test suite
+# output: Display the names of the supported test suite
 function test_suite_usage() {
 	echo "Supported Test suites are:"
 	for array in "${TEST_SUITE_ARRAY[@]}"
@@ -47,7 +60,7 @@ function test_suite_usage() {
 
 # Check if the cluster_type is one of kubernetes clusters
 # input: cluster type
-# ouput: If cluster type is not supported then print the usage
+# output: If cluster type is not supported then print the usage
 function check_cluster_type() {
 	if [ -z "${cluster_type}" ]; then
 		echo
@@ -62,9 +75,30 @@ function check_cluster_type() {
 	esac
 }
 
+# check if the specified testmodule type exists
+# input: testmodule
+# output: if the specified test module is supported or not 
+function check_testmodule_type() {
+	for tm in ${TEST_MODULE_ARRAY[@]}
+	do
+		if [ "${testmodule}" == "${tm}" ]; then
+			matched=1
+		fi
+	done
+	
+	if [ "${testmodule}" == "help" ]; then
+		test_module_usage
+	fi
+	
+	if [ "${matched}" -eq "0" ]; then
+		echo "Error: Invalid testmodule **${testmodule}** "
+		test_module_usage
+	fi
+}
+
 # check if the specified testsuite type exists
 # input: testsuite
-# ouput: if the given test suite is not supported print the spported testsuite
+# output: if the given test suite is not supported print the spported testsuite
 function check_testsuite_type() {
 	for ts in ${TEST_SUITE_ARRAY[@]}
 	do
@@ -105,6 +139,10 @@ do
 			tctype=*)
 				tctype=${OPTARG#*=}
 				check_testcase_type
+				;;
+			testmodule=*)
+				testmodule=${OPTARG#*=}
+				check_testmodule_type
 				;;
 			testsuite=*)
 				testsuite=${OPTARG#*=}
@@ -184,7 +222,7 @@ fi
 if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
 	echo -n "############# Performing ${tctype} test for autotune #############"
-	${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+	${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
 	echo "########################################################################"
 	echo ""
 else

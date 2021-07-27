@@ -31,6 +31,8 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
+TEST_MODULE_ARRAY=("da" "hpo")
+
 TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "autotune_config_yaml_tests"
 "basic_api_tests"
@@ -111,7 +113,7 @@ function setup() {
 	ignore_deployment_status_check=$2
 	
 	# remove the existing autotune objects
-	autotune_cleanup ${cluster_type}
+	autotune_cleanup 
 	
 	# Wait for 5 seconds to terminate the autotune pod
 	sleep 5
@@ -182,6 +184,8 @@ function deploy_autotune() {
 		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
 	fi
+
+	popd > /dev/null
 }
 
 # Remove the prometheus setup
@@ -200,13 +204,15 @@ function autotune_cleanup() {
 	RESULTS_LOG=$1
 	
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
-	if [ ! -z "${result_dir}" ]; then
+	if [ ! -z "${RESULTS_LOG}" ]; then
 		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-		AUTOTUNE_REPO="${AUTOTUNE_REPO}/autotune"
+		echo "*********** ${RESULTS_LOG} ${AUTOTUNE_REPO}"
+		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
+	else 
+		pushd ${AUTOTUNE_REPO} > /dev/null
 	fi
-	
+
 	echo  "Removing Autotune dependencies..."
-	pushd ${AUTOTUNE_REPO} > /dev/null
 	cmd="./deploy.sh -c ${cluster_type} -t"
 	echo "CMD= ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1

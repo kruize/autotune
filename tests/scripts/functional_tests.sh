@@ -21,17 +21,17 @@ CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}" 
 
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/common_functions.sh
+. ${SCRIPTS_DIR}/common/common_functions.sh
 
 # Source the test suite scripts
-. ${SCRIPTS_DIR}/da_app_autotune_yaml_tests.sh
-. ${SCRIPTS_DIR}/da_autotune_config_yaml_tests.sh
-. ${SCRIPTS_DIR}/da_basic_api_tests.sh
-. ${SCRIPTS_DIR}/modify_autotune_config_tests.sh
-. ${SCRIPTS_DIR}/configmap_yaml_tests.sh
-. ${SCRIPTS_DIR}/autotune_id_tests.sh
-. ${SCRIPTS_DIR}/autotune_layer_config_id_tests.sh
-. ${SCRIPTS_DIR}/hpo_api_tests.sh
+. ${SCRIPTS_DIR}/da/da_app_autotune_yaml_tests.sh
+. ${SCRIPTS_DIR}/da/da_autotune_config_yaml_tests.sh
+. ${SCRIPTS_DIR}/da/da_basic_api_tests.sh
+. ${SCRIPTS_DIR}/da/modify_autotune_config_tests.sh
+. ${SCRIPTS_DIR}/da/configmap_yaml_tests.sh
+. ${SCRIPTS_DIR}/da/autotune_id_tests.sh
+. ${SCRIPTS_DIR}/da/autotune_layer_config_id_tests.sh
+. ${SCRIPTS_DIR}/hpo/hpo_api_tests.sh
 
 # Iterate through the commandline options
 while getopts i:r:-: gopts
@@ -44,6 +44,9 @@ do
 				;;
 			tctype=*)
 				tctype=${OPTARG#*=}
+				;;
+			testmodule=*)
+				testmodule=${OPTARG#*=}
 				;;
 			testsuite=*)
 				testsuite=${OPTARG#*=}
@@ -99,59 +102,75 @@ update_yaml ${find} ${replace} ${config_yaml}
 # input: Result directory to store the functional test results
 # output: Perform the set of functional tests
 function functional_test() {
+	if [ "${sanity}" -eq "1" ]; then
+		testcase=""
+		# perform the basic api tests
+		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
+	else
+		execute_da_testsuites
+		execute_hpo_testsuites
+	fi
+}
+
+# Execute all tests for DA (Dependency Analyzer) module
+function execute_da_testsuites() {
 	# perform the application autotune yaml tests 
 	app_autotune_yaml_tests > >(tee "${RESULTS}/app_autotune_yaml_tests.log") 2>&1
 
 	testcase=""
 	# perform the autotune config yaml tests
 	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
-	
-	if [ "${sanity}" -eq "1" ]; then
-		testcase=""
-		# perform the basic api tests
-		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-	else
-		testcase=""
-		# perform the basic api tests
-		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-		
-		testcase=""
-		# Modify existing autotuneconfig yamls and check for API results
-		modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
-	
-		testcase=""
-		# perform the configmap yaml tests
-		configmap_yaml_tests > >(tee "${RESULTS}/configmap_yaml_tests.log") 2>&1
-		
-		testcase=""
-		# validate the autotune object id
-		autotune_id_tests > >(tee "${RESULTS}/autotune_id_tests.log") 2>&1
-		
-		testcase=""	
-		# validate the autotune config object id
-		autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
 
-		testcase=""
-		# perform the HPO (Hyper Parameter Optimization) /experiment_trials API tests
-		hpo_api_tests > >(tee "${RESULTS}/hpo_api_tests.log") 2>&1
-	fi
+	testcase=""
+	# perform the basic api tests
+	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
+		
+	testcase=""
+	# Modify existing autotuneconfig yamls and check for API results
+	modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
+	
+	testcase=""
+	# perform the configmap yaml tests
+	configmap_yaml_tests > >(tee "${RESULTS}/configmap_yaml_tests.log") 2>&1
+		
+	testcase=""
+	# validate the autotune object id
+	autotune_id_tests > >(tee "${RESULTS}/autotune_id_tests.log") 2>&1
+
+	testcase=""	
+	# validate the autotune config object id
+	autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
 }
 
-# If testsuite is not specified perform the set of functional tests
-if [ -z "${testsuite}" ]; then
-	testsuite=functional_test
-fi
+# Execute all tests for HPO (Hyperparameter Optimization) module
+function execute_hpo_testsuites() {
+	testcase=""
+	# perform the HPO API tests
+	hpo_api_tests > >(tee "${RESULTS}/hpo_api_tests.log") 2>&1
+}
 
 # Perform the specific testsuite if specified 
-if [ ! -z "${testsuite}" ]; then
+if [ ! -z "${testmodule}" ]; then
+	case "${testmodule}" in
+	   da)
+                # Execute tests for Dependency Analyzer Module 
+                execute_da_testsuites
+                ;;
+           hpo)
+		# Execute tests for Hyperparameter Optimization (HPO) Module 
+                execute_hpo_testsuites
+		;;
+	esac
+elif [ ! -z "${testsuite}" ]; then
 	if [ "${testsuite}" == "sanity" ]; then
 		sanity=1
 		functional_test 
 	else
 		${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
 	fi
-elif [[ -z "${testcase}" && -z "${testsuite}"  ]]; then
+elif [[ -z "${testcase}" && -z "${testsuite}" && -z "${testmodule}" ]]; then
 	functional_test
+echo "6 ********************* testsuite = ${testsuite}"
 fi
 
 echo ""

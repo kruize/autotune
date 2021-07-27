@@ -19,13 +19,12 @@
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}"
 
 pushd ${CURRENT_DIR}/../.. >> /dev/null
 autotune_dir="${PWD}"
 
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/id_constants.sh
+. ${CURRENT_DIR}/da/constants/id_constants.sh
 
 # validate autotune layer config object id for all APIs 
 function autotune_layer_config_id_tests() {
