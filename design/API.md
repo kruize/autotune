@@ -339,7 +339,7 @@ Launch an experiment for a particular deployment with a config recommended by th
 *Description:*
 
 The API endpoint `createExperiment` expects the data object of type `JSON` with a structure as shown
-below. The Input Json holds details of the configuration to try, settings to that particular deployment
+below. The Input JSON holds details of the configuration to try, settings to that particular deployment
 and the details of the deployment.
 
 *Sections:* 
@@ -349,49 +349,60 @@ and the details of the deployment.
     - Settings
     - Deployments
 
-Metadata section consists of params like `experiment_id`, `application_name`, `app-version` etc which are top level info points for the experiment
+Metadata section consists of params like `experiment_id`, `name` etc which are top level info points for the experiment
 
 Info section consists of the trial information details like `trial_id`, `trial_num`
 
 Settings section consists of 2 sub-sections 
 
+
     - trial_settings
     - deployment_settings
 
+
 Trial Settings consists of setting related to trial like 
 
-trial_run : How long a trial experiment should run for ?
-trial_measurement_time : At what time the metrics should be gathered before the end of trial ?
+`total_duration` : How long a trial experiment should run for ?
+`warmup_cycles` : Number of iterations for waiting for warmup
+`warmup_duration` : Time to wait for each iteration
+`measurement_cycles` : Number of iterations for measuring the metrics
+`measurement_duration` : Time to collect metrics in each iteration
 
 Deployment Settings consists of settings related to deployment like
 
-deployment_policy : What's the type of policy ? (newDeployment / rollingUpdate), target environment (dev / qa / prod)
-deployment_tracking : Which deployments to track (either prod or training or both)
+`deployment_info` : Metadata about the deployment like name of the deployment (will be ignored and warned if doesn't match in case of rollingUpdate), target environment (dev / qa / prod) 
+`deployment_policy` : What's the type of policy ? (newDeployment / rollingUpdate)
+`deployment_tracking` : Which deployments to track (either prod or training or both)
 
 Deployments section consists of the deployments to track and also their respective configs
+
+`deployment_name` : This is name of the target deployment to apply the config.
 
 *Sample Input JSON:*
 
 ```
 {
   "experiment_id": "2190310A384BC90EF",
-  "namespace": "default",
-  "application_name": "petclinic-sample",
-  "app-version": "v1",
+  "name": "petclinic-autotune",
   "info": {
     "trial_id": "",
     "trial_num": 1
   },
   "settings": {
     "trial_settings": {
-      "trial_run": "15mins",
-      "trial_measurement_time": "3mins"
+      "total_duration": "20 mins",
+      "warmup_cycles": 5,
+      "warmup_duration": "1 min",
+      "measurement_cycles": 15,
+      "measurement_duration": "1 min"
     },
     "deployment_settings": {
+      "deployment_info": {
+        "deployment_name" : "petclinic-sample",
+        "target_env" : "qa"
+      },
       "deployment_policy" : {
-        "type" : "rollingUpdate",
-        "target_env" : "qa",
-        "agent" : "EM"
+        "type" : "rollingUpdate"
       },
       "deployment_tracking": {
         "trackers": [
@@ -404,8 +415,7 @@ Deployments section consists of the deployments to track and also their respecti
   "deployments": [
     {
       "type" : "training",
-      "parent_deployment_name": "petclinic-sample",
-      "training_deployment_name": "petclinic-sample",
+      "deployment_name": "petclinic-sample",
       "namespace" : "default",
       "state": "",
       "result": "",
@@ -467,8 +477,7 @@ Deployments section consists of the deployments to track and also their respecti
               "spec": {
                 "container": {
                   "env": {
-                    "JVM_OPTIONS": "-XX:MaxInlineLevel=23",
-                    "JVM_ARGS": "-XX:MaxInlineLevel=23"
+                    "JDK_JAVA_OPTIONS": "-XX:MaxInlineLevel=23"
                   }
                 }
               }
@@ -540,8 +549,7 @@ Deployments section consists of the deployments to track and also their respecti
               "spec": {
                 "container": {
                   "env": {
-                    "JVM_OPTIONS": "-XX:MaxInlineLevel=23",
-                    "JVM_ARGS": "-XX:MaxInlineLevel=23"
+                    "JDK_JAVA_OPTIONS": "-XX:MaxInlineLevel=23"
                   }
                 }
               }
@@ -569,21 +577,13 @@ which we can use to track the status of the experiment
 Get the status of the experiment by passing `runId` to the endpoint.
 
 **Request**
-`GET /getTrialStatus`
+`GET /getTrialStatus?runId=<RUN_ID>`
 
-`curl -H 'Accept: application/json' -d <INPUT JSON> http://<URL>:<PORT>/getTrialStatus`
+`curl http://<URL>:<PORT>/getTrialStatus?runId=<RUN_ID>`
 
 *Description:*
 
-The `getTrialStatus` endpoint expects a input json which holds the `runId` and returns the status of a particular experiment run if the id is valid.
-
-*Sample Input JSON:*
-
-```
-{
-    'runId' : 'ccffab17-0ce5-43bc-96a5-5d9ef5fca075'
-}
-```
+The `getTrialStatus` endpoint expects a input param `runId` which holds the `runId` and returns the status of a particular experiment run if the id is valid.
 
 **Response**
 
