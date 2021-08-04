@@ -18,6 +18,8 @@ package com.autotune.experimentManager;
 
 import com.autotune.experimentManager.core.EMExecutorService;
 import com.autotune.experimentManager.settings.EMSettings;
+import com.autotune.experimentManager.core.EMScheduledStageProcessor;
+import com.autotune.experimentManager.core.EMStageProcessor;
 import com.autotune.experimentManager.utils.EMConstants;
 
 import org.apache.logging.log4j.Level;
@@ -28,10 +30,14 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class ExperimentManager {
     public static EMExecutorService emExecutorService;
+    public static EMStageProcessor emStageProcessor;
+    public static EMScheduledStageProcessor emScheduledStageProcessor;
 
     public static void initializeEM() {
         // Initializes the executor services needed by the EM
         emExecutorService = EMExecutorService.getInstance();
+        emStageProcessor = new EMStageProcessor();
+        emScheduledStageProcessor = new EMScheduledStageProcessor();
     }
 
     public static void start(ServletContextHandler contextHandler) {
@@ -41,5 +47,15 @@ public class ExperimentManager {
 
         // Set the initial executors based on settings
         emExecutorService.createExecutors(EMSettings.getController().getCurrentExecutors());
+        emExecutorService.initiateExperimentStageProcessor(emStageProcessor);
+        emExecutorService.initiateExperimentStageProcessor(emScheduledStageProcessor);
+    }
+
+    public static void notifyQueueProcessor() {
+        emStageProcessor.notifyProcessor();
+    }
+
+    public static void notifyScheduledQueueProcessor() {
+        emScheduledStageProcessor.notifyProcessor();
     }
 }
