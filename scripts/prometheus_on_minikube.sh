@@ -22,6 +22,9 @@ non_interactive=0
 # Call setup by default (and not terminate)
 setup=1
 
+# Prometheus release default
+tag="v0.8.0"
+
 function install_prometheus() {
 	echo
 	echo "Info: Checking pre requisites for prometheus..."
@@ -62,8 +65,11 @@ function install_prometheus() {
 		check_err "Error: Unable to install cadvisor"
 		popd >/dev/null
 		echo
-		echo "Info: Downloading prometheus git"
-		git clone https://github.com/coreos/kube-prometheus.git 2>/dev/null
+		echo "Info: Downloading prometheus git release - ${tag}"
+		# Commenting the below lines as the latest prometheus requires more than 2 CPUs and the PR checks fail on github hosted runners
+		# as they have only 2 CPUs on the host. Hence switching back to prometheus release 0.8.0 (Apr 2021)
+		# git clone https://github.com/coreos/kube-prometheus.git 2>/dev/null
+		git clone -b ${tag} https://github.com/coreos/kube-prometheus.git 2>/dev/null
 		pushd kube-prometheus/manifests >/dev/null
 		echo
 		echo "Info: Installing prometheus"
@@ -113,7 +119,7 @@ function delete_prometheus() {
 
 # Input from user to install/delete prometheus
 function usage() {
-	echo >&2 "usage: $0 [-a] [-s|t] where -a= non-interactive mode,  -s=start, -t=terminate ";
+	echo >&2 "usage: $0 [-r <prometheus release tag (default - v0.8.0)] [-a] [-s|t] where -a= non-interactive mode,  -s=start, -t=terminate ";
 	exit 1;
 }
 
@@ -122,9 +128,12 @@ if [ $# -eq 0 ]; then
 	usage
 fi
 
-while getopts "ast" option;
+while getopts "r:ast" option;
 do
 	case "${option}" in
+	r)
+		tag=${OPTARG}
+		;;
 	a)
 		non_interactive=1
 		;;
