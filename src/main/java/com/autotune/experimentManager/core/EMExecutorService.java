@@ -36,7 +36,11 @@ public class EMExecutorService {
 
     public static EMExecutorService getService() {
         if (null == emExecutorService) {
-            emExecutorService = new EMExecutorService();
+            synchronized (EMExecutorService.class) {
+                if (null == emExecutorService) {
+                    emExecutorService = new EMExecutorService();
+                }
+            }
         }
         return emExecutorService;
     }
@@ -44,11 +48,19 @@ public class EMExecutorService {
     public void createExecutors(int poolSize) {
         if (null == emExecutor) {
             LOGGER.info(EMConstants.Logs.EMExecutorService.CREATE_REGULAR_EXECUTOR);
-            emExecutor = Executors.newFixedThreadPool(poolSize);
+            synchronized (EMExecutorService.class) {
+                if (null == emExecutor) {
+                    emExecutor = Executors.newFixedThreadPool(poolSize);
+                }
+            }
         }
         if (null == emScheduledExecutor) {
             LOGGER.info(EMConstants.Logs.EMExecutorService.CREATE_SCHEDULED_EXECUTOR);
-            emScheduledExecutor = Executors.newScheduledThreadPool(poolSize);
+            synchronized (EMExecutorService.class) {
+                if (null == emScheduledExecutor) {
+                    emScheduledExecutor = Executors.newScheduledThreadPool(poolSize);
+                }
+            }
         }
     }
 
