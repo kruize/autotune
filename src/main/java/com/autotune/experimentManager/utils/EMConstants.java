@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package com.autotune.experimentManager.utils;
 
+import com.autotune.analyzer.utils.ServerContext;
+
 public class EMConstants {
     public static class APIPaths {
-        public static final int PORT = 8080;
-        public static final String ROOT = "/";
-        public static final String CREATE_EXPERIMENT = ROOT + "createExperiment";
-        public static final String GET_EXPERIMENTS = ROOT + "getExperiments";
-        public static final String GET_TRIAL_STATUS = ROOT + "getTrialStatus";
+        public static final String CREATE_EXPERIMENT = ServerContext.ROOT_CONTEXT + "createExperiment";
+        public static final String GET_EXPERIMENTS = ServerContext.ROOT_CONTEXT + "getExperiments";
+        public static final String GET_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "getTrialStatus";
     }
 
     public static class DeploymentConstants {
@@ -49,7 +49,7 @@ public class EMConstants {
 
     public static class Logs {
         public static class LoggerSettings {
-            public static String DEFUALT_LOG_LEVEL = "ALL";
+            public static String DEFAULT_LOG_LEVEL = "ALL";
         }
         public static class ExperimentManager {
             public static String INITIALIZE_EM = "Initializing EM";
@@ -73,7 +73,7 @@ public class EMConstants {
 
     public static class InputJsonKeys {
         public static class GetTrailStatusInputKeys {
-            public static String RUN_ID ="runId";
+            public static String RUN_ID = "runId";
         }
 
         public static class DeploymentKeys {
@@ -87,5 +87,19 @@ public class EMConstants {
             public static String TRAINING = "training";
             public static String PRODUCTION = "production";
         }
+    }
+
+    /**
+     * Constants for EMSettings class
+     */
+    public static class EMSettings {
+        // Number of current executors per CPU core
+        public static int EXECUTORS_MULTIPLIER = 1;
+        // Maximum number of executors per CPU core
+        public static int MAX_EXECUTORS_MULTIPLIER = 4;
+    }
+
+    public static class EMExecutorService {
+        public static int MIN_EXECUTOR_POOL_SIZE = 1;
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.autotune.experimentManager.core;
 
+import com.autotune.experimentManager.settings.EMSettings;
 import com.autotune.experimentManager.utils.EMConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,14 @@ public class EMExecutorService {
         emExecutor = null;
     }
 
-    public static EMExecutorService getService() {
+    /**
+     * Initialises a singleton class object for EMExecutorService class
+     * object is created in a synchronized block as we allow only one
+     * object to be created
+     *
+     * @return emExecutorService
+     */
+    public static EMExecutorService getInstance() {
         if (null == emExecutorService) {
             synchronized (EMExecutorService.class) {
                 if (null == emExecutorService) {
@@ -44,6 +52,12 @@ public class EMExecutorService {
         }
         return emExecutorService;
     }
+
+    /**
+     * Creates the Regular and Scheduled executors
+     *
+     * @param poolSize
+     */
 
     public void createExecutors(int poolSize) {
         if (null == emExecutor) {
@@ -64,16 +78,32 @@ public class EMExecutorService {
         }
     }
 
+    /**
+     * Sets Max Pool Size for the executors
+     * @param maxPoolSize
+     */
     public void setMaxExecutors(int maxPoolSize) {
-        ((ThreadPoolExecutor) emExecutor).setMaximumPoolSize(maxPoolSize);
-        ((ThreadPoolExecutor) emScheduledExecutor).setMaximumPoolSize(maxPoolSize);
+        if (maxPoolSize >= EMConstants.EMExecutorService.MIN_EXECUTOR_POOL_SIZE && maxPoolSize <= EMSettings.getController().getMaxExecutors()) {
+            ((ThreadPoolExecutor) emExecutor).setMaximumPoolSize(maxPoolSize);
+            ((ThreadPoolExecutor) emScheduledExecutor).setMaximumPoolSize(maxPoolSize);
+        }
     }
 
+    /**
+     * Sets Current Pool Size for executors
+     * @param currentPoolSize
+     */
     public void setCoreExecutors(int currentPoolSize) {
-        ((ThreadPoolExecutor) emExecutor).setCorePoolSize(currentPoolSize);
-        ((ThreadPoolExecutor) emScheduledExecutor).setCorePoolSize(currentPoolSize);
+        if (currentPoolSize >= EMConstants.EMExecutorService.MIN_EXECUTOR_POOL_SIZE && currentPoolSize <= EMSettings.getController().getMaxExecutors()) {
+            ((ThreadPoolExecutor) emExecutor).setCorePoolSize(currentPoolSize);
+            ((ThreadPoolExecutor) emScheduledExecutor).setCorePoolSize(currentPoolSize);
+        }
     }
 
+    /**
+     * Executes the given callable in the regular executor
+     * @param trial
+     */
     public Future<String> execute(Callable<String> trial) {
         if (null != emExecutor) {
             LOGGER.info(EMConstants.Logs.EMExecutorService.START_EXECUTE_TRIAL);
@@ -97,5 +127,4 @@ public class EMExecutorService {
         }
         return null;
     }
-
 }
