@@ -22,6 +22,9 @@ import com.autotune.experimentManager.core.EMScheduledStageProcessor;
 import com.autotune.experimentManager.core.EMStageProcessor;
 import com.autotune.experimentManager.utils.EMConstants;
 
+import com.autotune.experimentManager.services.CreateExperimentTrial;
+import com.autotune.experimentManager.services.ListTrialStatus;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -46,6 +49,7 @@ public class ExperimentManager {
         // Launches / starts the EM
         Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(EMConstants.Logs.LoggerSettings.DEFAULT_LOG_LEVEL));
         initializeEM();
+        addEMServlets(contextHandler);
 
         // Set the initial executors based on settings
         emExecutorService.createExecutors(EMSettings.getController().getCurrentExecutors());
@@ -59,5 +63,10 @@ public class ExperimentManager {
 
     public static void notifyScheduledQueueProcessor() {
         emScheduledStageProcessor.notifyProcessor();
+    }
+
+    private static void addEMServlets(ServletContextHandler context) {
+        context.addServlet(CreateExperimentTrial.class, EMConstants.APIPaths.CREATE_EXPERIMENT_TRIAL);
+        context.addServlet(ListTrialStatus.class, EMConstants.APIPaths.LIST_TRIAL_STATUS);
     }
 }
