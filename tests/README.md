@@ -1,13 +1,29 @@
 # **Autotune tests**
 
-## Test Scenarios
+Autotune tests repository contains tests to validate individual autotune modules. Going forward we will be adding end-to-end tests and some non-functional tests to test other aspects like stability, scaling and resilience of Autotune. 
+
+## Autotune Modules
+
+Autotune functional tests validate individual modules of Autotune. Autotune has the following high level modules:
+
+- Analyzer module
+	- Dependency Analyzer
+	- Recommendation Manager
+- Hyperparameter Optimization module
+- Experiment manager module
+
+Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/autotune_modules.md) for details.
+
+## High level Test Scenarios
+
 - IT Admin adds Autotune object (application config for autotune to tune the app)
 - SME adds / modifies Autotune layer
 - SME adds / modifies Autotune tunable
 - Autotune REST APIs
 
+## Functional tests description
 
-### Below is a brief description of the tests :
+### Dependency Analyzer module tests
 
 - **Application autotune yaml tests**
 
@@ -86,9 +102,11 @@
   	3. Update and apply the layer config yaml and compare the ids
   	4. Apply new layer config and validate the id
 
-- **HPO (Hyper Parameter Optimization) API tests**
+### Hyperparameter Optimization module tests
 
-  Here we validate the HPO /experiment_trials API.
+- ** Hyper Parameter Optimization (HPO) API tests**
+
+  Here we validate the HPO API - /experiment_trials
   
   The test does the following:
 
@@ -119,7 +137,7 @@ git clone https://github.com/kruize/benchmarks.git
 
 ```
 
-## To run the tests:
+## How to run the tests?
 
 First, cleanup any previous instances of autotune using the below command:
 
@@ -156,7 +174,9 @@ For example,
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results
 ```
 
-To run all tests for dependency analyzer (da) module execute the below command:
+## How to test a specific autotune module?
+
+To run the tests specific to a autotune module use the "testmodule" option. For example, to run all the tests for dependency analyzer module execute the below command:
 ```
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testmodule=da -r /home/benchmarks --resultsdir=/home/results
 ```
