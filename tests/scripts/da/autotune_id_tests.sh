@@ -19,10 +19,9 @@
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}"
 
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/id_constants.sh
+. ${CURRENT_DIR}/da/constants/id_constants.sh
 
 # validate autotune object id for all APIs 
 function autotune_id_tests() {

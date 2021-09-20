@@ -19,11 +19,11 @@
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}"
+SCRIPTS_DIR="${CURRENT_DIR}/hpo"
 SEARCH_SPACE_JSON="${CURRENT_DIR}/../resources/searchspace_jsons/searchspace.json"
 
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/hpo_api_constants.sh
+. ${SCRIPTS_DIR}/constants/hpo_api_constants.sh
 
 # Tests to validate the HPO APIs
 function hpo_api_tests() {

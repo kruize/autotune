@@ -162,7 +162,7 @@ function basic_api_tests() {
 	app_cleanup "petclinic"
 
 	# Cleanup autotune
-	autotune_cleanup "${cluster_type}"
+	autotune_cleanup
 	
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")

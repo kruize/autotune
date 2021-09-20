@@ -17,9 +17,6 @@
 ##### modify autotune config tests #####
 #
 
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}" 
-
 # Modify the existing autotuneconfig and check for API results
 function modify_autotune_config_tests() {
 	start_time=$(get_date)

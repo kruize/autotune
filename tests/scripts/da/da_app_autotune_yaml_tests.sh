@@ -18,10 +18,9 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}"
 
 # Source the common functions scripts
-. ${SCRIPTS_DIR}/app_autotune_yaml_constants.sh
+. ${CURRENT_DIR}/da/constants/app_autotune_yaml_constants.sh
 
 # application autotune yaml tests
 # output: Run the test cases for application autotune yaml
