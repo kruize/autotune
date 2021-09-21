@@ -18,6 +18,13 @@ package com.autotune.experimentManager.core;
 
 import java.util.concurrent.Callable;
 
+/**
+ * EMStageProcessor polls the EM Regular transitions queues
+ * and processes the stage transition based on the current
+ * and target stage. It's implemented as a infinite loop which
+ * polls when the queue is not empty and sleeps when queue is
+ * empty.
+ */
 public class EMStageProcessor implements Callable {
     public EMExecutorService emExecutorService;
 
