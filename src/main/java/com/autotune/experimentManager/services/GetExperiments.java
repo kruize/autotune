@@ -21,6 +21,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * This class is the endpoint handler for `/getExperiments`
+ *
+ * List out all the experiment trials which are active currently
+ * with their status
+ */
 public class GetExperiments extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

@@ -24,7 +24,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-public class GetTrialStatus extends HttpServlet {
+/**
+ * This class is the handler for the endpoint `listTrialStatus`
+ *
+ * Returns the status for the requested trial id
+ */
+public class ListTrialStatus extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String inputData = req.getReader().lines().collect(Collectors.joining());
