@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 /**
- * This Class is the endpoint handler for `/createExperiment`
+ * This Class is the endpoint handler for `/createExperimentTrial`
  *
  * We expect input JSON in the format given below for this endpoint
  *
@@ -215,8 +215,8 @@ import java.util.stream.Collectors;
  *
  * Processes the given input JSON validates it and generates a Run ID to return back to user
  */
-public class CreateExperiment extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+public class CreateExperimentTrial extends HttpServlet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String inputData = req.getReader().lines().collect(Collectors.joining());

@@ -22,12 +22,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * This class is the endpoint handler for `/getExperiments`
+ * This class is the endpoint handler for `/listExperimentTrials`
  *
  * List out all the experiment trials which are active currently
  * with their status
  */
-public class GetExperiments extends HttpServlet {
+public class ListExperimentTrials extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         // TODO: Need to implement EM API

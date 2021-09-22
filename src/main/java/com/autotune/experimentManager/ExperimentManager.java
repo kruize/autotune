@@ -22,8 +22,8 @@ import com.autotune.experimentManager.core.EMScheduledStageProcessor;
 import com.autotune.experimentManager.core.EMStageProcessor;
 import com.autotune.experimentManager.utils.EMConstants;
 
-import com.autotune.experimentManager.services.CreateExperiment;
-import com.autotune.experimentManager.services.GetExperiments;
+import com.autotune.experimentManager.services.CreateExperimentTrial;
+import com.autotune.experimentManager.services.ListExperimentTrials;
 import com.autotune.experimentManager.services.ListTrialStatus;
 
 import org.apache.logging.log4j.Level;
@@ -65,8 +65,8 @@ public class ExperimentManager {
     }
 
     private static void addEMServlets(ServletContextHandler context) {
-        context.addServlet(CreateExperiment.class, EMConstants.APIPaths.CREATE_EXPERIMENT);
-        context.addServlet(GetExperiments.class, EMConstants.APIPaths.GET_EXPERIMENTS);
+        context.addServlet(CreateExperimentTrial.class, EMConstants.APIPaths.CREATE_EXPERIMENT);
+        context.addServlet(ListExperimentTrials.class, EMConstants.APIPaths.LIST_EXPERIMENTS);
         context.addServlet(ListTrialStatus.class, EMConstants.APIPaths.LIST_TRIAL_STATUS);
     }
 }

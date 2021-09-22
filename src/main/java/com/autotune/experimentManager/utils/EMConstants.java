@@ -20,8 +20,8 @@ import com.autotune.analyzer.utils.ServerContext;
 
 public class EMConstants {
     public static class APIPaths {
-        public static final String CREATE_EXPERIMENT = ServerContext.ROOT_CONTEXT + "createExperiment";
-        public static final String GET_EXPERIMENTS = ServerContext.ROOT_CONTEXT + "getExperiments";
+        public static final String CREATE_EXPERIMENT = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
+        public static final String LIST_EXPERIMENTS = ServerContext.ROOT_CONTEXT + "listExperimentTrials";
         public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
     }
 
