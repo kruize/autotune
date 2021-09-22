@@ -19,6 +19,7 @@ import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.utils.ServerContext;
 import com.autotune.experimentManager.ExperimentManager;
 import com.autotune.service.HealthService;
+import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
@@ -44,8 +45,18 @@ public class Autotune
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		Analyzer.start(context);
-		ExperimentManager.start(context);
+		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
+
+		if (null != autotuneMode) {
+			if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
+				startAutotuneEMOnly(context);
+			} else {
+				startAutotuneNormalMode(context);
+			}
+		} else {
+			startAutotuneNormalMode(context);
+		}
+
 		try {
 			server.start();
 		} catch (Exception e) {
@@ -68,4 +79,12 @@ public class Autotune
 		System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
 	}
 
+	private static void startAutotuneEMOnly(ServletContextHandler contextHandler) {
+		ExperimentManager.start(contextHandler);
+	}
+
+	private static void startAutotuneNormalMode(ServletContextHandler contextHandler) {
+		Analyzer.start(contextHandler);
+		ExperimentManager.start(contextHandler);
+	}
 }
