@@ -12,7 +12,7 @@ Autotune Project is [Apache 2.0](https://github.com/kruize/autotune/blob/master/
 
 These steps outline the general contribution workflow:
 
-- Fork and set up the Autotune repository on your workstation (see [Fork and clone Autotune repo]((https://github.com/kruize/autotune/blob/master/docs/fork_and_clone.md))
+- Fork and set up the Autotune repository on your workstation
 - Create a topic branch from where you want to base your work (usually master)
 - Follow coding guidelines while making code changes
 - Install the required software to build and deploy autotune (see [Autotune Installation](https://github.com/kruize/autotune/blob/master/docs/autotune_install.md))
@@ -23,6 +23,8 @@ These steps outline the general contribution workflow:
 - Submit a pull request to the original repository 
 - Ensure the PR checks pass
 - Have any queries, contact us on [kruize autotune](https://kruizeworkspace.slack.com/archives/C01R7HV4LPN) slack
+
+If this is your first pull request on github, click [here](https://www.freecodecamp.org/news/how-to-make-your-first-pull-request-on-github-3/) to quickly get started.
 
 ### Commit Message
 
