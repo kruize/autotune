@@ -16,6 +16,8 @@
 
 package com.autotune.experimentManager.services;
 
+import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.services.util.EMAPIHandler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -222,6 +224,8 @@ public class CreateExperimentTrial extends HttpServlet {
         String inputData = req.getReader().lines().collect(Collectors.joining());
         JSONObject json = new JSONObject(inputData);
         // TODO: Need to implement EM API
+
+        ExperimentTrialData trialData = EMAPIHandler.createETD(json);
     }
 
     @Override
