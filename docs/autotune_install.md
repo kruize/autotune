@@ -1,20 +1,39 @@
-# Autotune - Installation and Build
+# Autotune Installation
 
-- [Installation](#installation)
-  - [Kubernetes](#kubernetes)
-    - [Minikube](#minikube)
+- [Clone Repositories](#Clone-Repositories)
+- [Install the required software](#Install-the-required-software)
+- [Build Auotune Docker image](#build-autotune-docker-image)
+- [Deploy Auotune using the Docker image](#deploy-autotune)
 - [Demo Repo](#demo)
 
-# Installation
+
+# Clone Repositories
+
+## Clone the Autotune Repository
+
+- Clone the kruize autotune repository onto your workstation with the following command.
+```
+$ git clone git@github.com:kruize/autotune.git
+```
+
+## Clone the Kruize Benchmarks Repository 
+
+- Clone the kruize benchmarks repository onto your workstation with the following command.
+```
+$ git clone git@github.com:kruize/benchmarks.git
+```
+
+# Install the required software
 
 ## Kubernetes
 
 Autotune can be deployed to a supported Kubernetes cluster. We currently support Minikube.
 
-### Minikube
+### Install kubectl and minikube
+
+Minikube setup with 8 CPUs and 16 GB Memory is recommended for autotune deployment. After setting up minikube, install prometheus from autotune repo with the following command
 
 ```
-# First install Prometheus
 $ ./scripts/prometheus_on_minikube.sh -as 
 
 Info: installing prometheus...
@@ -30,10 +49,30 @@ prometheus-k8s-1                       0/2     ContainerCreating   0          10
 prometheus-k8s-1                       1/2     Running   1          106s
 Info: prometheus-k8s-1 deploy succeeded: Running
 prometheus-k8s-1                       1/2     Running   1          106s
+```
+
+# Build autotune docker image
+
+Build autotune docker image 'autotune:test' with the following command
+
+```
+$ ./build.sh -t autotune:test
+
+    Usage: $0 [-d] [-v version_string] [-t docker_image_name]
+	-d: build in dev friendly mode
+	-v: build as specific autotune version
+	-t: build with specific docker image name
+```
+
+Note - You can use the 'dev friendly mode' option to quickly build the autotune docker image using the cached layers.
 
 
-# Now deploy autotune to the minikube cluster
-$ ./deploy.sh -c minikube
+# Deploy Autotune
+
+Let us now deploy autotune using the docker image onto the minikube cluster
+
+```
+$ ./deploy.sh -c minikube -i autotune:test
 
 Info: Checking pre requisites for minikube...
 Prometheus is installed and running.

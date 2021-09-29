@@ -23,7 +23,7 @@ Autotune helps to capture your performance tuning needs in a comprehensive way a
 
 ## Installation
 
-See the [Install README](/docs/README.md) for more details on the installation.
+See the [Autotune Installation](/docs/autotune_install.md) for more details on the installation.
 
 ## REST API
 
