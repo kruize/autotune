@@ -12,7 +12,6 @@ public class TransitionToDeployConfig extends AbstractBaseTransition{
     @Override
     public void transit(String runId) {
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
-        System.out.println("in stage two - Deploy Config");
         KubernetesClient client = new DefaultKubernetesClient();
         Deployment createdDeployment = client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).createOrReplace(trialData.getTrailDeployment());
         trialData.setTrailDeployment(createdDeployment);

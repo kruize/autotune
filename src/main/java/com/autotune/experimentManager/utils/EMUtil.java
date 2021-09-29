@@ -59,6 +59,7 @@ public class EMUtil {
         CREATED,
         WAIT,
         IN_PROGRESS,
+        WAITING_FOR_LOAD,
         COMPLETED
     }
 
