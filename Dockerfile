@@ -16,7 +16,7 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM maven:3-adoptopenjdk-11 as mvnbuild-jdk11
+FROM maven:3-eclipse-temurin-17 as mvnbuild-jdk17
 
 # Install any additional packages that a typical developer in the team needs.
 RUN apt-get update \
@@ -25,7 +25,7 @@ RUN apt-get update \
 
 WORKDIR /opt/src/autotune
 
-# Copy the pom.xml only and download the dependencies
+# Copy only the pom.xml and download the dependencies
 COPY pom.xml /opt/src/autotune/
 RUN mvn -f pom.xml install dependency:copy-dependencies
 
@@ -40,7 +40,7 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 #            Runtime Docker Image
 ##########################################################
 # Use ubi-minimal as the base image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 
 ARG AUTOTUNE_VERSION
 ARG NUM_TRIALS=5
@@ -78,12 +78,15 @@ USER 1001
 # Install optuna to the default user
 RUN python3 -m pip install --user optuna requests scikit-optimize
 
+COPY --chown=1001:0 . /opt/app/src/
+# Copy the start script
+COPY --chown=1001:0 scripts/start_apps.sh /opt/app/bin/
 # Copy ML hyperparameter tuning code
 COPY --chown=1001:0 hyperparameter_tuning /opt/app/hyperparameter_tuning/
 # Copy the jlinked JRE
-COPY --chown=1001:0 --from=mvnbuild-jdk11 /opt/src/autotune/jre/ /opt/app/jre/
+COPY --chown=1001:0 --from=mvnbuild-jdk17 /opt/src/autotune/jre/ /opt/app/jre/
 # Copy the app binaries
-COPY --chown=1001:0 --from=mvnbuild-jdk11 /opt/src/autotune/target/ /opt/app/target/
+COPY --chown=1001:0 --from=mvnbuild-jdk17 /opt/src/autotune/target/ /opt/app/target/
 
 EXPOSE 8080
 
@@ -92,4 +95,4 @@ ENV JAVA_HOME=/opt/app/jre \
     N_TRIALS=${NUM_TRIALS} \
     N_JOBS=${NUM_JOBS}
 
-ENTRYPOINT bash target/bin/Autotune
+ENTRYPOINT /opt/app/bin/start_apps.sh
