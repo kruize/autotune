@@ -16,7 +16,7 @@
 package com.autotune.analyzer.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.HttpUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,7 +51,7 @@ public class PrometheusDataSource implements DataSource
 
 	@Override
 	public String getQueryEndpoint() {
-		return DAConstants.PROMETHEUS_ENDPOINT;
+		return AnalyzerConstants.PROMETHEUS_ENDPOINT;
 	}
 
 	public String getToken() {

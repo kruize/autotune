@@ -16,8 +16,9 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
-import com.autotune.analyzer.utils.ServerContext;
-import com.autotune.experimentManager.ExperimentManager;
+import com.autotune.utils.ServerContext;
+import com.autotune.experimentManager.core.ExperimentManager;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.service.HealthService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -42,8 +43,18 @@ public class Autotune
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		Analyzer.start(context);
-		ExperimentManager.start(context);
+		String autotuneMode = System.getenv(EMConstants.EMEnv.AUTOTUNE_MODE);
+
+		if (null != autotuneMode) {
+			if (autotuneMode.equalsIgnoreCase(EMConstants.EMEnv.EM_ONLY_MODE)) {
+				startAutotuneEMOnly(context);
+			} else {
+				startAutotuneNormalMode(context);
+			}
+		} else {
+			startAutotuneNormalMode(context);
+		}
+
 		try {
 			server.start();
 		} catch (Exception e) {
@@ -63,4 +74,12 @@ public class Autotune
 		System.setProperty("org.eclipse.jetty.LEVEL", "OFF");
 	}
 
+	private static void startAutotuneEMOnly(ServletContextHandler contextHandler) {
+		ExperimentManager.launch(contextHandler);
+	}
+
+	private static void startAutotuneNormalMode(ServletContextHandler contextHandler) {
+		Analyzer.start(contextHandler);
+		ExperimentManager.launch(contextHandler);
+	}
 }

@@ -1,32 +1,21 @@
-/*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-
 package com.autotune.experimentManager.utils;
-
-import com.autotune.analyzer.utils.ServerContext;
 
 public class EMConstants {
     public static class APIPaths {
-        public static final String CREATE_EXPERIMENT = ServerContext.ROOT_CONTEXT + "createExperiment";
-        public static final String GET_EXPERIMENTS = ServerContext.ROOT_CONTEXT + "getExperiments";
-        public static final String GET_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "getTrialStatus";
+        public static final int PORT = 8080;
+        public static final String ROOT = "/";
+        public static final String CREATE_EXPERIMENT = ROOT + "createExperiment";
+        public static final String GET_EXPERIMENTS = ROOT + "getExperiments";
+        public static final String LIST_TRIAL_STATUS = ROOT + "listTrialStatus";
     }
 
     public static class DeploymentConstants {
         public static String NAMESPACE = "default";
+    }
+
+    public static class EMEnv {
+        public static final String AUTOTUNE_MODE = "AUTOTUNE_MODE";
+        public static final String EM_ONLY_MODE = "EM_ONLY";
     }
 
     public static class TransitionClasses {
@@ -49,7 +38,7 @@ public class EMConstants {
 
     public static class Logs {
         public static class LoggerSettings {
-            public static String DEFAULT_LOG_LEVEL = "ALL";
+            public static String DEFUALT_LOG_LEVEL = "ALL";
         }
         public static class ExperimentManager {
             public static String INITIALIZE_EM = "Initializing EM";
@@ -72,8 +61,10 @@ public class EMConstants {
     }
 
     public static class InputJsonKeys {
-        public static class GetTrailStatusInputKeys {
-            public static String RUN_ID = "runId";
+        public static class ListTrialStatusKeys {
+            public static String RUN_ID ="runId";
+            public static String STATUS = "status";
+            public static String ERROR = "error";
         }
 
         public static class DeploymentKeys {
@@ -89,17 +80,9 @@ public class EMConstants {
         }
     }
 
-    /**
-     * Constants for EMSettings class
-     */
-    public static class EMSettings {
-        // Number of current executors per CPU core
-        public static int EXECUTORS_MULTIPLIER = 1;
-        // Maximum number of executors per CPU core
-        public static int MAX_EXECUTORS_MULTIPLIER = 4;
-    }
+    public static class EMConfigSettings {
+        public static class TrialSettings {
 
-    public static class EMExecutorService {
-        public static int MIN_EXECUTOR_POOL_SIZE = 1;
+        }
     }
 }

@@ -18,7 +18,7 @@ package com.autotune.analyzer.utils;
 /**
  * Contains strings describing the errors encountered
  */
-public class DAErrorConstants
+public class AnalyzerErrorConstants
 {
 
 	public static class AutotuneConfigErrors {
@@ -28,7 +28,7 @@ public class DAErrorConstants
 		public final static String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
 		public final static String NO_TUNABLES = "AutotuneConfig has no tunables\n";
 		public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
-		public static final String INVALID_SLA_CLASS = "Invalid sla_class for tunable ";
+		public static final String INVALID_SLO_CLASS = "Invalid slo_class for tunable ";
 		public static final String TUNABLE_NAME_EMPTY = "Tunable name cannot be empty";
 		public static final String ZERO_STEP = "Tunable step cannot be 0";
 	}
@@ -37,7 +37,7 @@ public class DAErrorConstants
 		public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
 		public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";
 		public static final String INVALID_MATCHLABEL_VALUE = "Invalid or blank MatchLabelValue in selector\n";
-		public static final String SLA_CLASS_NOT_SUPPORTED = "sla_class not supported\n";
+		public static final String SLO_CLASS_NOT_SUPPORTED = "slo_class not supported\n";
 		public static final String DIRECTION_NOT_SUPPORTED = "direction not supported\n";
 		public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";

@@ -23,8 +23,8 @@ import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.*;
-import com.autotune.analyzer.utils.DAConstants;
-import com.autotune.analyzer.utils.DAErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.Utils;
 import com.autotune.analyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -46,6 +46,8 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.autotune.analyzer.Experimentator.startExperiment;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster
@@ -92,17 +94,32 @@ public class AutotuneDeployment
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							addAutotuneObject(autotuneObject, autotuneDeployment, client);
-							LOGGER.info("Added autotune object " + autotuneObject.getName());
+							String autotuneObjectStr = autotuneObject.getExperimentName();
+							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
+							// For each of these applicationServiceStacks, we need to start the experiments
+							for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
+								ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
+								startExperiment(autotuneObject, applicationServiceStack);
+							}
+							LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 						}
 						break;
 					case "MODIFIED":
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							// Check if any of the values have changed from the existing object in the map
-							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != autotuneObject.getId()) {
+							if (autotuneObjectMap.get(autotuneObject.getExperimentName()).getExperimentId() != autotuneObject.getExperimentId()) {
 								deleteExistingAutotuneObject(resource);
 								addAutotuneObject(autotuneObject, autotuneDeployment, client);
-								LOGGER.info("Modified autotune object {}", autotuneObject.getName());
+
+								String autotuneObjectStr = autotuneObject.getExperimentId();
+								// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
+								// For each of these applicationServiceStacks, we need to restart the experiments
+								for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
+									ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
+								}
+
+								LOGGER.info("Modified autotune object {}", autotuneObject.getExperimentName());
 							}
 						}
 						break;
@@ -163,7 +180,7 @@ public class AutotuneDeployment
 	 * @param client
 	 */
 	private static void addAutotuneObject(AutotuneObject autotuneObject, AutotuneDeployment autotuneDeployment, KubernetesClient client) {
-		autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+		autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
 		autotuneDeployment.matchPodsToAutotuneObject(client);
 
 		for (String autotuneConfig : autotuneConfigMap.keySet()) {
@@ -177,8 +194,8 @@ public class AutotuneDeployment
 	 */
 	private static void deleteExistingAutotuneObject(String autotuneObject) {
 		JSONObject autotuneObjectJson = new JSONObject(autotuneObject);
-		String name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
-				.optString(DAConstants.AutotuneObjectConstants.NAME);
+		String name = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 
 		autotuneObjectMap.remove(name);
 		applicationServiceStackMap.remove(name);
@@ -191,7 +208,7 @@ public class AutotuneDeployment
 	 */
 	private static void deleteExistingConfig(String resource) {
 		JSONObject autotuneConfigJson = new JSONObject(resource);
-		String configName = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+		String configName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		LOGGER.info("AutotuneConfig " + configName + " removed from autotune monitoring");
 		// Remove from collection of autotuneconfigs in map
@@ -228,16 +245,16 @@ public class AutotuneDeployment
 					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(podMetadata.getName(),
 							podMetadata.getNamespace(), status);
 					// If autotuneobject is already in map
-					if (applicationServiceStackMap.containsKey(autotuneObject.getName())) {
+					if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
 						//If applicationservicestack is not already in list
-						if (!applicationServiceStackMap.get(autotuneObject.getName()).containsKey(podMetadata.getName())) {
-							applicationServiceStackMap.get(autotuneObject.getName()).put(applicationServiceStack.getApplicationServiceName(),
+						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(podMetadata.getName())) {
+							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(applicationServiceStack.getApplicationServiceName(),
 									applicationServiceStack);
 						}
 					} else {
 						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
 						innerMap.put(applicationServiceStack.getApplicationServiceName(), applicationServiceStack);
-						applicationServiceStackMap.put(autotuneObject.getName(), innerMap);
+						applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
 					}
 				}
 			}
@@ -255,11 +272,11 @@ public class AutotuneDeployment
 
 			String name;
 			String mode;
-			SlaInfo slaInfo;
+			SloInfo sloInfo;
 			String namespace;
 			SelectorInfo selectorInfo;
 
-			JSONObject specJson = autotuneObjectJson.optJSONObject(DAConstants.AutotuneObjectConstants.SPEC);
+			JSONObject specJson = autotuneObjectJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SPEC);
 
 			JSONObject slaJson = null;
 			String sla_class = null;
@@ -267,25 +284,25 @@ public class AutotuneDeployment
 			String objectiveFunction = null;
 			String hpoAlgoImpl = null;
 			if (specJson != null) {
-				slaJson = specJson.optJSONObject(DAConstants.AutotuneObjectConstants.SLA);
-				sla_class = slaJson.optString(DAConstants.AutotuneObjectConstants.SLA_CLASS);
-				direction = slaJson.optString(DAConstants.AutotuneObjectConstants.DIRECTION);
-				hpoAlgoImpl = slaJson.optString(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
-				objectiveFunction = slaJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+				slaJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
+				sla_class = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+				direction = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
+				hpoAlgoImpl = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
+				objectiveFunction = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
 			JSONArray functionVariables = new JSONArray();
 			if (slaJson != null) {
-				functionVariables = slaJson.getJSONArray(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
+				functionVariables = slaJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 			}
 			ArrayList<FunctionVariable> functionVariableArrayList = new ArrayList<>();
 
 			for (Object functionVariableObj : functionVariables) {
 				JSONObject functionVariableJson = (JSONObject) functionVariableObj;
-				String variableName = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.NAME);
-				String query = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.QUERY);
-				String datasource = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.DATASOURCE);
-				String valueType = functionVariableJson.optString(DAConstants.AutotuneObjectConstants.VALUE_TYPE);
+				String variableName = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+				String query = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.QUERY);
+				String datasource = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
+				String valueType = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
 
 				FunctionVariable functionVariable = new FunctionVariable(variableName,
 						query,
@@ -297,10 +314,10 @@ public class AutotuneDeployment
 
 			// If the user has not specified hpoAlgoImpl, we use the default one.
 			if (hpoAlgoImpl == null || hpoAlgoImpl.isEmpty()) {
-				hpoAlgoImpl = DAConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL;
+				hpoAlgoImpl = AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL;
 			}
 
-			slaInfo = new SlaInfo(sla_class,
+			sloInfo = new SloInfo(sla_class,
 					objectiveFunction,
 					direction,
 					hpoAlgoImpl,
@@ -308,15 +325,15 @@ public class AutotuneDeployment
 
 			JSONObject selectorJson = null;
 			if (specJson != null) {
-				selectorJson = specJson.getJSONObject(DAConstants.AutotuneObjectConstants.SELECTOR);
+				selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
 			}
 
 			assert selectorJson != null;
-			String matchLabel = selectorJson.optString(DAConstants.AutotuneObjectConstants.MATCH_LABEL);
-			String matchLabelValue = selectorJson.optString(DAConstants.AutotuneObjectConstants.MATCH_LABEL_VALUE);
-			String matchRoute = selectorJson.optString(DAConstants.AutotuneObjectConstants.MATCH_ROUTE);
-			String matchURI = selectorJson.optString(DAConstants.AutotuneObjectConstants.MATCH_URI);
-			String matchService = selectorJson.optString(DAConstants.AutotuneObjectConstants.MATCH_SERVICE);
+			String matchLabel = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_LABEL);
+			String matchLabelValue = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_LABEL_VALUE);
+			String matchRoute = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_ROUTE);
+			String matchURI = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_URI);
+			String matchService = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_SERVICE);
 
 			selectorInfo = new SelectorInfo(matchLabel,
 					matchLabelValue,
@@ -324,27 +341,27 @@ public class AutotuneDeployment
 					matchURI,
 					matchService);
 
-			mode = specJson.optString(DAConstants.AutotuneObjectConstants.MODE);
-			name = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
-					.optString(DAConstants.AutotuneObjectConstants.NAME);
-			namespace = autotuneObjectJson.getJSONObject(DAConstants.AutotuneObjectConstants.METADATA)
-					.optString(DAConstants.AutotuneObjectConstants.NAMESPACE);
+			mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE);
+			name = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
+					.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+			namespace = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
+					.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
 
 			// Generate string of all fields we want to use for ID. This is the same as toString() for later comparison
 			String idString = "AutotuneObject{" +
 					"name='" + name + '\'' +
 					", namespace='" + namespace + '\'' +
 					", mode='" + mode + '\'' +
-					", slaInfo=" + slaInfo +
+					", slaInfo=" + sloInfo +
 					", selectorInfo=" + selectorInfo +
 					'}';
-			String id = Utils.generateID(idString);
+			String experimentId = Utils.generateID(idString);
 
-			return new AutotuneObject(id,
+			return new AutotuneObject(experimentId,
 					name,
 					namespace,
 					mode,
-					slaInfo,
+					sloInfo,
 					selectorInfo
 			);
 
@@ -365,25 +382,25 @@ public class AutotuneDeployment
 	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource, KubernetesClient client, CustomResourceDefinitionContext autotuneVariableContext) {
 		try {
 			JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
-			JSONObject presenceJson = autotuneConfigJson.optJSONObject(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE);
+			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
 			JSONObject layerPresenceQueryJson = null;
 			JSONArray layerPresenceLabelJson = null;
 			if (presenceJson != null) {
-				presence = presenceJson.optString(DAConstants.AutotuneConfigConstants.PRESENCE);
-				layerPresenceQueryJson = presenceJson.optJSONObject(DAConstants.AutotuneConfigConstants.QUERY);
-				layerPresenceLabelJson = presenceJson.optJSONArray(DAConstants.AutotuneConfigConstants.LABEL);
+				presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
+				layerPresenceQueryJson = presenceJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
 			}
 
-			String name = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAME);
-			String namespace = autotuneConfigJson.getJSONObject(DAConstants.AutotuneConfigConstants.METADATA).optString(DAConstants.AutotuneConfigConstants.NAMESPACE);
+			String name = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
+			String namespace = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
 			ArrayList<Map<String, String>> arrayList = null;
 			try {
 				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
-				arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(DAConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+				arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
 			} catch (Exception e) {
 				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
 				return null;
@@ -396,12 +413,12 @@ public class AutotuneDeployment
 			String layerPresenceLabelValue = null;
 
 			if (layerPresenceQueryJson != null) {
-				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
 				for (Object datasource : datasourceArray) {
 					JSONObject datasourceJson = (JSONObject) datasource;
-					if (datasourceJson.getString(DAConstants.AutotuneConfigConstants.NAME).equals(DeploymentInfo.getMonitoringAgent())) {
-						layerPresenceQuery = datasourceJson.getString(DAConstants.AutotuneConfigConstants.QUERY);
-						layerPresenceKey = datasourceJson.getString(DAConstants.AutotuneConfigConstants.KEY);
+					if (datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.NAME).equals(DeploymentInfo.getMonitoringAgent())) {
+						layerPresenceQuery = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+						layerPresenceKey = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
 						break;
 					}
 				}
@@ -410,14 +427,14 @@ public class AutotuneDeployment
 			if (layerPresenceLabelJson != null) {
 				for (Object label : layerPresenceLabelJson) {
 					JSONObject labelJson = (JSONObject) label;
-					layerPresenceLabel = labelJson.optString(DAConstants.AutotuneConfigConstants.NAME);
-					layerPresenceLabelValue = labelJson.optString(DAConstants.AutotuneConfigConstants.VALUE);
+					layerPresenceLabel = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
+					layerPresenceLabelValue = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE);
 				}
 			}
 
-			String layerName = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.LAYER_NAME);
-			String details = autotuneConfigJson.optString(DAConstants.AutotuneConfigConstants.DETAILS);
-			int level = autotuneConfigJson.optInt(DAConstants.AutotuneConfigConstants.LAYER_LEVEL);
+			String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+			String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
+			int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
 
 			// Replace the queryvariables in the query
 			try {
@@ -425,16 +442,16 @@ public class AutotuneDeployment
 						layerPresenceQuery, arrayList);
 			} catch (IOException ignored) { }
 
-			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(DAConstants.AutotuneConfigConstants.TUNABLES);
+			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 			ArrayList<Tunable> tunableArrayList = new ArrayList<>();
 
 			for (Object tunablesObject : tunablesJsonArray) {
 				JSONObject tunableJson = (JSONObject) tunablesObject;
 
-				JSONObject tunableQueries = tunableJson.optJSONObject(DAConstants.AutotuneConfigConstants.QUERIES);
+				JSONObject tunableQueries = tunableJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 				JSONArray dataSourceArray = null;
 				if (tunableQueries != null) {
-					dataSourceArray = tunableQueries.optJSONArray(DAConstants.AutotuneConfigConstants.DATASOURCE);
+					dataSourceArray = tunableQueries.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
 				}
 
 				// Store the datasource and query from the JSON in a map
@@ -442,8 +459,8 @@ public class AutotuneDeployment
 				if (dataSourceArray != null) {
 					for (Object dataSourceObject : dataSourceArray) {
 						JSONObject dataSourceJson = (JSONObject) dataSourceObject;
-						String datasource = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.NAME);
-						String datasourceQuery = dataSourceJson.optString(DAConstants.AutotuneConfigConstants.QUERY);
+						String datasource = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
+						String datasourceQuery = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
 
 						try {
 							datasourceQuery = Variables.updateQueryWithVariables(null, null,
@@ -454,16 +471,15 @@ public class AutotuneDeployment
 					}
 				}
 
-				String tunableName = tunableJson.optString(DAConstants.AutotuneConfigConstants.NAME);
-				String tunableValueType = tunableJson.optString(DAConstants.AutotuneConfigConstants.VALUE_TYPE);
-				double upperBound = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.UPPER_BOUND);
-				double lowerBound = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.LOWER_BOUND);
+				String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
+				String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
+				String upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
+				String lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
 				// Read in step from the tunable, set it to '1' if not specified.
-				double step = tunableJson.optDouble(DAConstants.AutotuneConfigConstants.STEP, 1);
+				double step = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.STEP, 1);
 
 				ArrayList<String> slaClassList = new ArrayList<>();
-
-				JSONArray slaClassJson = tunableJson.getJSONArray(DAConstants.AutotuneConfigConstants.SLA_CLASS);
+				JSONArray slaClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
 				for (Object slaClassObject : slaClassJson) {
 					String slaClass = (String) slaClassObject;
 					slaClassList.add(slaClass);
@@ -491,8 +507,8 @@ public class AutotuneDeployment
 					", tunables=" + tunableArrayList +
 					'}';
 
-			String id = Utils.generateID(idString);
-			return new AutotuneConfig(id, name,
+			String layerId = Utils.generateID(idString);
+			return new AutotuneConfig(layerId, name,
 					layerName,
 					level,
 					details,
@@ -518,7 +534,7 @@ public class AutotuneDeployment
 		String presence = autotuneConfig.getPresence();
 
 		//Add to all monitored applications in the cluster
-		if (presence.equals(DAConstants.PRESENCE_ALWAYS)) {
+		if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
 			for (String autotuneObject : applicationServiceStackMap.keySet()) {
 				for (String application : applicationServiceStackMap.get(autotuneObject).keySet()) {
 					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(application);
@@ -540,7 +556,7 @@ public class AutotuneDeployment
 			try {
 				apps = (ArrayList<String>) dataSource.getAppsForLayer(layerPresenceQuery, layerPresenceKey);
 			} catch (MalformedURLException | NullPointerException e) {
-				LOGGER.info(DAErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + autotuneConfig.getName());
+				LOGGER.info(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + autotuneConfig.getName());
 			}
 
 			if (apps != null) {
@@ -570,6 +586,9 @@ public class AutotuneDeployment
 					}
 				}
 			}
+
+			// We should now have all layers added to the applicationServiceStackMap
+
 		}
 	}
 
@@ -603,7 +622,7 @@ public class AutotuneDeployment
 						tunable.getLowerBound(),
 						tunable.getValueType(),
 						queries,
-						tunable.getSlaClassList());
+						tunable.getSloClassList());
 				tunables.add(tunableCopy);
 			} catch (IOException | InvalidBoundsException ignored) { }
 		}
@@ -611,7 +630,7 @@ public class AutotuneDeployment
 		//Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
-			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getId(),
+			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getLayerId(),
 					autotuneConfig.getName(),
 					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),

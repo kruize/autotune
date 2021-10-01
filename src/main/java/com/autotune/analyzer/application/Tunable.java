@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
+
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
  * and the list of sla_class (throughput, response_time, right_size, etc.) for which it is applicable.
@@ -36,7 +39,7 @@ import java.util.Objects;
  *     datasource:
  *     - name: 'prometheus'
  *       query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
- *   sla_class:
+ *   slo_class:
  *   - response_time
  *   - throughput
  */
@@ -45,8 +48,9 @@ public class Tunable
 	private String name;
 	private double step;
 	private String valueType;
-	private double upperBound;
-	private double lowerBound;
+	private Double upperBoundValue;
+	private Double lowerBoundValue;
+	private String boundUnits;
 	private String description;
 	private Map<String, String> queries;
 
@@ -55,46 +59,73 @@ public class Tunable
     String bound; //[1.5-3.5], [true, false]
     */
 
-	public ArrayList<String> slaClassList;
+	public ArrayList<String> sloClassList;
 
 	public Tunable(String name,
 				   double step,
-				   double upperBound,
-				   double lowerBound,
+				   String upperBound,
+				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
-				   ArrayList<String> slaClassList) throws InvalidBoundsException {
+				   ArrayList<String> sloClassList) throws InvalidBoundsException {
 		this.queries = queries;
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
-		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
+		this.sloClassList = Objects.requireNonNull(sloClassList, "tunable should contain supported slo_classes");
 		this.step = Objects.requireNonNull(step, "step cannot be null");
+
+		/* Parse the value for the bounds from the strings passed in */
+		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
+		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
+
+		/* Parse the bound units from the strings passed in and make sure they are the same */
+		String upperBoundUnits = BOUND_DIGITS.matcher(upperBound).replaceAll("");
+		String lowerBoundUnits = BOUND_DIGITS.matcher(lowerBound).replaceAll("");
+		if (upperBoundUnits != null &&
+				!upperBoundUnits.trim().isEmpty() &&
+				lowerBoundUnits != null &&
+				!lowerBoundUnits.trim().isEmpty() &&
+				!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
+			System.out.println("ERROR: Tunable: " + name +
+					" has invalid bound units; ubv: " + upperBoundValue +
+					" lbv: " + lowerBoundValue +
+					" ubu: " + upperBoundUnits +
+					" lbu: " + lowerBoundUnits);
+			throw new InvalidBoundsException();
+		}
 
 		/*
 		 * Bounds cannot be negative.
 		 * upperBound has to be greater than lowerBound.
 		 * step has to be lesser than or equal to the difference between the two bounds.
 		 */
-		if (upperBound < 0 ||
-			lowerBound < 0 ||
-			lowerBound >= upperBound ||
-			step > (upperBound - lowerBound)
+		if (upperBoundValue < 0 ||
+			lowerBoundValue < 0 ||
+			lowerBoundValue >= upperBoundValue ||
+			step > (upperBoundValue - lowerBoundValue)
 		   ) {
+			System.out.println("ERROR: Tunable: " + name +
+					" has invalid bounds; ubv: " + upperBoundValue +
+					" lbv: " + lowerBoundValue +
+					" ubu: " + upperBoundUnits +
+					" lbu: " + lowerBoundUnits);
 			throw new InvalidBoundsException();
 		}
-		this.lowerBound = lowerBound;
-		this.upperBound = upperBound;
+		this.lowerBoundValue = lowerBoundValue;
+		this.upperBoundValue = upperBoundValue;
+		this.boundUnits = upperBoundUnits;
 	}
 
 	public Tunable(Tunable copy) {
 		this.name = copy.name;
 		this.step = copy.step;
-		this.upperBound = copy.upperBound;
-		this.lowerBound = copy.lowerBound;
+		this.upperBoundValue = copy.upperBoundValue;
+		this.lowerBoundValue = copy.lowerBoundValue;
+		this.boundUnits = copy.boundUnits;
 		this.valueType = copy.valueType;
 		this.description = copy.description;
 		this.queries = copy.queries;
-		this.slaClassList = copy.slaClassList;
+		this.sloClassList = copy.sloClassList;
 	}
 
 	public String getName() {
@@ -108,31 +139,28 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public double getUpperBound() {
-		return upperBound;
+	public Double getUpperBoundValue() {
+		return upperBoundValue;
 	}
 
-	public void setUpperBound(double upperBound) {
-		this.upperBound = upperBound;
+	public String getUpperBound() {
+		return upperBoundValue + boundUnits;
 	}
 
-	public double getLowerBound() {
-		return lowerBound;
+	public Double getLowerBoundValue() {
+		return lowerBoundValue;
 	}
 
-	public void setLowerBound(double lowerBound) {
-			this.lowerBound = lowerBound;
+	public String getLowerBound() {
+		return lowerBoundValue + boundUnits;
+	}
+
+	public String getBoundUnits() {
+		return boundUnits;
 	}
 
 	public String getValueType() {
 		return valueType;
-	}
-
-	public void setValueType(String valueType) throws InvalidValueException {
-		if (valueType != null)
-			this.valueType = valueType;
-		else
-			throw new InvalidValueException("Value type not set for tunable");
 	}
 
 	public Map<String, String> getQueries() {
@@ -151,12 +179,8 @@ public class Tunable
 		this.description = description;
 	}
 
-	public ArrayList<String> getSlaClassList() {
-		return slaClassList;
-	}
-
-	public void setSlaClassList(ArrayList<String> slaClassList) {
-		this.slaClassList = slaClassList;
+	public ArrayList<String> getSloClassList() {
+		return sloClassList;
 	}
 
 	public double getStep() {
@@ -173,11 +197,11 @@ public class Tunable
 				"name='" + name + '\'' +
 				", step=" + step +
 				", valueType='" + valueType + '\'' +
-				", upperBound='" + upperBound + '\'' +
-				", lowerBound='" + lowerBound + '\'' +
+				", upperBound='" + upperBoundValue + '\'' +
+				", lowerBound='" + lowerBoundValue + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
-				", slaClassList=" + slaClassList +
+				", slaClassList=" + sloClassList +
 				'}';
 	}
 }

@@ -18,7 +18,7 @@ package com.autotune.analyzer.datasource;
 import com.autotune.analyzer.deployment.DeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -48,7 +48,7 @@ public class DataSourceFactory
 
 		String token = DeploymentInfo.getAuthToken();
 
-		if (dataSource.equals(DAConstants.PROMETHEUS_DATA_SOURCE))
+		if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
 			return new PrometheusDataSource(monitoringAgentEndpoint, token);
 
 		LOGGER.error("Datasource " + dataSource + " not supported");
@@ -77,7 +77,7 @@ public class DataSourceFactory
 				try {
 					String clusterIP = service.getSpec().getClusterIP();
 					int port = service.getSpec().getPorts().get(0).getPort();
-					return DAConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+					return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
 				} catch (Exception e) {
 					throw new MonitoringAgentNotFoundException();
 				}

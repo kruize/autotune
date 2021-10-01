@@ -15,10 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import java.util.regex.Pattern;
+
 /**
  * Holds constants used in other parts of the codebase
  */
-public class DAConstants
+public class AnalyzerConstants
 {
 	// Used to parse autotune configmaps
 	public static final String K8S_TYPE = "K8S_TYPE";
@@ -58,8 +60,8 @@ public class DAConstants
 	 */
 	public static class AutotuneObjectConstants {
 		public static final String SPEC = "spec";
-		public static final String SLA = "sla";
-		public static final String SLA_CLASS = "sla_class";
+		public static final String SLO = "sla";
+		public static final String SLO_CLASS = "sla_class";
 		public static final String DIRECTION = "direction";
 		public static final String OBJECTIVE_FUNCTION = "objective_function";
 
@@ -113,7 +115,10 @@ public class DAConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
-		public static final String SLA_CLASS = "sla_class";
+		public static final String SLO_CLASS = "sla_class";
+
+		public static final Pattern BOUND_CHARS = Pattern.compile("[\\sa-zA-Z]");
+		public static final Pattern BOUND_DIGITS = Pattern.compile("[\\s0-9\\.]");
 
 		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
 		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";

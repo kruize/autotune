@@ -28,8 +28,8 @@ tunables:
   description: 'The core thread pool size. This number of threads will always be kept alive.'
   # value_type: currently one of double or integer
   value_type: integer
-  upper_bound: 10
-  lower_bound: 1
+  upper_bound: '10'
+  lower_bound: '1'
   step: 1
   # sla_class is an array of one or more of "response_time, throughput or resource_usage"
   # It represents which sla's are affected by this tunable
@@ -39,8 +39,8 @@ tunables:
 - name: quarkus.hibernate-orm.jdbc.statement-fetch-size
   description: 'How many rows are fetched at a time by the JDBC driver.'
   value_type: integer
-  upper_bound: 50
-  lower_bound: 1
+  upper_bound: '50'
+  lower_bound: '1'
   step: 1
   sla_class:
   - response_time

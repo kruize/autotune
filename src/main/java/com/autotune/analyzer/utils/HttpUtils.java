@@ -22,8 +22,11 @@ import javax.net.ssl.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -86,7 +89,7 @@ public class HttpUtils
 		return response.toString();
 	}
 
-	public static void disableSSLVertification() {
+	public static void disableSSLVerification() {
 		TrustManager[] dummyTrustManager = new TrustManager[]{new X509TrustManager() {
 			public X509Certificate[] getAcceptedIssuers() {
 				return null;
@@ -110,5 +113,30 @@ public class HttpUtils
 		assert sslContext != null;
 		HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+	}
+
+	public static String postRequest(URL url, String content) {
+		try {
+			URLConnection connection = url.openConnection();
+			HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
+			httpURLConnection.setRequestMethod("POST");
+			httpURLConnection.setDoOutput(true);
+
+			byte[] out = content.getBytes(StandardCharsets.UTF_8);
+			int length = out.length;
+
+			httpURLConnection.setFixedLengthStreamingMode(length);
+			httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+			httpURLConnection.connect();
+			try(OutputStream outputStream = httpURLConnection.getOutputStream()) {
+				outputStream.write(out);
+			}
+			String data = getDataFromConnection(httpURLConnection);
+			return data;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "";
+		}
 	}
 }

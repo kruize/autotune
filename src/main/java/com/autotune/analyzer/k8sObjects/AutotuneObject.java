@@ -16,7 +16,7 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.HashMap;
 
@@ -27,45 +27,45 @@ import java.util.HashMap;
  */
 public final class AutotuneObject
 {
-	private final String id;
-	private final String name;
+	private final String experimentId;
+	private final String experimentName;
 	private final String namespace;
 	private final String mode;
-	private final SlaInfo slaInfo;
+	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 
-	public AutotuneObject(String id,
-			String name,
+	public AutotuneObject(String experimentId,
+			String experimentName,
 			String namespace,
 			String mode,
-			SlaInfo slaInfo,
+			SloInfo sloInfo,
 			SelectorInfo selectorInfo) throws InvalidValueException {
-		this.id = id;
+		this.experimentId = experimentId;
 		HashMap<String, Object> map = new HashMap<>();
-		map.put(DAConstants.AutotuneObjectConstants.NAME, name);
-		map.put(DAConstants.AutotuneObjectConstants.NAMESPACE, namespace);
-		map.put(DAConstants.AutotuneObjectConstants.MODE, mode);
-		map.put(DAConstants.AutotuneObjectConstants.SLA, slaInfo);
-		map.put(DAConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
 		StringBuilder error = ValidateAutotuneObject.validate(map);
 		if (error.toString().isEmpty()) {
-			this.name = name;
+			this.experimentName = experimentName;
 			this.namespace = namespace;
 			this.mode = mode;
-			this.slaInfo = slaInfo;
+			this.sloInfo = sloInfo;
 			this.selectorInfo = selectorInfo;
 		} else {
 			throw new InvalidValueException(error.toString());
 		}
 	}
 
-	public String getName() {
-		return name;
+	public String getExperimentName() {
+		return experimentName;
 	}
 
-	public SlaInfo getSlaInfo() {
-		return new SlaInfo(slaInfo);
+	public SloInfo getSlaInfo() {
+		return new SloInfo(sloInfo);
 	}
 
 	public SelectorInfo getSelectorInfo() {
@@ -80,17 +80,17 @@ public final class AutotuneObject
 		return namespace;
 	}
 
-	public String getId() {
-		return id;
+	public String getExperimentId() {
+		return experimentId;
 	}
 
 	@Override
 	public String toString() {
 		return "AutotuneObject{" +
-				"name='" + name + '\'' +
+				"name='" + experimentName + '\'' +
 				", namespace='" + namespace + '\'' +
 				", mode='" + mode + '\'' +
-				", slaInfo=" + slaInfo +
+				", sloInfo=" + sloInfo +
 				", selectorInfo=" + selectorInfo +
 				'}';
 	}

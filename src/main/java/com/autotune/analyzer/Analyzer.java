@@ -21,7 +21,7 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.services.*;
-import com.autotune.analyzer.utils.ServerContext;
+import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class Analyzer
@@ -34,6 +34,7 @@ public class Analyzer
 			// Current deployment not supported. Exit
 			System.exit(1);
 		}
+		Experimentator.start();
 		AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
 
 		try {
@@ -50,5 +51,7 @@ public class Analyzer
 		context.addServlet(ListAppTunables.class, ServerContext.LIST_APP_TUNABLES);
 		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
 		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
+		context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
+		context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
 	}
 }

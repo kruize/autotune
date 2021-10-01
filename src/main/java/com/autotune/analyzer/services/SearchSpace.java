@@ -15,12 +15,13 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.Experimentator;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -28,6 +29,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import static com.autotune.utils.SearchSpaceHelpers.getSearchSpaceJSONArray;
 
 public class SearchSpace extends HttpServlet
 {
@@ -41,60 +44,57 @@ public class SearchSpace extends HttpServlet
      *
      * Example JSON:
      * [
-     *   {
-     *     "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
-     *     "objective_function": "transaction_response_time",
-     *     "tunables": [
-     *       {
-     *         "value_type": "double",
-     *         "lower_bound": "150M",
-     *         "name": "memoryRequest",
-     *         "upper_bound": "300M"
-     *       },
-     *       {
-     *         "value_type": "double",
-     *         "lower_bound": "1.0",
-     *         "name": "cpuRequest",
-     *         "upper_bound": "3.0"
-     *       }
-     *     ],
-     *     "sla_class": "response_time",
-     *     "direction": "minimize"
-     *   }
+     *     {
+     *         "application_name": "petclinic-sample-6f47b9995f-bqdk2",
+     *         "objective_function": "request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "tunables": [
+     *             {
+     *                 "value_type": "double",
+     *                 "lower_bound": 150,
+     *                 "name": "memoryRequest",
+     *                 "step": 1,
+     *                 "upper_bound": 300
+     *             },
+     *             {
+     *                 "value_type": "double",
+     *                 "lower_bound": 1,
+     *                 "name": "cpuRequest",
+     *                 "step": 0.01,
+     *                 "upper_bound": 3
+     *             }
+     *         ],
+     *         "sla_class": "throughput",
+     *         "direction": "maximize"
+     *     }
      * ]
-     * @param req
-     * @param resp
+     * @param request
+     * @param response
      * @throws IOException
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        JSONArray outputJsonArray = new JSONArray();
-        resp.setContentType("application/json");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
 
-        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+            String applicationId = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.ID);
+            JSONArray searchSpaceJsonArray = new JSONArray();
+            getSearchSpaceJSONArray(searchSpaceJsonArray, applicationId);
 
-        for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-
-            if (applicationName == null) {
-                //No application parameter, generate search space for all applications
-                for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, application);
-                }
-            } else {
-                if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(applicationName)) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName);
-                }
+            if (searchSpaceJsonArray.isEmpty()) {
+                if (Experimentator.experimentsMap.isEmpty())
+                    searchSpaceJsonArray.put("Error: No Experiments underway!");
+                else
+                    searchSpaceJsonArray.put("Error: Application " + applicationId + " not found!");
             }
-        }
 
-        if (outputJsonArray.isEmpty()) {
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty())
-                outputJsonArray.put("Error: No objects of kind Autotune found!");
-            else
-                outputJsonArray.put("Error: Application " + applicationName + " not found!");
+            response.getWriter().println(searchSpaceJsonArray.toString(4));
+            response.getWriter().close();
+        } catch (Exception ex) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        resp.getWriter().println(outputJsonArray.toString(4));
     }
 
     private void addApplicationToSearchSpace(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application) {
@@ -102,26 +102,28 @@ public class SearchSpace extends HttpServlet
         ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap
                 .get(autotuneObjectKey).get(application);
 
-        applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+        applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSlaInfo().getSloClass());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
 
         JSONArray tunablesJsonArray = new JSONArray();
         for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
             AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
             for (Tunable tunable : autotuneConfig.getTunables()) {
                 JSONObject tunableJson = new JSONObject();
-                tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 
                 tunablesJsonArray.put(tunableJson);
             }
         }
 
-        applicationJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
+        applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
         outputJsonArray.put(applicationJson);
     }
 }

@@ -50,6 +50,7 @@ public class ApplicationServiceStack
 	private String namespace;
 	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
+	private ApplicationSearchSpace applicationSearchSpace;
 
 	public ApplicationServiceStack(String applicationServiceName, String namespace) {
 		this.applicationServiceName = applicationServiceName;
@@ -102,6 +103,22 @@ public class ApplicationServiceStack
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
+		return applicationServiceStackLayers;
+	}
+
+	public void setApplicationServiceStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
+		this.applicationServiceStackLayers = applicationServiceStackLayers;
+	}
+
+	public ApplicationSearchSpace getApplicationSearchSpace() {
+		return applicationSearchSpace;
+	}
+
+	public void setApplicationSearchSpace(ApplicationSearchSpace applicationSearchSpace) {
+		this.applicationSearchSpace = applicationSearchSpace;
 	}
 
 	@Override

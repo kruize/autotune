@@ -24,7 +24,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.FunctionVariable;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -100,8 +100,8 @@ public class ListAppTunables extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
-		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+		String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
+		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		// If no autotuneobjects in the cluster
 		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
@@ -136,31 +136,31 @@ public class ListAppTunables extends HttpServlet
 
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
 		JSONObject jsonObject = new JSONObject();
-		jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
+		jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSlaInfo().getSloClass());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
 
 		// Add function_variables info
 		JSONArray functionVariablesArray = new JSONArray();
 		for (FunctionVariable functionVariable : autotuneObject.getSlaInfo().getFunctionVariables()) {
 			JSONObject functionVariableJson = new JSONObject();
-			functionVariableJson.put(DAConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
-			functionVariableJson.put(DAConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
+			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
+			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
 			try {
 				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-				functionVariableJson.put(DAConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
+				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
 						dataSource.getQueryEndpoint() + functionVariable.getQuery());
 			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(DAConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
+				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
 			}
 
 			functionVariablesArray.put(functionVariableJson);
 		}
 
-		jsonObject.put(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
@@ -169,35 +169,35 @@ public class ListAppTunables extends HttpServlet
 					.get(application).getStackLayers().get(autotuneConfigName);
 			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
-				layerJson.put(DAConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
-				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-				layerJson.put(DAConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
-				layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getLayerId());
+				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
+				layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
+				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
 
 				JSONArray tunablesArray = new JSONArray();
 				for (Tunable tunable : autotuneConfig.getTunables()) {
 					JSONObject tunableJson = new JSONObject();
 					String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-					tunableJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 					try {
-						String query = DAConstants.NONE;
+						String query = AnalyzerConstants.NONE;
 						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
 						// If tunable has a query specified
 						if (tunableQuery != null && !tunableQuery.isEmpty()) {
 							query = Objects.requireNonNull(dataSource).getDataSourceURL() +
 									dataSource.getQueryEndpoint() + tunableQuery;
 						}
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, query);
+						tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
 					} catch (MonitoringAgentNotFoundException e) {
-						tunableJson.put(DAConstants.ServiceConstants.QUERY_URL, tunableQuery);
+						tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
 					}
 					tunablesArray.put(tunableJson);
 				}
-				layerJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 				layersArray.put(layerJson);
 			}
 		}
@@ -209,7 +209,7 @@ public class ListAppTunables extends HttpServlet
 				outputJsonArray.put("Error: AutotuneConfig " + layerName + " not found!");
 			return;
 		}
-		jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
+		jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
 		outputJsonArray.put(jsonObject);
 	}
 }

@@ -13,17 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.utils;
+package com.autotune.utils;
 
 /**
  * Holds the server context of the dependency analyzer.
  */
 public class ServerContext
 {
+	public static final int AUTOTUNE_PORT = 8080;
+	public static final int OPTUNA_PORT = 8085;
+
+	// Analyzer end points
 	public static final String ROOT_CONTEXT = "/";
+	public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	public static final String LIST_APPLICATIONS = ROOT_CONTEXT + "listApplications";
 	public static final String LIST_APP_LAYERS = ROOT_CONTEXT + "listAppLayers";
 	public static final String LIST_APP_TUNABLES = ROOT_CONTEXT + "listAppTunables";
 	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
 	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
+	public static final String LIST_EXPERIMENTS = ROOT_CONTEXT + "listExperiments";
+	public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
+
+	public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
+	public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
+
+	// Optuna End Points
+	public static final String OPTUNA_SERVER_PORT = "http://localhost:" + OPTUNA_PORT;
+	public static final String OPTUNA_TRIALS = ROOT_CONTEXT + "experiment_trials";
+	public static final String OPTUNA_TRIALS_END_POINT = OPTUNA_SERVER_PORT + OPTUNA_TRIALS;
+
+	public static final String EXPERIMENT_MANAGER_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
+	public static final String EXPERIMENT_MANAGER_CREATE_TRIAL = ROOT_CONTEXT + "createExperiment";
+	public static final String EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_CREATE_TRIAL;
 }
