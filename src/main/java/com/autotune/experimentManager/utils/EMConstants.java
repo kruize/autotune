@@ -1,13 +1,6 @@
 package com.autotune.experimentManager.utils;
 
 public class EMConstants {
-    public static class APIPaths {
-        public static final int PORT = 8080;
-        public static final String ROOT = "/";
-        public static final String CREATE_EXPERIMENT = ROOT + "createExperimentTrial";
-        public static final String LIST_EXPERIMENT_TRIAL = ROOT + "listExperimentTrial";
-        public static final String LIST_TRIAL_STATUS = ROOT + "listTrialStatus";
-    }
 
     public static class DeploymentConstants {
         public static String NAMESPACE = "default";
