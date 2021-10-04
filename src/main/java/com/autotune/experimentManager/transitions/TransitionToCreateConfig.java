@@ -22,15 +22,12 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
     public void transit(String runId) {
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
         JSONArray configs = trialData.getConfig().getTrainingConfigs();
-        System.out.println(configs);
         KubernetesClient client = new DefaultKubernetesClient();
         RollingUpdateDeployment rud = new RollingUpdateDeployment();
         IntOrString maxSurge = new IntOrString(1);
         IntOrString maxUnavailable = new IntOrString(0);
         rud.setMaxSurge(maxSurge);
         rud.setMaxUnavailable(maxUnavailable);
-        System.out.println("in stage one - Create Config");
-        System.out.println(trialData.getConfig().getDeploymentName());
         client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
         Deployment currentDeployment = client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).withName(trialData.getConfig().getDeploymentName()).get();
         trialData.setCurrentDeployment(currentDeployment);

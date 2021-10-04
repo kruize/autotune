@@ -1,6 +1,5 @@
 package com.autotune.experimentManager.services;
 
-import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.experimentManager.data.*;
 import com.autotune.experimentManager.services.util.EMAPIHandler;
 import org.json.JSONObject;
@@ -13,8 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-public class CreateExperiment extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+public class CreateExperimentTrial extends HttpServlet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String inputData = req.getReader().lines().collect(Collectors.joining());
