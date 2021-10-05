@@ -7,6 +7,7 @@ import com.autotune.experimentManager.services.ListExperimentTrail;
 import com.autotune.experimentManager.settings.EMS;
 import com.autotune.experimentManager.utils.EMConstants;
 
+import com.autotune.utils.ServerContext;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -72,8 +73,8 @@ public class ExperimentManager {
 
     private static void addEMServlets(ServletContextHandler context) {
         LOGGER.info(EMConstants.Logs.ExperimentManager.ADD_EM_SERVLETS);
-        context.addServlet(CreateExperimentTrial.class, EMConstants.APIPaths.CREATE_EXPERIMENT);
-        context.addServlet(ListExperimentTrail.class, EMConstants.APIPaths.LIST_EXPERIMENT_TRIAL);
-        context.addServlet(ListTrialStatus.class, EMConstants.APIPaths.LIST_TRIAL_STATUS);
+        context.addServlet(CreateExperimentTrial.class, ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL);
+        context.addServlet(ListExperimentTrail.class, ServerContext.EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL);
+        context.addServlet(ListTrialStatus.class, ServerContext.EXPERIMENT_MANAGER_LIST_TRIAL_STATUS);
     }
 }

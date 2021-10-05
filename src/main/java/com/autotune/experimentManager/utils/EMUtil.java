@@ -60,6 +60,8 @@ public class EMUtil {
         WAIT,
         IN_PROGRESS,
         WAITING_FOR_LOAD,
+        APPLYING_LOAD,
+        COLLECTING_METRICS,
         COMPLETED
     }
 
