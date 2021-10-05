@@ -23,7 +23,7 @@ import com.autotune.analyzer.deployment.DeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.k8sObjects.FunctionVariable;
+import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -137,24 +137,24 @@ public class ListAppTunables extends HttpServlet
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSlaInfo().getSloClass());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
 		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
 		// Add function_variables info
 		JSONArray functionVariablesArray = new JSONArray();
-		for (FunctionVariable functionVariable : autotuneObject.getSlaInfo().getFunctionVariables()) {
+		for (Metric metric : autotuneObject.getSloInfo().getFunctionVariables()) {
 			JSONObject functionVariableJson = new JSONObject();
-			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
-			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
+			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, metric.getName());
+			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, metric.getValueType());
 			try {
 				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
 				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-						dataSource.getQueryEndpoint() + functionVariable.getQuery());
+						dataSource.getQueryEndpoint() + metric.getQuery());
 			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
+				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, metric.getQuery());
 			}
 
 			functionVariablesArray.put(functionVariableJson);
@@ -164,9 +164,9 @@ public class ListAppTunables extends HttpServlet
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-				.get(application).getStackLayers().keySet()) {
+				.get(application).getApplicationServiceStackLayers().keySet()) {
 			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-					.get(application).getStackLayers().get(autotuneConfigName);
+					.get(application).getApplicationServiceStackLayers().get(autotuneConfigName);
 			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
 				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getLayerId());

@@ -64,7 +64,7 @@ public final class AutotuneObject
 		return experimentName;
 	}
 
-	public SloInfo getSlaInfo() {
+	public SloInfo getSloInfo() {
 		return new SloInfo(sloInfo);
 	}
 

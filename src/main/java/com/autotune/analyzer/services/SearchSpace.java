@@ -103,14 +103,14 @@ public class SearchSpace extends HttpServlet
                 .get(autotuneObjectKey).get(application);
 
         applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSlaInfo().getSloClass());
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
         JSONArray tunablesJsonArray = new JSONArray();
-        for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
-            AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
+        for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+            AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
             for (Tunable tunable : autotuneConfig.getTunables()) {
                 JSONObject tunableJson = new JSONObject();
                 tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());

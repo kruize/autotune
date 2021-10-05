@@ -1,12 +1,39 @@
+/*******************************************************************************
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
+import com.autotune.analyzer.application.ApplicationServiceStack;
+import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.datasource.DataSource;
+import com.autotune.analyzer.datasource.DataSourceFactory;
+import com.autotune.analyzer.deployment.DeploymentInfo;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.experiments.*;
+import com.autotune.analyzer.k8sObjects.AutotuneConfig;
+import com.autotune.analyzer.k8sObjects.AutotuneObject;
+import com.autotune.analyzer.k8sObjects.Metric;
+import com.autotune.analyzer.k8sObjects.SloInfo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
 import static java.lang.String.valueOf;
 
 public class TrialHelpers {
@@ -146,7 +173,7 @@ public class TrialHelpers {
              * experimentTrialJSON -> deployments -> metrics
              */
             JSONArray metricArrayObjects = new JSONArray();
-            for (Metrics metricObjects : deployment.getMetrics()) {
+            for (Metric metricObjects : deployment.getMetrics()) {
                 JSONObject obj = new JSONObject();
                 obj.put("name", metricObjects.getName());
                 obj.put("query", metricObjects.getQuery());
@@ -177,14 +204,15 @@ public class TrialHelpers {
      * Create a ExperimentTrial object that holds the trial config to be deployed to the k8s cluster
      *
      * @param trialNumber passed in from Optuna
-     * @param appSearchSpace from the user
+     * @param autotuneExperiment from the user
      * @param trialConfigJson from Optuna
      * @return ExperimentTrial object
      */
     public static ExperimentTrial createDefaultExperimentTrial(int trialNumber,
-                                                               ApplicationSearchSpace appSearchSpace,
+                                                               AutotuneExperiment autotuneExperiment,
                                                                String trialConfigJson) {
 
+        ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
         TrialSettings trialSettings = new TrialSettings("15mins",
                 "3mins");
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy("rollingUpdate",
@@ -227,17 +255,29 @@ public class TrialHelpers {
                 limits = new Resources(cpu, memory);
             }
 
-            Metrics request_sum = new Metrics("request_sum", "request_sum_query", "prometheus");
-            Metrics request_count = new Metrics("request_count", "request_count_query", "prometheus");
-            Metrics hotspot_function = new Metrics("hotspot_function", "hotspot_function_query", "prometheus");
-            Metrics cpuRequest = new Metrics("cpuRequest", "cpuRequest_query", "prometheus");
-            Metrics memoryRequest = new Metrics("memoryRequest", "memoryRequest_query", "prometheus");
-            ArrayList<Metrics> metrics = new ArrayList<>();
-            metrics.add(request_sum);
-            metrics.add(request_count);
-            metrics.add(hotspot_function);
-            metrics.add(cpuRequest);
-            metrics.add(memoryRequest);
+            /* Create the metrics array */
+            /* First iterate through the objective function variables */
+            AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
+            SloInfo sloInfo = autotuneObject.getSloInfo();
+            ArrayList<Metric> metrics = new ArrayList<>();
+            for (Metric metric : sloInfo.getFunctionVariables()) {
+                metrics.add(metric);
+            }
+
+            /* Now check for any metric object for tunables that have associated queries */
+            for (String autotuneConfigName : autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().keySet()) {
+                AutotuneConfig autotuneConfig = autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().get(autotuneConfigName);
+                for (Tunable tunable : autotuneConfig.getTunables()) {
+                    String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
+                    if (tunableQuery != null && !tunableQuery.isEmpty()) {
+                        Metric queryMetric = new Metric(tunable.getName(),
+                                tunableQuery,
+                                DeploymentInfo.getMonitoringAgent(),
+                                tunable.getValueType());
+                        metrics.add(queryMetric);
+                    }
+                }
+            }
 
             Deployments deployment = new Deployments(tracker,
                     "petclinic-sample",

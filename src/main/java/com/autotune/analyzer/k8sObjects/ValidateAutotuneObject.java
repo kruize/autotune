@@ -81,7 +81,7 @@ public class ValidateAutotuneObject
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
 
-		for (FunctionVariable functionVariable : sloInfo.getFunctionVariables()) {
+		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");

@@ -84,9 +84,9 @@ public class Experimentator implements Runnable {
 
 			String id = autotuneObject.getExperimentId();
 			String applicationName = autotuneObject.getExperimentName();
-			String objectiveFunction = autotuneObject.getSlaInfo().getObjectiveFunction();
-			String hpoAlgoImpl = autotuneObject.getSlaInfo().getHpoAlgoImpl();
-			String direction = autotuneObject.getSlaInfo().getDirection();
+			String objectiveFunction = autotuneObject.getSloInfo().getObjectiveFunction();
+			String hpoAlgoImpl = autotuneObject.getSloInfo().getHpoAlgoImpl();
+			String direction = autotuneObject.getSloInfo().getDirection();
 			// TODO: Need to add valueType to the ObjectiveFunction !
 			String valueType = "double";
 
@@ -97,8 +97,8 @@ public class Experimentator implements Runnable {
 					direction,
 					valueType);
 
-			for (String applicationServiceStackName : applicationServiceStack.getStackLayers().keySet()) {
-				AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(applicationServiceStackName);
+			for (String applicationServiceStackName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+				AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(applicationServiceStackName);
 				for (Tunable tunable : autotuneConfig.getTunables()) {
 					applicationSearchSpace.getApplicationTunablesMap().put(tunable.getName(), tunable);
 				}

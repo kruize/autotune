@@ -43,16 +43,19 @@ public class RunExperiment implements Runnable
 				String addTrialNumber = "&trial_number=" + trialNumber;
 				String trialConfigEP = OPTUNA_TRIALS_END_POINT + addExperimentId + addTrialNumber;
 				URL trialConfigURL = new URL(trialConfigEP);
+
 				/* STEP 2: We got a trial id from Optuna, now use that to get the actual config */
 				String trialConfigJson = HttpUtils.getDataFromURL(trialConfigURL, "");
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Experiment Trial Config Info");
 				System.out.println(trialConfigJson);
+
 				/* STEP 3: Now create a trial to be passed to experiment manager to run */
 				ExperimentTrial experimentTrial = TrialHelpers.createDefaultExperimentTrial(trialNumber,
-						autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace(),
+						autotuneExperiment,
 						trialConfigJson);
 				autotuneExperiment.experimentTrials.add(experimentTrial);
 				JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
+
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Sending Experiment Trial Config Info to EM");
 				System.out.println(experimentTrialJSON.toString(4));
 				URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);

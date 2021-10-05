@@ -25,17 +25,17 @@ package com.autotune.analyzer.k8sObjects;
  *    datasource: "prometheus"
  *    value_type: "double"
  */
-public final class FunctionVariable
+public final class Metric
 {
 	private final String name;
 	private final String query;
 	private final String datasource;
 	private final String valueType;
 
-	public FunctionVariable(String name,
-			String query,
-			String datasource,
-			String valueType) {
+	public Metric(String name,
+				  String query,
+				  String datasource,
+				  String valueType) {
 		this.name = name;
 		this.query = query;
 		this.datasource = datasource;

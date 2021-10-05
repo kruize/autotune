@@ -53,10 +53,6 @@ public class AutotuneExperiment {
         return applicationServiceStack;
     }
 
-    public void setApplicationServiceStack(ApplicationServiceStack applicationServiceStack) {
-        this.applicationServiceStack = applicationServiceStack;
-    }
-
     public ArrayList<ExperimentTrial> getExperimentTrials() {
         return experimentTrials;
     }

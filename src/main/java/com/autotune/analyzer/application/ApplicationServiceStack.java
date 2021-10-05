@@ -89,14 +89,6 @@ public class ApplicationServiceStack
 			throw new InvalidValueException("Application service name cannot be null");
 	}
 
-	public Map<String, AutotuneConfig> getStackLayers() {
-		return applicationServiceStackLayers;
-	}
-
-	public void setStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
-		this.applicationServiceStackLayers = applicationServiceStackLayers;
-	}
-
 	public String getStatus() {
 		return status;
 	}

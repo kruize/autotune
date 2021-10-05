@@ -1,5 +1,7 @@
 package com.autotune.analyzer.experiments;
 
+import com.autotune.analyzer.k8sObjects.Metric;
+
 import java.util.ArrayList;
 
 public class Deployments {
@@ -10,12 +12,22 @@ public class Deployments {
     String result;
     String resultInfo;
     String resultError;
-    ArrayList<Metrics> metrics;
+    ArrayList<Metric> metrics;
     Resources requests;
     Resources limits;
     String jvmOptions;
 
-    public Deployments(String deploymentType, String deploymentName, String deploymentNameSpace, String state, String result, String resultInfo, String resultError, ArrayList<Metrics> metrics, Resources requests, Resources limits, String jvmOptions) {
+    public Deployments(String deploymentType,
+                       String deploymentName,
+                       String deploymentNameSpace,
+                       String state,
+                       String result,
+                       String resultInfo,
+                       String resultError,
+                       ArrayList<Metric> metrics,
+                       Resources requests,
+                       Resources limits,
+                       String jvmOptions) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;
@@ -85,11 +97,11 @@ public class Deployments {
         this.resultError = resultError;
     }
 
-    public ArrayList<Metrics> getMetrics() {
+    public ArrayList<Metric> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(ArrayList<Metrics> metrics) {
+    public void setMetrics(ArrayList<Metric> metrics) {
         this.metrics = metrics;
     }
 

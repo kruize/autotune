@@ -218,7 +218,7 @@ public class AutotuneDeployment
 		for (String autotuneObject : applicationServiceStackMap.keySet()) {
 			for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObject).keySet()) {
 				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(applicationServiceStackName);
-				applicationServiceStack.getStackLayers().remove(configName);
+				applicationServiceStack.getApplicationServiceStackLayers().remove(configName);
 			}
 		}
 	}
@@ -295,7 +295,7 @@ public class AutotuneDeployment
 			if (slaJson != null) {
 				functionVariables = slaJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 			}
-			ArrayList<FunctionVariable> functionVariableArrayList = new ArrayList<>();
+			ArrayList<Metric> metricArrayList = new ArrayList<>();
 
 			for (Object functionVariableObj : functionVariables) {
 				JSONObject functionVariableJson = (JSONObject) functionVariableObj;
@@ -304,12 +304,12 @@ public class AutotuneDeployment
 				String datasource = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
 				String valueType = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
 
-				FunctionVariable functionVariable = new FunctionVariable(variableName,
+				Metric metric = new Metric(variableName,
 						query,
 						datasource,
 						valueType);
 
-				functionVariableArrayList.add(functionVariable);
+				metricArrayList.add(metric);
 			}
 
 			// If the user has not specified hpoAlgoImpl, we use the default one.
@@ -321,7 +321,7 @@ public class AutotuneDeployment
 					objectiveFunction,
 					direction,
 					hpoAlgoImpl,
-					functionVariableArrayList);
+					metricArrayList);
 
 			JSONObject selectorJson = null;
 			if (specJson != null) {
@@ -600,7 +600,7 @@ public class AutotuneDeployment
 	 */
 	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
 		//Check if layer already exists
-		if (applicationServiceStack.getStackLayers().containsKey(autotuneConfig.getName())) {
+		if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(autotuneConfig.getName())) {
 			return;
 		}
 
@@ -644,6 +644,6 @@ public class AutotuneDeployment
 		} catch (InvalidValueException ignored) { }
 
 		LOGGER.info("Added layer " + autotuneConfig.getName() + " to application " + applicationServiceStack.getApplicationServiceName());
-		applicationServiceStack.getStackLayers().put(autotuneConfig.getName(), autotuneConfigCopy);
+		applicationServiceStack.getApplicationServiceStackLayers().put(autotuneConfig.getName(), autotuneConfigCopy);
 	}
 }

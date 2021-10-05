@@ -45,13 +45,13 @@ public final class SloInfo
 	private final String objectiveFunction;
 	private final String direction;
 	private final String hpoAlgoImpl;
-	private final ArrayList<FunctionVariable> functionVariables;
+	private final ArrayList<Metric> metrics;
 
 	public SloInfo(String sloClass,
 				   String objectiveFunction,
 				   String direction,
 				   String hpoAlgoImpl,
-				   ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
+				   ArrayList<Metric> metrics) throws InvalidValueException {
 		if (AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloClass))
 			this.sloClass = sloClass;
 		else
@@ -68,7 +68,7 @@ public final class SloInfo
 		else
 			throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
 
-		this.functionVariables = new ArrayList<>(functionVariables);
+		this.metrics = new ArrayList<>(metrics);
 	}
 
 	public SloInfo(SloInfo copy) {
@@ -77,7 +77,7 @@ public final class SloInfo
 		this.direction = copy.getDirection();
 		this.hpoAlgoImpl = copy.getHpoAlgoImpl();
 
-		this.functionVariables = new ArrayList<>(copy.getFunctionVariables());
+		this.metrics = new ArrayList<>(copy.getFunctionVariables());
 
 	}
 
@@ -93,8 +93,8 @@ public final class SloInfo
 		return objectiveFunction;
 	}
 
-	public ArrayList<FunctionVariable> getFunctionVariables() {
-		return new ArrayList<>(functionVariables);
+	public ArrayList<Metric> getFunctionVariables() {
+		return new ArrayList<>(metrics);
 	}
 
 	public String getHpoAlgoImpl() {
@@ -108,7 +108,7 @@ public final class SloInfo
 				", objectiveFunction='" + objectiveFunction + '\'' +
 				", direction='" + direction + '\'' +
 				", hpoAlgoImpl='" + this.hpoAlgoImpl + '\'' +
-				", functionVariables=" + functionVariables +
+				", functionVariables=" + metrics +
 				'}';
 	}
 }

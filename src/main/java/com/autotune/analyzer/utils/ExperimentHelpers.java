@@ -16,8 +16,8 @@ public class ExperimentHelpers {
 		experimentJSON.put("Status", autotuneExperiment.getExperimentStatus());
 
 		JSONArray appLayersJSON = new JSONArray();
-		for (String applicationServiceStackName : autotuneExperiment.getApplicationServiceStack().getStackLayers().keySet()) {
-			AutotuneConfig autotuneConfig = autotuneExperiment.getApplicationServiceStack().getStackLayers().get(applicationServiceStackName);
+		for (String applicationServiceStackName : autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().keySet()) {
+			AutotuneConfig autotuneConfig = autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().get(applicationServiceStackName);
 			JSONObject appLayersObj = new JSONObject();
 			appLayersObj.put(applicationServiceStackName, autotuneConfig.getLevel());
 			appLayersJSON.put(appLayersObj);
