@@ -1,6 +1,7 @@
 package com.autotune.experimentManager.data;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.experimentManager.utils.EMUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -8,7 +9,15 @@ public class EMTrialConfig {
     private final JSONObject inputJSON;
     private final JSONObject configInfo;
     private final JSONObject configSettings;
+    private final JSONObject trialSettings;
     private final JSONArray configDeployments;
+    private final int measurementCycles;
+    private final int measurementDuration;
+    private final EMUtil.TimeUnits measurementDurationUnit;
+
+    public int getMeasurementCycles() {
+        return measurementCycles;
+    }
 
     private JSONObject parseConfigInfo() throws IncompatibleInputJSONException {
         if (inputJSON.has("info"))
@@ -33,6 +42,32 @@ public class EMTrialConfig {
         this.configInfo = parseConfigInfo();
         this.configSettings = parseConfigSettings();
         this.configDeployments = parseConfigDeployments();
+        this.trialSettings = parseTrialSettings();
+        this.measurementCycles = parseMeasurementCycles();
+        this.measurementDuration = parseMeasurementDuration();
+        this.measurementDurationUnit = parseMeasurementDurationUnit();
+    }
+
+    private EMUtil.TimeUnits parseMeasurementDurationUnit() {
+        return EMUtil.TimeUnits.SECONDS;
+    }
+
+    private int parseMeasurementDuration() {
+        return 0;
+    }
+
+    private JSONObject parseTrialSettings() throws IncompatibleInputJSONException {
+        if (!configSettings.has("trial_settings")) {
+            throw new IncompatibleInputJSONException();
+        }
+        return configSettings.getJSONObject("trial_settings");
+    }
+
+    private int parseMeasurementCycles() throws IncompatibleInputJSONException {
+        if (!trialSettings.has("measurement_cycles")) {
+            throw new IncompatibleInputJSONException();
+        }
+        return Integer.parseInt(trialSettings.getString("measurement_cycles"));
     }
 
     public JSONObject getConfigSettings() {

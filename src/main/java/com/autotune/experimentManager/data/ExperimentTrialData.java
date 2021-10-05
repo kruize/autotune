@@ -17,6 +17,15 @@ public class ExperimentTrialData {
     private EMExpStages targetStage;
     private EMExpStatus status;
     private boolean notifyTrialCompletion;
+    private int currentMeasurementCycle;
+
+    public int getCurrentMeasurementCycle() {
+        return currentMeasurementCycle;
+    }
+
+    public void setCurrentMeasurementCycle(int currentMeasurementCycle) {
+        this.currentMeasurementCycle = currentMeasurementCycle;
+    }
 
     public ExperimentTrialData(EMTrialConfig config) throws EMInvalidInstanceCreation {
         if (config == null) {

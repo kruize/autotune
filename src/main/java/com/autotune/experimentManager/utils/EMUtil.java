@@ -8,7 +8,7 @@ public class EMUtil {
         CREATE_CONFIG(1, 1, false, EMConstants.TransitionClasses.CREATE_CONFIG),
         DEPLOY_CONFIG(2, 1, false, EMConstants.TransitionClasses.DEPLOY_CONFIG),
         INITIATE_TRAIL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRAIL_RUN_PHASE),
-        INITIAL_LOAD_CHECK(3, 2, true, EMConstants.TransitionClasses.INITIAL_LOAD_CHECK),
+        INITIAL_LOAD_CHECK(3, 2, false, EMConstants.TransitionClasses.INITIAL_LOAD_CHECK),
         LOAD_CONSISTENCY_CHECK(3, 3, true, EMConstants.TransitionClasses.LOAD_CONSISTENCY_CHECK),
         INITIATE_METRICS_COLLECTION_PHASE(4, 1, false, EMConstants.TransitionClasses.INITIATE_METRICS_COLLECTION_PHASE),
         COLLECT_METRICS(4, 1, true, EMConstants.TransitionClasses.COLLECT_METRICS),
@@ -65,6 +65,18 @@ public class EMUtil {
         COMPLETED
     }
 
+    public enum TimeUnits {
+        NANOSECONDS,
+        MILLISECONDS,
+        SECONDS,
+        MINUTES,
+        HOURS,
+        DAYS,
+        WEEKS,
+        MONTHS,
+        YEARS
+    }
+
     public static String createUUID() {
         return UUID.randomUUID().toString();
     }
@@ -76,4 +88,5 @@ public class EMUtil {
                 .append(deploymentName)
                 .toString();
     }
+
 }

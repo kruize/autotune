@@ -15,6 +15,7 @@ public class TransitionToInitiateTrialRunPhase extends AbstractBaseTransition{
         ExperimentTrialData currentETD = ((ExperimentTrialData) EMMapper.getInstance().getMap().get(runId));
         if (TransistionHelper.LoadAnalyser.isReadyToLoad()) {
             currentETD.setStatus(EMUtil.EMExpStatus.WAITING_FOR_LOAD);
+            currentETD.setCurrentMeasurementCycle(1);
         }
         try {
             Thread.sleep(20000);
