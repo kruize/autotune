@@ -179,3 +179,10 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Overall summary of the tests ~~~~~~~~~~~~~~~~
 overallsummary  ${FAILED_TEST_SUITE} 
 echo ""
 echo "*********************************************************************************"
+
+if [ "${TOTAL_TESTS_FAILED}" -ne "0" ]; then
+	exit 1
+else
+	exit 0
+fi
+
