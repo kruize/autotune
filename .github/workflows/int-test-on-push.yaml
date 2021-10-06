@@ -1,4 +1,4 @@
-name: Test on Push 
+name: Run a few tests on Push 
 
 # Controls when the action will run. 
 on:
@@ -68,13 +68,24 @@ jobs:
           docker tag autotune:int-test kruize/autotune:int-test
           docker push kruize/autotune:int-test
 
-      - name: Run tests
+      - name: Run Analyzer API tests
         run: |
           echo Running Basic API tests
           cd autotune/tests
           ./test_autotune.sh -c minikube -i kruize/autotune:int-test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
 
+      - name: Archive results
+        if: always()
+        run: |
           cd ${GITHUB_WORKSPACE}
           ls
           tar cvf autotune_test_results.tar autotune_test_results
           ls
+          
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+           name: autotune-results
+           path: ./autotune_test_results.tar
+           retention-days: 2

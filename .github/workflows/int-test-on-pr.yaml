@@ -1,4 +1,4 @@
-name: Test on Pull Request 
+name: Run a few basic tests on Pull Request
 
 # Controls when the action will run. 
 on:
@@ -22,10 +22,6 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout autotune
         uses: actions/checkout@v2
-        with:
-          repository: kruize/autotune
-          ref: integration-channel-RM-EM
-          path: autotune
 
       - name: Checkout benchmarks
         uses: actions/checkout@v2
@@ -46,20 +42,18 @@ jobs:
       - name: Build autotune
         run: |
           echo Build autotune
-          cd autotune
           ./build.sh -t autotune:int-test
           docker images | grep autotune     
 
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube
-          cd autotune/scripts
+          cd scripts
           ./prometheus_on_minikube.sh -as
 
       - name: Deploy autotune
         run: |
           echo Deploy autotune
-          cd autotune
           cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
@@ -67,13 +61,24 @@ jobs:
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune:int-test
 
-      - name: Run tests
+      - name: Run Analyzer API tests
         run: |
           echo Running Basic API tests
           cd autotune/tests
           ./test_autotune.sh -c minikube -i autotune:int-test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
 
+      - name: Archive results
+        if: always()
+        run: |
           cd ${GITHUB_WORKSPACE}
-          ls
           tar cvf autotune_test_results.tar autotune_test_results
           ls
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+           name: autotune-results
+           path: ./autotune_test_results.tar
+           retention-days: 2
+
