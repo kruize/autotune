@@ -1,14 +1,15 @@
 package com.autotune.experimentManager.transitions;
 
+import com.autotune.experimentManager.core.EMScheduledStageProcessor;
 import com.autotune.experimentManager.core.EMTransitionRegistry;
 import com.autotune.experimentManager.core.ExperimentManager;
-import com.autotune.experimentManager.data.EMMapper;
-import com.autotune.experimentManager.data.EMStageProcessQueue;
-import com.autotune.experimentManager.data.EMStageTransition;
-import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.data.*;
 import com.autotune.experimentManager.utils.EMUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractBaseTransition implements BaseTransition {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractBaseTransition.class);
 
     @Override
     public void processNextTransition(String runId) {
@@ -16,17 +17,15 @@ public abstract class AbstractBaseTransition implements BaseTransition {
         EMUtil.EMExpStages nextStage = EMTransitionRegistry.getNextStage(trialData.getTargetStage());
         trialData.setCurrentStage(trialData.getTargetStage());
         trialData.setTargetStage(nextStage);
-        // TODO: need to check if the stage is isScheduled and take a decision to push in appropriate queue
-        // Just pushing to regular queue for demo
-        /*
-        *  if (nextStage.isScheduled) {
-        *
-        * } else {
-        * */
-        System.out.println("Next Stage : " + nextStage.toString());
+        LOGGER.info("Next Stage : " + nextStage.toString());
         EMStageTransition transition = new EMStageTransition(runId, nextStage);
-        EMStageProcessQueue.getStageProcessQueueInstance().getQueue().add(transition);
-        ExperimentManager.notifyQueueProcessor();
-        // }
+        if (nextStage.isScheduled()) {
+            EMStageScheduledTransition scheduledTransition = new EMStageScheduledTransition(transition, 20);
+            EMStageProcessQueue.getStageProcessQueueInstance().getScheduledQueue().add(scheduledTransition);
+            ExperimentManager.notifyScheduledQueueProcessor();
+        } else {
+            EMStageProcessQueue.getStageProcessQueueInstance().getQueue().add(transition);
+            ExperimentManager.notifyQueueProcessor();
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.autotune.experimentManager.data.input;
+package com.autotune.experimentManager.data.input.metadata;
 
 import com.autotune.experimentManager.data.input.interfaces.Editable;
 

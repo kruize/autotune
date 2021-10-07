@@ -1,6 +1,12 @@
 package com.autotune.experimentManager.utils;
 
+import com.autotune.experimentManager.exceptions.EMInvalidTimeDuarationException;
+
+import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EMUtil {
     public enum EMExpStages {
@@ -65,18 +71,6 @@ public class EMUtil {
         COMPLETED
     }
 
-    public enum TimeUnits {
-        NANOSECONDS,
-        MILLISECONDS,
-        SECONDS,
-        MINUTES,
-        HOURS,
-        DAYS,
-        WEEKS,
-        MONTHS,
-        YEARS
-    }
-
     public static String createUUID() {
         return UUID.randomUUID().toString();
     }
@@ -87,6 +81,80 @@ public class EMUtil {
                 .append(":")
                 .append(deploymentName)
                 .toString();
+    }
+
+    public static int convertMinsToSeconds(int minutes) {
+        return minutes * EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+    }
+
+    public static int convertHoursToMinutes(int hours) {
+        return hours * EMConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+    }
+
+    public static int convertHoursToSeconds(int hours) {
+        return convertMinsToSeconds(convertHoursToMinutes(hours));
+    }
+
+    public static TimeUnit extractTimeUnit(String durationString) throws EMInvalidTimeDuarationException {
+        durationString = durationString.replaceAll("\\s", "").toLowerCase();
+        Pattern pattern = Pattern.compile("([0-9]+)([a-z]+)");
+        Matcher match = pattern.matcher(durationString);
+        if (!match.find()) {
+            throw new EMInvalidTimeDuarationException();
+        }
+        String extractedTimeUnit = match.group(2);
+        if (    extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SINGLE_LC)
+        ) {
+            return TimeUnit.SECONDS;
+        } else if(
+                extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SINGLE_LC)
+        ) {
+            return TimeUnit.MINUTES;
+        } else if(
+                extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_SINGULAR)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_PLURAL)
+                || extractedTimeUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SINGLE_LC)
+        ) {
+            return TimeUnit.HOURS;
+        }
+        return null;
+    }
+
+    public static int extractTimeQuantity(String durationString) throws EMInvalidTimeDuarationException {
+        durationString = durationString.replaceAll("\\s", "").toLowerCase();
+        Pattern pattern = Pattern.compile("([0-9]+)([a-z]+)");
+        Matcher match = pattern.matcher(durationString);
+        if (!match.find()) {
+            throw new EMInvalidTimeDuarationException();
+        }
+        if (!isInteger(match.group(1))){
+            return -1;
+        }
+        return Integer.parseInt(match.group(1));
+    }
+
+    public static boolean isInteger(String intStr) {
+        if (null == intStr) {
+            return false;
+        }
+        try {
+            Integer.parseInt(intStr);
+        } catch(NumberFormatException e) {
+            return false;
+        } catch(NullPointerException e) {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -39,6 +39,7 @@ public class EMAPIHandler {
                     if (lastETD.getStatus().toString().equalsIgnoreCase(EMUtil.EMExpStatus.COMPLETED.toString())) {
                         depList.add(runId);
                         EMMapper.getInstance().getMap().put(runId, trialData);
+                        trialData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
                         pushTransitionToQueue(runId);
                     } else {
                         depList.add(runId);
@@ -51,6 +52,7 @@ public class EMAPIHandler {
                 LinkedList<String> runIdList = new LinkedList<String>();
                 runIdList.add(runId);
                 EMMapper.getInstance().getDeploymentRunIdMap().put(nsdKey, runIdList);
+                trialData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
                 EMMapper.getInstance().getMap().put(runId, trialData);
                 pushTransitionToQueue(runId);
             }

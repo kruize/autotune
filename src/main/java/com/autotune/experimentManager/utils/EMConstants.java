@@ -1,5 +1,7 @@
 package com.autotune.experimentManager.utils;
 
+import java.util.Locale;
+
 public class EMConstants {
 
     public static class DeploymentConstants {
@@ -77,5 +79,71 @@ public class EMConstants {
         public static class TrialSettings {
 
         }
+    }
+
+    public static class TimeUnitsExt {
+
+        public static String SECOND_LC_SINGULAR = "second";
+        public static String SECOND_LC_PLURAL = SECOND_LC_SINGULAR + "s";
+        public static String SECOND_UC_SINGULAR = SECOND_LC_SINGULAR.toUpperCase();
+        public static String SECOND_UC_PLURAL = SECOND_LC_PLURAL.toUpperCase();
+
+        public static String SECOND_SHORT_LC_SINGULAR = "sec";
+        public static String SECOND_SHORT_LC_PLURAL = SECOND_SHORT_LC_SINGULAR = "s";
+        public static String SECOND_SHORT_UC_SINGULAR = SECOND_SHORT_LC_SINGULAR.toUpperCase();
+        public static String SECOND_SHORT_UC_PLURAL = SECOND_SHORT_LC_PLURAL.toUpperCase();
+
+        public static String SECOND_SINGLE_LC = "s";
+        public static String SECOND_SINGLE_UC= SECOND_SINGLE_LC.toUpperCase();
+
+        public static String MINUTE_LC_SINGULAR = "minute";
+        public static String MINUTE_LC_PLURAL = MINUTE_LC_SINGULAR = "s";
+        public static String MINUTE_UC_SINGULAR = MINUTE_LC_SINGULAR.toUpperCase();
+        public static String MINUTE_UC_PLURAL = MINUTE_LC_PLURAL.toUpperCase();
+
+        public static String MINUTE_SHORT_LC_SINGULAR = "min";
+        public static String MINUTE_SHORT_LC_PLURAL = MINUTE_SHORT_LC_SINGULAR = "s";
+        public static String MINUTE_SHORT_UC_SINGULAR = MINUTE_SHORT_LC_SINGULAR.toUpperCase();
+        public static String MINUTE_SHORT_UC_PLURAL = MINUTE_SHORT_LC_PLURAL.toUpperCase();
+
+        public static String MINUTE_SINGLE_LC = "m";
+        public static String MINUTE_SINGLE_UC= MINUTE_SINGLE_LC.toUpperCase();
+
+        public static String HOUR_LC_SINGULAR = "hour";
+        public static String HOUR_LC_PLURAL = HOUR_LC_SINGULAR = "s";
+        public static String HOUR_UC_SINGULAR = HOUR_LC_SINGULAR.toUpperCase();
+        public static String HOUR_UC_PLURAL = HOUR_LC_PLURAL.toUpperCase();
+
+        public static String HOUR_SHORT_LC_SINGULAR = "hr";
+        public static String HOUR_SHORT_LC_PLURAL = HOUR_SHORT_LC_SINGULAR = "s";
+        public static String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
+        public static String HOUR_SHORT_UC_PLURAL = HOUR_SHORT_LC_PLURAL.toUpperCase();
+
+        public static String HOUR_SINGLE_LC = "h";
+        public static String HOUR_SINGLE_UC= HOUR_SINGLE_LC.toUpperCase();
+
+    }
+
+    public static class TimeConv {
+        public static int NO_OF_SECONDS_PER_MINUTE = 60;
+        public static int NO_OF_MINUTES_PER_HOUR = 60;
+        public static int NO_OF_HOURS_PER_DAY = 12;
+    }
+
+    public static class EMJSONKeys {
+        // Info section
+        public static String INFO = "info";
+        public static String TRIAL_ID = "trial_id";
+        public static String TRIAL_NUM = "trial_num";
+
+        //Deployment section
+        public static String TRACKERS = "trackers";
+        public static String DEPLOYMENT_TRACKING = "deployment_tracking";
+    }
+
+    public static class EMJSONValueDefaults {
+        public static String TRIAL_ID_DEFAULT ="";
+        public static int TRIAL_NUM_DEFAULT = -1;
+        public static String DEFAULT_NULL = null;
     }
 }
