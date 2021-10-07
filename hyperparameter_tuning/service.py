@@ -23,6 +23,7 @@ import threading
 import time
 from urllib.parse import urlparse, parse_qs
 
+from json_validate import validate_trial_generate_json
 from tunables import get_all_tunables
 
 from bayes_optuna import optuna_hpo
@@ -86,7 +87,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def handle_generate_new_operation(self, json_object):
         """Process EXP_TRIAL_GENERATE_NEW operation."""
-        if json_object["id"] not in autotune_object_ids.keys():
+        is_valid_json_object = validate_trial_generate_json(json_object)
+
+        if is_valid_json_object and json_object["id"] not in autotune_object_ids.keys():
             get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
             trial_number = get_trial_number(json_object["id"])
             self._set_response(200, str(trial_number))
@@ -95,7 +98,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def handle_generate_subsequent_operation(self, json_object):
         """Process EXP_TRIAL_GENERATE_SUBSEQUENT operation."""
-        if json_object["id"] in autotune_object_ids.keys():
+        is_valid_json_object = validate_trial_generate_json(json_object)
+
+        if is_valid_json_object and json_object["id"] in autotune_object_ids.keys():
             get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
             trial_number = get_trial_number(json_object["id"])
             self._set_response(200, str(trial_number))
@@ -131,6 +136,7 @@ def get_search_space(id_, url):
     """Perform a GET request and return the search space json."""
     params = {"id": id_}
     r = requests.get(url, params)
+    r.raise_for_status()
     search_space_json = r.json()
     return search_space_json
 
