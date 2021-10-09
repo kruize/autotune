@@ -82,15 +82,17 @@ public class Experimentator implements Runnable {
 				return applicationSearchSpace;
 			}
 
-			String id = autotuneObject.getExperimentId();
-			String applicationName = autotuneObject.getExperimentName();
+			String experimentName = autotuneObject.getExperimentName();
+			String experimentId = autotuneObject.getExperimentId();
+			String applicationName = applicationServiceStack.getApplicationServiceName();
 			String objectiveFunction = autotuneObject.getSloInfo().getObjectiveFunction();
 			String hpoAlgoImpl = autotuneObject.getSloInfo().getHpoAlgoImpl();
 			String direction = autotuneObject.getSloInfo().getDirection();
 			// TODO: Need to add valueType to the ObjectiveFunction !
 			String valueType = "double";
 
-			applicationSearchSpace = new ApplicationSearchSpace(id,
+			applicationSearchSpace = new ApplicationSearchSpace(experimentName,
+					experimentId,
 					applicationName,
 					objectiveFunction,
 					hpoAlgoImpl,

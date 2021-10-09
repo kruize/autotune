@@ -41,6 +41,7 @@ public class AnalyzerConstants
 	public static final String SCOPE = "Namespaced";
 	public static final String GROUP = "recommender.com";
 	public static final String API_VERSION = "v1";
+	public static final String POD_TEMPLATE_HASH = "pod-template-hash";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
@@ -132,7 +133,10 @@ public class AnalyzerConstants
 	 * Contains Strings used in REST services
 	 */
 	public static class ServiceConstants {
+		public static final String EXPERIMENT_NAME = "experiment_name";
 		public static final String APPLICATION_NAME = "application_name";
+		public static final String POD_NAME = "pod_name";
+		public static final String DEPLOYMENT_NAME = "deployment_name";
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";
 		public static final String QUERY_URL = "query_url";

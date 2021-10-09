@@ -45,7 +45,7 @@ public class SearchSpace extends HttpServlet
      * Example JSON:
      * [
      *     {
-     *         "application_name": "petclinic-sample-6f47b9995f-bqdk2",
+     *         "experiment_name": "app1_autotune",
      *         "objective_function": "request_count",
      *         "hpo_algo_impl": "optuna_tpe",
      *         "tunables": [
@@ -79,15 +79,15 @@ public class SearchSpace extends HttpServlet
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
 
-            String applicationId = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.ID);
+            String experimentId = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.ID);
             JSONArray searchSpaceJsonArray = new JSONArray();
-            getSearchSpaceJSONArray(searchSpaceJsonArray, applicationId);
+            getSearchSpaceJSONArray(searchSpaceJsonArray, experimentId);
 
             if (searchSpaceJsonArray.isEmpty()) {
                 if (Experimentator.experimentsMap.isEmpty())
                     searchSpaceJsonArray.put("Error: No Experiments underway!");
                 else
-                    searchSpaceJsonArray.put("Error: Application " + applicationId + " not found!");
+                    searchSpaceJsonArray.put("Error: Experiment " + experimentId + " not found!");
             }
 
             response.getWriter().println(searchSpaceJsonArray.toString(4));
@@ -97,12 +97,12 @@ public class SearchSpace extends HttpServlet
         }
     }
 
-    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application) {
+    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String experimentName) {
         JSONObject applicationJson = new JSONObject();
         ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap
-                .get(autotuneObjectKey).get(application);
+                .get(autotuneObjectKey).get(experimentName);
 
-        applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        applicationJson.put(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME, experimentName);
         applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
         applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
         applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());

@@ -30,6 +30,10 @@ import com.autotune.analyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -46,8 +50,10 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
+import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster
@@ -97,11 +103,16 @@ public class AutotuneDeployment
 							String autotuneObjectStr = autotuneObject.getExperimentName();
 							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 							// For each of these applicationServiceStacks, we need to start the experiments
-							for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
-								ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
-								startExperiment(autotuneObject, applicationServiceStack);
+
+							if (applicationServiceStackMap.get(autotuneObjectStr) != null) {
+								for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
+									ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
+									startExperiment(autotuneObject, applicationServiceStack);
+								}
+								LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
+							} else {
+								LOGGER.info("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 							}
-							LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 						}
 						break;
 					case "MODIFIED":
@@ -181,6 +192,7 @@ public class AutotuneDeployment
 	 */
 	private static void addAutotuneObject(AutotuneObject autotuneObject, AutotuneDeployment autotuneDeployment, KubernetesClient client) {
 		autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
+		System.out.println("Autotune Object: " + autotuneObject.getExperimentName() + ": Finding Layers");
 		autotuneDeployment.matchPodsToAutotuneObject(client);
 
 		for (String autotuneConfig : autotuneConfigMap.keySet()) {
@@ -229,32 +241,87 @@ public class AutotuneDeployment
 	 * @param client KubernetesClient to get pods in cluster
 	 */
 	private void matchPodsToAutotuneObject(KubernetesClient client) {
+
 		for (String autotuneObjectKey : autotuneObjectMap.keySet()) {
+
 			AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneObjectKey);
+			String namespace = autotuneObject.getNamespace();
 			String labelKey = autotuneObject.getSelectorInfo().getMatchLabel();
 			String labelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
 
-			PodList podList = client.pods().inAnyNamespace().withLabel(labelKey).list();
+			DeploymentList deploymentList = client.apps().deployments().inNamespace(namespace).list();
+			ReplicaSetList replicaSetList = client.apps().replicaSets().inNamespace(namespace).list();
+			PodList podList = client.pods().inNamespace(namespace).withLabel(labelKey, labelValue).list();
 
-			for (Pod pod : podList.getItems()) {
-				ObjectMeta podMetadata = pod.getMetadata();
-				String matchingLabelValue = podMetadata.getLabels().get(labelKey);
-				String status = pod.getStatus().getPhase();
+			if (deploymentList.getItems().isEmpty()) {
+				LOGGER.warn("No deployments in namespace: " + namespace);
+				continue;
+			}
+			if (replicaSetList.getItems().isEmpty()) {
+				LOGGER.warn("No replicaset in namespace: " + namespace);
+				continue;
+			}
+			if (podList.getItems().isEmpty()) {
+				LOGGER.warn("No podList in namespace: "
+						+ namespace + " with label: " + labelKey + " and label value: " + labelValue);
+				continue;
+			}
 
-				if (matchingLabelValue != null && matchingLabelValue.equals(labelValue)) {
-					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(podMetadata.getName(),
-							podMetadata.getNamespace(), status);
-					// If autotuneobject is already in map
-					if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
-						//If applicationservicestack is not already in list
-						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(podMetadata.getName())) {
-							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(applicationServiceStack.getApplicationServiceName(),
-									applicationServiceStack);
+			for (Deployment deployment : deploymentList.getItems()) {
+
+				ObjectMeta deploymentMetadata = deployment.getMetadata();
+				String deploymentName = deploymentMetadata.getName();
+				String deploymentLabelValue = deployment.getSpec().getTemplate().getMetadata().getLabels().get(labelKey);
+				LOGGER.debug("Deployment Name: " + deploymentName
+						+ " has LabelValue: " + deploymentLabelValue + " for labelKey: " + labelKey);
+
+				if (deploymentLabelValue == null || !deploymentLabelValue.equals(labelValue)) {
+					continue;
+				}
+
+				for (ReplicaSet replicaSet : replicaSetList.getItems()) {
+					ObjectMeta replicasetMetadata = replicaSet.getMetadata();
+					String replicasetLabelValue = replicasetMetadata.getLabels().get(labelKey);
+					LOGGER.debug("Replicaset Name: " + replicasetMetadata.getName()
+							+ " has LabelValue: " + replicasetLabelValue + " for labelKey: " + labelKey);
+					if (replicasetLabelValue == null || !replicasetLabelValue.equals(labelValue)) {
+						continue;
+					}
+					String replicasetPodTemplateHash = replicasetMetadata.getLabels().get(POD_TEMPLATE_HASH);
+
+					for (Pod pod : podList.getItems()) {
+						ObjectMeta podMetadata = pod.getMetadata();
+						String podLabelValue = podMetadata.getLabels().get(labelKey);
+						String podTemplateHash = podMetadata.getLabels().get(POD_TEMPLATE_HASH);
+						String status = pod.getStatus().getPhase();
+						LOGGER.debug("Pod: " + podMetadata.getName()
+								+ " Pod Label Value: " + podLabelValue
+								+ " Label Key: " + labelKey + " Label Value: " + labelValue
+								+ " replicasetPodTemplateHash: " + replicasetPodTemplateHash
+								+ " podTemplateHash: " + podTemplateHash);
+
+						if (podLabelValue == null
+								|| !podLabelValue.equals(labelValue)
+								|| !podTemplateHash.equals(replicasetPodTemplateHash)
+						) {
+							continue;
 						}
-					} else {
-						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
-						innerMap.put(applicationServiceStack.getApplicationServiceName(), applicationServiceStack);
-						applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
+						ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(podMetadata.getName(),
+								podMetadata.getNamespace(),
+								deploymentName,
+								status);
+						// If autotuneobject is already in map
+						if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
+							//If applicationservicestack is not already in list
+							if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(podMetadata.getName())) {
+								applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(applicationServiceStack.getApplicationServiceName(),
+										applicationServiceStack);
+							}
+						} else {
+							Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
+							innerMap.put(applicationServiceStack.getApplicationServiceName(), applicationServiceStack);
+							applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
+						}
 					}
 				}
 			}

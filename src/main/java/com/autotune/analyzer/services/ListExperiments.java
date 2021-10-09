@@ -64,7 +64,7 @@ public class ListExperiments extends HttpServlet
 		JSONObject jsonObject = new JSONObject();
 		ApplicationSearchSpace applicationSearchSpace = Experimentator.applicationSearchSpaceMap.get(id);
 
-		String applicationID = applicationSearchSpace.getApplicationId();;
+		String applicationID = applicationSearchSpace.getExperimentId();;
 		String name = applicationSearchSpace.getApplicationName();
 
 		//TODO Replace trialNum hardcoding

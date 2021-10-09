@@ -2,8 +2,11 @@ package com.autotune.utils;
 
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
+import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.HttpUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,13 +40,14 @@ public class SearchSpaceHelpers {
 
     public static void convertSearchSpaceToJson(JSONArray searchSpaceJsonArray, ApplicationSearchSpace applicationSearchSpace) {
         if (null != applicationSearchSpace) {
+
             JSONObject applicationJson = new JSONObject();
-            applicationJson.put("application_name", applicationSearchSpace.getApplicationName());
-            applicationJson.put("id", applicationSearchSpace.getApplicationId());
-            applicationJson.put("value_type", applicationSearchSpace.getValueType());
-            applicationJson.put("objective_function", applicationSearchSpace.getObjectiveFunction());
-            applicationJson.put("direction", applicationSearchSpace.getDirection());
-            applicationJson.put("hpo_algo_impl", applicationSearchSpace.getHpoAlgoImpl());
+            applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, applicationSearchSpace.getApplicationName());
+            applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.ID, applicationSearchSpace.getExperimentId());
+            applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, applicationSearchSpace.getValueType());
+            applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, applicationSearchSpace.getObjectiveFunction());
+            applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, applicationSearchSpace.getDirection());
+            applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, applicationSearchSpace.getHpoAlgoImpl());
 
             JSONArray tunablesJsonArray = new JSONArray();
             for (String applicationTunableName : applicationSearchSpace.getApplicationTunablesMap().keySet()) {
@@ -112,8 +116,9 @@ public class SearchSpaceHelpers {
         for (Object searchSpaceObject : searchSpaceArray) {
 
             JSONObject searchSpaceJsonObject = (JSONObject) searchSpaceObject;
-            String id = searchSpaceJsonObject.getString("id");
-            String applicationName = searchSpaceJsonObject.getString("application_name");
+            String experimentName = searchSpaceJsonObject.getString("experiment_name");
+            String experimentId = searchSpaceJsonObject.getString("experiment_id");
+            String podName = searchSpaceJsonObject.getString("pod_name");
             String objectiveFunction = searchSpaceJsonObject.getString("objective_function");
             String hpoAlgoImpl = searchSpaceJsonObject.getString("hpo_algo_impl");
             String direction = searchSpaceJsonObject.getString("direction");
@@ -170,8 +175,9 @@ public class SearchSpaceHelpers {
                     e.printStackTrace();
                 }
             }
-            ApplicationSearchSpace appSearchSpace = new ApplicationSearchSpace(id,
-                    applicationName,
+            ApplicationSearchSpace appSearchSpace = new ApplicationSearchSpace(experimentName,
+                    experimentId,
+                    podName,
                     objectiveFunction,
                     hpoAlgoImpl,
                     direction,
