@@ -223,8 +223,14 @@ if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
 	echo -n "############# Performing ${tctype} test for autotune #############"
 	${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+	TEST_RESULT=$?
 	echo "########################################################################"
 	echo ""
+	if [ "${TEST_RESULT}" -ne "0" ]; then
+		exit 1
+	else
+		exit 0
+	fi
 else
 	autotune_cleanup "${resultsdir}"
 fi
