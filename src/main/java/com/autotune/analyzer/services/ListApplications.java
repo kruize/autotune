@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -37,13 +38,13 @@ public class ListApplications extends HttpServlet
      * Example JSON:
      * [
      *     {
-     *       "application_name": "app1",
+     *       "experiment_name": "app1_autotune",
      *       “objective_function”: “transaction_response_time”,
      *       "sla_class": "response_time",
      *       “direction”: “minimize”
      *     },
      *     {
-     *       "application_name": "app2",
+     *       "experiment_name": "app2_autotune",
      *       “objective_function”: “performedChecks_total”,
      *       "sla_class": "throughput",
      *       “direction”: “maximize”
@@ -58,17 +59,17 @@ public class ListApplications extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
+        String podName = req.getParameter(AnalyzerConstants.ServiceConstants.POD_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
-            if (applicationName == null) {
+            if (podName == null) {
                 for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
                     addApplicationToResponse(outputJsonArray, autotuneObject, application);
                 }
             } else {
-                addApplicationToResponse(outputJsonArray, autotuneObject, applicationName);
+                addApplicationToResponse(outputJsonArray, autotuneObject, podName);
             }
         }
 
@@ -76,19 +77,24 @@ public class ListApplications extends HttpServlet
             if (AutotuneDeployment.autotuneObjectMap.isEmpty())
                 outputJsonArray.put("Error: No objects of kind Autotune found!");
             else
-                outputJsonArray.put("Error: Application " + applicationName + " not found!");
+                outputJsonArray.put("Error: Application " + podName + " not found!");
         }
 
         resp.getWriter().println(outputJsonArray.toString(4));
     }
 
-    private void addApplicationToResponse(JSONArray outputJsonArray, AutotuneObject autotuneObject, String application) {
-        //Check if application is monitored by autotune
-        if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(application))
+    private void addApplicationToResponse(JSONArray outputJsonArray, AutotuneObject autotuneObject, String podName) {
+        // Check if application is monitored by autotune
+        if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(podName))
             return;
 
+        ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(podName);
+
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        jsonObject.put(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME, autotuneObject.getExperimentName());
+        jsonObject.put(AnalyzerConstants.ServiceConstants.POD_NAME, podName);
+        jsonObject.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationServiceStack.getDeploymentName());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, autotuneObject.getNamespace());
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());

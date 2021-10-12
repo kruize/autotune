@@ -26,8 +26,8 @@ public class ListExperiments extends HttpServlet
 			response.setCharacterEncoding("UTF-8");
 
 			JSONArray experimentTrialJSONArray = new JSONArray();
-			for (String applicationID : Experimentator.experimentsMap.keySet()) {
-				AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(applicationID);
+			for (String experimentId : Experimentator.experimentsMap.keySet()) {
+				AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(experimentId);
 				for (ExperimentTrial experimentTrial : autotuneExperiment.getExperimentTrials()) {
 					JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
 					experimentTrialJSONArray.put(experimentTrialJSON);
@@ -40,15 +40,15 @@ public class ListExperiments extends HttpServlet
 		}
 	}
 
-	public void getExperiment(JSONArray outputJsonArray, String id) {
-		if (id == null) {
-			//No application parameter, generate search space for all applications
-			for (String applicationID : Experimentator.applicationSearchSpaceMap.keySet()) {
-				addExperiment(outputJsonArray, applicationID);
+	public void getExperiment(JSONArray outputJsonArray, String podName) {
+		if (podName == null) {
+			// No application parameter, generate search space for all applications
+			for (String applicationName : Experimentator.applicationSearchSpaceMap.keySet()) {
+				addExperiment(outputJsonArray, applicationName);
 			}
 		} else {
-			if (Experimentator.applicationSearchSpaceMap.containsKey(id)) {
-				addExperiment(outputJsonArray, id);
+			if (Experimentator.applicationSearchSpaceMap.containsKey(podName)) {
+				addExperiment(outputJsonArray, podName);
 			}
 		}
 
@@ -56,30 +56,30 @@ public class ListExperiments extends HttpServlet
 			if (AutotuneDeployment.autotuneObjectMap.isEmpty())
 				outputJsonArray.put("Error: No objects of kind Autotune found!");
 			else
-				outputJsonArray.put("Error: Application " + id + " not found!");
+				outputJsonArray.put("Error: Application " + podName + " not found!");
 		}
 	}
 
-	private void addExperiment(JSONArray outputJsonArray, String id) {
+	private void addExperiment(JSONArray outputJsonArray, String applicationName) {
 		JSONObject jsonObject = new JSONObject();
-		ApplicationSearchSpace applicationSearchSpace = Experimentator.applicationSearchSpaceMap.get(id);
+		ApplicationSearchSpace applicationSearchSpace = Experimentator.applicationSearchSpaceMap.get(applicationName);
 
-		String applicationID = applicationSearchSpace.getApplicationId();;
+		String experimentId = applicationSearchSpace.getExperimentId();
 		String name = applicationSearchSpace.getApplicationName();
 
 		//TODO Replace trialNum hardcoding
 		int trialNum = 1;
 
-		jsonObject.put("id", applicationID);
+		jsonObject.put("id", experimentId);
 		jsonObject.put("application_name", name);
 		jsonObject.put("trial_num", trialNum);
 
 		JSONArray updateConfigJson = new JSONArray();
 
-		for (String tunableName : Experimentator.tunablesMap.get(id).keySet()) {
+		for (String tunableName : Experimentator.tunablesMap.get(applicationName).keySet()) {
 			JSONObject tunableJson = new JSONObject();
 			tunableJson.put("tunable_name", tunableName);
-			tunableJson.put("tunable_value", Experimentator.tunablesMap.get(id).get(tunableName));
+			tunableJson.put("tunable_value", Experimentator.tunablesMap.get(applicationName).get(tunableName));
 			updateConfigJson.put(tunableJson);
 		}
 

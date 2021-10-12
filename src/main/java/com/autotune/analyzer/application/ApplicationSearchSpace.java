@@ -5,7 +5,8 @@ import java.util.Map;
 
 public class ApplicationSearchSpace
 {
-	String applicationId;
+	String experimentName;
+	String experimentId;
 	String applicationName;
 	String objectiveFunction;
 	String hpoAlgoImpl;
@@ -14,13 +15,15 @@ public class ApplicationSearchSpace
 
 	Map<String, Tunable> applicationTunablesMap;
 
-	public ApplicationSearchSpace(String applicationId,
+	public ApplicationSearchSpace(String experimentName,
+								  String experimentId,
 								  String applicationName,
 								  String objectiveFunction,
 								  String hpoAlgoImpl,
 								  String direction,
 								  String valueType) {
-		this.applicationId = applicationId;
+		this.experimentName = experimentName;
+		this.experimentId = experimentId;
 		this.applicationName = applicationName;
 		this.objectiveFunction = objectiveFunction;
 		this.hpoAlgoImpl = hpoAlgoImpl;
@@ -30,8 +33,10 @@ public class ApplicationSearchSpace
 		this.applicationTunablesMap = new HashMap<>();
 	}
 
-	public String getApplicationId() {
-		return applicationId;
+	public String getExperimentName() {	return experimentName;	}
+
+	public String getExperimentId() {
+		return experimentId;
 	}
 
 	public String getApplicationName() {

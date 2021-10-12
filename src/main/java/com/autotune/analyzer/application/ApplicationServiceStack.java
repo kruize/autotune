@@ -48,20 +48,15 @@ public class ApplicationServiceStack
 {
 	private String applicationServiceName;
 	private String namespace;
+	private String deploymentName;
 	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 	private ApplicationSearchSpace applicationSearchSpace;
 
-	public ApplicationServiceStack(String applicationServiceName, String namespace) {
+	public ApplicationServiceStack(String applicationServiceName, String namespace, String deploymentName, String status) {
 		this.applicationServiceName = applicationServiceName;
 		this.namespace = namespace;
-
-		this.applicationServiceStackLayers = new HashMap<>();
-	}
-
-	public ApplicationServiceStack(String applicationServiceName, String namespace, String status) {
-		this.applicationServiceName = applicationServiceName;
-		this.namespace = namespace;
+		this.deploymentName = deploymentName;
 		this.status = status;
 
 		this.applicationServiceStackLayers = new HashMap<>();
@@ -76,6 +71,14 @@ public class ApplicationServiceStack
 			this.namespace = namespace;
 		else
 			throw new InvalidValueException("Namespace cannot be null");
+	}
+
+	public String getDeploymentName() {
+		return deploymentName;
+	}
+
+	public void setDeploymentName(String deploymentName) {
+		this.deploymentName = deploymentName;
 	}
 
 	public String getApplicationServiceName() {

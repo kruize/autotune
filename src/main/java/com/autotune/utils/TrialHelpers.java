@@ -19,10 +19,7 @@ import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.deployment.DeploymentInfo;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.experiments.*;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
@@ -213,6 +210,8 @@ public class TrialHelpers {
                                                                String trialConfigJson) {
 
         ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
+        AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
+
         TrialSettings trialSettings = new TrialSettings("15mins",
                 "3mins");
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy("rollingUpdate",
@@ -257,7 +256,6 @@ public class TrialHelpers {
 
             /* Create the metrics array */
             /* First iterate through the objective function variables */
-            AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
             SloInfo sloInfo = autotuneObject.getSloInfo();
             ArrayList<Metric> metrics = new ArrayList<>();
             for (Metric metric : sloInfo.getFunctionVariables()) {
@@ -265,8 +263,9 @@ public class TrialHelpers {
             }
 
             /* Now check for any metric object for tunables that have associated queries */
-            for (String autotuneConfigName : autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().keySet()) {
-                AutotuneConfig autotuneConfig = autotuneExperiment.getApplicationServiceStack().getApplicationServiceStackLayers().get(autotuneConfigName);
+            ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationServiceStack();
+            for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+                AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
                 for (Tunable tunable : autotuneConfig.getTunables()) {
                     String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
                     if (tunableQuery != null && !tunableQuery.isEmpty()) {
@@ -280,8 +279,8 @@ public class TrialHelpers {
             }
 
             Deployments deployment = new Deployments(tracker,
-                    "petclinic-sample",
-                    "default",
+                    applicationServiceStack.getDeploymentName(),
+                    applicationServiceStack.getNamespace(),
                     "",
                     "",
                     "",
@@ -294,8 +293,8 @@ public class TrialHelpers {
             deployments.add(deployment);
         }
 
-        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getApplicationId(),
-                "default",
+        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentId(),
+                autotuneObject.getNamespace(),
                 appSearchSpace.getApplicationName(),
                 "v1",
                 trialInfo,
