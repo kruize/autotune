@@ -24,7 +24,7 @@ import java.util.Objects;
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
- * and the list of sla_class (throughput, response_time, right_size, etc.) for which it is applicable.
+ * and the list of slo_class (throughput, response_time, right_size, etc.) for which it is applicable.
  *
  * Example:
  * - name: <Tunable>
@@ -36,7 +36,7 @@ import java.util.Objects;
  *     datasource:
  *     - name: 'prometheus'
  *       query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
- *   sla_class:
+ *   slo_class:
  *   - response_time
  *   - throughput
  */
@@ -55,7 +55,7 @@ public class Tunable
     String bound; //[1.5-3.5], [true, false]
     */
 
-	public ArrayList<String> slaClassList;
+	public ArrayList<String> sloClassList;
 
 	public Tunable(String name,
 				   double step,
@@ -63,11 +63,11 @@ public class Tunable
 				   double lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
-				   ArrayList<String> slaClassList) throws InvalidBoundsException {
+				   ArrayList<String> sloClassList) throws InvalidBoundsException {
 		this.queries = queries;
 		this.name = Objects.requireNonNull(name, "name cannot be null");
 		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
-		this.slaClassList = Objects.requireNonNull(slaClassList, "tunable should contain supported sla_classes");
+		this.sloClassList = Objects.requireNonNull(sloClassList, "tunable should contain supported slo_classes");
 		this.step = Objects.requireNonNull(step, "step cannot be null");
 
 		/*
@@ -94,7 +94,7 @@ public class Tunable
 		this.valueType = copy.valueType;
 		this.description = copy.description;
 		this.queries = copy.queries;
-		this.slaClassList = copy.slaClassList;
+		this.sloClassList = copy.sloClassList;
 	}
 
 	public String getName() {
@@ -151,12 +151,12 @@ public class Tunable
 		this.description = description;
 	}
 
-	public ArrayList<String> getSlaClassList() {
-		return slaClassList;
+	public ArrayList<String> getSloClassList() {
+		return sloClassList;
 	}
 
-	public void setSlaClassList(ArrayList<String> slaClassList) {
-		this.slaClassList = slaClassList;
+	public void setSloClassList(ArrayList<String> sloClassList) {
+		this.sloClassList = sloClassList;
 	}
 
 	public double getStep() {
@@ -177,7 +177,7 @@ public class Tunable
 				", lowerBound='" + lowerBound + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
-				", slaClassList=" + slaClassList +
+				", sloClassList=" + sloClassList +
 				'}';
 	}
 }

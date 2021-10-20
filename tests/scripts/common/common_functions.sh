@@ -659,7 +659,7 @@ function create_expected_searchspace_json() {
 		autotune_json="${AUTOTUNE_JSONS_DIR}/${autotune_names[count]}.json"
 		((index--))
 		printf '\n  {\n  "application_name": "'${app}'",' >> ${file_name}
-		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
+		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_name=${layer_configs[$deploy]}
 		for layer in ${layer_name[@]}
@@ -688,9 +688,9 @@ function create_expected_searchspace_json() {
 				fi
 			done
 		done
-		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
-		printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'' >> ${file_name}
+		printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
 			printf '\n } \n' >> ${file_name}
 		else
@@ -795,15 +795,15 @@ function create_expected_listapptunables_json() {
 		autotune_json="${AUTOTUNE_JSONS_DIR}/${autotune_names[count]}.json"
 		((index--))
 		printf '{\n  "application_name": "'${app}'",' >> ${file_name}
-		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
-		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
+		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')',' >> ${file_name}
 		printf '\n  "function_variables": [{' >> ${file_name}
-		printf '\n      "value_type": '$(cat ${autotune_json} | jq '.spec.sla.function_variables[].value_type')','  >> ${file_name}
-		printf '\n      "name": '$(cat ${autotune_json} | jq '.spec.sla.function_variables[].name')','  >> ${file_name}
+		printf '\n      "value_type": '$(cat ${autotune_json} | jq '.spec.slo.function_variables[].value_type')','  >> ${file_name}
+		printf '\n      "name": '$(cat ${autotune_json} | jq '.spec.slo.function_variables[].name')','  >> ${file_name}
 
 		url=$(kubectl get svc -n ${NAMESPACE} | grep prometheus-k8s | awk {'print $3'})
 		query_url="http://${url}:9090/api/v1/query?query="
-		fn_query=$(cat ${autotune_json} | jq '.spec.sla.function_variables[].query')
+		fn_query=$(cat ${autotune_json} | jq '.spec.slo.function_variables[].query')
 		fn_query=$(echo "${fn_query}" | tr -d '"')
 		printf '\n      "query_url": "'${query_url}''${fn_query}'"'  >> ${file_name}
 		printf '\n }],'  >> ${file_name}
@@ -860,12 +860,12 @@ function create_expected_listapptunables_json() {
 			fi
 		done
 
-		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
-			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}]' >> ${file_name}
+			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}]' >> ${file_name}
 		else
-			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n},\n' >> ${file_name}
+			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n},\n' >> ${file_name}
 		fi
 		((count++))
 	done
@@ -942,15 +942,15 @@ function listapptunables_test() {
 }
 
 # Create expected listAutotuneTunables json
-# Input: sla class, layer name
+# Input: slo class, layer name
 function create_expected_listautotunetunables_json() {
-	sla_class=$1
+	slo_class=$1
 	layer_name=$2
 	file_name="${LOG_DIR}/expected_list_tunables.json"
 	layer_count=0
 	
-	if [ -z "${sla_class}" ]; then
-		sla_class=("response_time" "throughput" "resource_usage")
+	if [ -z "${slo_class}" ]; then
+		slo_class=("response_time" "throughput" "resource_usage")
 	fi
 
 	if [ -z "${layer_name}" ]; then
@@ -959,8 +959,8 @@ function create_expected_listautotunetunables_json() {
 
 	count="${#layer_name[@]}"
 
-	if [ -z "${sla_class}" ]; then
-		sla_class=("response_time" "throughput" "resource_usage")
+	if [ -z "${slo_class}" ]; then
+		slo_class=("response_time" "throughput" "resource_usage")
 	fi
 
 	printf '[' > 	${file_name}
@@ -974,13 +974,13 @@ function create_expected_listautotunetunables_json() {
 		while [ "${length}" -ne 0 ]
 		do
 			((length--))
-			sla_count=0
-			sla=$(cat ${layer_json} | jq .tunables[${length}].sla_class[])
-			readarray -t sla <<<  ${sla}
-			for s in "${sla[@]}"
+			slo_count=0
+			slo=$(cat ${layer_json} | jq .tunables[${length}].slo_class[])
+			readarray -t slo <<<  ${slo}
+			for s in "${slo[@]}"
 			do
 				s=$(echo "${s}" | tr -d '"')
-				if [[ "${sla_class[sla_count]}" == "${s}" ]]; then
+				if [[ "${slo_class[slo_count]}" == "${s}" ]]; then
 					printf '{\n\t\t"value_type": '$(cat ${layer_json} | jq .tunables[${length}].value_type)',' >> ${file_name}
 					printf '\n\t\t"lower_bound": '$(cat ${layer_json} | jq .tunables[${length}].lower_bound)',' >> ${file_name}
 					printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',' >> ${file_name}
@@ -1015,17 +1015,17 @@ function create_expected_listautotunetunables_json() {
 }
 
 # Get listAutotuneTunables json
-# Input: sla class, layer name
+# Input: slo class, layer name
 function get_list_autotune_tunables_json() {
-	sla_class=$1
+	slo_class=$1
 	layer_name=$2
 
-	if [[ -z "${sla_class}" && -z "${layer_name}" ]]; then
+	if [[ -z "${slo_class}" && -z "${layer_name}" ]]; then
 		cmd="${curl_cmd}/listAutotuneTunables"
-	elif [[ ! -z "${sla_class}" && -z "${layer_name}" ]]; then
-		cmd="${curl_cmd}/listAutotuneTunables?sla_class=${sla_class}"
-	elif [[ ! -z "${sla_class}" && ! -z "${layer_name}" ]]; then
-		cmd="${curl_cmd}/listAutotuneTunables?sla_class=${sla_class}&layer_name=${layer_name}"
+	elif [[ ! -z "${slo_class}" && -z "${layer_name}" ]]; then
+		cmd="${curl_cmd}/listAutotuneTunables?slo_class=${slo_class}"
+	elif [[ ! -z "${slo_class}" && ! -z "${layer_name}" ]]; then
+		cmd="${curl_cmd}/listAutotuneTunables?slo_class=${slo_class}&layer_name=${layer_name}"
 	fi
 
 	json_file="${LOG_DIR}/actual_list_tunables.json"
@@ -1033,18 +1033,18 @@ function get_list_autotune_tunables_json() {
 }
 
 # Test listAutotuneTunables Autotune API
-# Input: sla class, layer name
+# Input: slo class, layer name
 function list_autotune_tunables_test() {
-	sla_class=$1
+	slo_class=$1
 	layer_name=$2
 	test_name=${FUNCNAME}
 
-	if [[ -z "${sla_class}" && -z "${layer_name}" ]]; then
+	if [[ -z "${slo_class}" && -z "${layer_name}" ]]; then
 		test_name=${FUNCNAME}
-	elif [[ ! -z "${sla_class}" && -z "${layer_name}" ]]; then
-		test_name="list_autotune_tunables_sla_class_test"
-	elif [[ ! -z "${sla_class}" && ! -z "${layer_name}" ]]; then
-		test_name="list_autotune_tunables_sla_class_layer_name_test"
+	elif [[ ! -z "${slo_class}" && -z "${layer_name}" ]]; then
+		test_name="list_autotune_tunables_slo_class_test"
+	elif [[ ! -z "${slo_class}" && ! -z "${layer_name}" ]]; then
+		test_name="list_autotune_tunables_slo_class_layer_name_test"
 	fi
 
 	LOG_DIR="${TEST_SUITE_DIR}/${test_name}"
@@ -1063,18 +1063,18 @@ function list_autotune_tunables_test() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	echo "                    Running Testcase ${test_name}" | tee -a ${LOG}
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
-	if [[ -z "${sla_class}" && -z "${layer_name}" ]]; then
+	if [[ -z "${slo_class}" && -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for all applications ----------*******" | tee -a ${LOG}
 		get_list_autotune_tunables_json
 		create_expected_listautotunetunables_json
-	elif [[ ! -z "${sla_class}" && -z "${layer_name}" ]]; then
-		echo "*******----------- ${FUNCNAME} for specified sla ----------*******" | tee -a ${LOG}
-		get_list_autotune_tunables_json "${sla_class}"
-		create_expected_listautotunetunables_json "${sla_class}"
-	elif [[ ! -z "${sla_class}" && ! -z "${layer_name}" ]]; then
-		echo "*******----------- ${FUNCNAME} for specified sla and specific layer ----------*******" | tee -a ${LOG}
-		get_list_autotune_tunables_json "${sla_class}" "${layer_name}"
-		create_expected_listautotunetunables_json "${sla_class}" "${layer_name}"
+	elif [[ ! -z "${slo_class}" && -z "${layer_name}" ]]; then
+		echo "*******----------- ${FUNCNAME} for specified slo ----------*******" | tee -a ${LOG}
+		get_list_autotune_tunables_json "${slo_class}"
+		create_expected_listautotunetunables_json "${slo_class}"
+	elif [[ ! -z "${slo_class}" && ! -z "${layer_name}" ]]; then
+		echo "*******----------- ${FUNCNAME} for specified slo and specific layer ----------*******" | tee -a ${LOG}
+		get_list_autotune_tunables_json "${slo_class}" "${layer_name}"
+		create_expected_listautotunetunables_json "${slo_class}" "${layer_name}"
 	fi
 	compare_json "${LOG_DIR}/actual_list_tunables.json" "${LOG_DIR}/expected_list_tunables.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
@@ -1107,9 +1107,9 @@ function create_expected_listapplayer_json() {
 		((index--))
 		printf '{\n    "application_name": "'${app}'",' >> ${file_name}
 		# do comparision of actual and expected name
-		objectve_function=$(cat ${autotune_json} | jq '.spec.sla.objective_function')
-		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
-		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.sla.hpo_algo_impl')',' >> ${file_name}
+		objectve_function=$(cat ${autotune_json} | jq '.spec.slo.objective_function')
+		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
+		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_names=${layer_configs[$deploy]}
 		IFS=',' read -r -a layer_name <<<  ${layer_name}
@@ -1133,12 +1133,12 @@ function create_expected_listapplayer_json() {
 				printf '     },\n' >> ${file_name}
 			fi
 		done
-		printf '\n    "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n    "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
-			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}' >> ${file_name}
+			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}' >> ${file_name}
 		else
-			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n},\n' >> ${file_name}
+			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n},\n' >> ${file_name}
 		fi
 		((count++))
 	done
@@ -1226,13 +1226,13 @@ function create_expected_listapplication_json() {
 		autotune_json="${AUTOTUNE_JSONS_DIR}/${autotune_names[count]}.json"
 		((index--))
 		printf '{\n  "application_name": "'${app}'",' >> ${file_name}
-		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.sla.objective_function')',' >> ${file_name}
-		printf '\n  "sla_class": '$(cat ${autotune_json} | jq '.spec.sla.sla_class')',' >> ${file_name}
+		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
+		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].id')',' >> ${file_name}
 		if [ "${index}" -eq 0 ]; then
-			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n}' >> ${file_name}
+			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}' >> ${file_name}
 		else
-			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.sla.direction')'\n},\n' >> ${file_name}
+			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n},\n' >> ${file_name}
 		fi
 		((count++))
 	done

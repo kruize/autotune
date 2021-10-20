@@ -14,7 +14,7 @@ tunables:
   value_type: integer
   upper_bound: 10
   lower_bound: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
 - name: quarkus.thread-pool.queue-size
@@ -22,7 +22,7 @@ tunables:
   value_type: integer
   upper_bound: 100
   lower_bound: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
   - resource_usage
@@ -31,7 +31,7 @@ tunables:
   value_type: integer
   upper_bound: 50
   lower_bound: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
   - resource_usage

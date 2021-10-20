@@ -65,16 +65,16 @@ public class ValidateAutotuneConfig
 			errorString.append(DAErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
 		}
 
-		// Validate sla_class in tunables
+		// Validate slo_class in tunables
 		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(DAConstants.AutotuneConfigConstants.TUNABLES);
 		if (tunableArrayList != null) {
 			for (Tunable tunable : tunableArrayList) {
 				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(DAErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
-				for (String sla_class : tunable.getSlaClassList()) {
-					if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(sla_class)) {
-						errorString.append(DAErrorConstants.AutotuneConfigErrors.INVALID_SLA_CLASS).append(tunable.getName()).append("\n");
+				for (String slo_class : tunable.getSloClassList()) {
+					if (!AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(slo_class)) {
+						errorString.append(DAErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
 					}
 
 					if (tunable.getStep() == 0) {

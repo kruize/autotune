@@ -104,18 +104,18 @@ function get_config_id() {
 # output: Query the API and get the autotune object ids
 function query_autotune_tunables_api() {
 	query_api=$1
-	sla_class="response_time"
+	slo_class="response_time"
 	layer="container"
 	
 	echo " " | tee -a ${LOG}
 	case "${query_api}" in
-		get_list_autotune_tunables_json_sla_layer)
-			# listAutotuneTunables for specific sla_class and layer
-			get_list_autotune_tunables_json ${sla_class} ${layer}
+		get_list_autotune_tunables_json_slo_layer)
+			# listAutotuneTunables for specific slo_class and layer
+			get_list_autotune_tunables_json ${slo_class} ${layer}
 			;;
-		get_list_autotune_tunables_json_sla)
-			# listAutotuneTunables for specific sla_class
-			get_list_autotune_tunables_json ${sla_class}
+		get_list_autotune_tunables_json_slo)
+			# listAutotuneTunables for specific slo_class
+			get_list_autotune_tunables_json ${slo_class}
 			;;
 		get_list_autotune_tunables_json)
 			# listAutotuneTunables for all layers

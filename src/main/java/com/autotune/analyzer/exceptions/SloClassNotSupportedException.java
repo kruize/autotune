@@ -15,12 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class SlaClassNotSupportedException extends Throwable
+public class SloClassNotSupportedException extends Throwable
 {
-	public SlaClassNotSupportedException() {
+	public SloClassNotSupportedException() {
 	}
 
-	public SlaClassNotSupportedException(String message) {
+	public SloClassNotSupportedException(String message) {
 		super(message);
 	}
 }

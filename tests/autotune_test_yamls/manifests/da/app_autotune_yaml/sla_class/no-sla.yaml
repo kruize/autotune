@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "no-sla"
+ name: "no-slo"
 spec:
   mode: "show"
   selector:

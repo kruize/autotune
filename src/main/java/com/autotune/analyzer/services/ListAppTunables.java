@@ -50,7 +50,7 @@ public class ListAppTunables extends HttpServlet
 	 * {
 	 *       "application_name": "app1",
 	 *       “objective_function”: “transaction_response_time”,
-	 *       "sla_class": "response_time",
+	 *       "slo_class": "response_time",
 	 *       “direction”: “minimize”
 	 *       "layers": [
 	 *         {
@@ -137,15 +137,15 @@ public class ListAppTunables extends HttpServlet
 	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
 		jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
-		jsonObject.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSlaInfo().getHpoAlgoImpl());
+		jsonObject.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
 		// Add function_variables info
 		JSONArray functionVariablesArray = new JSONArray();
-		for (FunctionVariable functionVariable : autotuneObject.getSlaInfo().getFunctionVariables()) {
+		for (FunctionVariable functionVariable : autotuneObject.getSloInfo().getFunctionVariables()) {
 			JSONObject functionVariableJson = new JSONObject();
 			functionVariableJson.put(DAConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
 			functionVariableJson.put(DAConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());

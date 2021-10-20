@@ -152,13 +152,13 @@ function multiple_tunables() {
 
 # Validate listAutotuneTunabels API 
 function validate_list_autotune_tunables() {
-	# test listAutotuneTunables API for specific sla_class and layer
-	sla_class="response_time"
+	# test listAutotuneTunables API for specific slo_class and layer
+	slo_class="response_time"
 	layer="container"
-	list_autotune_tunables_test "${sla_class}" "${layer}"
+	list_autotune_tunables_test "${slo_class}" "${layer}"
 
-	# test listAutotuneTunables API for specific sla_class
-	list_autotune_tunables_test "${sla_class}" 
+	# test listAutotuneTunables API for specific slo_class
+	list_autotune_tunables_test "${slo_class}" 
 	
 	# test listautotunetunables API for all layers
 	list_autotune_tunables_test

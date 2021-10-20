@@ -28,8 +28,8 @@ spec:
             type: object
           spec:
             properties:
-              sla:
-                description: 'sla allow an user to provide any one option out of response_time, right-size, throughput'
+              slo:
+                description: 'slo allow an user to provide any one option out of response_time, right-size, throughput'
                 properties:
                   objective_function:
                     description: 'function take simple and complex expression'
@@ -37,7 +37,7 @@ spec:
                   direction:
                     description: 'it will take the value like up or down'
                     type: string
-                  sla_class:
+                  slo_class:
                     description: 'One of throughput, response_time or resource_usage'
                     type: string
                   function_variables:
@@ -108,7 +108,7 @@ spec:
                 - value
                 type: object
             required:
-            - sla
+            - slo
             - mode
             - selector
             type: object

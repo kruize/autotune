@@ -52,7 +52,7 @@ def perform_experiment():
 
 class Objective(TrialDetails):
     """
-    A class used to define search space and return the actual sla value.
+    A class used to define search space and return the actual slo value.
 
     Parameters:
         tunables (list): A list containing the details of each tunable in a dictionary format.
@@ -90,7 +90,7 @@ class Objective(TrialDetails):
 
         TrialDetails.trial_json_object = experiment_tunables
 
-        actual_sla_value, experiment_status = perform_experiment()
+        actual_slo_value, experiment_status = perform_experiment()
 
         TrialDetails.trial_result_received = -1
 
@@ -101,8 +101,8 @@ class Objective(TrialDetails):
         if experiment_status == "prune":
             raise optuna.TrialPruned()
 
-        actual_sla_value = round(float(actual_sla_value), 2)
-        return actual_sla_value
+        actual_slo_value = round(float(actual_slo_value), 2)
+        return actual_slo_value
 
 
 def recommend(application_name, direction, hpo_algo_impl, id_, objective_function, tunables, value_type):

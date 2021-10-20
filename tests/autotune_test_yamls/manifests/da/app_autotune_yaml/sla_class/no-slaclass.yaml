@@ -1,9 +1,9 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "no-slaclass"
+ name: "no-sloclass"
 spec:
-  sla:
+  slo:
     objective_function: "transaction_response_time"
     direction: "minimize"
     function_variables:

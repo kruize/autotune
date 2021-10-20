@@ -4,9 +4,9 @@ metadata:
   name: "blank-hpo-algo-impl"
   namespace: "default"
 spec:
-  sla:
+  slo:
     objective_function: "transaction_response_time"
-    sla_class: "response_time"
+    slo_class: "response_time"
     direction: "minimize"
     hpo_algo_impl: " "
     function_variables:

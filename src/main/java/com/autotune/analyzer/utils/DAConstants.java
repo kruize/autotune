@@ -58,8 +58,8 @@ public class DAConstants
 	 */
 	public static class AutotuneObjectConstants {
 		public static final String SPEC = "spec";
-		public static final String SLA = "sla";
-		public static final String SLA_CLASS = "sla_class";
+		public static final String SLO = "slo";
+		public static final String SLO_CLASS = "slo_class";
 		public static final String DIRECTION = "direction";
 		public static final String OBJECTIVE_FUNCTION = "objective_function";
 
@@ -113,7 +113,7 @@ public class DAConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
-		public static final String SLA_CLASS = "sla_class";
+		public static final String SLO_CLASS = "slo_class";
 
 		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
 		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";

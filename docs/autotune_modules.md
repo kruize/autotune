@@ -14,15 +14,15 @@ Analyzer module is a combination of Dependency Analyzer and Recommendation Manag
 
 Dependency Analyzer does the following:
 
-- Dependency Analyzer validates the autotune yaml file provided by the user. This yaml file defines the "sla" goal along with the objective function to optimize application performance.
-- It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided sla. 
+- Dependency Analyzer validates the autotune yaml file provided by the user. This yaml file defines the "slo" goal along with the objective function to optimize application performance.
+- It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided slo. 
 - It creates the search space for all the layer tunables and function variables to derive the objective function
 
 Recommendation Manager does the following:
 
 - Recommendation Manager (RM) module posts the search space to the Hyperparameter Optimization module (HPO)
 - Obtains the trial config for the tunables from the HPO module and posts it to the Experiment manager module (EM)
-- It then computes the object function for the sla based on the metrics values from Experiment manager and posts the results to HPO module
+- It then computes the object function for the slo based on the metrics values from Experiment manager and posts the results to HPO module
 - It repeats step 2 & 3 until the specified number of trials are completed and then obtains the optimal values for the tunables from HPO and returns it to the user 
 
 

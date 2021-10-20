@@ -58,7 +58,7 @@ public class SearchSpace extends HttpServlet
      *         "upper_bound": "3.0"
      *       }
      *     ],
-     *     "sla_class": "response_time",
+     *     "slo_class": "response_time",
      *     "direction": "minimize"
      *   }
      * ]
@@ -103,9 +103,9 @@ public class SearchSpace extends HttpServlet
                 .get(autotuneObjectKey).get(application);
 
         applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
+        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
 
         JSONArray tunablesJsonArray = new JSONArray();
         for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
