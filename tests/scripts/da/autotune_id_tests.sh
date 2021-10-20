@@ -196,16 +196,16 @@ function update_app_autotune() {
 	
 	# Update and apply the application autotune yaml
 	count=0
-	sla=`grep -A3 'sla_class:' ${yaml_dir}/${autotune_names[count]}.yaml | head -n1 | awk '{print $2}' | tr -d '""'`
+	slo=`grep -A3 'slo_class:' ${yaml_dir}/${autotune_names[count]}.yaml | head -n1 | awk '{print $2}' | tr -d '""'`
 	direction=`grep -A3 'direction:' ${yaml_dir}/${autotune_names[count]}.yaml | head -n1 | awk '{print $2}' | tr -d '""'`
 	
-	find_sla="${sla}"
-	case "${find_sla}" in
+	find_slo="${slo}"
+	case "${find_slo}" in
 		response_time)
-			replace_sla="throughput"
+			replace_slo="throughput"
 			;;
 		throughput)
-			replace_sla="response_time"
+			replace_slo="response_time"
 			;;
 	esac
 	
@@ -223,7 +223,7 @@ function update_app_autotune() {
 	for app in "${app_pod_names[@]}"
 	do
 		test_yaml="${yaml_dir}/${autotune_names[count]}.yaml"
-		sed -i 's/'${find_sla}'/'${replace_sla}'/g' ${test_yaml}
+		sed -i 's/'${find_slo}'/'${replace_slo}'/g' ${test_yaml}
 		sed -i 's/'${find_direction}'/'${replace_direction}'/g' ${test_yaml}
 		echo "Applying autotune yaml ${test_yaml}..." | tee -a ${LOG}
 		kubectl apply -f ${test_yaml} | tee -a ${LOG}

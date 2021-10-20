@@ -39,13 +39,13 @@ public class ListApplications extends HttpServlet
      *     {
      *       "application_name": "app1",
      *       “objective_function”: “transaction_response_time”,
-     *       "sla_class": "response_time",
+     *       "slo_class": "response_time",
      *       “direction”: “minimize”
      *     },
      *     {
      *       "application_name": "app2",
      *       “objective_function”: “performedChecks_total”,
-     *       "sla_class": "throughput",
+     *       "slo_class": "throughput",
      *       “direction”: “maximize”
      *     }
      * ]
@@ -89,9 +89,9 @@ public class ListApplications extends HttpServlet
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSlaInfo().getDirection());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSlaInfo().getObjectiveFunction());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.SLA_CLASS, autotuneObject.getSlaInfo().getSlaClass());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        jsonObject.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
         jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
 
         outputJsonArray.put(jsonObject);

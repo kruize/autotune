@@ -171,7 +171,7 @@ Note: If you want to run a particular testcase then it is mandatory to specify t
 For example,
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=slo_class -r /home/benchmarks --resultsdir=/home/results
 ```
 
 ## How to test a specific autotune module?

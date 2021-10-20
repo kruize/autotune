@@ -159,7 +159,7 @@ function run_post_tests(){
 		case "${post_test}" in
 			invalid-searchspace)
 				exp="valid-experiment"
-				sed 's/"sla_class": "response_time"/"sla_class": "xyz"/g' ${SEARCH_SPACE_JSON} > ${TESTS_}/invalid_searchspace.json
+				sed 's/"slo_class": "response_time"/"slo_class": "xyz"/g' ${SEARCH_SPACE_JSON} > ${TESTS_}/invalid_searchspace.json
 				echo "Searchspace JSON" | tee -a ${LOG_} ${LOG}
 				cat ${TESTS_}/invalid_searchspace.json | tee -a ${LOG_} ${LOG}
 				echo "" | tee -a ${LOG_} ${LOG}

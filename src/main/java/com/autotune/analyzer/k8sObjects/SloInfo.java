@@ -21,12 +21,12 @@ import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 import java.util.ArrayList;
 
 /**
- * Holds information about the sla key in the autotune object yaml
+ * Holds information about the slo key in the autotune object yaml
  *
  * Example:
- * sla:
+ * slo:
  *     objective_function: "transaction_response_time"
- *     sla_class: "response_time"
+ *     slo_class: "response_time"
  *     direction: "minimize"
  *     hpo_algo_impl: "optuna_tpe"
  *     function_variables:
@@ -39,23 +39,23 @@ import java.util.ArrayList;
  *     matchLabel: "app.kubernetes.io/name"
  *     matchLabelValue: "petclinic-deployment"
  */
-public final class SlaInfo
+public final class SloInfo
 {
-	private final String slaClass;
+	private final String sloClass;
 	private final String objectiveFunction;
 	private final String direction;
 	private final String hpoAlgoImpl;
 	private final ArrayList<FunctionVariable> functionVariables;
 
-	public SlaInfo(String slaClass,
+	public SloInfo(String sloClass,
 		String objectiveFunction,
 		String direction,
 		String hpoAlgoImpl,
 		ArrayList<FunctionVariable> functionVariables) throws InvalidValueException {
-		if (AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaClass))
-			this.slaClass = slaClass;
+		if (AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloClass))
+			this.sloClass = sloClass;
 		else
-			throw new InvalidValueException("sla_class: " + slaClass + " not supported");
+			throw new InvalidValueException("slo_class: " + sloClass + " not supported");
 		this.objectiveFunction = objectiveFunction;
 
 		if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
@@ -71,8 +71,8 @@ public final class SlaInfo
 		this.functionVariables = new ArrayList<>(functionVariables);
 	}
 
-	public SlaInfo(SlaInfo copy) {
-		this.slaClass = copy.getSlaClass();
+	public SloInfo(SloInfo copy) {
+		this.sloClass = copy.getSloClass();
 		this.objectiveFunction = copy.getObjectiveFunction();
 		this.direction = copy.getDirection();
 		this.hpoAlgoImpl = copy.getHpoAlgoImpl();
@@ -81,8 +81,8 @@ public final class SlaInfo
 
 	}
 
-	public String getSlaClass() {
-		return slaClass;
+	public String getSloClass() {
+		return sloClass;
 	}
 
 	public String getDirection() {
@@ -103,8 +103,8 @@ public final class SlaInfo
 
 	@Override
 	public String toString() {
-		return "SlaInfo{" +
-				"slaClass='" + slaClass + '\'' +
+		return "SloInfo{" +
+				"sloClass='" + sloClass + '\'' +
 				", objectiveFunction='" + objectiveFunction + '\'' +
 				", direction='" + direction + '\'' +
 				", hpoAlgoImpl='" + this.hpoAlgoImpl + '\'' +

@@ -17,7 +17,7 @@ tunables:
       datasource:
         - name: 'prometheus'
           query: NULL
-    sla_class:
+    slo_class:
       - response_time
       - throughput
       - resource_usage
@@ -30,7 +30,7 @@ tunables:
       datasource:
         - name: 'prometheus'
           query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
-    sla_class:
+    slo_class:
       - response_time
       - throughput
       - resource_usage

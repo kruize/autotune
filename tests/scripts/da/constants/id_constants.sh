@@ -38,9 +38,9 @@ autotune_id_expected_behaviour=([check_uniqueness]="The autotune objects should 
 ##### script containing constants for autotune/autotune_layer_config object id test constants #####
 #
 
-layer_config_id=("get_list_autotune_tunables_json_sla_layer" "get_list_autotune_tunables_json_sla" "get_list_autotune_tunables_json")
+layer_config_id=("get_list_autotune_tunables_json_slo_layer" "get_list_autotune_tunables_json_slo" "get_list_autotune_tunables_json")
 
-old_layer_config_id=( "get_list_autotune_tunables_json_sla_layer" "get_list_autotune_tunables_json_sla" "get_list_autotune_tunables_json")
+old_layer_config_id=( "get_list_autotune_tunables_json_slo_layer" "get_list_autotune_tunables_json_slo" "get_list_autotune_tunables_json")
 
 # Breif description about the layer config id tests
 declare -A layer_config_id_test_description

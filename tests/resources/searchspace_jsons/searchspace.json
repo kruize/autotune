@@ -21,7 +21,7 @@
                 "step": 0.01
             }
         ],
-        "sla_class": "response_time",
+        "slo_class": "response_time",
         "direction": "minimize"
     }
 ]

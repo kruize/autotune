@@ -31,21 +31,21 @@ public final class AutotuneObject
 	private final String name;
 	private final String namespace;
 	private final String mode;
-	private final SlaInfo slaInfo;
+	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 
 	public AutotuneObject(String id,
 			String name,
 			String namespace,
 			String mode,
-			SlaInfo slaInfo,
+			SloInfo sloInfo,
 			SelectorInfo selectorInfo) throws InvalidValueException {
 		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(DAConstants.AutotuneObjectConstants.NAME, name);
 		map.put(DAConstants.AutotuneObjectConstants.NAMESPACE, namespace);
 		map.put(DAConstants.AutotuneObjectConstants.MODE, mode);
-		map.put(DAConstants.AutotuneObjectConstants.SLA, slaInfo);
+		map.put(DAConstants.AutotuneObjectConstants.SLO, sloInfo);
 		map.put(DAConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
 		StringBuilder error = ValidateAutotuneObject.validate(map);
@@ -53,7 +53,7 @@ public final class AutotuneObject
 			this.name = name;
 			this.namespace = namespace;
 			this.mode = mode;
-			this.slaInfo = slaInfo;
+			this.sloInfo = sloInfo;
 			this.selectorInfo = selectorInfo;
 		} else {
 			throw new InvalidValueException(error.toString());
@@ -64,8 +64,8 @@ public final class AutotuneObject
 		return name;
 	}
 
-	public SlaInfo getSlaInfo() {
-		return new SlaInfo(slaInfo);
+	public SloInfo getSloInfo() {
+		return new SloInfo(sloInfo);
 	}
 
 	public SelectorInfo getSelectorInfo() {
@@ -90,7 +90,7 @@ public final class AutotuneObject
 				"name='" + name + '\'' +
 				", namespace='" + namespace + '\'' +
 				", mode='" + mode + '\'' +
-				", slaInfo=" + slaInfo +
+				", sloInfo=" + sloInfo +
 				", selectorInfo=" + selectorInfo +
 				'}';
 	}

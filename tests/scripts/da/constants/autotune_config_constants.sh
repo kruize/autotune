@@ -48,7 +48,7 @@ autotune_config_tests=("layer_name"
 "step"
 "tunable_query"
 "tunable_datasource_name"
-"tunable_sla_class"
+"tunable_slo_class"
 "tunables")
 
 # tests for layer name
@@ -194,21 +194,21 @@ tunable_datasource_name_testcases=("blank-tunable-datasource-name"
 "numerical-tunable-datasource-name"
 "valid-tunable-datasource-name")
 
-# tests for tunable sla class
-tunable_sla_class_testcases=("blank-tunable-sla-class"
-"invalid-tunable-sla-class"
-"empty-tunable-sla-class"
-"no-tunable-sla-class"
-"no-tunable-sla-class-value"
-"null-tunable-sla-class"
-"numerical-tunable-sla-class"
-"valid-tunable-sla-class")
+# tests for tunable slo class
+tunable_slo_class_testcases=("blank-tunable-slo-class"
+"invalid-tunable-slo-class"
+"empty-tunable-slo-class"
+"no-tunable-slo-class"
+"no-tunable-slo-class-value"
+"null-tunable-slo-class"
+"numerical-tunable-slo-class"
+"valid-tunable-slo-class")
 
 # tests for tunables
 tunables_testcases=("interchanged-bound"
 "no-tunables"
 "no-tunables-queries"
-"no-tunables-sla-class"
+"no-tunables-slo-class"
 "valid-tunables")
 
 # other test cases
@@ -563,37 +563,37 @@ tunable_datasource_name_expected_log_msgs=([blank-tunable-datasource-name]='vali
 [numerical-tunable-datasource-name]='The AutotuneConfig "numerical-tunable-datasource-name" is invalid: tunables.queries.datasource.name: Invalid value: "integer": tunables.queries.datasource.name in body must be of type string: "integer"' 
 [valid-tunable-datasource-name]=''${autotune_config_obj_create_msg}' valid-tunable-datasource-name' )
 
-# Expected autotune object for sla class
-declare -A tunable_sla_class_autotune_objects
-tunable_sla_class_autotune_objects=([blank-tunable-sla-class]='true'
-[invalid-tunable-sla-class]='true'
-[empty-tunable-sla-class]='false'
-[no-sla-tunable-class]='false'
-[no-tunable-sla-class-value]='false'
-[null-tunable-sla-class]='false'
-[numerical-tunable-sla-value]='false'
-[valid-tunable-sla-class]='true')
+# Expected autotune object for slo class
+declare -A tunable_slo_class_autotune_objects
+tunable_slo_class_autotune_objects=([blank-tunable-slo-class]='true'
+[invalid-tunable-slo-class]='true'
+[empty-tunable-slo-class]='false'
+[no-slo-tunable-class]='false'
+[no-tunable-slo-class-value]='false'
+[null-tunable-slo-class]='false'
+[numerical-tunable-slo-value]='false'
+[valid-tunable-slo-class]='true')
 
-# Expected log message for sla class
-declare -A tunable_sla_class_expected_log_msgs
-tunable_sla_class_yaml_path="${yaml_path}/${autotune_config_tests[16]}"
-tunable_sla_class_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-validation_error='ValidationError(AutotuneConfig.tunables\[0\].sla_class): unknown object type "nil" in AutotuneConfig.tunables\[0\]'
-tunable_sla_class_expected_log_msgs=([blank-tunable-sla-class]=''${exception}' Invalid sla_class for tunable memoryRequest' 
-[invalid-tunable-sla-class]=''${exception}' Invalid sla_class for tunable memoryRequest' 
-[empty-tunable-sla-class]='error: error validating "'${tunable_sla_class_yaml_path}/empty-tunable-sla-class.yaml'"'${tunable_sla_class_kubectl_error}'' 
-[no-tunable-sla-class]='error: error validating "'${tunable_sla_class_yaml_path}/no-tunable-sla-class.yaml'"'${tunable_sla_class_kubectl_error}'' 
-[no-tunable-sla-class-value]='error: error validating "'${tunable_sla_class_yaml_path}/no-tunable-sla-class-value.yaml'": error validating data: \['${validation_error}'.sla_class\[0\], '${validation_error}'.sla_class\[1\], '${validation_error}'.sla_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-sla-class]='error: error validating "'${tunable_sla_class_yaml_path}/null-tunable-sla-class.yaml'": error validating data: '${validation_error}'.sla_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[numerical-tunable-sla-class]='The AutotuneConfig "numerical-tunable-sla-class" is invalid: tunables.sla_class: Invalid value: "integer": tunables.sla_class in body must be of type string: "integer"' 
-[valid-tunable-sla-class]=''${autotune_config_obj_create_msg}' valid-tunable-sla-class')
+# Expected log message for slo class
+declare -A tunable_slo_class_expected_log_msgs
+tunable_slo_class_yaml_path="${yaml_path}/${autotune_config_tests[16]}"
+tunable_slo_class_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+validation_error='ValidationError(AutotuneConfig.tunables\[0\].slo_class): unknown object type "nil" in AutotuneConfig.tunables\[0\]'
+tunable_slo_class_expected_log_msgs=([blank-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest' 
+[invalid-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest' 
+[empty-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/empty-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}'' 
+[no-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}'' 
+[no-tunable-slo-class-value]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class-value.yaml'": error validating data: \['${validation_error}'.slo_class\[0\], '${validation_error}'.slo_class\[1\], '${validation_error}'.slo_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false' 
+[null-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/null-tunable-slo-class.yaml'": error validating data: '${validation_error}'.slo_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false' 
+[numerical-tunable-slo-class]='The AutotuneConfig "numerical-tunable-slo-class" is invalid: tunables.slo_class: Invalid value: "integer": tunables.slo_class in body must be of type string: "integer"' 
+[valid-tunable-slo-class]=''${autotune_config_obj_create_msg}' valid-tunable-slo-class')
 
 # Expected autotune object for tunables
 declare -A tunables_autotune_objects
 tunables_autotune_objects=([interchanged-bound]='true'
 [no-tunables]='false'
 [no-tunables-queries]='true'
-[no-tunables-sla-class]='false'
+[no-tunables-slo-class]='false'
 [valid-tunables]='true')
 
 # Expected log message for tunables
@@ -602,7 +602,7 @@ tunables_yaml_path="${yaml_path}/${autotune_config_tests[17]}"
 tunables_expected_log_msgs=([interchanged-bound]=''${invalid_bound_exception}'' 
 [no-tunables]='error: error validating "'${tunables_yaml_path}/no-tunables.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
 [no-tunables-queries]=''${autotune_config_obj_create_msg}' no-tunables-queries' 
-[no-tunables-sla-class]='error: error validating "'${tunables_yaml_path}/no-tunables-sla-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "sla_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-tunables-slo-class]='error: error validating "'${tunables_yaml_path}/no-tunables-slo-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
  [valid-tunables]=''${autotune_config_obj_create_msg}' valid-tunables' )
 
 # Expected autotune object for other test cases

@@ -3,9 +3,9 @@
 
 ## What is Autotune ?
 
-Autotune is an Autonomous Performance Tuning Tool for Kubernetes. Autotune accepts a user provided "sla" goal to optimize application performance. It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided sla. It then runs experiments with the help of a hyperparameter optimization framework to arrive at the most optimal values for the identified set of tunables to get a better result for the user provided sla.
+Autotune is an Autonomous Performance Tuning Tool for Kubernetes. Autotune accepts a user provided "slo" goal to optimize application performance. It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided slo. It then runs experiments with the help of a hyperparameter optimization framework to arrive at the most optimal values for the identified set of tunables to get a better result for the user provided slo.
 
-Autotune can take an arbitrarily large set of tunables and run experiments to continually optimize the user provided sla in incremental steps. For this reason, it does not necessarily have a "best" value for a set of tunables, only a "better" one than what is currently deployed.
+Autotune can take an arbitrarily large set of tunables and run experiments to continually optimize the user provided slo in incremental steps. For this reason, it does not necessarily have a "best" value for a set of tunables, only a "better" one than what is currently deployed.
 
 ## Motivation
 
@@ -19,7 +19,7 @@ Tracking down performance issues in a dynamic microservices environment can be c
 
 ## How do I start ?
 
-Autotune helps to capture your performance tuning needs in a comprehensive way and runs experiments to provide recommendations that help achieve your sla goals. So how does it do it ? We recommend you check out the [autotune-demo](https://github.com/kruize/autotune-demo) repo for a quick start !
+Autotune helps to capture your performance tuning needs in a comprehensive way and runs experiments to provide recommendations that help achieve your slo goals. So how does it do it ? We recommend you check out the [autotune-demo](https://github.com/kruize/autotune-demo) repo for a quick start !
 
 ## Installation
 

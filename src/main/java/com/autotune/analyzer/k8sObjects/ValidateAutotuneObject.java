@@ -55,33 +55,33 @@ public class ValidateAutotuneObject
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.INVALID_MATCHLABEL_VALUE);
 		}
 
-		// Check if sla_class is supported
-		SlaInfo slaInfo = (SlaInfo) map.get(DAConstants.AutotuneObjectConstants.SLA);
-		if (!AutotuneSupportedTypes.SLA_CLASSES_SUPPORTED.contains(slaInfo.getSlaClass())) {
-			errorString.append(DAErrorConstants.AutotuneObjectErrors.SLA_CLASS_NOT_SUPPORTED);
+		// Check if slo_class is supported
+		SloInfo sloInfo = (SloInfo) map.get(DAConstants.AutotuneObjectConstants.SLO);
+		if (!AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloInfo.getSloClass())) {
+			errorString.append(DAErrorConstants.AutotuneObjectErrors.SLO_CLASS_NOT_SUPPORTED);
 		}
 
 		// Check if direction is supported
-		if (!AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(slaInfo.getDirection())) {
+		if (!AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection())) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
 		}
 
 		// Check if hpo_algo_impl is supported
-		if (!AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(slaInfo.getHpoAlgoImpl())) {
+		if (!AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(sloInfo.getHpoAlgoImpl())) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.HPO_ALGO_NOT_SUPPORTED);
 		}
 
 		// Check if objective_function exists
-		if (slaInfo.getObjectiveFunction() == null || slaInfo.getObjectiveFunction().isEmpty()) {
+		if (sloInfo.getObjectiveFunction() == null || sloInfo.getObjectiveFunction().isEmpty()) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
 		}
 
 		// Check if function_variables is empty
-		if (slaInfo.getFunctionVariables().isEmpty()) {
+		if (sloInfo.getFunctionVariables().isEmpty()) {
 			errorString.append(DAErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
 
-		for (FunctionVariable functionVariable : slaInfo.getFunctionVariables()) {
+		for (FunctionVariable functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");
@@ -91,7 +91,7 @@ public class ValidateAutotuneObject
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
 
 			// Check if function_variable is part of objective_function
-			String objectiveFunction = slaInfo.getObjectiveFunction();
+			String objectiveFunction = sloInfo.getObjectiveFunction();
 			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName()))
 				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
 		}

@@ -128,14 +128,14 @@ function basic_api_tests() {
 		searchspace_test
 		;;&
 	    list_autotune_tunables|all)
-		# test listAutotuneTunables API for specific sla_class and layer
-		sla_class="response_time"
+		# test listAutotuneTunables API for specific slo_class and layer
+		slo_class="response_time"
 		layer="container"
-		list_autotune_tunables_test "${sla_class}" "${layer}"
+		list_autotune_tunables_test "${slo_class}" "${layer}"
 
-		# test listAutotuneTunables API for specific sla_class
-		sla_class="response_time"
-		list_autotune_tunables_test "${sla_class}" 
+		# test listAutotuneTunables API for specific slo_class
+		slo_class="response_time"
+		list_autotune_tunables_test "${slo_class}" 
 	
 		# test listAutotuneTunables API for all layers
 		list_autotune_tunables_test

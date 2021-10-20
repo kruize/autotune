@@ -27,7 +27,7 @@ function usage() {
 	echo ""
 	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
 	echo ""
-	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=sla_class -r /home/benchmarks --resultsdir=/home/results"
+	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=slo_class -r /home/benchmarks --resultsdir=/home/results"
 	echo "Example: $0 -c minikube --testmodule=hpo -r /home/benchmarks --resultsdir=/home/results"
 	echo ""
 	test_module_usage

@@ -17,13 +17,13 @@ Get the list of applications monitored by autotune.
     {
       "application_name": "app1",
       “objective_function”: “transaction_response_time”,
-      "sla_class": "response_time",
+      "slo_class": "response_time",
       “direction”: “minimize”
     },
     {
       "application_name": "app2",
       “objective_function”: “performedChecks_total”,
-      "sla_class": "throughput",
+      "slo_class": "throughput",
       “direction”: “maximize”
     }
 ]
@@ -45,7 +45,7 @@ Returns the list of applications monitored by autotune along with layers detecte
     {
         "application_name": "app1",
         “objective_function”: “transaction_response_time”,
-        "sla_class": "response_time",
+        "slo_class": "response_time",
         “direction”: “minimize”
         "layers": [
           {
@@ -63,7 +63,7 @@ Returns the list of applications monitored by autotune along with layers detecte
     {
         "application_name": "app2",
         “objective_function”: “performedChecks_total”,
-        "sla_class": "throughput",
+        "slo_class": "throughput",
         “direction”: “maximize”
         "layers": [
           {
@@ -98,7 +98,7 @@ Returns the list of applications monitored by autotune along with their tunables
   {
       "application_name": "app1",
       “objective_function”: “transaction_response_time”,
-      "sla_class": "response_time",
+      "slo_class": "response_time",
       “direction”: “minimize”,
       "function_variables": [
         {
@@ -148,16 +148,16 @@ Returns the list of applications monitored by autotune along with their tunables
 ]
 ```
 ##  listAutotuneTunables
-Get the tunables supported by autotune for the SLA.
+Get the tunables supported by autotune for the SLO.
 
 **Request**
 `GET /listAutotuneTunables` gives all tunables for all layers in the cluster
 
-`GET /listAutotuneTunables?sla_class=<SLA_CLASS>` gives all tunables for the SLA class
+`GET /listAutotuneTunables?slo_class=<SLO_CLASS>` gives all tunables for the SLO class
 
-`GET /listAutotuneTunables?sla_class=<SLA_CLASS>&layer_name=<LAYER>` gives tunables for the SLA class and the layer
+`GET /listAutotuneTunables?slo_class=<SLO_CLASS>&layer_name=<LAYER>` gives tunables for the SLO class and the layer
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?sla_class=<SLA_CLASS>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?slo_class=<SLO_CLASS>`
 
 **Response**
 ```
@@ -225,7 +225,7 @@ Generates the search space used for the analysis.
   {
     "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
     "objective_function": "transaction_response_time",
-    "sla_class": "response_time",
+    "slo_class": "response_time",
     "direction": "minimize"
     "tunables": [
       {

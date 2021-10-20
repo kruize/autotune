@@ -40,7 +40,7 @@ import java.util.Map;
  *        datasource:
  *        - name: 'prometheus'
  *          query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
- *      sla_class:
+ *      slo_class:
  *      - response_time
  *      - throughput
  */

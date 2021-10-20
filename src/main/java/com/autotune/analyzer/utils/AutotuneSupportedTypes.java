@@ -36,7 +36,7 @@ public class AutotuneSupportedTypes
 	public static final Set<String> PRESENCE_SUPPORTED =
 			new HashSet<>(Arrays.asList("always", "", null));
 
-	public static final Set<String> SLA_CLASSES_SUPPORTED =
+	public static final Set<String> SLO_CLASSES_SUPPORTED =
 			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage"));
 
 	public static final Set<String> VALUE_TYPES_SUPPORTED =

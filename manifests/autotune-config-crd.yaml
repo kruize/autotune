@@ -123,8 +123,8 @@ spec:
                         required:
                         - name
                         - query
-                sla_class:
-                  description: 'sla class of the tunable'
+                slo_class:
+                  description: 'slo class of the tunable'
                   type: array
                   items:
                     type: string
@@ -133,7 +133,7 @@ spec:
               - upper_bound
               - lower_bound
               - value_type
-              - sla_class
+              - slo_class
         required:
         - layer_name
         - layer_level
