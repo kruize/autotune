@@ -64,7 +64,7 @@ public class SearchSpace extends HttpServlet
      *                 "upper_bound": 3
      *             }
      *         ],
-     *         "sla_class": "throughput",
+     *         "slo_class": "throughput",
      *         "direction": "maximize"
      *     }
      * ]

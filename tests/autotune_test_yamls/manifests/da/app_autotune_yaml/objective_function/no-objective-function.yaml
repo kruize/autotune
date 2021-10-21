@@ -4,8 +4,8 @@ metadata:
  name: "no-objective-function"
  namespace: "default"
 spec:
-  sla:
-    sla_class: "response_time"
+  slo:
+    slo_class: "response_time"
     direction: "minimize"
     function_variables:
     - name: "transaction_response_time"

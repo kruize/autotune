@@ -345,22 +345,22 @@ public class AutotuneDeployment
 
 			JSONObject specJson = autotuneObjectJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SPEC);
 
-			JSONObject slaJson = null;
-			String sla_class = null;
+			JSONObject sloJson = null;
+			String slo_class = null;
 			String direction = null;
 			String objectiveFunction = null;
 			String hpoAlgoImpl = null;
 			if (specJson != null) {
-				slaJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
-				sla_class = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-				direction = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
-				hpoAlgoImpl = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
-				objectiveFunction = slaJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+				sloJson = specJson.optJSONObject(DAConstants.AutotuneObjectConstants.SLO);
+				slo_class = sloJson.optString(DAConstants.AutotuneObjectConstants.SLO_CLASS);
+				direction = sloJson.optString(DAConstants.AutotuneObjectConstants.DIRECTION);
+				hpoAlgoImpl = sloJson.optString(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
+				objectiveFunction = sloJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
 			JSONArray functionVariables = new JSONArray();
-			if (slaJson != null) {
-				functionVariables = slaJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
+			if (sloJson != null) {
+				functionVariables = sloJson.getJSONArray(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 			}
 			ArrayList<Metric> metricArrayList = new ArrayList<>();
 
@@ -384,7 +384,7 @@ public class AutotuneDeployment
 				hpoAlgoImpl = AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL;
 			}
 
-			sloInfo = new SloInfo(sla_class,
+			sloInfo = new SloInfo(slo_class,
 					objectiveFunction,
 					direction,
 					hpoAlgoImpl,
@@ -419,7 +419,7 @@ public class AutotuneDeployment
 					"name='" + name + '\'' +
 					", namespace='" + namespace + '\'' +
 					", mode='" + mode + '\'' +
-					", slaInfo=" + sloInfo +
+					", sloInfo=" + sloInfo +
 					", selectorInfo=" + selectorInfo +
 					'}';
 			String experimentId = Utils.generateID(idString);
@@ -545,16 +545,17 @@ public class AutotuneDeployment
 				// Read in step from the tunable, set it to '1' if not specified.
 				double step = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.STEP, 1);
 
-				ArrayList<String> slaClassList = new ArrayList<>();
-				JSONArray slaClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
-				for (Object slaClassObject : slaClassJson) {
-					String slaClass = (String) slaClassObject;
-					slaClassList.add(slaClass);
+				ArrayList<String> sloClassList = new ArrayList<>();
+
+				JSONArray sloClassJson = tunableJson.getJSONArray(DAConstants.AutotuneConfigConstants.SLO_CLASS);
+				for (Object sloClassObject : sloClassJson) {
+					String sloClass = (String) sloClassObject;
+					sloClassList.add(sloClass);
 				}
 
 				Tunable tunable;
 				try {
-					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, slaClassList);
+					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, sloClassList);
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
 					e.printStackTrace();

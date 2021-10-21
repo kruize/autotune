@@ -21,12 +21,12 @@ import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 import java.util.ArrayList;
 
 /**
- * Holds information about the sla key in the autotune object yaml
+ * Holds information about the slo key in the autotune object yaml
  *
  * Example:
  * slo:
  *     objective_function: "transaction_response_time"
- *     sla_class: "response_time"
+ *     slo_class: "response_time"
  *     direction: "minimize"
  *     hpo_algo_impl: "optuna_tpe"
  *     function_variables:

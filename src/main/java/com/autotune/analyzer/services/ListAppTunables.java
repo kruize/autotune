@@ -51,7 +51,7 @@ public class ListAppTunables extends HttpServlet
 	 * {
 	 *       "experiment_name": "app1_autotune",
 	 *       “objective_function”: “transaction_response_time”,
-	 *       "sla_class": "response_time",
+	 *       "slo_class": "response_time",
 	 *       “direction”: “minimize”
 	 *       "layers": [
 	 *         {

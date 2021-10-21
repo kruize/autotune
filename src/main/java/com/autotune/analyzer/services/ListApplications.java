@@ -40,13 +40,13 @@ public class ListApplications extends HttpServlet
      *     {
      *       "experiment_name": "app1_autotune",
      *       “objective_function”: “transaction_response_time”,
-     *       "sla_class": "response_time",
+     *       "slo_class": "response_time",
      *       “direction”: “minimize”
      *     },
      *     {
      *       "experiment_name": "app2_autotune",
      *       “objective_function”: “performedChecks_total”,
-     *       "sla_class": "throughput",
+     *       "slo_class": "throughput",
      *       “direction”: “maximize”
      *     }
      * ]

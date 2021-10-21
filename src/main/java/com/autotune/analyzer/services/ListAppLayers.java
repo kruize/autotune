@@ -44,7 +44,7 @@ public class ListAppLayers extends HttpServlet {
      * "pod_name": "app1_xyz",
      * "deployment_name": "app1_deployment",
      * “objective_function”: “transaction_response_time”,
-     * "sla_class": "response_time",
+     * "slo_class": "response_time",
      * “direction”: “minimize”
      * "layers": [
      * {
@@ -64,7 +64,7 @@ public class ListAppLayers extends HttpServlet {
      * "pod_name": "app1_xyz",
      * "deployment_name": "app1_deployment",
      * “objective_function”: “performedChecks_total”,
-     * "sla_class": "throughput",
+     * "slo_class": "throughput",
      * “direction”: “maximize”
      * "layers": [
      * {

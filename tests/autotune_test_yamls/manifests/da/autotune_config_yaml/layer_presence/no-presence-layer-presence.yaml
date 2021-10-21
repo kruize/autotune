@@ -20,6 +20,6 @@ tunables:
   value_type: integer
   upper_bound: 50
   lower_bound: 9
-  sla_class:
+  slo_class:
   - response_time
   - throughput

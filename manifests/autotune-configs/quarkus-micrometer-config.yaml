@@ -16,7 +16,7 @@ tunables:
   upper_bound: '10'
   lower_bound: '1'
   step: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
 - name: quarkus.thread-pool.queue-size
@@ -25,7 +25,7 @@ tunables:
   upper_bound: '100'
   lower_bound: '1'
   step: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
   - resource_usage
@@ -35,7 +35,7 @@ tunables:
   upper_bound: '50'
   lower_bound: '1'
   step: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
   - resource_usage

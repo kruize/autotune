@@ -1,9 +1,9 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "no-sla-value"
+ name: "no-slo-value"
 spec:
-  sla:
+  slo:
   mode: "show"
   selector:
     matchLabel: "app.kubernetes.io/name"

@@ -31,9 +31,9 @@ tunables:
   upper_bound: '10'
   lower_bound: '1'
   step: 1
-  # sla_class is an array of one or more of "response_time, throughput or resource_usage"
-  # It represents which sla's are affected by this tunable
-  sla_class:
+  # slo_class is an array of one or more of "response_time, throughput or resource_usage"
+  # It represents which slo's are affected by this tunable
+  slo_class:
   - response_time
   - throughput
 - name: quarkus.hibernate-orm.jdbc.statement-fetch-size
@@ -42,7 +42,7 @@ tunables:
   upper_bound: '50'
   lower_bound: '1'
   step: 1
-  sla_class:
+  slo_class:
   - response_time
   - throughput
   - resource_usage

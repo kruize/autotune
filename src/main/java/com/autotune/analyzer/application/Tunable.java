@@ -27,7 +27,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
- * and the list of sla_class (throughput, response_time, right_size, etc.) for which it is applicable.
+ * and the list of slo_class (throughput, response_time, right_size, etc.) for which it is applicable.
  *
  * Example:
  * - name: <Tunable>
@@ -201,7 +201,7 @@ public class Tunable
 				", lowerBound='" + lowerBoundValue + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
-				", slaClassList=" + sloClassList +
+				", sloClassList=" + sloClassList +
 				'}';
 	}
 }

@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "AutotuneConfig"
 metadata:
-  name: "blank-tunable-sla-class"
+  name: "blank-tunable-slo-class"
 layer_name: container
 layer_level: 0
 details: generic container tunables
@@ -17,7 +17,7 @@ tunables:
       datasource:
         - name: 'prometheus'
           query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
-    sla_class:
+    slo_class:
       - ' '
       - ' '
       - ' '
@@ -30,7 +30,7 @@ tunables:
       datasource:
         - name: 'prometheus'
           query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
-    sla_class:
+    slo_class:
       - response_time
       - throughput
       - resource_usage

@@ -1,11 +1,11 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "invalid-direction-for-slaclass"
+ name: "invalid-direction-for-sloclass"
 spec:
-  sla:
+  slo:
     objective_function: "transaction_response_time"
-    sla_class: "response_time"
+    slo_class: "response_time"
     direction: "maximize"
     function_variables:
     - name: "transaction_response_time"
