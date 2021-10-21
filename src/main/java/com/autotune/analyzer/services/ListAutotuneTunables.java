@@ -95,8 +95,8 @@ public class ListAutotuneTunables extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String sloClass = req.getParameter(DAConstants.AutotuneObjectConstants.SLO_CLASS);
-		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		//No layer parameter was passed in the request
 		if (layerName == null) {

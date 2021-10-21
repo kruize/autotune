@@ -351,16 +351,16 @@ public class AutotuneDeployment
 			String objectiveFunction = null;
 			String hpoAlgoImpl = null;
 			if (specJson != null) {
-				sloJson = specJson.optJSONObject(DAConstants.AutotuneObjectConstants.SLO);
-				slo_class = sloJson.optString(DAConstants.AutotuneObjectConstants.SLO_CLASS);
-				direction = sloJson.optString(DAConstants.AutotuneObjectConstants.DIRECTION);
-				hpoAlgoImpl = sloJson.optString(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
-				objectiveFunction = sloJson.optString(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+				sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
+				slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+				direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
+				hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
+				objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
 			JSONArray functionVariables = new JSONArray();
 			if (sloJson != null) {
-				functionVariables = sloJson.getJSONArray(DAConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
+				functionVariables = sloJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 			}
 			ArrayList<Metric> metricArrayList = new ArrayList<>();
 
@@ -547,7 +547,7 @@ public class AutotuneDeployment
 
 				ArrayList<String> sloClassList = new ArrayList<>();
 
-				JSONArray sloClassJson = tunableJson.getJSONArray(DAConstants.AutotuneConfigConstants.SLO_CLASS);
+				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
 				for (Object sloClassObject : sloClassJson) {
 					String sloClass = (String) sloClassObject;
 					sloClassList.add(sloClass);
