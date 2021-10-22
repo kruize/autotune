@@ -1,8 +1,8 @@
 package com.autotune.analyzer.experiments;
 
 public class TrialInfo {
-    String trialId;
-    int trialNum;
+    private final String trialId;
+    private final int trialNum;
 
     public TrialInfo(String trialId, int trialNum) {
         this.trialId = trialId;
@@ -13,15 +13,7 @@ public class TrialInfo {
         return trialId;
     }
 
-    public void setTrialId(String trialId) {
-        this.trialId = trialId;
-    }
-
     public int getTrialNum() {
         return trialNum;
-    }
-
-    public void setTrialNum(int trialNum) {
-        this.trialNum = trialNum;
     }
 }

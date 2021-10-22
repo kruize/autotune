@@ -35,7 +35,7 @@ public class ListAppLayers extends HttpServlet {
      * Request:
      * `GET /listAppLayers` returns the list of all applications monitored by autotune, and their layers.
      * <p>
-     * `GET /listAppLayers?application_name=<APP_NAME>` returns the layers for the application specified.
+     * `GET /listAppLayers?experiment_name=<EXP_NAME>` returns the layers detected for the pods specific to the given experiment.
      * <p>
      * Example JSON:
      * [

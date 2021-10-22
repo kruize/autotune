@@ -1,8 +1,8 @@
 package com.autotune.analyzer.experiments;
 
 public class DeploymentSettings {
-    DeploymentPolicy deploymentPolicy;
-    DeploymentTracking deploymentTracking;
+    private final DeploymentPolicy deploymentPolicy;
+    private final DeploymentTracking deploymentTracking;
 
     public DeploymentSettings(DeploymentPolicy deploymentPolicy, DeploymentTracking deploymentTracking) {
         this.deploymentPolicy = deploymentPolicy;
@@ -13,15 +13,7 @@ public class DeploymentSettings {
         return deploymentPolicy;
     }
 
-    public void setDeploymentPolicy(DeploymentPolicy deploymentPolicy) {
-        this.deploymentPolicy = deploymentPolicy;
-    }
-
     public DeploymentTracking getDeploymentTracking() {
         return deploymentTracking;
-    }
-
-    public void setDeploymentTracking(DeploymentTracking deploymentTracking) {
-        this.deploymentTracking = deploymentTracking;
     }
 }

@@ -5,17 +5,17 @@ import com.autotune.analyzer.k8sObjects.Metric;
 import java.util.ArrayList;
 
 public class Deployments {
-    String deploymentType;
-    String deploymentName;
-    String deploymentNameSpace;
-    String state;
-    String result;
-    String resultInfo;
-    String resultError;
-    ArrayList<Metric> metrics;
-    Resources requests;
-    Resources limits;
-    String jvmOptions;
+    private String deploymentType;
+    private final String deploymentName;
+    private final String deploymentNameSpace;
+    private String state;
+    private String result;
+    private String resultInfo;
+    private String resultError;
+    private ArrayList<Metric> metrics;
+    private Resources requests;
+    private Resources limits;
+    private String runtimeOptions;
 
     public Deployments(String deploymentType,
                        String deploymentName,
@@ -27,7 +27,7 @@ public class Deployments {
                        ArrayList<Metric> metrics,
                        Resources requests,
                        Resources limits,
-                       String jvmOptions) {
+                       String runtimeOptions) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;
@@ -38,31 +38,19 @@ public class Deployments {
         this.metrics = metrics;
         this.requests = requests;
         this.limits = limits;
-        this.jvmOptions = jvmOptions;
+        this.runtimeOptions = runtimeOptions;
     }
 
     public String getDeploymentType() {
         return deploymentType;
     }
 
-    public void setDeploymentType(String deploymentType) {
-        this.deploymentType = deploymentType;
-    }
-
     public String getDeploymentName() {
         return deploymentName;
     }
 
-    public void setDeploymentName(String deploymentName) {
-        this.deploymentName = deploymentName;
-    }
-
     public String getDeploymentNameSpace() {
         return deploymentNameSpace;
-    }
-
-    public void setDeploymentNameSpace(String deploymentNameSpace) {
-        this.deploymentNameSpace = deploymentNameSpace;
     }
 
     public String getState() {
@@ -121,11 +109,11 @@ public class Deployments {
         this.limits = limits;
     }
 
-    public String getJvmOptions() {
-        return jvmOptions;
+    public String getRuntimeOptions() {
+        return runtimeOptions;
     }
 
-    public void setJvmOptions(String jvmOptions) {
-        this.jvmOptions = jvmOptions;
+    public void setRuntimeOptions(String runtimeOptions) {
+        this.runtimeOptions = runtimeOptions;
     }
 }

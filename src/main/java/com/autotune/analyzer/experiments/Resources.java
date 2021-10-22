@@ -4,10 +4,10 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
 
 public class Resources {
-    Double cpuValue;
-    String cpuUnits;
-    Double memoryValue;
-    String memoryUnits;
+    private final Double cpuValue;
+    private final String cpuUnits;
+    private final Double memoryValue;
+    private final String memoryUnits;
 
     public Resources(String cpu, String memory) {
         /* Parse the value for the bounds from the strings passed in */

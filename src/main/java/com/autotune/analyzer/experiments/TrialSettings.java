@@ -1,8 +1,8 @@
 package com.autotune.analyzer.experiments;
 
 public class TrialSettings {
-    String trialRun;
-    String trialMeasurementTime;
+    private final String trialRun;
+    private final String trialMeasurementTime;
 
     public TrialSettings(String trialRun, String trialMeasurementTime) {
         this.trialRun = trialRun;
@@ -13,15 +13,7 @@ public class TrialSettings {
         return trialRun;
     }
 
-    public void setTrialRun(String trialRun) {
-        this.trialRun = trialRun;
-    }
-
     public String getTrialMeasurementTime() {
         return trialMeasurementTime;
-    }
-
-    public void setTrialMeasurementTime(String trialMeasurementTime) {
-        this.trialMeasurementTime = trialMeasurementTime;
     }
 }

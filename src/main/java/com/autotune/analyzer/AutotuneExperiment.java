@@ -2,24 +2,28 @@ package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.experiments.ExperimentTrial;
+import com.autotune.analyzer.k8sObjects.AutotuneObject;
 
 import java.util.ArrayList;
 
 public class AutotuneExperiment {
-    String experimentId;
-    String experimentName;
-    String experimentStatus;
-    ApplicationServiceStack applicationServiceStack;
+    private final String experimentId;
+    private final String experimentName;
+    private final AutotuneObject autotuneObject;
+    private String experimentStatus;
+    private ApplicationServiceStack applicationServiceStack;
     ArrayList<ExperimentTrial> experimentTrials;
-    Thread experimentThread;
+    private Thread experimentThread;
 
     public AutotuneExperiment(String experimentId,
                               String experimentName,
+                              AutotuneObject autotuneObject,
                               String experimentStatus,
                               ApplicationServiceStack applicationServiceStack,
                               ArrayList<ExperimentTrial> experimentTrials) {
         this.experimentId = experimentId;
         this.experimentName = experimentName;
+        this.autotuneObject = autotuneObject;
         this.experimentStatus = experimentStatus;
         this.applicationServiceStack = applicationServiceStack;
         this.experimentTrials = experimentTrials;
@@ -29,16 +33,12 @@ public class AutotuneExperiment {
         return experimentId;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
-    }
-
     public String getExperimentName() {
         return experimentName;
     }
 
-    public void setExperimentName(String experimentName) {
-        this.experimentName = experimentName;
+    public AutotuneObject getAutotuneObject() {
+        return autotuneObject;
     }
 
     public String getExperimentStatus() {
@@ -55,10 +55,6 @@ public class AutotuneExperiment {
 
     public ArrayList<ExperimentTrial> getExperimentTrials() {
         return experimentTrials;
-    }
-
-    public void setExperimentTrials(ArrayList<ExperimentTrial> experimentTrials) {
-        this.experimentTrials = experimentTrials;
     }
 
     public Thread getExperimentThread() {

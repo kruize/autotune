@@ -117,6 +117,10 @@ public class AnalyzerConstants
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
 
+		public static final String DOUBLE = "double";
+		public static final String LONG = "long";
+		public static final String INTEGER = "integer";
+
 		public static final Pattern BOUND_CHARS = Pattern.compile("[\\sa-zA-Z]");
 		public static final Pattern BOUND_DIGITS = Pattern.compile("[\\s0-9\\.]");
 		public static final String SLO_CLASS = "slo_class";

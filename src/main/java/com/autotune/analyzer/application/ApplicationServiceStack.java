@@ -47,8 +47,8 @@ import java.util.Map;
 public class ApplicationServiceStack
 {
 	private String applicationServiceName;
-	private String namespace;
-	private String deploymentName;
+	private final String namespace;
+	private final String deploymentName;
 	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 	private ApplicationSearchSpace applicationSearchSpace;
@@ -66,20 +66,24 @@ public class ApplicationServiceStack
 		return namespace;
 	}
 
+	/*
 	public void setNamespace(String namespace) throws InvalidValueException {
 		if (namespace != null)
 			this.namespace = namespace;
 		else
 			throw new InvalidValueException("Namespace cannot be null");
 	}
+	*/
 
 	public String getDeploymentName() {
 		return deploymentName;
 	}
 
+	/*
 	public void setDeploymentName(String deploymentName) {
 		this.deploymentName = deploymentName;
 	}
+	*/
 
 	public String getApplicationServiceName() {
 		return applicationServiceName;

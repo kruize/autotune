@@ -138,8 +138,8 @@ public class TrialHelpers {
              * experimentTrialJSON -> deployments -> config -> env
              */
             JSONObject envValues = new JSONObject();
-            envValues.put("JVM_OPTIONS", deployment.getJvmOptions());
-            envValues.put("JVM_ARGS", deployment.getJvmOptions());
+            envValues.put("JVM_OPTIONS", deployment.getRuntimeOptions());
+            envValues.put("JVM_ARGS", deployment.getRuntimeOptions());
 
             JSONObject env = new JSONObject();
             env.put("env", envValues);
@@ -224,7 +224,7 @@ public class TrialHelpers {
 
         ArrayList<String> trackers = new ArrayList<>();
         trackers.add("training");
-        trackers.add("production");
+        // trackers.add("production");
         DeploymentTracking deploymentTracking = new DeploymentTracking(trackers);
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
@@ -235,18 +235,36 @@ public class TrialHelpers {
         String cpu = null, memory = null;
 
         ArrayList<Deployments> deployments = new ArrayList<>();
+        // TODO: "runtimeOptions" needs to be interpreted at a runtime level
+        // TODO: That means that once we detect a certain layer, it will be associated with a runtime
+        // TODO: The runtime layer will know how to pass the options to container through kubernetes
+        // This will be the default for Java
+        // TODO: The -XX:MaxRAMPercentage will be based on actual observation of the size of the heap
+        StringBuilder runtimeOptions = new StringBuilder("-server -XX:+UseG1GC -XX:MaxRAMPercentage=70");
         for (String tracker : trackers ) {
+            System.out.println(trialConfigJson);
             JSONArray trialConfigArray = new JSONArray(trialConfigJson);
             for (Object trialConfigObject : trialConfigArray) {
                 JSONObject trialConfig = (JSONObject) trialConfigObject;
-                if ("cpuRequest".equals(trialConfig.getString("tunable_name"))) {
-                    cpu = valueOf(trialConfig.getDouble("tunable_value")) +
+                String tunableName = trialConfig.getString("tunable_name");
+                // TODO: We need layer wise handling of tunables so each layer knows how to interpret
+                // TODO: the values as well as the results obtained from the experiment manager.
+                // Handle the container tunables as they contribute to the requests.
+                if ("cpuRequest".equals(tunableName)) {
+                    cpu = trialConfig.getDouble("tunable_value") +
                             appSearchSpace.getApplicationTunablesMap().get("cpuRequest").getBoundUnits();
                     System.out.println("CPU Request: " + cpu);
-                } else if ("memoryRequest".equals(trialConfig.getString("tunable_name"))) {
-                    memory = valueOf(trialConfig.getDouble("tunable_value")) +
+                } else if ("memoryRequest".equals(tunableName)) {
+                    memory = trialConfig.getDouble("tunable_value") +
                             appSearchSpace.getApplicationTunablesMap().get("memoryRequest").getBoundUnits();
                     System.out.println("Mem Request: " + memory);
+                // quarkus tunables will have quarkus in the name
+                } else if (tunableName.contains("quarkus")) {
+                    runtimeOptions.append(" -D").append(tunableName).append("=")
+                            .append(trialConfig.getLong("tunable_value"));
+                } else {
+                    runtimeOptions.append(" -XX:").append(tunableName).append("=")
+                            .append(trialConfig.getLong("tunable_value"));
                 }
             }
             if (cpu != null && memory != null) {
@@ -288,7 +306,7 @@ public class TrialHelpers {
                     metrics,
                     requests,
                     limits,
-                    "-XX:MaxInlineLevel=23"
+                    runtimeOptions.toString()
             );
             deployments.add(deployment);
         }

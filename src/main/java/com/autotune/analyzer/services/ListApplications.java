@@ -59,17 +59,17 @@ public class ListApplications extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String podName = req.getParameter(AnalyzerConstants.ServiceConstants.POD_NAME);
+        String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
-            if (podName == null) {
+            if (experimentName == null) {
                 for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
                     addApplicationToResponse(outputJsonArray, autotuneObject, application);
                 }
             } else {
-                addApplicationToResponse(outputJsonArray, autotuneObject, podName);
+                addApplicationToResponse(outputJsonArray, autotuneObject, experimentName);
             }
         }
 
@@ -77,7 +77,7 @@ public class ListApplications extends HttpServlet
             if (AutotuneDeployment.autotuneObjectMap.isEmpty())
                 outputJsonArray.put("Error: No objects of kind Autotune found!");
             else
-                outputJsonArray.put("Error: Application " + podName + " not found!");
+                outputJsonArray.put("Error: Application " + experimentName + " not found!");
         }
 
         resp.getWriter().println(outputJsonArray.toString(4));

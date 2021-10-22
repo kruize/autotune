@@ -16,7 +16,7 @@ public class RunExperiment implements Runnable
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RunExperiment.class);
 	private static final int MAX_NUMBER_OF_TRIALS = 1;
-	AutotuneExperiment autotuneExperiment;
+	private final AutotuneExperiment autotuneExperiment;
 
 	public RunExperiment(AutotuneExperiment autotuneExperiment) {
 		this.autotuneExperiment = autotuneExperiment;

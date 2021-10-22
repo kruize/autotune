@@ -16,14 +16,13 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
-import com.autotune.analyzer.exceptions.InvalidValueException;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
@@ -45,12 +44,12 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
  */
 public class Tunable
 {
-	private String name;
-	private double step;
-	private String valueType;
-	private Double upperBoundValue;
-	private Double lowerBoundValue;
-	private String boundUnits;
+	private final String name;
+	private final double step;
+	private final String valueType;
+	private final Double upperBoundValue;
+	private final Double lowerBoundValue;
+	private final String boundUnits;
 	private String description;
 	private Map<String, String> queries;
 
@@ -61,26 +60,10 @@ public class Tunable
 
 	public ArrayList<String> sloClassList;
 
-	public Tunable(String name,
-				   double step,
-				   String upperBound,
-				   String lowerBound,
-				   String valueType,
-				   Map<String, String> queries,
-				   ArrayList<String> sloClassList) throws InvalidBoundsException {
-		this.queries = queries;
-		this.name = Objects.requireNonNull(name, "name cannot be null");
-		this.valueType = Objects.requireNonNull(valueType, "Value type cannot be null");
-		this.sloClassList = Objects.requireNonNull(sloClassList, "tunable should contain supported slo_classes");
-		this.step = Objects.requireNonNull(step, "step cannot be null");
-
-		/* Parse the value for the bounds from the strings passed in */
-		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
-		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
-
-		/* Parse the bound units from the strings passed in and make sure they are the same */
-		String upperBoundUnits = BOUND_DIGITS.matcher(upperBound).replaceAll("");
-		String lowerBoundUnits = BOUND_DIGITS.matcher(lowerBound).replaceAll("");
+	private void validateBounds(Double upperBoundValue,
+								Double lowerBoundValue,
+								String upperBoundUnits,
+								String lowerBoundUnits) throws InvalidBoundsException {
 		if (upperBoundUnits != null &&
 				!upperBoundUnits.trim().isEmpty() &&
 				lowerBoundUnits != null &&
@@ -100,10 +83,10 @@ public class Tunable
 		 * step has to be lesser than or equal to the difference between the two bounds.
 		 */
 		if (upperBoundValue < 0 ||
-			lowerBoundValue < 0 ||
-			lowerBoundValue >= upperBoundValue ||
-			step > (upperBoundValue - lowerBoundValue)
-		   ) {
+				lowerBoundValue < 0 ||
+				lowerBoundValue >= upperBoundValue ||
+				step > (upperBoundValue - lowerBoundValue)
+		) {
 			System.out.println("ERROR: Tunable: " + name +
 					" has invalid bounds; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
@@ -111,9 +94,40 @@ public class Tunable
 					" lbu: " + lowerBoundUnits);
 			throw new InvalidBoundsException();
 		}
+	}
+
+	public Tunable(String name,
+				   double step,
+				   String upperBound,
+				   String lowerBound,
+				   String valueType,
+				   Map<String, String> queries,
+				   ArrayList<String> sloClassList) throws InvalidBoundsException {
+		this.queries = queries;
+		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
+		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
+		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
+		this.step = Objects.requireNonNull(step, ZERO_STEP);
+
+		/* Parse the value for the bounds from the strings passed in */
+		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
+		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
+
+		/* Parse the bound units from the strings passed in and make sure they are the same */
+		String upperBoundUnits = BOUND_DIGITS.matcher(upperBound).replaceAll("");
+		String lowerBoundUnits = BOUND_DIGITS.matcher(lowerBound).replaceAll("");
+
+		validateBounds(upperBoundValue, lowerBoundValue, upperBoundUnits, lowerBoundUnits);
+
 		this.lowerBoundValue = lowerBoundValue;
 		this.upperBoundValue = upperBoundValue;
 		this.boundUnits = upperBoundUnits;
+
+		System.out.println("Adding Tunable: " + name +
+				" has bounds; ubv: " + this.upperBoundValue +
+				" lbv: " + this.lowerBoundValue +
+				" ubu: " + upperBoundUnits +
+				" lbu: " + lowerBoundUnits);
 	}
 
 	public Tunable(Tunable copy) {
@@ -132,11 +146,14 @@ public class Tunable
 		return name;
 	}
 
-	public void setName(String name) throws InvalidValueException {
-		if (name != null)
-			this.name = name;
-		else
-			throw new InvalidValueException("Tunable name cannot be null");
+	private String getBound(Double boundVal, String boundUnits, String valueType) {
+		if (valueType.equalsIgnoreCase(INTEGER)) {
+			return boundVal.intValue() + boundUnits;
+		}
+		if (valueType.equalsIgnoreCase(LONG)) {
+			return boundVal.longValue() + boundUnits;
+		}
+		return boundVal + boundUnits;
 	}
 
 	public Double getUpperBoundValue() {
@@ -144,7 +161,7 @@ public class Tunable
 	}
 
 	public String getUpperBound() {
-		return upperBoundValue + boundUnits;
+		return getBound(upperBoundValue, boundUnits, valueType);
 	}
 
 	public Double getLowerBoundValue() {
@@ -152,7 +169,7 @@ public class Tunable
 	}
 
 	public String getLowerBound() {
-		return lowerBoundValue + boundUnits;
+		return getBound(lowerBoundValue, boundUnits, valueType);
 	}
 
 	public String getBoundUnits() {
@@ -185,10 +202,6 @@ public class Tunable
 
 	public double getStep() {
 		return step;
-	}
-
-	public void setStep(double step) {
-		this.step = step;
 	}
 
 	@Override

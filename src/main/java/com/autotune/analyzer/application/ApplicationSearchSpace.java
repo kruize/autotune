@@ -5,13 +5,13 @@ import java.util.Map;
 
 public class ApplicationSearchSpace
 {
-	String experimentName;
-	String experimentId;
-	String applicationName;
-	String objectiveFunction;
-	String hpoAlgoImpl;
-	String direction;
-	String valueType;
+	private final String experimentName;
+	private final String experimentId;
+	private final String applicationName;
+	private final String objectiveFunction;
+	private final String hpoAlgoImpl;
+	private final String direction;
+	private final String valueType;
 
 	Map<String, Tunable> applicationTunablesMap;
 
@@ -53,10 +53,6 @@ public class ApplicationSearchSpace
 
 	public String getDirection() {
 		return direction;
-	}
-
-	public void setDirection(String direction) {
-		this.direction = direction;
 	}
 
 	public Map<String, Tunable> getApplicationTunablesMap() {

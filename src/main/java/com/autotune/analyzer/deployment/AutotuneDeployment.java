@@ -466,8 +466,8 @@ public class AutotuneDeployment
 			// Get the autotunequeryvariables for the current kubernetes environment
 			ArrayList<Map<String, String>> arrayList = null;
 			try {
-				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
-				arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+				Map<String, Object> envVariablesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
+				arrayList = (ArrayList<Map<String, String>>) envVariablesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
 			} catch (Exception e) {
 				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
 				return null;
@@ -546,7 +546,6 @@ public class AutotuneDeployment
 				double step = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.STEP, 1);
 
 				ArrayList<String> sloClassList = new ArrayList<>();
-
 				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
 				for (Object sloClassObject : sloClassJson) {
 					String sloClass = (String) sloClassObject;
@@ -667,16 +666,19 @@ public class AutotuneDeployment
 	 * @param autotuneConfig          AutotuneConfig object for the layer
 	 */
 	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
-		//Check if layer already exists
+		// Check if layer already exists
 		if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(autotuneConfig.getName())) {
 			return;
 		}
+
 
 		ArrayList<Tunable> tunables = new ArrayList<>();
 		for (Tunable tunable : autotuneConfig.getTunables()) {
 			try {
 				Map<String, String> queries = new HashMap<>(tunable.getQueries());
 
+				/*
+		         * EM will update the queries with the right values for the pods in question.
 				//Replace the query variables for all queries in the tunable and add the updated tunable copy to the tunables arraylist
 				for (String datasource : queries.keySet()) {
 					String query = queries.get(datasource);
@@ -684,6 +686,7 @@ public class AutotuneDeployment
 							applicationServiceStack.getNamespace(), query, null);
 					queries.replace(datasource, query);
 				}
+				*/
 				Tunable tunableCopy = new Tunable(tunable.getName(),
 						tunable.getStep(),
 						tunable.getUpperBound(),
@@ -692,10 +695,10 @@ public class AutotuneDeployment
 						queries,
 						tunable.getSloClassList());
 				tunables.add(tunableCopy);
-			} catch (IOException | InvalidBoundsException ignored) { }
+			} catch (InvalidBoundsException ignored) { }
 		}
 
-		//Create autotuneconfigcopy with updated tunables arraylist
+		// Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
 			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getLayerId(),

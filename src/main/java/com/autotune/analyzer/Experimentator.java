@@ -50,6 +50,7 @@ public class Experimentator implements Runnable {
 			ArrayList<ExperimentTrial> experimentTrials = new ArrayList<>();
 			autotuneExperiment = new AutotuneExperiment(autotuneObject.getExperimentId(),
 					autotuneObject.getExperimentName(),
+					autotuneObject,
 					"Pending Provisioning",
 					applicationServiceStack,
 					experimentTrials);
