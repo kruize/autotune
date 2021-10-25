@@ -21,6 +21,7 @@ public class ListTrialStatus extends HttpServlet {
         JSONObject API_RESPONSE = new JSONObject();
         String runId = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.RUN_ID);
         String completeStatus = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.COMPLETE_STATUS);
+        String summary = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.SUMMARY);
 
         if (null == runId) {
             API_RESPONSE.put(EMConstants.InputJsonKeys.ListTrialStatusKeys.ERROR, "Run ID cannot be null");
@@ -45,6 +46,10 @@ public class ListTrialStatus extends HttpServlet {
             API_RESPONSE.put(EMConstants.EMJSONKeys.INFO, trialConfigJson.getJSONObject(EMConstants.EMJSONKeys.INFO));
             API_RESPONSE.put(EMConstants.EMJSONKeys.SETTINGS,trialConfigJson.getJSONObject(EMConstants.EMJSONKeys.SETTINGS));
             API_RESPONSE.put(EMConstants.EMJSONKeys.DEPLOYMENTS, trialConfigJson.getJSONObject(EMConstants.EMJSONKeys.DEPLOYMENTS));
+        }
+
+        if(summary.equalsIgnoreCase("true")) {
+
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);

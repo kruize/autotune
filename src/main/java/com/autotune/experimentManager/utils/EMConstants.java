@@ -61,6 +61,7 @@ public class EMConstants {
             public static String STATUS = "status";
             public static String ERROR = "error";
             public static String COMPLETE_STATUS = "completeStatus";
+            public static String SUMMARY = "summary";
         }
 
         public static class DeploymentKeys {
