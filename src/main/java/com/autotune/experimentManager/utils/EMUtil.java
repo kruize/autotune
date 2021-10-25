@@ -157,4 +157,12 @@ public class EMUtil {
         return true;
     }
 
+    public static int getSecondsFromTimeunit(int timeQuantity, TimeUnit unit) {
+        switch(unit) {
+            case SECONDS: return timeQuantity;
+            case MINUTES: return convertMinsToSeconds(timeQuantity);
+            case HOURS: return convertHoursToSeconds(timeQuantity);
+        }
+        return EMConstants.StandardDefaults.NEGATIVE_INT_DEFAULT;
+    }
 }

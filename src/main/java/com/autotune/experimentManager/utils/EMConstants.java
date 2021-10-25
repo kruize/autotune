@@ -60,6 +60,7 @@ public class EMConstants {
             public static String RUN_ID ="runId";
             public static String STATUS = "status";
             public static String ERROR = "error";
+            public static String COMPLETE_STATUS = "completeStatus";
         }
 
         public static class DeploymentKeys {
@@ -135,15 +136,66 @@ public class EMConstants {
         public static String INFO = "info";
         public static String TRIAL_ID = "trial_id";
         public static String TRIAL_NUM = "trial_num";
+        public static String TRIAL_RESULT_URL = "trial_result_url";
 
-        //Deployment section
+        // Settings section
         public static String TRACKERS = "trackers";
+        public static String SETTINGS = "settings";
         public static String DEPLOYMENT_TRACKING = "deployment_tracking";
+        public static String DEPLOYMENT_POLICY = "deployment_policy";
+        public static String DEPLOYMENT_SETTINGS = "deployment_settings";
+        public static String TYPE = "type";
+        public static String DEPLOYMENT_INFO = "deployment_info";
+        public static String DEPLOYMENT_NAME = "deployment_name";
+        public static String TARGET_ENV = "target_env";
+        public static String TRIAL_SETTINGS = "trial_settings";
+        public static String TOTAL_DURATION = "total_duration";
+        public static String WARMUP_CYCLES = "warmup_cycles";
+        public static String WARMUP_DURATION = "warmup_duration";
+        public static String MEASUREMENT_CYCLES = "measurement_cycles";
+        public static String MEASUREMENT_DURATION = "measurement_duration";
+
+        // Metadata Section
+        public static String EXPERIMENT_ID = "experiment_id";
+        public static String APPLICATION_NAME = "application_name";
+
+        // Deployments Section
+        public static String DEPLOYMENTS = "deployments";
+        public static String NAMESPACE = "namespace";
+        public static String METRICS = "metrics";
+        public static String CONFIG = "config";
+        public static String NAME = "name";
+        public static String QUERY = "query";
+        public static String DATASOURCE = "datasource";
+        public static String METRICS_RESULTS = "metrics_results";
+        public static String WARMUP_RESULTS = "warmup_results";
+        public static String MEASUREMENT_RESULTS = "measurement_results";
+        public static String RESULTS = "results";
+        public static String SCORE = "score";
+        public static String ERROR = "error";
+        public static String MEAN = "mean";
+        public static String MODE = "mode";
+        public static String SPIKE = "spike";
+        public static String P_95_0 = "95.0";
+        public static String P_99_0 = "99.0";
+        public static String P_99_9 = "99.9";
+        public static String P_99_99 = "99.99";
+        public static String P_99_999 = "99.999";
+        public static String P_99_9999 = "99.9999";
+        public static String P_100_0 = "100.0";
+        public static String CYCLES = "cycles";
+        public static String DURATION = "duration";
     }
 
     public static class EMJSONValueDefaults {
-        public static String TRIAL_ID_DEFAULT ="";
+        public static String TRIAL_ID_DEFAULT = "";
         public static int TRIAL_NUM_DEFAULT = -1;
+        public static String TRIAL_RESULT_URL_DEFAULT = "";
         public static String DEFAULT_NULL = null;
+        public static String DEPLOYMENT_TYPE_DEFAULT = "rollingUpdate";
+    }
+
+    public static class StandardDefaults {
+        public static int NEGATIVE_INT_DEFAULT = -1;
     }
 }

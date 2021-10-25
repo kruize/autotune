@@ -4,6 +4,7 @@ import com.autotune.experimentManager.data.input.abscls.DataEditor;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.EMDataObjectIsInEditingException;
 import com.autotune.experimentManager.exceptions.EMDataObjectIsNotFilledException;
+import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,6 +24,22 @@ public class EMConfigDeploymentTracker extends DataEditor<EMConfigDeploymentTrac
 
     public EMConfigDeploymentTracker() {
         trackerList = new ArrayList<String>();
+    }
+
+    public EMConfigDeploymentTracker(JSONObject jsonObject) throws IncompatibleInputJSONException {
+        if (!jsonObject.has(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING)) {
+            throw new IncompatibleInputJSONException();
+        }
+        JSONObject trackingObject = jsonObject.getJSONObject(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING);
+        if(!trackingObject.has(EMConstants.EMJSONKeys.TRACKERS)) {
+            throw new IncompatibleInputJSONException();
+        }
+        JSONArray trackersList = trackingObject.getJSONArray(EMConstants.EMJSONKeys.TRACKERS);
+        for (Object o: trackersList.toList()) {
+            if (null != o) {
+                this.trackerList.add(o.toString());
+            }
+        }
     }
 
     @Override

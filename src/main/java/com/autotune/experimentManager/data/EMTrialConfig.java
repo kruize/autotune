@@ -1,114 +1,106 @@
 package com.autotune.experimentManager.data;
 
+import com.autotune.experimentManager.core.EMExecutorService;
+import com.autotune.experimentManager.data.input.EMConfigObject;
+import com.autotune.experimentManager.exceptions.EMInvalidTimeDuarationException;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class EMTrialConfig {
-    private final JSONObject inputJSON;
-    private final JSONObject configInfo;
-    private final JSONObject configSettings;
-    private final JSONObject trialSettings;
-    private final JSONArray configDeployments;
-    private final int measurementCycles;
-    private final int measurementDuration;
-    private final EMUtil.TimeUnits measurementDurationUnit;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMTrialConfig.class);
 
-    public int getMeasurementCycles() {
-        return measurementCycles;
+    private EMConfigObject emConfigObject;
+    private int totalCycles;
+    private boolean isWarmup;
+    private int currentCycle;
+
+    public int getCurrentCycle() {
+        return currentCycle;
     }
 
-    private JSONObject parseConfigInfo() throws IncompatibleInputJSONException {
-        if (inputJSON.has("info"))
-            return inputJSON.getJSONObject("info");
-        throw new IncompatibleInputJSONException();
+    public void setCurrentCycle(int currentCycle) {
+        this.currentCycle = currentCycle;
     }
 
-    private JSONObject parseConfigSettings() throws IncompatibleInputJSONException {
-        if (inputJSON.has("settings"))
-            return inputJSON.getJSONObject("settings");
-        throw new IncompatibleInputJSONException();
+    public EMConfigObject getEmConfigObject() {
+        return emConfigObject;
     }
 
-    private JSONArray parseConfigDeployments() throws IncompatibleInputJSONException {
-        if (inputJSON.has("deployments"))
-            return inputJSON.getJSONArray("deployments");
-        throw new IncompatibleInputJSONException();
+    public void setEmConfigObject(EMConfigObject emConfigObject) {
+        this.emConfigObject = emConfigObject;
     }
+
+    public int getTotalCycles() {
+        return totalCycles;
+    }
+
+    public void setTotalCycles(int totalCycles) {
+        this.totalCycles = totalCycles;
+    }
+
+    public boolean isWarmup() {
+        return isWarmup;
+    }
+
+    public void setWarmup(boolean warmup) {
+        isWarmup = warmup;
+    }
+
+    public int getCycleDuration() throws EMInvalidTimeDuarationException {
+        int duration = EMConstants.StandardDefaults.NEGATIVE_INT_DEFAULT;
+        if (isWarmup() && emConfigObject.getSettings().getTrialSettings().getWarmupCycles() > 0) {
+            int warmupDuration = EMUtil.extractTimeQuantity(emConfigObject.getSettings().getTrialSettings().getWarmupDuration());
+            TimeUnit warmupTimeunit = EMUtil.extractTimeUnit(emConfigObject.getSettings().getTrialSettings().getWarmupDuration());
+            if(null == warmupTimeunit) {
+                LOGGER.error("Invalid Timeunits given in the input json");
+            } else {
+                duration = EMUtil.getSecondsFromTimeunit(warmupDuration, warmupTimeunit);
+            }
+        } else {
+            int measurementDuration = EMUtil.extractTimeQuantity(emConfigObject.getSettings().getTrialSettings().getMeasurementDuration());
+            TimeUnit measurementTimeunit = EMUtil.extractTimeUnit(emConfigObject.getSettings().getTrialSettings().getMeasurementDuration());
+            if(null == measurementTimeunit) {
+                LOGGER.error("Invalid Timeunits given in the input json");
+            } else {
+                duration = EMUtil.getSecondsFromTimeunit(measurementDuration, measurementTimeunit);
+            }
+        }
+        return duration;
+    }
+
+
 
     public EMTrialConfig(JSONObject inputJSON) throws IncompatibleInputJSONException {
-        this.inputJSON = inputJSON;
-        this.configInfo = parseConfigInfo();
-        this.configSettings = parseConfigSettings();
-        this.configDeployments = parseConfigDeployments();
-        this.trialSettings = parseTrialSettings();
-        this.measurementCycles = parseMeasurementCycles();
-        this.measurementDuration = parseMeasurementDuration();
-        this.measurementDurationUnit = parseMeasurementDurationUnit();
-    }
-
-    private EMUtil.TimeUnits parseMeasurementDurationUnit() {
-        return EMUtil.TimeUnits.SECONDS;
-    }
-
-    private int parseMeasurementDuration() {
-        return 0;
-    }
-
-    private JSONObject parseTrialSettings() throws IncompatibleInputJSONException {
-        if (!configSettings.has("trial_settings")) {
+        this.emConfigObject = new EMConfigObject(inputJSON);
+        if (emConfigObject.getSettings().getTrialSettings().getWarmupCycles() <= 0 && emConfigObject.getSettings().getTrialSettings().getMeasurementCycles() <= 0) {
             throw new IncompatibleInputJSONException();
         }
-        return configSettings.getJSONObject("trial_settings");
-    }
-
-    private int parseMeasurementCycles() throws IncompatibleInputJSONException {
-        if (!trialSettings.has("measurement_cycles")) {
-            throw new IncompatibleInputJSONException();
+        if(emConfigObject.getSettings().getTrialSettings().getWarmupCycles() <= 0) {
+            this.totalCycles = emConfigObject.getSettings().getTrialSettings().getMeasurementCycles();
         }
-        return Integer.parseInt(trialSettings.getString("measurement_cycles"));
-    }
-
-    public JSONObject getConfigSettings() {
-        return this.configSettings;
-    }
-
-    public JSONArray getConfigDeployments() {
-        return this.configDeployments;
+        this.totalCycles = emConfigObject.getSettings().getTrialSettings().getWarmupCycles() + emConfigObject.getSettings().getTrialSettings().getMeasurementCycles();
     }
 
     public JSONArray getTrainingConfigs() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getJSONArray("config");
-            }
-        }
-        return null;
+        return emConfigObject.getDeployments().getTrainingDeployment().getRawConfigs();
     }
 
     public String getDeploymentName() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getString("deployment_name");
-            }
-        }
-        return null;
+        return emConfigObject.getDeployments().getTrainingDeployment().getDeploymentName();
     }
 
     public String getDeploymentStrategy() {
-        return configSettings.getJSONObject("deployment_settings").getJSONObject("deployment_policy").getString("type");
+        return emConfigObject.getSettings().getDeploymentSettings().getDeploymentPolicy().getType();
     }
 
     public String getDeploymentNamespace() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getString("namespace");
-            }
-        }
         return "default";
     }
 }
