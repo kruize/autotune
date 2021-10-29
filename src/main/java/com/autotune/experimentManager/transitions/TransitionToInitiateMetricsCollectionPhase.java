@@ -18,21 +18,11 @@ public class TransitionToInitiateMetricsCollectionPhase extends AbstractBaseTran
     @Override
     public void transit(String runId) {
         LOGGER.info("Executing transition - {} on thread - {} For RunId - {}", this.getClass().toString(), Thread.currentThread().getId(), runId);
-        EMCycleMetrics metrics = new EMCycleMetrics();
-        metrics.setMean("1");
-        metrics.setMode("1");
-        metrics.setError("none");
-        metrics.setP95("1");
-        metrics.setP99("1");
-        metrics.setScore("1");
-        metrics.setP99point9("1");
-        metrics.setP99point99("1");
-        metrics.setP99point999("1");
-        metrics.setP99point9999("1");
-        metrics.setP100("1");
+
         ExperimentTrialData etd = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
         for (EMConfigDeploymentMetrics mt : etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics()) {
-            mt.getResults().getWarmupResults().getCollectiveCyclesMetrics().getCycleMetricsList().add(metrics);
+            // Place holder code to add metrics
+            mt.getResults().getWarmupResults().getCollectiveCyclesMetrics().getCycleMetricsList();
         }
         try {
             Thread.sleep(20000);

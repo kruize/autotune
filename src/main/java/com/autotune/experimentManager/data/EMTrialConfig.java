@@ -2,6 +2,8 @@ package com.autotune.experimentManager.data;
 
 import com.autotune.experimentManager.core.EMExecutorService;
 import com.autotune.experimentManager.data.input.EMConfigObject;
+import com.autotune.experimentManager.exceptions.EMDataObjectIsInEditingException;
+import com.autotune.experimentManager.exceptions.EMDataObjectIsNotFilledException;
 import com.autotune.experimentManager.exceptions.EMInvalidTimeDuarationException;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
@@ -102,5 +104,9 @@ public class EMTrialConfig {
 
     public String getDeploymentNamespace() {
         return "default";
+    }
+
+    public JSONObject getInputJSON() throws EMDataObjectIsInEditingException, EMDataObjectIsNotFilledException {
+        return emConfigObject.toJSON();
     }
 }

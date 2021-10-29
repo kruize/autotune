@@ -131,6 +131,7 @@ public class EMConstants {
 		public static String P_100_0 = "100p";
 		public static String CYCLES = "cycles";
 		public static String DURATION = "duration";
+		public static String PERCENTILE_INFO = "percentile_info";
 	}
 
 
@@ -144,6 +145,7 @@ public class EMConstants {
 			public static String STATUS = "status";
 			public static String ERROR = "error";
 			public static String SUMMARY = "summary";
+			public static String COMPLETE_STATUS = "completeStatus";
 		}
 
 		public static class DeploymentKeys {
@@ -234,7 +236,6 @@ public class EMConstants {
 
         public static String HOUR_SINGLE_LC = "h";
         public static String HOUR_SINGLE_UC= HOUR_SINGLE_LC.toUpperCase();
-
     }
 
     public static class TimeConv {
@@ -256,5 +257,9 @@ public class EMConstants {
     public static class StandardDefaults {
 	    private StandardDefaults() { }
         public static int NEGATIVE_INT_DEFAULT = -1;
+	    public static String CPU_QUERY_NAME = "cpuRequest";
+	    public static String MEM_QUERY_NAME = "memRequest";
+	    public static String THROUGHPUT = "throughput";
+	    public static String RESPONSE_TIME = "response_time";
     }
 }
