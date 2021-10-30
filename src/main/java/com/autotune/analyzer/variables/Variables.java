@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.variables;
 
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,10 +61,10 @@ public class Variables
      */
     private static String replaceGlobalVariablesForQuery(String application, String namespace, String query) {
         if (application != null) {
-            query = query.replace(DAConstants.POD_VARIABLE, application);
+            query = query.replace(AnalyzerConstants.POD_VARIABLE, application);
         }
         if (namespace != null) {
-            query = query.replace(DAConstants.NAMESPACE_VARIABLE, namespace);
+            query = query.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
         }
         return query;
     }

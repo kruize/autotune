@@ -18,7 +18,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -85,7 +85,7 @@ public class ListAppLayers extends HttpServlet {
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -116,12 +116,12 @@ public class ListAppLayers extends HttpServlet {
             return;
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
+        jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
         JSONArray layersArray = new JSONArray();
         for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
@@ -129,13 +129,13 @@ public class ListAppLayers extends HttpServlet {
             AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
                     .get(application).getStackLayers().get(autotuneConfigName);
             JSONObject layerJson = new JSONObject();
-            layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-            layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
-            layerJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
-            layerJson.put(DAConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
+            layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
+            layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
+            layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+            layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
             layersArray.put(layerJson);
         }
-        jsonObject.put(DAConstants.ServiceConstants.LAYERS, layersArray);
+        jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
         outputJsonArray.put(jsonObject);
     }
 }
