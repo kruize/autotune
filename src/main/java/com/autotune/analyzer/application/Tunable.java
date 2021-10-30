@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
  * and the list of slo_class (throughput, response_time, right_size, etc.) for which it is applicable.
@@ -45,8 +47,9 @@ public class Tunable
 	private String name;
 	private double step;
 	private String valueType;
-	private double upperBound;
-	private double lowerBound;
+	private double upperBoundValue;
+	private double lowerBoundValue;
+	private String boundUnits;
 	private String description;
 	private Map<String, String> queries;
 
@@ -57,10 +60,44 @@ public class Tunable
 
 	public ArrayList<String> sloClassList;
 
+	private void validateBounds(Double upperBoundValue,
+								Double lowerBoundValue,
+								String upperBoundUnits,
+								String lowerBoundUnits) throws InvalidBoundsException {
+		if (upperBoundUnits != null &&
+			!upperBoundUnits.trim().isEmpty() &&
+			lowerBoundUnits != null &&
+			!lowerBoundUnits.trim().isEmpty() &&
+			!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
+			throw new InvalidBoundsException("Tunable: " + name +
+					" has invalid bound units; ubv: " + upperBoundValue +
+					" lbv: " + lowerBoundValue +
+					" ubu: " + upperBoundUnits +
+					" lbu: " + lowerBoundUnits);
+		}
+
+		/*
+		 * Bounds cannot be negative.
+		 * upperBound has to be greater than lowerBound.
+		 * step has to be lesser than or equal to the difference between the two bounds.
+		 */
+		if (upperBoundValue < 0 ||
+			lowerBoundValue < 0 ||
+			lowerBoundValue >= upperBoundValue ||
+			step > (upperBoundValue - lowerBoundValue)
+		) {
+			throw new InvalidBoundsException("ERROR: Tunable: " + name +
+					" has invalid bounds; ubv: " + upperBoundValue +
+					" lbv: " + lowerBoundValue +
+					" ubu: " + upperBoundUnits +
+					" lbu: " + lowerBoundUnits);
+		}
+	}
+
 	public Tunable(String name,
 				   double step,
-				   double upperBound,
-				   double lowerBound,
+				   String upperBound,
+				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> sloClassList) throws InvalidBoundsException {
@@ -70,27 +107,27 @@ public class Tunable
 		this.sloClassList = Objects.requireNonNull(sloClassList, "tunable should contain supported slo_classes");
 		this.step = Objects.requireNonNull(step, "step cannot be null");
 
-		/*
-		 * Bounds cannot be negative.
-		 * upperBound has to be greater than lowerBound.
-		 * step has to be lesser than or equal to the difference between the two bounds.
-		 */
-		if (upperBound < 0 ||
-			lowerBound < 0 ||
-			lowerBound >= upperBound ||
-			step > (upperBound - lowerBound)
-		   ) {
-			throw new InvalidBoundsException();
-		}
-		this.lowerBound = lowerBound;
-		this.upperBound = upperBound;
+		/* Parse the value for the bounds from the strings passed in */
+		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
+		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
+
+		/* Parse the bound units from the strings passed in and make sure they are the same */
+		String upperBoundUnits = BOUND_DIGITS.matcher(upperBound).replaceAll("");
+		String lowerBoundUnits = BOUND_DIGITS.matcher(lowerBound).replaceAll("");
+
+		validateBounds(upperBoundValue, lowerBoundValue, upperBoundUnits, lowerBoundUnits);
+
+		this.lowerBoundValue = lowerBoundValue;
+		this.upperBoundValue = upperBoundValue;
+		this.boundUnits = upperBoundUnits;
 	}
 
 	public Tunable(Tunable copy) {
 		this.name = copy.name;
 		this.step = copy.step;
-		this.upperBound = copy.upperBound;
-		this.lowerBound = copy.lowerBound;
+		this.upperBoundValue = copy.upperBoundValue;
+		this.lowerBoundValue = copy.lowerBoundValue;
+		this.boundUnits = copy.boundUnits;
 		this.valueType = copy.valueType;
 		this.description = copy.description;
 		this.queries = copy.queries;
@@ -108,20 +145,30 @@ public class Tunable
 			throw new InvalidValueException("Tunable name cannot be null");
 	}
 
-	public double getUpperBound() {
-		return upperBound;
+	private String getBound(Double boundVal, String boundUnits, String valueType) {
+		if (valueType.equalsIgnoreCase(INTEGER)) {
+			return boundVal.intValue() + boundUnits;
+		}
+		if (valueType.equalsIgnoreCase(LONG)) {
+			return boundVal.longValue() + boundUnits;
+		}
+		return boundVal + boundUnits;
 	}
 
-	public void setUpperBound(double upperBound) {
-		this.upperBound = upperBound;
+	public Double getUpperBoundValue() {
+		return upperBoundValue;
 	}
 
-	public double getLowerBound() {
-		return lowerBound;
+	public String getUpperBound() {
+		return getBound(upperBoundValue, boundUnits, valueType);
 	}
 
-	public void setLowerBound(double lowerBound) {
-			this.lowerBound = lowerBound;
+	public Double getLowerBoundValue() {
+		return lowerBoundValue;
+	}
+
+	public String getLowerBound() {
+		return getBound(lowerBoundValue, boundUnits, valueType);
 	}
 
 	public String getValueType() {
@@ -173,8 +220,9 @@ public class Tunable
 				"name='" + name + '\'' +
 				", step=" + step +
 				", valueType='" + valueType + '\'' +
-				", upperBound='" + upperBound + '\'' +
-				", lowerBound='" + lowerBound + '\'' +
+				", upperBound='" + upperBoundValue + '\'' +
+				", lowerBound='" + lowerBoundValue + '\'' +
+				", boundUnits='" + boundUnits + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
 				", sloClassList=" + sloClassList +

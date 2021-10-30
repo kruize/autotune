@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 /**
@@ -25,29 +25,29 @@ public class KubernetesContexts
 {
 	private static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.GROUP)
-			.withScope(DAConstants.SCOPE)
-			.withPlural(DAConstants.AUTOTUNE_PLURALS)
-			.withVersion(DAConstants.API_VERSION)
-			.withName(DAConstants.AUTOTUNE_RESOURCE_NAME)
+			.withGroup(AnalyzerConstants.GROUP)
+			.withScope(AnalyzerConstants.SCOPE)
+			.withPlural(AnalyzerConstants.AUTOTUNE_PLURALS)
+			.withVersion(AnalyzerConstants.API_VERSION)
+			.withName(AnalyzerConstants.AUTOTUNE_RESOURCE_NAME)
 			.build();
 
 	private static final CustomResourceDefinitionContext autotuneConfigContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.GROUP)
-			.withScope(DAConstants.SCOPE)
-			.withPlural(DAConstants.AUTOTUNE_CONFIG_PLURALS)
-			.withVersion(DAConstants.API_VERSION)
-			.withName(DAConstants.AUTOTUNE_CONFIG_RESOURCE_NAME)
+			.withGroup(AnalyzerConstants.GROUP)
+			.withScope(AnalyzerConstants.SCOPE)
+			.withPlural(AnalyzerConstants.AUTOTUNE_CONFIG_PLURALS)
+			.withVersion(AnalyzerConstants.API_VERSION)
+			.withName(AnalyzerConstants.AUTOTUNE_CONFIG_RESOURCE_NAME)
 			.build();
 
 	private static final CustomResourceDefinitionContext autotuneVariableContext = new CustomResourceDefinitionContext
 			.Builder()
-			.withGroup(DAConstants.GROUP)
-			.withScope(DAConstants.SCOPE)
-			.withPlural(DAConstants.AUTOTUNE_VARIABLE_PLURALS)
-			.withVersion(DAConstants.API_VERSION)
-			.withName(DAConstants.AUTOTUNE_VARIABLE_RESOURCE_NAME)
+			.withGroup(AnalyzerConstants.GROUP)
+			.withScope(AnalyzerConstants.SCOPE)
+			.withPlural(AnalyzerConstants.AUTOTUNE_VARIABLE_PLURALS)
+			.withVersion(AnalyzerConstants.API_VERSION)
+			.withName(AnalyzerConstants.AUTOTUNE_VARIABLE_RESOURCE_NAME)
 			.build();
 
 	public static CustomResourceDefinitionContext getAutotuneCrdContext() {

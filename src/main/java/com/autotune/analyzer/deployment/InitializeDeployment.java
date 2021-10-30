@@ -19,7 +19,7 @@ import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -30,14 +30,14 @@ import org.apache.logging.log4j.core.config.Configurator;
 public class InitializeDeployment
 {
 	public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
-		String k8S_type = System.getenv(DAConstants.K8S_TYPE);
-		String auth_type = System.getenv(DAConstants.AUTH_TYPE);
-		String auth_token = System.getenv(DAConstants.AUTH_TOKEN);
-		String cluster_type = System.getenv(DAConstants.CLUSTER_TYPE);
-		String logging_level = System.getenv(DAConstants.LOGGING_LEVEL);
-		String monitoring_agent = System.getenv(DAConstants.MONITORING_AGENT);
-		String monitoring_agent_service = System.getenv(DAConstants.MONITORING_SERVICE);
-		String monitoring_agent_endpoint = System.getenv(DAConstants.MONITORING_AGENT_ENDPOINT);
+		String k8S_type = System.getenv(AnalyzerConstants.K8S_TYPE);
+		String auth_type = System.getenv(AnalyzerConstants.AUTH_TYPE);
+		String auth_token = System.getenv(AnalyzerConstants.AUTH_TOKEN);
+		String cluster_type = System.getenv(AnalyzerConstants.CLUSTER_TYPE);
+		String logging_level = System.getenv(AnalyzerConstants.LOGGING_LEVEL);
+		String monitoring_agent = System.getenv(AnalyzerConstants.MONITORING_AGENT);
+		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
+		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
 
 		DeploymentInfo.setClusterType(cluster_type);
 		DeploymentInfo.setKubernetesType(k8S_type);

@@ -18,7 +18,7 @@ package com.autotune.analyzer.utils;
 /**
  * Contains strings describing the errors encountered
  */
-public class DAErrorConstants
+public class AnalyzerErrorConstants
 {
 
 	public static class AutotuneConfigErrors {

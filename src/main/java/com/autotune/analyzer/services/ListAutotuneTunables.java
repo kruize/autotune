@@ -18,7 +18,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -95,8 +95,8 @@ public class ListAutotuneTunables extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType("application/json");
 
-		String sloClass = req.getParameter(DAConstants.AutotuneObjectConstants.SLO_CLASS);
-		String layerName = req.getParameter(DAConstants.AutotuneConfigConstants.LAYER_NAME);
+		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 
 		//No layer parameter was passed in the request
 		if (layerName == null) {
@@ -124,21 +124,21 @@ public class ListAutotuneTunables extends HttpServlet
 			return;
 		}
 
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
+		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
+		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
+		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 
 		JSONArray tunablesArray = new JSONArray();
 		for (Tunable tunable : autotuneConfig.getTunables()) {
 			//If no sloClass parameter was passed in the request, or if the argument matches the sloClassList for the Tunable
 			if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
 				JSONObject tunablesJson = new JSONObject();
-				tunablesJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
-				tunablesJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-				tunablesJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-				tunablesJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-				tunablesJson.put(DAConstants.AutotuneConfigConstants.STEP, tunable.getStep());
+				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 
 				tunablesArray.put(tunablesJson);
 			}
@@ -147,7 +147,7 @@ public class ListAutotuneTunables extends HttpServlet
 			outputJsonArray.put("Error: Tunables matching slo_class " + sloClass + " not found");
 			return;
 		}
-		autotuneConfigJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 		outputJsonArray.put(autotuneConfigJson);
 	}
 }

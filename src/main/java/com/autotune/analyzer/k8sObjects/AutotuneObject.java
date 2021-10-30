@@ -16,7 +16,7 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.HashMap;
 
@@ -42,11 +42,11 @@ public final class AutotuneObject
 			SelectorInfo selectorInfo) throws InvalidValueException {
 		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
-		map.put(DAConstants.AutotuneObjectConstants.NAME, name);
-		map.put(DAConstants.AutotuneObjectConstants.NAMESPACE, namespace);
-		map.put(DAConstants.AutotuneObjectConstants.MODE, mode);
-		map.put(DAConstants.AutotuneObjectConstants.SLO, sloInfo);
-		map.put(DAConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, name);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
 		StringBuilder error = ValidateAutotuneObject.validate(map);
 		if (error.toString().isEmpty()) {

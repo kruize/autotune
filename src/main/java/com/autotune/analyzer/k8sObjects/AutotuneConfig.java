@@ -17,7 +17,7 @@ package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,15 +62,15 @@ public final class AutotuneConfig
 			ArrayList<Tunable> tunables) throws InvalidValueException {
 		this.id = id;
 		HashMap<String, Object> map = new HashMap<>();
-		map.put(DAConstants.AutotuneConfigConstants.NAME, name);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
-		map.put(DAConstants.AutotuneConfigConstants.PRESENCE, presence);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY, layerPresenceQuery);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY, layerPresenceKey);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL, layerPresenceLabel);
-		map.put(DAConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
-		map.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunables);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.NAME, name);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.PRESENCE, presence);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY, layerPresenceQuery);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY, layerPresenceKey);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL, layerPresenceLabel);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunables);
 
 		StringBuilder error = ValidateAutotuneConfig.validate(map);
 		if (error.toString().isEmpty()) {

@@ -20,7 +20,7 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -71,7 +71,7 @@ public class SearchSpace extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -102,26 +102,26 @@ public class SearchSpace extends HttpServlet
         ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap
                 .get(autotuneObjectKey).get(application);
 
-        applicationJson.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        applicationJson.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+        applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
 
         JSONArray tunablesJsonArray = new JSONArray();
         for (String autotuneConfigName : applicationServiceStack.getStackLayers().keySet()) {
             AutotuneConfig autotuneConfig = applicationServiceStack.getStackLayers().get(autotuneConfigName);
             for (Tunable tunable : autotuneConfig.getTunables()) {
                 JSONObject tunableJson = new JSONObject();
-                tunableJson.put(DAConstants.AutotuneConfigConstants.NAME, tunable.getName());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-                tunableJson.put(DAConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 
                 tunablesJsonArray.put(tunableJson);
             }
         }
 
-        applicationJson.put(DAConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
+        applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
         outputJsonArray.put(applicationJson);
     }
 }

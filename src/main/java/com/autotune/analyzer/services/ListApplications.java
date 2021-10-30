@@ -17,7 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.utils.DAConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -58,7 +58,7 @@ public class ListApplications extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType("application/json");
 
-        String applicationName = req.getParameter(DAConstants.ServiceConstants.APPLICATION_NAME);
+        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
@@ -88,11 +88,11 @@ public class ListApplications extends HttpServlet
             return;
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(DAConstants.ServiceConstants.APPLICATION_NAME, application);
-        jsonObject.put(DAConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        jsonObject.put(DAConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
+        jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
 
         outputJsonArray.put(jsonObject);
     }
