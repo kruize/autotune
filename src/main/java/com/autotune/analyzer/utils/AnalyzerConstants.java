@@ -131,6 +131,13 @@ public class AnalyzerConstants
 		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
 		public static final String ID = "id";
 		public static final String STEP = "step";
+
+		public static final String LAYER_GENERIC = "generic";
+		public static final String LAYER_CONTAINER = "container";
+		public static final String LAYER_HOTSPOT = "hotspot";
+		public static final String LAYER_QUARKUS = "quarkus";
+		public static final String LAYER_OPENJ9 = "openj9";
+		public static final String LAYER_NODEJS = "nodejs";
 	}
 
 	/**

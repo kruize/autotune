@@ -32,6 +32,7 @@ public class Autotune
 	private static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
+
 	public static void main(String[] args) {
 		ServletContextHandler context = null;
 

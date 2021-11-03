@@ -169,7 +169,8 @@ public class SearchSpaceHelpers {
                             lowerBound,
                             tValueType,
                             queriesMap,
-                            slaClassList);
+                            slaClassList,
+                            "generic");
                     tunables.add(applicationTunable);
                 } catch (InvalidBoundsException e) {
                     e.printStackTrace();

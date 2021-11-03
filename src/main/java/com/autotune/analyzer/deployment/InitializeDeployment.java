@@ -58,6 +58,8 @@ public class InitializeDeployment
 		}
 		DeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
 
+		DeploymentInfo.setLayerTable();
+
 		/* Update logging level from the env */
 		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(DeploymentInfo.getLoggingLevel()));
 
