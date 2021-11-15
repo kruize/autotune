@@ -34,10 +34,12 @@ AUTOTUNE_CONFIGS="manifests/autotune-configs"
 AUTOTUNE_QUERY_VARIABLES="manifests/autotune-query-variables"
 
 AUTOTUNE_PORT="8080"
-AUTOTUNE_DOCKER_REPO="kruize/autotune"
+AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
+OPTUNA_DOCKER_REPO="kruize/autotune_optuna"
 #Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
+OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
@@ -86,7 +88,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:i:k:n:p:d:stu:-: gopts
+while getopts ac:d:i:k:n:o:p:stu:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -112,6 +114,9 @@ do
 		cluster_type="${OPTARG}"
 		check_cluster_type
 		;;
+	d)
+		AUTOTUNE_CONFIGMAPS="${OPTARG}"
+		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
 		;;
@@ -121,8 +126,8 @@ do
 	n)
 		autotune_ns="${OPTARG}"
 		;;
-	d)
-		AUTOTUNE_CONFIGMAPS="${OPTARG}"
+	o)
+		OPTUNA_DOCKER_IMAGE="${OPTARG}"		
 		;;
 	s)
 		setup=1
