@@ -63,6 +63,7 @@ function minikube_deploy() {
 
 	# Replace autotune docker image in deployment yaml
 	sed -e "s|{{ AUTOTUNE_IMAGE }}|${AUTOTUNE_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE} > ${AUTOTUNE_DEPLOY_MANIFEST}
+	sed -i "s|{{ OPTUNA_IMAGE }}|${OPTUNA_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST}
 
 	${kubectl_cmd} apply -f ${AUTOTUNE_DEPLOY_MANIFEST}
 	sleep 2
