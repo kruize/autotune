@@ -492,15 +492,18 @@ public class AutotuneDeployment
 					'}';
 
 			String id = Utils.generateID(idString);
+
+			LayerPresenceInfo layerPresenceInfo = new LayerPresenceInfo(presence,
+					layerPresenceQuery,
+					layerPresenceKey,
+					layerPresenceLabel,
+					layerPresenceLabelValue);
+
 			return new AutotuneConfig(id, name,
 					layerName,
 					level,
 					details,
-					presence,
-					layerPresenceQuery,
-					layerPresenceKey,
-					layerPresenceLabel,
-					layerPresenceLabelValue,
+					layerPresenceInfo,
 					tunableArrayList);
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
 			e.printStackTrace();
@@ -616,11 +619,7 @@ public class AutotuneDeployment
 					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
-					autotuneConfig.getPresence(),
-					autotuneConfig.getLayerPresenceQuery(),
-					autotuneConfig.getLayerPresenceKey(),
-					autotuneConfig.getLayerPresenceLabel(),
-					autotuneConfig.getLayerPresenceLabelValue(),
+					autotuneConfig.getLayerPresenceInfo(),
 					tunables);
 		} catch (InvalidValueException ignored) { }
 
