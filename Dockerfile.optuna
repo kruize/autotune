@@ -40,7 +40,7 @@ RUN microdnf install -y python3 \
 USER 1001
 
 # Install optuna to the default user
-RUN python3 -m pip install --user optuna requests scikit-optimize
+RUN python3 -m pip install --user optuna requests scikit-optimize jsonschema
 
 LABEL name="Kruize Autotune Optuna" \
       vendor="Red Hat" \
