@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
+# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ do
 		AUTOTUNE_CONFIGMAPS="${OPTARG}"
 		;;
 	i)
-		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
+		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
 		;;
 	k)
 		kurl="${OPTARG}"
@@ -127,7 +127,7 @@ do
 		autotune_ns="${OPTARG}"
 		;;
 	o)
-		OPTUNA_DOCKER_IMAGE="${OPTARG}"		
+		OPTUNA_DOCKER_IMAGE="${OPTARG}"
 		;;
 	s)
 		setup=1
