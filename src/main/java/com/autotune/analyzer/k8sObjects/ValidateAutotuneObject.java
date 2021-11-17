@@ -26,6 +26,8 @@ import java.util.HashMap;
  */
 public class ValidateAutotuneObject
 {
+	private ValidateAutotuneObject() { }
+
 	/**
 	 * Check if the AutotuneObject is valid
 	 * @param map

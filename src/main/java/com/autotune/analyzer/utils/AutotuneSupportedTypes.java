@@ -24,6 +24,8 @@ import java.util.Set;
  */
 public class AutotuneSupportedTypes
 {
+	private AutotuneSupportedTypes() { }
+
 	public static final Set<String> DIRECTIONS_SUPPORTED =
 			new HashSet<>(Arrays.asList("minimize", "maximize"));
 

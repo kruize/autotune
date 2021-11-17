@@ -23,6 +23,8 @@ import java.security.MessageDigest;
  */
 public class Utils
 {
+	private Utils() { }
+
 	public static String generateID(Object object) {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");

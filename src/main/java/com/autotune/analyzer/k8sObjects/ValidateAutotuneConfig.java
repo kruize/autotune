@@ -28,6 +28,8 @@ import java.util.HashMap;
  */
 public class ValidateAutotuneConfig
 {
+	private ValidateAutotuneConfig() { }
+
 	/**
 	 * Check if the AutotuneConfig is valid
 	 * @param map

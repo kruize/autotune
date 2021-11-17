@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DeploymentInfo
 {
+	private DeploymentInfo() { }
+
 	private static String clusterType;
 	private static String kubernetesType;
 	private static String authType;
