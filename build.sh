@@ -16,19 +16,23 @@
 #
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
-
-DOCKERFILE="Dockerfile"
-AUTOTUNE_DOCKER_REPO="kruize/autotune"
+AUTOTUNE_DOCKERFILE="Dockerfile.autotune"
+OPTUNA_DOCKERFILE="Dockerfile.optuna"
+AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
+OPTUNA_DOCKER_REPO="kruize/autotune_optuna"
 # Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
+OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
 DEV_MODE=0
+BUILD_PARAMS="--pull --no-cache"
 
 function usage() {
-	echo "Usage: $0 [-d] [-v version_string] [-t docker_image_name]"
+	echo "Usage: $0 [-d] [-v version_string] [-i autotune_docker_image] [-o optuna_docker_image]"
 	echo " -d: build in dev friendly mode"
+	echo " -i: build with specific autotune operator docker image name"
+	echo " -o: build with specific optuna docker image name"
 	echo " -v: build as specific autotune version"
-	echo " -t: build with specific docker image name"
 	exit -1
 }
 
@@ -52,7 +56,8 @@ function cleanup() {
 }
 
 function set_tags() {
-	DOCKER_REPO=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
+	AUTOTUNE_REPO=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
+	OPTUNA_REPO=$(echo ${OPTUNA_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
 	DOCKER_TAG=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $2 }')
 	if [ -z "${DOCKER_TAG}" ]; then
 		DOCKER_TAG="latest"
@@ -60,14 +65,17 @@ function set_tags() {
 }
 
 # Iterate through the commandline options
-while getopts dt:v: gopts
+while getopts di:o:v: gopts
 do
 	case ${gopts} in
 	d)
 		DEV_MODE=1
 		;;
-	t)
+	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
+		;;
+	o)
+		OPTUNA_DOCKER_IMAGE="${OPTARG}"
 		;;
 	v)
 		AUTOTUNE_VERSION="${OPTARG}"
@@ -82,9 +90,12 @@ set_tags
 # Build the docker image with the given version string
 if [ ${DEV_MODE} -eq 0 ]; then
 	cleanup
-	docker build --pull --no-cache --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${DOCKERFILE} .
 else
-	docker build --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${DOCKERFILE} .
+	unset BUILD_PARAMS
 fi
+echo ${BUILD_PARAMS}
+docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
 check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
-docker images | grep -e "TAG" -e "${DOCKER_REPO}" | grep "${DOCKER_TAG}"
+docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${OPTUNA_DOCKER_IMAGE} -f ${OPTUNA_DOCKERFILE} .
+check_err "Docker build of ${OPTUNA_DOCKER_IMAGE} failed."
+docker images | grep -e "TAG" -e "${AUTOTUNE_REPO}" -e "${OPTUNA_REPO}" | grep "${DOCKER_TAG}"
