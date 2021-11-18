@@ -34,7 +34,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/hpo/hpo_api_tests.sh
 
 # Iterate through the commandline options
-while getopts i:r:-: gopts
+while getopts i:o:r:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -61,6 +61,9 @@ do
 		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
+		;;
+	o)
+		OPTUNA_DOCKER_IMAGE="${OPTARG}"
 		;;
 	r)
 		APP_REPO="${OPTARG}"		
@@ -170,7 +173,6 @@ elif [ ! -z "${testsuite}" ]; then
 	fi
 elif [[ -z "${testcase}" && -z "${testsuite}" && -z "${testmodule}" ]]; then
 	functional_test
-echo "6 ********************* testsuite = ${testsuite}"
 fi
 
 echo ""
