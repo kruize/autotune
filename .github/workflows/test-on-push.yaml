@@ -35,7 +35,7 @@ jobs:
       - name: Build autotune
         run: |
           echo Build autotune
-          ./build.sh -t autotune:test
+          ./build.sh -i autotune_operator:test -o autotune_optuna:test
           docker images | grep autotune     
       - name: docker login
         uses: docker/login-action@v1
@@ -44,8 +44,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune:test kruize/autotune:test
-          docker push kruize/autotune:test
+          docker tag autotune_operator:test kruize/autotune_operator:test
+          docker tag autotune_optuna:test kruize/autotune_optuna:test
+          docker push kruize/autotune_operator:test
+          docker push kruize/autotune_optuna:test
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube  
@@ -54,5 +56,5 @@ jobs:
       - name: Deploy autotune
         run: |
           echo Deploy autotune  
-          ./deploy.sh -c minikube -i kruize/autotune:test
+          ./deploy.sh -c minikube -i kruize/autotune_operator:test -o kruize/autotune_optuna:test
 

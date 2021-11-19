@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "no-slo-value"
+ name: "no-sloclass-value"
 spec:
   slo:
     objective_function: "transaction_response_time"

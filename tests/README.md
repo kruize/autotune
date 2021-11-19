@@ -148,14 +148,15 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] 
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [-o optuna image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory]
 ```
 
 Where values for test_autotune.sh are:
 
 ```
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
-                        [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune:test
+                        [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune_operator:test
+                        [ -o ] : optional. Optuna docker image to be used for testing, default - kruize/autotune_optuna:test
 			[ -r ] : Location of benchmarks
 			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)
 			[ --testmodule ]: Module to be tested. Use testmodule=help, to list the modules to be tested

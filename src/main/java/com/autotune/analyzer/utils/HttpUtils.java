@@ -36,6 +36,8 @@ import java.security.cert.X509Certificate;
  */
 public class HttpUtils
 {
+	private HttpUtils() { }
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(HttpUtils.class);
 
 	/**
