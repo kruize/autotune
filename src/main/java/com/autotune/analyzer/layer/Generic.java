@@ -7,7 +7,6 @@ import org.json.JSONObject;
 public class Generic implements Layer {
 
 	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
-		System.out.println("######: Generic Tunable Parsing");
 		StringBuilder runtimeOptions = new StringBuilder(deployment.getRuntimeOptions());
 		String tunableName = tunableJSON.getString("tunable_name");
 		runtimeOptions.append(" -XX:").append(tunableName).append("=")

@@ -9,7 +9,6 @@ public class Container extends Generic implements Layer {
 
 	@Override
 	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
-		System.out.println("######: Container Tunable Parsing");
 		Resources requests = deployment.getRequests();
 		String tunableName = tunableJSON.getString("tunable_name");
 		if ("cpuRequest".equals(tunableName)) {

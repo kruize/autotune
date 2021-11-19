@@ -7,7 +7,6 @@ import org.json.JSONObject;
 public class Quarkus extends Generic implements Layer {
 	@Override
 	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
-		System.out.println("######: Quarkus Tunable Parsing");
 		StringBuilder runtimeOptions = new StringBuilder(deployment.getRuntimeOptions());
 		String tunableName = tunableJSON.getString("tunable_name");
 		if (tunableName.contains("quarkus")) {

@@ -8,7 +8,6 @@ public class Hotspot extends Generic implements Layer {
 
 	@Override
 	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
-		System.out.println("######: Hotspot Tunable Parsing");
 		StringBuilder runtimeOptions = new StringBuilder(deployment.getRuntimeOptions());
 		runtimeOptions.append("-server -XX:+UseG1GC -XX:MaxRAMPercentage=70");
 		String tunableName = tunableJSON.getString("tunable_name");
