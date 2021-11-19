@@ -32,7 +32,7 @@ public class ExperimentManager {
     }
 
     public static void launch(ServletContextHandler contextHandler) {
-        Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(EMConstants.Logs.LoggerSettings.DEFUALT_LOG_LEVEL));
+        Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(EMConstants.Logs.LoggerSettings.DEFAULT_LOG_LEVEL));
         LOGGER.info("EM version: testv1");
         initializeEM();
         addEMServlets(contextHandler);

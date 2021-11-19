@@ -25,7 +25,7 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
+	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [-o autotune optuna image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] "
 	echo ""
 	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=slo_class -r /home/benchmarks --resultsdir=/home/results"
 	echo "Example: $0 -c minikube --testmodule=hpo -r /home/benchmarks --resultsdir=/home/results"
@@ -131,7 +131,7 @@ function check_testcase_type() {
 }
 
 # Iterate through the commandline options
-while getopts c:ti:k:n:p:su:r:y:-: gopts
+while getopts c:ti:k:n:p:su:r:y:o:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -164,6 +164,9 @@ do
 		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
+		;;
+	o)
+		OPTUNA_DOCKER_IMAGE="${OPTARG}"
 		;;
 	k)
 		kurl="${OPTARG}"
@@ -208,6 +211,10 @@ if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
 	AUTOTUNE_DOCKER_IMAGE="${AUTOTUNE_IMAGE}"
 fi
 
+if [ -z "${OPTUNA_DOCKER_IMAGE}" ]; then
+	OPTUNA_DOCKER_IMAGE="${OPTUNA_IMAGE}"
+fi
+
 # check for benchmarks directory path
 if [ -z "${APP_REPO}" ]; then
 	echo "Error: Do specify the benchmarks directory path"
@@ -222,7 +229,7 @@ fi
 if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
 	echo -n "############# Performing ${tctype} test for autotune #############"
-	${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+	${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -o ${OPTUNA_DOCKER_IMAGE} -r ${APP_REPO}
 	TEST_RESULT=$?
 	echo "########################################################################"
 	echo ""

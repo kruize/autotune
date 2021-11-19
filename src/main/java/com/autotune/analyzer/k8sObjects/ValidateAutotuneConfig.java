@@ -28,6 +28,8 @@ import java.util.HashMap;
  */
 public class ValidateAutotuneConfig
 {
+	private ValidateAutotuneConfig() { }
+
 	/**
 	 * Check if the AutotuneConfig is valid
 	 * @param map
@@ -65,15 +67,15 @@ public class ValidateAutotuneConfig
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
 		}
 
-		// Validate sla_class in tunables
+		// Validate slo_class in tunables
 		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 		if (tunableArrayList != null) {
 			for (Tunable tunable : tunableArrayList) {
 				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
-				for (String sla_class : tunable.getSloClassList()) {
-					if (!AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sla_class)) {
+				for (String slo_class : tunable.getSloClassList()) {
+					if (!AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(slo_class)) {
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
 					}
 

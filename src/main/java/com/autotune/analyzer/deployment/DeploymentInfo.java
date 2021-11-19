@@ -35,6 +35,8 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
  */
 public class DeploymentInfo
 {
+	private DeploymentInfo() { }
+
 	private static String clusterType;
 	private static String kubernetesType;
 	private static String authType;

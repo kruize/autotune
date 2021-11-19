@@ -18,6 +18,16 @@ spec:
     spec:
       serviceAccountName: autotune-sa
       containers:
+      - name: autotune-optuna
+        image: "{{ OPTUNA_IMAGE }}"
+        imagePullPolicy: Always
+        env:
+          - name: LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: logging_level
+                optional: true
       - name: autotune
         image: "{{ AUTOTUNE_IMAGE }}"
         imagePullPolicy: Always

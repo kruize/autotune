@@ -6,11 +6,11 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.5_int</version>
     <properties>
         <fabric8-version>4.13.0</fabric8-version>
         <org-json-version>20201115</org-json-version>
-        <jetty-version> 9.4.44.v20210927</jetty-version>
+        <jetty-version>9.4.44.v20210927</jetty-version>
         <slf4j-version>2.13.2</slf4j-version>
         <java-version>17</java-version>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
@@ -114,8 +114,8 @@
                 <version>${maven-compiler-plugin-version}</version>
                 <configuration>
                     <release>${java-version}</release>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>${java-version}</source>
+                    <target>${java-version}</target>
                 </configuration>
             </plugin>
 

@@ -67,16 +67,15 @@ public class Tunable
 								String upperBoundUnits,
 								String lowerBoundUnits) throws InvalidBoundsException {
 		if (upperBoundUnits != null &&
-				!upperBoundUnits.trim().isEmpty() &&
-				lowerBoundUnits != null &&
-				!lowerBoundUnits.trim().isEmpty() &&
-				!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
-			System.out.println("ERROR: Tunable: " + name +
+			!upperBoundUnits.trim().isEmpty() &&
+			lowerBoundUnits != null &&
+			!lowerBoundUnits.trim().isEmpty() &&
+			!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
+			throw new InvalidBoundsException("Tunable: " + name +
 					" has invalid bound units; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
 					" ubu: " + upperBoundUnits +
 					" lbu: " + lowerBoundUnits);
-			throw new InvalidBoundsException();
 		}
 
 		/*
@@ -85,16 +84,15 @@ public class Tunable
 		 * step has to be lesser than or equal to the difference between the two bounds.
 		 */
 		if (upperBoundValue < 0 ||
-				lowerBoundValue < 0 ||
-				lowerBoundValue >= upperBoundValue ||
-				step > (upperBoundValue - lowerBoundValue)
+			lowerBoundValue < 0 ||
+			lowerBoundValue >= upperBoundValue ||
+			step > (upperBoundValue - lowerBoundValue)
 		) {
-			System.out.println("ERROR: Tunable: " + name +
+			throw new InvalidBoundsException("ERROR: Tunable: " + name +
 					" has invalid bounds; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
 					" ubu: " + upperBoundUnits +
 					" lbu: " + lowerBoundUnits);
-			throw new InvalidBoundsException();
 		}
 	}
 
@@ -146,8 +144,8 @@ public class Tunable
 		this.valueType = copy.valueType;
 		this.description = copy.description;
 		this.queries = copy.queries;
-		this.layerName = copy.layerName;
 		this.sloClassList = copy.sloClassList;
+		this.layerName = copy.layerName;
 	}
 
 	public String getName() {
@@ -180,9 +178,7 @@ public class Tunable
 		return getBound(lowerBoundValue, boundUnits, valueType);
 	}
 
-	public String getBoundUnits() {
-		return boundUnits;
-	}
+	public String getBoundUnits() {	return boundUnits; }
 
 	public String getValueType() {
 		return valueType;
@@ -212,7 +208,7 @@ public class Tunable
 		return step;
 	}
 
-	public String getLayerName() { return layerName;	}
+	public String getLayerName() { return layerName; }
 
 	@Override
 	public String toString() {
@@ -222,10 +218,11 @@ public class Tunable
 				", valueType='" + valueType + '\'' +
 				", upperBound='" + upperBoundValue + '\'' +
 				", lowerBound='" + lowerBoundValue + '\'' +
+				", boundUnits='" + boundUnits + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
-				", layer=" + layerName +
 				", sloClassList=" + sloClassList +
+				", layer=" + layerName +
 				'}';
 	}
 }
