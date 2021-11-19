@@ -16,6 +16,7 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -52,6 +53,7 @@ public class Tunable
 	private final String boundUnits;
 	private String description;
 	private Map<String, String> queries;
+	private final String layerName;
 
     /*
     TODO Think about bounds for other valueTypes
@@ -102,12 +104,17 @@ public class Tunable
 				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
-				   ArrayList<String> sloClassList) throws InvalidBoundsException {
+				   ArrayList<String> sloClassList,
+				   String layerName) throws InvalidBoundsException {
 		this.queries = queries;
 		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
 		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
 		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
 		this.step = Objects.requireNonNull(step, ZERO_STEP);
+		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+			this.layerName = layerName;
+		else
+			this.layerName = "generic";
 
 		/* Parse the value for the bounds from the strings passed in */
 		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
@@ -139,6 +146,7 @@ public class Tunable
 		this.valueType = copy.valueType;
 		this.description = copy.description;
 		this.queries = copy.queries;
+		this.layerName = copy.layerName;
 		this.sloClassList = copy.sloClassList;
 	}
 
@@ -204,6 +212,8 @@ public class Tunable
 		return step;
 	}
 
+	public String getLayerName() { return layerName;	}
+
 	@Override
 	public String toString() {
 		return "Tunable{" +
@@ -214,6 +224,7 @@ public class Tunable
 				", lowerBound='" + lowerBoundValue + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
+				", layer=" + layerName +
 				", sloClassList=" + sloClassList +
 				'}';
 	}

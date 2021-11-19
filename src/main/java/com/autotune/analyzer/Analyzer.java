@@ -29,6 +29,7 @@ public class Analyzer
 	public static void start(ServletContextHandler contextHandler) {
 		try {
 			InitializeDeployment.setup_deployment_info();
+
 		} catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
 			e.printStackTrace();
 			// Current deployment not supported. Exit

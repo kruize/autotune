@@ -50,7 +50,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
 import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
@@ -554,7 +553,7 @@ public class AutotuneDeployment
 
 				Tunable tunable;
 				try {
-					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, sloClassList);
+					tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, sloClassList, layerName);
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
 					e.printStackTrace();
@@ -693,7 +692,8 @@ public class AutotuneDeployment
 						tunable.getLowerBound(),
 						tunable.getValueType(),
 						queries,
-						tunable.getSloClassList());
+						tunable.getSloClassList(),
+						tunable.getLayerName());
 				tunables.add(tunableCopy);
 			} catch (InvalidBoundsException ignored) { }
 		}

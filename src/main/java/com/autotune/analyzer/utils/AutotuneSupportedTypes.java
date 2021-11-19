@@ -39,6 +39,9 @@ public class AutotuneSupportedTypes
 	public static final Set<String> SLO_CLASSES_SUPPORTED =
 			new HashSet<>(Arrays.asList("throughput", "response_time", "resource_usage"));
 
+	public static final Set<String> LAYERS_SUPPORTED =
+			new HashSet<>(Arrays.asList("container", "hotspot", "quarkus"));
+
 	public static final Set<String> VALUE_TYPES_SUPPORTED =
 			new HashSet<>(Arrays.asList("double", "int", "string"));
 

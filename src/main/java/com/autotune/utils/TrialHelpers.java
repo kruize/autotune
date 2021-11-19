@@ -25,9 +25,13 @@ import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.k8sObjects.SloInfo;
+import com.autotune.analyzer.layer.Layer;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
@@ -110,10 +114,8 @@ public class TrialHelpers {
              */
             JSONObject requestsValues = new JSONObject();
             /* CPU Value should only be */
-            requestsValues.put("cpu", String.format("%.2f", deployment.getRequests().getCpuValue()) +
-                    deployment.getRequests().getCpuUnits());
-            requestsValues.put("memory", String.valueOf(deployment.getRequests().getMemoryValue()) +
-                    deployment.getRequests().getMemoryUnits());
+            requestsValues.put("cpu", deployment.getRequests().getCpu());
+            requestsValues.put("memory", deployment.getRequests().getMemory());
             JSONObject resourcesValues = new JSONObject();
             resourcesValues.put("requests", requestsValues);
             resourcesValues.put("limits", requestsValues);
@@ -138,8 +140,8 @@ public class TrialHelpers {
              * experimentTrialJSON -> deployments -> config -> env
              */
             JSONObject envValues = new JSONObject();
-            envValues.put("JVM_OPTIONS", deployment.getRuntimeOptions());
-            envValues.put("JVM_ARGS", deployment.getRuntimeOptions());
+            envValues.put("JDK_JAVA_OPTIONS", deployment.getRuntimeOptions());
+            // envValues.put("JVM_ARGS", deployment.getRuntimeOptions());
 
             JSONObject env = new JSONObject();
             env.put("env", envValues);
@@ -231,57 +233,59 @@ public class TrialHelpers {
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
                 deploymentSettings);
 
-        Resources requests = null, limits = null;
-        String cpu = null, memory = null;
-
         ArrayList<Deployments> deployments = new ArrayList<>();
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
         // TODO: The runtime layer will know how to pass the options to container through kubernetes
         // This will be the default for Java
         // TODO: The -XX:MaxRAMPercentage will be based on actual observation of the size of the heap
-        StringBuilder runtimeOptions = new StringBuilder("-server -XX:+UseG1GC -XX:MaxRAMPercentage=70");
+
         for (String tracker : trackers ) {
             System.out.println(trialConfigJson);
+            ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationServiceStack();
+            ArrayList<Metric> metrics = new ArrayList<>();
+            Deployments deployment = new Deployments(tracker,
+                    applicationServiceStack.getDeploymentName(),
+                    applicationServiceStack.getNamespace(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    metrics,
+                    null,
+                    null,
+                    ""
+            );
             JSONArray trialConfigArray = new JSONArray(trialConfigJson);
             for (Object trialConfigObject : trialConfigArray) {
                 JSONObject trialConfig = (JSONObject) trialConfigObject;
                 String tunableName = trialConfig.getString("tunable_name");
-                // TODO: We need layer wise handling of tunables so each layer knows how to interpret
-                // TODO: the values as well as the results obtained from the experiment manager.
-                // Handle the container tunables as they contribute to the requests.
-                if ("cpuRequest".equals(tunableName)) {
-                    cpu = trialConfig.getDouble("tunable_value") +
-                            appSearchSpace.getApplicationTunablesMap().get("cpuRequest").getBoundUnits();
-                    System.out.println("CPU Request: " + cpu);
-                } else if ("memoryRequest".equals(tunableName)) {
-                    memory = trialConfig.getDouble("tunable_value") +
-                            appSearchSpace.getApplicationTunablesMap().get("memoryRequest").getBoundUnits();
-                    System.out.println("Mem Request: " + memory);
-                // quarkus tunables will have quarkus in the name
-                } else if (tunableName.contains("quarkus")) {
-                    runtimeOptions.append(" -D").append(tunableName).append("=")
-                            .append(trialConfig.getLong("tunable_value"));
-                } else {
-                    runtimeOptions.append(" -XX:").append(tunableName).append("=")
-                            .append(trialConfig.getLong("tunable_value"));
+                Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getApplicationTunablesMap().get(tunableName);
+                // String tunableValue = trialConfig.getString("tunable_value");
+                Class<Layer> classRef = DeploymentInfo.getLayer(tunable.getLayerName());
+                try {
+                    Object inst = classRef.getDeclaredConstructor().newInstance();
+                    Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, Deployments.class);
+                    method.invoke(inst, tunable, trialConfig, deployment);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
-            }
-            if (cpu != null && memory != null) {
-                requests = new Resources(cpu, memory);
-                limits = new Resources(cpu, memory);
             }
 
             /* Create the metrics array */
             /* First iterate through the objective function variables */
             SloInfo sloInfo = autotuneObject.getSloInfo();
-            ArrayList<Metric> metrics = new ArrayList<>();
             for (Metric metric : sloInfo.getFunctionVariables()) {
                 metrics.add(metric);
             }
 
             /* Now check for any metric object for tunables that have associated queries */
-            ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationServiceStack();
             for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
                 AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
                 for (Tunable tunable : autotuneConfig.getTunables()) {
@@ -296,18 +300,6 @@ public class TrialHelpers {
                 }
             }
 
-            Deployments deployment = new Deployments(tracker,
-                    applicationServiceStack.getDeploymentName(),
-                    applicationServiceStack.getNamespace(),
-                    "",
-                    "",
-                    "",
-                    "",
-                    metrics,
-                    requests,
-                    limits,
-                    runtimeOptions.toString()
-            );
             deployments.add(deployment);
         }
 
