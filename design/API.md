@@ -573,22 +573,719 @@ which we can use to track the status of the experiment
 }
 ```
 
-##  getTrialStatus
+##  ListTrialStatus
 Get the status of the experiment by passing `runId` to the endpoint.
 
 **Request**
-`GET /getTrialStatus?runId=<RUN_ID>`
+`GET /listTrialStatus?runId=<RUN_ID>&completeStatus=true&summary=true`
 
-`curl http://<URL>:<PORT>/getTrialStatus?runId=<RUN_ID>`
+```
+runId - Required
+completeStatus - Optional
+summary - Optional
+```
+
+`curl http://<URL>:<PORT>/listTrialStatus?runId=<RUN_ID>`
 
 *Description:*
 
-The `getTrialStatus` endpoint expects a input param `runId` which holds the `runId` and returns the status of a particular experiment run if the id is valid.
+The `listTrialStatus` endpoint expects a input param `runId` which holds the `runId` and returns the status of a particular experiment run if the id is valid.
 
 **Response**
+
+##### With only `runId`
 
 ```
 {
     'status' : <STATUS OF EXPERIMENT [CREATED | IN_PROGRESS | COMPLETED]>
 }
 ```
+
+##### With `runId` and `completeStatus` (Under design yet to be implemented)
+
+```
+{
+  "experiment_id": "2190310A384BC90EF",
+  "name": "petclinic-autotune",
+  "status": "COMPLETED",
+  "info": {
+    "trial_id": "",
+    "trial_num": 1,
+    "trial_result_url": "http://analyser.com/receive/results?expId=2190310A384BC90EF"
+  },
+  "settings": {
+    "trial_settings": {
+      "total_duration": "7 mins",
+      "warmup_cycles": 2,
+      "warmup_duration": "1 min",
+      "measurement_cycles": 5,
+      "measurement_duration": "1 min"
+    },
+    "deployment_settings": {
+      "deployment_info": {
+        "deployment_name" : "petclinic-sample",
+        "target_env" : "qa"
+      },
+      "deployment_policy" : {
+        "type" : "rollingUpdate"
+      },
+      "deployment_tracking": {
+        "trackers": [
+          "training"
+        ]
+      }
+    }
+  },
+  "deployments": [
+    {
+      "type" : "training",
+      "deployment_name": "petclinic-sample",
+      "namespace" : "default",
+      "state": "",
+      "result": "",
+      "result_info": "",
+      "result_error": "",
+      "metrics": [
+        {
+          "name": "request_sum",
+          "query": "request_sum_query",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "metric_results": {
+            "warmup_results": {
+              "cycles": 2,
+              "duration": "1 min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            },
+            "measurement_results": {
+              "cycles": 5,
+              "duration": "1min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "request_count",
+          "query": "request_count_query",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "metric_results": {
+            "warmup_results": {
+              "cycles": 2,
+              "duration": "1 min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            },
+            "measurement_results": {
+              "cycles": 5,
+              "duration": "1min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "hotspot_function",
+          "query": "hotspot_function_query",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "metric_results": {
+            "warmup_results": {
+              "cycles": 2,
+              "duration": "1 min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            },
+            "measurement_results": {
+              "cycles": 5,
+              "duration": "1min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "cpuRequest",
+          "query": "cpuRequest_query",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "metric_results": {
+            "warmup_results": {
+              "cycles": 2,
+              "duration": "1 min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            },
+            "measurement_results": {
+              "cycles": 5,
+              "duration": "1min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "memRequest",
+          "query": "memRequest_query",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "metric_results": {
+            "warmup_results": {
+              "cycles": 2,
+              "duration": "1 min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            },
+            "measurement_results": {
+              "cycles": 5,
+              "duration": "1min",
+              "results": [
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                },
+                {
+                  "score": "",
+                  "Error": "",
+                  "mean": "",
+                  "mode": "",
+                  "95.0": "",
+                  "99.0": "",
+                  "99.9": "",
+                  "99.99": "",
+                  "99.999": "",
+                  "99.9999": "",
+                  "100.0": "",
+                  "spike": ""
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "config": [
+        {
+          "name": "update requests and limits",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "resources": {
+                    "requests": {
+                      "cpu": 2,
+                      "memory": "512Mi"
+                    },
+                    "limits": {
+                      "cpu": 3,
+                      "memory": "1024Mi"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "update env",
+          "spec": {
+            "template": {
+              "spec": {
+                "container": {
+                  "env": {
+                    "JDK_JAVA_OPTIONS": "-XX:MaxInlineLevel=23"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+##### With `runId` and `summary`
+
+```
+Yet to be finalised
+```
+
+### Note
+
+`completeStatus` and `summary` cannot be clubbed together in a request. If both are sent `summary` takes the precedence and the API returns response of `summary`
+
