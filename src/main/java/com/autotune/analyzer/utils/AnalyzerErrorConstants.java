@@ -20,8 +20,11 @@ package com.autotune.analyzer.utils;
  */
 public class AnalyzerErrorConstants
 {
+	private AnalyzerErrorConstants() { }
 
 	public static class AutotuneConfigErrors {
+		private AutotuneConfigErrors() { }
+
 		public final static String AUTOTUNE_CONFIG_NAME_NULL = "AutotuneConfig object name cannot be null or empty\n";
 		public final static String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
 		public final static String BOTH_LAYER_QUERY_AND_LABEL_SET = "Both layerPresenceQuery and layerPresenceLabel cannot be set\n";
@@ -34,6 +37,8 @@ public class AnalyzerErrorConstants
 	}
 
 	public static class AutotuneObjectErrors {
+		private AutotuneObjectErrors() { }
+
 		public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
 		public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";
 		public static final String INVALID_MATCHLABEL_VALUE = "Invalid or blank MatchLabelValue in selector\n";

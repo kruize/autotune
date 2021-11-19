@@ -29,6 +29,8 @@ import org.apache.logging.log4j.core.config.Configurator;
  */
 public class InitializeDeployment
 {
+	private InitializeDeployment() { }
+
 	public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
 		String k8S_type = System.getenv(AnalyzerConstants.K8S_TYPE);
 		String auth_type = System.getenv(AnalyzerConstants.AUTH_TYPE);

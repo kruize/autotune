@@ -25,6 +25,7 @@ import com.autotune.utils.AutotuneUtils.QueueName;
  *
  */
 public class AutotuneQueueFactory {
+	private AutotuneQueueFactory() { }
 
 	public static AutotuneQueue getQueue(String queueName) {
 		

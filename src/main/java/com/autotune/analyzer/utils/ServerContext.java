@@ -20,6 +20,7 @@ package com.autotune.analyzer.utils;
  */
 public class ServerContext
 {
+	private ServerContext() { }
 	public static final String ROOT_CONTEXT = "/";
 	public static final String LIST_APPLICATIONS = ROOT_CONTEXT + "listApplications";
 	public static final String LIST_APP_LAYERS = ROOT_CONTEXT + "listAppLayers";

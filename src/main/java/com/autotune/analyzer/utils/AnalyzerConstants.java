@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
  */
 public class AnalyzerConstants
 {
+	private AnalyzerConstants() { }
+
 	// Used to parse autotune configmaps
 	public static final String K8S_TYPE = "K8S_TYPE";
 	public static final String AUTH_TYPE = "AUTH_TYPE";
@@ -59,6 +61,8 @@ public class AnalyzerConstants
 	 * Used to parse the Autotune kind resource
 	 */
 	public static class AutotuneObjectConstants {
+		private AutotuneObjectConstants() { }
+
 		public static final String SPEC = "spec";
 		public static final String SLO = "slo";
 		public static final String SLO_CLASS = "slo_class";
@@ -91,6 +95,8 @@ public class AnalyzerConstants
 	 * Used to parse the AutotuneConfig resource
 	 */
 	public static class AutotuneConfigConstants {
+		private AutotuneConfigConstants() { }
+
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
 
@@ -136,6 +142,8 @@ public class AnalyzerConstants
 	 * Contains Strings used in REST services
 	 */
 	public static class ServiceConstants {
+		private ServiceConstants() { }
+
 		public static final String APPLICATION_NAME = "application_name";
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";

@@ -29,6 +29,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class ExperimentManager {
+    private ExperimentManager() { }
+
     public static EMExecutorService emExecutorService;
     public static EMStageProcessor emStageProcessor;
     public static EMScheduledStageProcessor emScheduledStageProcessor;

@@ -26,6 +26,8 @@ import java.util.Map;
  */
 public class Variables
 {
+    private Variables() { }
+
     /**
      * For a query, update the variables with the values from AutotuneQueryVariable object
      * @param application
