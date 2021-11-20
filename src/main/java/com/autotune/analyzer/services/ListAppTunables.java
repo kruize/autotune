@@ -140,7 +140,7 @@ public class ListAppTunables extends HttpServlet
 		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
 		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
 		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
+		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
 		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
 		// Add function_variables info
@@ -164,12 +164,12 @@ public class ListAppTunables extends HttpServlet
 
 		JSONArray layersArray = new JSONArray();
 		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-				.get(application).getStackLayers().keySet()) {
+				.get(application).getApplicationServiceStackLayers().keySet()) {
 			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-					.get(application).getStackLayers().get(autotuneConfigName);
+					.get(application).getApplicationServiceStackLayers().get(autotuneConfigName);
 			if (layerName == null || autotuneConfigName.equals(layerName)) {
 				JSONObject layerJson = new JSONObject();
-				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getId());
+				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getLayerId());
 				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
 				layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
 				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());

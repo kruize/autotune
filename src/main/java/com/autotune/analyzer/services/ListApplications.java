@@ -84,7 +84,7 @@ public class ListApplications extends HttpServlet
 
     private void addApplicationToResponse(JSONArray outputJsonArray, AutotuneObject autotuneObject, String application) {
         //Check if application is monitored by autotune
-        if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getName()).containsKey(application))
+        if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(application))
             return;
 
         JSONObject jsonObject = new JSONObject();
@@ -92,7 +92,7 @@ public class ListApplications extends HttpServlet
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
         jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getId());
+        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
 
         outputJsonArray.put(jsonObject);
     }

@@ -30,12 +30,12 @@ import java.util.HashMap;
  */
 public final class AutotuneConfig
 {
-	private final String id;
+	private final String layerId;
 	private final int level;
 	private final String name;
 	private final String layerName;
 	private final String details;
-	//If true, apply to all autotuneobjects
+	// If true, apply to all autotuneobjects
 	private final String presence;
 
 	/*
@@ -50,17 +50,17 @@ public final class AutotuneConfig
 
 	private final ArrayList<Tunable> tunables;
 
-	public AutotuneConfig(String id, String name,
-			String layerName,
-			int level,
-			String details,
-			String presence,
-			String layerPresenceQuery,
-			String layerPresenceKey,
-			String layerPresenceLabel,
-			String layerPresenceLabelValue,
-			ArrayList<Tunable> tunables) throws InvalidValueException {
-		this.id = id;
+	public AutotuneConfig(String layerId, String name,
+						  String layerName,
+						  int level,
+						  String details,
+						  String presence,
+						  String layerPresenceQuery,
+						  String layerPresenceKey,
+						  String layerPresenceLabel,
+						  String layerPresenceLabelValue,
+						  ArrayList<Tunable> tunables) throws InvalidValueException {
+		this.layerId = layerId;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneConfigConstants.NAME, name);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
@@ -91,7 +91,7 @@ public final class AutotuneConfig
 	}
 
 	public AutotuneConfig(AutotuneConfig copy) {
-		this.id = copy.getId();
+		this.layerId = copy.getLayerId();
 		this.name = copy.getName();
 		this.layerName = copy.getLayerName();
 		this.level = copy.getLevel();
@@ -145,8 +145,8 @@ public final class AutotuneConfig
 		return layerPresenceLabelValue;
 	}
 
-	public String getId() {
-		return id;
+	public String getLayerId() {
+		return layerId;
 	}
 
 	@Override

@@ -46,17 +46,10 @@ import java.util.Map;
  */
 public class ApplicationServiceStack
 {
-	private String applicationServiceName;
-	private String namespace;
+	private final String applicationServiceName;
+	private final String namespace;
 	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
-
-	public ApplicationServiceStack(String applicationServiceName, String namespace) {
-		this.applicationServiceName = applicationServiceName;
-		this.namespace = namespace;
-
-		this.applicationServiceStackLayers = new HashMap<>();
-	}
 
 	public ApplicationServiceStack(String applicationServiceName, String namespace, String status) {
 		this.applicationServiceName = applicationServiceName;
@@ -70,30 +63,8 @@ public class ApplicationServiceStack
 		return namespace;
 	}
 
-	public void setNamespace(String namespace) throws InvalidValueException {
-		if (namespace != null)
-			this.namespace = namespace;
-		else
-			throw new InvalidValueException("Namespace cannot be null");
-	}
-
 	public String getApplicationServiceName() {
 		return applicationServiceName;
-	}
-
-	public void setApplicationServiceName(String applicationServiceName) throws InvalidValueException {
-		if (applicationServiceName != null)
-			this.applicationServiceName = applicationServiceName;
-		else
-			throw new InvalidValueException("Application service name cannot be null");
-	}
-
-	public Map<String, AutotuneConfig> getStackLayers() {
-		return applicationServiceStackLayers;
-	}
-
-	public void setStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
-		this.applicationServiceStackLayers = applicationServiceStackLayers;
 	}
 
 	public String getStatus() {
@@ -102,6 +73,14 @@ public class ApplicationServiceStack
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
+		return applicationServiceStackLayers;
+	}
+
+	public void setApplicationServiceStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
+		this.applicationServiceStackLayers = applicationServiceStackLayers;
 	}
 
 	@Override

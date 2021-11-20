@@ -92,17 +92,17 @@ public class AutotuneDeployment
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							addAutotuneObject(autotuneObject, autotuneDeployment, client);
-							LOGGER.info("Added autotune object " + autotuneObject.getName());
+							LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 						}
 						break;
 					case "MODIFIED":
 						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							// Check if any of the values have changed from the existing object in the map
-							if (autotuneObjectMap.get(autotuneObject.getName()).getId() != autotuneObject.getId()) {
+							if (autotuneObjectMap.get(autotuneObject.getExperimentName()).getExperimentId() != autotuneObject.getExperimentId()) {
 								deleteExistingAutotuneObject(resource);
 								addAutotuneObject(autotuneObject, autotuneDeployment, client);
-								LOGGER.info("Modified autotune object {}", autotuneObject.getName());
+								LOGGER.info("Modified autotune object {}", autotuneObject.getExperimentName());
 							}
 						}
 						break;
@@ -163,7 +163,7 @@ public class AutotuneDeployment
 	 * @param client
 	 */
 	private static void addAutotuneObject(AutotuneObject autotuneObject, AutotuneDeployment autotuneDeployment, KubernetesClient client) {
-		autotuneObjectMap.put(autotuneObject.getName(), autotuneObject);
+		autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
 		autotuneDeployment.matchPodsToAutotuneObject(client);
 
 		for (String autotuneConfig : autotuneConfigMap.keySet()) {
@@ -201,7 +201,7 @@ public class AutotuneDeployment
 		for (String autotuneObject : applicationServiceStackMap.keySet()) {
 			for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObject).keySet()) {
 				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(applicationServiceStackName);
-				applicationServiceStack.getStackLayers().remove(configName);
+				applicationServiceStack.getApplicationServiceStackLayers().remove(configName);
 			}
 		}
 	}
@@ -228,16 +228,16 @@ public class AutotuneDeployment
 					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(podMetadata.getName(),
 							podMetadata.getNamespace(), status);
 					// If autotuneobject is already in map
-					if (applicationServiceStackMap.containsKey(autotuneObject.getName())) {
+					if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
 						//If applicationservicestack is not already in list
-						if (!applicationServiceStackMap.get(autotuneObject.getName()).containsKey(podMetadata.getName())) {
-							applicationServiceStackMap.get(autotuneObject.getName()).put(applicationServiceStack.getApplicationServiceName(),
+						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(podMetadata.getName())) {
+							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(applicationServiceStack.getApplicationServiceName(),
 									applicationServiceStack);
 						}
 					} else {
 						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
 						innerMap.put(applicationServiceStack.getApplicationServiceName(), applicationServiceStack);
-						applicationServiceStackMap.put(autotuneObject.getName(), innerMap);
+						applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
 					}
 				}
 			}
@@ -581,7 +581,7 @@ public class AutotuneDeployment
 	 */
 	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
 		//Check if layer already exists
-		if (applicationServiceStack.getStackLayers().containsKey(autotuneConfig.getName())) {
+		if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(autotuneConfig.getName())) {
 			return;
 		}
 
@@ -611,7 +611,7 @@ public class AutotuneDeployment
 		//Create autotuneconfigcopy with updated tunables arraylist
 		AutotuneConfig autotuneConfigCopy = null;
 		try {
-			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getId(),
+			autotuneConfigCopy = new AutotuneConfig(autotuneConfig.getLayerId(),
 					autotuneConfig.getName(),
 					autotuneConfig.getLayerName(),
 					autotuneConfig.getLevel(),
@@ -625,6 +625,6 @@ public class AutotuneDeployment
 		} catch (InvalidValueException ignored) { }
 
 		LOGGER.info("Added layer " + autotuneConfig.getName() + " to application " + applicationServiceStack.getApplicationServiceName());
-		applicationServiceStack.getStackLayers().put(autotuneConfig.getName(), autotuneConfigCopy);
+		applicationServiceStack.getApplicationServiceStackLayers().put(autotuneConfig.getName(), autotuneConfigCopy);
 	}
 }
