@@ -15,15 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
+import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
-import com.autotune.analyzer.deployment.DeploymentInfo;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.k8sObjects.FunctionVariable;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +27,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Objects;
+
+import static com.autotune.analyzer.deployment.AutotuneDeployment.applicationServiceStackMap;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.ServiceHelpers.*;
 
 public class ListAppTunables extends HttpServlet
 {
@@ -42,13 +41,13 @@ public class ListAppTunables extends HttpServlet
 	 * Request:
 	 * `GET /listAppTunables` gives the tunables and layer information for all the applications monitored by autotune.
 	 *
-	 * `GET /listAppTunables?application_name=<APPLICATION_NAME>` for getting the tunables information of a specific application.
+	 * `GET /listAppTunables?experiment_name=<EXP_NAME>` for getting the tunables information of a specific application.
 	 *
-	 * `GET /listAppTunables?application_name=<APPLICATION_NAME>&layer_name='<LAYER>' for getting tunables of a specific layer for the application.
+	 * `GET /listAppTunables?experiment_name=<EXP_NAME>&layer_name='<LAYER>' for getting tunables of a specific layer for the application.
 	 *
 	 * Example JSON:
 	 * {
-	 *       "application_name": "app1",
+	 *       "experiment_name": "app1_autotune",
 	 *       “objective_function”: “transaction_response_time”,
 	 *       "slo_class": "response_time",
 	 *       “direction”: “minimize”
@@ -98,118 +97,78 @@ public class ListAppTunables extends HttpServlet
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		JSONArray outputJsonArray = new JSONArray();
-		resp.setContentType("application/json");
+		resp.setContentType(JSON_CONTENT_TYPE);
 
-		String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
-		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-
-		// If no autotuneobjects in the cluster
+		/* Check if there are any experiments running at all ? */
 		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-			outputJsonArray.put("Error: No objects of kind Autotune found!");
-		} else {
-			//If no application_name was passed in the request, print all apps in all autotune obects in response
-			if (applicationName == null) {
-				for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-					AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-					for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-						addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, application, layerName);
-					}
-				}
-			} else {
-				boolean doesApplicationExist = false;
-				for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-					if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(applicationName)) {
-						AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-						addAppTunablesToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName, layerName);
-						doesApplicationExist = true;
-					}
-				}
+			outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
+			resp.getWriter().println(outputJsonArray.toString(4));
+			return;
+		}
 
-				//If no such application is monitored by autotune
-				if (!doesApplicationExist) {
-					outputJsonArray.put("Error: Application " + applicationName + " not found!");
-				}
+		String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+
+		/* If experiment name is not null, try to find it in the hashmap */
+		if (experimentName != null) {
+			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
+			if (autotuneObject != null) {
+				addAppLayersToResponse(outputJsonArray, experimentName, autotuneObject, layerName, sloClass);
 			}
+		} else {
+			/* Print all the experiments */
+			for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
+				AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+				addAppLayersToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, layerName, sloClass);
+			}
+		}
+
+		if (outputJsonArray.isEmpty()) {
+			outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
 		}
 		resp.getWriter().println(outputJsonArray.toString(4));
 	}
 
-	private void addAppTunablesToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application, String layerName) {
+	private void addAppLayersToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String layerName, String sloClass) {
 		JSONObject jsonObject = new JSONObject();
-		jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
-
-		// Add function_variables info
-		JSONArray functionVariablesArray = new JSONArray();
-		for (FunctionVariable functionVariable : autotuneObject.getSloInfo().getFunctionVariables()) {
-			JSONObject functionVariableJson = new JSONObject();
-			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
-			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
-			try {
-				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-						dataSource.getQueryEndpoint() + functionVariable.getQuery());
-			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
-			}
-
-			functionVariablesArray.put(functionVariableJson);
-		}
-
-		jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
+		addExperimentDetails(jsonObject, autotuneObject);
+		addFunctionVariablesDetails(jsonObject, autotuneObject);
 
 		JSONArray layersArray = new JSONArray();
-		for (String autotuneConfigName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-				.get(application).getApplicationServiceStackLayers().keySet()) {
-			AutotuneConfig autotuneConfig = AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey)
-					.get(application).getApplicationServiceStackLayers().get(autotuneConfigName);
-			if (layerName == null || autotuneConfigName.equals(layerName)) {
-				JSONObject layerJson = new JSONObject();
-				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getLayerId());
-				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-				layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
-				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
-
-				JSONArray tunablesArray = new JSONArray();
-				for (Tunable tunable : autotuneConfig.getTunables()) {
-					JSONObject tunableJson = new JSONObject();
-					String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
-					try {
-						String query = AnalyzerConstants.NONE;
-						final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-						// If tunable has a query specified
-						if (tunableQuery != null && !tunableQuery.isEmpty()) {
-							query = Objects.requireNonNull(dataSource).getDataSourceURL() +
-									dataSource.getQueryEndpoint() + tunableQuery;
-						}
-						tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
-					} catch (MonitoringAgentNotFoundException e) {
-						tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
-					}
-					tunablesArray.put(tunableJson);
+		for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+			ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(applicationServiceStackName);
+			if (layerName != null) {
+				if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
+					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
 				}
-				layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
-				layersArray.put(layerJson);
+			} else {
+				for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
+				}
 			}
 		}
 		if (layersArray.isEmpty()) {
 			// No autotuneconfig objects currently being monitored.
 			if (layerName == null)
-				outputJsonArray.put("Error: No AutotuneConfig objects found!");
+				outputJsonArray.put(LAYER_NOT_FOUND);
 			else
-				outputJsonArray.put("Error: AutotuneConfig " + layerName + " not found!");
+				outputJsonArray.put(ERROR_LAYER + layerName + NOT_FOUND);
 			return;
 		}
 		jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
 		outputJsonArray.put(jsonObject);
+	}
+
+	private void addLayersAndTunablesToResponse(JSONArray layersArray, ApplicationServiceStack applicationServiceStack, String layerName, String sloClass) {
+		JSONObject layerJson = new JSONObject();
+		AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
+		addLayerDetails(layerJson, autotuneConfig);
+		JSONArray tunablesArray = new JSONArray();
+		addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+		if (!tunablesArray.isEmpty()) {
+			layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+			layersArray.put(layerJson);
+		}
 	}
 }

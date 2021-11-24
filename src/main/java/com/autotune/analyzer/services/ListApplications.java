@@ -26,6 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
+
 public class ListApplications extends HttpServlet
 {
     /**
@@ -37,13 +41,13 @@ public class ListApplications extends HttpServlet
      * Example JSON:
      * [
      *     {
-     *       "application_name": "app1",
+     *       "experiment_name": "app1_autotune",
      *       “objective_function”: “transaction_response_time”,
      *       "slo_class": "response_time",
      *       “direction”: “minimize”
      *     },
      *     {
-     *       "application_name": "app2",
+     *       "experiment_name": "app2_autotune",
      *       “objective_function”: “performedChecks_total”,
      *       "slo_class": "throughput",
      *       “direction”: “maximize”
@@ -56,45 +60,37 @@ public class ListApplications extends HttpServlet
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         JSONArray outputJsonArray = new JSONArray();
-        resp.setContentType("application/json");
+        resp.setContentType(JSON_CONTENT_TYPE);
 
-        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
+        /* Check if there are any experiments running at all ? */
+        if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+            outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
+            resp.getWriter().println(outputJsonArray.toString(4));
+            return;
+        }
 
-        for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-
-            if (applicationName == null) {
-                for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToResponse(outputJsonArray, autotuneObject, application);
-                }
-            } else {
-                addApplicationToResponse(outputJsonArray, autotuneObject, applicationName);
+        String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        /* If experiment name is not null, try to find it in the hashmap */
+        if (experimentName != null) {
+            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
+            if (autotuneObject != null) {
+                JSONObject jsonObject = new JSONObject();
+                addExperimentDetails(jsonObject, autotuneObject);
+                outputJsonArray.put(jsonObject);
+            }
+        } else {
+            /* Print all the experiments */
+            for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
+                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+                JSONObject jsonObject = new JSONObject();
+                addExperimentDetails(jsonObject, autotuneObject);
+                outputJsonArray.put(jsonObject);
             }
         }
 
         if (outputJsonArray.isEmpty()) {
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty())
-                outputJsonArray.put("Error: No objects of kind Autotune found!");
-            else
-                outputJsonArray.put("Error: Application " + applicationName + " not found!");
+            outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
         }
-
         resp.getWriter().println(outputJsonArray.toString(4));
     }
-
-    private void addApplicationToResponse(JSONArray outputJsonArray, AutotuneObject autotuneObject, String application) {
-        //Check if application is monitored by autotune
-        if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(application))
-            return;
-
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
-        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
-        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        jsonObject.put(AnalyzerConstants.AutotuneObjectConstants.ID, autotuneObject.getExperimentId());
-
-        outputJsonArray.put(jsonObject);
-    }
-
 }

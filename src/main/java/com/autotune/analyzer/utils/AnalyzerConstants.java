@@ -152,6 +152,7 @@ public class AnalyzerConstants
 	public static class ServiceConstants {
 		private ServiceConstants() { }
 
+		public static final String JSON_CONTENT_TYPE = "application/json";
 		public static final String EXPERIMENT_NAME = "experiment_name";
 		public static final String APPLICATION_NAME = "application_name";
 		public static final String POD_NAME = "pod_name";
