@@ -45,20 +45,21 @@ function basic_api_tests() {
 	# create the result directory for given testsuite
 	echo ""
 	TEST_SUITE_DIR="${RESULTS}/basic_api_tests"
+	AUTOTUNE_YAMLS_DIR="${TEST_SUITE_DIR}/autotune_yamls"
 	AUTOTUNE_JSONS_DIR="${TEST_SUITE_DIR}/autotune_jsons"
 	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
 	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
+	mkdir -p ${AUTOTUNE_YAMLS_DIR}
 	mkdir -p ${AUTOTUNE_JSONS_DIR}
 	mkdir -p ${AUTOTUNE_CONFIG_JSONS_DIR}
 	echo ""
 	((TOTAL_TEST_SUITES++))
 	
-	declare -A layer_configs=([petclinic-deployment-0]="container" [petclinic-deployment-1]="container" [petclinic-deployment-2]="container")
+#	declare -A layer_configs=([petclinic-deployment-0]="container" [petclinic-deployment-1]="container" [petclinic-deployment-2]="container")
 	deployments=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
-	autotune_names=("petclinic-autotune-0"  "petclinic-autotune-1" "petclinic-autotune-2")
-
+	declare -A layer_configs=([petclinic]="container hotspot" [quarkus]="container hotspot quarkus") 
 	
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
@@ -80,24 +81,28 @@ function basic_api_tests() {
 	form_curl_cmd
 
 	# Deploy petclinic application instances	
-	deploy_app "${APP_REPO}" "petclinic" "3"
+	appln="petclinic"
+	instances="3"
+	deploy_app "${APP_REPO}" "${appln}" "${instances}"
 
 	# Sleep for sometime for application pods to be up
 	sleep 5
 
 	# Get the application pods
-	application_name=$(kubectl get pod | grep petclinic-sample-0 | awk '{print $1}')
 	app_pod_names=$(kubectl get pod | grep petclinic | cut -d " " -f1)
 	
 	# Add label to your application pods for autotune to monitor
 	label_names=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
 	label_pods app_pod_names label_names
-	
-	# Get the autotune jsons and autotune config jsons
-	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}" "${YAML_PATH}" "${autotune_names[@]}"
-	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}" "${autotune_config_names[@]}"
 
-	# If testcase is not specified run all tests	
+	# Apply Autotune yamls
+	apply_autotune_yamls "${APP_REPO}" "${appln}" "${instances}" "${AUTOTUNE_YAMLS_DIR}"
+
+	# Get the autotune jsons and autotune config jsons
+	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}"
+	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}"
+
+	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
 		testtorun="all"
 	else
@@ -106,23 +111,23 @@ function basic_api_tests() {
 	
 	case "$testtorun" in
 
-	   listapplications|all) 
+	   listapplications|all)
 		# test listapplication API for specific application
-		listapplications_test "${application_name}" 
+		listapplications_test "${autotune_names[0]}"
 	
 		# test listapplication API for all applications
 		listapplications_test
 		;;&	
 	   listapplayer|all)
 		# test listapplayer API for specific application
-		listapplayer_test "${application_name}"
+		listapplayer_test "${autotune_names[1]}"
 	
 		# test listapplayer API for all applications
 		listapplayer_test
 		;;&
 	   searchspace|all)
 		# test searchSpace API for specific application
-		searchspace_test "${application_name}"
+		searchspace_test "${autotune_names[0]}"
 	
 		# test searchSpace API for all applications
 		searchspace_test
@@ -143,10 +148,10 @@ function basic_api_tests() {
 	    listapptunables|all)
 		# test listapptunables API for specific application and specific layer
 		layer="container"
-		listapptunables_test "${application_name}" "${layer}"
+		listapptunables_test "${autotune_names[2]}" "${layer}"
 
 		# test listapptunables API for specific application
-		listapptunables_test "${application_name}"
+		listapptunables_test "${autotune_names[2]}"
 
 		# test listapptunables API for all applications	
 		listapptunables_test
