@@ -62,7 +62,7 @@ public class ListApplications extends HttpServlet
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType(JSON_CONTENT_TYPE);
 
-        /* Check if there are any experiments running at all ? */
+        // Check if there are any experiments running at all ?
         if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
             outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
             resp.getWriter().println(outputJsonArray.toString(4));
@@ -70,7 +70,7 @@ public class ListApplications extends HttpServlet
         }
 
         String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-        /* If experiment name is not null, try to find it in the hashmap */
+        // If experiment name is not null, try to find it in the hashmap
         if (experimentName != null) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
             if (autotuneObject != null) {
@@ -79,7 +79,7 @@ public class ListApplications extends HttpServlet
                 outputJsonArray.put(jsonObject);
             }
         } else {
-            /* Print all the experiments */
+            // Print all the experiments
             for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
                 AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
                 JSONObject jsonObject = new JSONObject();

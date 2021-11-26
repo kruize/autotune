@@ -16,14 +16,9 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
-import com.autotune.analyzer.deployment.DeploymentInfo;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.k8sObjects.FunctionVariable;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +27,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Objects;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.applicationServiceStackMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -98,7 +92,7 @@ public class ListAppLayers extends HttpServlet {
         JSONArray outputJsonArray = new JSONArray();
         resp.setContentType(JSON_CONTENT_TYPE);
 
-        /* Check if there are any experiments running at all ? */
+        // Check if there are any experiments running at all ?
         if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
             outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
             resp.getWriter().println(outputJsonArray.toString(4));
@@ -107,14 +101,14 @@ public class ListAppLayers extends HttpServlet {
 
         String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-        /* If experiment name is not null, try to find it in the hashmap */
+        // If experiment name is not null, try to find it in the hashmap
         if (experimentName != null) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
             if (autotuneObject != null) {
                 addAppLayersToResponse(outputJsonArray, experimentName, autotuneObject, layerName);
             }
         } else {
-            /* Print all the experiments */
+            // Print all the experiments
             for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
                 AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
                 addAppLayersToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, layerName);
@@ -162,8 +156,4 @@ public class ListAppLayers extends HttpServlet {
         jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
         outputJsonArray.put(jsonObject);
     }
-
-
-
-
 }

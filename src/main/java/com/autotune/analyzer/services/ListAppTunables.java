@@ -99,7 +99,7 @@ public class ListAppTunables extends HttpServlet
 		JSONArray outputJsonArray = new JSONArray();
 		resp.setContentType(JSON_CONTENT_TYPE);
 
-		/* Check if there are any experiments running at all ? */
+		// Check if there are any experiments running at all ?
 		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
 			outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
 			resp.getWriter().println(outputJsonArray.toString(4));
@@ -110,14 +110,14 @@ public class ListAppTunables extends HttpServlet
 		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
 
-		/* If experiment name is not null, try to find it in the hashmap */
+		// If experiment name is not null, try to find it in the hashmap
 		if (experimentName != null) {
 			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
 			if (autotuneObject != null) {
 				addAppLayersToResponse(outputJsonArray, experimentName, autotuneObject, layerName, sloClass);
 			}
 		} else {
-			/* Print all the experiments */
+			// Print all the experiments
 			for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
 				AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 				addAppLayersToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, layerName, sloClass);
