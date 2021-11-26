@@ -43,6 +43,7 @@ public class AnalyzerConstants
 	public static final String SCOPE = "Namespaced";
 	public static final String GROUP = "recommender.com";
 	public static final String API_VERSION = "v1";
+	public static final String POD_TEMPLATE_HASH = "pod-template-hash";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
@@ -121,7 +122,6 @@ public class AnalyzerConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
-		public static final String SLO_CLASS = "slo_class";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";
@@ -129,6 +129,7 @@ public class AnalyzerConstants
 
 		public static final Pattern BOUND_CHARS = Pattern.compile("[\\sa-zA-Z]");
 		public static final Pattern BOUND_DIGITS = Pattern.compile("[\\s0-9\\.]");
+		public static final String SLO_CLASS = "slo_class";
 
 		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
 		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
@@ -136,6 +137,13 @@ public class AnalyzerConstants
 		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
 		public static final String ID = "id";
 		public static final String STEP = "step";
+
+		public static final String LAYER_GENERIC = "generic";
+		public static final String LAYER_CONTAINER = "container";
+		public static final String LAYER_HOTSPOT = "hotspot";
+		public static final String LAYER_QUARKUS = "quarkus";
+		public static final String LAYER_OPENJ9 = "openj9";
+		public static final String LAYER_NODEJS = "nodejs";
 	}
 
 	/**
@@ -144,7 +152,11 @@ public class AnalyzerConstants
 	public static class ServiceConstants {
 		private ServiceConstants() { }
 
+		public static final String JSON_CONTENT_TYPE = "application/json";
+		public static final String EXPERIMENT_NAME = "experiment_name";
 		public static final String APPLICATION_NAME = "application_name";
+		public static final String POD_NAME = "pod_name";
+		public static final String DEPLOYMENT_NAME = "deployment_name";
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";
 		public static final String QUERY_URL = "query_url";

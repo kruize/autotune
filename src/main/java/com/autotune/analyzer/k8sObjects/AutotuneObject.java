@@ -27,22 +27,22 @@ import java.util.HashMap;
  */
 public final class AutotuneObject
 {
-	private final String id;
-	private final String name;
+	private final String experimentId;
+	private final String experimentName;
 	private final String namespace;
 	private final String mode;
 	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 
-	public AutotuneObject(String id,
-			String name,
-			String namespace,
-			String mode,
-			SloInfo sloInfo,
-			SelectorInfo selectorInfo) throws InvalidValueException {
-		this.id = id;
+	public AutotuneObject(String experimentId,
+						  String experimentName,
+						  String namespace,
+						  String mode,
+						  SloInfo sloInfo,
+						  SelectorInfo selectorInfo) throws InvalidValueException {
+		this.experimentId = experimentId;
 		HashMap<String, Object> map = new HashMap<>();
-		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, name);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
@@ -50,7 +50,7 @@ public final class AutotuneObject
 
 		StringBuilder error = ValidateAutotuneObject.validate(map);
 		if (error.toString().isEmpty()) {
-			this.name = name;
+			this.experimentName = experimentName;
 			this.namespace = namespace;
 			this.mode = mode;
 			this.sloInfo = sloInfo;
@@ -60,8 +60,8 @@ public final class AutotuneObject
 		}
 	}
 
-	public String getName() {
-		return name;
+	public String getExperimentName() {
+		return experimentName;
 	}
 
 	public SloInfo getSloInfo() {
@@ -80,14 +80,14 @@ public final class AutotuneObject
 		return namespace;
 	}
 
-	public String getId() {
-		return id;
+	public String getExperimentId() {
+		return experimentId;
 	}
 
 	@Override
 	public String toString() {
 		return "AutotuneObject{" +
-				"name='" + name + '\'' +
+				"name='" + experimentName + '\'' +
 				", namespace='" + namespace + '\'' +
 				", mode='" + mode + '\'' +
 				", sloInfo=" + sloInfo +
