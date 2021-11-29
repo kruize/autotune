@@ -29,6 +29,7 @@ import java.io.IOException;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
+import static com.autotune.analyzer.utils.ServiceHelpers.addStackDetails;
 
 public class ListApplications extends HttpServlet
 {
@@ -74,17 +75,19 @@ public class ListApplications extends HttpServlet
         if (experimentName != null) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
             if (autotuneObject != null) {
-                JSONObject jsonObject = new JSONObject();
-                addExperimentDetails(jsonObject, autotuneObject);
-                outputJsonArray.put(jsonObject);
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addStackDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
         } else {
             // Print all the experiments
             for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
                 AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-                JSONObject jsonObject = new JSONObject();
-                addExperimentDetails(jsonObject, autotuneObject);
-                outputJsonArray.put(jsonObject);
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addStackDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
         }
 

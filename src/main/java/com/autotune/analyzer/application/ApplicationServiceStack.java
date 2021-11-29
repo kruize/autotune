@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 
 import java.util.HashMap;
@@ -26,7 +25,7 @@ import java.util.Map;
  * stack layers on different levels. (runtime, container, framework, etc)
  *
  * application: "petclinic",
- * namespace: "defaut"
+ * namespace: "default"
  * serviceStackLayers:
  * -  layer_name: container
  *    layer_level: 0
@@ -46,15 +45,13 @@ import java.util.Map;
  */
 public class ApplicationServiceStack
 {
-	private final String applicationServiceName;
+	private final String stackName;
 	private final String namespace;
-	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 
-	public ApplicationServiceStack(String applicationServiceName, String namespace, String status) {
-		this.applicationServiceName = applicationServiceName;
+	public ApplicationServiceStack(String stackName, String namespace) {
+		this.stackName = stackName;
 		this.namespace = namespace;
-		this.status = status;
 
 		this.applicationServiceStackLayers = new HashMap<>();
 	}
@@ -63,16 +60,8 @@ public class ApplicationServiceStack
 		return namespace;
 	}
 
-	public String getApplicationServiceName() {
-		return applicationServiceName;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
+	public String getStackName() {
+		return stackName;
 	}
 
 	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
@@ -85,10 +74,9 @@ public class ApplicationServiceStack
 
 	@Override
 	public String toString() {
-		return "ApplicationTunables{" +
-				"applicationName='" + applicationServiceName + '\'' +
+		return "ApplicationServiceStack{" +
+				"DockerImageId='" + stackName + '\'' +
 				", namespace='" + namespace + '\'' +
-				", status='" + status + '\'' +
 				", serviceStackLayers=" + applicationServiceStackLayers +
 				'}';
 	}

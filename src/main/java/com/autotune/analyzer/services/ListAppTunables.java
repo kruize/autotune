@@ -131,13 +131,16 @@ public class ListAppTunables extends HttpServlet
 	}
 
 	private void addAppLayersToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String layerName, String sloClass) {
-		JSONObject jsonObject = new JSONObject();
-		addExperimentDetails(jsonObject, autotuneObject);
-		addFunctionVariablesDetails(jsonObject, autotuneObject);
+		JSONObject experimentJson = new JSONObject();
+		addExperimentDetails(experimentJson, autotuneObject);
+		addFunctionVariablesDetails(experimentJson, autotuneObject);
 
-		JSONArray layersArray = new JSONArray();
-		for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-			ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(applicationServiceStackName);
+		JSONArray stackArray = new JSONArray();
+		for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+			JSONObject stackJson = new JSONObject();
+			stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
+			JSONArray layersArray = new JSONArray();
+			ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
 			if (layerName != null) {
 				if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
 					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
@@ -147,7 +150,12 @@ public class ListAppTunables extends HttpServlet
 					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
 				}
 			}
+			stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
+			stackArray.put(stackJson);
 		}
+		experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+
+		/*
 		if (layersArray.isEmpty()) {
 			// No autotuneconfig objects currently being monitored.
 			if (layerName == null)
@@ -156,8 +164,8 @@ public class ListAppTunables extends HttpServlet
 				outputJsonArray.put(ERROR_LAYER + layerName + NOT_FOUND);
 			return;
 		}
-		jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
-		outputJsonArray.put(jsonObject);
+		*/
+		outputJsonArray.put(experimentJson);
 	}
 
 	private void addLayersAndTunablesToResponse(JSONArray layersArray, ApplicationServiceStack applicationServiceStack, String layerName, String sloClass) {

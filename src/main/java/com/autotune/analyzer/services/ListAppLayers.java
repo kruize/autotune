@@ -122,12 +122,16 @@ public class ListAppLayers extends HttpServlet {
     }
 
     private void addAppLayersToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String layerName) {
-        JSONObject jsonObject = new JSONObject();
-        addExperimentDetails(jsonObject, autotuneObject);
+        JSONObject experimentJson = new JSONObject();
+        addExperimentDetails(experimentJson, autotuneObject);
 
-        JSONArray layersArray = new JSONArray();
-        for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-            ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(applicationServiceStackName);
+        JSONArray stackArray = new JSONArray();
+
+        for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+            ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
+            JSONObject stackJson = new JSONObject();
+            stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
+            JSONArray layersArray = new JSONArray();
             if (layerName != null) {
                 if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
                     JSONObject layerJson = new JSONObject();
@@ -143,8 +147,11 @@ public class ListAppLayers extends HttpServlet {
                     layersArray.put(layerJson);
                 }
             }
+            stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
+            stackArray.put(stackJson);
         }
 
+        /*
         if (layersArray.isEmpty()) {
             // No autotuneconfig objects currently being monitored.
             if (layerName == null)
@@ -153,7 +160,8 @@ public class ListAppLayers extends HttpServlet {
                 outputJsonArray.put(ERROR_LAYER + layerName + NOT_FOUND);
             return;
         }
-        jsonObject.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
-        outputJsonArray.put(jsonObject);
+         */
+        experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+        outputJsonArray.put(experimentJson);
     }
 }

@@ -15,19 +15,19 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
-import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 
 public class SearchSpace extends HttpServlet
 {
@@ -42,8 +42,11 @@ public class SearchSpace extends HttpServlet
      * Example JSON:
      * [
      *   {
-     *     "application_name": "petclinic-deployment-6d4c8678d4-jmz8x",
+     *     "experiment_name": "galaxies-autotune-min-http-response-time",
      *     "objective_function": "transaction_response_time",
+     *     "value_type": "double",
+     *     "hpo_algo_impl": "optuna_tpe",
+     *
      *     "tunables": [
      *       {
      *         "value_type": "double",
@@ -69,59 +72,39 @@ public class SearchSpace extends HttpServlet
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         JSONArray outputJsonArray = new JSONArray();
-        resp.setContentType("application/json");
+        resp.setContentType(JSON_CONTENT_TYPE);
 
-        String applicationName = req.getParameter(AnalyzerConstants.ServiceConstants.APPLICATION_NAME);
+        String experimentName = req.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String containerImageName = req.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
+
+        if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+            outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
+            resp.getWriter().println(outputJsonArray.toString(4));
+            return;
+        }
 
         for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
-            if (applicationName == null) {
-                //No application parameter, generate search space for all applications
-                for (String application : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, application);
+            if (containerImageName == null) {
+                // No application parameter, generate search space for all applications
+                for (String imageId : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageId);
                 }
             } else {
-                if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(applicationName)) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, applicationName);
+                if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
+                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, containerImageName);
                 }
             }
         }
 
         if (outputJsonArray.isEmpty()) {
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty())
-                outputJsonArray.put("Error: No objects of kind Autotune found!");
-            else
-                outputJsonArray.put("Error: Application " + applicationName + " not found!");
-        }
-        resp.getWriter().println(outputJsonArray.toString(4));
-    }
-
-    private void addApplicationToSearchSpace(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String application) {
-        JSONObject applicationJson = new JSONObject();
-        ApplicationServiceStack applicationServiceStack = AutotuneDeployment.applicationServiceStackMap
-                .get(autotuneObjectKey).get(application);
-
-        applicationJson.put(AnalyzerConstants.ServiceConstants.APPLICATION_NAME, application);
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, autotuneObject.getSloInfo().getSloClass());
-        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
-
-        JSONArray tunablesJsonArray = new JSONArray();
-        for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-            AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
-            for (Tunable tunable : autotuneConfig.getTunables()) {
-                JSONObject tunableJson = new JSONObject();
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-
-                tunablesJsonArray.put(tunableJson);
+            if (containerImageName != null) {
+                outputJsonArray.put(ERROR_STACK_NAME + containerImageName + NOT_FOUND);
+            } else {
+                outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
             }
         }
-
-        applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
-        outputJsonArray.put(applicationJson);
+        resp.getWriter().println(outputJsonArray.toString(4));
     }
 }
