@@ -33,7 +33,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.*;
 
-public class ListAppTunables extends HttpServlet
+public class ListStackTunables extends HttpServlet
 {
 	/**
 	 * Returns the list of applications monitored by autotune along with their tunables

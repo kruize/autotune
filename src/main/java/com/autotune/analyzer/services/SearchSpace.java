@@ -88,8 +88,8 @@ public class SearchSpace extends HttpServlet
 
             if (containerImageName == null) {
                 // No application parameter, generate search space for all applications
-                for (String imageId : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageId);
+                for (String imageName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageName);
                 }
             } else {
                 if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {

@@ -215,8 +215,8 @@ public class AutotuneDeployment
 	private static void matchPodsToAutotuneObject(AutotuneObject autotuneObject, KubernetesClient client) {
 		String userLabelKey = autotuneObject.getSelectorInfo().getMatchLabel();
 		String userLabelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
-		PodList podList = client.pods().inAnyNamespace().withLabel(userLabelKey).list();
 
+		PodList podList = client.pods().inAnyNamespace().withLabel(userLabelKey).list();
 		if (podList.getItems().isEmpty()) {
 			// TODO: No matching pods with the userLabelKey found, need to warn the user.
 			return;
@@ -229,23 +229,22 @@ public class AutotuneDeployment
 		for (Pod pod : podList.getItems()) {
 			ObjectMeta podMetadata = pod.getMetadata();
 			String containerLabelValue = podMetadata.getLabels().get(userLabelKey);
-
 			// Check docker image id for each container in the pod
 			for (Container container : pod.getSpec().getContainers()) {
-				String containerId = container.getImage();
+				String containerImageName = container.getImage();
 				if (containerLabelValue != null && containerLabelValue.equals(userLabelValue)) {
-					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerId,
+					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
 							podMetadata.getNamespace());
 					// If autotuneobject is already in map
 					if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
 						// If applicationservicestack is not already in list
-						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerId)) {
-							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(containerId,
+						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
+							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(containerImageName,
 									applicationServiceStack);
 						}
 					} else {
 						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
-						innerMap.put(containerId, applicationServiceStack);
+						innerMap.put(containerImageName, applicationServiceStack);
 						applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
 					}
 				}
@@ -389,10 +388,10 @@ public class AutotuneDeployment
 			String namespace = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
-			ArrayList<Map<String, String>> arrayList = null;
+			ArrayList<Map<String, String>> queryVarList = null;
 			try {
 				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
-				arrayList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+				queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
 			} catch (Exception e) {
 				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
 				return null;
@@ -431,7 +430,7 @@ public class AutotuneDeployment
 			// Replace the queryvariables in the query
 			try {
 				layerPresenceQuery = Variables.updateQueryWithVariables(null, null,
-						layerPresenceQuery, arrayList);
+						layerPresenceQuery, queryVarList);
 			} catch (IOException ignored) { }
 
 			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
@@ -456,7 +455,7 @@ public class AutotuneDeployment
 
 						try {
 							datasourceQuery = Variables.updateQueryWithVariables(null, null,
-									datasourceQuery, arrayList);
+									datasourceQuery, queryVarList);
 						} catch (IOException ignored) { }
 
 						queriesMap.put(datasource, datasourceQuery);
@@ -517,27 +516,28 @@ public class AutotuneDeployment
 		}
 	}
 
-	private static void addLayerInfo(AutotuneConfig autotuneConfig) {
+	private static void addLayerInfo(AutotuneConfig layer) {
 		KubernetesClient client = new DefaultKubernetesClient();
-		String layerPresenceQuery = autotuneConfig.getLayerPresenceQuery();
-		String layerPresenceKey = autotuneConfig.getLayerPresenceKey();
 
-		String layerPresenceLabel = autotuneConfig.getLayerPresenceLabel();
-		String layerPresenceLabelValue = autotuneConfig.getLayerPresenceLabelValue();
+		String layerPresenceQuery = layer.getLayerPresenceQuery();
+		String layerPresenceKey = layer.getLayerPresenceKey();
 
-		String presence = autotuneConfig.getPresence();
+		String layerPresenceLabel = layer.getLayerPresenceLabel();
+		String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
 
+		String presence = layer.getPresence();
 		// Add to all monitored applications in the cluster
 		if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
-			for (String autotuneObject : applicationServiceStackMap.keySet()) {
-				for (String containerImageName : applicationServiceStackMap.get(autotuneObject).keySet()) {
-					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(containerImageName);
-					addLayerInfoToApplication(applicationServiceStack, autotuneConfig);
+			for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
+				for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
+					addLayerInfoToApplication(applicationServiceStack, layer);
 				}
 			}
 			return;
 		}
 
+		// Check if a layer has a datasource query that validates its presence
 		if (layerPresenceQuery != null && !layerPresenceQuery.isEmpty()) {
 			DataSource dataSource = null;
 			try {
@@ -550,45 +550,35 @@ public class AutotuneDeployment
 			try {
 				apps = (ArrayList<String>) dataSource.getAppsForLayer(layerPresenceQuery, layerPresenceKey);
 			} catch (MalformedURLException | NullPointerException e) {
-				LOGGER.info(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + autotuneConfig.getName());
+				LOGGER.info(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 			}
-
 			if (apps != null) {
+				// We now have a list of apps that have the label and the key specified by the user.
+				// We now have to find the kubernetes objects corresponding to these apps
+				// TODO: This query needs to be optimized to only check for pods in the right namespace
+				PodList podList = client.pods().inAnyNamespace().list();
 				for (String application : apps) {
-					for (String autotuneObject : applicationServiceStackMap.keySet()) {
-						/*
-						String[] app = application.split("-");
-						StringBuilder appName = new StringBuilder(app[0]);
-						for (int idx=1; idx<(app.length-2); idx++) {
-							appName.append("-");
-							appName.append(app[idx]);
-						}
-						// Pod pod = client.pods().withName(appName.toString()).get();
-						 */
-						List<Container> containers = null;
-						PodList podList = client.pods().inAnyNamespace().list();
-						for (Pod pod : podList.getItems()) {
-							if (pod.getMetadata().getName().contains(application)) {
-								containers = pod.getSpec().getContainers();
-								break;
-							}
-						}
-						if (containers == null) {
-							LOGGER.info("Application name: " + application + " has " + layerPresenceQuery + " and " + layerPresenceKey + " Error: no such Pod");
-						}
-						for (Container container : containers) {
-							String containerImageName = container.getImage();
-							if (applicationServiceStackMap.get(autotuneObject).containsKey(containerImageName)) {
-								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(containerImageName), autotuneConfig);
-							}
-						}
-						/*
-						LOGGER.info("Application name: " + appName.toString() + " has " + layerPresenceQuery + " and " + layerPresenceKey);
-						if (pod == null) {
-
+					List<Container> containers = null;
+					for (Pod pod : podList.getItems()) {
+						if (pod.getMetadata().getName().contains(application)) {
+							// We found a POD that matches the app name, now get its containers
+							containers = pod.getSpec().getContainers();
 							break;
 						}
-						 */
+					}
+					// No containers were found that matched the applications, this is weird, log a warning
+					if (containers == null) {
+						LOGGER.warn("Could not find any PODs related to Application name: " + application);
+						break;
+					}
+					for (Container container : containers) {
+						String containerImageName = container.getImage();
+						// Check if the container image is already present in the applicationServiceStackMap, it not, add it
+						for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
+							if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
+								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
+							}
+						}
 					}
 				}
 			}
@@ -596,14 +586,13 @@ public class AutotuneDeployment
 
 		if (layerPresenceLabel != null) {
 			PodList podList = client.pods().inAnyNamespace().withLabel(layerPresenceLabel).list();
-
 			for (Pod pod : podList.getItems()) {
 				if (pod.getMetadata().getLabels().get(layerPresenceLabel).equals(layerPresenceLabelValue)) {
-					for (String autotuneObject : applicationServiceStackMap.keySet()) {
-						for (Container container : pod.getSpec().getContainers()) {
-							String containerImageName = container.getImage();
-							if (applicationServiceStackMap.get(autotuneObject).containsKey(containerImageName)) {
-								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject).get(containerImageName), autotuneConfig);
+					for (Container container : pod.getSpec().getContainers()) {
+						String containerImageName = container.getImage();
+						for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
+							if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
+								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
 							}
 						}
 					}
@@ -620,7 +609,8 @@ public class AutotuneDeployment
 	 */
 	private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, AutotuneConfig autotuneConfig) {
 		// Check if layer already exists
-		if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(autotuneConfig.getName())) {
+		if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty() &&
+				applicationServiceStack.getApplicationServiceStackLayers().containsKey(autotuneConfig.getName())) {
 			return;
 		}
 

@@ -34,7 +34,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneService
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
 import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
 
-public class ListAppLayers extends HttpServlet {
+public class ListStackLayers extends HttpServlet {
     /**
      * Returns the list of applications monitored by autotune along with layers detected in the applications.
      * <p>

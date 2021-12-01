@@ -31,7 +31,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneService
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
 import static com.autotune.analyzer.utils.ServiceHelpers.addStackDetails;
 
-public class ListApplications extends HttpServlet
+public class ListStacks extends HttpServlet
 {
     /**
      * Get the list of applications monitored by autotune.

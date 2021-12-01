@@ -22,9 +22,9 @@ public class ServerContext
 {
 	private ServerContext() { }
 	public static final String ROOT_CONTEXT = "/";
-	public static final String LIST_APPLICATIONS = ROOT_CONTEXT + "listApplications";
-	public static final String LIST_APP_LAYERS = ROOT_CONTEXT + "listAppLayers";
-	public static final String LIST_APP_TUNABLES = ROOT_CONTEXT + "listAppTunables";
+	public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
+	public static final String LIST_STACK_LAYERS = ROOT_CONTEXT + "listStackLayers";
+	public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
 	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
 	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
 }
