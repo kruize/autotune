@@ -36,14 +36,14 @@ import static com.autotune.analyzer.utils.ServiceHelpers.*;
 public class ListStackTunables extends HttpServlet
 {
 	/**
-	 * Returns the list of applications monitored by autotune along with their tunables
+	 * Returns the list of application stacks monitored by autotune along with their tunables
 	 *
 	 * Request:
-	 * `GET /listAppTunables` gives the tunables and layer information for all the applications monitored by autotune.
+	 * `GET /listStackTunables` gives the tunables and layer information for all the application stacks monitored by autotune.
 	 *
-	 * `GET /listAppTunables?experiment_name=<EXP_NAME>` for getting the tunables information of a specific application.
+	 * `GET /listStackTunables?experiment_name=<EXP_NAME>` for getting the tunables information of a specific application stack/
 	 *
-	 * `GET /listAppTunables?experiment_name=<EXP_NAME>&layer_name='<LAYER>' for getting tunables of a specific layer for the application.
+	 * `GET /listStackTunables?experiment_name=<EXP_NAME>&layer_name='<LAYER>' for getting tunables of a specific layer for the application stack.
 	 *
 	 * Example JSON:
 	 * {
