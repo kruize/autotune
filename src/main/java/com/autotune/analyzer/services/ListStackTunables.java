@@ -47,49 +47,103 @@ public class ListStackTunables extends HttpServlet
 	 *
 	 * Example JSON:
 	 * {
-	 *       "experiment_name": "app1_autotune",
-	 *       “objective_function”: “transaction_response_time”,
-	 *       "slo_class": "response_time",
-	 *       “direction”: “minimize”
-	 *       "layers": [
-	 *         {
-	 *           "layer_level": 0,
-	 *           "layer_name": "container",
-	 *           "layer_details": "generic container tunables"
-	 *           "tunables": [
+	 *    {
+	 *         "experiment_name": "galaxies-autotune-min-http-response-time",
+	 *         "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
+	 *         "objective_function": "request_sum/request_count",
+	 *         "hpo_algo_impl": "optuna_tpe",
+	 *         "stacks": [{
+	 *             "layers": [
+	 *                 {
+	 *                     "layer_id": "af07fd998199bf2d57f95dc18f2cc2311b72f6de11e7e949b566fcdc5ecb443b",
+	 *                     "layer_level": 0,
+	 *                     "tunables": [
+	 *                         {
+	 *                             "value_type": "double",
+	 *                             "lower_bound": "150.0Mi",
+	 *                             "name": "memoryRequest",
+	 *                             "step": 1,
+	 *                             "query_url": "http://10.111.106.208:9090/api/v1/query?query=container_memory_working_set_bytes{container=\"\", pod=\"dinogun/galaxies:1.2-jdk-11.0.10_9\"}",
+	 *                             "upper_bound": "300.0Mi"
+	 *                         },
+	 *                         {
+	 *                             "value_type": "double",
+	 *                             "lower_bound": "1.0",
+	 *                             "name": "cpuRequest",
+	 *                             "step": 0.01,
+	 *                             "query_url": "http://10.111.106.208:9090/api/v1/query?query=(container_cpu_usage_seconds_total{container!=\"POD\", pod=\"dinogun/galaxies:1.2-jdk-11.0.10_9\"}[1m])",
+	 *                             "upper_bound": "3.0"
+	 *                         }
+	 *                     ],
+	 *                     "layer_name": "container",
+	 *                     "layer_details": "generic container tunables"
+	 *                 },
+	 *                 {
+	 *                     "layer_id": "63f4bd430913abffaa6c41a5e05015d5fea23134c99826470c904a7cfe56b40c",
+	 *                     "layer_level": 1,
+	 *                     "tunables": [{
+	 *                         "value_type": "integer",
+	 *                         "lower_bound": "9",
+	 *                         "name": "MaxInlineLevel",
+	 *                         "step": 1,
+	 *                         "query_url": "http://10.111.106.208:9090/api/v1/query?query=jvm_memory_used_bytes{area=\"heap\", container=\"\", pod=\"dinogun/galaxies:1.2-jdk-11.0.10_9\"}",
+	 *                         "upper_bound": "50"
+	 *                     }],
+	 *                     "layer_name": "hotspot",
+	 *                     "layer_details": "hotspot tunables"
+	 *                 },
+	 *                 {
+	 *                     "layer_id": "3ec648860dd10049b2488f19ca6d80fc5b50acccdf4aafaedc2316c6eea66741",
+	 *                     "layer_level": 2,
+	 *                     "tunables": [
+	 *                         {
+	 *                             "value_type": "integer",
+	 *                             "lower_bound": "1",
+	 *                             "name": "quarkus.thread-pool.core-threads",
+	 *                             "step": 1,
+	 *                             "query_url": "none",
+	 *                             "upper_bound": "10"
+	 *                         },
+	 *                         {
+	 *                             "value_type": "integer",
+	 *                             "lower_bound": "1",
+	 *                             "name": "quarkus.thread-pool.queue-size",
+	 *                             "step": 1,
+	 *                             "query_url": "none",
+	 *                             "upper_bound": "100"
+	 *                         },
+	 *                         {
+	 *                             "value_type": "integer",
+	 *                             "lower_bound": "1",
+	 *                             "name": "quarkus.hibernate-orm.jdbc.statement-fetch-size",
+	 *                             "step": 1,
+	 *                             "query_url": "none",
+	 *                             "upper_bound": "50"
+	 *                         }
+	 *                     ],
+	 *                     "layer_name": "quarkus",
+	 *                     "layer_details": "quarkus tunables"
+	 *                 }
+	 *             ],
+	 *             "stack_name": "dinogun/galaxies:1.2-jdk-11.0.10_9"
+	 *         }],
+	 *         "function_variables": [
 	 *             {
-	 *                 "name": "memoryRequest",
-	 *                 "upper_bound": "300M",
-	 *                 "lower_bound": "150M",
 	 *                 "value_type": "double",
-	 *                 "query_url": "http://prometheus:9090/container_memory_working_set_bytes{container=\"\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}"
+	 *                 "name": "request_sum",
+	 *                 "query_url": "http://10.111.106.208:9090/api/v1/query?query=rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])"
 	 *             },
 	 *             {
-	 *                 "name": "cpuRequest",
-	 *                 "upper_bound": "3.0",
-	 *                 "lower_bound": "1.0",
 	 *                 "value_type": "double",
-	 *                 "query_url": "http://prometheus:9090/(container_cpu_usage_seconds_total{container!=\"POD\", pod_name=\"petclinic-deployment-6d4c8678d4-jmz8x\"}[1m])"
+	 *                 "name": "request_count",
+	 *                 "query_url": "http://10.111.106.208:9090/api/v1/query?query=rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])"
 	 *             }
-	 *           ]
-	 *         },
-	 *         {
-	 *           "layer_level": 1,
-	 *           "layer_name": "openj9",
-	 *           "layer_details": "java openj9 tunables",
-	 *           "tunables": [
-	 *             {
-	 *               "name": "javaHeap",
-	 *               "upper_bound": "250M",
-	 *               "lower_bound": "100M",
-	 *               "value_type": "double",
-	 *               "query_url": "http://prometheus:9090/jvm_memory_used_bytes{area=\"heap\",id=\"nursery-allocate\", pod=petclinic-deployment-6d4c8678d4-jmz8x}"
-	 *             }
-	 *           ]
-	 *       }
-	 *     ]
-	 *   }
+	 *         ],
+	 *         "slo_class": "response_time",
+	 *         "direction": "minimize"
+	 *     }
 	 * ]
+	 *
 	 * @param req
 	 * @param resp
 	 * @throws IOException
@@ -154,17 +208,6 @@ public class ListStackTunables extends HttpServlet
 			stackArray.put(stackJson);
 		}
 		experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
-
-		/*
-		if (layersArray.isEmpty()) {
-			// No autotuneconfig objects currently being monitored.
-			if (layerName == null)
-				outputJsonArray.put(LAYER_NOT_FOUND);
-			else
-				outputJsonArray.put(ERROR_LAYER + layerName + NOT_FOUND);
-			return;
-		}
-		*/
 		outputJsonArray.put(experimentJson);
 	}
 

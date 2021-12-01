@@ -37,34 +37,63 @@ public class SearchSpace extends HttpServlet
      * Request:
      * `GET /searchSpace` gives the search space for all applications monitored.
      *
-     * `GET /searchSpace?application_name=<APPLICATION>` gives the search space for a specific application.
+     * `GET /searchSpace?experiment_name=<EXP_NAME>` gives the search space for a specific application.
      *
      * Example JSON:
      * [
-     *   {
-     *     "experiment_name": "galaxies-autotune-min-http-response-time",
-     *     "objective_function": "transaction_response_time",
-     *     "value_type": "double",
-     *     "hpo_algo_impl": "optuna_tpe",
-     *
-     *     "tunables": [
-     *       {
-     *         "value_type": "double",
-     *         "lower_bound": "150M",
-     *         "name": "memoryRequest",
-     *         "upper_bound": "300M"
-     *       },
-     *       {
-     *         "value_type": "double",
-     *         "lower_bound": "1.0",
-     *         "name": "cpuRequest",
-     *         "upper_bound": "3.0"
-     *       }
-     *     ],
-     *     "slo_class": "response_time",
-     *     "direction": "minimize"
-     *   }
+     *    {
+     *         "experiment_name": "galaxies-autotune-min-http-response-time",
+     *         "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
+     *         "objective_function": "request_sum/request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "tunables": [
+     *             {
+     *                 "value_type": "double",
+     *                 "lower_bound": "150.0Mi",
+     *                 "name": "memoryRequest",
+     *                 "step": 1,
+     *                 "upper_bound": "300.0Mi"
+     *             },
+     *             {
+     *                 "value_type": "double",
+     *                 "lower_bound": "1.0",
+     *                 "name": "cpuRequest",
+     *                 "step": 0.01,
+     *                 "upper_bound": "3.0"
+     *             },
+     *             {
+     *                 "value_type": "integer",
+     *                 "lower_bound": "9",
+     *                 "name": "MaxInlineLevel",
+     *                 "step": 1,
+     *                 "upper_bound": "50"
+     *             },
+     *             {
+     *                 "value_type": "integer",
+     *                 "lower_bound": "1",
+     *                 "name": "quarkus.thread-pool.core-threads",
+     *                 "step": 1,
+     *                 "upper_bound": "10"
+     *             },
+     *             {
+     *                 "value_type": "integer",
+     *                 "lower_bound": "1",
+     *                 "name": "quarkus.thread-pool.queue-size",
+     *                 "step": 1,
+     *                 "upper_bound": "100"
+     *             },
+     *             {
+     *                 "value_type": "integer",
+     *                 "lower_bound": "1",
+     *                 "name": "quarkus.hibernate-orm.jdbc.statement-fetch-size",
+     *                 "step": 1,
+     *                 "upper_bound": "50"
+     *             }
+     *         ],
+     *         "direction": "minimize"
+     *     }
      * ]
+     *
      * @param req
      * @param resp
      * @throws IOException

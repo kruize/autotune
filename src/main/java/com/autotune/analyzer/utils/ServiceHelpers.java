@@ -56,8 +56,10 @@ public class ServiceHelpers {
 	}
 
 	/**
+	 * Copy over the array of stack names for the given Autotune Object to the JSON Object provided
 	 *
 	 * @param stackJson
+	 * @param autotuneObject
 	 */
 	public static void addStackDetails(JSONObject stackJson, AutotuneObject autotuneObject) {
 		Set<String> applicationServiceStack = applicationServiceStackMap.get(autotuneObject.getExperimentName()).keySet();
@@ -176,7 +178,7 @@ public class ServiceHelpers {
 		applicationJson.put(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME, autotuneObject.getExperimentName());
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, autotuneObject.getSloInfo().getDirection());
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, autotuneObject.getSloInfo().getObjectiveFunction());
-		applicationJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
+		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.EXPERIMENT_ID, autotuneObject.getExperimentId());
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, autotuneObject.getSloInfo().getHpoAlgoImpl());
 
 		JSONArray tunablesJsonArray = new JSONArray();

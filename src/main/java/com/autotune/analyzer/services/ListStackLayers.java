@@ -36,51 +36,74 @@ import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
 
 public class ListStackLayers extends HttpServlet {
     /**
-     * Returns the list of applications monitored by autotune along with layers detected in the applications.
+     * Returns the list of applications stacks monitored by autotune along with layers detected in the applications.
      * <p>
      * Request:
-     * `GET /listAppLayers` returns the list of all applications monitored by autotune, and their layers.
+     * `GET /listStackLayers` returns the list of all application stacks monitored by autotune, and their layers.
      * <p>
-     * `GET /listAppLayers?experiment_name=<EXP_NAME>` returns the layers detected for the pods specific to the given experiment.
+     * `GET /listStackLayers?experiment_name=<EXP_NAME>` returns the layers detected for the pods specific to the given experiment.
      * <p>
      * Example JSON:
      * [
-     * {
-     * "experiment_name": "app1_autotune",
-     * “objective_function”: “transaction_response_time”,
-     * "slo_class": "response_time",
-     * “direction”: “minimize”
-     * "layers": [
-     * {
-     * "layer_level": 0,
-     * "layer_name": "container",
-     * "layer_details": "generic container tunables"
-     * },
-     * {
-     * "layer_level": 1,
-     * "layer_name": "openj9",
-     * "layer_details": "java openj9 tunables"
-     * }
-     * ]
-     * },
-     * {
-     * "experiment_name": "app2_autotune",
-     * “objective_function”: “performedChecks_total”,
-     * "slo_class": "throughput",
-     * “direction”: “maximize”
-     * "layers": [
-     * {
-     * "layer_level": 0,
-     * "layer_name": "container",
-     * "layer_details": "generic container tunables"
-     * },
-     * {
-     * "layer_level": 1,
-     * "layer_name": "hotspot",
-     * "layer_details": "java hotspot tunables"
-     * }
-     * ]
-     * }
+     *     {
+     *         "experiment_name": "autotune-max-http-throughput",
+     *         "experiment_id": "94f76772f43339f860e0d5aad8bebc1abf50f461712d4c5d14ea7aada280e8f3",
+     *         "objective_function": "request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "stacks": [
+     *             {
+     *                 "layers": [{
+     *                     "layer_id": "af07fd998199bf2d57f95dc18f2cc2311b72f6de11e7e949b566fcdc5ecb443b",
+     *                     "layer_level": 0,
+     *                     "layer_name": "container",
+     *                     "layer_details": "generic container tunables"
+     *                 }],
+     *                 "stack_name": "dinogun/autotune_optuna:0.0.5"
+     *             },
+     *             {
+     *                 "layers": [{
+     *                     "layer_id": "af07fd998199bf2d57f95dc18f2cc2311b72f6de11e7e949b566fcdc5ecb443b",
+     *                     "layer_level": 0,
+     *                     "layer_name": "container",
+     *                     "layer_details": "generic container tunables"
+     *                 }],
+     *                 "stack_name": "dinogun/autotune_operator:0.0.5"
+     *             }
+     *         ],
+     *         "slo_class": "throughput",
+     *         "direction": "maximize"
+     *     },
+     *     {
+     *         "experiment_name": "galaxies-autotune-min-http-response-time",
+     *         "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
+     *         "objective_function": "request_sum/request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "stacks": [{
+     *             "layers": [
+     *                 {
+     *                     "layer_id": "af07fd998199bf2d57f95dc18f2cc2311b72f6de11e7e949b566fcdc5ecb443b",
+     *                     "layer_level": 0,
+     *                     "layer_name": "container",
+     *                     "layer_details": "generic container tunables"
+     *                 },
+     *                 {
+     *                     "layer_id": "63f4bd430913abffaa6c41a5e05015d5fea23134c99826470c904a7cfe56b40c",
+     *                     "layer_level": 1,
+     *                     "layer_name": "hotspot",
+     *                     "layer_details": "hotspot tunables"
+     *                 },
+     *                 {
+     *                     "layer_id": "3ec648860dd10049b2488f19ca6d80fc5b50acccdf4aafaedc2316c6eea66741",
+     *                     "layer_level": 2,
+     *                     "layer_name": "quarkus",
+     *                     "layer_details": "quarkus tunables"
+     *                 }
+     *             ],
+     *             "stack_name": "dinogun/galaxies:1.2-jdk-11.0.10_9"
+     *         }],
+     *         "slo_class": "response_time",
+     *         "direction": "minimize"
+     *     }
      * ]
      *
      * @param req
@@ -151,16 +174,6 @@ public class ListStackLayers extends HttpServlet {
             stackArray.put(stackJson);
         }
 
-        /*
-        if (layersArray.isEmpty()) {
-            // No autotuneconfig objects currently being monitored.
-            if (layerName == null)
-                outputJsonArray.put(LAYER_NOT_FOUND);
-            else
-                outputJsonArray.put(ERROR_LAYER + layerName + NOT_FOUND);
-            return;
-        }
-         */
         experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
         outputJsonArray.put(experimentJson);
     }

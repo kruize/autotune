@@ -75,9 +75,9 @@ public class ApplicationServiceStack
 	@Override
 	public String toString() {
 		return "ApplicationServiceStack{" +
-				"DockerImageId='" + stackName + '\'' +
+				"stackName='" + stackName + '\'' +
 				", namespace='" + namespace + '\'' +
-				", serviceStackLayers=" + applicationServiceStackLayers +
+				", stackLayers=" + applicationServiceStackLayers +
 				'}';
 	}
 }
