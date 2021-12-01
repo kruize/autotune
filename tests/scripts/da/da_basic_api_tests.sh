@@ -57,9 +57,7 @@ function basic_api_tests() {
 	echo ""
 	((TOTAL_TEST_SUITES++))
 	
-#	declare -A layer_configs=([petclinic-deployment-0]="container" [petclinic-deployment-1]="container" [petclinic-deployment-2]="container")
-	deployments=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
-	declare -A layer_configs=([petclinic]="container hotspot" [quarkus]="container hotspot quarkus") 
+	declare -A layer_configs=([petclinic]="container" [galaxies]="container hotspot quarkus") 
 	
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
@@ -113,24 +111,27 @@ function basic_api_tests() {
 
 	   listapplications|all)
 		# test listapplication API for specific application
-		listapplications_test "${autotune_names[0]}"
+		exp_name="${autotune_names[0]}"
+		listapplications_test "${exp_name}"
 	
 		# test listapplication API for all applications
 		listapplications_test
 		;;&	
 	   listapplayer|all)
 		# test listapplayer API for specific application
-		listapplayer_test "${autotune_names[1]}"
+		exp_name="${autotune_names[1]}"
+		listapplayer_test "${appln}" "${exp_name}"
 	
 		# test listapplayer API for all applications
-		listapplayer_test
+		listapplayer_test "${appln}"
 		;;&
 	   searchspace|all)
 		# test searchSpace API for specific application
-		searchspace_test "${autotune_names[0]}"
+		exp_name="${autotune_names[0]}"
+		searchspace_test "${appln}" "${exp_name}"
 	
 		# test searchSpace API for all applications
-		searchspace_test
+		searchspace_test "${appln}"
 		;;&
 	    list_autotune_tunables|all)
 		# test listAutotuneTunables API for specific slo_class and layer
@@ -148,13 +149,14 @@ function basic_api_tests() {
 	    listapptunables|all)
 		# test listapptunables API for specific application and specific layer
 		layer="container"
-		listapptunables_test "${autotune_names[2]}" "${layer}"
+		exp_name="${autotune_names[2]}"
+		listapptunables_test "${appln}" "${exp_name}" "${layer}"
 
 		# test listapptunables API for specific application
-		listapptunables_test "${autotune_names[2]}"
+		listapptunables_test "${appln}" "${exp_name}"
 
 		# test listapptunables API for all applications	
-		listapptunables_test
+		listapptunables_test "${appln}"
 		;;&
 	esac
 
@@ -164,7 +166,7 @@ function basic_api_tests() {
 	fi 
 
 	# Cleanup the deployed apps
-	app_cleanup "petclinic"
+	app_cleanup "${appln}"
 
 	# Cleanup autotune
 	autotune_cleanup
