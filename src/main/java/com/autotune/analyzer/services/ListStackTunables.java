@@ -190,22 +190,26 @@ public class ListStackTunables extends HttpServlet
 		addFunctionVariablesDetails(experimentJson, autotuneObject);
 
 		JSONArray stackArray = new JSONArray();
-		for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-			JSONObject stackJson = new JSONObject();
-			stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
-			JSONArray layersArray = new JSONArray();
-			ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
-			if (layerName != null) {
-				if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
-					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
+		if (!applicationServiceStackMap.get(autotuneObjectKey).isEmpty()) {
+			for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+				JSONObject stackJson = new JSONObject();
+				stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
+				JSONArray layersArray = new JSONArray();
+				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
+				if (layerName != null) {
+					if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
+						addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
+					}
+				} else {
+					if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty()) {
+						for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+							addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
+						}
+					}
 				}
-			} else {
-				for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-					addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
-				}
+				stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
+				stackArray.put(stackJson);
 			}
-			stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
-			stackArray.put(stackJson);
 		}
 		experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
 		outputJsonArray.put(experimentJson);

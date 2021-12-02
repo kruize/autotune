@@ -149,6 +149,12 @@ public class ListStackLayers extends HttpServlet {
         addExperimentDetails(experimentJson, autotuneObject);
 
         JSONArray stackArray = new JSONArray();
+        if (applicationServiceStackMap.isEmpty() ||
+                applicationServiceStackMap.get(autotuneObjectKey).keySet().isEmpty()) {
+            experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+            outputJsonArray.put(experimentJson);
+            return;
+        }
 
         for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
             ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
@@ -163,11 +169,13 @@ public class ListStackLayers extends HttpServlet {
                     layersArray.put(layerJson);
                 }
             } else {
-                for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-                    JSONObject layerJson = new JSONObject();
-                    AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(layer);
-                    addLayerDetails(layerJson, autotuneConfig);
-                    layersArray.put(layerJson);
+                if (!applicationServiceStack.getApplicationServiceStackLayers().keySet().isEmpty()) {
+                    for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+                        JSONObject layerJson = new JSONObject();
+                        AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(layer);
+                        addLayerDetails(layerJson, autotuneConfig);
+                        layersArray.put(layerJson);
+                    }
                 }
             }
             stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);

@@ -112,17 +112,21 @@ public class SearchSpace extends HttpServlet
             return;
         }
 
-        for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+        if (!AutotuneDeployment.applicationServiceStackMap.isEmpty()) {
+            for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
+                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
 
-            if (containerImageName == null) {
-                // No application parameter, generate search space for all applications
-                for (String imageName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageName);
-                }
-            } else {
-                if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
-                    addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, containerImageName);
+                if (containerImageName == null) {
+                    // No application parameter, generate search space for all applications
+                    if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).isEmpty()) {
+                        for (String imageName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
+                            addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageName);
+                        }
+                    }
+                } else {
+                    if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
+                        addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, containerImageName);
+                    }
                 }
             }
         }
