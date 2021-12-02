@@ -113,20 +113,16 @@ public class SearchSpace extends HttpServlet
         }
 
         if (!AutotuneDeployment.applicationServiceStackMap.isEmpty()) {
-            for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
-                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-
-                if (containerImageName == null) {
-                    // No application parameter, generate search space for all applications
-                    if (!AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).isEmpty()) {
-                        for (String imageName : AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-                            addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, imageName);
-                        }
-                    }
-                } else {
-                    if (AutotuneDeployment.applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
-                        addApplicationToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, containerImageName);
-                    }
+            if (experimentName == null) {
+                // No experiment name parameter, generate search space for all experiments
+                for (String autotuneObjectKey : AutotuneDeployment.applicationServiceStackMap.keySet()) {
+                    AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+                    addExperimentToSearchSpace(outputJsonArray, autotuneObjectKey, autotuneObject, containerImageName);
+                }
+            } else {
+                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
+                if (autotuneObject != null) {
+                    addExperimentToSearchSpace(outputJsonArray, experimentName, autotuneObject, containerImageName);
                 }
             }
         }
@@ -139,5 +135,20 @@ public class SearchSpace extends HttpServlet
             }
         }
         resp.getWriter().println(outputJsonArray.toString(4));
+    }
+
+    private void addExperimentToSearchSpace(JSONArray outputJsonArray, String experimentName, AutotuneObject autotuneObject, String containerImageName) {
+        if (containerImageName == null) {
+            // No containerImage name parameter, generate search space for all stacks
+            if (!AutotuneDeployment.applicationServiceStackMap.get(experimentName).isEmpty()) {
+                for (String imageName : AutotuneDeployment.applicationServiceStackMap.get(experimentName).keySet()) {
+                    addApplicationToSearchSpace(outputJsonArray, experimentName, autotuneObject, imageName);
+                }
+            }
+        } else {
+            if (AutotuneDeployment.applicationServiceStackMap.get(experimentName).containsKey(containerImageName)) {
+                addApplicationToSearchSpace(outputJsonArray, experimentName, autotuneObject, containerImageName);
+            }
+        }
     }
 }
