@@ -36,7 +36,7 @@ import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
 
 public class ListStackLayers extends HttpServlet {
     /**
-     * Returns the list of applications stacks monitored by autotune along with layers detected in the applications.
+     * Returns the list of application stacks monitored by autotune along with layers detected in the applications.
      * <p>
      * Request:
      * `GET /listStackLayers` returns the list of all application stacks monitored by autotune, and their layers.
