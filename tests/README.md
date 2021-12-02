@@ -148,7 +148,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [-o optuna image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory]
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [-o optuna image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--hpo specifying this flag starts the HPO service]
 ```
 
 Where values for test_autotune.sh are:
@@ -164,6 +164,7 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
+			[ --hpo ] : optional. Specifying this option runs HPO tests in standalone mode without using the docker image for optuna]
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 
