@@ -29,9 +29,9 @@ See the [Autotune Installation](/docs/autotune_install.md) for more details on t
 
 See the [API README](/design/API.md) for more details on the Autotune REST API.
 
-## Autotune Architecure
+## Autotune Architecture
 
-See the [Autotune Architecure](/design/README.md) for more details on the architecture.
+See the [Autotune Architecture](/design/README.md) for more details on the architecture.
 
 ## Contributing
 

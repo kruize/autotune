@@ -31,6 +31,9 @@ TESTS_FAILED=0
 TESTS_PASSED=0
 TESTS=0
 
+# By default do not start HPO service as it is started in the autotune docker image
+HPO_SERVICE=0
+
 TEST_MODULE_ARRAY=("da" "hpo")
 
 TEST_SUITE_ARRAY=("app_autotune_yaml_tests"

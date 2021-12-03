@@ -34,12 +34,12 @@ public final class AutotuneObject
 	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 
-	public AutotuneObject(String experimentId,
-			String experimentName,
-			String namespace,
-			String mode,
-			SloInfo sloInfo,
-			SelectorInfo selectorInfo) throws InvalidValueException {
+	public AutotuneObject(String experimentName,
+						  String experimentId,
+						  String namespace,
+						  String mode,
+						  SloInfo sloInfo,
+						  SelectorInfo selectorInfo) throws InvalidValueException {
 		this.experimentId = experimentId;
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);

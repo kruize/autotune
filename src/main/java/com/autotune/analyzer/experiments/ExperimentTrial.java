@@ -20,22 +20,22 @@ import java.util.ArrayList;
 public class ExperimentTrial {
     private final String experimentId;
     private final String namespace;
-    private final String applicationName;
+    private final String experimentName;
     private final String appVersion;
     private final TrialInfo trialInfo;
     private final ExperimentSettings experimentSettings;
     private final ArrayList<Deployments> deployments;
 
-    public ExperimentTrial(String experimentId,
+    public ExperimentTrial(String experimentName,
+                           String experimentId,
                            String namespace,
-                           String applicationName,
                            String appVersion,
                            TrialInfo trialInfo,
                            ExperimentSettings experimentSettings,
                            ArrayList<Deployments> deployments) {
         this.experimentId = experimentId;
         this.namespace = namespace;
-        this.applicationName = applicationName;
+        this.experimentName = experimentName;
         this.appVersion = appVersion;
         this.trialInfo = trialInfo;
         this.experimentSettings = experimentSettings;
@@ -50,8 +50,8 @@ public class ExperimentTrial {
         return namespace;
     }
 
-    public String getApplicationName() {
-        return applicationName;
+    public String getExperimentName() {
+        return experimentName;
     }
 
     public String getAppVersion() {

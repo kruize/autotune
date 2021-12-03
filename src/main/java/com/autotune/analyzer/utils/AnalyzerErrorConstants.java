@@ -50,4 +50,16 @@ public class AnalyzerErrorConstants
 		public static final String MODE_NOT_SUPPORTED = "Autotune object mode not supported\n";
 		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm not supported\n";
 	}
+
+	public static class AutotuneServiceMessages {
+		private AutotuneServiceMessages() { }
+
+		public static final String AUTOTUNE_OBJECTS_NOT_FOUND = "Error: No objects of kind Autotune found!";
+		public static final String ERROR_EXPERIMENT_NAME = "Error: Experiment Name ";
+		public static final String NOT_FOUND = " not found!";
+		public static final String LAYER_NOT_FOUND = "Error: No Layer (AutotuneConfig) object found!";
+		public static final String ERROR_LAYER = "Error: Layer (AutotuneConfig) object ";
+		public static final String ERROR_SLO_CLASS = "Error: Tunables matching slo_class ";
+		public static final String ERROR_STACK_NAME = "Error: Experiment related to Stack (Container Image) ";
+	}
 }

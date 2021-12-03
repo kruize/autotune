@@ -39,7 +39,7 @@ public class Experimentator implements Runnable {
 			ApplicationSearchSpace applicationSearchSpace = updateSearchSpace(autotuneObject, applicationServiceStack);
 			applicationServiceStack.setApplicationSearchSpace(applicationSearchSpace);
 
-			AutotuneExperiment autotuneExperiment = experimentsMap.get(autotuneObject.getExperimentId());
+			AutotuneExperiment autotuneExperiment = experimentsMap.get(autotuneObject.getExperimentName());
 			// If a experiment is already underway, need to update it
 			if (null != autotuneExperiment) {
 				updateExperiment(autotuneExperiment);
@@ -48,13 +48,13 @@ public class Experimentator implements Runnable {
 
 			// Start a new experiment
 			ArrayList<ExperimentTrial> experimentTrials = new ArrayList<>();
-			autotuneExperiment = new AutotuneExperiment(autotuneObject.getExperimentId(),
-					autotuneObject.getExperimentName(),
+			autotuneExperiment = new AutotuneExperiment(autotuneObject.getExperimentName(),
+					autotuneObject.getExperimentId(),
 					autotuneObject,
 					"Pending Provisioning",
 					applicationServiceStack,
 					experimentTrials);
-			experimentsMap.put(autotuneObject.getExperimentId(), autotuneExperiment);
+			experimentsMap.put(autotuneObject.getExperimentName(), autotuneExperiment);
 
 			// Autotune can only handle MAX_NUMBER_OF_EXPERIMENTS at any given time
 			if (++num_experiments <= MAX_NUMBER_OF_EXPERIMENTS) {
@@ -85,29 +85,27 @@ public class Experimentator implements Runnable {
 
 			String experimentName = autotuneObject.getExperimentName();
 			String experimentId = autotuneObject.getExperimentId();
-			String applicationName = applicationServiceStack.getApplicationServiceName();
 			String objectiveFunction = autotuneObject.getSloInfo().getObjectiveFunction();
 			String hpoAlgoImpl = autotuneObject.getSloInfo().getHpoAlgoImpl();
 			String direction = autotuneObject.getSloInfo().getDirection();
-			// TODO: Need to add valueType to the ObjectiveFunction !
+			// TODO: Need to add valueType to the ObjectiveFunction!
 			String valueType = "double";
 
 			applicationSearchSpace = new ApplicationSearchSpace(experimentName,
 					experimentId,
-					applicationName,
 					objectiveFunction,
 					hpoAlgoImpl,
 					direction,
 					valueType);
 
-			for (String applicationServiceStackName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-				AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(applicationServiceStackName);
-				for (Tunable tunable : autotuneConfig.getTunables()) {
-					applicationSearchSpace.getApplicationTunablesMap().put(tunable.getName(), tunable);
+			for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+				AutotuneConfig layer = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
+				for (Tunable tunable : layer.getTunables()) {
+					applicationSearchSpace.getTunablesMap().put(tunable.getName(), tunable);
 				}
 			}
 
-			applicationSearchSpaceMap.put(applicationName,applicationSearchSpace);
+			applicationSearchSpaceMap.put(experimentName, applicationSearchSpace);
 
 			return applicationSearchSpace;
 		} catch (Exception e) {

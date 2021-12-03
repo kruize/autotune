@@ -26,7 +26,6 @@ import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.k8sObjects.SloInfo;
 import com.autotune.analyzer.layer.Layer;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -52,7 +51,7 @@ public class TrialHelpers {
         JSONObject experimentTrialJSON = new JSONObject();
         experimentTrialJSON.put("experiment_id", experimentTrial.getExperimentId());
         experimentTrialJSON.put("namespace", experimentTrial.getNamespace());
-        experimentTrialJSON.put("application_name", experimentTrial.getApplicationName());
+        experimentTrialJSON.put("experiment_name", experimentTrial.getExperimentName());
         experimentTrialJSON.put("app-version", experimentTrial.getAppVersion());
 
         /*
@@ -141,7 +140,6 @@ public class TrialHelpers {
              */
             JSONObject envValues = new JSONObject();
             envValues.put("JDK_JAVA_OPTIONS", deployment.getRuntimeOptions());
-            // envValues.put("JVM_ARGS", deployment.getRuntimeOptions());
 
             JSONObject env = new JSONObject();
             env.put("env", envValues);
@@ -260,7 +258,7 @@ public class TrialHelpers {
             for (Object trialConfigObject : trialConfigArray) {
                 JSONObject trialConfig = (JSONObject) trialConfigObject;
                 String tunableName = trialConfig.getString("tunable_name");
-                Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getApplicationTunablesMap().get(tunableName);
+                Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getTunablesMap().get(tunableName);
                 // String tunableValue = trialConfig.getString("tunable_value");
                 Class<Layer> classRef = DeploymentInfo.getLayer(tunable.getLayerName());
                 try {
@@ -303,9 +301,9 @@ public class TrialHelpers {
             deployments.add(deployment);
         }
 
-        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentId(),
+        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentName(),
+                appSearchSpace.getExperimentId(),
                 autotuneObject.getNamespace(),
-                appSearchSpace.getApplicationName(),
                 "v1",
                 trialInfo,
                 experimentSettings,

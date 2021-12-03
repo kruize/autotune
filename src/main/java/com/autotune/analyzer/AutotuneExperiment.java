@@ -15,8 +15,8 @@ public class AutotuneExperiment {
     ArrayList<ExperimentTrial> experimentTrials;
     private Thread experimentThread;
 
-    public AutotuneExperiment(String experimentId,
-                              String experimentName,
+    public AutotuneExperiment(String experimentName,
+                              String experimentId,
                               AutotuneObject autotuneObject,
                               String experimentStatus,
                               ApplicationServiceStack applicationServiceStack,
