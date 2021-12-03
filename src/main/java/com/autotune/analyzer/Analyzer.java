@@ -45,9 +45,9 @@ public class Analyzer
 	}
 
 	public static void addServlets(ServletContextHandler context) {
-		context.addServlet(ListApplications.class, ServerContext.LIST_APPLICATIONS);
-		context.addServlet(ListAppLayers.class, ServerContext.LIST_APP_LAYERS);
-		context.addServlet(ListAppTunables.class, ServerContext.LIST_APP_TUNABLES);
+		context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
+		context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
+		context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
 		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
 		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
 	}

@@ -59,5 +59,6 @@ public class AnalyzerErrorConstants
 		public static final String LAYER_NOT_FOUND = "Error: No Layer (AutotuneConfig) object found!";
 		public static final String ERROR_LAYER = "Error: Layer (AutotuneConfig) object ";
 		public static final String ERROR_SLO_CLASS = "Error: Tunables matching slo_class ";
+		public static final String ERROR_STACK_NAME = "Error: Experiment related to Stack (Container Image) ";
 	}
 }

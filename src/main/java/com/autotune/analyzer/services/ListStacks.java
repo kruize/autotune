@@ -29,30 +29,41 @@ import java.io.IOException;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
+import static com.autotune.analyzer.utils.ServiceHelpers.addStackDetails;
 
-public class ListApplications extends HttpServlet
+public class ListStacks extends HttpServlet
 {
     /**
      * Get the list of applications monitored by autotune.
      *
      * Request:
-     * `GET /listApplications` gives list of applications monitored by autotune.
+     * `GET /listStacks` gives list of application stacks monitored by autotune.
      *
      * Example JSON:
      * [
      *     {
-     *       "experiment_name": "app1_autotune",
-     *       “objective_function”: “transaction_response_time”,
-     *       "slo_class": "response_time",
-     *       “direction”: “minimize”
+     *         "experiment_name": "autotune-max-http-throughput",
+     *         "experiment_id": "94f76772f43339f860e0d5aad8bebc1abf50f461712d4c5d14ea7aada280e8f3",
+     *         "objective_function": "request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "stacks": [
+     *             "dinogun/autotune_optuna:0.0.5",
+     *             "dinogun/autotune_operator:0.0.5"
+     *         ],
+     *         "slo_class": "throughput",
+     *         "direction": "maximize"
      *     },
      *     {
-     *       "experiment_name": "app2_autotune",
-     *       “objective_function”: “performedChecks_total”,
-     *       "slo_class": "throughput",
-     *       “direction”: “maximize”
+     *         "experiment_name": "galaxies-autotune-min-http-response-time",
+     *         "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
+     *         "objective_function": "request_sum/request_count",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "stacks": ["dinogun/galaxies:1.2-jdk-11.0.10_9"],
+     *         "slo_class": "response_time",
+     *         "direction": "minimize"
      *     }
      * ]
+     *
      * @param req
      * @param resp
      * @throws IOException
@@ -74,17 +85,19 @@ public class ListApplications extends HttpServlet
         if (experimentName != null) {
             AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
             if (autotuneObject != null) {
-                JSONObject jsonObject = new JSONObject();
-                addExperimentDetails(jsonObject, autotuneObject);
-                outputJsonArray.put(jsonObject);
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addStackDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
         } else {
             // Print all the experiments
             for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
                 AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-                JSONObject jsonObject = new JSONObject();
-                addExperimentDetails(jsonObject, autotuneObject);
-                outputJsonArray.put(jsonObject);
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addStackDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
         }
 

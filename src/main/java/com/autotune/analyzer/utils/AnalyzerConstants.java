@@ -86,7 +86,7 @@ public class AnalyzerConstants
 		public static final String MODE = "mode";
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
-		public static final String ID = "id";
+		public static final String EXPERIMENT_ID = "experiment_id";
 		public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
 
 		public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
@@ -135,7 +135,7 @@ public class AnalyzerConstants
 		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
 		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
 		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
-		public static final String ID = "id";
+		public static final String LAYER_ID = "layer_id";
 		public static final String STEP = "step";
 
 		public static final String LAYER_GENERIC = "generic";
@@ -154,9 +154,10 @@ public class AnalyzerConstants
 
 		public static final String JSON_CONTENT_TYPE = "application/json";
 		public static final String EXPERIMENT_NAME = "experiment_name";
-		public static final String APPLICATION_NAME = "application_name";
 		public static final String POD_NAME = "pod_name";
 		public static final String DEPLOYMENT_NAME = "deployment_name";
+		public static final String STACKS = "stacks";
+		public static final String STACK_NAME = "stack_name";
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";
 		public static final String QUERY_URL = "query_url";

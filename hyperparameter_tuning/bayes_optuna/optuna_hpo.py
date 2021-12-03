@@ -105,12 +105,12 @@ class Objective(TrialDetails):
         return actual_slo_value
 
 
-def recommend(application_name, direction, hpo_algo_impl, id_, objective_function, tunables, value_type):
+def recommend(experiment_name, direction, hpo_algo_impl, id_, objective_function, tunables, value_type):
     """
     Perform Bayesian Optimization with Optuna using the appropriate sampler and recommend the best config.
 
     Parameters:
-        application_name (str): The name of the application that is being optimized.
+        experiment_name (str): The name of the application that is being optimized.
         direction (str): Direction of optimization, minimize or maximize.
         hpo_algo_impl (str): Hyperparameter optimization library to perform Bayesian Optimization.
         id_ (str): The id of the application that is being optimized.
@@ -172,7 +172,7 @@ def recommend(application_name, direction, hpo_algo_impl, id_, objective_functio
         )
 
     recommended_config["id"] = id_
-    recommended_config["application_name"] = application_name
+    recommended_config["experiment_name"] = experiment_name
     recommended_config["direction"] = direction
     recommended_config["optimal_value"] = optimal_value
 

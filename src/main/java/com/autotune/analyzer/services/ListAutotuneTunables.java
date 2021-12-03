@@ -109,7 +109,6 @@ public class ListAutotuneTunables extends HttpServlet
 		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 		AutotuneConfig autotuneConfig = null;
 
-		// No layer parameter was passed in the request
 		if (layerName != null) {
 			if (AutotuneDeployment.autotuneConfigMap.containsKey(layerName)) {
 				JSONObject layerJson = new JSONObject();
@@ -121,12 +120,15 @@ public class ListAutotuneTunables extends HttpServlet
 					layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
 					layersArray.put(layerJson);
 				} else {
-					layersArray.put(LAYER_NOT_FOUND);
+					if (sloClass != null) {
+						layersArray.put(ERROR_SLO_CLASS + sloClass + NOT_FOUND);
+					}
 				}
 			} else {
 				layersArray.put(LAYER_NOT_FOUND);
 			}
 		} else {
+			// No layer parameter was passed in the request
 			for (String layer : AutotuneDeployment.autotuneConfigMap.keySet()) {
 				JSONObject layerJson = new JSONObject();
 				autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layer);
