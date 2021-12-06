@@ -36,7 +36,7 @@ function basic_api_tests() {
 	TESTS=0
 
 	# check if the test case is supported
-	basic_api_tests=("listapplayer" "listapptunables" "listapplications" "searchspace" "list_autotune_tunables")
+	basic_api_tests=("liststacklayers" "liststacktunables" "liststacks" "searchspace" "list_autotune_tunables")
 
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "basic_api"
@@ -109,54 +109,54 @@ function basic_api_tests() {
 	
 	case "$testtorun" in
 
-	   listapplications|all)
-		# test listapplication API for specific application
+	   liststacks|all)
+		# Test listStacks API for a specific application
 		exp_name="${autotune_names[0]}"
-		listapplications_test "${exp_name}"
+		liststacks_test "${exp_name}"
 	
-		# test listapplication API for all applications
-		listapplications_test
+		# Test listStacks API for all applications
+		liststacks_test
 		;;&	
-	   listapplayer|all)
-		# test listapplayer API for specific application
+	   liststacklayers|all)
+		# Test listStackLayer API for a specific application
 		exp_name="${autotune_names[1]}"
-		listapplayer_test "${appln}" "${exp_name}"
+		liststacklayers_test "${appln}" "${exp_name}"
 	
-		# test listapplayer API for all applications
-		listapplayer_test "${appln}"
+		# Test listStackLayers API for all applications
+		liststacklayers_test "${appln}"
 		;;&
 	   searchspace|all)
-		# test searchSpace API for specific application
+		# Test searchSpace API for a specific application
 		exp_name="${autotune_names[0]}"
 		searchspace_test "${appln}" "${exp_name}"
 	
-		# test searchSpace API for all applications
+		# Test searchSpace API for all applications
 		searchspace_test "${appln}"
 		;;&
 	    list_autotune_tunables|all)
-		# test listAutotuneTunables API for specific slo_class and layer
+		# Test listAutotuneTunables API for a specific slo_class and layer
 		slo_class="response_time"
 		layer="container"
 		list_autotune_tunables_test "${slo_class}" "${layer}"
 
-		# test listAutotuneTunables API for specific slo_class
+		# Test listAutotuneTunables API for a specific slo_class
 		slo_class="response_time"
 		list_autotune_tunables_test "${slo_class}" 
 	
-		# test listAutotuneTunables API for all layers
+		# Test listAutotuneTunables API for all layers
 		list_autotune_tunables_test
 		;;&
-	    listapptunables|all)
-		# test listapptunables API for specific application and specific layer
+	    liststacktunables|all)
+		# Test listStackTunables API for a specific application and a specific layer
 		layer="container"
 		exp_name="${autotune_names[2]}"
-		listapptunables_test "${appln}" "${exp_name}" "${layer}"
+		liststacktunables_test "${appln}" "${exp_name}" "${layer}"
 
-		# test listapptunables API for specific application
-		listapptunables_test "${appln}" "${exp_name}"
+		# Test listStackTunables API for a specific application
+		liststacktunables_test "${appln}" "${exp_name}"
 
-		# test listapptunables API for all applications	
-		listapptunables_test "${appln}"
+		# Test listStackTunables API for all applications
+		liststacktunables_test "${appln}"
 		;;&
 	esac
 

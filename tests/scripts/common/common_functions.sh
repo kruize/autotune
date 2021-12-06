@@ -637,10 +637,20 @@ function compare_json() {
 	fi
 }
 
+
+function format_memory() {
+	bound=$1
+	memory_value=$(echo ${bound} | sed 's/[^0-9]*//g')
+	memory_unit=$(echo ${bound} | sed 's/[0-9]*//g')
+	memory_unit=$(echo ${memory_unit} | sed 's/ //g')
+	memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
+	bound="\"${memory_value}.0${memory_unit}\""
+	echo "$bound"
+}
+
 # Create the expected search space json
 # Input: experiment name
 function create_expected_searchspace_json() {
-	index=0
 	app_name=$1
 	exp_name=$2
 
@@ -662,7 +672,7 @@ function create_expected_searchspace_json() {
 		printf '\n  {\n  "experiment_name": "'${exp_name[index]}'",' >> ${file_name}
 		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
 		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
-		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].id')',' >> ${file_name}
+		printf '\n  "experiment_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].experiment_id')',' >> ${file_name}
 		hpo_algo_impl=$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')
 
 		if [ ${hpo_algo_impl} == null ]; then
@@ -690,31 +700,25 @@ function create_expected_searchspace_json() {
 			do
 				((length--))
 				printf '\n {\n\t\t"value_type": '$(cat ${layer_json} | jq .tunables[${length}].value_type)',' >> ${file_name}
+				printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',' >> ${file_name}
 
+				name=$(cat ${layer_json} | jq .tunables[${length}].name)
 				lower_bound=$(cat ${layer_json} | jq .tunables[${length}].lower_bound)
+
 				if [[ "${layer}" == "container"  &&  "${name}" == "\"memoryRequest\"" ]]; then
-					echo "lower_bound from the layer config = $lower_bound"					
-					memory_value=$(echo ${lower_bound} | sed 's/[^0-9]*//g')
-					memory_unit=$(echo ${lower_bound} | sed 's/[0-9]*//g')
-					memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-					memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
-					lower_bound="\"${memory_value}.0${memory_unit}\""
+					lower_bound=$(format_memory "${lower_bound}")
 				fi
+
 				printf '\n\t\t"lower_bound": '${lower_bound}',' >> ${file_name}
 
-				printf '\n\t\t"name": '$(cat ${layer_json} | jq .tunables[${length}].name)',' >> ${file_name}
 				printf '\n\t\t"step": '$(cat ${layer_json} | jq .tunables[${length}].step)',' >> ${file_name}
 
 
 				upper_bound=$(cat ${layer_json} | jq .tunables[${length}].upper_bound)
 				if [[ "${layer}" == "container" && "${name}" == "\"memoryRequest\"" ]]; then
-					echo "upper_bound from the layer config = $upper_bound"					
-					memory_value=$(echo ${upper_bound} | sed 's/[^0-9]*//g')
-					memory_unit=$(echo ${upper_bound} | sed 's/[0-9]*//g')
-					memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-					memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
-					upper_bound="\"${memory_value}.0${memory_unit}\""
+					upper_bound=$(format_memory "${upper_bound}")
 				fi
+
 				printf '\n\t\t"upper_bound": '${upper_bound}'' >> ${file_name}
 
 				if [ "${length}" -ne 0 ]; then
@@ -725,7 +729,7 @@ function create_expected_searchspace_json() {
 			done
 		done
 		printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'' >> ${file_name}
-		if [ "${index}" -eq 0 ]; then
+		if [ "${index}" -eq $((arr_size-1)) ]; then
 			printf '\n } \n' >> ${file_name}
 		else
 			printf '\n }, \n' >> ${file_name}
@@ -803,13 +807,13 @@ function searchspace_test() {
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
-# Create the expected listApplicationTunables json
+# Create the expected listStackTunables json
 # Input: application name, experiment name, layer name
-function create_expected_listapptunables_json() {
+function create_expected_liststacktunables_json() {
 	app_name=$1
 	exp_name=$2
 	layer_name=$3
-	file_name="${LOG_DIR}/expected_listapptunables.json"
+	file_name="${LOG_DIR}/expected_liststacktunables.json"
 
 	# check if the experiment name is passed, if not the consider all the experiments
 	if [ -z "${exp_name}" ]; then
@@ -893,10 +897,6 @@ function create_expected_listapptunables_json() {
 				lower_bound=$(cat ${layer_json} | jq .tunables[${tunables_length}].lower_bound)
 
 				if [[ "${layer}" == "container"  &&  "${name}" == "\"memoryRequest\"" ]]; then
-					memory_value=$(echo ${lower_bound} | sed 's/[^0-9]*//g')
-					memory_unit=$(echo ${lower_bound} | sed 's/[0-9]*//g')
-					memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-					memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
 					lower_bound="\"${memory_value}.0${memory_unit}\""
 				fi
 				printf '\t\t"lower_bound": '${lower_bound}',' >> ${file_name}
@@ -911,10 +911,6 @@ function create_expected_listapptunables_json() {
 
 				upper_bound=$(cat ${layer_json} | jq .tunables[${tunables_length}].upper_bound)
 				if [[ "${layer}" == "container" && "${name}" == "\"memoryRequest\"" ]]; then
-					memory_value=$(echo ${upper_bound} | sed 's/[^0-9]*//g')
-					memory_unit=$(echo ${upper_bound} | sed 's/[0-9]*//g')
-					memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-					memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
 					upper_bound="\"${memory_value}.0${memory_unit}\""
 				fi
 				printf '\t\t"upper_bound": '${upper_bound}'' >> ${file_name}
@@ -924,7 +920,7 @@ function create_expected_listapptunables_json() {
 					printf '\n       }], \n' >> ${file_name}
 				fi
 			done
-			printf '\n         "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].layers['${layer_level}'].id')',' >> ${file_name}
+			printf '\n         "layer_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].layers['${layer_level}'].layer_id')',' >> ${file_name}
 			printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)','  >> ${file_name}
 			printf '\n' >> ${file_name}
 			echo '         "layer_details": '$(cat ${layer_json} | jq .details)''  >> ${file_name}
@@ -936,7 +932,7 @@ function create_expected_listapptunables_json() {
 		done
 
 		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
-		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].id')',' >> ${file_name}
+		printf '\n  "experiment_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].experiment_id')',' >> ${file_name}
 		if [ "${index}" -eq $((arr_size-1)) ]; then
 			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}]' >> ${file_name}
 		else
@@ -948,27 +944,27 @@ function create_expected_listapptunables_json() {
 	echo ""  >> ${LOG}
 }
 
-# Get listAppTunables json
+# Get listStackTunables json
 # Input: experiment name, layer name
-function get_listapptunables_json() {
+function get_liststacktunables_json() {
 	exp_name=$1
 	layer_name=$2
 
 	if [[ -z "${exp_name}" && -z "${layer_name}" ]]; then
-		cmd="${curl_cmd}/listAppTunables"
+		cmd="${curl_cmd}/listStackTunables"
 	elif [[ ! -z "${exp_name}" && ! -z "${layer_name}" ]]; then
-		cmd="${curl_cmd}/listAppTunables?experiment_name=${exp_name}&layer_name=${layer_name}"
+		cmd="${curl_cmd}/listStackTunables?experiment_name=${exp_name}&layer_name=${layer_name}"
 	elif [[ ! -z "${exp_name}" && -z "${layer_name}" ]];then
-		cmd="${curl_cmd}/listAppTunables?experiment_name=${exp_name}"
+		cmd="${curl_cmd}/listStackTunables?experiment_name=${exp_name}"
 	fi
 
-	json_file="${LOG_DIR}/actual_listapptunables.json"
+	json_file="${LOG_DIR}/actual_liststacktunables.json"
 	run_curl_cmd "${cmd}" "${json_file}"
 }
 
-# Test listAppTunables Autotune API
+# Test listStackTunables Autotune API
 # Input: application name, experiment name, layer name
-function listapptunables_test() {
+function liststacktunables_test() {
 	app_name=$1
 	exp_name=$2
 	layer_name=$3
@@ -977,9 +973,9 @@ function listapptunables_test() {
 	if [[ -z ${exp_name} && -z "${layer_name}" ]]; then
 		test_name=${FUNCNAME}
 	elif [[ ! -z "${exp_name}" && -z "${layer_name}" ]]; then
-		test_name="listapptunables_exp_name_test"
+		test_name="liststacktunables_exp_name_test"
 	elif [[ ! -z "${exp_name}" && ! -z "${layer_name}" ]]; then
-		test_name="listapptunables_exp_name_layer_name_test"
+		test_name="liststacktunables_exp_name_layer_name_test"
 	fi
 
 	LOG_DIR="${TEST_SUITE_DIR}/${test_name}"
@@ -1000,19 +996,19 @@ function listapptunables_test() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	if [[ -z ${exp_name} && -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for all applications----------*******" | tee -a ${LOG}
-		get_listapptunables_json
-		create_expected_listapptunables_json "${app_name}"
+		get_liststacktunables_json
+		create_expected_liststacktunables_json "${app_name}"
 	elif [[ ! -z ${exp_name} && ! -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for a specific application and specific layer----------*******" | tee -a ${LOG}
-		get_listapptunables_json "${exp_name}" "${layer_name}"
-		create_expected_listapptunables_json "${app_name}" "${exp_name}" "${layer_name}"
+		get_liststacktunables_json "${exp_name}" "${layer_name}"
+		create_expected_liststacktunables_json "${app_name}" "${exp_name}" "${layer_name}"
 	elif [[ ! -z ${exp_name} && -z "${layer_name}" ]]; then
 		echo "*******----------- ${FUNCNAME} for specified application----------*******" | tee -a ${LOG}
-		get_listapptunables_json "${exp_name}"
-		create_expected_listapptunables_json "${app_name}" "${exp_name}"
+		get_liststacktunables_json "${exp_name}"
+		create_expected_liststacktunables_json "${app_name}" "${exp_name}"
 	fi
 
-	compare_json "${LOG_DIR}/actual_listapptunables.json" "${LOG_DIR}/expected_listapptunables.json" "${test_name}"
+	compare_json "${LOG_DIR}/actual_liststacktunables.json" "${LOG_DIR}/expected_liststacktunables.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
@@ -1065,11 +1061,7 @@ function create_expected_listautotunetunables_json() {
 					lower_bound=$(cat ${layer_json} | jq .tunables[${length}].lower_bound)
 					
 					if [[ "${layer}" == "container"  &&  "${name}" == "\"memoryRequest\"" ]]; then
-						memory_value=$(echo ${lower_bound} | sed 's/[^0-9]*//g')
-						memory_unit=$(echo ${lower_bound} | sed 's/[0-9]*//g')
-						memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-						memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
-						lower_bound="\"${memory_value}.0${memory_unit}\""
+						lower_bound=$(format_memory "${lower_bound}")
 					fi
 					printf '\n\t\t"lower_bound": '${lower_bound}',' >> ${file_name}
 
@@ -1087,10 +1079,6 @@ function create_expected_listautotunetunables_json() {
 
 					upper_bound=$(cat ${layer_json} | jq .tunables[${length}].upper_bound)
 					if [[ "${layer}" == "container" && "${name}" == "\"memoryRequest\"" ]]; then
-						memory_value=$(echo ${upper_bound} | sed 's/[^0-9]*//g')
-						memory_unit=$(echo ${upper_bound} | sed 's/[0-9]*//g')
-						memory_unit=$(echo ${memory_unit} | sed 's/ //g')
-						memory_unit=$(echo ${memory_unit} | sed 's/^"\|"$//g')
 						upper_bound="\"${memory_value}.0${memory_unit}\""
 					fi
 					printf '\n\t\t"upper_bound": '${upper_bound}'' >> ${file_name}
@@ -1103,7 +1091,7 @@ function create_expected_listautotunetunables_json() {
 				fi
 			done
 		done
-		printf '\n         "id": '$(cat ${json_file} | jq '.['${layer_count}'].id')',' >> ${file_name}
+		printf '\n         "layer_id": '$(cat ${json_file} | jq '.['${layer_count}'].layer_id')',' >> ${file_name}
 		printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)','  >> 	${file_name}
 		printf '\n' >> ${file_name}
 		echo '         "layer_details": '$(cat ${layer_json} | jq .details)''  >> ${file_name}
@@ -1189,13 +1177,13 @@ function list_autotune_tunables_test() {
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
-# Create the expected listAppLayer json
+# Create the expected listStackLayers json
 # Input: application name, experiment name
-function create_expected_listapplayer_json() {
+function create_expected_liststacklayers_json() {
 	layercount=0
 	app_name=$1
 	exp_name=$2
-	file_name="${LOG_DIR}/expected_listapplayer.json"
+	file_name="${LOG_DIR}/expected_liststacklayers.json"
 
 	# check if the experiment name is passed, if not the consider all the experiments
 	if [ -z "${exp_name}" ]; then
@@ -1242,7 +1230,7 @@ function create_expected_listapplayer_json() {
 			printf '{\n        "layer_level": '$(cat ${layer_json} | jq .layer_level)',' >> ${file_name}
 			layer_level=$(cat ${layer_json} | jq .layer_level)
 
-			printf '\n         "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].layers['${layer_level}'].id')',' >> ${file_name}
+			printf '\n         "layer_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].layers['${layer_level}'].layer_id')',' >> ${file_name}
 			printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)',' >> ${file_name}
 			printf '\n' >> ${file_name}
 			echo '         "layer_details": '$(cat ${layer_json} | jq .details)'' >> ${file_name}
@@ -1253,7 +1241,7 @@ function create_expected_listapplayer_json() {
 				printf '     },\n' >> ${file_name}
 			fi
 		done
-		printf '\n    "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].id')',' >> ${file_name}
+		printf '\n    "experiment_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].experiment_id')',' >> ${file_name}
 		printf '\n    "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 		if [ "${index}" -eq $((arr_size-1)) ]; then
 			printf '\n    "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}' >> ${file_name}
@@ -1267,30 +1255,30 @@ function create_expected_listapplayer_json() {
 	echo "" >> ${LOG}
 }
 
-# Get the listAppLayer json
+# Get the listStackLayers json
 # Input: experiment name
-function get_listapplayer_json() {
+function get_liststacklayers_json() {
 	exp_name=$1
 	if [ -z "${exp_name}" ]; then
-		cmd="${curl_cmd}/listAppLayers"
+		cmd="${curl_cmd}/listStackLayers"
 	else
-		cmd="${curl_cmd}/listAppLayers?experiment_name=${exp_name}"
+		cmd="${curl_cmd}/listStackLayers?experiment_name=${exp_name}"
 	fi
 
 
-	json_file="${LOG_DIR}/actual_listapplayer.json"
+	json_file="${LOG_DIR}/actual_liststacklayers.json"
 	run_curl_cmd "${cmd}" "${json_file}"
 }
 
-# Test listAppLayer Autotune API
+# Test listStackLayers Autotune API
 # input: application name, experiment name
-function listapplayer_test() {
+function liststacklayers_test() {
 	app_name=$1
 	exp_name=$2
 	test_name=$FUNCNAME
 
 	if [ ! -z "${exp_name}" ]; then
-		test_name="listapplayer_exp_name_test"
+		test_name="liststacklayers_exp_name_test"
 	fi
 
 	LOG_DIR="${TEST_SUITE_DIR}/${test_name}"
@@ -1311,21 +1299,21 @@ function listapplayer_test() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 
 	if [ -z "${exp_name}" ]; then
-		get_listapplayer_json
-		create_expected_listapplayer_json "${app_name}"
+		get_liststacklayers_json
+		create_expected_liststacklayers_json "${app_name}"
 	else
-		get_listapplayer_json "${exp_name}"
-		create_expected_listapplayer_json "${app_name}" "${exp_name}"
+		get_liststacklayers_json "${exp_name}"
+		create_expected_liststacklayers_json "${app_name}" "${exp_name}"
 	fi
-	compare_json "${LOG_DIR}/actual_listapplayer.json" "${LOG_DIR}/expected_listapplayer.json" "${test_name}"
+	compare_json "${LOG_DIR}/actual_liststacklayers.json" "${LOG_DIR}/expected_liststacklayers.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
-# Create the expected listapplication json
+# Create the expected listStacks json
 # Input: experiment name
-function create_expected_listapplication_json() {
+function create_expected_liststacks_json() {
 	exp_name=$1
-	file_name="${LOG_DIR}/expected_listapp.json"
+	file_name="${LOG_DIR}/expected_liststacks.json"
 
 	# check if the experiment name is passed, if not the consider all the experiments
 	if [ -z "${exp_name}" ]; then
@@ -1352,7 +1340,7 @@ function create_expected_listapplication_json() {
 		printf '\n  "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
 		printf '\n  "namespace": '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
-		printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].id')',' >> ${file_name}
+		printf '\n  "experiment_id": '$(cat ${json_file} | jq 'sort_by(.experiment_name)' | jq '.['${index}'].experiment_id')',' >> ${file_name}
 		if [ "${index}" -eq $((arr_size-1)) ]; then
 			echo "index = $index"
 			printf '\n  "direction": '$(cat ${autotune_json} | jq '.spec.slo.direction')'\n}' >> ${file_name}
@@ -1367,28 +1355,28 @@ function create_expected_listapplication_json() {
 	echo "" >> ${LOG}
 }
 
-# Get listApplication json
+# Get listStacks json
 # Input: experiment name
-function get_listapplication_json() {
+function get_liststacks_json() {
 	exp_name=$1
 	if [ -z "${exp_name}" ]; then
-		cmd="${curl_cmd}/listApplications"
+		cmd="${curl_cmd}/listStacks"
 	else
-		cmd="${curl_cmd}/listApplications?experiment_name=${exp_name}"
+		cmd="${curl_cmd}/listStacks?experiment_name=${exp_name}"
 	fi
 
-	json_file="${LOG_DIR}/actual_listapp.json"
+	json_file="${LOG_DIR}/actual_liststacks.json"
 	run_curl_cmd "${cmd}" "${json_file}"
 }
 
-# Test lisApplications Autotune API
+# Test listStacks Autotune API
 # input: experiment name
-function listapplications_test() {
+function liststacks_test() {
 	exp_name=$1
 	test_name=$FUNCNAME
 
 	if [ ! -z "${exp_name}" ]; then
-		test_name="listapplications_exp_name_test"
+		test_name="liststacks_exp_name_test"
 	fi
 
 	LOG_DIR="${TEST_SUITE_DIR}/${test_name}"
@@ -1409,14 +1397,14 @@ function listapplications_test() {
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
 	if [ -z "${exp_name}" ]; then
 		echo "*******----------- ${test_name} for all experiments ----------*******" | tee -a ${LOG}
-		get_listapplication_json
-		create_expected_listapplication_json
+		get_liststacks_json
+		create_expected_liststacks_json
 	else
 		echo "*******----------- ${test_name} for specified experiment - ${exp_name}----------*******" | tee -a ${LOG}
-		get_listapplication_json "${exp_name}"
-		create_expected_listapplication_json "${exp_name}"
+		get_liststacks_json "${exp_name}"
+		create_expected_liststacks_json "${exp_name}"
 	fi
-	compare_json "${LOG_DIR}/actual_listapp.json" "${LOG_DIR}/expected_listapp.json" "${test_name}"
+	compare_json "${LOG_DIR}/actual_liststacks.json" "${LOG_DIR}/expected_liststacks.json" "${test_name}"
 	echo "--------------------------------------------------------------" | tee -a ${LOG}
 }
 
