@@ -11,7 +11,7 @@ public class AutotuneExperiment {
     private final String experimentName;
     private final AutotuneObject autotuneObject;
     private String experimentStatus;
-    private ApplicationServiceStack applicationServiceStack;
+    private final ApplicationServiceStack applicationServiceStack;
     ArrayList<ExperimentTrial> experimentTrials;
     private Thread experimentThread;
 

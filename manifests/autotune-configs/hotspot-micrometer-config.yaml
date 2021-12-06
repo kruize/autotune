@@ -9,7 +9,7 @@ layerPresence:
   query:
     datasource:
     - name: prometheus
-      query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
+      query: 'jvm_memory_used_bytes{area="heap",}'
       key: pod
 tunables:
 - name: MaxInlineLevel
@@ -17,6 +17,10 @@ tunables:
   value_type: integer
   upper_bound: '50'
   lower_bound: '9'
+  queries:
+    datasource:
+    - name: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
   step: 1
   slo_class:
   - response_time

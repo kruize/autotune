@@ -49,7 +49,8 @@ modify_autotune_config_tests=("add_new_tunable"
 "change_bound"
 "multiple_tunables")
 
-AUTOTUNE_IMAGE="kruize/autotune:test"
+AUTOTUNE_IMAGE="kruize/autotune_operator:test"
+OPTUNA_IMAGE="kruize/autotune_optuna:test"
 total_time=0
 matched=0
 sanity=0
@@ -123,7 +124,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${OPTUNA_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -151,7 +152,8 @@ function setup_prometheus() {
 function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
-	CONFIGMAP_DIR=$3
+	OPTUNA_IMAGE=$3
+	CONFIGMAP_DIR=$4
 	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
@@ -162,15 +164,16 @@ function deploy_autotune() {
 	fi
 	
 	echo "Deploying autotune"
+	echo "AUTOTUNE IMAGE = ${AUTOTUNE_IMAGE}  OPTUNA IMAGE = ${OPTUNA_IMAGE}"
 	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR}"
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP_DIR}"
 	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP}"
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP}"
 	fi	
 	echo "CMD= ${cmd}"
 	${cmd}
@@ -1109,7 +1112,7 @@ function create_expected_listapplayer_json() {
 		# do comparision of actual and expected name
 		objectve_function=$(cat ${autotune_json} | jq '.spec.slo.objective_function')
 		printf '\n    "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
-		printf '\n  "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')',' >> ${file_name}
+		printf '\n    "hpo_algo_impl":  '$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')',' >> ${file_name}
 		deploy=${deployments[count]}
 		layer_names=${layer_configs[$deploy]}
 		IFS=',' read -r -a layer_name <<<  ${layer_name}
@@ -1123,8 +1126,8 @@ function create_expected_listapplayer_json() {
 			layer_json="${AUTOTUNE_CONFIG_JSONS_DIR}/${layer}.json"
 			((layercount--))
 			printf '{\n         "layer_level": '$(cat ${layer_json} | jq .layer_level)',' >> ${file_name}
-			printf '\n  "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].layers[].id')',' >> ${file_name}
-			printf '\n         "layer_name": '$(cat ${layer_json} | jq .layer_name)',' >> ${file_name}
+			printf '\n          "id": '$(cat ${json_file} | jq 'sort_by(.application_name)' | jq '.['${count}'].layers[].id')',' >> ${file_name}
+			printf '\n          "layer_name": '$(cat ${layer_json} | jq .layer_name)',' >> ${file_name}
 			printf '\n' >> ${file_name}
 			echo '         "layer_details": '$(cat ${layer_json} | jq .details)'' >> ${file_name}
 			if [ "${layercount}" -eq 0 ]; then
@@ -1465,9 +1468,11 @@ function match_ids() {
 # input : Log file path to store the pod information
 function get_autotune_pod_log() {
 	log=$1
+	# Fetch the autotune container log
+	container="autotune"
 
 	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE} -c ${container})
 	echo "${pod_log_msg}" > "${log}"
 }
 

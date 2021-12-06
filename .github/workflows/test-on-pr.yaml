@@ -29,7 +29,7 @@ jobs:
       - name: Build autotune
         run: |
           echo Build autotune
-          ./build.sh -t autotune:test
+          ./build.sh -i autotune_operator:test -o autotune_optuna:test
           docker images | grep autotune     
       - name: Start minikube
         run: |
@@ -48,5 +48,5 @@ jobs:
           echo "***************************************************************"
           cat ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune:test
+          ./deploy.sh -c minikube -i autotune_operator:test -o autotune_optuna:test
 

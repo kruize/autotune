@@ -29,6 +29,8 @@ import org.apache.logging.log4j.core.config.Configurator;
  */
 public class InitializeDeployment
 {
+	private InitializeDeployment() { }
+
 	public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
 		String k8S_type = System.getenv(AnalyzerConstants.K8S_TYPE);
 		String auth_type = System.getenv(AnalyzerConstants.AUTH_TYPE);
@@ -57,6 +59,8 @@ public class InitializeDeployment
 			}
 		}
 		DeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
+
+		DeploymentInfo.setLayerTable();
 
 		/* Update logging level from the env */
 		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(DeploymentInfo.getLoggingLevel()));

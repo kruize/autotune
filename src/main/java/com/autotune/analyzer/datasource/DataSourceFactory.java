@@ -35,6 +35,8 @@ import java.util.ArrayList;
  */
 public class DataSourceFactory
 {
+	private DataSourceFactory() { }
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceFactory.class);
 
 	public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {

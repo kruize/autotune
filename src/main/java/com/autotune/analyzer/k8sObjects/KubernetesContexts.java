@@ -23,6 +23,8 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  */
 public class KubernetesContexts
 {
+	private KubernetesContexts() { }
+
 	private static final CustomResourceDefinitionContext autotuneCrdContext = new CustomResourceDefinitionContext
 			.Builder()
 			.withGroup(AnalyzerConstants.GROUP)

@@ -16,6 +16,7 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -52,6 +53,7 @@ public class Tunable
 	private final String boundUnits;
 	private String description;
 	private Map<String, String> queries;
+	private final String layerName;
 
     /*
     TODO Think about bounds for other valueTypes
@@ -65,16 +67,15 @@ public class Tunable
 								String upperBoundUnits,
 								String lowerBoundUnits) throws InvalidBoundsException {
 		if (upperBoundUnits != null &&
-				!upperBoundUnits.trim().isEmpty() &&
-				lowerBoundUnits != null &&
-				!lowerBoundUnits.trim().isEmpty() &&
-				!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
-			System.out.println("ERROR: Tunable: " + name +
+			!upperBoundUnits.trim().isEmpty() &&
+			lowerBoundUnits != null &&
+			!lowerBoundUnits.trim().isEmpty() &&
+			!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
+			throw new InvalidBoundsException("Tunable: " + name +
 					" has invalid bound units; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
 					" ubu: " + upperBoundUnits +
 					" lbu: " + lowerBoundUnits);
-			throw new InvalidBoundsException();
 		}
 
 		/*
@@ -83,16 +84,15 @@ public class Tunable
 		 * step has to be lesser than or equal to the difference between the two bounds.
 		 */
 		if (upperBoundValue < 0 ||
-				lowerBoundValue < 0 ||
-				lowerBoundValue >= upperBoundValue ||
-				step > (upperBoundValue - lowerBoundValue)
+			lowerBoundValue < 0 ||
+			lowerBoundValue >= upperBoundValue ||
+			step > (upperBoundValue - lowerBoundValue)
 		) {
-			System.out.println("ERROR: Tunable: " + name +
+			throw new InvalidBoundsException("ERROR: Tunable: " + name +
 					" has invalid bounds; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
 					" ubu: " + upperBoundUnits +
 					" lbu: " + lowerBoundUnits);
-			throw new InvalidBoundsException();
 		}
 	}
 
@@ -102,12 +102,17 @@ public class Tunable
 				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
-				   ArrayList<String> sloClassList) throws InvalidBoundsException {
+				   ArrayList<String> sloClassList,
+				   String layerName) throws InvalidBoundsException {
 		this.queries = queries;
 		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
 		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
 		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
 		this.step = Objects.requireNonNull(step, ZERO_STEP);
+		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+			this.layerName = layerName;
+		else
+			this.layerName = "generic";
 
 		/* Parse the value for the bounds from the strings passed in */
 		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
@@ -140,6 +145,7 @@ public class Tunable
 		this.description = copy.description;
 		this.queries = copy.queries;
 		this.sloClassList = copy.sloClassList;
+		this.layerName = copy.layerName;
 	}
 
 	public String getName() {
@@ -172,9 +178,7 @@ public class Tunable
 		return getBound(lowerBoundValue, boundUnits, valueType);
 	}
 
-	public String getBoundUnits() {
-		return boundUnits;
-	}
+	public String getBoundUnits() {	return boundUnits; }
 
 	public String getValueType() {
 		return valueType;
@@ -204,6 +208,8 @@ public class Tunable
 		return step;
 	}
 
+	public String getLayerName() { return layerName; }
+
 	@Override
 	public String toString() {
 		return "Tunable{" +
@@ -212,9 +218,11 @@ public class Tunable
 				", valueType='" + valueType + '\'' +
 				", upperBound='" + upperBoundValue + '\'' +
 				", lowerBound='" + lowerBoundValue + '\'' +
+				", boundUnits='" + boundUnits + '\'' +
 				", description='" + description + '\'' +
 				", queries=" + queries +
 				", sloClassList=" + sloClassList +
+				", layer=" + layerName +
 				'}';
 	}
 }
