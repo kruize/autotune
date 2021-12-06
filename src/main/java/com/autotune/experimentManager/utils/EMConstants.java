@@ -258,7 +258,7 @@ public class EMConstants {
 	    private StandardDefaults() { }
         public static int NEGATIVE_INT_DEFAULT = -1;
 	    public static String CPU_QUERY_NAME = "cpuRequest";
-	    public static String MEM_QUERY_NAME = "memRequest";
+	    public static String MEM_QUERY_NAME = "memoryRequest";
 	    public static String THROUGHPUT = "throughput";
 	    public static String RESPONSE_TIME = "response_time";
     }
