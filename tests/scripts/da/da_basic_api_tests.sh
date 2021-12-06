@@ -36,7 +36,7 @@ function basic_api_tests() {
 	TESTS=0
 
 	# check if the test case is supported
-	basic_api_tests=("listapplayer" "listapptunables" "listapplications" "searchspace" "list_autotune_tunables")
+	basic_api_tests=("liststacklayers" "liststacktunables" "liststacks" "searchspace" "list_autotune_tunables")
 
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "basic_api"
@@ -45,20 +45,19 @@ function basic_api_tests() {
 	# create the result directory for given testsuite
 	echo ""
 	TEST_SUITE_DIR="${RESULTS}/basic_api_tests"
+	AUTOTUNE_YAMLS_DIR="${TEST_SUITE_DIR}/autotune_yamls"
 	AUTOTUNE_JSONS_DIR="${TEST_SUITE_DIR}/autotune_jsons"
 	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
 	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
+	mkdir -p ${AUTOTUNE_YAMLS_DIR}
 	mkdir -p ${AUTOTUNE_JSONS_DIR}
 	mkdir -p ${AUTOTUNE_CONFIG_JSONS_DIR}
 	echo ""
 	((TOTAL_TEST_SUITES++))
 	
-	declare -A layer_configs=([petclinic-deployment-0]="container" [petclinic-deployment-1]="container" [petclinic-deployment-2]="container")
-	deployments=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
-	autotune_names=("petclinic-autotune-0"  "petclinic-autotune-1" "petclinic-autotune-2")
-
+	declare -A layer_configs=([petclinic]="container" [galaxies]="container hotspot quarkus") 
 	
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
@@ -80,24 +79,28 @@ function basic_api_tests() {
 	form_curl_cmd
 
 	# Deploy petclinic application instances	
-	deploy_app "${APP_REPO}" "petclinic" "3"
+	appln="petclinic"
+	instances="3"
+	deploy_app "${APP_REPO}" "${appln}" "${instances}"
 
 	# Sleep for sometime for application pods to be up
 	sleep 5
 
 	# Get the application pods
-	application_name=$(kubectl get pod | grep petclinic-sample-0 | awk '{print $1}')
 	app_pod_names=$(kubectl get pod | grep petclinic | cut -d " " -f1)
 	
 	# Add label to your application pods for autotune to monitor
 	label_names=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
 	label_pods app_pod_names label_names
-	
-	# Get the autotune jsons and autotune config jsons
-	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}" "${YAML_PATH}" "${autotune_names[@]}"
-	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}" "${autotune_config_names[@]}"
 
-	# If testcase is not specified run all tests	
+	# Apply Autotune yamls
+	apply_autotune_yamls "${APP_REPO}" "${appln}" "${instances}" "${AUTOTUNE_YAMLS_DIR}"
+
+	# Get the autotune jsons and autotune config jsons
+	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}"
+	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}"
+
+	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
 		testtorun="all"
 	else
@@ -106,50 +109,54 @@ function basic_api_tests() {
 	
 	case "$testtorun" in
 
-	   listapplications|all) 
-		# test listapplication API for specific application
-		listapplications_test "${application_name}" 
+	   liststacks|all)
+		# Test listStacks API for a specific application
+		exp_name="${autotune_names[0]}"
+		liststacks_test "${exp_name}"
 	
-		# test listapplication API for all applications
-		listapplications_test
+		# Test listStacks API for all applications
+		liststacks_test
 		;;&	
-	   listapplayer|all)
-		# test listapplayer API for specific application
-		listapplayer_test "${application_name}"
+	   liststacklayers|all)
+		# Test listStackLayer API for a specific application
+		exp_name="${autotune_names[1]}"
+		liststacklayers_test "${appln}" "${exp_name}"
 	
-		# test listapplayer API for all applications
-		listapplayer_test
+		# Test listStackLayers API for all applications
+		liststacklayers_test "${appln}"
 		;;&
 	   searchspace|all)
-		# test searchSpace API for specific application
-		searchspace_test "${application_name}"
+		# Test searchSpace API for a specific application
+		exp_name="${autotune_names[0]}"
+		searchspace_test "${appln}" "${exp_name}"
 	
-		# test searchSpace API for all applications
-		searchspace_test
+		# Test searchSpace API for all applications
+		searchspace_test "${appln}"
 		;;&
 	    list_autotune_tunables|all)
-		# test listAutotuneTunables API for specific slo_class and layer
+		# Test listAutotuneTunables API for a specific slo_class and layer
 		slo_class="response_time"
 		layer="container"
 		list_autotune_tunables_test "${slo_class}" "${layer}"
 
-		# test listAutotuneTunables API for specific slo_class
+		# Test listAutotuneTunables API for a specific slo_class
 		slo_class="response_time"
 		list_autotune_tunables_test "${slo_class}" 
 	
-		# test listAutotuneTunables API for all layers
+		# Test listAutotuneTunables API for all layers
 		list_autotune_tunables_test
 		;;&
-	    listapptunables|all)
-		# test listapptunables API for specific application and specific layer
+	    liststacktunables|all)
+		# Test listStackTunables API for a specific application and a specific layer
 		layer="container"
-		listapptunables_test "${application_name}" "${layer}"
+		exp_name="${autotune_names[2]}"
+		liststacktunables_test "${appln}" "${exp_name}" "${layer}"
 
-		# test listapptunables API for specific application
-		listapptunables_test "${application_name}"
+		# Test listStackTunables API for a specific application
+		liststacktunables_test "${appln}" "${exp_name}"
 
-		# test listapptunables API for all applications	
-		listapptunables_test
+		# Test listStackTunables API for all applications
+		liststacktunables_test "${appln}"
 		;;&
 	esac
 
@@ -159,7 +166,7 @@ function basic_api_tests() {
 	fi 
 
 	# Cleanup the deployed apps
-	app_cleanup "petclinic"
+	app_cleanup "${appln}"
 
 	# Cleanup autotune
 	autotune_cleanup
