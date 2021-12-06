@@ -1,12 +1,12 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.Deployments;
+import com.autotune.analyzer.experiments.TrialDetails;
 import org.json.JSONObject;
 
 public class Quarkus extends Generic implements Layer {
 	@Override
-	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
+	public void prepTunable(Tunable tunable, JSONObject tunableJSON, TrialDetails deployment) {
 		StringBuilder runtimeOptions = new StringBuilder(deployment.getRuntimeOptions());
 		String tunableName = tunableJSON.getString("tunable_name");
 		if (tunableName.contains("quarkus")) {

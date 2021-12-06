@@ -20,7 +20,7 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.datasource.DataSource;
 import com.autotune.analyzer.datasource.DataSourceFactory;
-import com.autotune.analyzer.deployment.DeploymentInfo;
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
@@ -116,10 +116,10 @@ public class ServiceHelpers {
 			if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
 				JSONObject tunableJson = new JSONObject();
 				addTunable(tunableJson, tunable);
-				String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
+				String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
 				try {
 					String query = AnalyzerConstants.NONE;
-					final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
+					final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
 					// If tunable has a query specified
 					if (tunableQuery != null && !tunableQuery.isEmpty()) {
 						query = Objects.requireNonNull(dataSource).getDataSourceURL() +
@@ -148,7 +148,7 @@ public class ServiceHelpers {
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
 			try {
-				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
+				final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
 				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
 						dataSource.getQueryEndpoint() + functionVariable.getQuery());
 			} catch (MonitoringAgentNotFoundException e) {
@@ -180,16 +180,18 @@ public class ServiceHelpers {
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, applicationSearchSpace.getValueType());
 
 		JSONArray tunablesJsonArray = new JSONArray();
-		for (String applicationTunableName : applicationSearchSpace.getTunablesMap().keySet()) {
-			Tunable tunable = applicationSearchSpace.getTunablesMap().get(applicationTunableName);
-			JSONObject tunableJson = new JSONObject();
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
-			// searchSpace is passing only the tunable value and not a string
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
-			tunablesJsonArray.put(tunableJson);
+		if (!applicationSearchSpace.getTunablesMap().isEmpty()) {
+			for (String applicationTunableName : applicationSearchSpace.getTunablesMap().keySet()) {
+				Tunable tunable = applicationSearchSpace.getTunablesMap().get(applicationTunableName);
+				JSONObject tunableJson = new JSONObject();
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+				// searchSpace is passing only the tunable value and not a string
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
+				tunablesJsonArray.put(tunableJson);
+			}
 		}
 
 		applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);

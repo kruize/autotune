@@ -19,7 +19,7 @@ import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.deployment.DeploymentInfo;
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.experiments.*;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
@@ -106,7 +106,7 @@ public class TrialHelpers {
          * deployments object section
          */
         JSONArray deploymentsArrayObjs = new JSONArray();
-        for (Deployments deployment : experimentTrial.getDeployments()) {
+        for (TrialDetails deployment : experimentTrial.getTrialDetails()) {
             /*
              * resources object
              * experimentTrialJSON -> deployments -> config -> resources
@@ -231,7 +231,7 @@ public class TrialHelpers {
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
                 deploymentSettings);
 
-        ArrayList<Deployments> deployments = new ArrayList<>();
+        ArrayList<TrialDetails> deployments = new ArrayList<>();
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
         // TODO: The runtime layer will know how to pass the options to container through kubernetes
@@ -242,7 +242,7 @@ public class TrialHelpers {
             System.out.println(trialConfigJson);
             ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationServiceStack();
             ArrayList<Metric> metrics = new ArrayList<>();
-            Deployments deployment = new Deployments(tracker,
+            TrialDetails deployment = new TrialDetails(tracker,
                     applicationServiceStack.getDeploymentName(),
                     applicationServiceStack.getNamespace(),
                     "",
@@ -260,10 +260,10 @@ public class TrialHelpers {
                 String tunableName = trialConfig.getString("tunable_name");
                 Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getTunablesMap().get(tunableName);
                 // String tunableValue = trialConfig.getString("tunable_value");
-                Class<Layer> classRef = DeploymentInfo.getLayer(tunable.getLayerName());
+                Class<Layer> classRef = AutotuneDeploymentInfo.getLayer(tunable.getLayerName());
                 try {
                     Object inst = classRef.getDeclaredConstructor().newInstance();
-                    Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, Deployments.class);
+                    Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, TrialDetails.class);
                     method.invoke(inst, tunable, trialConfig, deployment);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
@@ -287,11 +287,11 @@ public class TrialHelpers {
             for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
                 AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
                 for (Tunable tunable : autotuneConfig.getTunables()) {
-                    String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
+                    String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
                     if (tunableQuery != null && !tunableQuery.isEmpty()) {
                         Metric queryMetric = new Metric(tunable.getName(),
                                 tunableQuery,
-                                DeploymentInfo.getMonitoringAgent(),
+                                AutotuneDeploymentInfo.getMonitoringAgent(),
                                 tunable.getValueType());
                         metrics.add(queryMetric);
                     }

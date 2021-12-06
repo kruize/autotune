@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
@@ -90,57 +91,63 @@ public class ListAutotuneTunables extends HttpServlet
 	 *     ]
 	 *   }
 	 * ]
-	 * @param req
-	 * @param resp
+	 * @param request
+	 * @param response
 	 * @throws IOException
 	 */
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		JSONArray layersArray = new JSONArray();
-		resp.setContentType(JSON_CONTENT_TYPE);
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		try {
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.setContentType(JSON_CONTENT_TYPE);
+			response.setCharacterEncoding(CHARACTER_ENCODING);
 
-		if (AutotuneDeployment.autotuneConfigMap.isEmpty()) {
-			layersArray.put(LAYER_NOT_FOUND);
-			resp.getWriter().println(layersArray.toString(4));
-			return;
-		}
+			JSONArray layersArray = new JSONArray();
+			if (AutotuneDeployment.autotuneConfigMap.isEmpty()) {
+				layersArray.put(LAYER_NOT_FOUND);
+				response.getWriter().println(layersArray.toString(4));
+				return;
+			}
 
-		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-		AutotuneConfig autotuneConfig = null;
+			String sloClass = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+			String layerName = request.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+			AutotuneConfig autotuneConfig = null;
 
-		if (layerName != null) {
-			if (AutotuneDeployment.autotuneConfigMap.containsKey(layerName)) {
-				JSONObject layerJson = new JSONObject();
-				autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layerName);
-				addLayerDetails(layerJson, autotuneConfig);
-				JSONArray tunablesArray = new JSONArray();
-				addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
-				if (!tunablesArray.isEmpty()) {
-					layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
-					layersArray.put(layerJson);
-				} else {
-					if (sloClass != null) {
-						layersArray.put(ERROR_SLO_CLASS + sloClass + NOT_FOUND);
+			if (layerName != null) {
+				if (AutotuneDeployment.autotuneConfigMap.containsKey(layerName)) {
+					JSONObject layerJson = new JSONObject();
+					autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layerName);
+					addLayerDetails(layerJson, autotuneConfig);
+					JSONArray tunablesArray = new JSONArray();
+					addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+					if (!tunablesArray.isEmpty()) {
+						layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+						layersArray.put(layerJson);
+					} else {
+						if (sloClass != null) {
+							layersArray.put(ERROR_SLO_CLASS + sloClass + NOT_FOUND);
+						}
 					}
+				} else {
+					layersArray.put(LAYER_NOT_FOUND);
 				}
 			} else {
-				layersArray.put(LAYER_NOT_FOUND);
-			}
-		} else {
-			// No layer parameter was passed in the request
-			for (String layer : AutotuneDeployment.autotuneConfigMap.keySet()) {
-				JSONObject layerJson = new JSONObject();
-				autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layer);
-				addLayerDetails(layerJson, autotuneConfig);
-				JSONArray tunablesArray = new JSONArray();
-				addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
-				if (!tunablesArray.isEmpty()) {
-					layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
-					layersArray.put(layerJson);
+				// No layer parameter was passed in the request
+				for (String layer : AutotuneDeployment.autotuneConfigMap.keySet()) {
+					JSONObject layerJson = new JSONObject();
+					autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layer);
+					addLayerDetails(layerJson, autotuneConfig);
+					JSONArray tunablesArray = new JSONArray();
+					addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+					if (!tunablesArray.isEmpty()) {
+						layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+						layersArray.put(layerJson);
+					}
 				}
 			}
+			response.getWriter().println(layersArray.toString(4));
+		}  catch (Exception ex) {
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		resp.getWriter().println(layersArray.toString(4));
 	}
 }

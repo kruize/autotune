@@ -24,7 +24,7 @@ public class ExperimentTrial {
     private final String appVersion;
     private final TrialInfo trialInfo;
     private final ExperimentSettings experimentSettings;
-    private final ArrayList<Deployments> deployments;
+    private final ArrayList<TrialDetails> trialDetails;
 
     public ExperimentTrial(String experimentName,
                            String experimentId,
@@ -32,14 +32,14 @@ public class ExperimentTrial {
                            String appVersion,
                            TrialInfo trialInfo,
                            ExperimentSettings experimentSettings,
-                           ArrayList<Deployments> deployments) {
+                           ArrayList<TrialDetails> trialDetails) {
         this.experimentId = experimentId;
         this.namespace = namespace;
         this.experimentName = experimentName;
         this.appVersion = appVersion;
         this.trialInfo = trialInfo;
         this.experimentSettings = experimentSettings;
-        this.deployments = deployments;
+        this.trialDetails = trialDetails;
     }
 
     public String getExperimentId() {
@@ -66,7 +66,7 @@ public class ExperimentTrial {
         return experimentSettings;
     }
 
-    public ArrayList<Deployments> getDeployments() {
-        return deployments;
+    public ArrayList<TrialDetails> getTrialDetails() {
+        return trialDetails;
     }
 }

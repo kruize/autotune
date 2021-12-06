@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.datasource;
 
-import com.autotune.analyzer.deployment.DeploymentInfo;
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -41,14 +41,14 @@ public class DataSourceFactory
 
 	public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
 		String monitoringAgentEndpoint = null;
-		if (dataSource.toLowerCase().equals(DeploymentInfo.getMonitoringAgent()))
-			monitoringAgentEndpoint = DeploymentInfo.getMonitoringAgentEndpoint();
+		if (dataSource.toLowerCase().equals(AutotuneDeploymentInfo.getMonitoringAgent()))
+			monitoringAgentEndpoint = AutotuneDeploymentInfo.getMonitoringAgentEndpoint();
 
 		// Monitoring agent endpoint not set in the configmap
 		if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
 			monitoringAgentEndpoint = getMonitoringAgentEndpoint();
 
-		String token = DeploymentInfo.getAuthToken();
+		String token = AutotuneDeploymentInfo.getAuthToken();
 
 		if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
 			return new PrometheusDataSource(monitoringAgentEndpoint, token);
@@ -68,7 +68,7 @@ public class DataSourceFactory
 		//No endpoint was provided in the configmap, find the endpoint from the service.
 		KubernetesClient client = new DefaultKubernetesClient();
 		ServiceList serviceList = client.services().inAnyNamespace().list();
-		String monitoringAgentService = DeploymentInfo.getMonitoringAgentService();
+		String monitoringAgentService = AutotuneDeploymentInfo.getMonitoringAgentService();
 
 		if (monitoringAgentService == null)
 			throw new MonitoringAgentNotFoundException();

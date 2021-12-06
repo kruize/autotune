@@ -17,6 +17,7 @@ package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.Utils;
 
 import java.util.HashMap;
 
@@ -35,12 +36,11 @@ public final class AutotuneObject
 	private final SelectorInfo selectorInfo;
 
 	public AutotuneObject(String experimentName,
-						  String experimentId,
 						  String namespace,
 						  String mode,
 						  SloInfo sloInfo,
 						  SelectorInfo selectorInfo) throws InvalidValueException {
-		this.experimentId = experimentId;
+
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
@@ -55,6 +55,7 @@ public final class AutotuneObject
 			this.mode = mode;
 			this.sloInfo = sloInfo;
 			this.selectorInfo = selectorInfo;
+			this.experimentId = Utils.generateID(toString());
 		} else {
 			throw new InvalidValueException(error.toString());
 		}

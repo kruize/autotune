@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
@@ -105,9 +106,9 @@ public class SearchSpace extends HttpServlet
         try {
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType(JSON_CONTENT_TYPE);
-            response.setCharacterEncoding("UTF-8");
-            JSONArray searchSpaceJsonArray = new JSONArray();
+            response.setCharacterEncoding(CHARACTER_ENCODING);
 
+            JSONArray searchSpaceJsonArray = new JSONArray();
             if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
                 searchSpaceJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
                 response.getWriter().println(searchSpaceJsonArray.toString(4));

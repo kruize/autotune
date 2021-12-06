@@ -1,13 +1,13 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.Deployments;
+import com.autotune.analyzer.experiments.TrialDetails;
 import org.json.JSONObject;
 
 public class Hotspot extends Generic implements Layer {
 
 	@Override
-	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
+	public void prepTunable(Tunable tunable, JSONObject tunableJSON, TrialDetails deployment) {
 		StringBuilder runtimeOptions = new StringBuilder(deployment.getRuntimeOptions());
 		runtimeOptions.append("-server -XX:+UseG1GC -XX:MaxRAMPercentage=70");
 		String tunableName = tunableJSON.getString("tunable_name");

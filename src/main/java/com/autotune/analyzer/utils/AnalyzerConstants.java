@@ -153,6 +153,7 @@ public class AnalyzerConstants
 		private ServiceConstants() { }
 
 		public static final String JSON_CONTENT_TYPE = "application/json";
+		public static final String CHARACTER_ENCODING = "UTF-8";
 		public static final String EXPERIMENT_NAME = "experiment_name";
 		public static final String POD_NAME = "pod_name";
 		public static final String DEPLOYMENT_NAME = "deployment_name";

@@ -1,14 +1,14 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.Deployments;
+import com.autotune.analyzer.experiments.TrialDetails;
 import com.autotune.analyzer.experiments.Resources;
 import org.json.JSONObject;
 
 public class Container extends Generic implements Layer {
 
 	@Override
-	public void prepTunable(Tunable tunable, JSONObject tunableJSON, Deployments deployment) {
+	public void prepTunable(Tunable tunable, JSONObject tunableJSON, TrialDetails deployment) {
 		Resources requests = deployment.getRequests();
 		String tunableName = tunableJSON.getString("tunable_name");
 		if ("cpuRequest".equals(tunableName)) {
