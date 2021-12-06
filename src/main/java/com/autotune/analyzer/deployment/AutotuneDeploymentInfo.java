@@ -33,9 +33,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
 /**
  * Contains information about the current deployment by parsing the autotune config map
  */
-public class DeploymentInfo
+public class AutotuneDeploymentInfo
 {
-	private DeploymentInfo() { }
+	private AutotuneDeploymentInfo() { }
 
 	private static String clusterType;
 	private static String kubernetesType;
@@ -47,7 +47,7 @@ public class DeploymentInfo
 	private static String loggingLevel;
 	private static Hashtable<String, Class> tunableLayerPair;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DeploymentInfo.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeploymentInfo.class);
 
 	public static void setLayerTable() {
 		tunableLayerPair = new Hashtable<String, Class>();
@@ -67,10 +67,10 @@ public class DeploymentInfo
 
 	public static void setMonitoringAgentEndpoint(String monitoringAgentEndpoint) {
 		if (monitoringAgentEndpoint.endsWith("/")) {
-			DeploymentInfo.monitoringAgentEndpoint =
+			AutotuneDeploymentInfo.monitoringAgentEndpoint =
 					monitoringAgentEndpoint.substring(0, monitoringAgentEndpoint.length() - 1);
 		} else {
-			DeploymentInfo.monitoringAgentEndpoint = monitoringAgentEndpoint;
+			AutotuneDeploymentInfo.monitoringAgentEndpoint = monitoringAgentEndpoint;
 		}
 	}
 
@@ -83,7 +83,7 @@ public class DeploymentInfo
 			clusterType = clusterType.toLowerCase();
 
 		if (AutotuneSupportedTypes.CLUSTER_TYPES_SUPPORTED.contains(clusterType)) {
-			DeploymentInfo.clusterType = clusterType;
+			AutotuneDeploymentInfo.clusterType = clusterType;
 		} else {
 			LOGGER.error("Cluster type {} is not supported", clusterType);
 			throw new ClusterTypeNotSupportedException();
@@ -101,7 +101,7 @@ public class DeploymentInfo
 			kubernetesType = kubernetesType.toLowerCase();
 
 		if (AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(kubernetesType)) {
-			DeploymentInfo.kubernetesType = kubernetesType;
+			AutotuneDeploymentInfo.kubernetesType = kubernetesType;
 		} else {
 			LOGGER.error("k8s type {} is not suppported", kubernetesType);
 			throw new K8sTypeNotSupportedException();
@@ -117,7 +117,7 @@ public class DeploymentInfo
 			authType = authType.toLowerCase();
 
 		if (AutotuneSupportedTypes.AUTH_TYPES_SUPPORTED.contains(authType)) {
-			DeploymentInfo.authType = authType;
+			AutotuneDeploymentInfo.authType = authType;
 		}
 	}
 
@@ -126,7 +126,7 @@ public class DeploymentInfo
 	}
 
 	public static void setAuthToken(String authToken) {
-		DeploymentInfo.authToken = (authToken == null) ? "" : authToken;
+		AutotuneDeploymentInfo.authToken = (authToken == null) ? "" : authToken;
 	}
 
 	public static String getMonitoringAgent() {
@@ -138,7 +138,7 @@ public class DeploymentInfo
 			monitoringAgent = monitoringAgent.toLowerCase();
 
 		if (AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoringAgent)) {
-			DeploymentInfo.monitoringAgent = monitoringAgent;
+			AutotuneDeploymentInfo.monitoringAgent = monitoringAgent;
 		} else {
 			LOGGER.error("Monitoring agent {}  is not supported", monitoringAgent);
 			throw new MonitoringAgentNotSupportedException();
@@ -151,7 +151,7 @@ public class DeploymentInfo
 
 	public static void setMonitoringAgentService(String monitoringAgentService) {
 		if (monitoringAgentService != null)
-			DeploymentInfo.monitoringAgentService = monitoringAgentService.toLowerCase();
+			AutotuneDeploymentInfo.monitoringAgentService = monitoringAgentService.toLowerCase();
 	}
 
 	public static String getLoggingLevel() {
@@ -163,9 +163,9 @@ public class DeploymentInfo
 			loggingLevel = loggingLevel.toLowerCase();
 
 		if (AutotuneSupportedTypes.LOGGING_TYPES_SUPPORTED.contains(loggingLevel))
-			DeploymentInfo.loggingLevel = loggingLevel;
+			AutotuneDeploymentInfo.loggingLevel = loggingLevel;
 		else
-			DeploymentInfo.loggingLevel = "info";
+			AutotuneDeploymentInfo.loggingLevel = "info";
 	}
 
 	public static void logDeploymentInfo() {

@@ -56,12 +56,15 @@ prometheus-k8s-1                       1/2     Running   1          106s
 Build autotune docker image 'autotune:test' with the following command
 
 ```
-$ ./build.sh -t autotune:test
+$ ./build.sh -i autotune:test
 
-    Usage: $0 [-d] [-v version_string] [-t docker_image_name]
+
+   Usage: $0 [-d] [-v version_string] [-i autotune_docker_image] [-o optuna_docker_image]
 	-d: build in dev friendly mode
+	-i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
+	-o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]
 	-v: build as specific autotune version
-	-t: build with specific docker image name
+
 ```
 
 Note - You can use the 'dev friendly mode' option to quickly build the autotune docker image using the cached layers.

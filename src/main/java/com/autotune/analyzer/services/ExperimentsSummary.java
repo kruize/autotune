@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+
 public class ExperimentsSummary extends HttpServlet
 {
 	@Override
@@ -19,8 +22,8 @@ public class ExperimentsSummary extends HttpServlet
 						 HttpServletResponse response) throws ServletException, IOException {
 		try {
 			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
+			response.setContentType(JSON_CONTENT_TYPE);
+			response.setCharacterEncoding(CHARACTER_ENCODING);
 
 			JSONArray experimentsJSONArray = new JSONArray();
 			for (String experimentID : Experimentator.experimentsMap.keySet()) {

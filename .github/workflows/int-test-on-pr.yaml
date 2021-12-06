@@ -47,7 +47,7 @@ jobs:
         run: |
           echo Build autotune
           cd autotune
-          ./build.sh -t autotune:int-test
+          ./build.sh -i autotune_operator:int-test -o autotune_optuna:int-test
           docker images | grep autotune     
 
       - name: Install Prometheus on minikube
@@ -65,13 +65,13 @@ jobs:
           echo "***************************************************************"
           cat ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune:int-test
+          ./deploy.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test
 
       - name: Run tests
         run: |
           echo Running Basic API tests
           cd autotune/tests
-          ./test_autotune.sh -c minikube -i autotune:int-test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
+          ./test_autotune.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
 
           cd ${GITHUB_WORKSPACE}
           ls

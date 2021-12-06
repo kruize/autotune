@@ -19,14 +19,13 @@ import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.deployment.DeploymentInfo;
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.experiments.*;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.k8sObjects.SloInfo;
 import com.autotune.analyzer.layer.Layer;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -52,7 +51,7 @@ public class TrialHelpers {
         JSONObject experimentTrialJSON = new JSONObject();
         experimentTrialJSON.put("experiment_id", experimentTrial.getExperimentId());
         experimentTrialJSON.put("namespace", experimentTrial.getNamespace());
-        experimentTrialJSON.put("application_name", experimentTrial.getApplicationName());
+        experimentTrialJSON.put("experiment_name", experimentTrial.getExperimentName());
         experimentTrialJSON.put("app-version", experimentTrial.getAppVersion());
 
         /*
@@ -107,7 +106,7 @@ public class TrialHelpers {
          * deployments object section
          */
         JSONArray deploymentsArrayObjs = new JSONArray();
-        for (Deployments deployment : experimentTrial.getDeployments()) {
+        for (TrialDetails deployment : experimentTrial.getTrialDetails()) {
             /*
              * resources object
              * experimentTrialJSON -> deployments -> config -> resources
@@ -141,7 +140,6 @@ public class TrialHelpers {
              */
             JSONObject envValues = new JSONObject();
             envValues.put("JDK_JAVA_OPTIONS", deployment.getRuntimeOptions());
-            // envValues.put("JVM_ARGS", deployment.getRuntimeOptions());
 
             JSONObject env = new JSONObject();
             env.put("env", envValues);
@@ -233,7 +231,7 @@ public class TrialHelpers {
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
                 deploymentSettings);
 
-        ArrayList<Deployments> deployments = new ArrayList<>();
+        ArrayList<TrialDetails> deployments = new ArrayList<>();
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
         // TODO: The runtime layer will know how to pass the options to container through kubernetes
@@ -244,7 +242,7 @@ public class TrialHelpers {
             System.out.println(trialConfigJson);
             ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationServiceStack();
             ArrayList<Metric> metrics = new ArrayList<>();
-            Deployments deployment = new Deployments(tracker,
+            TrialDetails deployment = new TrialDetails(tracker,
                     applicationServiceStack.getDeploymentName(),
                     applicationServiceStack.getNamespace(),
                     "",
@@ -260,12 +258,12 @@ public class TrialHelpers {
             for (Object trialConfigObject : trialConfigArray) {
                 JSONObject trialConfig = (JSONObject) trialConfigObject;
                 String tunableName = trialConfig.getString("tunable_name");
-                Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getApplicationTunablesMap().get(tunableName);
+                Tunable tunable = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace().getTunablesMap().get(tunableName);
                 // String tunableValue = trialConfig.getString("tunable_value");
-                Class<Layer> classRef = DeploymentInfo.getLayer(tunable.getLayerName());
+                Class<Layer> classRef = AutotuneDeploymentInfo.getLayer(tunable.getLayerName());
                 try {
                     Object inst = classRef.getDeclaredConstructor().newInstance();
-                    Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, Deployments.class);
+                    Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, TrialDetails.class);
                     method.invoke(inst, tunable, trialConfig, deployment);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
@@ -289,11 +287,11 @@ public class TrialHelpers {
             for (String autotuneConfigName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
                 AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(autotuneConfigName);
                 for (Tunable tunable : autotuneConfig.getTunables()) {
-                    String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
+                    String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
                     if (tunableQuery != null && !tunableQuery.isEmpty()) {
                         Metric queryMetric = new Metric(tunable.getName(),
                                 tunableQuery,
-                                DeploymentInfo.getMonitoringAgent(),
+                                AutotuneDeploymentInfo.getMonitoringAgent(),
                                 tunable.getValueType());
                         metrics.add(queryMetric);
                     }
@@ -303,9 +301,9 @@ public class TrialHelpers {
             deployments.add(deployment);
         }
 
-        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentId(),
+        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentName(),
+                appSearchSpace.getExperimentId(),
                 autotuneObject.getNamespace(),
-                appSearchSpace.getApplicationName(),
                 "v1",
                 trialInfo,
                 experimentSettings,

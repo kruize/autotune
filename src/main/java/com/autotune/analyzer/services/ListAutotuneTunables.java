@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -26,6 +25,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
+import static com.autotune.analyzer.utils.ServiceHelpers.addLayerTunableDetails;
 
 public class ListAutotuneTunables extends HttpServlet
 {
@@ -86,68 +91,63 @@ public class ListAutotuneTunables extends HttpServlet
 	 *     ]
 	 *   }
 	 * ]
-	 * @param req
-	 * @param resp
+	 * @param request
+	 * @param response
 	 * @throws IOException
 	 */
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		JSONArray outputJsonArray = new JSONArray();
-		resp.setContentType("application/json");
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		try {
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.setContentType(JSON_CONTENT_TYPE);
+			response.setCharacterEncoding(CHARACTER_ENCODING);
 
-		String sloClass = req.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-		String layerName = req.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+			JSONArray layersArray = new JSONArray();
+			if (AutotuneDeployment.autotuneConfigMap.isEmpty()) {
+				layersArray.put(LAYER_NOT_FOUND);
+				response.getWriter().println(layersArray.toString(4));
+				return;
+			}
 
-		//No layer parameter was passed in the request
-		if (layerName == null) {
-			if (!AutotuneDeployment.autotuneConfigMap.isEmpty()) {
-				for (String autotuneConfigName : AutotuneDeployment.autotuneConfigMap.keySet()) {
-					addLayerTunablesToResponse(outputJsonArray, sloClass, autotuneConfigName);
+			String sloClass = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+			String layerName = request.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+			AutotuneConfig autotuneConfig = null;
+
+			if (layerName != null) {
+				if (AutotuneDeployment.autotuneConfigMap.containsKey(layerName)) {
+					JSONObject layerJson = new JSONObject();
+					autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layerName);
+					addLayerDetails(layerJson, autotuneConfig);
+					JSONArray tunablesArray = new JSONArray();
+					addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+					if (!tunablesArray.isEmpty()) {
+						layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+						layersArray.put(layerJson);
+					} else {
+						if (sloClass != null) {
+							layersArray.put(ERROR_SLO_CLASS + sloClass + NOT_FOUND);
+						}
+					}
+				} else {
+					layersArray.put(LAYER_NOT_FOUND);
 				}
 			} else {
-				outputJsonArray.put("Error: No AutotuneConfig objects found!");
+				// No layer parameter was passed in the request
+				for (String layer : AutotuneDeployment.autotuneConfigMap.keySet()) {
+					JSONObject layerJson = new JSONObject();
+					autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(layer);
+					addLayerDetails(layerJson, autotuneConfig);
+					JSONArray tunablesArray = new JSONArray();
+					addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+					if (!tunablesArray.isEmpty()) {
+						layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+						layersArray.put(layerJson);
+					}
+				}
 			}
-		} else {
-			addLayerTunablesToResponse(outputJsonArray, sloClass, layerName);
+			response.getWriter().println(layersArray.toString(4));
+		}  catch (Exception ex) {
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		resp.getWriter().println(outputJsonArray.toString(4));
-	}
-
-	private void addLayerTunablesToResponse(JSONArray outputJsonArray, String sloClass, String autotuneConfigName) {
-		AutotuneConfig autotuneConfig;
-		JSONObject autotuneConfigJson = new JSONObject();
-
-		if (AutotuneDeployment.autotuneConfigMap.containsKey(autotuneConfigName)) {
-			autotuneConfig = AutotuneDeployment.autotuneConfigMap.get(autotuneConfigName);
-		} else {
-			outputJsonArray.put("Error: AutotuneConfig " + autotuneConfigName + " not found!");
-			return;
-		}
-
-		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.ID, autotuneConfig.getLayerId());
-		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
-		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_DETAILS, autotuneConfig.getDetails());
-
-		JSONArray tunablesArray = new JSONArray();
-		for (Tunable tunable : autotuneConfig.getTunables()) {
-			//If no sloClass parameter was passed in the request, or if the argument matches the sloClassList for the Tunable
-			if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
-				JSONObject tunablesJson = new JSONObject();
-				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
-				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
-				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-				tunablesJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
-
-				tunablesArray.put(tunablesJson);
-			}
-		}
-		if (tunablesArray.isEmpty()) {
-			outputJsonArray.put("Error: Tunables matching slo_class " + sloClass + " not found");
-			return;
-		}
-		autotuneConfigJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
-		outputJsonArray.put(autotuneConfigJson);
 	}
 }

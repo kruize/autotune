@@ -7,40 +7,33 @@ public class ApplicationSearchSpace
 {
 	private final String experimentName;
 	private final String experimentId;
-	private final String applicationName;
 	private final String objectiveFunction;
 	private final String hpoAlgoImpl;
 	private final String direction;
 	private final String valueType;
 
-	Map<String, Tunable> applicationTunablesMap;
+	Map<String, Tunable> tunablesMap;
 
 	public ApplicationSearchSpace(String experimentName,
 								  String experimentId,
-								  String applicationName,
 								  String objectiveFunction,
 								  String hpoAlgoImpl,
 								  String direction,
 								  String valueType) {
 		this.experimentName = experimentName;
 		this.experimentId = experimentId;
-		this.applicationName = applicationName;
 		this.objectiveFunction = objectiveFunction;
 		this.hpoAlgoImpl = hpoAlgoImpl;
 		this.direction = direction;
 		this.valueType = valueType;
 
-		this.applicationTunablesMap = new HashMap<>();
+		this.tunablesMap = new HashMap<>();
 	}
 
 	public String getExperimentName() {	return experimentName;	}
 
 	public String getExperimentId() {
 		return experimentId;
-	}
-
-	public String getApplicationName() {
-		return applicationName;
 	}
 
 	public String getObjectiveFunction() {
@@ -55,8 +48,8 @@ public class ApplicationSearchSpace
 		return direction;
 	}
 
-	public Map<String, Tunable> getApplicationTunablesMap() {
-		return applicationTunablesMap;
+	public Map<String, Tunable> getTunablesMap() {
+		return tunablesMap;
 	}
 
 	public String getValueType() {

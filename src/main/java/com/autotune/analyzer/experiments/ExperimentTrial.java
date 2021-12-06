@@ -20,26 +20,26 @@ import java.util.ArrayList;
 public class ExperimentTrial {
     private final String experimentId;
     private final String namespace;
-    private final String applicationName;
+    private final String experimentName;
     private final String appVersion;
     private final TrialInfo trialInfo;
     private final ExperimentSettings experimentSettings;
-    private final ArrayList<Deployments> deployments;
+    private final ArrayList<TrialDetails> trialDetails;
 
-    public ExperimentTrial(String experimentId,
+    public ExperimentTrial(String experimentName,
+                           String experimentId,
                            String namespace,
-                           String applicationName,
                            String appVersion,
                            TrialInfo trialInfo,
                            ExperimentSettings experimentSettings,
-                           ArrayList<Deployments> deployments) {
+                           ArrayList<TrialDetails> trialDetails) {
         this.experimentId = experimentId;
         this.namespace = namespace;
-        this.applicationName = applicationName;
+        this.experimentName = experimentName;
         this.appVersion = appVersion;
         this.trialInfo = trialInfo;
         this.experimentSettings = experimentSettings;
-        this.deployments = deployments;
+        this.trialDetails = trialDetails;
     }
 
     public String getExperimentId() {
@@ -50,8 +50,8 @@ public class ExperimentTrial {
         return namespace;
     }
 
-    public String getApplicationName() {
-        return applicationName;
+    public String getExperimentName() {
+        return experimentName;
     }
 
     public String getAppVersion() {
@@ -66,7 +66,7 @@ public class ExperimentTrial {
         return experimentSettings;
     }
 
-    public ArrayList<Deployments> getDeployments() {
-        return deployments;
+    public ArrayList<TrialDetails> getTrialDetails() {
+        return trialDetails;
     }
 }

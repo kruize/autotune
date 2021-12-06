@@ -25,6 +25,8 @@ SEARCH_SPACE_JSON="${CURRENT_DIR}/../resources/searchspace_jsons/searchspace.jso
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/constants/hpo_api_constants.sh
 
+hpo_option=""
+
 # Tests to validate the HPO APIs
 function hpo_api_tests() {
 	start_time=$(get_date)
@@ -51,6 +53,13 @@ function hpo_api_tests() {
 		testtorun=("${hpo_api_tests[@]}")
 	else
 		testtorun=${testcase}
+	fi
+
+	if [[ ${HPO_SERVICE} == 1 ]]; then
+		# Terminate any running HPO servers
+		echo "Terminating any running HPO servers..."
+		${SCRIPTS_DIR}/start_hpo_servers.sh -t > /dev/null
+		echo "Terminating any running HPO servers...Done"
 	fi
 
 	for test in "${testtorun[@]}"
@@ -88,16 +97,47 @@ function hpo_api_tests() {
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES} 
 }
 
+function form_hpo_curl_cmd {
+	API=$1
+	# Form the curl command based on the cluster type
+	case $cluster_type in
+		openshift) ;;
+		minikube)
+			NAMESPACE="monitoring"
+			echo "NAMESPACE = ${NAMESPACE}"
+			#PORT=$(kubectl -n ${NAMESPACE} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+			PORT="8085"
+			SERVER_IP=$(minikube ip)
+			URL="http://${SERVER_IP}";;
+		docker) ;;
+           *);;
+        esac
+
+        if [ $cluster_type == "openshift" ]; then
+                hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}/${API}"
+        else
+                hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}:${PORT}/${API}"
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			URL="http://localhost"
+			hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}:${PORT}/${API}"
+		fi
+
+        fi
+}
+
 # Post a JSON object to HPO(Hyper Parameter Optimization) module
 # input: JSON object
 # output: Create the Curl command with given JSON and get the result
 function post_experiment_json() {
 	json_array_=$1
 
-	content='curl -H "Content-Type: application/json"'
-	post_cmd=$(curl -H "Content-Type: application/json" -d "${json_array_}"  http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
+	form_hpo_curl_cmd "experiment_trials"
+	echo "HPO curl cmd =  $hpo_curl_cmd"
+
+	post_cmd=$(${hpo_curl_cmd}  -d "${json_array_}"  -w '\n%{http_code}' 2>&1)
+
 	# Example curl command: curl -H "Content-Type: application/json" -d {"id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
-	post_experiment_cmd="${content} -d ${json_array_}  http://localhost:8085/experiment_trials -w '\n%{http_code}'"
+	post_experiment_cmd="${hpo_curl_cmd} -d ${json_array_}  -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment= ${post_experiment_cmd}" | tee -a ${LOG_} ${LOG}
@@ -164,19 +204,26 @@ function run_post_tests(){
 				cat ${TESTS_}/invalid_searchspace.json | tee -a ${LOG_} ${LOG}
 				echo "" | tee -a ${LOG_} ${LOG}
 				# Start the HPO servers
-				${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${TESTS_}/invalid_searchspace.json | tee -a ${LOG_} ${LOG}
+
+				if [[ ${HPO_SERVICE} == 1 ]]; then
+					${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${TESTS_}/invalid_searchspace.json | tee -a ${LOG_} ${LOG}
+				fi
 				;;
 			*)
 				exp="${post_test}"	
 				# Start the HPO servers
-				${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
+				if [[ ${HPO_SERVICE} == 1 ]]; then
+					${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
+				fi
 		esac
 
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
 
 		# Check if the servers have started
-		check_server_status
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			check_server_status
+		fi
 
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
@@ -223,7 +270,9 @@ function run_post_tests(){
 		echo ""
 
 		# Stop the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -t ${hpo_option} | tee -a ${LOG_} ${LOG}
+		fi
 
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
@@ -311,14 +360,16 @@ function other_post_experiment_tests() {
 		echo "************************************* ${operation} Test ****************************************" | tee -a ${LOG_} ${LOG}
 		
 		# Start the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} -j ${SEARCH_SPACE_JSON} | tee -a ${LOG_} ${LOG}
+
+			# Sleep for few seconds to reduce the ambiguity
+			sleep 2
+
+			# Check if the servers have started
+			check_server_status
+		fi
 		
-		# Sleep for few seconds to reduce the ambiguity
-		sleep 2
-		
-		# Check if the servers have started
-		check_server_status
-				
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
 		
@@ -327,7 +378,9 @@ function other_post_experiment_tests() {
 		echo ""
 		
 		# Stop the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		fi
 		
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
@@ -413,14 +466,16 @@ function get_trial_json_invalid_tests() {
 		echo "************************************* ${exp_trial} Test ****************************************" | tee -a ${LOG_} ${LOG}
 		
 		# Start the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
-		
-		# Sleep for few seconds to reduce the ambiguity
-		sleep 2
-		
-		# Check if the servers have started
-		check_server_status
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
 
+			# Sleep for few seconds to reduce the ambiguity
+			sleep 2
+		
+			# Check if the servers have started
+			check_server_status
+		fi
+		
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
 
@@ -441,7 +496,9 @@ function get_trial_json_invalid_tests() {
 		echo ""
 		
 		# Stop the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		fi
 	done
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 }
@@ -540,13 +597,15 @@ function get_trial_json_valid_tests() {
 		echo "************************************* ${exp_trial} Test ****************************************" | tee -a ${LOG_} ${LOG}
 	
 		# Start the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
-		
-		# Sleep for few seconds to reduce the ambiguity
-		sleep 2
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+
+			# Sleep for few seconds to reduce the ambiguity
+			sleep 2
 	
-		# Check if the servers have started
-		check_server_status
+			# Check if the servers have started
+			check_server_status
+		fi
 			
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
@@ -572,12 +631,14 @@ function get_trial_json_valid_tests() {
 
 		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 		
-		if [ "${failed}" -eq 0 ]; then
+		if [[ "${failed}" -eq 0 ]]; then
 			validate_exp_trial
 		fi
 		
 		# Stop the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		fi
 		echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 	done
 }
@@ -588,10 +649,13 @@ function get_trial_json_valid_tests() {
 function post_experiment_result_json() {
 	exp_result=$1
 
-	content='curl -H "Content-Type: application/json"'
-	post_result=$(curl -H "Content-Type: application/json" -d "${exp_result}" http://localhost:8085/experiment_trials -w '\n%{http_code}' 2>&1)
+	form_hpo_curl_cmd "experiment_trials"
+	echo "HPO curl cmd =  $hpo_curl_cmd"
+
+	post_result=$(${hpo_curl_cmd}  -d "${exp_result}"  -w '\n%{http_code}' 2>&1)
+
 	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
-	post_exp_result_cmd="${content} -d ${exp_result} http://localhost:8085/experiment_trials -w '\n%{http_code}'"
+	post_exp_result_cmd="${hpo_curl_cmd} -d ${exp_result} -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment result= ${post_exp_result_cmd}" | tee -a ${LOG_} ${LOG}
@@ -703,13 +767,18 @@ function other_exp_result_post_tests() {
 		echo "************************************* ${operation} Test ****************************************" | tee -a ${LOG_} ${LOG}
 
 		# Start the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -p ${TESTS_} | tee -a ${LOG_} ${LOG}
 
-		# Sleep for few seconds to reduce the ambiguity
-		sleep 2
+			# Sleep for few seconds to reduce the ambiguity
+			sleep 2
 
-		# Check if the servers have started
-		check_server_status
+			# Check if the servers have started
+			if [ ${HPO_SERVICE} == 1 ]; then
+				check_server_status
+			fi
+		fi
+
 
 		# Get the id from search space JSON
 		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
@@ -719,7 +788,9 @@ function other_exp_result_post_tests() {
 		echo ""
 
 		# Stop the HPO servers
-		${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		if [[ ${HPO_SERVICE} == 1 ]]; then
+			${SCRIPTS_DIR}/start_hpo_servers.sh -t | tee -a ${LOG_} ${LOG}
+		fi
 
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 2
