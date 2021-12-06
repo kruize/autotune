@@ -19,7 +19,6 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}"
-echo "************ SCRIPTS_DIR = ${SCRIPTS_DIR}"
 
 PATH_TO_HPO_SERVICE=${SCRIPTS_DIR}/../../../hyperparameter_tuning
 PATH_TO_SEARCHSPACE=${SCRIPTS_DIR}

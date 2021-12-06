@@ -41,13 +41,13 @@ public class InitializeDeployment
 		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
 		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
 
-		DeploymentInfo.setClusterType(cluster_type);
-		DeploymentInfo.setKubernetesType(k8S_type);
-		DeploymentInfo.setAuthType(auth_type);
-		DeploymentInfo.setMonitoringAgent(monitoring_agent);
-		DeploymentInfo.setAuthToken(auth_token);
-		DeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
-		DeploymentInfo.setLoggingLevel(logging_level);
+		AutotuneDeploymentInfo.setClusterType(cluster_type);
+		AutotuneDeploymentInfo.setKubernetesType(k8S_type);
+		AutotuneDeploymentInfo.setAuthType(auth_type);
+		AutotuneDeploymentInfo.setMonitoringAgent(monitoring_agent);
+		AutotuneDeploymentInfo.setAuthToken(auth_token);
+		AutotuneDeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
+		AutotuneDeploymentInfo.setLoggingLevel(logging_level);
 
 		//If no endpoint was specified in the configmap
 		if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
@@ -58,13 +58,13 @@ public class InitializeDeployment
 				monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
 			}
 		}
-		DeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
+		AutotuneDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
 
-		DeploymentInfo.setLayerTable();
+		AutotuneDeploymentInfo.setLayerTable();
 
 		/* Update logging level from the env */
-		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(DeploymentInfo.getLoggingLevel()));
+		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(AutotuneDeploymentInfo.getLoggingLevel()));
 
-		DeploymentInfo.logDeploymentInfo();
+		AutotuneDeploymentInfo.logDeploymentInfo();
 	}
 }

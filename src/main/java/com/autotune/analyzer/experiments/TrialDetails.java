@@ -4,7 +4,7 @@ import com.autotune.analyzer.k8sObjects.Metric;
 
 import java.util.ArrayList;
 
-public class Deployments {
+public class TrialDetails {
     private String deploymentType;
     private final String deploymentName;
     private final String deploymentNameSpace;
@@ -17,17 +17,17 @@ public class Deployments {
     private Resources limits;
     private String runtimeOptions;
 
-    public Deployments(String deploymentType,
-                       String deploymentName,
-                       String deploymentNameSpace,
-                       String state,
-                       String result,
-                       String resultInfo,
-                       String resultError,
-                       ArrayList<Metric> metrics,
-                       Resources requests,
-                       Resources limits,
-                       String runtimeOptions) {
+    public TrialDetails(String deploymentType,
+						String deploymentName,
+						String deploymentNameSpace,
+						String state,
+						String result,
+						String resultInfo,
+						String resultError,
+						ArrayList<Metric> metrics,
+						Resources requests,
+						Resources limits,
+						String runtimeOptions) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;

@@ -10,7 +10,7 @@ public class Resources {
     private String memoryUnits;
 
     public Resources(String cpu, String memory) {
-        /* Parse the value for the bounds from the strings passed in */
+        // Parse the value for the bounds from the strings passed in
         setCpu(cpu);
         setMemory(memory);
     }

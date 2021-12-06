@@ -18,6 +18,7 @@ package com.autotune.analyzer.k8sObjects;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public final class AutotuneConfig
 
 	private final ArrayList<Tunable> tunables;
 
-	public AutotuneConfig(String layerId, String name,
+	public AutotuneConfig(String name,
 						  String layerName,
 						  int level,
 						  String details,
@@ -60,7 +61,7 @@ public final class AutotuneConfig
 						  String layerPresenceLabel,
 						  String layerPresenceLabelValue,
 						  ArrayList<Tunable> tunables) throws InvalidValueException {
-		this.layerId = layerId;
+
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneConfigConstants.NAME, name);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
@@ -84,7 +85,7 @@ public final class AutotuneConfig
 			this.layerPresenceLabel = layerPresenceLabel;
 			this.layerPresenceLabelValue = layerPresenceLabelValue;
 			this.tunables = new ArrayList<>(tunables);
-
+			this.layerId = Utils.generateID(toString());;
 		} else {
 			throw new InvalidValueException(error.toString());
 		}

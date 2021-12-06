@@ -25,11 +25,11 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.autotune.utils.ServerContext.AUTOTUNE_PORT;
+import static com.autotune.utils.ServerContext.HEALTH_SERVICE;
+
 public class Autotune
 {
-	private static final int PORT = 8080;
-	private static final String ROOT_CONTEXT = "/";
-	private static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
 
@@ -38,7 +38,7 @@ public class Autotune
 
 		disableServerLogging();
 
-		Server server = new Server(PORT);
+		Server server = new Server(AUTOTUNE_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 
 import java.util.HashMap;
@@ -26,7 +25,7 @@ import java.util.Map;
  * stack layers on different levels. (runtime, container, framework, etc)
  *
  * application: "petclinic",
- * namespace: "defaut"
+ * namespace: "default"
  * serviceStackLayers:
  * -  layer_name: container
  *    layer_level: 0
@@ -46,19 +45,18 @@ import java.util.Map;
  */
 public class ApplicationServiceStack
 {
-	private String applicationServiceName;
+	private final String stackName;
 	private final String namespace;
 	private final String deploymentName;
 	private String status;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 	private ApplicationSearchSpace applicationSearchSpace;
 
-	public ApplicationServiceStack(String applicationServiceName, String namespace, String deploymentName, String status) {
-		this.applicationServiceName = applicationServiceName;
+	public ApplicationServiceStack(String stackName, String namespace, String deploymentName, String status) {
+		this.stackName = stackName;
 		this.namespace = namespace;
 		this.deploymentName = deploymentName;
 		this.status = status;
-
 		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
@@ -66,34 +64,8 @@ public class ApplicationServiceStack
 		return namespace;
 	}
 
-	/*
-	public void setNamespace(String namespace) throws InvalidValueException {
-		if (namespace != null)
-			this.namespace = namespace;
-		else
-			throw new InvalidValueException("Namespace cannot be null");
-	}
-	*/
-
 	public String getDeploymentName() {
 		return deploymentName;
-	}
-
-	/*
-	public void setDeploymentName(String deploymentName) {
-		this.deploymentName = deploymentName;
-	}
-	*/
-
-	public String getApplicationServiceName() {
-		return applicationServiceName;
-	}
-
-	public void setApplicationServiceName(String applicationServiceName) throws InvalidValueException {
-		if (applicationServiceName != null)
-			this.applicationServiceName = applicationServiceName;
-		else
-			throw new InvalidValueException("Application service name cannot be null");
 	}
 
 	public String getStatus() {
@@ -104,12 +76,12 @@ public class ApplicationServiceStack
 		this.status = status;
 	}
 
-	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
-		return applicationServiceStackLayers;
+	public String getStackName() {
+		return stackName;
 	}
 
-	public void setApplicationServiceStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
-		this.applicationServiceStackLayers = applicationServiceStackLayers;
+	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
+		return applicationServiceStackLayers;
 	}
 
 	public ApplicationSearchSpace getApplicationSearchSpace() {
@@ -122,11 +94,10 @@ public class ApplicationServiceStack
 
 	@Override
 	public String toString() {
-		return "ApplicationTunables{" +
-				"applicationName='" + applicationServiceName + '\'' +
+		return "ApplicationServiceStack{" +
+				"stackName='" + stackName + '\'' +
 				", namespace='" + namespace + '\'' +
-				", status='" + status + '\'' +
-				", serviceStackLayers=" + applicationServiceStackLayers +
+				", stackLayers=" + applicationServiceStackLayers +
 				'}';
 	}
 }
