@@ -77,6 +77,17 @@ Let us now deploy autotune using the docker image onto the minikube cluster
 ```
 $ ./deploy.sh -c minikube -i autotune:test
 
+  Usage: $0 [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [-s start] [-t terminate]
+        -s: Deploy autotune [Default]
+        -t: Terminate autotune deployment
+        -k: URL for Openshift Server
+        -c: kubernetes cluster type. At present we support only minikube [Default - minikube]
+        -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
+        -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]
+        -n: Namespace to which autotune is deployed [Default - monitoring for cluster type minikube]
+        -d: Config maps directory [Default - manifests/configmaps]
+
+
 Info: Checking pre requisites for minikube...
 Prometheus is installed and running.
 Info: One time setup - Create a service account to deploy autotune

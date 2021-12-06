@@ -71,8 +71,16 @@ trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i docker-image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
+	echo " -s: Deploy autotune [Default]"
+        echo " -t: Terminate autotune deployment"
+	echo " -k: URL for openshift server"
+	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
+	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
+	echo " -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]"
+	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
+	echo " -d: Config maps directory [Default - manifests/configmaps]"
 	exit -1
 }
 
