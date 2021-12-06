@@ -28,7 +28,7 @@ If this is your first pull request on github, click [here](https://www.freecodec
 
 ### Commit Message
 
-The commit message should indicate what has changed and why the change was made. Sign off on your commit in the footer. By doing this, you assert original authorship of the commit and that you are permitted to contribute it. This can be automatically added to your commit by passing -s to git commit, or by manually adding the following line to the footer of the commit.
+We use PGP keys for signing the commits. Refer [generating a new PGP key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) for details. The commit message should indicate what has changed and why the change was made. Sign off on your commit in the footer. By doing this, you assert original authorship of the commit and that you are permitted to contribute it. This can be automatically added to your commit by passing -S to git commit, or by manually adding the following line to the footer of the commit.
 
 ```
 Signed-off-by: Full Name <email>
