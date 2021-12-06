@@ -4,7 +4,7 @@ metadata:
   name: "minikube"
 query_variables:
   - name: '$POD_LABEL$'
-    value: 'pod_name'
+    value: 'pod'
   - name: '$CONTAINER_LABEL$'
     value: 'container'
 
