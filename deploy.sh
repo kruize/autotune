@@ -75,7 +75,6 @@ function usage() {
 	echo "       -s = start(default), -t = terminate"
 	echo " -s: Deploy autotune [Default]"
         echo " -t: Terminate autotune deployment"
-	echo " -k: URL for openshift server"
 	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
 	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
 	echo " -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]"
