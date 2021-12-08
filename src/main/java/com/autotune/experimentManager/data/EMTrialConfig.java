@@ -76,4 +76,8 @@ public class EMTrialConfig {
         }
         return "default";
     }
+
+    public JSONObject getInputJSON() {
+        return this.inputJSON;
+    }
 }

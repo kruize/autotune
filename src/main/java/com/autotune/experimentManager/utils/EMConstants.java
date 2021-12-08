@@ -99,7 +99,7 @@ public class EMConstants {
 
 		// Metadata Section
 		public static String EXPERIMENT_ID = "experiment_id";
-		public static String APPLICATION_NAME = "application_name";
+		public static String EXPERIMENT_NAME = "experiment_name";
 
 		// Deployments Section
 		public static String DEPLOYMENTS = "deployments";
