@@ -243,9 +243,16 @@ public class AutotuneDeployment
 		try {
 			String userLabelKey = autotuneObject.getSelectorInfo().getMatchLabel();
 			String userLabelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
+			String matchDeployment = autotuneObject.getSelectorInfo().getMatchDeployment();
 
 			String namespace = autotuneObject.getNamespace();
-			PodList podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
+			PodList podList;
+
+			if (matchDeployment != null) {
+				Deployment deployment = client.apps().deployments().withName(matchDeployment).get();
+			}
+
+			podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
 			if (podList.getItems().isEmpty()) {
 				// TODO: No matching pods with the userLabelKey found, need to warn the user.
 				return;
@@ -378,12 +385,13 @@ public class AutotuneDeployment
 			String matchRoute = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_ROUTE);
 			String matchURI = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_URI);
 			String matchService = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_SERVICE);
+			String matchDeployment = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_DEPLOYMENT);
 
 			selectorInfo = new SelectorInfo(matchLabel,
 					matchLabelValue,
 					matchRoute,
 					matchURI,
-					matchService);
+					matchService, matchDeployment);
 
 			mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE);
 			name = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)

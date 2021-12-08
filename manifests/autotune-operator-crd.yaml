@@ -71,7 +71,7 @@ spec:
                 - function_variables
                 type: object
               mode:
-                description: 'provide an options to either try, show or apply the recommendation'
+                description: 'provide an option to either try, show or apply the recommendation'
                 type: string
                 default: "show"
               selector:
@@ -79,10 +79,13 @@ spec:
                 type: object
                 properties:
                   matchLabel:
-                    description: 'match lable is may be the name of the applications where recommendation system apply'
+                    description: 'match label with applications where recommendation system apply'
                     type: string
                   matchLabelValue:
-                    description: 'match lable value'
+                    description: 'match label value'
+                    type: string
+                  matchDeployment:
+                    description: 'match the kubernetes deployment'
                     type: string
                   matchRoute:
                     description: 'test'

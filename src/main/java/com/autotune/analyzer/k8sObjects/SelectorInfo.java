@@ -30,17 +30,19 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
  */
 public final class SelectorInfo
 {
-	private final String matchLabel;
 	private final String matchLabelValue;
+	private final String matchLabel;
 	private final String matchURI;
 	private final String matchRoute;
 	private final String matchService;
+	private final String matchDeployment;
 
 	public SelectorInfo(String matchLabel,
-			String matchLabelValue,
-			String matchURI,
-			String matchRoute,
-			String matchService) throws InvalidValueException {
+						String matchLabelValue,
+						String matchURI,
+						String matchRoute,
+						String matchService, String matchDeployment) throws InvalidValueException {
+		this.matchDeployment = matchDeployment;
 		//TODO Can this be blank?
 		if (matchLabel != null && !matchLabel.equals(""))
 			this.matchLabel = matchLabel;
@@ -61,6 +63,7 @@ public final class SelectorInfo
 		this.matchURI = copy.getMatchURI();
 		this.matchRoute = copy.getMatchRoute();
 		this.matchService = copy.getMatchService();
+		this.matchDeployment = copy.getMatchDeployment();
 	}
 
 	public String getMatchLabel() {
@@ -81,6 +84,10 @@ public final class SelectorInfo
 
 	public String getMatchService() {
 		return matchService;
+	}
+
+	public String getMatchDeployment() {
+		return matchDeployment;
 	}
 
 	@Override

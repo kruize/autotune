@@ -82,6 +82,7 @@ public class AnalyzerConstants
 		public static final String MATCH_ROUTE = "matchRoute";
 		public static final String MATCH_URI = "matchURI";
 		public static final String MATCH_SERVICE = "matchService";
+		public static final String MATCH_DEPLOYMENT = "matchDeployment";
 
 		public static final String MODE = "mode";
 		public static final String METADATA = "metadata";
