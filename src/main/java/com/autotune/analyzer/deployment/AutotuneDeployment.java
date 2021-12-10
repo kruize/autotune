@@ -280,7 +280,7 @@ public class AutotuneDeployment
 						break;
 					}
 				}
-				// Check docker image id for each container in the pod
+				// Check docker image name for each container in the pod
 				for (Container container : pod.getSpec().getContainers()) {
 					String containerImageName = container.getImage();
 					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
@@ -629,8 +629,8 @@ public class AutotuneDeployment
 					}
 					for (Container container : containers) {
 						String containerImageName = container.getImage();
-						// Check if the container image is already present in the applicationServiceStackMap, it not, add it
 						if (autotuneObject != null) {
+							// Add the layer info to the container image that should be already present in the applicationServiceStackMap.
 							if (applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
 								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName), layer);
 							}
