@@ -64,7 +64,7 @@ function autotune_id_tests() {
 	fi
 	
 	# Cleanup autotune
-	autotune_cleanup  | tee -a ${LOG}
+#	autotune_cleanup  | tee -a ${LOG}
 	
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
@@ -84,15 +84,18 @@ function get_autotune_id() {
 	test_name=$2
 	declare -A autotune_id
 	length=$(cat ${json_} | jq '. | length')
+
 	while [ "${length}" -ne 0 ]
 	do	
 		((length--))
-		autotune_id[test_name]+=" $(cat ${json_} | jq .[${length}].id) "
+		autotune_id[test_name]+=" $(cat ${json_} | jq .[${length}].experiment_id) "
 	done
 	id_="${autotune_id[test_name]}"
 	
 	# convert config_id into an array
 	IFS=' ' read -r -a id_ <<<  ${id_}
+
+	echo "Got the experiment ids - ${id_[@]}"
 }
 
 # query the api and get the result
@@ -100,41 +103,43 @@ function get_autotune_id() {
 # output: Query the API and get the autotune object ids
 function query_api() {
 	api_to_query=$1
+	experiment_name=${autotune_names[0]}
 	layer="container"
+	echo "experiment name = $experiment_name"
 	
 	echo " " | tee -a ${LOG}
 	case "${api_to_query}" in
-		get_listapplication_json_app)
-			# listapplication for specific application
-			get_listapplication_json ${application_name}
+		get_liststacks_json_app)
+			# listStacks for a specific application
+			get_liststacks_json ${experiment_name}
 			;;
-		get_listapplication_json)
-			# listapplication for all applications
-			get_listapplication_json
+		get_liststacks_json)
+			# liststacks for all applications
+			get_liststacks_json
 			;;
-		get_listapplayer_json_app)
-			# listapplayer for specific application
-			get_listapplayer_json ${application_name}
+		get_liststacklayers_json_app)
+			# listStacksLayer for a specific application
+			get_liststacklayers_json ${experiment_name}
 			;;
-		get_listapplayer_json)	
-			# listapplayer for all applications
-			get_listapplayer_json
+		get_liststacklayers_json)
+			# listStackLayers for all applications
+			get_liststacklayers_json
 			;;
-		get_listapptunables_json_app_layer)
-			# listapptunables for specific application and specific layer
-			get_listapptunables_json ${application_name} ${layer}
+		get_liststacktunables_json_app_layer)
+			# listStackTunables for a specific application and specific layer
+			get_liststacktunables_json ${experiment_name} ${layer}
 			;;
-		get_listapptunables_json_app)
-			# listapptunables for specific application
-			get_listapptunables_json ${application_name}
+		get_liststacktunables_json_app)
+			# listStackTunables for a specific application
+			get_liststacktunables_json ${experiment_name}
 			;;
-		get_listapptunables_json)
-			# listapptunables for all applications	
-			get_listapptunables_json
+		get_liststacktunables_json)
+			# listStackTunables for all applications
+			get_liststacktunables_json
 			;;
 		get_searchspace_json_app)
 			# test searchSpace API for specific application
-			get_searchspace_json ${application_name}
+			get_searchspace_json ${experiment_name}
 			;;
 		get_searchspace_json)
 			# test searchSpace API for all applications
@@ -176,6 +181,11 @@ function re_apply_test() {
 	new_id_=("${id_[@]}")
 	
 	match_ids
+
+	echo "old_ids = ${old_id_[@]}"
+	echo "new_ids = ${new_id_[@]}"
+	echo "old id count = ${#old_id_[@]} new id count = ${#new_id_[@]}"
+	echo "matched count = ${matched_count}"
 	
 	if [ "${matched_count}" -ne "${#old_id_[@]}" ]; then
 		flag=1
