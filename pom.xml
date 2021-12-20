@@ -78,6 +78,12 @@
             <version>${slf4j-version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.udojava</groupId>
+            <artifactId>EvalEx</artifactId>
+            <version>2.7</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
