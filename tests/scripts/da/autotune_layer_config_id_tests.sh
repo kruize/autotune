@@ -134,7 +134,7 @@ function re_apply_test_() {
 	old_layer_config_id[test_name]+="${config_id[@]}"
 	echo -n "Deleting the application autotune layer config objects..." | tee -a ${LOG}
 	echo " " >> ${LOG}
-	kubectl delete -f ${CONFIG_YAML_DIR} -n monitoring>> ${LOG}
+	kubectl delete -f ${CONFIG_YAML_DIR} -n ${NAMESPACE} >> ${LOG}
 	echo "done" | tee -a ${LOG}
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -142,7 +142,7 @@ function re_apply_test_() {
 	
 	echo -n "Re-applying the autotune layer config yaml..." | tee -a ${LOG}
 	echo " " >> ${LOG}
-	kubectl apply -f ${CONFIG_YAML_DIR} -n monitoring>> ${LOG}
+	kubectl apply -f ${CONFIG_YAML_DIR} -n ${NAMESPACE} >> ${LOG}
 	echo "done"
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -202,7 +202,7 @@ function update_layer_config() {
 		sed -i 's/upper_bound: '\'${find_upper_bound}\''/upper_bound: '\'${replace_upper_bound}\''/g' ${test_layer_config}
 
 		echo "Applying autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
-		kubectl apply -f ${test_layer_config} -n monitoring | tee -a ${LOG}
+		kubectl apply -f ${test_layer_config} -n ${NAMESPACE} | tee -a ${LOG}
 		echo "done" | tee -a ${LOG}
 	done
 	
@@ -239,7 +239,7 @@ function new_layer_config() {
 	old_layer_config_id_count="${#config_id[@]}"
 	
 	echo "Applying new layer config yaml ${new_config_yaml}..."| tee -a ${LOG}
-	kubectl apply -f ${new_config_yaml} -n monitoring | tee -a ${LOG}
+	kubectl apply -f ${new_config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
 	echo "done" | tee -a ${LOG}
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -300,15 +300,15 @@ function validate_autotune_tunables_api() {
 			query_autotune_tunables_api ${layer_config_id_test}
 			validate_layer_config_id "${config_id}"
 			if [ "${config_id_test_name}" == "${autotune_layer_config_id_tests[3]}" ]; then
-				kubectl delete -f ${new_config_yaml} -n monitoring >> ${LOG}
+				kubectl delete -f ${new_config_yaml} -n ${NAMESPACE} >> ${LOG}
 			fi
 
 			echo "Deleting autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
-			kubectl delete -f ${config_yaml} -n monitoring | tee -a ${LOG}
+			kubectl delete -f ${config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
 			echo "done" | tee -a ${LOG}
 
 			echo "Applying autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
-			kubectl apply -f ${config_yaml} -n monitoring | tee -a ${LOG}
+			kubectl apply -f ${config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
 			echo "done" | tee -a ${LOG}
 		fi
 	done

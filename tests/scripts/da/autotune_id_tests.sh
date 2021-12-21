@@ -64,7 +64,7 @@ function autotune_id_tests() {
 	fi
 	
 	# Cleanup autotune
-#	autotune_cleanup  | tee -a ${LOG}
+	autotune_cleanup  | tee -a ${LOG}
 	
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
