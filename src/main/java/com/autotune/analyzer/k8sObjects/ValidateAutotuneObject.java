@@ -79,11 +79,6 @@ public class ValidateAutotuneObject
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
 		}
 
-		// Check if objective_function is correctly formatted
-//		if (!new EvalExParser().validate(sloInfo.getObjectiveFunction(), sloInfo.getFunctionVariables())) {
-//			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
-//		}
-
 		// Check if function_variables is empty
 		if (sloInfo.getFunctionVariables().isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
@@ -103,6 +98,12 @@ public class ValidateAutotuneObject
 			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName()))
 				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
 		}
+
+		// Check if objective_function is correctly formatted
+		if (!new EvalExParser().validate(sloInfo.getObjectiveFunction(), sloInfo.getFunctionVariables())) {
+			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+		}
+
 		return errorString;
 	}
 }
