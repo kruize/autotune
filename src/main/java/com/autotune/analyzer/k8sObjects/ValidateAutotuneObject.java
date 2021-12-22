@@ -18,6 +18,7 @@ package com.autotune.analyzer.k8sObjects;
 import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.EvalExParser;
 
 import java.util.HashMap;
 
@@ -77,6 +78,11 @@ public class ValidateAutotuneObject
 		if (sloInfo.getObjectiveFunction() == null || sloInfo.getObjectiveFunction().isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
 		}
+
+		// Check if objective_function is correctly formatted
+//		if (!new EvalExParser().validate(sloInfo.getObjectiveFunction(), sloInfo.getFunctionVariables())) {
+//			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+//		}
 
 		// Check if function_variables is empty
 		if (sloInfo.getFunctionVariables().isEmpty()) {

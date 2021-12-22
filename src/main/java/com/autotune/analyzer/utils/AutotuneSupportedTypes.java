@@ -61,4 +61,6 @@ public class AutotuneSupportedTypes
 
 	public static final Set<String> HPO_ALGOS_SUPPORTED =
 			new HashSet<>(Arrays.asList("optuna_tpe", "optuna_tpe_multivariate", "optuna_skopt", null));
+	public static final Set<String> MATH_OPERATORS_SUPPORTED =
+			new HashSet<>(Arrays.asList("+", "-", "*", "/", "^","%","sin", "cos", "tan", "log"));
 }
