@@ -18,10 +18,10 @@ package com.autotune.analyzer.deployment;
 import com.autotune.analyzer.exceptions.ClusterTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.layer.Container;
-import com.autotune.analyzer.layer.Generic;
-import com.autotune.analyzer.layer.Hotspot;
-import com.autotune.analyzer.layer.Quarkus;
+import com.autotune.analyzer.layer.ContainerLayer;
+import com.autotune.analyzer.layer.GenericLayer;
+import com.autotune.analyzer.layer.HotspotLayer;
+import com.autotune.analyzer.layer.QuarkusLayer;
 import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +51,13 @@ public class AutotuneDeploymentInfo
 
 	public static void setLayerTable() {
 		tunableLayerPair = new Hashtable<String, Class>();
-		tunableLayerPair.put(LAYER_GENERIC, Generic.class);
-		tunableLayerPair.put(LAYER_CONTAINER, Container.class);
-		tunableLayerPair.put(LAYER_HOTSPOT, Hotspot.class);
-		tunableLayerPair.put(LAYER_QUARKUS, Quarkus.class);
+		tunableLayerPair.put(LAYER_GENERIC, GenericLayer.class);
+		tunableLayerPair.put(LAYER_CONTAINER, ContainerLayer.class);
+		tunableLayerPair.put(LAYER_HOTSPOT, HotspotLayer.class);
+		tunableLayerPair.put(LAYER_QUARKUS, QuarkusLayer.class);
 	}
 
+	// TODO: Need a better way to get the layer class
 	public static Class getLayer(String layerName) {
 		return tunableLayerPair.get(layerName);
 	}

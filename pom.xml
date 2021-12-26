@@ -6,28 +6,29 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.0.5_int</version>
+    <version>0.0.6_int</version>
     <properties>
         <fabric8-version>4.13.0</fabric8-version>
         <org-json-version>20201115</org-json-version>
         <jetty-version>9.4.44.v20210927</jetty-version>
-        <slf4j-version>2.15.0</slf4j-version>
+        <slf4j-version>2.17.0</slf4j-version>
         <java-version>17</java-version>
+        <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
     </properties>
     <dependencies>
         <dependency>
-          <groupId>com.pubnub</groupId>
-          <artifactId>pubnub-gson</artifactId>
-          <version>5.2.1</version>
+            <groupId>com.pubnub</groupId>
+            <artifactId>pubnub-gson</artifactId>
+            <version>5.2.1</version>
         </dependency>
 
         <dependency>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-core</artifactId>
-          <version>2.12.4</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.12.4</version>
         </dependency>
 
         <dependency>
@@ -77,6 +78,31 @@
             <artifactId>log4j-core</artifactId>
             <version>${slf4j-version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- The Prometheus client -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- Hotspot JVM metrics-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_hotspot</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- Exposition HTTPServer-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_httpserver</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.prometheus/simpleclient_servlet -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_servlet</artifactId>
+            <version>${prometheus-simpleclient}</version>
         </dependency>
     </dependencies>
     <build>

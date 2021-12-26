@@ -155,10 +155,12 @@ public class AnalyzerConstants
 		public static final String JSON_CONTENT_TYPE = "application/json";
 		public static final String CHARACTER_ENCODING = "UTF-8";
 		public static final String EXPERIMENT_NAME = "experiment_name";
-		public static final String POD_NAME = "pod_name";
+		public static final String DEPLOYMENTS = "deployments";
 		public static final String DEPLOYMENT_NAME = "deployment_name";
+		public static final String NAMESPACE = "namespace";
 		public static final String STACKS = "stacks";
 		public static final String STACK_NAME = "stack_name";
+		public static final String CONTAINER_NAME = "container_name";
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";
 		public static final String QUERY_URL = "query_url";

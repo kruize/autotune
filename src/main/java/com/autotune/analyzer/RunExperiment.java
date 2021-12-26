@@ -26,8 +26,9 @@ public class RunExperiment implements Runnable
 	public void run() {
 
 		String operation = "EXP_TRIAL_GENERATE_NEW";
+		String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
 		JSONObject jsonObject = new JSONObject();
-		jsonObject.put("id", autotuneExperiment.getExperimentId());
+		jsonObject.put("id", experimentId);
 		jsonObject.put("url", ServerContext.SEARCH_SPACE_END_POINT);
 		jsonObject.put("operation", operation);
 
@@ -39,7 +40,7 @@ public class RunExperiment implements Runnable
 				int trialNumber = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, jsonObject.toString()));
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Experiment Trial Config");
 				System.out.println("Optuna Trial No :" + trialNumber);
-				String addExperimentId = "?id=" + autotuneExperiment.getExperimentId();
+				String addExperimentId = "?id=" + experimentId;
 				String addTrialNumber = "&trial_number=" + trialNumber;
 				String trialConfigEP = OPTUNA_TRIALS_END_POINT + addExperimentId + addTrialNumber;
 				URL trialConfigURL = new URL(trialConfigEP);

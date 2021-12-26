@@ -123,14 +123,14 @@ public class SearchSpace extends HttpServlet
             if (null != experimentName) {
                 autotuneExperiment = experimentsMap.get(experimentName);
                 if (null != autotuneExperiment) {
-                    applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
+                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
                     addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                 }
             } else {
                 // No experiment name parameter, generate search space for all experiments
                 for (String expName : experimentsMap.keySet()) {
                     autotuneExperiment = experimentsMap.get(expName);
-                    applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
+                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
                     addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                 }
             }

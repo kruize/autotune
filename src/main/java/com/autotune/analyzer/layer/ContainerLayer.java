@@ -1,16 +1,16 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.TrialDetails;
+import com.autotune.analyzer.experiments.PodContainer;
 import com.autotune.analyzer.experiments.Resources;
 import org.json.JSONObject;
 
-public class Container extends Generic implements Layer {
+public class ContainerLayer extends GenericLayer implements Layer {
 
 	@Override
-	public void prepTunable(Tunable tunable, JSONObject tunableJSON, TrialDetails deployment) {
-		Resources requests = deployment.getRequests();
-		String tunableName = tunableJSON.getString("tunable_name");
+	public void prepTunable(Tunable tunable, JSONObject tunableJSON, PodContainer podContainer) {
+		Resources requests = podContainer.getRequests();
+		String tunableName = tunable.getName();
 		if ("cpuRequest".equals(tunableName)) {
 			String cpu = tunableJSON.getDouble("tunable_value") +
 					tunable.getBoundUnits();
@@ -31,8 +31,8 @@ public class Container extends Generic implements Layer {
 			}
 		}
 
-		deployment.setRequests(requests);
-		deployment.setLimits(requests);
+		podContainer.setRequests(requests);
+		podContainer.setLimits(requests);
 	}
 
 	@Override
