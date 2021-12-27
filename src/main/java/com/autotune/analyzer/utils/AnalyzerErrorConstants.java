@@ -56,6 +56,7 @@ public class AnalyzerErrorConstants
 
 		public static final String AUTOTUNE_OBJECTS_NOT_FOUND = "Error: No objects of kind Autotune found!";
 		public static final String ERROR_EXPERIMENT_NAME = "Error: Experiment Name ";
+		public static final String ERROR_DEPLOYMENT_NAME = "Error: Deployment Name ";
 		public static final String NOT_FOUND = " not found!";
 		public static final String LAYER_NOT_FOUND = "Error: No Layer (AutotuneConfig) object found!";
 		public static final String ERROR_LAYER = "Error: Layer (AutotuneConfig) object ";

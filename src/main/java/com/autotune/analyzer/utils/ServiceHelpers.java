@@ -19,18 +19,12 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.Objects;
-import java.util.Set;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
 
@@ -132,18 +126,11 @@ public class ServiceHelpers {
 				JSONObject tunableJson = new JSONObject();
 				addTunable(tunableJson, tunable);
 				String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
-				try {
-					String query = AnalyzerConstants.NONE;
-					final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
-					// If tunable has a query specified
-					if (tunableQuery != null && !tunableQuery.isEmpty()) {
-						query = Objects.requireNonNull(dataSource).getDataSourceURL() +
-								dataSource.getQueryEndpoint() + tunableQuery;
-					}
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
-				} catch (MonitoringAgentNotFoundException e) {
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
+				String query = AnalyzerConstants.NONE;
+				if (tunableQuery != null && !tunableQuery.isEmpty()) {
+					query = tunableQuery;
 				}
+				tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
 				tunablesArray.put(tunableJson);
 			}
 		}
@@ -162,13 +149,7 @@ public class ServiceHelpers {
 			JSONObject functionVariableJson = new JSONObject();
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
-			try {
-				final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-						dataSource.getQueryEndpoint() + functionVariable.getQuery());
-			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
-			}
+			functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
 			functionVariablesArray.put(functionVariableJson);
 		}
 		funcVarJson.put(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);

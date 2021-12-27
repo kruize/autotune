@@ -103,7 +103,6 @@ public class AutotuneDeployment
 							String autotuneObjectStr = autotuneObject.getExperimentName();
 							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 							// For each of these applicationServiceStacks, we need to start the experiments
-
 							if (!deploymentMap.isEmpty() &&
 									deploymentMap.get(autotuneObjectStr) != null) {
 								Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectStr);
@@ -233,7 +232,6 @@ public class AutotuneDeployment
 		autotuneConfigMap.remove(configName);
 
 		// Remove autotuneconfig for all applications monitored
-
 		for (String autotuneObjectKey : deploymentMap.keySet()) {
 			Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
 			for (String deploymentName : depMap.keySet()) {
@@ -512,10 +510,13 @@ public class AutotuneDeployment
 						String datasource = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
 						String datasourceQuery = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
 
+						/*
+						 * EM will expand the queries
 						try {
 							datasourceQuery = Variables.updateQueryWithVariables(null, null,
 									datasourceQuery, queryVarList);
 						} catch (IOException ignored) { }
+						 */
 
 						queriesMap.put(datasource, datasourceQuery);
 					}

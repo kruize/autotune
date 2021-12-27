@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URL;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT;
 import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 
@@ -27,9 +29,14 @@ public class RunExperiment implements Runnable
 
 		String operation = "EXP_TRIAL_GENERATE_NEW";
 		String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
+		StringBuilder searchSpaceUrl = new StringBuilder(ServerContext.SEARCH_SPACE_END_POINT)
+				.append("?")
+				.append(DEPLOYMENT_NAME)
+				.append("=")
+				.append(autotuneExperiment.getDeploymentName());
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("id", experimentId);
-		jsonObject.put("url", ServerContext.SEARCH_SPACE_END_POINT);
+		jsonObject.put("url", searchSpaceUrl.toString());
 		jsonObject.put("operation", operation);
 
 		for (int i = 0; i<MAX_NUMBER_OF_TRIALS; i++) {
@@ -40,10 +47,12 @@ public class RunExperiment implements Runnable
 				int trialNumber = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, jsonObject.toString()));
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Experiment Trial Config");
 				System.out.println("Optuna Trial No :" + trialNumber);
-				String addExperimentId = "?id=" + experimentId;
-				String addTrialNumber = "&trial_number=" + trialNumber;
-				String trialConfigEP = OPTUNA_TRIALS_END_POINT + addExperimentId + addTrialNumber;
-				URL trialConfigURL = new URL(trialConfigEP);
+				StringBuilder trialConfigUrl = new StringBuilder(OPTUNA_TRIALS_END_POINT)
+						.append("?id=")
+						.append(experimentId)
+						.append("&trial_number=")
+						.append(trialNumber);
+				URL trialConfigURL = new URL(trialConfigUrl.toString());
 
 				/* STEP 2: We got a trial id from Optuna, now use that to get the actual config */
 				String trialConfigJson = HttpUtils.getDataFromURL(trialConfigURL, "");

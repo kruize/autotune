@@ -65,9 +65,9 @@
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlet:9.4.44.v20210927" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-security:9.4.44.v20210927" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util-ajax:9.4.44.v20210927" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-slf4j-impl:2.15.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.15.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.15.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-slf4j-impl:2.17.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.17.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.17.0" level="project" />
     <orderEntry type="library" name="Maven: io.prometheus:simpleclient:0.14.1" level="project" />
     <orderEntry type="library" name="Maven: io.prometheus:simpleclient_tracer_otel:0.14.1" level="project" />
     <orderEntry type="library" name="Maven: io.prometheus:simpleclient_tracer_common:0.14.1" level="project" />
