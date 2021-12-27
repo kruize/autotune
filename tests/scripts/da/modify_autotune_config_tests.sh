@@ -50,8 +50,9 @@ function modify_autotune_config_tests() {
 	sleep 10
 	
 	# get autotune pod log
-	autotune_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n monitoring)
+	container="autotune"
+	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE} -c ${container})
 	echo "${pod_log_msg}" >> "${AUTOTUNE_LOG}"
 	
 	# form the curl command based on the cluster type

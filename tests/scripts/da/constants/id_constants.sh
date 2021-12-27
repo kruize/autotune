@@ -17,9 +17,9 @@
 ##### script containing constants for autotune object id and autotuneconfig object id test constants #####
 #
 
-autotune_id=("get_listapplication_json_app" "get_listapplication_json" "get_listapplayer_json_app" "get_listapplayer_json" "get_listapptunables_json_app_layer" "get_listapptunables_json_app" "get_listapptunables_json" "get_searchspace_json_app" "get_searchspace_json")
+autotune_id=("get_liststacks_json_app" "get_liststacks_json" "get_liststacklayers_json_app" "get_liststacklayers_json" "get_liststacktunables_json_app_layer" "get_liststacktunables_json_app" "get_liststacktunables_json" "get_searchspace_json_app" "get_searchspace_json")
 
-old_autotune_id=("get_listapplication_json_app" "get_listapplication_json" "get_listapplayer_json_app" "get_listapplayer_json" "get_listapptunables_json_app_layer" "get_listapptunables_json_app" "get_listapptunables_json" "get_searchspace_json_app" "get_searchspace_json")
+old_autotune_id=("get_liststacks_json_app" "get_liststacks_json" "get_liststacklayers_json_app" "get_liststacklayers_json" "get_liststacktunables_json_app_layer" "get_liststacktunables_json_app" "get_liststacktunables_json" "get_searchspace_json_app" "get_searchspace_json")
 
 # Breif description about the autotune id tests
 declare -A autotune_id_test_description
