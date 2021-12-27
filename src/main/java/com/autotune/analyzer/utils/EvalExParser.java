@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * We're using the EvalEx - Java Expression Evaluator for the objective function evaluation
- * EvalEx GitHub URL : https://github.com/uklimaschewski/EvalEx
- * Copyright 2012-2021 by Udo Klimaschewski
- *
- * http://UdoJava.com/
- * http://about.me/udo.klimaschewski
  *******************************************************************************/
 
-// TODO: Add javadoc for Evaluator library
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.k8sObjects.Metric;
@@ -31,15 +24,28 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
-
+/**
+ *  * We're using the EvalEx - Java Expression Evaluator for the objective function evaluation
+ *  * EvalEx GitHub URL : https://github.com/uklimaschewski/EvalEx
+ *  * Copyright 2012-2021 by Udo Klimaschewski
+ *  *
+ *  * http://UdoJava.com/
+ *  * http://about.me/udo.klimaschewski
+ * To validate and parse the objective function by using EvaluatorEx library
+ */
 public class EvalExParser implements AlgebraicParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EvalExParser.class);
+
+    /**
+     *  parse the objective function and return the result based on the valueType received
+     * @param objFunction
+     * @param valueType
+     * @param objFunctionMap
+     * @return
+     */
     @Override
     public String parse(String objFunction, String valueType, Map<String, String> objFunctionMap) {
 
@@ -58,6 +64,12 @@ public class EvalExParser implements AlgebraicParser {
         return result.toString();
     }
 
+    /**
+     * validate the objective function and return boolean based on the result
+     * @param objFunction
+     * @param functionVariables
+     * @return
+     */
     @Override
     public Boolean validate(String objFunction, ArrayList<Metric> functionVariables) {
 
@@ -65,63 +77,78 @@ public class EvalExParser implements AlgebraicParser {
         for(Metric functionVariable : functionVariables){
             variables.add(functionVariable.getName());
         }
-        System.out.println("variables: "+variables);
-        for(String variable : variables){
+
+        LOGGER.info("Variables: {}", variables);
+
+        for(String variable : variables) {
+
             objFunction = objFunction.replaceAll(variable,"");
+
         }
-        LOGGER.info("Objective Func: ", objFunction);
+        LOGGER.info("Objective Func: {}", objFunction);
 
         //Remove extra whitespaces from the string
         objFunction = objFunction.replaceAll("\\s", "");
 
         //check if there's any unnecessary character apart from the mathematical operators
-        if(!containsValidMathOperators(objFunction)){
+        if (!containsValidMathOperators(objFunction)) {
             return false;
         }
 
         // check if brackets in objective function string are balanced
-        if(!areBracketsBalanced(objFunction)){
-            return false;
-        }
-
-        return true;
+        return areBracketsBalanced(objFunction);
     }
 
+    /**
+     * check if the objFunction recieved contains valid mathematical operators
+     * @param objFunction
+     * @return
+     */
     private boolean containsValidMathOperators(String objFunction) {
 
-        Stack<Character> stack = new Stack<>();
-        for (int i = 0; i < objFunction.length(); i++)  {
-            char character = objFunction.charAt(i);
-            if(!(character == ')' || character == '(' || isNumeric(String.valueOf(character)))) {
-                stack.push(character);
+        Deque<Character> mathOperators = new ArrayDeque<>();
+        for (int i = 0; i < objFunction.length(); i++) {
+
+            char charInObjFunction = objFunction.charAt(i);
+            if(!(charInObjFunction == ')' || charInObjFunction == '(' || isNumeric(String.valueOf(charInObjFunction)))) {
+                mathOperators.push(charInObjFunction);
             }
         }
-        for(Character ch : stack){
-            if(!AutotuneSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(ch))){
+        for (Character mathOperator : mathOperators) {
+
+            if(!AutotuneSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(mathOperator))) {
                 return false;
             }
         }
         return true;
     }
 
-    //check if string is numeric
+    /**
+     * check if the string contains only numbers and return boolean result
+     * @param strNum
+     * @return
+     */
     private static boolean isNumeric(String strNum) {
+
         if (strNum == null) {
             return false;
         }
         try {
-            double d = Double.parseDouble(strNum);
+            Double.parseDouble(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
         return true;
     }
 
-    // function to check if brackets are balanced
-
+    /**
+     * check if the brackets present in the objective function are balanced
+     * @param objFunction
+     * @return
+     */
     private boolean areBracketsBalanced(String objFunction) {
 
-        Stack<Character> stack = new Stack<>();
+        Deque<Character> stack = new ArrayDeque<>();
 
         for (int i = 0; i < objFunction.length(); i++)  {
             char bracket = objFunction.charAt(i);
@@ -140,11 +167,4 @@ public class EvalExParser implements AlgebraicParser {
         // Check Empty Stack
         return (stack.isEmpty());
     }
-
-//    public static void main(String[] args) {
-//
-//        List<String> variables = new ArrayList<>(List.of("transaction_response_time" , "throughput", "max_response_time"));
-//        String objFunction = "(( throughput / transaction_response_time) /  max_response_time) * 100";
-//        System.out.println(new EvalExParser().validate(objFunction, variables));
-//    }
 }
