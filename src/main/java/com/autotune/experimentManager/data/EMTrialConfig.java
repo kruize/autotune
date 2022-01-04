@@ -43,11 +43,11 @@ public class EMTrialConfig {
         return this.configDeployments;
     }
 
-    public JSONArray getTrainingConfigs() {
+    public JSONArray getTrainingContainers() {
         for (Object deploymentConfig : configDeployments) {
             JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
             if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getJSONArray("config");
+                return castedDeploymentConfig.getJSONArray("containers");
             }
         }
         return null;
