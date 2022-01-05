@@ -41,35 +41,31 @@ spec:
           details:
             description: 'Description of the layer'
             type: string
-          layerPresence:
+          layer_presence:
             type: object
             properties:
               presence:
                 description: 'Set presence to always for the layer to apply to all applications'
                 type: string
-              query:
+              queries:
                 description: 'Query to detect the applications matching the layer'
-                type: object
-                properties:
-                  datasource:
-                    description: 'Query to detect the presence of the layer for the application for the datasource'
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          description: 'Name of the datasource'
-                          type: string
-                        query:
-                          description: 'Query for the datasource'
-                          type: string
-                        key:
-                          description: 'Key to search for in the query response'
-                          type: string
-                      required:
-                      - name
-                      - query
-                      - key
+                type: array
+                items:
+                  type: object
+                  properties:
+                    datasource:
+                      description: 'Name of the datasource'
+                      type: string
+                    query:
+                      description: 'Query for the datasource'
+                      type: string
+                    key:
+                      description: 'Key to search for in the query response'
+                      type: string
+                  required:
+                  - datasource
+                  - query
+                  - key
               label:
                 description: 'Label used to detect the presence of the layer for the application for the datasource'
                 type: array
@@ -107,22 +103,19 @@ spec:
                   type: number
                 queries:
                   description: 'List of queries for the tunable'
-                  type: object
-                  properties:
-                    datasource:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          name:
-                            description: 'Name of the datasource'
-                            type: string
-                          query:
-                              description: 'Query for the datasource'
-                              type: string
-                        required:
-                        - name
-                        - query
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      datasource:
+                        description: 'Name of the datasource'
+                        type: string
+                      query:
+                        description: 'Query for the datasource'
+                        type: string
+                    required:
+                    - datasource
+                    - query
                 slo_class:
                   description: 'slo class of the tunable'
                   type: array
@@ -137,5 +130,5 @@ spec:
         required:
         - layer_name
         - layer_level
-        - layerPresence
+        - layer_presence
         - tunables
