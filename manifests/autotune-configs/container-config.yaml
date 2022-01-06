@@ -36,3 +36,18 @@ tunables:
   - response_time
   - throughput
   - resource_usage
+
+- name: someRequest
+  value_type: categorical
+  categoricalValues:
+    - one
+    - two
+  step: 0.01
+  queries:
+    datasource:
+      - name: 'prometheus'
+        query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage

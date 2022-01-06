@@ -25,3 +25,19 @@ tunables:
   slo_class:
   - response_time
   - throughput
+- name: '-Xgc:'
+  description: '<some-description>'
+  value_type: categorical
+  categoricalValues:
+    - throughput
+    - genpar
+    - singlepar
+    - parallel
+  queries:
+    datasource:
+      - name: 'prometheus'
+        query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+  step: 1
+  slo_class:
+    - response_time
+    - throughput

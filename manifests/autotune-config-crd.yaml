@@ -130,8 +130,6 @@ spec:
                     type: string
               required:
               - name
-              - upper_bound
-              - lower_bound
               - value_type
               - slo_class
         required:
