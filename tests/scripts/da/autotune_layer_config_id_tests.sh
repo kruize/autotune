@@ -91,7 +91,7 @@ function get_config_id() {
 	while [ "${length}" -ne 0 ]
 	do
 		((length--))
-		layer_config_id[test_name]+="$(cat ${_json_} | jq .[${length}].id) "
+		layer_config_id[test_name]+="$(cat ${_json_} | jq .[${length}].layer_id) "
 	done
 	config_id="${layer_config_id[test_name]}"
 	
@@ -134,7 +134,7 @@ function re_apply_test_() {
 	old_layer_config_id[test_name]+="${config_id[@]}"
 	echo -n "Deleting the application autotune layer config objects..." | tee -a ${LOG}
 	echo " " >> ${LOG}
-	kubectl delete -f ${CONFIG_YAML_DIR} -n monitoring>> ${LOG}
+	kubectl delete -f ${CONFIG_YAML_DIR} -n ${NAMESPACE} >> ${LOG}
 	echo "done" | tee -a ${LOG}
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -142,7 +142,7 @@ function re_apply_test_() {
 	
 	echo -n "Re-applying the autotune layer config yaml..." | tee -a ${LOG}
 	echo " " >> ${LOG}
-	kubectl apply -f ${CONFIG_YAML_DIR} -n monitoring>> ${LOG}
+	kubectl apply -f ${CONFIG_YAML_DIR} -n ${NAMESPACE} >> ${LOG}
 	echo "done"
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -172,65 +172,37 @@ function update_layer_config() {
 	flag=0
 	declare -A old_layer_config_id
 	old_layer_config_id[test_name]+="${config_id[@]} "
-	
+
+	# copy the config yamls into the test directory
+	test_config_yamls_dir="${config_yaml}/${test_name}"
+	mkdir -p ${test_config_yamls_dir}
+	cp ${config_yaml}/*.yaml ${test_config_yamls_dir}
+
 	# Update and apply the application autotune yaml
-	test_yaml_files=$(ls ${config_yaml} | tr "\n" " ")
+	test_yaml_files=$(ls ${test_config_yamls_dir} | tr "\n" " ")
 	IFS=' ' read -r -a test_yaml_files <<<  ${test_yaml_files}
 	
 	for test_yaml in "${test_yaml_files[@]}"
 	do
-		test_layer_config="${config_yaml}/${test_yaml}"
-		upper_bound=`grep -A3 'upper_bound:' ${test_layer_config} | head -n1 | awk '{print $2}' | tr -d \'\'`
-		lower_bound=`grep -A3 'lower_bound:' ${test_layer_config} | head -n1 | awk '{print $2}' | tr -d \'\'`
-	
-		find_upper_bound="${upper_bound}"
-		case "${find_upper_bound}" in
-			300)
-				replace_upper_bound="350"
-				;;
-			350)
-				replace_upper_bound="300"
-				;;
-			50)
-				replace_upper_bound="60"
-				;;
-			60)
-				replace_upper_bound="50"
-				;;
-			10)
-				replace_upper_bound="20"
-				;;
-			20)
-				replace_upper_bound="10"
-				;;
-		esac
-	
-		find_lower_bound="${lower_bound}"
-		case "${find_lower_bound}" in
-			150)
-				replace_lower_bound="200"
-				;;
-			200)
-				replace_lower_bound="150"
-				;;
-			9)
-				replace_lower_bound="10"
-				;;
-			10)
-				replace_lower_bound="9"
-				;;
-			1)
-				replace_lower_bound="2"
-				;;
-			2)
-				replace_lower_bound="1"
-				;;
-		esac
-		
-		sed -i 's/upper_bound: '${find_upper_bound}'/upper_bound: '${replace_upper_bound}'/g' ${test_layer_config}
-		sed -i 's/lower_bound: '${find_lower_bound}'/lower_bound: '${replace_lower_bound}'/g' ${test_layer_config}
+
+		test_layer_config="${test_config_yamls_dir}/${test_yaml}"
+
+		if [[ ${test_layer_config} =~ "container" ]]; then
+			find_upper_bound="3.0"
+			replace_upper_bound="4.0"
+		elif [[ ${test_layer_config} =~ "hotspot" ]]; then
+			find_upper_bound="50"
+			replace_upper_bound="51"
+		elif [[ ${test_layer_config} =~ "quarkus" ]]; then
+			find_upper_bound="10"
+			replace_upper_bound="11"
+		fi
+
+		echo "Updating upper bound and lower bound in ${test_layer_config}"
+		sed -i 's/upper_bound: '\'${find_upper_bound}\''/upper_bound: '\'${replace_upper_bound}\''/g' ${test_layer_config}
+
 		echo "Applying autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
-		kubectl apply -f ${test_layer_config} -n monitoring | tee -a ${LOG}
+		kubectl apply -f ${test_layer_config} -n ${NAMESPACE} | tee -a ${LOG}
 		echo "done" | tee -a ${LOG}
 	done
 	
@@ -242,6 +214,9 @@ function update_layer_config() {
 	old_id_=("${old_layer_config_id[test_name]}")
 	IFS=' ' read -r -a old_id_ <<<  ${old_id_}
 	new_id_=("${config_id[@]}")
+
+	echo "old ids = ${old_id_[@]}"
+	echo "new ids = ${new_id_[@]}"
 	
 	# Compare the old id with the new id
 	match_ids
@@ -264,7 +239,7 @@ function new_layer_config() {
 	old_layer_config_id_count="${#config_id[@]}"
 	
 	echo "Applying new layer config yaml ${new_config_yaml}..."| tee -a ${LOG}
-	kubectl apply -f ${new_config_yaml} -n monitoring | tee -a ${LOG}
+	kubectl apply -f ${new_config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
 	echo "done" | tee -a ${LOG}
 	
 	# sleep for few seconds to reduce the ambiguity
@@ -325,8 +300,16 @@ function validate_autotune_tunables_api() {
 			query_autotune_tunables_api ${layer_config_id_test}
 			validate_layer_config_id "${config_id}"
 			if [ "${config_id_test_name}" == "${autotune_layer_config_id_tests[3]}" ]; then
-				kubectl delete -f ${new_config_yaml} -n monitoring >> ${LOG}
+				kubectl delete -f ${new_config_yaml} -n ${NAMESPACE} >> ${LOG}
 			fi
+
+			echo "Deleting autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
+			kubectl delete -f ${config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
+			echo "done" | tee -a ${LOG}
+
+			echo "Applying autotune layer config yaml ${test_layer_config}..." | tee -a ${LOG}
+			kubectl apply -f ${config_yaml} -n ${NAMESPACE} | tee -a ${LOG}
+			echo "done" | tee -a ${LOG}
 		fi
 	done
 }
@@ -388,7 +371,7 @@ function re_apply_config_test() {
 
 # Update and apply the layer config yaml and compare the ids
 function update_layer_config_yaml_test() {
-	# copy the config yamls 
+	# copy the config yamls
 	config_yaml="${TEST_SUITE_DIR}/${FUNCNAME}/yamls"
 	mkdir -p ${config_yaml}
 	cp ${CONFIG_YAML_DIR}/* ${config_yaml}/ ; rm -r ${config_yaml}/layer-config.yaml_template
