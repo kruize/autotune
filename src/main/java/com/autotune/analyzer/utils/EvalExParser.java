@@ -27,12 +27,12 @@ import java.math.RoundingMode;
 import java.util.*;
 
 /**
- *  * We're using the EvalEx - Java Expression Evaluator for the objective function evaluation
- *  * EvalEx GitHub URL : https://github.com/uklimaschewski/EvalEx
- *  * Copyright 2012-2021 by Udo Klimaschewski
- *  *
- *  * http://UdoJava.com/
- *  * http://about.me/udo.klimaschewski
+ * We're using the EvalEx - Java Expression Evaluator for the objective function evaluation
+ * EvalEx GitHub URL : https://github.com/uklimaschewski/EvalEx
+ * Copyright 2012-2021 by Udo Klimaschewski
+ *
+ * http://UdoJava.com/
+ * http://about.me/udo.klimaschewski
  * To validate and parse the objective function by using EvaluatorEx library
  */
 public class EvalExParser implements AlgebraicParser {
@@ -51,13 +51,19 @@ public class EvalExParser implements AlgebraicParser {
 
         BigDecimal result;
 
+        if(objFunctionMap.isEmpty())
+            return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING;
+
+        if( objFunction.isBlank() || objFunction == null)
+            return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING;
+
         List<String> objFunctionMapKeys = new ArrayList<>(objFunctionMap.keySet());
-        Expression temp = new Expression(objFunction);
+        Expression expressionEvaluator = new Expression(objFunction);
 
         for(String key : objFunctionMapKeys){
-            temp = temp.and(key, objFunctionMap.get(key));
+            expressionEvaluator = expressionEvaluator.and(key, objFunctionMap.get(key));
         }
-        result = temp.setPrecision(3)
+        result = expressionEvaluator.setPrecision(3)
                 .setRoundingMode(RoundingMode.UP)
                 .eval();
 
@@ -73,44 +79,48 @@ public class EvalExParser implements AlgebraicParser {
     @Override
     public Boolean validate(String objFunction, ArrayList<Metric> functionVariables) {
 
-        List<String> variables = new ArrayList<>();
+        List<String> variableNames = new ArrayList<>();
         for(Metric functionVariable : functionVariables){
-            variables.add(functionVariable.getName());
+            variableNames.add(functionVariable.getName());
         }
 
-        LOGGER.info("Variables: {}", variables);
+        LOGGER.info("Variables: {}", variableNames);
 
-        for(String variable : variables) {
-
-            objFunction = objFunction.replaceAll(variable,"");
+        /*
+            Remove all the variables from the objFunction matching with variables present in variableNames List
+            so that the function is left with only brackets and operators
+         */
+        String objFunctionOperators = "";
+        for(String variable : variableNames) {
+            objFunctionOperators = objFunction.replaceAll("[a-zA-Z _]","");
 
         }
-        LOGGER.info("Objective Func: {}", objFunction);
+        LOGGER.info("Objective Func Operators: {}", objFunctionOperators);
 
         //Remove extra whitespaces from the string
-        objFunction = objFunction.replaceAll("\\s", "");
+        objFunctionOperators = objFunctionOperators.replaceAll("\\s", "");
 
         //check if there's any unnecessary character apart from the mathematical operators
-        if (!containsValidMathOperators(objFunction)) {
+        if (!containsValidMathOperators(objFunctionOperators)) {
             return false;
         }
 
         // check if brackets in objective function string are balanced
-        return areBracketsBalanced(objFunction);
+        return areBracketsBalanced(objFunctionOperators);
     }
 
     /**
-     * check if the objFunction recieved contains valid mathematical operators
-     * @param objFunction
+     * check if the objFunction received contains valid mathematical operators
+     * @param objFunctionOperators
      * @return
      */
-    private boolean containsValidMathOperators(String objFunction) {
+    private boolean containsValidMathOperators(String objFunctionOperators) {
 
         Deque<Character> mathOperators = new ArrayDeque<>();
-        for (int i = 0; i < objFunction.length(); i++) {
+        for (int i = 0; i < objFunctionOperators.length(); i++) {
 
-            char charInObjFunction = objFunction.charAt(i);
-            if(!(charInObjFunction == ')' || charInObjFunction == '(' || isNumeric(String.valueOf(charInObjFunction)))) {
+            char charInObjFunction = objFunctionOperators.charAt(i);
+            if(!(charInObjFunction == ')' || charInObjFunction == '(' || isNumeric(String.valueOf(charInObjFunction)) || charInObjFunction == '.')) {
                 mathOperators.push(charInObjFunction);
             }
         }
