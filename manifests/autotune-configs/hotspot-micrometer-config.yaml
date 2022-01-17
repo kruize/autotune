@@ -28,7 +28,7 @@ tunables:
 - name: '-Xgc:'
   description: '<some-description>'
   value_type: categorical
-  categoricalValues:
+  categorical_values:
     - throughput
     - genpar
     - singlepar

@@ -19,6 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,9 +50,9 @@ public class Tunable
 	private String fullName;
 	private final double step;
 	private final String valueType;
-	private final Double upperBoundValue;
-	private final Double lowerBoundValue;
-	private final String boundUnits;
+	private Double upperBoundValue;
+	private Double lowerBoundValue;
+	private String boundUnits;
 	private String description;
 	private Map<String, String> queries;
 	private final String layerName;
@@ -63,16 +64,32 @@ public class Tunable
     */
 
 	public ArrayList<String> sloClassList;
+	public List<String> categoricalValueList;
+
+	public Tunable(String name, double step, String valueType, Map<String, String> queries, ArrayList<String> sloClassList, String layerName, List<String> categoricalValueList) {
+
+		this.queries = queries;
+		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
+		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
+		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
+		this.step = Objects.requireNonNull(step, ZERO_STEP);
+		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+			this.layerName = layerName;
+		else
+			this.layerName = "generic";
+
+		this.categoricalValueList = Objects.requireNonNull(categoricalValueList, INVALID_CATEGORICAL_VALUE);
+	}
 
 	private void validateBounds(Double upperBoundValue,
 								Double lowerBoundValue,
 								String upperBoundUnits,
 								String lowerBoundUnits) throws InvalidBoundsException {
 		if (upperBoundUnits != null &&
-			!upperBoundUnits.trim().isEmpty() &&
-			lowerBoundUnits != null &&
-			!lowerBoundUnits.trim().isEmpty() &&
-			!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
+				!upperBoundUnits.trim().isEmpty() &&
+				lowerBoundUnits != null &&
+				!lowerBoundUnits.trim().isEmpty() &&
+				!lowerBoundUnits.equalsIgnoreCase(upperBoundUnits)) {
 			throw new InvalidBoundsException("Tunable: " + name +
 					" has invalid bound units; ubv: " + upperBoundValue +
 					" lbv: " + lowerBoundValue +
@@ -86,9 +103,9 @@ public class Tunable
 		 * step has to be lesser than or equal to the difference between the two bounds.
 		 */
 		if (upperBoundValue < 0 ||
-			lowerBoundValue < 0 ||
-			lowerBoundValue >= upperBoundValue ||
-			step > (upperBoundValue - lowerBoundValue)
+				lowerBoundValue < 0 ||
+				lowerBoundValue >= upperBoundValue ||
+				step > (upperBoundValue - lowerBoundValue)
 		) {
 			throw new InvalidBoundsException("ERROR: Tunable: " + name +
 					" has invalid bounds; ubv: " + upperBoundValue +
@@ -115,6 +132,7 @@ public class Tunable
 			this.layerName = layerName;
 		else
 			this.layerName = "generic";
+
 
 		/* Parse the value for the bounds from the strings passed in */
 		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
@@ -223,6 +241,10 @@ public class Tunable
 	public String getStackName() { return stackName; }
 
 	public void setStackName(String stackName) { this.stackName = stackName; }
+
+	public List<String> getCategoricalValueList() {
+		return categoricalValueList;
+	}
 
 	@Override
 	public String toString() {

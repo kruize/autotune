@@ -35,6 +35,7 @@ public class AnalyzerErrorConstants
 		public static final String TUNABLE_NAME_EMPTY = "Tunable name cannot be empty";
 		public static final String VALUE_TYPE_NULL = "value_type cannot be null";
 		public static final String ZERO_STEP = "Tunable step cannot be 0 or null";
+		public static final String INVALID_CATEGORICAL_VALUE = "Invalid categorical_value for tunable ";
 	}
 
 	public static class AutotuneObjectErrors {

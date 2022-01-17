@@ -42,7 +42,7 @@ tunables:
 - name: <some-value>
   description: 'some Description'
   value_type: categorical
-  categoricalValues:
+  categorical_values:
     - one
     - two
   step: 1

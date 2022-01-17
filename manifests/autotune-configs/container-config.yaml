@@ -39,7 +39,7 @@ tunables:
 
 - name: someRequest
   value_type: categorical
-  categoricalValues:
+  categorical_values:
     - one
     - two
   step: 0.01

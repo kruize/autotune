@@ -122,6 +122,7 @@ public class AnalyzerConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
+		public static final String CATEGORICAL_VALUES = "categorical_values";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";
