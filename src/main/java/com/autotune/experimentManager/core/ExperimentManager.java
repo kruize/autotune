@@ -8,9 +8,6 @@ import com.autotune.experimentManager.settings.EMS;
 import com.autotune.experimentManager.utils.EMConstants;
 
 import com.autotune.utils.ServerContext;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.Configurator;
 
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -32,7 +29,6 @@ public class ExperimentManager {
     }
 
     public static void launch(ServletContextHandler contextHandler) {
-        Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(EMConstants.Logs.LoggerSettings.DEFAULT_LOG_LEVEL));
         LOGGER.info("EM version: testv1");
         initializeEM();
         addEMServlets(contextHandler);

@@ -72,12 +72,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${slf4j-version}</version>
-            <scope>compile</scope>
-        </dependency>
+
     </dependencies>
     <build>
         <plugins>

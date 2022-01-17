@@ -30,6 +30,7 @@ public class AnalyzerConstants
 	public static final String AUTH_TOKEN = "AUTH_TOKEN";
 	public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
 	public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
+	public static final String ROOT_LOGGING_LEVEL = "ROOT_LOGGING_LEVEL";
 	public static final String MONITORING_AGENT = "MONITORING_AGENT";
 	public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
 	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
