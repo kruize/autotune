@@ -9,7 +9,8 @@ spec:
     matchLabels:
       app: autotune
   endpoints:
-  - port: http
+  - port: autotune-port
+    path: '/metrics'
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus

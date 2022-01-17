@@ -21,7 +21,11 @@ package com.autotune.analyzer.utils;
 public class ServerContext
 {
 	private ServerContext() { }
+	public static final int AUTOTUNE_PORT = 8080;
+
 	public static final String ROOT_CONTEXT = "/";
+	public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
+	public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
 	public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
 	public static final String LIST_STACK_LAYERS = ROOT_CONTEXT + "listStackLayers";
 	public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
