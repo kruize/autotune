@@ -107,7 +107,7 @@ function update_yaml() {
 	find=$1
 	replace=$2
 	config_yaml=$3
-	sed -i 's/'${find}'/'${replace}'/g' ${config_yaml}
+	sed -i "s/${find}/${replace}/g" ${config_yaml}
 }
 
 # Set up the autotune 
