@@ -19,16 +19,18 @@ import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.utils.ServerContext;
 import com.autotune.experimentManager.ExperimentManager;
 import com.autotune.service.HealthService;
+import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.autotune.analyzer.utils.ServerContext.*;
+
 public class Autotune
 {
-	private static final int PORT = 8080;
-	private static final String ROOT_CONTEXT = "/";
-	private static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
 	public static void main(String[] args) {
@@ -36,7 +38,7 @@ public class Autotune
 
 		disableServerLogging();
 
-		Server server = new Server(PORT);
+		Server server = new Server(AUTOTUNE_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);
@@ -54,6 +56,9 @@ public class Autotune
 
 	private static void addAutotuneServlets(ServletContextHandler context) {
 		context.addServlet(HealthService.class, HEALTH_SERVICE);
+		// Start the Prometheus end point (/metrics) for Autotune
+		context.addServlet(new ServletHolder(new MetricsServlet()), METRICS_SERVICE);
+		DefaultExports.initialize();
 	}
 
 	private static void disableServerLogging() {
