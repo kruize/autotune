@@ -106,8 +106,13 @@ public class ServiceHelpers {
 	 */
 	private static void addTunable(JSONObject tunableJson, Tunable tunable) {
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
-		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+
+		if(tunable.getCategoricalValueList().isEmpty()) {
+			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
+			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+		} else {
+			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_VALUES, tunable.getCategoricalValueList());
+		}
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 	}
