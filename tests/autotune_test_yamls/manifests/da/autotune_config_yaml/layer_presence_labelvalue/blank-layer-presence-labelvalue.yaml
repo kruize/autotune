@@ -5,7 +5,7 @@ metadata:
 layer_name: quarkus
 layer_level: 2
 details: quarkus tunables
-layerPresence:
+layer_presence:
   label:
   - name: app.kubernetes.io/layer
     value: ' '
