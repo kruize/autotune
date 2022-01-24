@@ -115,18 +115,12 @@ public class ServiceHelpers {
 				JSONObject tunableJson = new JSONObject();
 				addTunable(tunableJson, tunable);
 				String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
-				try {
-					String query = AnalyzerConstants.NONE;
-					final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-					// If tunable has a query specified
-					if (tunableQuery != null && !tunableQuery.isEmpty()) {
-						query = Objects.requireNonNull(dataSource).getDataSourceURL() +
-								dataSource.getQueryEndpoint() + tunableQuery;
-					}
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
-				} catch (MonitoringAgentNotFoundException e) {
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
+				String query = AnalyzerConstants.NONE;
+				if (tunableQuery != null && !tunableQuery.isEmpty()) {
+					query = tunableQuery;
 				}
+				tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
+
 				tunablesArray.put(tunableJson);
 			}
 		}
