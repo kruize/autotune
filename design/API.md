@@ -328,17 +328,17 @@ Get the status of autotune.
 Healthy
 ```
 
-##  createExperiment
+##  createExperimentTrial
 Launch an experiment for a particular deployment with a config recommended by the Recommendation Manager 
 
 **Request**
-`GET /createExperiment`
+`GET /createExperimentTrial`
 
-`curl -H 'Accept: application/json' -d <INPUT JSON> http://<URL>:<PORT>/createExperiment`
+`curl -H 'Accept: application/json' -d <INPUT JSON> http://<URL>:<PORT>/createExperimentTrial`
 
 *Description:*
 
-The API endpoint `createExperiment` expects the data object of type `JSON` with a structure as shown
+The API endpoint `createExperimentTrial` expects the data object of type `JSON` with a structure as shown
 below. The Input JSON holds details of the configuration to try, settings to that particular deployment
 and the details of the deployment.
 
@@ -382,184 +382,109 @@ Deployments section consists of the deployments to track and also their respecti
 
 ```
 {
-  "experiment_id": "2190310A384BC90EF",
-  "name": "petclinic-autotune",
-  "info": {
-    "trial_id": "",
-    "trial_num": 1
-  },
   "settings": {
     "trial_settings": {
-      "total_duration": "20 mins",
-      "warmup_cycles": 5,
-      "warmup_duration": "1 min",
-      "measurement_cycles": 15,
-      "measurement_duration": "1 min"
+      "measurement_cycles": "3",
+      "warmup_duration": "1min",
+      "warmup_cycles": "3",
+      "measurement_duration": "1min",
+      "iterations": "3"
     },
     "deployment_settings": {
+      "deployment_tracking": {"trackers": ["training"]},
       "deployment_info": {
-        "deployment_name" : "petclinic-sample",
-        "target_env" : "qa"
+        "agent": "EM",
+        "target_env": "qa"
       },
-      "deployment_policy" : {
-        "type" : "rollingUpdate"
-      },
-      "deployment_tracking": {
-        "trackers": [
-          "training",
-          "production"
-        ]
+      "deployment_policy": {
+        "type": "rollingUpdate"
       }
     }
   },
-  "deployments": [
-    {
-      "type" : "training",
-      "deployment_name": "petclinic-sample",
-      "namespace" : "default",
-      "state": "",
-      "result": "",
-      "result_info": "",
-      "result_error": "",
-      "metrics": [
-        {
-          "name": "request_sum",
-          "query": "request_sum_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "request_count",
-          "query": "request_count_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "hotspot_function",
-          "query": "hotspot_function_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "cpuRequest",
-          "query": "cpuRequest_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "memRequest",
-          "query": "memRequest_query",
-          "datasource": "prometheus"
-        }
-      ],
+  "experiment_name": "galaxies-autotune-min-http-response-time",
+  "deployments": [{
+    "deployment_name": "galaxies-sample",
+    "namespace": "default",
+    "containers": [{
+      "image_name": "dinogun/galaxies:1.2-jdk-11.0.10_9",
+      "container_name": "galaxies",
       "config": [
         {
           "name": "update requests and limits",
-          "spec": {
-            "template": {
-              "spec": {
-                "container": {
-                  "resources": {
-                    "requests": {
-                      "cpu": 2,
-                      "memory": "512Mi"
-                    },
-                    "limits": {
-                      "cpu": 3,
-                      "memory": "1024Mi"
-                    }
-                  }
-                }
-              }
+          "spec": {"template": {"spec": {"container": {"resources": {
+            "requests": {
+              "memory": "213.00Mi",
+              "cpu": "1.04"
+            },
+            "limits": {
+              "memory": "213.00Mi",
+              "cpu": "1.04"
             }
-          }
+          }}}}}
         },
         {
           "name": "update env",
-          "spec": {
-            "template": {
-              "spec": {
-                "container": {
-                  "env": {
-                    "JDK_JAVA_OPTIONS": "-XX:MaxInlineLevel=23"
-                  }
-                }
-              }
-            }
-          }
+          "spec": {"template": {"spec": {"container": {"env": {"JDK_JAVA_OPTIONS": " -Dquarkus.hibernate-orm.jdbc.statement-fetch-size=47 -Dquarkus.thread-pool.queue-size=4 -Dquarkus.thread-pool.core-threads=5 -server -XX:+UseG1GC -XX:MaxRAMPercentage=70 -XX:MaxInlineLevel=43"}}}}}
+        }
+      ],
+      "container_metrics": [
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+          "name": "request_sum"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+          "name": "request_count"
         }
       ]
+    }],
+    "pod_metrics": [
+      {
+        "datasource": "prometheus",
+        "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+        "name": "request_sum"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+        "name": "request_count"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+        "name": "cpuRequest"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "MaxInlineLevel"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "memoryRequest"
+      }
+    ],
+    "type": "training"
+  }],
+  "experiment_id": "7671cf10f52b288d48e3f60806af0740ec09a09360ed1da3a6e24df4cfd27256",
+  "app-version": "v1",
+  "info": {
+    "trial_info": {
+      "trial_id": "",
+      "trial_num": 0,
+      "trial_result_url": "trail data return url"
     },
-    {
-      "type" : "production",
-      "deployment_name": "petclinic-sample-1",
-      "state": "",
-      "result": "",
-      "result_info": "",
-      "result_error": "",
-      "metrics": [
-        {
-          "name": "request_sum",
-          "query": "request_sum_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "request_count",
-          "query": "request_count_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "hotspot_function",
-          "query": "hotspot_function_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "cpuRequest",
-          "query": "cpuRequest_query",
-          "datasource": "prometheus"
-        },
-        {
-          "name": "memRequest",
-          "query": "memRequest_query",
-          "datasource": "prometheus"
-        }
-      ],
-      "config": [
-        {
-          "name": "update requests and limits",
-          "spec": {
-            "template": {
-              "spec": {
-                "container": {
-                  "resources": {
-                    "requests": {
-                      "cpu": 2,
-                      "memory": "512Mi"
-                    },
-                    "limits": {
-                      "cpu": 3,
-                      "memory": "1024Mi"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "update env",
-          "spec": {
-            "template": {
-              "spec": {
-                "container": {
-                  "env": {
-                    "JDK_JAVA_OPTIONS": "-XX:MaxInlineLevel=23"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ]
-}
+    "datasource_info": [
+      {
+        "name": "prometheus",
+        "url": "prom url"
+      }
+    ]
+  }
+} 
 ```
 
 **Response**
