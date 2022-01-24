@@ -7,7 +7,7 @@ layer_level: 1
 details: hotspot tunables
 layer_presence:
   queries:
-  - datasource: prometheus
+  - datasource: 'prometheus'
     query: 'jvm_memory_used_bytes{area="heap",}'
     key: pod
 tunables:

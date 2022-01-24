@@ -14,7 +14,7 @@ layer_presence:
   #presence: always
   # This layer is present if the following prometheus query returns non null
   #queries:
-  #- datasource: prometheus
+  #- datasource: 'prometheus'
   #  query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
   #  key: pod
   # This layer is present if the following pod label is present
