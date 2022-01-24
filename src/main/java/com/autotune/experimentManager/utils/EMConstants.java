@@ -1,5 +1,7 @@
 package com.autotune.experimentManager.utils;
 
+import java.util.Locale;
+
 public class EMConstants {
 
 	private EMConstants() { }
@@ -62,7 +64,12 @@ public class EMConstants {
 
 	public static class EMJSONKeys {
 		private EMJSONKeys() { }
-		// Info section
+        public static final String CONTAINERS = "containers";
+		public static final String IMAGE_NAME = "image_name";
+		public static final String CONTAINER_NAME = "container_name";
+        public static final String ITERATIONS = "iterations";
+
+        // Info section
 		public static String INFO = "info";
 		public static String TRIAL_ID = "trial_id";
 		public static String TRIAL_NUM = "trial_num";
@@ -85,7 +92,8 @@ public class EMConstants {
 		public static String MEASUREMENT_DURATION = "measurement_duration";
 		// Metadata Section
 		public static String EXPERIMENT_ID = "experiment_id";
-		public static String APPLICATION_NAME = "application_name";
+		public static String EXPERIMENT_NAME = "experiment_name";
+
 		// Deployments Section
 		public static String DEPLOYMENTS = "deployments";
 		public static String NAMESPACE = "namespace";
@@ -115,6 +123,7 @@ public class EMConstants {
 		public static String P_100_0 = "100p";
 		public static String CYCLES = "cycles";
 		public static String DURATION = "duration";
+		public static String PERCENTILE_INFO = "percentile_info";
 	}
 
 	public static class InputJsonKeys {
@@ -125,6 +134,7 @@ public class EMConstants {
 			public static String STATUS = "status";
 			public static String ERROR = "error";
 			public static String SUMMARY = "summary";
+			public static String COMPLETE_STATUS = "completeStatus";
 		}
 		public static class DeploymentKeys {
 			private DeploymentKeys() { }
@@ -163,5 +173,73 @@ public class EMConstants {
 			private EMConfigSettings() { }
 			public static int MIN_EXECUTOR_POOL_SIZE = 1;
 		}
+	}
+
+	public static class TimeUnitsExt {
+		private TimeUnitsExt() { }
+
+		public static String SECOND_LC_SINGULAR = "second";
+		public static String SECOND_LC_PLURAL = SECOND_LC_SINGULAR + "s";
+		public static String SECOND_UC_SINGULAR = SECOND_LC_SINGULAR.toUpperCase();
+		public static String SECOND_UC_PLURAL = SECOND_LC_PLURAL.toUpperCase();
+
+		public static String SECOND_SHORT_LC_SINGULAR = "sec";
+		public static String SECOND_SHORT_LC_PLURAL = SECOND_SHORT_LC_SINGULAR = "s";
+		public static String SECOND_SHORT_UC_SINGULAR = SECOND_SHORT_LC_SINGULAR.toUpperCase();
+		public static String SECOND_SHORT_UC_PLURAL = SECOND_SHORT_LC_PLURAL.toUpperCase();
+
+		public static String SECOND_SINGLE_LC = "s";
+		public static String SECOND_SINGLE_UC= SECOND_SINGLE_LC.toUpperCase();
+
+		public static String MINUTE_LC_SINGULAR = "minute";
+		public static String MINUTE_LC_PLURAL = MINUTE_LC_SINGULAR = "s";
+		public static String MINUTE_UC_SINGULAR = MINUTE_LC_SINGULAR.toUpperCase();
+		public static String MINUTE_UC_PLURAL = MINUTE_LC_PLURAL.toUpperCase();
+
+		public static String MINUTE_SHORT_LC_SINGULAR = "min";
+		public static String MINUTE_SHORT_LC_PLURAL = MINUTE_SHORT_LC_SINGULAR = "s";
+		public static String MINUTE_SHORT_UC_SINGULAR = MINUTE_SHORT_LC_SINGULAR.toUpperCase();
+		public static String MINUTE_SHORT_UC_PLURAL = MINUTE_SHORT_LC_PLURAL.toUpperCase();
+
+		public static String MINUTE_SINGLE_LC = "m";
+		public static String MINUTE_SINGLE_UC= MINUTE_SINGLE_LC.toUpperCase();
+
+		public static String HOUR_LC_SINGULAR = "hour";
+		public static String HOUR_LC_PLURAL = HOUR_LC_SINGULAR = "s";
+		public static String HOUR_UC_SINGULAR = HOUR_LC_SINGULAR.toUpperCase();
+		public static String HOUR_UC_PLURAL = HOUR_LC_PLURAL.toUpperCase();
+
+		public static String HOUR_SHORT_LC_SINGULAR = "hr";
+		public static String HOUR_SHORT_LC_PLURAL = HOUR_SHORT_LC_SINGULAR = "s";
+		public static String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
+		public static String HOUR_SHORT_UC_PLURAL = HOUR_SHORT_LC_PLURAL.toUpperCase();
+
+		public static String HOUR_SINGLE_LC = "h";
+		public static String HOUR_SINGLE_UC= HOUR_SINGLE_LC.toUpperCase();
+	}
+
+	public static class TimeConv {
+		private TimeConv() { }
+		public static int NO_OF_SECONDS_PER_MINUTE = 60;
+		public static int NO_OF_MINUTES_PER_HOUR = 60;
+		public static int NO_OF_HOURS_PER_DAY = 12;
+	}
+
+	public static class EMJSONValueDefaults {
+		private EMJSONValueDefaults() { }
+		public static String TRIAL_ID_DEFAULT = "";
+		public static int TRIAL_NUM_DEFAULT = -1;
+		public static String TRIAL_RESULT_URL_DEFAULT = "";
+		public static String DEFAULT_NULL = null;
+		public static String DEPLOYMENT_TYPE_DEFAULT = "rollingUpdate";
+	}
+
+	public static class StandardDefaults {
+		private StandardDefaults() { }
+		public static int NEGATIVE_INT_DEFAULT = -1;
+		public static String CPU_QUERY_NAME = "cpuRequest";
+		public static String MEM_QUERY_NAME = "memRequest";
+		public static String THROUGHPUT = "throughput";
+		public static String RESPONSE_TIME = "response_time";
 	}
 }

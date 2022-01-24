@@ -7,8 +7,7 @@ public class TransitionToCollectMetrics extends AbstractBaseTransition {
     private static final Logger LOGGER = LoggerFactory.getLogger(TransitionToCollectMetrics.class);
     @Override
     public void transit(String runId) {
-        LOGGER.info("Executing transition - TransitionToCollectMetrics on thread - {}", Thread.currentThread().getId());
-        System.out.println("Executing transition - TransitionToCollectMetrics on thread - {}" + Thread.currentThread().getId() + "For RunId - " + runId);
+        LOGGER.info("Executing transition - TransitionToCollectMetrics on thread - {} For RunId - {}", Thread.currentThread().getId(), runId);
         try {
             Thread.sleep(20000);
         } catch (InterruptedException e) {
