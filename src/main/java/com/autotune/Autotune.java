@@ -28,7 +28,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.autotune.utils.ServerContext.*
+import static com.autotune.utils.ServerContext.*;
 
 public class Autotune
 {
