@@ -22,6 +22,7 @@ import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -102,7 +103,6 @@ public class AutotuneDeployment
 							String autotuneObjectStr = autotuneObject.getExperimentName();
 							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 							// For each of these applicationServiceStacks, we need to start the experiments
-
 							if (applicationServiceStackMap.get(autotuneObjectStr) != null) {
 								for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
 									ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
@@ -110,7 +110,7 @@ public class AutotuneDeployment
 								}
 								LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 							} else {
-								LOGGER.info("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
+								LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 							}
 						}
 						break;
@@ -247,6 +247,7 @@ public class AutotuneDeployment
 			String namespace = autotuneObject.getNamespace();
 			PodList podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
 			if (podList.getItems().isEmpty()) {
+				LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 				// TODO: No matching pods with the userLabelKey found, need to warn the user.
 				return;
 			}
@@ -263,6 +264,7 @@ public class AutotuneDeployment
 				// So to get the deployment name we remove the '-podTemplateHash' from the Replicaset name
 				ReplicaSetList replicaSetList = client.apps().replicaSets().inNamespace(namespace).withLabel(POD_TEMPLATE_HASH, podTemplateHash).list();
 				if (replicaSetList.getItems().isEmpty()) {
+					LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 					// TODO: No matching pods with the userLabelKey found, need to warn the user.
 					return;
 				}
@@ -421,11 +423,11 @@ public class AutotuneDeployment
 			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
-			JSONObject layerPresenceQueryJson = null;
+			JSONArray layerPresenceQueryJson = null;
 			JSONArray layerPresenceLabelJson = null;
 			if (presenceJson != null) {
 				presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
-				layerPresenceQueryJson = presenceJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				layerPresenceQueryJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 				layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
 			}
 
@@ -442,16 +444,26 @@ public class AutotuneDeployment
 				return null;
 			}
 
-			String layerPresenceQuery = null;
+			String layerPresenceQueryStr = null;
 			String layerPresenceKey = null;
+			ArrayList<LayerPresenceQuery> layerPresenceQueries = new ArrayList<>();
 			if (layerPresenceQueryJson != null) {
-				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				for (Object datasource : datasourceArray) {
-					JSONObject datasourceJson = (JSONObject) datasource;
-					if (datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.NAME).equals(AutotuneDeploymentInfo.getMonitoringAgent())) {
-						layerPresenceQuery = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-						layerPresenceKey = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
-						break;
+				for (Object query : layerPresenceQueryJson) {
+					JSONObject queryJson = (JSONObject) query;
+					String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+					if (datasource.equalsIgnoreCase(AutotuneDeploymentInfo.getMonitoringAgent())) {
+						layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+						layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
+						// Replace the queryvariables in the query
+						try {
+							layerPresenceQueryStr = Variables.updateQueryWithVariables(null, null,
+									layerPresenceQueryStr, queryVarList);
+							LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, layerPresenceQueryStr, layerPresenceKey);
+							layerPresenceQueries.add(layerPresenceQuery);
+						} catch (IOException | MonitoringAgentNotSupportedException e) {
+							LOGGER.error("autotuneconfig {}: Unsupported Datasource: {}", name, datasource);
+							return null;
+						}
 					}
 				}
 			}
@@ -469,32 +481,20 @@ public class AutotuneDeployment
 			String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 			String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
 			int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-
-			// Replace the queryvariables in the query
-			try {
-				layerPresenceQuery = Variables.updateQueryWithVariables(null, null,
-						layerPresenceQuery, queryVarList);
-			} catch (IOException ignored) { }
-
 			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 			ArrayList<Tunable> tunableArrayList = new ArrayList<>();
 
 			for (Object tunablesObject : tunablesJsonArray) {
 				JSONObject tunableJson = (JSONObject) tunablesObject;
-
-				JSONObject tunableQueries = tunableJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-				JSONArray dataSourceArray = null;
-				if (tunableQueries != null) {
-					dataSourceArray = tunableQueries.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				}
+				JSONArray tunableQueriesArray = tunableJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 
 				// Store the datasource and query from the JSON in a map
 				Map<String, String> queriesMap = new HashMap<>();
-				if (dataSourceArray != null) {
-					for (Object dataSourceObject : dataSourceArray) {
-						JSONObject dataSourceJson = (JSONObject) dataSourceObject;
-						String datasource = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-						String datasourceQuery = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				if (tunableQueriesArray != null) {
+					for (Object tunableQuery : tunableQueriesArray) {
+						JSONObject tunableQueryObj = (JSONObject) tunableQuery;
+						String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+						String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
 
 						try {
 							datasourceQuery = Variables.updateQueryWithVariables(null, null,
@@ -533,8 +533,7 @@ public class AutotuneDeployment
 					level,
 					details,
 					presence,
-					layerPresenceQuery,
-					layerPresenceKey,
+					layerPresenceQueries,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
 					tunableArrayList);
@@ -579,69 +578,73 @@ public class AutotuneDeployment
 	 */
 	private static void addQueryLayer(AutotuneConfig layer, AutotuneObject autotuneObject)  {
 		try {
-			String layerPresenceQuery = layer.getLayerPresenceQuery();
-			String layerPresenceKey = layer.getLayerPresenceKey();
-			// Check if a layer has a datasource query that validates its presence
-			if (layerPresenceQuery == null || layerPresenceQuery.isEmpty()) {
+			// TODO: This query needs to be optimized to only check for pods in the right namespace
+			KubernetesClient client = new DefaultKubernetesClient();
+			PodList podList = null;
+			if (autotuneObject != null) {
+				podList = client.pods().inNamespace(autotuneObject.getNamespace()).list();
+			} else {
+				podList = client.pods().inAnyNamespace().list();
+			}
+			if (podList == null) {
+				LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				return;
 			}
-
-			DataSource dataSource = null;
+			DataSource autotuneDataSource = null;
 			try {
-				dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
+				autotuneDataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
 			} catch (MonitoringAgentNotFoundException e) {
 				e.printStackTrace();
 			}
-
-			ArrayList<String> apps = null;
-			try {
-				apps = (ArrayList<String>) dataSource.getAppsForLayer(layerPresenceQuery, layerPresenceKey);
-			} catch (MalformedURLException | NullPointerException e) {
-				LOGGER.info(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-			}
-			if (apps != null) {
-				KubernetesClient client = new DefaultKubernetesClient();
-				PodList podList = null;
+			ArrayList<String> appsForAllQueries = new ArrayList<>();
+			ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();
+			// Check if a layer has a datasource query that validates its presence
+			if (layerPresenceQueries != null && !layerPresenceQueries.isEmpty()) {
+				for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
+					try {
+						// TODO: Check the datasource in the query is the same as the Autotune one
+						ArrayList<String> apps = (ArrayList<String>) autotuneDataSource.getAppsForLayer(layerPresenceQuery.getLayerPresenceQuery(),
+								layerPresenceQuery.getLayerPresenceKey());
+						appsForAllQueries.addAll(apps);
+					} catch (MalformedURLException | NullPointerException e) {
+						LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+					}
+				}
 				// We now have a list of apps that have the label and the key specified by the user.
 				// We now have to find the kubernetes objects corresponding to these apps
-				if (autotuneObject != null) {
-					podList = client.pods().inNamespace(autotuneObject.getNamespace()).list();
-				} else {
-					podList = client.pods().inAnyNamespace().list();
-				}
-				if (podList == null) {
-					// TODO: WARN User
-					return;
-				}
-				for (String application : apps) {
-					List<Container> containers = null;
-					for (Pod pod : podList.getItems()) {
-						if (pod.getMetadata().getName().contains(application)) {
-							// We found a POD that matches the app name, now get its containers
-							containers = pod.getSpec().getContainers();
-							break;
-						}
-					}
-					// No containers were found that matched the applications, this is weird, log a warning
-					if (containers == null) {
-						LOGGER.warn("Could not find any PODs related to Application name: " + application);
-						break;
-					}
-					for (Container container : containers) {
-						String containerImageName = container.getImage();
-						if (autotuneObject != null) {
-							// Add the layer info to the container image that should be already present in the applicationServiceStackMap.
-							if (applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
-								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName), layer);
+				if (!appsForAllQueries.isEmpty()) {
+					for (String application : appsForAllQueries) {
+						List<Container> containers = null;
+						for (Pod pod : podList.getItems()) {
+							if (pod.getMetadata().getName().contains(application)) {
+								// We found a POD that matches the app name, now get its containers
+								containers = pod.getSpec().getContainers();
+								break;
 							}
-						} else {
-							for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
-								if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
-									addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
+						}
+						// No containers were found that matched the applications, this is weird, log a warning
+						if (containers == null) {
+							LOGGER.warn("Could not find any PODs related to Application name: " + application);
+							continue;
+						}
+						for (Container container : containers) {
+							String containerImageName = container.getImage();
+							if (autotuneObject != null) {
+								// Add the layer info to the container image that should be already present in the applicationServiceStackMap.
+								if (applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
+									addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName), layer);
+								}
+							} else {
+								for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
+									if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
+										addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
+									}
 								}
 							}
 						}
 					}
+				} else {
+					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -677,7 +680,7 @@ public class AutotuneDeployment
 				}
 
 				if (podList.getItems().isEmpty()) {
-					// TODO: WARN User
+					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 					return;
 				}
 				for (Pod pod : podList.getItems()) {
@@ -741,8 +744,7 @@ public class AutotuneDeployment
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
 					autotuneConfig.getPresence(),
-					autotuneConfig.getLayerPresenceQuery(),
-					autotuneConfig.getLayerPresenceKey(),
+					autotuneConfig.getLayerPresenceQueries(),
 					autotuneConfig.getLayerPresenceLabel(),
 					autotuneConfig.getLayerPresenceLabelValue(),
 					tunables);

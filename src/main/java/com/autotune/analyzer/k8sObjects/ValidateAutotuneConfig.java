@@ -39,21 +39,27 @@ public class ValidateAutotuneConfig
 		StringBuilder errorString = new StringBuilder();
 
 		// Check if name is valid
-		if (map.get(AnalyzerConstants.AutotuneConfigConstants.NAME) == null || ((String)map.get(AnalyzerConstants.AutotuneConfigConstants.NAME)).isEmpty()) {
+		if (map.get(AnalyzerConstants.AutotuneConfigConstants.NAME) == null
+				|| ((String)map.get(AnalyzerConstants.AutotuneConfigConstants.NAME)).isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.AUTOTUNE_CONFIG_NAME_NULL);
 		}
 
 		// Check if either presence, layerPresenceQuery or layerPresenceLabel are set. presence field has highest priority.
 		if (map.get(AnalyzerConstants.AutotuneConfigConstants.PRESENCE) == null ||
 				!map.get(AnalyzerConstants.AutotuneConfigConstants.PRESENCE).equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
-			if ((map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) == null || map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE) == null) &&
-					(map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY) == null || map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY) == null)) {
+			if ((map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) == null
+					|| map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE) == null)
+					&& (map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES) == null
+					|| (map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES) != null
+					&& ((ArrayList<LayerPresenceQuery>)map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES)).isEmpty()))) {
 				errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.LAYER_PRESENCE_MISSING);
 			}
 		}
 
 		// Check if both layerPresenceQuery and layerPresenceLabel are set
-		if (map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY) != null && map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) != null) {
+		if ((map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES) != null
+				&& !(((ArrayList<LayerPresenceQuery>)map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES)).isEmpty()))
+				&& map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL) != null) {
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.BOTH_LAYER_QUERY_AND_LABEL_SET);
 		}
 
@@ -87,5 +93,4 @@ public class ValidateAutotuneConfig
 		}
 		return errorString;
 	}
-
 }
