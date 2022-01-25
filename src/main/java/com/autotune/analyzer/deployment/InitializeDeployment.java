@@ -20,9 +20,6 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * Get the deployment information from the config map and initialize
@@ -37,6 +34,7 @@ public class InitializeDeployment
 		String auth_token = System.getenv(AnalyzerConstants.AUTH_TOKEN);
 		String cluster_type = System.getenv(AnalyzerConstants.CLUSTER_TYPE);
 		String logging_level = System.getenv(AnalyzerConstants.LOGGING_LEVEL);
+		String root_logging_level = System.getenv(AnalyzerConstants.ROOT_LOGGING_LEVEL);
 		String monitoring_agent = System.getenv(AnalyzerConstants.MONITORING_AGENT);
 		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
 		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
@@ -48,6 +46,7 @@ public class InitializeDeployment
 		AutotuneDeploymentInfo.setAuthToken(auth_token);
 		AutotuneDeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
 		AutotuneDeploymentInfo.setLoggingLevel(logging_level);
+		AutotuneDeploymentInfo.setRootLoggingLevel(root_logging_level);
 
 		//If no endpoint was specified in the configmap
 		if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
@@ -61,9 +60,6 @@ public class InitializeDeployment
 		AutotuneDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
 
 		AutotuneDeploymentInfo.setLayerTable();
-
-		/* Update logging level from the env */
-		Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.toLevel(AutotuneDeploymentInfo.getLoggingLevel()));
 
 		AutotuneDeploymentInfo.logDeploymentInfo();
 	}
