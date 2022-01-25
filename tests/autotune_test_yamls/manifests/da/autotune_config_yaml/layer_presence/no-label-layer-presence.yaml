@@ -5,14 +5,13 @@ metadata:
 layer_name: hotspot
 layer_level: 1
 details: hotspot tunables
-layerPresence:
+layer_presence:
   # This layer is assumed to be available by default for all applications.
   presence: always
-  query:
-    datasource:
-    - name: prometheus
-      query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
-      key: pod
+  queries:
+  - datasource: 'prometheus'
+    query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
+    key: pod
 tunables:
 - name: MaxInlineLevel
   description: 'maximum number of nested calls that are inlined. Default is 9'
