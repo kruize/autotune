@@ -26,6 +26,7 @@ public class ServerContext
 	// Analyzer end points
 	public static final String ROOT_CONTEXT = "/";
 	public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
+	public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
 	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
 	public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
 	public static final String LIST_STACK_LAYERS = ROOT_CONTEXT + "listStackLayers";
