@@ -20,13 +20,15 @@ import com.autotune.utils.ServerContext;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.service.HealthService;
+import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.autotune.utils.ServerContext.AUTOTUNE_PORT;
-import static com.autotune.utils.ServerContext.HEALTH_SERVICE;
+import static com.autotune.utils.ServerContext.*
 
 public class Autotune
 {
@@ -66,6 +68,9 @@ public class Autotune
 
 	private static void addAutotuneServlets(ServletContextHandler context) {
 		context.addServlet(HealthService.class, HEALTH_SERVICE);
+		// Start the Prometheus end point (/metrics) for Autotune
+		context.addServlet(new ServletHolder(new MetricsServlet()), METRICS_SERVICE);
+		DefaultExports.initialize();
 	}
 
 	private static void disableServerLogging() {

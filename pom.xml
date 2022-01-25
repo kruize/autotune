@@ -13,6 +13,7 @@
         <jetty-version>9.4.44.v20210927</jetty-version>
         <slf4j-version>2.17.1</slf4j-version>
         <java-version>17</java-version>
+        <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
@@ -72,6 +73,37 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${slf4j-version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+		<!-- The Prometheus client -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- Hotspot JVM metrics-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_hotspot</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- Exposition HTTPServer-->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_httpserver</artifactId>
+            <version>${prometheus-simpleclient}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.prometheus/simpleclient_servlet -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_servlet</artifactId>
+            <version>0.14.1</version>
+        </dependency>
 
     </dependencies>
     <build>

@@ -42,7 +42,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
-                key: cluster_type 
+                key: cluster_type
           - name: K8S_TYPE
             valueFrom:
               configMapKeyRef:
@@ -52,7 +52,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: autotune-config
-                key: auth_type 
+                key: auth_type
                 optional: true
           - name: AUTH_TOKEN
             valueFrom:
@@ -89,17 +89,18 @@ spec:
                 optional: true
         envFrom: 
           - configMapRef:
-              name: autotune-config 
+              name: autotune-config
         ports:
-         - name: http
+         - name: autotune-port
            containerPort: 8080
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: autotune
   annotations:
     prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
   labels:
     app: autotune
 spec:
@@ -107,6 +108,6 @@ spec:
   selector:
     app: autotune
   ports:
-  - name: http
+  - name: autotune-port
     port: 8080
     targetPort: 8080
