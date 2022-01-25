@@ -28,6 +28,12 @@ spec:
                 name: autotune-config
                 key: logging_level
                 optional: true
+          - name: ROOT_LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: root_logging_level
+                optional: true
       - name: autotune
         image: "{{ AUTOTUNE_IMAGE }}"
         imagePullPolicy: Always
@@ -75,7 +81,13 @@ spec:
                 name: autotune-config
                 key: logging_level
                 optional: true
-        envFrom:
+          - name: ROOT_LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: root_logging_level
+                optional: true
+        envFrom: 
           - configMapRef:
               name: autotune-config
         ports:

@@ -23,6 +23,7 @@ import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -111,7 +112,7 @@ public class AutotuneDeployment
 								}
 								LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 							} else {
-								LOGGER.info("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
+								LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 							}
 						}
 						break;
@@ -258,6 +259,7 @@ public class AutotuneDeployment
 			String experimentName = autotuneObject.getExperimentName();
 			PodList podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
 			if (podList.getItems().isEmpty()) {
+				LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 				// TODO: No matching pods with the userLabelKey found, need to warn the user.
 				return;
 			}
@@ -274,6 +276,7 @@ public class AutotuneDeployment
 				// So to get the deployment name we remove the '-podTemplateHash' from the Replicaset name
 				ReplicaSetList replicaSetList = client.apps().replicaSets().inNamespace(namespace).withLabel(POD_TEMPLATE_HASH, podTemplateHash).list();
 				if (replicaSetList.getItems().isEmpty()) {
+					LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 					// TODO: No matching pods with the userLabelKey found, need to warn the user.
 					return;
 				}
@@ -435,11 +438,11 @@ public class AutotuneDeployment
 			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
-			JSONObject layerPresenceQueryJson = null;
+			JSONArray layerPresenceQueryJson = null;
 			JSONArray layerPresenceLabelJson = null;
 			if (presenceJson != null) {
 				presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
-				layerPresenceQueryJson = presenceJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				layerPresenceQueryJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 				layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
 			}
 
@@ -456,16 +459,26 @@ public class AutotuneDeployment
 				return null;
 			}
 
-			String layerPresenceQuery = null;
+			String layerPresenceQueryStr = null;
 			String layerPresenceKey = null;
+			ArrayList<LayerPresenceQuery> layerPresenceQueries = new ArrayList<>();
 			if (layerPresenceQueryJson != null) {
-				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				for (Object datasource : datasourceArray) {
-					JSONObject datasourceJson = (JSONObject) datasource;
-					if (datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.NAME).equals(AutotuneDeploymentInfo.getMonitoringAgent())) {
-						layerPresenceQuery = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-						layerPresenceKey = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
-						break;
+				for (Object query : layerPresenceQueryJson) {
+					JSONObject queryJson = (JSONObject) query;
+					String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+					if (datasource.equalsIgnoreCase(AutotuneDeploymentInfo.getMonitoringAgent())) {
+						layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+						layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
+						// Replace the queryvariables in the query
+						try {
+							layerPresenceQueryStr = Variables.updateQueryWithVariables(null, null,
+									layerPresenceQueryStr, queryVarList);
+							LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, layerPresenceQueryStr, layerPresenceKey);
+							layerPresenceQueries.add(layerPresenceQuery);
+						} catch (IOException | MonitoringAgentNotSupportedException e) {
+							LOGGER.error("autotuneconfig {}: Unsupported Datasource: {}", name, datasource);
+							return null;
+						}
 					}
 				}
 			}
@@ -483,32 +496,20 @@ public class AutotuneDeployment
 			String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
 			String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
 			int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-
-			// Replace the queryvariables in the query
-			try {
-				layerPresenceQuery = Variables.updateQueryWithVariables(null, null,
-						layerPresenceQuery, queryVarList);
-			} catch (IOException ignored) { }
-
 			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 			ArrayList<Tunable> tunableArrayList = new ArrayList<>();
 
 			for (Object tunablesObject : tunablesJsonArray) {
 				JSONObject tunableJson = (JSONObject) tunablesObject;
-
-				JSONObject tunableQueries = tunableJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-				JSONArray dataSourceArray = null;
-				if (tunableQueries != null) {
-					dataSourceArray = tunableQueries.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				}
+				JSONArray tunableQueriesArray = tunableJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 
 				// Store the datasource and query from the JSON in a map
 				Map<String, String> queriesMap = new HashMap<>();
-				if (dataSourceArray != null) {
-					for (Object dataSourceObject : dataSourceArray) {
-						JSONObject dataSourceJson = (JSONObject) dataSourceObject;
-						String datasource = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-						String datasourceQuery = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				if (tunableQueriesArray != null) {
+					for (Object tunableQuery : tunableQueriesArray) {
+						JSONObject tunableQueryObj = (JSONObject) tunableQuery;
+						String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+						String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
 
 						/*
 						 * EM will expand the queries
@@ -550,8 +551,7 @@ public class AutotuneDeployment
 					level,
 					details,
 					presence,
-					layerPresenceQuery,
-					layerPresenceKey,
+					layerPresenceQueries,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
 					tunableArrayList);
@@ -611,7 +611,7 @@ public class AutotuneDeployment
 
 			DataSource dataSource = null;
 			try {
-				dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
+				autotuneDataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
 			} catch (MonitoringAgentNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -674,6 +674,8 @@ public class AutotuneDeployment
 							}
 						}
 					}
+				} else {
+					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -709,7 +711,7 @@ public class AutotuneDeployment
 				}
 
 				if (podList.getItems().isEmpty()) {
-					// TODO: WARN User
+					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 					return;
 				}
 				for (Pod pod : podList.getItems()) {
@@ -779,8 +781,7 @@ public class AutotuneDeployment
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
 					autotuneConfig.getPresence(),
-					autotuneConfig.getLayerPresenceQuery(),
-					autotuneConfig.getLayerPresenceKey(),
+					autotuneConfig.getLayerPresenceQueries(),
 					autotuneConfig.getLayerPresenceLabel(),
 					autotuneConfig.getLayerPresenceLabelValue(),
 					tunables);

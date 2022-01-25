@@ -68,6 +68,7 @@ public class Autotune
 
 	private static void addAutotuneServlets(ServletContextHandler context) {
 		context.addServlet(HealthService.class, HEALTH_SERVICE);
+		// Start the Prometheus end point (/metrics) for Autotune
 		context.addServlet(new ServletHolder(new MetricsServlet()), METRICS_SERVICE);
 		DefaultExports.initialize();
 	}

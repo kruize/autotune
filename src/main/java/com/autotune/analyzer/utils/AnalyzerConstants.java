@@ -30,6 +30,7 @@ public class AnalyzerConstants
 	public static final String AUTH_TOKEN = "AUTH_TOKEN";
 	public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
 	public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
+	public static final String ROOT_LOGGING_LEVEL = "ROOT_LOGGING_LEVEL";
 	public static final String MONITORING_AGENT = "MONITORING_AGENT";
 	public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
 	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
@@ -102,7 +103,7 @@ public class AnalyzerConstants
 		public static final String NAMESPACE = "namespace";
 
 		public static final String DATASOURCE = "datasource";
-		public static final String LAYER_PRESENCE = "layerPresence";
+		public static final String LAYER_PRESENCE = "layer_presence";
 		public static final String PRESENCE = "presence";
 		public static final String LABEL = "label";
 		public static final String QUERY_VARIABLES = "query_variables";
@@ -132,9 +133,8 @@ public class AnalyzerConstants
 		public static final String SLO_CLASS = "slo_class";
 
 		public static final String LAYER_PRESENCE_LABEL = "layerPresenceLabel";
-		public static final String LAYER_PRESENCE_QUERY = "layerPresenceQuery";
 		public static final String LAYER_PRESENCE_LABEL_VALUE = "layerPresenceLabelValue";
-		public static final String LAYER_PRESENCE_KEY = "layerPresenceKey";
+		public static final String LAYER_PRESENCE_QUERIES = "layerPresenceQueries";
 		public static final String LAYER_ID = "layer_id";
 		public static final String STEP = "step";
 
