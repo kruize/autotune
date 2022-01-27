@@ -115,18 +115,12 @@ public class ServiceHelpers {
 				JSONObject tunableJson = new JSONObject();
 				addTunable(tunableJson, tunable);
 				String tunableQuery = tunable.getQueries().get(DeploymentInfo.getMonitoringAgent());
-				try {
-					String query = AnalyzerConstants.NONE;
-					final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-					// If tunable has a query specified
-					if (tunableQuery != null && !tunableQuery.isEmpty()) {
-						query = Objects.requireNonNull(dataSource).getDataSourceURL() +
-								dataSource.getQueryEndpoint() + tunableQuery;
-					}
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
-				} catch (MonitoringAgentNotFoundException e) {
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
+				String query = AnalyzerConstants.NONE;
+				if (tunableQuery != null && !tunableQuery.isEmpty()) {
+					query = tunableQuery;
 				}
+				tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
+
 				tunablesArray.put(tunableJson);
 			}
 		}
@@ -145,13 +139,8 @@ public class ServiceHelpers {
 			JSONObject functionVariableJson = new JSONObject();
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
-			try {
-				final DataSource dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-						dataSource.getQueryEndpoint() + functionVariable.getQuery());
-			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
-			}
+			functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
+
 			functionVariablesArray.put(functionVariableJson);
 		}
 		funcVarJson.put(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
