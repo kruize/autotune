@@ -69,12 +69,12 @@ public class ValidateAutotuneObject
 		}
 
 		//check if slo_class is 'response_time' and direction is minimize
-		if(sloInfo.getSloClass().equalsIgnoreCase("response_time") && !sloInfo.getDirection().equalsIgnoreCase("minimize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase("response_time") && !sloInfo.getDirection().equalsIgnoreCase("minimize")) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
 		//check if slo_class is 'throughput' and direction is maximize
-		if(sloInfo.getSloClass().equalsIgnoreCase("throughput") && !sloInfo.getDirection().equalsIgnoreCase("maximize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase("throughput") && !sloInfo.getDirection().equalsIgnoreCase("maximize")) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
