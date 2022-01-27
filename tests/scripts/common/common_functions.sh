@@ -863,8 +863,7 @@ function create_expected_liststacktunables_json() {
 			fn_query=$(cat ${autotune_json} | jq '.spec.slo.function_variables['${i}'].query')
 
 			fn_query=$(echo "${fn_query}" | sed 's/^"\|"$//g')
-			query_url="http://${url}:9090/api/v1/query?query="
-			echo -e "\n          \"query_url\": \"${query_url}${fn_query}\""  >> ${file_name}
+			echo -e "\n          \"query_url\": \"${fn_query}\""  >> ${file_name}
 
 			var_count=$((variables_count-1))
 			if [[ ${i} == ${var_count} ]]; then
@@ -920,10 +919,10 @@ function create_expected_liststacktunables_json() {
 					printf '\n\t\t"step": '$(cat ${layer_json} | jq .tunables[${tunables_length}].step)',\n' >> ${file_name}
 					query=$(cat ${layer_json} |jq .tunables[${tunables_length}].queries.datasource[].query)
 					query=$(echo ${query} | sed 's/","/,/g; s/^"\|"$//g')
-					query=$(echo "${query/\$CONTAINER_LABEL$/container}}")
+					query=$(echo "${query/\$CONTAINER_LABEL$/container}")
 					query=$(echo "${query/\$POD_LABEL$/pod}")
 					query=$(echo "${query/\$POD$/${app}}")
-					echo '                "query_url": "'${query_url}''${query}'",'  >> ${file_name}
+					echo '                "query_url": "'${query}'",'  >> ${file_name}
 
 					upper_bound=$(cat ${layer_json} | jq .tunables[${tunables_length}].upper_bound)
 					if [[ "${name}" == "\"memoryLimit\"" || "${name}" == "\"memoryRequest\"" ]]; then
@@ -1092,13 +1091,12 @@ function create_expected_listautotunetunables_json() {
 
 					if [[ ${layer} == "container" || ${layer} == "hotspot" ]]; then
 						url=$(kubectl get svc -n ${NAMESPACE} | grep prometheus-k8s | awk {'print $3'})
-						query_url="http://${url}:9090/api/v1/query?query="
 						query=$(cat ${layer_json} |jq .tunables[${length}].queries.datasource[].query)
 						query=$(echo ${query} | sed 's/","/,/g; s/^"\|"$//g')
 						query=$(echo "${query/\$CONTAINER_LABEL$/container}")
 						query=$(echo "${query/\$POD_LABEL$/pod}")
 						#query=$(echo "${query/\$POD$/${app}}")
-						echo -e '\n                "query_url": "'${query_url}''${query}'",'  >> ${file_name}					
+						echo -e '\n                "query_url": "'${query}'",'  >> ${file_name}
 					else 
 						printf '\n\t\t"query_url": "none",' >> ${file_name}
 
