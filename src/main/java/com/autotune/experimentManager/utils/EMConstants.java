@@ -23,10 +23,8 @@ public class EMConstants {
 
     public static class APIPaths {
         private APIPaths() { }
-
-        public static final String CREATE_EXPERIMENT = ServerContext.ROOT_CONTEXT + "createExperiment";
-        public static final String GET_EXPERIMENTS = ServerContext.ROOT_CONTEXT + "getExperiments";
-        public static final String GET_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "getTrialStatus";
+        public static final String CREATE_EXPERIMENT_TRIAL = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
+        public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
     }
 
     public static class DeploymentConstants {
