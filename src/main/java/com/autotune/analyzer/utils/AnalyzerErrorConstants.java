@@ -48,6 +48,7 @@ public class AnalyzerErrorConstants
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
 		public static final String MODE_NOT_SUPPORTED = "Autotune object mode not supported\n";
 		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm not supported\n";
+		public static final String INVALID_DIRECTION_FOR_SLO_CLASS = "Invalid direction for slo_class\n";
 	}
 
 	public static class AutotuneServiceMessages {
