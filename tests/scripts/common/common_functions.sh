@@ -847,9 +847,8 @@ function create_expected_liststacktunables_json() {
 
 		printf '\n    "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
 
-		# Uncomment these when the json output is updated
-		#printf '\n    "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
-		#printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n    "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 		printf '\n    "function_variables": [' >> ${file_name}
 		variables_count=$(cat ${autotune_json} | jq '.spec.slo.function_variables' | jq length)
 
@@ -1241,9 +1240,8 @@ function create_expected_liststacklayers_json() {
 		fi
 
 		printf '\n    "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
-		# Uncomment these when added to the json output
-		#printf '\n    "deployment_name":  "'${deployment_names[index]}'",' >> ${file_name}
-		#printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n    "deployment_name":  "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 
 		images_count=${#container_images[@]}
 		printf '\n    "stacks": [{' >> ${file_name}
@@ -1375,8 +1373,7 @@ function create_expected_liststacks_json() {
 		autotune_json="${AUTOTUNE_JSONS_DIR}/${exp_names[index]}.json"
 		printf '{\n  "experiment_name": "'${exp_names[index]}'",' >> ${file_name}
 		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
-		# Uncomment when included in the json output
-		# printf '\n  "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n  "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
 		hpo_algo_impl=$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')
 
 		if [ ${hpo_algo_impl} == null ]; then
@@ -1384,8 +1381,7 @@ function create_expected_liststacks_json() {
 		fi
 
 		printf '\n  "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
-		# Uncomment when included in the json output
-		# printf '\n  "namespace": '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n  "namespace": '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 
 		images_count=${#container_images[@]}
