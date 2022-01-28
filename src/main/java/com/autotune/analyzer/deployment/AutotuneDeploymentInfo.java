@@ -45,8 +45,8 @@ public class AutotuneDeploymentInfo
 	private static String monitoringAgentService;
 	private static String monitoringAgentEndpoint;
 	private static String loggingLevel;
+	private static String rootLoggingLevel;
 	private static Hashtable<String, Class> tunableLayerPair;
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeploymentInfo.class);
 
 	public static void setLayerTable() {
@@ -157,6 +157,9 @@ public class AutotuneDeploymentInfo
 	public static String getLoggingLevel() {
 		return loggingLevel;
 	}
+	public static String getRootLoggingLevel() {
+		return rootLoggingLevel;
+	}
 
 	public static void setLoggingLevel(String loggingLevel) {
 		if (loggingLevel != null)
@@ -166,6 +169,15 @@ public class AutotuneDeploymentInfo
 			AutotuneDeploymentInfo.loggingLevel = loggingLevel;
 		else
 			AutotuneDeploymentInfo.loggingLevel = "info";
+	}
+	public static void setRootLoggingLevel(String rootLoggingLevel) {
+		if (rootLoggingLevel != null)
+			rootLoggingLevel = rootLoggingLevel.toLowerCase();
+
+		if (AutotuneSupportedTypes.LOGGING_TYPES_SUPPORTED.contains(rootLoggingLevel))
+			AutotuneDeploymentInfo.rootLoggingLevel = rootLoggingLevel;
+		else
+			AutotuneDeploymentInfo.rootLoggingLevel = "error";
 	}
 
 	public static void logDeploymentInfo() {

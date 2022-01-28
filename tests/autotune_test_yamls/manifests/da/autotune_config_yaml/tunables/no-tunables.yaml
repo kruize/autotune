@@ -5,7 +5,7 @@ metadata:
 layer_name: container
 layer_level: 0
 details: generic container tunables
-layerPresence:
+layer_presence:
   # This layer is assumed to be available by default for all applications.
   presence: always
 

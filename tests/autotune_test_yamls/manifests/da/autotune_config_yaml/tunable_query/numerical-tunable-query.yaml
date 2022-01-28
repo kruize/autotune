@@ -5,18 +5,17 @@ metadata:
 layer_name: container
 layer_level: 0
 details: generic container tunables
-layerPresence:
+layer_presence:
   # This layer is assumed to be available by default for all applications.
   presence: always
 tunables:
   - name: memoryRequest
     value_type: double
-    upper_bound: 300
-    lower_bound: 150
+    upper_bound: '300 Mi'
+    lower_bound: '150 Mi'
     queries:
-      datasource:
-        - name: 'prometheus'
-          query: 24632
+    - datasource: 'prometheus'
+      query: 24632
     slo_class:
       - response_time
       - throughput
@@ -24,12 +23,11 @@ tunables:
 
   - name: cpuRequest
     value_type: double
-    upper_bound: 3.0
-    lower_bound: 1.0
+    upper_bound: '3.0'
+    lower_bound: '1.0'
     queries:
-      datasource:
-        - name: 'prometheus'
-          query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
+    - datasource: 'prometheus'
+      query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
     slo_class:
       - response_time
       - throughput

@@ -10,5 +10,6 @@ data:
   monitoring_agent: "prometheus"
   monitoring_service: ""
   monitoring_agent_endpoint: ""
+  root_logging_level: "error"
   logging_level: "info"
 

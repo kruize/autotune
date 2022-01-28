@@ -56,22 +56,21 @@ jobs:
           cd autotune/scripts
           ./prometheus_on_minikube.sh -as
 
-      - name: Deploy autotune
+      - name: Update Always to ImagePullPolicy in autotune deployment
         run: |
-          echo Deploy autotune
+          echo Update Always to ImagePullPolicy in autotune deployment
           cd autotune
           cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           cat ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test
 
       - name: Run tests
         run: |
-          echo Running Basic API tests
+          echo Running Dependency Analyzer tests
           cd autotune/tests
-          ./test_autotune.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
+          ./test_autotune.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test --tctype=functional --testmodule=da --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
 
           cd ${GITHUB_WORKSPACE}
           ls
