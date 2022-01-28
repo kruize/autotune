@@ -38,12 +38,9 @@ public final class AutotuneConfig
 	// If true, apply to all autotuneobjects
 	private final String presence;
 
-	/*
-	Used to detect the presence of the layer in an application. Autotune runs the query, looks for
-	the key, and all applications in the query output are matched to the AutotuneConfig object.
-	*/
-	private final String layerPresenceKey;
-	private final String layerPresenceQuery;
+	// Used to detect the presence of the layer in an application. Autotune runs the query, looks for
+	// the key, and all applications in the query output are matched to the AutotuneConfig object.
+	private final ArrayList<LayerPresenceQuery> layerPresenceQueries;
 
 	private final String layerPresenceLabel;
 	private final String layerPresenceLabelValue;
@@ -55,8 +52,7 @@ public final class AutotuneConfig
 						  int level,
 						  String details,
 						  String presence,
-						  String layerPresenceQuery,
-						  String layerPresenceKey,
+						  ArrayList<LayerPresenceQuery> layerPresenceQueries,
 						  String layerPresenceLabel,
 						  String layerPresenceLabelValue,
 						  ArrayList<Tunable> tunables) throws InvalidValueException {
@@ -66,8 +62,7 @@ public final class AutotuneConfig
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.PRESENCE, presence);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERY, layerPresenceQuery);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_KEY, layerPresenceKey);
+		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES, layerPresenceQueries);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL, layerPresenceLabel);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
 		map.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunables);
@@ -79,8 +74,7 @@ public final class AutotuneConfig
 			this.presence = presence;
 			this.level = level;
 			this.details = details;
-			this.layerPresenceKey = layerPresenceKey;
-			this.layerPresenceQuery = layerPresenceQuery;
+			this.layerPresenceQueries = new ArrayList<>(layerPresenceQueries);
 			this.layerPresenceLabel = layerPresenceLabel;
 			this.layerPresenceLabelValue = layerPresenceLabelValue;
 			this.tunables = new ArrayList<>(tunables);
@@ -96,8 +90,7 @@ public final class AutotuneConfig
 		this.layerName = copy.getLayerName();
 		this.level = copy.getLevel();
 		this.details = copy.getDetails();
-		this.layerPresenceQuery = copy.getLayerPresenceQuery();
-		this.layerPresenceKey = copy.getLayerPresenceKey();
+		this.layerPresenceQueries = new ArrayList<>(copy.getLayerPresenceQueries());
 		this.layerPresenceLabel = copy.getLayerPresenceLabel();
 		this.layerPresenceLabelValue = copy.getLayerPresenceLabelValue();
 		this.presence = copy.presence;
@@ -129,12 +122,8 @@ public final class AutotuneConfig
 		return new ArrayList<>(tunables);
 	}
 
-	public String getLayerPresenceKey() {
-		return layerPresenceKey;
-	}
-
-	public String getLayerPresenceQuery() {
-		return layerPresenceQuery;
+	public ArrayList<LayerPresenceQuery> getLayerPresenceQueries() {
+		return layerPresenceQueries;
 	}
 
 	public String getLayerPresenceLabel() {
@@ -156,8 +145,7 @@ public final class AutotuneConfig
 				", name='" + name + '\'' +
 				", layerName='" + layerName + '\'' +
 				", presence='" + presence + '\'' +
-				", layerPresenceKey='" + layerPresenceKey + '\'' +
-				", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+				", layerPresenceQueries='" + layerPresenceQueries + '\'' +
 				", layerPresenceLabel='" + layerPresenceLabel + '\'' +
 				", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
 				", tunables=" + tunables +

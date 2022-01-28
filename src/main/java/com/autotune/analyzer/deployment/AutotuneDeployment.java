@@ -22,8 +22,10 @@ import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.Utils;
 import com.autotune.analyzer.variables.Variables;
@@ -192,7 +194,7 @@ public class AutotuneDeployment
 	 */
 	private static void deleteExistingConfig(String resource) {
 		JSONObject autotuneConfigJson = new JSONObject(resource);
-		String configName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+		String configName = autotuneConfigJson.optString(AutotuneConfigConstants.LAYER_NAME);
 
 		LOGGER.info("AutotuneConfig " + configName + " removed from autotune monitoring");
 		// Remove from collection of autotuneconfigs in map
@@ -373,85 +375,85 @@ public class AutotuneDeployment
 	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource, KubernetesClient client, CustomResourceDefinitionContext autotuneVariableContext) {
 		try {
 			JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
-			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
+			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
-			JSONObject layerPresenceQueryJson = null;
+			JSONArray layerPresenceQueryJson = null;
 			JSONArray layerPresenceLabelJson = null;
 			if (presenceJson != null) {
-				presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
-				layerPresenceQueryJson = presenceJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-				layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
+				presence = presenceJson.optString(AutotuneConfigConstants.PRESENCE);
+				layerPresenceQueryJson = presenceJson.optJSONArray(AutotuneConfigConstants.QUERIES);
+				layerPresenceLabelJson = presenceJson.optJSONArray(AutotuneConfigConstants.LABEL);
 			}
 
-			String name = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-			String namespace = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAMESPACE);
+			String name = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAME);
+			String namespace = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
 			ArrayList<Map<String, String>> queryVarList = null;
 			try {
 				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, DeploymentInfo.getKubernetesType());
-				queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+				queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AutotuneConfigConstants.QUERY_VARIABLES);
 			} catch (Exception e) {
 				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
 				return null;
 			}
 
-			String layerPresenceQuery = null;
+			String layerPresenceQueryStr = null;
 			String layerPresenceKey = null;
 
-			String layerPresenceLabel = null;
-			String layerPresenceLabelValue = null;
-
+			ArrayList<LayerPresenceQuery> layerPresenceQueries = new ArrayList<>();
 			if (layerPresenceQueryJson != null) {
-				JSONArray datasourceArray = layerPresenceQueryJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				for (Object datasource : datasourceArray) {
-					JSONObject datasourceJson = (JSONObject) datasource;
-					if (datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.NAME).equals(DeploymentInfo.getMonitoringAgent())) {
-						layerPresenceQuery = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-						layerPresenceKey = datasourceJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
-						break;
+				for (Object query : layerPresenceQueryJson) {
+					JSONObject queryJson = (JSONObject) query;
+					String datasource = queryJson.getString(AutotuneConfigConstants.DATASOURCE);
+					if (datasource.equalsIgnoreCase(DeploymentInfo.getMonitoringAgent())) {
+						layerPresenceQueryStr = queryJson.getString(AutotuneConfigConstants.QUERY);
+						layerPresenceKey = queryJson.getString(AutotuneConfigConstants.KEY);
+						// Replace the queryvariables in the query
+						try {
+							layerPresenceQueryStr = Variables.updateQueryWithVariables(null,
+									null,
+									layerPresenceQueryStr,
+									queryVarList);
+							LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, layerPresenceQueryStr, layerPresenceKey);
+							layerPresenceQueries.add(layerPresenceQuery);
+						} catch (IOException | MonitoringAgentNotSupportedException e) {
+							LOGGER.error("autotuneconfig {}: Unsupported Datasource: {}", name, datasource);
+							return null;
+						}
 					}
 				}
 			}
 
+			String layerPresenceLabel = null;
+			String layerPresenceLabelValue = null;
 			if (layerPresenceLabelJson != null) {
 				for (Object label : layerPresenceLabelJson) {
 					JSONObject labelJson = (JSONObject) label;
-					layerPresenceLabel = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-					layerPresenceLabelValue = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE);
+					layerPresenceLabel = labelJson.optString(AutotuneConfigConstants.NAME);
+					layerPresenceLabelValue = labelJson.optString(AutotuneConfigConstants.VALUE);
 				}
 			}
 
-			String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-			String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
-			int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
+			String layerName = autotuneConfigJson.optString(AutotuneConfigConstants.LAYER_NAME);
+			String details = autotuneConfigJson.optString(AutotuneConfigConstants.DETAILS);
+			int level = autotuneConfigJson.optInt(AutotuneConfigConstants.LAYER_LEVEL);
 
-			// Replace the queryvariables in the query
-			try {
-				layerPresenceQuery = Variables.updateQueryWithVariables(null, null,
-						layerPresenceQuery, queryVarList);
-			} catch (IOException ignored) { }
-
-			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
+			JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AutotuneConfigConstants.TUNABLES);
 			ArrayList<Tunable> tunableArrayList = new ArrayList<>();
 
 			for (Object tunablesObject : tunablesJsonArray) {
 				JSONObject tunableJson = (JSONObject) tunablesObject;
-
-				JSONObject tunableQueries = tunableJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-				JSONArray dataSourceArray = null;
-				if (tunableQueries != null) {
-					dataSourceArray = tunableQueries.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-				}
+				JSONArray tunableQueriesArray = tunableJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
 
 				// Store the datasource and query from the JSON in a map
 				Map<String, String> queriesMap = new HashMap<>();
-				if (dataSourceArray != null) {
-					for (Object dataSourceObject : dataSourceArray) {
-						JSONObject dataSourceJson = (JSONObject) dataSourceObject;
-						String datasource = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-						String datasourceQuery = dataSourceJson.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+				if (tunableQueriesArray != null) {
+					for (Object tunableQuery : tunableQueriesArray) {
+						JSONObject tunableQueryObj = (JSONObject) tunableQuery;
+						String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+						String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
 
 						try {
 							datasourceQuery = Variables.updateQueryWithVariables(null, null,
@@ -462,16 +464,16 @@ public class AutotuneDeployment
 					}
 				}
 
-				String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-				String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
-				String upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-				String lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+				String tunableName = tunableJson.optString(AutotuneConfigConstants.NAME);
+				String tunableValueType = tunableJson.optString(AutotuneConfigConstants.VALUE_TYPE);
+				String upperBound = tunableJson.optString(AutotuneConfigConstants.UPPER_BOUND);
+				String lowerBound = tunableJson.optString(AutotuneConfigConstants.LOWER_BOUND);
 				// Read in step from the tunable, set it to '1' if not specified.
-				double step = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.STEP, 1);
+				double step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
 
 				ArrayList<String> sloClassList = new ArrayList<>();
 
-				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
+				JSONArray sloClassJson = tunableJson.getJSONArray(AutotuneConfigConstants.SLO_CLASS);
 				for (Object sloClassObject : sloClassJson) {
 					String sloClass = (String) sloClassObject;
 					sloClassList.add(sloClass);
@@ -493,7 +495,7 @@ public class AutotuneDeployment
 					", layerName='" + layerName + '\'' +
 					", presence='" + presence + '\'' +
 					", layerPresenceKey='" + layerPresenceKey + '\'' +
-					", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+					", layerPresenceQueries='" + layerPresenceQueries + '\'' +
 					", layerPresenceLabel='" + layerPresenceLabel + '\'' +
 					", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
 					", tunables=" + tunableArrayList +
@@ -505,8 +507,7 @@ public class AutotuneDeployment
 					level,
 					details,
 					presence,
-					layerPresenceQuery,
-					layerPresenceKey,
+					layerPresenceQueries,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
 					tunableArrayList);
@@ -518,12 +519,6 @@ public class AutotuneDeployment
 
 	private static void addLayerInfo(AutotuneConfig layer) {
 		KubernetesClient client = new DefaultKubernetesClient();
-
-		String layerPresenceQuery = layer.getLayerPresenceQuery();
-		String layerPresenceKey = layer.getLayerPresenceKey();
-
-		String layerPresenceLabel = layer.getLayerPresenceLabel();
-		String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
 
 		String presence = layer.getPresence();
 		// Add to all monitored applications in the cluster
@@ -537,27 +532,33 @@ public class AutotuneDeployment
 			return;
 		}
 
-		// Check if a layer has a datasource query that validates its presence
-		if (layerPresenceQuery != null && !layerPresenceQuery.isEmpty()) {
-			DataSource dataSource = null;
-			try {
-				dataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
-			} catch (MonitoringAgentNotFoundException e) {
-				e.printStackTrace();
-			}
+		DataSource autotuneDataSource = null;
+		try {
+			autotuneDataSource = DataSourceFactory.getDataSource(DeploymentInfo.getMonitoringAgent());
+		} catch (MonitoringAgentNotFoundException e) {
+			e.printStackTrace();
+		}
+		ArrayList<String> appsForAllQueries = new ArrayList<>();
+		ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();
 
-			ArrayList<String> apps = null;
-			try {
-				apps = (ArrayList<String>) dataSource.getAppsForLayer(layerPresenceQuery, layerPresenceKey);
-			} catch (MalformedURLException | NullPointerException e) {
-				LOGGER.info(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+		// Check if a layer has a datasource query that validates its presence
+		if (layerPresenceQueries != null && !layerPresenceQueries.isEmpty()) {
+			for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
+				try {
+					// TODO: Check the datasource in the query is the same as the Autotune one
+					ArrayList<String> apps = (ArrayList<String>) autotuneDataSource.getAppsForLayer(layerPresenceQuery.getLayerPresenceQuery(),
+							layerPresenceQuery.getLayerPresenceKey());
+					appsForAllQueries.addAll(apps);
+				} catch (MalformedURLException | NullPointerException e) {
+					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+				}
 			}
-			if (apps != null) {
+			if (!appsForAllQueries.isEmpty()) {
 				// We now have a list of apps that have the label and the key specified by the user.
 				// We now have to find the kubernetes objects corresponding to these apps
 				// TODO: This query needs to be optimized to only check for pods in the right namespace
 				PodList podList = client.pods().inAnyNamespace().list();
-				for (String application : apps) {
+				for (String application : appsForAllQueries) {
 					List<Container> containers = null;
 					for (Pod pod : podList.getItems()) {
 						if (pod.getMetadata().getName().contains(application)) {
@@ -569,7 +570,7 @@ public class AutotuneDeployment
 					// No containers were found that matched the applications, this is weird, log a warning
 					if (containers == null) {
 						LOGGER.warn("Could not find any PODs related to Application name: " + application);
-						break;
+						continue;
 					}
 					for (Container container : containers) {
 						String containerImageName = container.getImage();
@@ -581,9 +582,13 @@ public class AutotuneDeployment
 						}
 					}
 				}
+			} else {
+				LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 			}
 		}
 
+		String layerPresenceLabel = layer.getLayerPresenceLabel();
+		String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
 		if (layerPresenceLabel != null) {
 			PodList podList = client.pods().inAnyNamespace().withLabel(layerPresenceLabel).list();
 			for (Pod pod : podList.getItems()) {
@@ -646,8 +651,7 @@ public class AutotuneDeployment
 					autotuneConfig.getLevel(),
 					autotuneConfig.getDetails(),
 					autotuneConfig.getPresence(),
-					autotuneConfig.getLayerPresenceQuery(),
-					autotuneConfig.getLayerPresenceKey(),
+					autotuneConfig.getLayerPresenceQueries(),
 					autotuneConfig.getLayerPresenceLabel(),
 					autotuneConfig.getLayerPresenceLabelValue(),
 					tunables);
