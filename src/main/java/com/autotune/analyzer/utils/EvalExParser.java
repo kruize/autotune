@@ -51,11 +51,8 @@ public class EvalExParser implements AlgebraicParser {
 
         BigDecimal result;
 
-        if(objFunctionMap.isEmpty())
+        if(objFunctionMap.isEmpty() || objFunction.isBlank())
             return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING;
-
-        if( objFunction.isBlank() || objFunction == null)
-            return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING;
 
         List<String> objFunctionMapKeys = new ArrayList<>(objFunctionMap.keySet());
         Expression expressionEvaluator = new Expression(objFunction);
@@ -79,22 +76,13 @@ public class EvalExParser implements AlgebraicParser {
     @Override
     public Boolean validate(String objFunction, ArrayList<Metric> functionVariables) {
 
-        List<String> variableNames = new ArrayList<>();
-        for(Metric functionVariable : functionVariables){
-            variableNames.add(functionVariable.getName());
-        }
-
-        LOGGER.info("Variables: {}", variableNames);
-
         /*
             Remove all the variables from the objFunction matching with variables present in variableNames List
             so that the function is left with only brackets and operators
          */
         String objFunctionOperators = "";
-        for(String variable : variableNames) {
-            objFunctionOperators = objFunction.replaceAll("[a-zA-Z _]","");
+        objFunctionOperators = objFunction.replaceAll("[a-zA-Z _]", "");
 
-        }
         LOGGER.info("Objective Func Operators: {}", objFunctionOperators);
 
         //Remove extra whitespaces from the string
