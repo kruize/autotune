@@ -27,7 +27,7 @@ app_autotune_yaml="app_autotune_yaml"
 testcase_matched=0
 module="da"
 path="${MANIFESTS}/${module}/${app_autotune_yaml}"
-autotune_object_create_msg="com.autotune.analyzer.deployment.AutotuneDeployment - Added autotune object"
+autotune_object_create_msg="[AutotuneDeployment.java([0-9]*)]-Added autotune object"
 autotune_exception="com.autotune.analyzer.exceptions.InvalidValueException:"
 
 # testcases for application autotune yaml
@@ -205,8 +205,8 @@ slo_class_autotune_objects=([blank-sloclass]='true'
 declare -A slo_class_expected_log_msgs
 yaml_test_path="${path}/${app_autotune_tests[1]}"
 slo_kubectl_error=': error validating data: ValidationError(Autotune.spec): missing required field "slo" in com.recommender.v1.Autotune.spec; if you choose to ignore these errors, turn validation off with --validate=false'
-slo_class_expected_log_msgs=([blank-sloclass]=''${autotune_object_create_msg}' blank-sloclass' 
-[invalid-sloclass]=''${autotune_exception}' slo_class: rgyedg not supported' 
+slo_class_expected_log_msgs=([blank-sloclass]=''${autotune_object_create_msg}' blank-sloclass'
+[invalid-sloclass]=''${autotune_exception}' slo_class: rgyedg not supported'
 [no-slo]='error: error validating "'${yaml_test_path}/no-slo.yaml'"'${slo_kubectl_error}''
 [no-sloclass]=''${autotune_object_create_msg}' no-sloclass'
 [no-slo-value]='error: error validating "'${yaml_test_path}/no-slo-value.yaml'"'${slo_kubectl_error}'' 
