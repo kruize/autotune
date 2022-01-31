@@ -7,17 +7,16 @@ layer_name: xyz
 #             2 = framework (eg: quarkus, liberty, springboot), 3 = app
 layer_level: 2
 details: xyz tunables
-# layerPresence tells autotune how to detect this layer in a pod
-layerPresence:
+# layer_presence tells autotune how to detect this layer in a pod
+layer_presence:
   # Uncomment one of the following
   # This layer is assumed to be available by default for all applications.
   #presence: always
   # This layer is present if the following prometheus query returns non null
-  #query:
-  #  datasource:
-  #  - name: prometheus
-  #    query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
-  #    key: pod
+  #queries:
+  #- datasource: 'prometheus'
+  #  query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
+  #  key: pod
   # This layer is present if the following pod label is present
   #label:
   #- name: app.kubernetes.io/layer
