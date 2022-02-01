@@ -21,6 +21,7 @@ import com.autotune.utils.ServerContext;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.service.HealthService;
+import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
@@ -55,10 +56,10 @@ public class Autotune
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		String autotuneMode = System.getenv(EMConstants.EMEnv.AUTOTUNE_MODE);
+		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
 
 		if (null != autotuneMode) {
-			if (autotuneMode.equalsIgnoreCase(EMConstants.EMEnv.EM_ONLY_MODE)) {
+			if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
 				startAutotuneEMOnly(context);
 			} else {
 				startAutotuneNormalMode(context);
@@ -97,6 +98,7 @@ public class Autotune
 		Analyzer.start(contextHandler);
 		ExperimentManager.launch(contextHandler);
 	}
+
 	private static ErrorPageErrorHandler getErrorHandler(String errorHandlerPath) {
 		ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
 		errorHandler.addErrorPage(HttpServletResponse.SC_BAD_REQUEST, errorHandlerPath);

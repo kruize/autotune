@@ -25,6 +25,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.Container;
@@ -218,7 +219,7 @@ public class AutotuneDeployment
 	 */
 	private static void deleteExistingConfig(String resource) {
 		JSONObject autotuneConfigJson = new JSONObject(resource);
-		String configName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+		String configName = autotuneConfigJson.optString(AutotuneConfigConstants.LAYER_NAME);
 
 		LOGGER.info("AutotuneConfig " + configName + " removed from autotune monitoring");
 		// Remove from collection of autotuneconfigs in map
@@ -420,7 +421,7 @@ public class AutotuneDeployment
 	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource, KubernetesClient client, CustomResourceDefinitionContext autotuneVariableContext) {
 		try {
 			JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
-			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
+			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
 			JSONArray layerPresenceQueryJson = null;
@@ -431,8 +432,8 @@ public class AutotuneDeployment
 				layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
 			}
 
-			String name = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-			String namespace = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneConfigConstants.METADATA).optString(AnalyzerConstants.AutotuneConfigConstants.NAMESPACE);
+			String name = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAME);
+			String namespace = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAMESPACE);
 
 			// Get the autotunequeryvariables for the current kubernetes environment
 			ArrayList<Map<String, String>> queryVarList = null;
@@ -446,6 +447,7 @@ public class AutotuneDeployment
 
 			String layerPresenceQueryStr = null;
 			String layerPresenceKey = null;
+
 			ArrayList<LayerPresenceQuery> layerPresenceQueries = new ArrayList<>();
 			if (layerPresenceQueryJson != null) {
 				for (Object query : layerPresenceQueryJson) {
@@ -473,8 +475,8 @@ public class AutotuneDeployment
 			if (layerPresenceLabelJson != null) {
 				for (Object label : layerPresenceLabelJson) {
 					JSONObject labelJson = (JSONObject) label;
-					layerPresenceLabel = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-					layerPresenceLabelValue = labelJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE);
+					layerPresenceLabel = labelJson.optString(AutotuneConfigConstants.NAME);
+					layerPresenceLabelValue = labelJson.optString(AutotuneConfigConstants.VALUE);
 				}
 			}
 
@@ -505,15 +507,16 @@ public class AutotuneDeployment
 					}
 				}
 
-				String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-				String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
-				String upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-				String lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+				String tunableName = tunableJson.optString(AutotuneConfigConstants.NAME);
+				String tunableValueType = tunableJson.optString(AutotuneConfigConstants.VALUE_TYPE);
+				String upperBound = tunableJson.optString(AutotuneConfigConstants.UPPER_BOUND);
+				String lowerBound = tunableJson.optString(AutotuneConfigConstants.LOWER_BOUND);
 				// Read in step from the tunable, set it to '1' if not specified.
-				double step = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.STEP, 1);
+				double step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
 
 				ArrayList<String> sloClassList = new ArrayList<>();
 				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
+
 				for (Object sloClassObject : sloClassJson) {
 					String sloClass = (String) sloClassObject;
 					sloClassList.add(sloClass);
@@ -646,6 +649,8 @@ public class AutotuneDeployment
 				} else {
 					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				}
+			} else {
+				LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
