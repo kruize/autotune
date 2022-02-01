@@ -103,49 +103,47 @@ public class SearchSpace extends HttpServlet
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setContentType(JSON_CONTENT_TYPE);
-            response.setCharacterEncoding(CHARACTER_ENCODING);
 
-            JSONArray searchSpaceJsonArray = new JSONArray();
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-                searchSpaceJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
-                response.getWriter().println(searchSpaceJsonArray.toString(4));
-                return;
-            }
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
 
-            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-            String containerImageName = request.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
-
-            AutotuneExperiment autotuneExperiment = null;
-            ApplicationSearchSpace applicationSearchSpace = null;
-            if (null != experimentName) {
-                autotuneExperiment = experimentsMap.get(experimentName);
-                if (null != autotuneExperiment) {
-                    applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
-                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                }
-            } else {
-                // No experiment name parameter, generate search space for all experiments
-                for (String expName : experimentsMap.keySet()) {
-                    autotuneExperiment = experimentsMap.get(expName);
-                    applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
-                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                }
-            }
-
-            if (searchSpaceJsonArray.isEmpty()) {
-                if (containerImageName != null) {
-                    searchSpaceJsonArray.put(ERROR_STACK_NAME + containerImageName + NOT_FOUND);
-                } else {
-                    searchSpaceJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
-                }
-            }
+        JSONArray searchSpaceJsonArray = new JSONArray();
+        if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+            searchSpaceJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
             response.getWriter().println(searchSpaceJsonArray.toString(4));
-            response.getWriter().close();
-        } catch (Exception ex) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
         }
+
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String containerImageName = request.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
+
+        AutotuneExperiment autotuneExperiment = null;
+        ApplicationSearchSpace applicationSearchSpace = null;
+        if (null != experimentName) {
+            autotuneExperiment = experimentsMap.get(experimentName);
+            if (null != autotuneExperiment) {
+                applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
+                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
+            }
+        } else {
+            // No experiment name parameter, generate search space for all experiments
+            for (String expName : experimentsMap.keySet()) {
+                autotuneExperiment = experimentsMap.get(expName);
+                applicationSearchSpace = autotuneExperiment.getApplicationServiceStack().getApplicationSearchSpace();
+                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
+            }
+        }
+
+        if (searchSpaceJsonArray.isEmpty()) {
+            if (containerImageName != null) {
+                searchSpaceJsonArray.put(ERROR_STACK_NAME + containerImageName + NOT_FOUND);
+            } else {
+                searchSpaceJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
+            }
+        }
+        response.getWriter().println(searchSpaceJsonArray.toString(4));
+        response.getWriter().close();
+
     }
 }

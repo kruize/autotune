@@ -20,21 +20,19 @@ public class ExperimentsSummary extends HttpServlet
 	@Override
 	protected void doGet(HttpServletRequest request,
 						 HttpServletResponse response) throws ServletException, IOException {
-		try {
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType(JSON_CONTENT_TYPE);
-			response.setCharacterEncoding(CHARACTER_ENCODING);
 
-			JSONArray experimentsJSONArray = new JSONArray();
-			for (String experimentID : Experimentator.experimentsMap.keySet()) {
-				AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(experimentID);
-				JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(autotuneExperiment);
-				experimentsJSONArray.put(experimentJSON);
-			}
-			response.getWriter().println(experimentsJSONArray.toString(4));
-			response.getWriter().close();
-		} catch (Exception ex) {
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(JSON_CONTENT_TYPE);
+		response.setCharacterEncoding(CHARACTER_ENCODING);
+
+		JSONArray experimentsJSONArray = new JSONArray();
+		for (String experimentID : Experimentator.experimentsMap.keySet()) {
+			AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(experimentID);
+			JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(autotuneExperiment);
+			experimentsJSONArray.put(experimentJSON);
 		}
+		response.getWriter().println(experimentsJSONArray.toString(4));
+		response.getWriter().close();
+
 	}
 }
