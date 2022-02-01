@@ -27,10 +27,7 @@ import com.autotune.analyzer.k8sObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.variables.Variables;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSetList;
@@ -54,6 +51,8 @@ import java.util.Map;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
 import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
+import static com.autotune.analyzer.Experimentator.startExperiment;
+import static com.autotune.analyzer.utils.AnalyzerConstants.*;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster
@@ -87,7 +86,7 @@ public class AutotuneDeployment
 	 * @throws IOException if unable to get Kubernetes config
 	 */
 	public static void getAutotuneObjects(final AutotuneDeployment autotuneDeployment) throws IOException {
-		KubernetesClient client = new DefaultKubernetesClient();
+		KubernetesClient client = AutotuneDeploymentInfo.getKubernetesClient();
 
 		/* Watch for events (additions, modifications or deletions) of autotune objects */
 		Watcher<String> autotuneObjectWatcher = new Watcher<>() {
@@ -191,6 +190,7 @@ public class AutotuneDeployment
 	private static void addAutotuneObject(AutotuneObject autotuneObject, KubernetesClient client) {
 		autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
 		System.out.println("Autotune Object: " + autotuneObject.getExperimentName() + ": Finding Layers");
+
 		matchPodsToAutotuneObject(autotuneObject, client);
 
 		for (String autotuneConfig : autotuneConfigMap.keySet()) {
@@ -318,6 +318,7 @@ public class AutotuneDeployment
 	private static AutotuneObject getAutotuneObject(String autotuneObjectJsonStr) {
 		try {
 			JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
+			JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
 
 			String name;
 			String mode;
@@ -391,16 +392,28 @@ public class AutotuneDeployment
 					matchService);
 
 			mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE);
-			name = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
-					.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-			namespace = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
-					.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
+			name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+			namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
+
+			String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
+			String uid = metadataJson.optString(AnalyzerConstants.UID);
+			String apiVersion = autotuneObjectJson.optString(AnalyzerConstants.API_VERSION);
+			String kind = autotuneObjectJson.optString(AnalyzerConstants.KIND);
+
+			ObjectReference objectReference = new ObjectReference(apiVersion,
+					null,
+					kind,
+					name,
+					namespace,
+					resourceVersion,
+					uid);
 
 			return new AutotuneObject(name,
 					namespace,
 					mode,
 					sloInfo,
-					selectorInfo
+					selectorInfo,
+					objectReference
 			);
 
 		} catch (InvalidValueException | NullPointerException | JSONException e) {
@@ -420,6 +433,7 @@ public class AutotuneDeployment
 	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource, KubernetesClient client, CustomResourceDefinitionContext autotuneVariableContext) {
 		try {
 			JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
+			JSONObject metadataJson = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
 			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE);
 
 			String presence = null;
@@ -528,6 +542,19 @@ public class AutotuneDeployment
 				}
 			}
 
+			String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
+			String uid = metadataJson.optString(AnalyzerConstants.UID);
+			String apiVersion = autotuneConfigJson.optString(AnalyzerConstants.API_VERSION);
+			String kind = autotuneConfigJson.optString(AnalyzerConstants.KIND);
+
+			ObjectReference objectReference = new ObjectReference(apiVersion,
+					null,
+					kind,
+					name,
+					namespace,
+					resourceVersion,
+					uid);
+
 			return new AutotuneConfig(name,
 					layerName,
 					level,
@@ -536,7 +563,8 @@ public class AutotuneDeployment
 					layerPresenceQueries,
 					layerPresenceLabel,
 					layerPresenceLabelValue,
-					tunableArrayList);
+					tunableArrayList,
+					objectReference);
 		} catch (JSONException | InvalidValueException | NullPointerException e) {
 			e.printStackTrace();
 			return null;
@@ -747,7 +775,8 @@ public class AutotuneDeployment
 					autotuneConfig.getLayerPresenceQueries(),
 					autotuneConfig.getLayerPresenceLabel(),
 					autotuneConfig.getLayerPresenceLabelValue(),
-					tunables);
+					tunables,
+					autotuneConfig.getObjectReference());
 		} catch (InvalidValueException ignored) { }
 
 		LOGGER.info("Added layer " + autotuneConfig.getName() + " to stack " + applicationServiceStack.getStackName());
