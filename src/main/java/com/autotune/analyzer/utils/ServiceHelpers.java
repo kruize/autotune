@@ -24,7 +24,12 @@ import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
 
@@ -188,9 +193,14 @@ public class ServiceHelpers {
 				// Pass the full name here that includes the layer and stack names
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getFullName());
 				// searchSpace is passing only the tunable value and not a string
-				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
-				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
+				// check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values
+				if(tunable.getValueType().equalsIgnoreCase("categorical")) {
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_VALUES,tunable.getCategoricalValueList());
+				} else {
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
+				}
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 				tunablesJsonArray.put(tunableJson);
 			}
