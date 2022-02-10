@@ -1,0 +1,104 @@
+{
+  "settings": {
+    "trial_settings": {
+      "measurement_cycles": "3",
+      "warmup_duration": "1min",
+      "warmup_cycles": "3",
+      "measurement_duration": "1min",
+      "iterations": "3"
+    },
+    "deployment_settings": {
+      "deployment_tracking": {"trackers": ["training"]},
+      "deployment_info": {
+        "agent": "EM",
+        "target_env": "qa"
+      },
+      "deployment_policy": {
+        "type": "rollingUpdate"
+      }
+    }
+  },
+  "experiment_name": "autotune-max-http-throughput",
+  "deployments": [{
+    "deployment_name": "petclinic-sample-0",
+    "namespace": "default",
+    "containers": [{
+      "image_name": "kruize/spring_petclinic:2.2.0-jdk-11.0.8-openj9-0.21.0",
+      "container_name": "petclinic-tomcat",
+      "config": [
+        {
+          "name": "update requests and limits",
+          "spec": {"template": {"spec": {"container": {"resources": {
+            "requests": {
+              "memory": "223Mi",
+              "cpu": "2"
+            },
+            "limits": {
+              "memory": "223Mi",
+              "cpu": "2"
+            }
+          }}}}}
+        },
+        {
+          "name": "update env",
+          "spec": {"template": {"spec": {"container": {"env": {"JDK_JAVA_OPTIONS": " -XX:MaxInlineLevel=23"}}}}}
+        }
+      ],
+      "container_metrics": [
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+          "name": "request_sum"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+          "name": "request_count"
+        }
+      ]
+    }],
+    "pod_metrics": [
+      {
+        "datasource": "prometheus",
+        "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+        "name": "request_sum"
+      },
+      {
+        "datasource": "prometheus",
+	"query": "rate(http_server_requests_seconds_count{exception=\"None\",method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+        "name": "request_count"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+        "name": "cpuRequest"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "MaxInlineLevel"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "memoryRequest"
+      }
+    ],
+    "type": "training"
+  }],
+  "experiment_id": "f7cc7393db1dd9aa28ef9ad038b956fe72a570fba775a8c3568ebafaf3c0eb1d",
+  "app-version": "v1",
+  "info": {
+    "trial_info": {
+      "trial_id": "",
+      "trial_num": 0,
+      "trial_result_url": "trail data return url"
+    },
+    "datasource_info": [
+      {
+        "name": "prometheus",
+        "url": "prom url"
+      }
+    ]
+  }
+} 

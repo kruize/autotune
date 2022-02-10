@@ -19,7 +19,6 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 SCRIPTS_DIR="${CURRENT_DIR}" 
-
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/common/common_functions.sh
 
@@ -31,6 +30,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/da/configmap_yaml_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_id_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_layer_config_id_tests.sh
+. ${SCRIPTS_DIR}/../em/em_standalone_tests.sh
 
 # Iterate through the commandline options
 while getopts i:o:r:-: gopts
@@ -107,6 +107,7 @@ function functional_test() {
 		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
 	else
 		execute_da_testsuites
+		execute_em_testsuites
 	fi
 }
 
@@ -140,12 +141,30 @@ function execute_da_testsuites() {
 	autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
 }
 
+# Execute all autotune integration tests
+function execute_integration_testsuite() {
+        testcase=""
+        # perform the EM API tests
+        autotune_integration_test > >(tee "${RESULTS}/autotune_integration_test.log") 2>&1
+}
+
+# Execute all tests for EM (Experiment Manager) module
+function execute_em_testsuites() {
+        testcase=""
+        # perform the EM API tests
+        em_standalone_tests > >(tee "${RESULTS}/em_standalone_tests.log") 2>&1
+}
+
 # Perform the specific testsuite if specified 
 if [ ! -z "${testmodule}" ]; then
 	case "${testmodule}" in
 	da)
 		# Execute tests for Dependency Analyzer Module 
 		execute_da_testsuites
+		;;
+	   em)
+		# Execute tests for Experiment Manager (EM) Module
+		execute_em_testsuites
 		;;
 	esac
 elif [ ! -z "${testsuite}" ]; then
