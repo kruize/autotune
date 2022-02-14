@@ -89,6 +89,7 @@ public class EMConstants {
 		// Deployments Section
 		public static String DEPLOYMENTS = "deployments";
 		public static String NAMESPACE = "namespace";
+		public static String CONTAINER_NAME = "container_name";
 		public static String METRICS = "metrics";
 		public static String CONFIG = "config";
 		public static String NAME = "name";
