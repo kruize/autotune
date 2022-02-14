@@ -46,34 +46,17 @@ import java.util.Map;
 public class ApplicationServiceStack
 {
 	private final String stackName;
-	private final String namespace;
-	private final String deploymentName;
-	private String status;
+	private final String containerName;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
-	private ApplicationSearchSpace applicationSearchSpace;
 
-	public ApplicationServiceStack(String stackName, String namespace, String deploymentName, String status) {
+	public ApplicationServiceStack(String stackName, String containerName) {
 		this.stackName = stackName;
-		this.namespace = namespace;
-		this.deploymentName = deploymentName;
-		this.status = status;
+		this.containerName = containerName;
 		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public String getDeploymentName() {
-		return deploymentName;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
+	public String getContainerName() {
+		return containerName;
 	}
 
 	public String getStackName() {
@@ -84,19 +67,11 @@ public class ApplicationServiceStack
 		return applicationServiceStackLayers;
 	}
 
-	public ApplicationSearchSpace getApplicationSearchSpace() {
-		return applicationSearchSpace;
-	}
-
-	public void setApplicationSearchSpace(ApplicationSearchSpace applicationSearchSpace) {
-		this.applicationSearchSpace = applicationSearchSpace;
-	}
-
 	@Override
 	public String toString() {
 		return "ApplicationServiceStack{" +
 				"stackName='" + stackName + '\'' +
-				", namespace='" + namespace + '\'' +
+				", containerName='" + containerName + '\'' +
 				", stackLayers=" + applicationServiceStackLayers +
 				'}';
 	}

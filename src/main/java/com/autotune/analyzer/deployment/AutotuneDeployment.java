@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.deployment;
 
+import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.datasource.DataSource;
@@ -52,8 +53,6 @@ import java.util.Map;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
 import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
-import static com.autotune.analyzer.Experimentator.startExperiment;
-import static com.autotune.analyzer.utils.AnalyzerConstants.*;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster
@@ -72,10 +71,10 @@ public class AutotuneDeployment
 	 * Key: Name of autotune Object
 	 *
 	 * Inner map:
-	 * Key: Name of application
-	 * Value: ApplicationServiceStack instance for the application.
+	 * Key: Name of deployment
+	 * Value: ApplicationDeployment instance matching the name
 	 */
-	public static Map<String, Map<String, ApplicationServiceStack>> applicationServiceStackMap = new HashMap<>();
+	public static Map <String, Map<String, ApplicationDeployment>> deploymentMap = new HashMap<>();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeployment.class);
 
@@ -97,16 +96,17 @@ public class AutotuneDeployment
 
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
-						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						autotuneObject = getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							addAutotuneObject(autotuneObject, client);
 							String autotuneObjectStr = autotuneObject.getExperimentName();
 							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 							// For each of these applicationServiceStacks, we need to start the experiments
-							if (applicationServiceStackMap.get(autotuneObjectStr) != null) {
-								for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
-									ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
-									startExperiment(autotuneObject, applicationServiceStack);
+							if (!deploymentMap.isEmpty() &&
+									deploymentMap.get(autotuneObjectStr) != null) {
+								Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectStr);
+								for (String deploymentName : depMap.keySet()) {
+									startExperiment(autotuneObject, depMap.get(deploymentName));
 								}
 								LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
 							} else {
@@ -115,21 +115,26 @@ public class AutotuneDeployment
 						}
 						break;
 					case "MODIFIED":
-						autotuneObject = autotuneDeployment.getAutotuneObject(resource);
+						autotuneObject = getAutotuneObject(resource);
 						if (autotuneObject != null) {
 							// Check if any of the values have changed from the existing object in the map
 							if (autotuneObjectMap.get(autotuneObject.getExperimentName()).getExperimentId() != autotuneObject.getExperimentId()) {
 								deleteExistingAutotuneObject(resource);
 								addAutotuneObject(autotuneObject, client);
 
-								String autotuneObjectStr = autotuneObject.getExperimentId();
+								String autotuneObjectStr = autotuneObject.getExperimentName();
 								// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 								// For each of these applicationServiceStacks, we need to restart the experiments
-								for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObjectStr).keySet()) {
-									ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectStr).get(applicationServiceStackName);
+								if (!deploymentMap.isEmpty() &&
+										deploymentMap.get(autotuneObjectStr) != null) {
+									Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectStr);
+									for (String deploymentName : depMap.keySet()) {
+										startExperiment(autotuneObject, depMap.get(deploymentName));
+									}
+									LOGGER.info("Updated autotune object " + autotuneObject.getExperimentName());
+								} else {
+									LOGGER.info("autotune object " + autotuneObject.getExperimentName() + " not updated!");
 								}
-
-								LOGGER.info("Modified autotune object {}", autotuneObject.getExperimentName());
 							}
 						}
 						break;
@@ -209,7 +214,8 @@ public class AutotuneDeployment
 				.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 
 		autotuneObjectMap.remove(name);
-		applicationServiceStackMap.remove(name);
+		deploymentMap.remove(name);
+		// TODO: Stop all the experiments
 		LOGGER.info("Deleted autotune object {}", name);
 	}
 
@@ -226,10 +232,13 @@ public class AutotuneDeployment
 		autotuneConfigMap.remove(configName);
 
 		// Remove autotuneconfig for all applications monitored
-		for (String autotuneObject : applicationServiceStackMap.keySet()) {
-			for (String applicationServiceStackName : applicationServiceStackMap.get(autotuneObject).keySet()) {
-				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject).get(applicationServiceStackName);
-				applicationServiceStack.getApplicationServiceStackLayers().remove(configName);
+		for (String autotuneObjectKey : deploymentMap.keySet()) {
+			Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
+			for (String deploymentName : depMap.keySet()) {
+				for (String applicationServiceStackName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
+					ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(applicationServiceStackName);
+					applicationServiceStack.getApplicationServiceStackLayers().remove(configName);
+				}
 			}
 		}
 	}
@@ -246,6 +255,7 @@ public class AutotuneDeployment
 			String userLabelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
 
 			String namespace = autotuneObject.getNamespace();
+			String experimentName = autotuneObject.getExperimentName();
 			PodList podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
 			if (podList.getItems().isEmpty()) {
 				LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
@@ -279,30 +289,33 @@ public class AutotuneDeployment
 							+ " podTemplateHash: " + podTemplateHash
 							+ " replicasetName: " + replicasetName
 							+ " deploymentName: " + deploymentName);
-					if (deployment != null) {
-						break;
-					}
-				}
-				// Check docker image name for each container in the pod
-				for (Container container : pod.getSpec().getContainers()) {
-					String containerImageName = container.getImage();
-					ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
-							podMetadata.getNamespace(),
-							deploymentName,
-							status);
 
-					// If autotuneObject is already in the applicationServiceStack map, add the new stack
-					if (applicationServiceStackMap.containsKey(autotuneObject.getExperimentName())) {
-						// Add the stack, if the stack (docker image) is not already in the map
-						if (!applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
-							applicationServiceStackMap.get(autotuneObject.getExperimentName()).put(containerImageName,
-									applicationServiceStack);
+					if (deployment != null) {
+						// Add the deployment if it is already not there
+						ApplicationDeployment applicationDeployment = null;
+						if (!deploymentMap.containsKey(experimentName)) {
+							applicationDeployment = new ApplicationDeployment(deploymentName,
+									experimentName, namespace,
+									deployment.getStatus().toString());
+							Map<String, ApplicationDeployment> depMap = new HashMap<>();
+							depMap.put(deploymentName, applicationDeployment);
+							deploymentMap.put(experimentName, depMap);
+						} else {
+							applicationDeployment = deploymentMap.get(experimentName).get(deploymentName);
 						}
-					} else {
-						// Associate the autotuneObject to the applicationServiceStack
-						Map<String, ApplicationServiceStack> innerMap = new HashMap<>();
-						innerMap.put(containerImageName, applicationServiceStack);
-						applicationServiceStackMap.put(autotuneObject.getExperimentName(), innerMap);
+						// Check docker image id for each container in the pod
+						for (Container container : pod.getSpec().getContainers()) {
+							String containerImageName = container.getImage();
+							String containerName = container.getName();
+							ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
+									containerName);
+							assert(applicationDeployment == null);
+							// Add the container image if it has not already been added to the deployment
+							if (!applicationDeployment.getApplicationServiceStackMap().containsKey(containerImageName)) {
+								applicationDeployment.getApplicationServiceStackMap().put(containerImageName, applicationServiceStack);
+							}
+						}
+						break;
 					}
 				}
 			}
@@ -511,12 +524,6 @@ public class AutotuneDeployment
 						JSONObject tunableQueryObj = (JSONObject) tunableQuery;
 						String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
 						String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-
-						try {
-							datasourceQuery = Variables.updateQueryWithVariables(null, null,
-									datasourceQuery, queryVarList);
-						} catch (IOException ignored) { }
-
 						queriesMap.put(datasource, datasourceQuery);
 					}
 				}
@@ -586,16 +593,22 @@ public class AutotuneDeployment
 		// Add to all monitored applications in the cluster
 		if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
 			if (autotuneObject == null) {
-				for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
-					for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-						ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
-						addLayerInfoToApplication(applicationServiceStack, layer);
+				for (String autotuneObjectKey : deploymentMap.keySet()) {
+					Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
+					for (String deploymentName : depMap.keySet()) {
+						for (String containerImageName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
+							ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName);
+							addLayerInfoToApplication(applicationServiceStack, layer);
+						}
 					}
 				}
 			} else {
-				for (String containerImageName : applicationServiceStackMap.get(autotuneObject.getExperimentName()).keySet()) {
-					ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName);
-					addLayerInfoToApplication(applicationServiceStack, layer);
+				Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+				for (String deploymentName : depMap.keySet()) {
+					for (String containerImageName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
+						ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName);
+						addLayerInfoToApplication(applicationServiceStack, layer);
+					}
 				}
 			}
 		}
@@ -660,15 +673,21 @@ public class AutotuneDeployment
 						}
 						for (Container container : containers) {
 							String containerImageName = container.getImage();
+							// Check if the container image is already present in the applicationServiceStackMap, if not, add it
 							if (autotuneObject != null) {
-								// Add the layer info to the container image that should be already present in the applicationServiceStackMap.
-								if (applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
-									addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName), layer);
+								Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+								for (String deploymentName : depMap.keySet()) {
+									if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
+										addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
+									}
 								}
 							} else {
-								for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
-									if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
-										addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
+								for (String autotuneObjectKey : deploymentMap.keySet()) {
+									Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
+									for (String deploymentName : depMap.keySet()) {
+										if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
+											addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
+										}
 									}
 								}
 							}
@@ -720,13 +739,19 @@ public class AutotuneDeployment
 					for (Container container : pod.getSpec().getContainers()) {
 						String containerImageName = container.getImage();
 						if (autotuneObject != null) {
-							if (applicationServiceStackMap.get(autotuneObject.getExperimentName()).containsKey(containerImageName)) {
-								addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName), layer);
+							Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+							for (String deploymentName : depMap.keySet()) {
+								if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
+									addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
+								}
 							}
 						} else {
-							for (String autotuneObjectKey : applicationServiceStackMap.keySet()) {
-								if (applicationServiceStackMap.get(autotuneObjectKey).containsKey(containerImageName)) {
-									addLayerInfoToApplication(applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName), layer);
+							for (String autotuneObjectKey : deploymentMap.keySet()) {
+								Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
+								for (String deploymentName : depMap.keySet()) {
+									if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
+										addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
+									}
 								}
 							}
 						}

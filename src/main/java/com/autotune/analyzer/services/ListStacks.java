@@ -30,7 +30,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
-import static com.autotune.analyzer.utils.ServiceHelpers.addStackDetails;
+import static com.autotune.analyzer.utils.ServiceHelpers.addDeploymentDetails;
 
 public class ListStacks extends HttpServlet
 {
@@ -46,22 +46,34 @@ public class ListStacks extends HttpServlet
      *         "experiment_name": "autotune-max-http-throughput",
      *         "experiment_id": "94f76772f43339f860e0d5aad8bebc1abf50f461712d4c5d14ea7aada280e8f3",
      *         "objective_function": "request_count",
-     *         "hpo_algo_impl": "optuna_tpe",
-     *         "stacks": [
-     *             "dinogun/autotune_optuna:0.0.5",
-     *             "dinogun/autotune_operator:0.0.5"
-     *         ],
      *         "slo_class": "throughput",
-     *         "direction": "maximize"
+     *         "direction": "maximize",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "deployments": [
+     *             {
+     *                 "name": "autotune",
+     *                 "namespace": "monitoring",
+     *                 "stacks": [
+     *                    "dinogun/autotune_optuna:0.0.5",
+     *                    "dinogun/autotune_operator:0.0.5"
+     *                 ]
+     *             }
+     *         ]
      *     },
      *     {
      *         "experiment_name": "galaxies-autotune-min-http-response-time",
      *         "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
      *         "objective_function": "request_sum/request_count",
-     *         "hpo_algo_impl": "optuna_tpe",
-     *         "stacks": ["dinogun/galaxies:1.2-jdk-11.0.10_9"],
      *         "slo_class": "response_time",
-     *         "direction": "minimize"
+     *         "direction": "minimize",
+     *         "hpo_algo_impl": "optuna_tpe",
+     *         "deployments": [
+     *             {
+     *                 "name": "galaxies-sample",
+     *                 "namespace": "default",
+     *                 "stacks": ["dinogun/galaxies:1.2-jdk-11.0.10_9"]
+     *             }
+     *         ]
      *     }
      * ]
      *
@@ -77,13 +89,6 @@ public class ListStacks extends HttpServlet
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
         JSONArray outputJsonArray = new JSONArray();
-        // Check if there are any experiments running at all ?
-        if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-            outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
-            response.getWriter().println(outputJsonArray.toString(4));
-            return;
-        }
-
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         // If experiment name is not null, try to find it in the hashmap
         if (experimentName != null) {
@@ -91,7 +96,7 @@ public class ListStacks extends HttpServlet
             if (autotuneObject != null) {
                 JSONObject experimentJson = new JSONObject();
                 addExperimentDetails(experimentJson, autotuneObject);
-                addStackDetails(experimentJson, autotuneObject);
+                addDeploymentDetails(experimentJson, autotuneObject);
                 outputJsonArray.put(experimentJson);
             }
         } else {
@@ -100,15 +105,13 @@ public class ListStacks extends HttpServlet
                 AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
                 JSONObject experimentJson = new JSONObject();
                 addExperimentDetails(experimentJson, autotuneObject);
-                addStackDetails(experimentJson, autotuneObject);
+                addDeploymentDetails(experimentJson, autotuneObject);
                 outputJsonArray.put(experimentJson);
             }
         }
-
         if (outputJsonArray.isEmpty()) {
             outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
         }
         response.getWriter().println(outputJsonArray.toString(4));
-
     }
 }

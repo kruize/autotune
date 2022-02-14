@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
@@ -28,7 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.autotune.analyzer.deployment.AutotuneDeployment.applicationServiceStackMap;
+import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
@@ -193,30 +195,46 @@ public class ListStackTunables extends HttpServlet
 		addExperimentDetails(experimentJson, autotuneObject);
 		addFunctionVariablesDetails(experimentJson, autotuneObject);
 
-		JSONArray stackArray = new JSONArray();
-		if (!applicationServiceStackMap.get(autotuneObjectKey).isEmpty()) {
-			for (String containerImageName : applicationServiceStackMap.get(autotuneObjectKey).keySet()) {
-				ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObjectKey).get(containerImageName);
-				JSONObject stackJson = new JSONObject();
-				stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, containerImageName);
-				stackJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationServiceStack.getDeploymentName());
-				JSONArray layersArray = new JSONArray();
-				if (layerName != null) {
-					if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
-						addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
-					}
-				} else {
-					if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty()) {
-						for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-							addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
+		JSONArray deploymentArray = new JSONArray();
+		if (AutotuneDeployment.autotuneObjectMap.isEmpty()
+				|| AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey) == null) {
+			experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
+			outputJsonArray.put(experimentJson);
+			return;
+		}
+
+		for (String deploymentName : deploymentMap.get(autotuneObjectKey).keySet()) {
+			JSONObject deploymentJson = new JSONObject();
+			ApplicationDeployment applicationDeployment = deploymentMap.get(autotuneObjectKey).get(deploymentName);
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationDeployment.getDeploymentName());
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.NAMESPACE, applicationDeployment.getNamespace());
+			JSONArray stackArray = new JSONArray();
+			if (!applicationDeployment.getApplicationServiceStackMap().isEmpty()) {
+				for (String stackName : applicationDeployment.getApplicationServiceStackMap().keySet()) {
+					ApplicationServiceStack applicationServiceStack = applicationDeployment.getApplicationServiceStackMap().get(stackName);
+					JSONObject stackJson = new JSONObject();
+					stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, stackName);
+					stackJson.put(AnalyzerConstants.ServiceConstants.CONTAINER_NAME, applicationServiceStack.getContainerName());
+					JSONArray layersArray = new JSONArray();
+					if (layerName != null) {
+						if (applicationServiceStack.getApplicationServiceStackLayers().containsKey(layerName)) {
+							addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layerName, sloClass);
+						}
+					} else {
+						if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty()) {
+							for (String layer : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+								addLayersAndTunablesToResponse(layersArray, applicationServiceStack, layer, sloClass);
+							}
 						}
 					}
+					stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
+					stackArray.put(stackJson);
 				}
-				stackJson.put(AnalyzerConstants.ServiceConstants.LAYERS, layersArray);
-				stackArray.put(stackJson);
 			}
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+			deploymentArray.put(deploymentJson);
 		}
-		experimentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+		experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
 		outputJsonArray.put(experimentJson);
 	}
 

@@ -17,6 +17,9 @@ package com.autotune.analyzer.experiments;
 
 import java.util.ArrayList;
 
+/**
+ *
+ */
 public class ExperimentTrial {
     private final String experimentId;
     private final String namespace;

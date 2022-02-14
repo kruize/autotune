@@ -19,7 +19,6 @@ import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.exceptions.AutoTuneExceptionHandler;
 import com.autotune.utils.ServerContext;
 import com.autotune.experimentManager.core.ExperimentManager;
-import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.service.HealthService;
 import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -31,12 +30,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import static com.autotune.utils.ServerContext.*;
 import javax.servlet.http.HttpServletResponse;
-
-import static com.autotune.utils.ServerContext.AUTOTUNE_PORT;
-import static com.autotune.utils.ServerContext.HEALTH_SERVICE;
 
 public class Autotune
 {
