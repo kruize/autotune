@@ -83,46 +83,35 @@ public class ListStacks extends HttpServlet
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setContentType(JSON_CONTENT_TYPE);
-            response.setCharacterEncoding(CHARACTER_ENCODING);
 
-            JSONArray outputJsonArray = new JSONArray();
-            // Check if there are any experiments running at all ?
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-                outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
-                response.getWriter().println(outputJsonArray.toString(4));
-                return;
-            }
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
 
-            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-            // If experiment name is not null, try to find it in the hashmap
-            if (experimentName != null) {
-                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
-                if (autotuneObject != null) {
-                    JSONObject experimentJson = new JSONObject();
-                    addExperimentDetails(experimentJson, autotuneObject);
-                    addDeploymentDetails(experimentJson, autotuneObject);
-                    outputJsonArray.put(experimentJson);
-                }
-            } else {
-                // Print all the experiments
-                for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
-                    AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-                    JSONObject experimentJson = new JSONObject();
-                    addExperimentDetails(experimentJson, autotuneObject);
-                    addDeploymentDetails(experimentJson, autotuneObject);
-                    outputJsonArray.put(experimentJson);
-                }
+        JSONArray outputJsonArray = new JSONArray();
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        // If experiment name is not null, try to find it in the hashmap
+        if (experimentName != null) {
+            AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
+            if (autotuneObject != null) {
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addDeploymentDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
-
-            if (outputJsonArray.isEmpty()) {
-                outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
+        } else {
+            // Print all the experiments
+            for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
+                AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+                JSONObject experimentJson = new JSONObject();
+                addExperimentDetails(experimentJson, autotuneObject);
+                addDeploymentDetails(experimentJson, autotuneObject);
+                outputJsonArray.put(experimentJson);
             }
-            response.getWriter().println(outputJsonArray.toString(4));
-        } catch (Exception ex) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+        if (outputJsonArray.isEmpty()) {
+            outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
+        }
+        response.getWriter().println(outputJsonArray.toString(4));
     }
 }

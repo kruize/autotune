@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.utils.EventLogger;
+
 import java.util.regex.Pattern;
 
 /**
@@ -43,7 +45,7 @@ public class AnalyzerConstants
 	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";
 	public static final String GROUP = "recommender.com";
-	public static final String API_VERSION = "v1";
+	public static final String API_VERSION_V1 = "v1";
 	public static final String POD_TEMPLATE_HASH = "pod-template-hash";
 	public static final String AUTOTUNE_PLURALS = "autotunes";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
@@ -58,6 +60,13 @@ public class AnalyzerConstants
 	public static final String POD_VARIABLE = "$POD$";
 	public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
 
+	public static final String API_VERSION = "apiVersion";
+	public static final String KIND = "kind";
+	public static final String RESOURCE_VERSION = "resourceVersion";
+	public static final String UID = "uid";
+
+	public static final String REASON_NORMAL = "Normal";
+	public static final String AUTOTUNE = "Autotune";
 
 	/**
 	 * Used to parse the Autotune kind resource

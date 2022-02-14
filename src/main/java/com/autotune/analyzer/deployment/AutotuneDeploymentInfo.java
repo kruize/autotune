@@ -23,9 +23,14 @@ import com.autotune.analyzer.layer.GenericLayer;
 import com.autotune.analyzer.layer.HotspotLayer;
 import com.autotune.analyzer.layer.QuarkusLayer;
 import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KubeEventLogger;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.Hashtable;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
@@ -48,6 +53,8 @@ public class AutotuneDeploymentInfo
 	private static String rootLoggingLevel;
 	private static Hashtable<String, Class> tunableLayerPair;
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeploymentInfo.class);
+	private static KubernetesClient kubernetesClient;
+	private static KubeEventLogger kubeEventLogger;
 
 	public static void setLayerTable() {
 		tunableLayerPair = new Hashtable<String, Class>();
@@ -107,6 +114,28 @@ public class AutotuneDeploymentInfo
 			LOGGER.error("k8s type {} is not suppported", kubernetesType);
 			throw new K8sTypeNotSupportedException();
 		}
+	}
+
+	public static void initializeKubernetesClient()
+	{
+		kubernetesClient = new DefaultKubernetesClient();
+	}
+
+	public static KubernetesClient getKubernetesClient()
+	{
+		return kubernetesClient;
+	}
+
+	public static void initiateEventLogging()
+	{
+		if (kubernetesClient != null) {
+			kubeEventLogger = new KubeEventLogger(kubernetesClient, Clock.systemUTC());
+		}
+	}
+
+	public static KubeEventLogger getKubeEventLogger()
+	{
+		return kubeEventLogger;
 	}
 
 	public static String getAuthType() {

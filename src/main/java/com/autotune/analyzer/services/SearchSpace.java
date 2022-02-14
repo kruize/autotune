@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
@@ -111,77 +110,68 @@ public class SearchSpace extends HttpServlet
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setContentType(JSON_CONTENT_TYPE);
-            response.setCharacterEncoding(CHARACTER_ENCODING);
 
-            JSONArray searchSpaceJsonArray = new JSONArray();
-            if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-                searchSpaceJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
-                response.getWriter().println(searchSpaceJsonArray.toString(4));
-                return;
-            }
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        JSONArray searchSpaceJsonArray = new JSONArray();
 
-            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-            String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
-            String containerImageName = request.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
+        String containerImageName = request.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
 
-            AutotuneExperiment autotuneExperiment = null;
-            ApplicationSearchSpace applicationSearchSpace = null;
-            if (null != experimentName) {
-                AutotuneObject autotuneObject = autotuneObjectMap.get(experimentName);
-                if (null != autotuneObject) {
-                    Map<String, ApplicationDeployment> depMap = deploymentMap.get(experimentName);
-                    if (!depMap.isEmpty()) {
-                        if (null != deploymentName) {
-                            ApplicationDeployment applicationDeployment = depMap.get(deploymentName);
-                            if (null != applicationDeployment) {
-                                autotuneExperiment = experimentsMap.get(deploymentName);
-                                if (null != autotuneExperiment) {
-                                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
-                                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                                }
+        AutotuneExperiment autotuneExperiment = null;
+        ApplicationSearchSpace applicationSearchSpace = null;
+        if (null != experimentName) {
+            AutotuneObject autotuneObject = autotuneObjectMap.get(experimentName);
+            if (null != autotuneObject) {
+                Map<String, ApplicationDeployment> depMap = deploymentMap.get(experimentName);
+                if (!depMap.isEmpty()) {
+                    if (null != deploymentName) {
+                        ApplicationDeployment applicationDeployment = depMap.get(deploymentName);
+                        if (null != applicationDeployment) {
+                            autotuneExperiment = experimentsMap.get(deploymentName);
+                            if (null != autotuneExperiment) {
+                                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                             }
-                        } else {
-                            for (String depName : depMap.keySet()) {
-                                autotuneExperiment = experimentsMap.get(depName);
-                                if (null != autotuneExperiment) {
-                                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
-                                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                                }
+                        }
+                    } else {
+                        for (String depName : depMap.keySet()) {
+                            autotuneExperiment = experimentsMap.get(depName);
+                            if (null != autotuneExperiment) {
+                                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                             }
                         }
                     }
                 }
-            } else if (null != deploymentName) {
-                autotuneExperiment = experimentsMap.get(deploymentName);
-                if (null != autotuneExperiment) {
-                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
-                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                }
-            } else {
-                // No experiment name parameter, generate search space for all experiments
-                for (String expName : experimentsMap.keySet()) {
-                    autotuneExperiment = experimentsMap.get(expName);
-                    applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
-                    addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
-                }
             }
-
-            if (searchSpaceJsonArray.isEmpty()) {
-                if (null != containerImageName) {
-                    searchSpaceJsonArray.put(ERROR_STACK_NAME + containerImageName + NOT_FOUND);
-                } if (null != deploymentName) {
-                    searchSpaceJsonArray.put(ERROR_DEPLOYMENT_NAME + deploymentName + NOT_FOUND);
-                } else {
-                    searchSpaceJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
-                }
+        } else if (null != deploymentName) {
+            autotuneExperiment = experimentsMap.get(deploymentName);
+            if (null != autotuneExperiment) {
+                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
             }
-            response.getWriter().println(searchSpaceJsonArray.toString(4));
-            response.getWriter().close();
-        } catch (Exception ex) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } else {
+            // No experiment name parameter, generate search space for all experiments
+            for (String expName : experimentsMap.keySet()) {
+                autotuneExperiment = experimentsMap.get(expName);
+                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
+            }
         }
+
+        if (searchSpaceJsonArray.isEmpty()) {
+            if (null != containerImageName) {
+                searchSpaceJsonArray.put(ERROR_STACK_NAME + containerImageName + NOT_FOUND);
+            } else if (null != deploymentName) {
+                searchSpaceJsonArray.put(ERROR_DEPLOYMENT_NAME + deploymentName + NOT_FOUND);
+            } else {
+                searchSpaceJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
+            }
+        }
+        response.getWriter().println(searchSpaceJsonArray.toString(4));
+        response.getWriter().close();
     }
 }

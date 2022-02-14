@@ -153,44 +153,41 @@ public class ListStackTunables extends HttpServlet
 	 */
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		try {
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType(JSON_CONTENT_TYPE);
-			response.setCharacterEncoding(CHARACTER_ENCODING);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(JSON_CONTENT_TYPE);
+		response.setCharacterEncoding(CHARACTER_ENCODING);
 
-			JSONArray outputJsonArray = new JSONArray();
-			// Check if there are any experiments running at all ?
-			if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
-				outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
-				response.getWriter().println(outputJsonArray.toString(4));
-				return;
-			}
-
-			String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-			String layerName = request.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-			String sloClass = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-
-			// If experiment name is not null, try to find it in the hashmap
-			if (experimentName != null) {
-				AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
-				if (autotuneObject != null) {
-					addAppLayersToResponse(outputJsonArray, experimentName, autotuneObject, layerName, sloClass);
-				}
-			} else {
-				// Print all the experiments
-				for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
-					AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
-					addAppLayersToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, layerName, sloClass);
-				}
-			}
-
-			if (outputJsonArray.isEmpty()) {
-				outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
-			}
+		JSONArray outputJsonArray = new JSONArray();
+		// Check if there are any experiments running at all ?
+		if (AutotuneDeployment.autotuneObjectMap.isEmpty()) {
+			outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
 			response.getWriter().println(outputJsonArray.toString(4));
-		} catch (Exception ex) {
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return;
 		}
+
+		String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+		String layerName = request.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+		String sloClass = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+
+		// If experiment name is not null, try to find it in the hashmap
+		if (experimentName != null) {
+			AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(experimentName);
+			if (autotuneObject != null) {
+				addAppLayersToResponse(outputJsonArray, experimentName, autotuneObject, layerName, sloClass);
+			}
+		} else {
+			// Print all the experiments
+			for (String autotuneObjectKey : AutotuneDeployment.autotuneObjectMap.keySet()) {
+				AutotuneObject autotuneObject = AutotuneDeployment.autotuneObjectMap.get(autotuneObjectKey);
+				addAppLayersToResponse(outputJsonArray, autotuneObjectKey, autotuneObject, layerName, sloClass);
+			}
+		}
+
+		if (outputJsonArray.isEmpty()) {
+			outputJsonArray.put(ERROR_EXPERIMENT_NAME + experimentName + NOT_FOUND);
+		}
+		response.getWriter().println(outputJsonArray.toString(4));
+
 	}
 
 	private void addAppLayersToResponse(JSONArray outputJsonArray, String autotuneObjectKey, AutotuneObject autotuneObject, String layerName, String sloClass) {

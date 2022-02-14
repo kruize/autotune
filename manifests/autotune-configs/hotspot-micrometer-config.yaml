@@ -8,7 +8,13 @@ details: hotspot tunables
 layer_presence:
   queries:
   - datasource: 'prometheus'
-    query: 'jvm_memory_used_bytes{area="heap",}'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Old.+"}'
     key: pod
 tunables:
 - name: MaxInlineLevel

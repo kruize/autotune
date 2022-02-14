@@ -27,7 +27,7 @@ autotune_config_testsuite="autotune_config_yaml"
 testcase_matched=0
 module="da"
 yaml_path="${MANIFESTS}/${module}/${autotune_config_testsuite}"
-autotune_config_obj_create_msg='com.autotune.analyzer.deployment.AutotuneDeployment - Added autotuneconfig'
+autotune_config_obj_create_msg='[AutotuneDeployment.java([0-9]*)]-Added autotuneconfig'
 exception="com.autotune.analyzer.exceptions.InvalidValueException:"
 invalid_bound_exception='com.autotune.analyzer.exceptions.InvalidBoundsException'
 
