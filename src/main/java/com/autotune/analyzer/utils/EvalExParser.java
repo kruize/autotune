@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,13 +51,13 @@ public class EvalExParser implements AlgebraicParser {
 
         BigDecimal result;
 
-        if(objFunctionMap.isEmpty() || objFunction.isBlank())
+        if (objFunctionMap.isEmpty() || objFunction.isBlank()) {
             return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING;
-
+        }
         List<String> objFunctionMapKeys = new ArrayList<>(objFunctionMap.keySet());
         Expression expressionEvaluator = new Expression(objFunction);
 
-        for(String key : objFunctionMapKeys){
+        for (String key : objFunctionMapKeys) {
             expressionEvaluator = expressionEvaluator.and(key, objFunctionMap.get(key));
         }
         result = expressionEvaluator.setPrecision(3)
@@ -106,15 +106,18 @@ public class EvalExParser implements AlgebraicParser {
 
         Deque<Character> mathOperators = new ArrayDeque<>();
         for (int i = 0; i < objFunctionOperators.length(); i++) {
-
             char charInObjFunction = objFunctionOperators.charAt(i);
-            if(!(charInObjFunction == ')' || charInObjFunction == '(' || isNumeric(String.valueOf(charInObjFunction)) || charInObjFunction == '.')) {
+            if (!(charInObjFunction == ')'
+                    || charInObjFunction == '('
+                    || isNumeric(String.valueOf(charInObjFunction))
+                    || charInObjFunction == '.'
+            )) {
                 mathOperators.push(charInObjFunction);
             }
         }
         for (Character mathOperator : mathOperators) {
 
-            if(!AutotuneSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(mathOperator))) {
+            if (!AutotuneSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(mathOperator))) {
                 return false;
             }
         }
@@ -148,16 +151,18 @@ public class EvalExParser implements AlgebraicParser {
 
         Deque<Character> stack = new ArrayDeque<>();
 
-        for (int i = 0; i < objFunction.length(); i++)  {
+        for (int i = 0; i < objFunction.length(); i++) {
             char bracket = objFunction.charAt(i);
-            if(bracket == ')') {
-                if(stack.isEmpty())
+            if (bracket == ')') {
+                if (stack.isEmpty()) {
                     return false;
+                }
                 Character stackTop = stack.pop();
-                if( stackTop != '(')
+                if ( stackTop != '(') {
                     return false;
+                }
             } else {
-                if(bracket == '(') {
+                if (bracket == '(') {
                     stack.push(bracket);
                 }
             }

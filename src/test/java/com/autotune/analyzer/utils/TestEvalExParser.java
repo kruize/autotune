@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ public class TestEvalExParser {
             "((request_count / (request_sum / request_count)) / request_max) * 100"
     ));
     @Test
-    public void testValidate(){
+    public void testValidate() {
 
-    for(String objFunction : objFunctionsList) {
+    for (String objFunction : objFunctionsList) {
         ArrayList<Metric> functionVariables = getFunctionVariables();
         assertEquals(true, new EvalExParser().validate(objFunction, functionVariables));
         }
@@ -48,7 +48,16 @@ public class TestEvalExParser {
 
     private ArrayList<Metric> getFunctionVariables() {
 
-        String sloJson = "{\"function_variables\":[{\"name\":\"request_sum\",\"query\":\"rate(http_server_requests_seconds_sum{method=\\\"GET\\\",outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\",\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_count\",\"query\":\"rate(http_server_requests_seconds_count{method=\\\"GET\\\",outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\",\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_max\",\"query\":\"http_server_requests_seconds_max{method=\\\"GET\\\",outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\"}\",\"datasource\":\"prometheus\",\"value_type\":\"double\"}]}";
+        String sloJson = "{\"function_variables\":[{\"name\":\"request_sum\"," +
+                "\"query\":\"rate(http_server_requests_seconds_sum{method=\\\"GET\\\"," +
+                "outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\"," +
+                "\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_count\"," +
+                "\"query\":\"rate(http_server_requests_seconds_count{method=\\\"GET\\\"," +
+                "outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\"," +
+                "\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_max\"," +
+                "\"query\":\"http_server_requests_seconds_max{method=\\\"GET\\\",outcome=\\\"SUCCESS\\\"," +
+                "status=\\\"200\\\",uri=\\\"/db\\\"}\",\"datasource\":\"prometheus\",\"value_type\":\"double\"}]}";
+
         JSONObject functionVariablesObject = new JSONObject(sloJson.toString());
         JSONArray functionVariables = functionVariablesObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 
@@ -72,13 +81,11 @@ public class TestEvalExParser {
     }
 
     @Test
-    public void testParse(){
+    public void testParse() {
 
         for(String objFunction : objFunctionsList) {
-//            Map<String, String> objFunctionMap = getObjFunctionMapValues(objFunction);
             Map<String, String> objFunctionMap = new HashMap<>();
             assertEquals("objective_function_map is missing or empty\n", new EvalExParser().parse(objFunction, "String", objFunctionMap));
-//            assertEquals("some-result", new EvalExParser().parse(objFunction, "String", objFunctionMap));
         }
     }
 
