@@ -29,3 +29,19 @@ tunables:
   slo_class:
   - response_time
   - throughput
+
+- name: '-Xgc:'
+  description: 'Garbage collection'
+  value_type: categorical
+  categorical_values:
+    - throughput
+    - genpar
+    - singlepar
+    - parallel
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+  step: 1
+  slo_class:
+    - response_time
+    - throughput

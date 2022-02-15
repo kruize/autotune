@@ -45,7 +45,7 @@ public class AutotuneSupportedTypes
 			new HashSet<>(Arrays.asList("container", "hotspot", "quarkus"));
 
 	public static final Set<String> VALUE_TYPES_SUPPORTED =
-			new HashSet<>(Arrays.asList("double", "int", "string"));
+			new HashSet<>(Arrays.asList("double", "int", "string", "categorical"));
 
 	public static final Set<String> CLUSTER_TYPES_SUPPORTED =
 			new HashSet<>(Arrays.asList("kubernetes"));

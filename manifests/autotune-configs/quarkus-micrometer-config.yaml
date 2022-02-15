@@ -39,3 +39,14 @@ tunables:
   - response_time
   - throughput
   - resource_usage
+- name: <some-value>
+  description: 'some Description'
+  value_type: categorical
+  categorical_values:
+    - one
+    - two
+  step: 1
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage

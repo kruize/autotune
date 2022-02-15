@@ -19,6 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,9 +50,9 @@ public class Tunable
 	private String fullName;
 	private final double step;
 	private final String valueType;
-	private final Double upperBoundValue;
-	private final Double lowerBoundValue;
-	private final String boundUnits;
+	private Double upperBoundValue;
+	private Double lowerBoundValue;
+	private String boundUnits;
 	private String description;
 	private Map<String, String> queries;
 	private final String layerName;
@@ -63,6 +64,22 @@ public class Tunable
     */
 
 	public ArrayList<String> sloClassList;
+	public List<String> categoricalValueList;
+
+	public Tunable(String name, double step, String valueType, Map<String, String> queries, ArrayList<String> sloClassList, String layerName, List<String> categoricalValueList) {
+
+		this.queries = queries;
+		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
+		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
+		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
+		this.step = Objects.requireNonNull(step, ZERO_STEP);
+		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+			this.layerName = layerName;
+		else
+			this.layerName = "generic";
+
+		this.categoricalValueList = Objects.requireNonNull(categoricalValueList, INVALID_CATEGORICAL_VALUE);
+	}
 
 	private void validateBounds(Double upperBoundValue,
 								Double lowerBoundValue,
@@ -223,6 +240,10 @@ public class Tunable
 	public String getStackName() { return stackName; }
 
 	public void setStackName(String stackName) { this.stackName = stackName; }
+
+	public List<String> getCategoricalValueList() {
+		return categoricalValueList;
+	}
 
 	@Override
 	public String toString() {
