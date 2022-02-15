@@ -99,6 +99,12 @@ spec:
                 lower_bound:
                   description: 'Lower bound of the recommendations generated for the tunable'
                   type: string
+                categorical_values:
+                  description: 'Categorical values recommendations generated for the tunable'
+                  type: array
+                  items:
+                    description: 'Categorical value input'
+                    type: string
                 value_type:
                   description: 'Value type of the query response (double, string, int)'
                   type: string

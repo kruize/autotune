@@ -777,7 +777,8 @@ public class AutotuneDeployment
 				Map<String, String> queries = new HashMap<>(tunable.getQueries());
 
 				Tunable tunableCopy;
-				if( tunable.getCategoricalValueList().isEmpty()) {
+//				check if tunable has categorical values and then call the respective constructor
+				if( tunable.getCategoricalValueList() == null || tunable.getCategoricalValueList().isEmpty()) {
 					tunableCopy = new Tunable(tunable.getName(),
 						tunable.getStep(),
 						tunable.getUpperBound(),
