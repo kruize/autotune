@@ -38,6 +38,7 @@ public class ServerContext
 
 	public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
 	public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
+	public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
 
 	// Optuna End Points
 	public static final String OPTUNA_SERVER_PORT = "http://localhost:" + OPTUNA_PORT;

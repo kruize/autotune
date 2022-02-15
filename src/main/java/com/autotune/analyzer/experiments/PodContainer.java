@@ -15,6 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiments;
 
+import com.autotune.analyzer.k8sObjects.Metric;
+
+import java.util.ArrayList;
+
 /**
  *
  */
@@ -24,6 +28,7 @@ public class PodContainer {
 	private Resources requests;
 	private Resources limits;
 	private String runtimeOptions;
+	private ArrayList<Metric> containerMetrics;
 
 	public PodContainer(String stackName, String containerName) {
 		this.stackName = stackName;
@@ -50,5 +55,11 @@ public class PodContainer {
 
 	public void setRuntimeOptions(String runtimeOptions) {
 		this.runtimeOptions = runtimeOptions;
+	}
+
+	public ArrayList<Metric> getContainerMetrics() { return containerMetrics; }
+
+	public void setContainerMetrics(ArrayList<Metric> containerMetrics) {
+		this.containerMetrics = containerMetrics;
 	}
 }

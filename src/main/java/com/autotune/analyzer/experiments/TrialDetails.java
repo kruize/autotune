@@ -30,7 +30,7 @@ public class TrialDetails {
     private String result;
     private String resultInfo;
     private String resultError;
-    private ArrayList<Metric> metrics;
+    private ArrayList<Metric> podMetrics;
     private ArrayList<PodContainer> podContainers;
 
     public TrialDetails(String deploymentType,
@@ -40,7 +40,7 @@ public class TrialDetails {
 						String result,
 						String resultInfo,
 						String resultError,
-						ArrayList<Metric> metrics,
+						ArrayList<Metric> podMetrics,
 						ArrayList<PodContainer> podContainers) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
@@ -49,7 +49,7 @@ public class TrialDetails {
         this.result = result;
         this.resultInfo = resultInfo;
         this.resultError = resultError;
-        this.metrics = metrics;
+        this.podMetrics = podMetrics;
         this.podContainers = podContainers;
     }
 
@@ -81,28 +81,14 @@ public class TrialDetails {
         this.result = result;
     }
 
-    public String getResultInfo() {
-        return resultInfo;
-    }
+    public String getResultInfo() { return resultInfo; }
 
-    public void setResultInfo(String resultInfo) {
-        this.resultInfo = resultInfo;
-    }
+    public void setResultInfo(String resultInfo) { this.resultInfo = resultInfo; }
 
-    public String getResultError() {
-        return resultError;
-    }
+    public String getResultError() { return resultError; }
 
-    public void setResultError(String resultError) {
-        this.resultError = resultError;
-    }
-
-    public ArrayList<Metric> getMetrics() {
-        return metrics;
-    }
-
-    public void setMetrics(ArrayList<Metric> metrics) {
-        this.metrics = metrics;
+    public ArrayList<Metric> getPodMetrics() {
+        return podMetrics;
     }
 
     public ArrayList<PodContainer> getPodContainers() {
