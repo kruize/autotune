@@ -9,10 +9,6 @@
     },
     "deployment_settings": {
       "deployment_tracking": {"trackers": ["training"]},
-      "deployment_info": {
-        "agent": "EM",
-        "target_env": "qa"
-      },
       "deployment_policy": {
         "type": "rollingUpdate"
       }
@@ -87,7 +83,6 @@
     "type": "training"
   }],
   "experiment_id": "f7cc7393db1dd9aa28ef9ad038b956fe72a570fba775a8c3568ebafaf3c0eb1d",
-  "app-version": "v1",
   "info": {
     "trial_info": {
       "trial_id": "",
