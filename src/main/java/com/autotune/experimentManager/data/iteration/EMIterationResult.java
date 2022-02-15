@@ -1,6 +1,8 @@
 package com.autotune.experimentManager.data.iteration;
 
+import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.data.util.EMDataOperator;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 

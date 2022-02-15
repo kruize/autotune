@@ -16,6 +16,11 @@
 
 package com.autotune.experimentManager.utils;
 
+import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.data.input.EMMetricInput;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class EMUtil {
@@ -160,5 +165,11 @@ public class EMUtil {
                 .append(":")
                 .append(deploymentName)
                 .toString();
+    }
+
+    public JSONObject generateMetricsMap(ExperimentTrialData etd) {
+        ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
+
+        return null;
     }
 }

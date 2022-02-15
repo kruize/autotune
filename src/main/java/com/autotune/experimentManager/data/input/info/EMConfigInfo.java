@@ -10,33 +10,8 @@ import org.slf4j.LoggerFactory;
 
 public class EMConfigInfo implements ConvertToJSON {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMConfigInfo.class);
-    private String trialId;
-    private int trialNum;
-    private String trialResultUrl;
-
-    public String getTrialResultUrl() {
-        return trialResultUrl;
-    }
-
-    public void setTrialResultUrl(String trialResultUrl) {
-        this.trialResultUrl = trialResultUrl;
-    }
-
-    public String getTrialId() {
-        return trialId;
-    }
-
-    public void setTrialId(String trialId) {
-        this.trialId = trialId;
-    }
-
-    public int getTrialNum() {
-        return trialNum;
-    }
-
-    public void setTrialNum(int trialNum) {
-        this.trialNum = trialNum;
-    }
+    private EMTrialInfo trialInfo;
+    private EMDataSourceInfo dataSourceInfo;
 
     public EMConfigInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
@@ -45,39 +20,21 @@ public class EMConfigInfo implements ConvertToJSON {
         }
         JSONObject subObj = jsonObject.getJSONObject(EMConstants.EMJSONKeys.INFO);
         if (null != subObj) {
-            if (!subObj.has(EMConstants.EMJSONKeys.TRIAL_ID) || !subObj.has(EMConstants.EMJSONKeys.TRIAL_NUM)) {
+            if (!subObj.has(EMConstants.EMJSONKeys.TRIAL_INFO) || !subObj.has(EMConstants.EMJSONKeys.DATASOURCE_INFO)) {
                 throw new IncompatibleInputJSONException();
             }
-            this.trialId = subObj.getString(EMConstants.EMJSONKeys.TRIAL_ID);
-            this.trialNum = subObj.getInt(EMConstants.EMJSONKeys.TRIAL_NUM);
-            if(subObj.has(EMConstants.EMJSONKeys.TRIAL_RESULT_URL)){
-                this.trialResultUrl = subObj.getString(EMConstants.EMJSONKeys.TRIAL_RESULT_URL);
-            }
+            trialInfo = new EMTrialInfo(subObj);
+            dataSourceInfo = new EMDataSourceInfo(subObj);
         } else {
             throw new IncompatibleInputJSONException();
         }
     }
 
-    public EMConfigInfo() {
-        this.trialNum = EMConstants.EMJSONValueDefaults.TRIAL_NUM_DEFAULT;
-        this.trialId = EMConstants.EMJSONValueDefaults.TRIAL_ID_DEFAULT;
-        this.trialResultUrl = EMConstants.EMJSONValueDefaults.TRIAL_RESULT_URL_DEFAULT;
-    }
-
-    public EMConfigInfo(String trialId, int trialNum, String url) {
-        this.trialId = trialId;
-        this.trialNum = trialNum;
-        this.trialResultUrl = url;
-    }
-
+    @Override
     public JSONObject toJSON() {
-
-        JSONObject infoJsonObject = new JSONObject();
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_ID, this.trialId);
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_NUM, this.trialNum);
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_RESULT_URL, this.trialResultUrl);
-
-
-        return infoJsonObject;
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(EMConstants.EMJSONKeys.TRIAL_INFO, trialInfo.toJSON());
+        jsonObject.put(EMConstants.EMJSONKeys.DATASOURCE_INFO, dataSourceInfo.toJSON());
+        return jsonObject;
     }
 }

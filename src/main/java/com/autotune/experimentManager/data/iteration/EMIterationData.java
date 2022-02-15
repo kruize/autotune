@@ -1,5 +1,7 @@
 package com.autotune.experimentManager.data.iteration;
 
+import org.json.JSONObject;
+
 public class EMIterationData {
     private final int iterationIndex;
     private final int warmCycles;

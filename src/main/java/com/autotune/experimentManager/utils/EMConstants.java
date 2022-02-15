@@ -71,9 +71,12 @@ public class EMConstants {
 
         // Info section
 		public static String INFO = "info";
+		public static String TRIAL_INFO = "trial_info";
+		public static String DATASOURCE_INFO = "datasource_info";
 		public static String TRIAL_ID = "trial_id";
 		public static String TRIAL_NUM = "trial_num";
 		public static String TRIAL_RESULT_URL = "trial_result_url";
+		public static String URL = "url";
 		// Settings section
 		public static String TRACKERS = "trackers";
 		public static String SETTINGS = "settings";
@@ -97,15 +100,19 @@ public class EMConstants {
 		// Deployments Section
 		public static String DEPLOYMENTS = "deployments";
 		public static String NAMESPACE = "namespace";
-		public static String CONTAINER_NAME = "container_name";
 		public static String METRICS = "metrics";
+		public static String POD_METRICS = "pod_metrics";
+		public static String CONTAINER_METRICS = "container_metrics";
 		public static String CONFIG = "config";
 		public static String NAME = "name";
 		public static String QUERY = "query";
 		public static String DATASOURCE = "datasource";
+		public static String METRIC_INFO = "metric_info";
 		public static String METRICS_RESULTS = "metrics_results";
 		public static String WARMUP_RESULTS = "warmup_results";
 		public static String MEASUREMENT_RESULTS = "measurement_results";
+		public static String ITERATION_RESULT = "iteration_result";
+		public static String GENERAL_INFO = "general_info";
 		public static String RESULTS = "results";
 		public static String SCORE = "score";
 		public static String ERROR = "error";

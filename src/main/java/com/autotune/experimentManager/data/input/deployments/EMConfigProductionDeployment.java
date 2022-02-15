@@ -17,11 +17,13 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
     private ArrayList<EMMetricInput> metrics;
     private ArrayList<EMConfigDeploymentContainerConfig> containerConfigs;
 
+
+
     public EMConfigProductionDeployment(JSONObject jsonObject) throws IncompatibleInputJSONException, EMInvalidInstanceCreation {
         if (!jsonObject.has(EMConstants.EMJSONKeys.TYPE)
                 || !jsonObject.has(EMConstants.EMJSONKeys.DEPLOYMENT_NAME)
                 || !jsonObject.has(EMConstants.EMJSONKeys.NAMESPACE)
-                || !jsonObject.has(EMConstants.EMJSONKeys.METRICS)) {
+                || !jsonObject.has(EMConstants.EMJSONKeys.POD_METRICS)) {
             throw new IncompatibleInputJSONException();
         }
         this.type = jsonObject.getString(EMConstants.EMJSONKeys.TYPE);
@@ -35,7 +37,7 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
             EMConfigDeploymentContainerConfig containerConfig = new EMConfigDeploymentContainerConfig(container);
             this.containerConfigs.add(containerConfig);
         }
-        JSONArray jsonMetrics = jsonObject.getJSONArray(EMConstants.EMJSONKeys.METRICS);
+        JSONArray jsonMetrics = jsonObject.getJSONArray(EMConstants.EMJSONKeys.POD_METRICS);
         for (Object raw_metric : jsonMetrics) {
             JSONObject metric = (JSONObject) raw_metric;
             EMMetricInput emMetricInput = new EMMetricInput(metric);
@@ -59,13 +61,38 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
     }
 
     @Override
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @Override
+    public void setDeploymentName(String deploymentName) {
+        this.deploymentName = deploymentName;
+    }
+
+    @Override
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    @Override
     public ArrayList<EMMetricInput> getMetrics() {
         return this.metrics;
     }
 
     @Override
+    public void setMetrics(ArrayList<EMMetricInput> metrics) {
+        this.metrics = metrics;
+    }
+
+    @Override
     public ArrayList<EMConfigDeploymentContainerConfig> getContainers() {
         return containerConfigs;
+    }
+
+    @Override
+    public void setContainers(ArrayList<EMConfigDeploymentContainerConfig> containerConfigs) {
+        this.containerConfigs = containerConfigs;
     }
 
     public JSONArray getContainersToJSON() {
@@ -86,7 +113,7 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
         for (EMMetricInput mtrcs : getMetrics()) {
             jsonArray.put(mtrcs.toJSON());
         }
-        jsonObject.put(EMConstants.EMJSONKeys.METRICS, getMetrics());
+        jsonObject.put(EMConstants.EMJSONKeys.POD_METRICS, getMetrics());
         jsonObject.put(EMConstants.EMJSONKeys.CONTAINERS, getContainersToJSON());
         return jsonObject;
     }
