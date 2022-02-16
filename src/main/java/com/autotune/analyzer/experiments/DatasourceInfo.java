@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,25 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiments;
 
+import java.net.URL;
+
 /**
  *
  */
-public class TrialInfo {
-    private final String trialId;
-    private final int trialNum;
-    private final String trialResultURL;
+public class DatasourceInfo {
+	private final String name;
+	private final URL url;
 
-    public TrialInfo(String trialId,
-                     int trialNum,
-                     String trialResultURL) {
-        this.trialId = trialId;
-        this.trialNum = trialNum;
-        this.trialResultURL = trialResultURL;
-    }
+	public DatasourceInfo(String name, URL url) {
+		this.name = name;
+		this.url = url;
+	}
 
-    public String getTrialId() {
-        return trialId;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public int getTrialNum() {
-        return trialNum;
-    }
-
-    public String getTrialResultURL() {
-        return trialResultURL;
-    }
+	public URL getUrl() {
+		return url;
+	}
 }

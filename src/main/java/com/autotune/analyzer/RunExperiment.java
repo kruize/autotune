@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT;
 import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 
@@ -66,6 +65,7 @@ public class RunExperiment implements Runnable
 				autotuneExperiment.experimentTrials.add(experimentTrial);
 				JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
 
+				/* STEP 4: Send trial to EM */
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Sending Experiment Trial Config Info to EM");
 				System.out.println(experimentTrialJSON.toString(4));
 				URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);

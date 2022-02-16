@@ -24,23 +24,23 @@ public class ExperimentTrial {
     private final String experimentId;
     private final String namespace;
     private final String experimentName;
-    private final String appVersion;
     private final TrialInfo trialInfo;
+    private final DatasourceInfo datasourceInfo;
     private final ExperimentSettings experimentSettings;
     private final ArrayList<TrialDetails> trialDetails;
 
     public ExperimentTrial(String experimentName,
                            String experimentId,
                            String namespace,
-                           String appVersion,
                            TrialInfo trialInfo,
+                           DatasourceInfo datasourceInfo,
                            ExperimentSettings experimentSettings,
                            ArrayList<TrialDetails> trialDetails) {
         this.experimentId = experimentId;
         this.namespace = namespace;
         this.experimentName = experimentName;
-        this.appVersion = appVersion;
         this.trialInfo = trialInfo;
+        this.datasourceInfo = datasourceInfo;
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
     }
@@ -57,8 +57,8 @@ public class ExperimentTrial {
         return experimentName;
     }
 
-    public String getAppVersion() {
-        return appVersion;
+    public DatasourceInfo getDatasourceInfo() {
+        return datasourceInfo;
     }
 
     public TrialInfo getTrialInfo() {
