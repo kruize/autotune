@@ -13,6 +13,22 @@ public class EMConfigInfo implements ConvertToJSON {
     private EMTrialInfo trialInfo;
     private EMDataSourceInfo dataSourceInfo;
 
+    public EMTrialInfo getTrialInfo() {
+        return trialInfo;
+    }
+
+    public void setTrialInfo(EMTrialInfo trialInfo) {
+        this.trialInfo = trialInfo;
+    }
+
+    public EMDataSourceInfo getDataSourceInfo() {
+        return dataSourceInfo;
+    }
+
+    public void setDataSourceInfo(EMDataSourceInfo dataSourceInfo) {
+        this.dataSourceInfo = dataSourceInfo;
+    }
+
     public EMConfigInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
         if (!jsonObject.has(EMConstants.EMJSONKeys.INFO)) {
