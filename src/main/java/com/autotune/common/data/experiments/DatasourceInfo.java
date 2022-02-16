@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
 
-import java.util.ArrayList;
+import java.net.URL;
 
 /**
  *
  */
-public class DeploymentTracking {
-    private final ArrayList<String> trackers;
+public class DatasourceInfo {
+	private final String name;
+	private final URL url;
 
-    public DeploymentTracking(ArrayList<String> trackers) {
-        this.trackers = trackers;
-    }
+	public DatasourceInfo(String name, URL url) {
+		this.name = name;
+		this.url = url;
+	}
 
-    public ArrayList<String> getTrackers() {
-        return trackers;
-    }
+	public String getName() {
+		return name;
+	}
+
+	public URL getUrl() {
+		return url;
+	}
 }

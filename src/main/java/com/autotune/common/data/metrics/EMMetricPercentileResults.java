@@ -1,6 +1,6 @@
-package com.autotune.shared.data.metrics;
+package com.autotune.common.data.metrics;
 
-import com.autotune.shared.data.interfaces.ConvertToJSON;
+import com.autotune.common.data.interfaces.ConvertToJSON;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 

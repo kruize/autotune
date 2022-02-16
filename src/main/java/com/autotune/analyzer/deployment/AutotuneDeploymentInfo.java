@@ -22,18 +22,17 @@ import com.autotune.analyzer.layer.ContainerLayer;
 import com.autotune.analyzer.layer.GenericLayer;
 import com.autotune.analyzer.layer.HotspotLayer;
 import com.autotune.analyzer.layer.QuarkusLayer;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.Hashtable;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 
 /**
  * Contains information about the current deployment by parsing the autotune config map

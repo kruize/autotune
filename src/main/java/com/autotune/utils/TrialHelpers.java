@@ -20,7 +20,7 @@ import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
-import com.autotune.analyzer.experiments.*;
+import com.autotune.common.data.experiments.*;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.k8sObjects.SloInfo;
@@ -36,8 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
 public class TrialHelpers {

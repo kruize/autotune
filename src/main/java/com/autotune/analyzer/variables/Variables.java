@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.variables;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;

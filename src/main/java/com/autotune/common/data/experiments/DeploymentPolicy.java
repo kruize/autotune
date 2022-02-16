@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
 
 /**
  *
  */
-public class ExperimentSettings {
-    private final TrialSettings trialSettings;
-    private final DeploymentSettings deploymentSettings;
+public class DeploymentPolicy {
+    private final String deploymentType;
 
-    public ExperimentSettings(TrialSettings trialSettings, DeploymentSettings deploymentSettings) {
-        this.trialSettings = trialSettings;
-        this.deploymentSettings = deploymentSettings;
+    public DeploymentPolicy(String deploymentType) {
+        this.deploymentType = deploymentType;
     }
 
-    public TrialSettings getTrialSettings() {
-        return trialSettings;
-    }
-
-    public DeploymentSettings getDeploymentSettings() {
-        return deploymentSettings;
+    public String getDeploymentType() {
+        return deploymentType;
     }
 }

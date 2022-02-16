@@ -1,7 +1,7 @@
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.experiments.ExperimentTrial;
-import com.autotune.analyzer.utils.HttpUtils;
+import com.autotune.common.data.experiments.ExperimentTrial;
+import com.autotune.utils.HttpUtils;
 import com.autotune.utils.ServerContext;
 import com.autotune.utils.TrialHelpers;
 import org.json.JSONObject;
@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URL;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
 import static com.autotune.utils.ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT;
 import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 

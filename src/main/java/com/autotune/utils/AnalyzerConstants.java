@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.utils;
+package com.autotune.utils;
 
 import com.autotune.utils.EventLogger;
 
@@ -38,7 +38,7 @@ public class AnalyzerConstants
 	public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
 
 	public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
-	public static final String PROMETHEUS_ENDPOINT = "/api/v1/query?query=";
+	public static final String PROMETHEUS_API = "/api/v1/query?query=";
 
 	public static final String HTTP_PROTOCOL = "http";
 

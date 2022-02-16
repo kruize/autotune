@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
 
 /**
  *

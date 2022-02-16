@@ -2,8 +2,8 @@ package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.analyzer.experiments.ExperimentTrial;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
+import com.autotune.common.data.experiments.ExperimentTrial;
 
 import java.util.ArrayList;
 

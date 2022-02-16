@@ -16,8 +16,8 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.Utils;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;

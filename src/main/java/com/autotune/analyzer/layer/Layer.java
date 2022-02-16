@@ -1,7 +1,7 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.PodContainer;
+import com.autotune.common.data.experiments.PodContainer;
 import org.json.JSONObject;
 
 public interface Layer {

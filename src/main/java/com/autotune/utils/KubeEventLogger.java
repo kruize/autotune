@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.EventBuilder;
 import io.fabric8.kubernetes.api.model.ObjectReference;

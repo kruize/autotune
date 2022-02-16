@@ -13,33 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
+
+import java.util.ArrayList;
 
 /**
  *
  */
-public class TrialInfo {
-    private final String trialId;
-    private final int trialNum;
-    private final String trialResultURL;
+public class DeploymentTracking {
+    private final ArrayList<String> trackers;
 
-    public TrialInfo(String trialId,
-                     int trialNum,
-                     String trialResultURL) {
-        this.trialId = trialId;
-        this.trialNum = trialNum;
-        this.trialResultURL = trialResultURL;
+    public DeploymentTracking(ArrayList<String> trackers) {
+        this.trackers = trackers;
     }
 
-    public String getTrialId() {
-        return trialId;
-    }
-
-    public int getTrialNum() {
-        return trialNum;
-    }
-
-    public String getTrialResultURL() {
-        return trialResultURL;
+    public ArrayList<String> getTrackers() {
+        return trackers;
     }
 }

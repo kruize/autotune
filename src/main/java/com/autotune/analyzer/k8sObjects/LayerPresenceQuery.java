@@ -16,7 +16,7 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 
 /**
  * Used to detect the presence of the layer in an application. Autotune runs the query, looks for

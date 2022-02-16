@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.autotune.analyzer.deployment;
 
-import com.autotune.analyzer.datasource.DataSourceFactory;
+import com.autotune.common.data.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 
 /**
  * Get the deployment information from the config map and initialize

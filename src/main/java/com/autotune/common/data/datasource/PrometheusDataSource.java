@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.datasource;
+package com.autotune.common.data.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.HttpUtils;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.HttpUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public class PrometheusDataSource implements DataSource
 
 	@Override
 	public String getQueryEndpoint() {
-		return AnalyzerConstants.PROMETHEUS_ENDPOINT;
+		return AnalyzerConstants.PROMETHEUS_API;
 	}
 
 	public String getToken() {
