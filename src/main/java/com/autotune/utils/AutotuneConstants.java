@@ -96,6 +96,8 @@ public class AutotuneConstants {
         public static String P_99_999 = "99.999p";
         public static String P_99_9999 = "99.9999p";
         public static String P_100_0 = "100p";
+        public static String MAX = "max";
+        public static String MIN = "min";
         public static String CYCLES = "cycles";
         public static String DURATION = "duration";
         public static String PERCENTILE_INFO = "percentile_info";

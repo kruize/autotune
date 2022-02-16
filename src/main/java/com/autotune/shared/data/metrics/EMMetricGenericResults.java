@@ -10,6 +10,8 @@ public class EMMetricGenericResults implements ConvertToJSON {
     private float mean;
     private float mode;
     private float spike;
+    private float min;
+    private float max;
 
     public EMMetricGenericResults() {
         score = Float.MIN_VALUE;
@@ -17,6 +19,8 @@ public class EMMetricGenericResults implements ConvertToJSON {
         mean = Float.MIN_VALUE;
         mode = Float.MIN_VALUE;
         spike = Float.MIN_VALUE;
+        min = Float.MIN_VALUE;
+        max = Float.MIN_VALUE;
     }
 
     public EMMetricGenericResults(JSONObject jsonObject) {
@@ -25,6 +29,24 @@ public class EMMetricGenericResults implements ConvertToJSON {
         this.mean = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN) : Float.MIN_VALUE;
         this.mode = (jsonObject.has(AutotuneConstants.JSONKeys.MODE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MODE) : Float.MIN_VALUE;
         this.spike = (jsonObject.has(AutotuneConstants.JSONKeys.SPIKE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SPIKE) : Float.MIN_VALUE;
+        this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MAX) : Float.MIN_VALUE;
+        this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MIN) : Float.MIN_VALUE;
+    }
+
+    public float getMin() {
+        return min;
+    }
+
+    public void setMin(float min) {
+        this.min = min;
+    }
+
+    public float getMax() {
+        return max;
+    }
+
+    public void setMax(float max) {
+        this.max = max;
     }
 
     public float getScore() {
@@ -80,6 +102,10 @@ public class EMMetricGenericResults implements ConvertToJSON {
             jsonObject.put(AutotuneConstants.JSONKeys.MEAN, mean);
         if (this.score != Float.MIN_VALUE)
             jsonObject.put(AutotuneConstants.JSONKeys.SCORE, score);
+        if (this.max != Float.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.MAX, max);
+        if (this.min != Float.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.MIN, min);
         return jsonObject;
     }
 }
