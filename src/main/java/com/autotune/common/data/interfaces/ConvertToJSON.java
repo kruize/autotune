@@ -1,4 +1,4 @@
-package com.autotune.shared.data.interfaces;
+package com.autotune.common.data.interfaces;
 
 import org.json.JSONObject;
 

@@ -20,7 +20,7 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -29,11 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.autotune.analyzer.Experimentator.experimentsMap;
 import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.*;
 
 public class ListStackTunables extends HttpServlet

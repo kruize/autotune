@@ -16,14 +16,14 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type

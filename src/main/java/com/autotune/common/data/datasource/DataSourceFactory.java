@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.datasource;
+package com.autotune.common.data.datasource;
 
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;

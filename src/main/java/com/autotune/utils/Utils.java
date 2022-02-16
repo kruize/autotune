@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.utils;
+package com.autotune.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

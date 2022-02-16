@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 /**

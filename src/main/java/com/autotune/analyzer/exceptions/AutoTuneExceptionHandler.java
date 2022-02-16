@@ -15,20 +15,18 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-import com.autotune.Autotune;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
-import java.util.Enumeration;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 @WebServlet("/AutotuneExceptionHandler")
 public class AutoTuneExceptionHandler extends HttpServlet {

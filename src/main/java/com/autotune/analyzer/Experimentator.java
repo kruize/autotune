@@ -4,7 +4,7 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.ExperimentTrial;
+import com.autotune.common.data.experiments.ExperimentTrial;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import org.slf4j.Logger;

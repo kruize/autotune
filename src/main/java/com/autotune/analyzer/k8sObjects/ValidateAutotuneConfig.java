@@ -16,9 +16,9 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;

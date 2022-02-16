@@ -18,16 +18,16 @@ package com.autotune.analyzer.deployment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
+import com.autotune.common.data.datasource.DataSource;
+import com.autotune.common.data.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.variables.Variables;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
-import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
+import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster

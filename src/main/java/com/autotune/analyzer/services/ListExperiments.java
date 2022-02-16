@@ -2,7 +2,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.Experimentator;
-import com.autotune.analyzer.experiments.ExperimentTrial;
+import com.autotune.common.data.experiments.ExperimentTrial;
 import com.autotune.utils.TrialHelpers;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,8 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 public class ListExperiments extends HttpServlet
 {

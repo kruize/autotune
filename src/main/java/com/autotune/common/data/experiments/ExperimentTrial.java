@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
 
 import java.util.ArrayList;
 

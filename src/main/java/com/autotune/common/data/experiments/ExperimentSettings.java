@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
-
-import java.net.URL;
+package com.autotune.common.data.experiments;
 
 /**
  *
  */
-public class DatasourceInfo {
-	private final String name;
-	private final URL url;
+public class ExperimentSettings {
+    private final TrialSettings trialSettings;
+    private final DeploymentSettings deploymentSettings;
 
-	public DatasourceInfo(String name, URL url) {
-		this.name = name;
-		this.url = url;
-	}
+    public ExperimentSettings(TrialSettings trialSettings, DeploymentSettings deploymentSettings) {
+        this.trialSettings = trialSettings;
+        this.deploymentSettings = deploymentSettings;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public TrialSettings getTrialSettings() {
+        return trialSettings;
+    }
 
-	public URL getUrl() {
-		return url;
-	}
+    public DeploymentSettings getDeploymentSettings() {
+        return deploymentSettings;
+    }
 }

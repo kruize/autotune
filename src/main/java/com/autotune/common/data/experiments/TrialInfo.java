@@ -13,25 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiments;
+package com.autotune.common.data.experiments;
 
 /**
  *
  */
-public class DeploymentSettings {
-    private final DeploymentPolicy deploymentPolicy;
-    private final DeploymentTracking deploymentTracking;
+public class TrialInfo {
+    private final String trialId;
+    private final int trialNum;
+    private final String trialResultURL;
 
-    public DeploymentSettings(DeploymentPolicy deploymentPolicy, DeploymentTracking deploymentTracking) {
-        this.deploymentPolicy = deploymentPolicy;
-        this.deploymentTracking = deploymentTracking;
+    public TrialInfo(String trialId,
+                     int trialNum,
+                     String trialResultURL) {
+        this.trialId = trialId;
+        this.trialNum = trialNum;
+        this.trialResultURL = trialResultURL;
     }
 
-    public DeploymentPolicy getDeploymentPolicy() {
-        return deploymentPolicy;
+    public String getTrialId() {
+        return trialId;
     }
 
-    public DeploymentTracking getDeploymentTracking() {
-        return deploymentTracking;
+    public int getTrialNum() {
+        return trialNum;
+    }
+
+    public String getTrialResultURL() {
+        return trialResultURL;
     }
 }
