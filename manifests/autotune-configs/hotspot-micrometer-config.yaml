@@ -30,18 +30,38 @@ tunables:
   - response_time
   - throughput
 
-- name: '-Xgc:'
-  description: 'Garbage collection'
+- name: gcpolicy
+  description: 'Garbage collection policy'
   value_type: categorical
-  categorical_values:
-    - throughput
-    - genpar
-    - singlepar
-    - parallel
-  queries:
-  - datasource: 'prometheus'
-    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
-  step: 1
+  choices:
+    - g1gc
+    - serialgc
+    - parallelgc
+    - cmsgc
+    - zgc
   slo_class:
     - response_time
     - throughput
+    - resource_usage
+
+- name: TieredCompilation
+  description: 'Tiered Compilation'
+  value_type: categorical
+  choices:
+    - true
+    - false
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
+- name: AllowParallelDefineClass
+  description: 'Whether to allow parallel define class or not'
+  value_type: categorical
+  choices:
+    - true
+    - false
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage

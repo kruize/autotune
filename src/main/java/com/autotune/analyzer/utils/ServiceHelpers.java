@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,7 @@ import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
 
@@ -113,11 +108,11 @@ public class ServiceHelpers {
 	private static void addTunable(JSONObject tunableJson, Tunable tunable) {
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
 
-		if (tunable.getCategoricalValueList() == null || tunable.getCategoricalValueList().isEmpty()) {
+		if (tunable.getValueType().equalsIgnoreCase("categorical")) {
+			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES, tunable.getChoices());
+		} else {
 			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
 			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
-		} else {
-			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_VALUES, tunable.getCategoricalValueList());
 		}
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
@@ -196,8 +191,8 @@ public class ServiceHelpers {
 				// searchSpace is passing only the tunable value and not a string
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 				// check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values
-				if(tunable.getValueType().equalsIgnoreCase("categorical")) {
-					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_VALUES,tunable.getCategoricalValueList());
+				if (tunable.getValueType().equalsIgnoreCase("categorical")) {
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES,tunable.getChoices());
 				} else {
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
