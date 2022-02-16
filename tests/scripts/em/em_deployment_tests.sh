@@ -440,6 +440,37 @@ function invalid_input_json() {
 	done
 }
 
+
+function validate_no_deployment_exp() {
+
+	test_name_=${FUNCNAME}
+	input_json="${TEST_DIR_}/resources/em_input_json/${app}_em_input.json"
+	echo  "EM input json = ${input_json}"
+
+	# Sleep for sometime for application pods to be up
+	sleep 5
+
+	# Post the input json to /createExperimentTrial API rest end point	
+	post_experiment_json "${input_json}"
+
+	sleep 10
+	deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
+
+	echo "deployment_name = ${deployment_name}"
+	deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
+
+	list_trial_status "${runid}"
+
+	#expected_exp_status="\"WAITING_FOR_LOAD\""
+	#validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
+	echo "Experiment status for ${runid}  = ${exp_status}"
+
+	validate_single_deployment
+
+	echo "----------------------------------------------------------------------------------------------"
+}
+
+
 function check_duplication() {
 	post_experiment_json ${input_json}.json
 	post_experiment_json ${input_json}.json
