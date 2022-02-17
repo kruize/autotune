@@ -3,6 +3,11 @@ package com.autotune.experimentManager.transitions.util;
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.utils.EMConstants;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -80,14 +85,18 @@ public class TransistionHelper {
     public static class DataPoster {
         public static void sendData(String URL, JSONObject payload) {
             try {
-                URL url = new URL (URL);
-                HttpURLConnection con = (HttpURLConnection)url.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/json; utf-8");
-                con.setDoOutput(true);
-                try(OutputStream os = con.getOutputStream()) {
-                    byte[] input = payload.toString().getBytes("utf-8");
-                    os.write(input, 0, input.length);
+                System.out.print(URL);
+                HttpClient httpClient = HttpClientBuilder.create().build();
+                try {
+                    HttpPost request = new HttpPost(URL);
+                    StringEntity params = new StringEntity(payload.toString());
+                    request.addHeader("content-type", "application/json; utf-8");
+                    request.setEntity(params);
+                    HttpResponse response = httpClient.execute(request);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    System.out.println("Sending Metrics JSON done.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
