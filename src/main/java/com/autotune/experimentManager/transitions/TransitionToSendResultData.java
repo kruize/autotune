@@ -21,6 +21,7 @@ public class TransitionToSendResultData extends AbstractBaseTransition{
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
         String trial_result_url = trialData.getConfig().getEmConfigObject().getInfo().getTrialInfo().getTrialResultUrl();
         JSONObject retJson = TransistionHelper.MetricsFormatter.getMetricsJson(runId);
+        System.out.println(retJson.toString(4));
         TransistionHelper.DataPoster.sendData(trial_result_url, retJson);
         processNextTransition(runId);
     }

@@ -223,11 +223,11 @@ public class CreateExperimentTrial extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String inputData = req.getReader().lines().collect(Collectors.joining());
         JSONObject json = new JSONObject(inputData);
-        JSONObject depSettings = json.getJSONObject("settings").getJSONObject("deployment_settings");
-        JSONObject newDepInfo = new JSONObject();
-        newDepInfo.put("target_env", depSettings.getJSONObject("deployment_policy").getString("target_env"));
-        newDepInfo.put("agent", depSettings.getJSONObject("deployment_policy").getString("agent"));
-        depSettings.put("deployment_info", newDepInfo);
+//        JSONObject depSettings = json.getJSONObject("settings").getJSONObject("deployment_settings");
+//        JSONObject newDepInfo = new JSONObject();
+//        newDepInfo.put("target_env", depSettings.getJSONObject("deployment_policy").getString("target_env"));
+//        newDepInfo.put("agent", depSettings.getJSONObject("deployment_policy").getString("agent"));
+//        depSettings.put("deployment_info", newDepInfo);
         LOGGER.info("Input JSON obtained:");
         LOGGER.info(json.toString(4));
         LOGGER.info("Creating ETD");
