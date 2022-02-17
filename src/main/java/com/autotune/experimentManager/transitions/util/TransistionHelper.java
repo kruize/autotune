@@ -71,7 +71,6 @@ public class TransistionHelper {
                     "\"min\":2.11," +
                     "\"mean\":21045}}}]}]," +
                     "\"experiment_id\":\"7671cf10f52b288d48e3f60806af0740ec09a09360ed1da3a6e24df4cfd27256\"," +
-                    "\"app-version\":\"v1\"," +
                     "\"info\":{\"trial_info\":{\"trial_id\":\"\"," +
                     "\"trial_num\":0}}}");
             return retJsonObj;
