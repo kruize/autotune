@@ -30,7 +30,7 @@ tunables:
   - response_time
   - throughput
 
-- name: gcpolicy
+- name: balanced
   description: 'Garbage collection policy'
   value_type: categorical
   choices:

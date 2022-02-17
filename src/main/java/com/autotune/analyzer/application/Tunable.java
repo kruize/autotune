@@ -104,7 +104,6 @@ public class Tunable
 	 * invoked when tunables contain categorical choices
 	 *
 	 * @param name
-	 * @param step
 	 * @param valueType
 	 * @param queries
 	 * @param sloClassList
@@ -112,13 +111,12 @@ public class Tunable
 	 * @param choices
 	 */
 	public Tunable(String name,
-				   double step,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> sloClassList,
 				   String layerName,
 				   List<String> choices) {
-		setCommonTunableParameters(queries, name, valueType, sloClassList, step, layerName);
+		setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
 		this.choices = Objects.requireNonNull(choices, INVALID_TUNABLE_CHOICE);
 	}
 
@@ -126,24 +124,26 @@ public class Tunable
 	 * invoked when tunables contain upper & lower bounds values
 	 * 
 	 * @param name
-	 * @param step
-	 * @param upperBound
-	 * @param lowerBound
 	 * @param valueType
 	 * @param queries
 	 * @param sloClassList
 	 * @param layerName
+	 * @param step
+	 * @param upperBound
+	 * @param lowerBound
 	 * @throws InvalidBoundsException
 	 */
 	public Tunable(String name,
-				   double step,
-				   String upperBound,
-				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> sloClassList,
-				   String layerName) throws InvalidBoundsException {
-		setCommonTunableParameters(queries, name, valueType, sloClassList, step, layerName);
+				   String layerName,
+				   double step,
+				   String upperBound,
+				   String lowerBound
+				   ) throws InvalidBoundsException {
+		setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
+		this.step = Objects.requireNonNull(step, ZERO_STEP);
 		/* Parse the value for the bounds from the strings passed in */
 		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
 		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
@@ -186,20 +186,17 @@ public class Tunable
 	 * @param name
 	 * @param valueType
 	 * @param sloClassList
-	 * @param step
 	 * @param layerName
 	 */
 	private void setCommonTunableParameters(Map<String, String> queries,
 											String name,
 											String valueType,
 											ArrayList<String> sloClassList,
-											double step,
 											String layerName) {
 		this.queries = queries;
 		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
 		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
 		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
-		this.step = Objects.requireNonNull(step, ZERO_STEP);
 		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
 			this.layerName = layerName;
 		else

@@ -533,9 +533,10 @@ public class AutotuneDeployment
 
 				String upperBound = "";
 				String lowerBound = "";
+				double step = 1;
 				List<String> choices = new ArrayList<>();
 
-				// check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values
+				// check the tunable type, if it's categorical then we need to add the choices
 				if (tunableValueType.equalsIgnoreCase("categorical")) {
 					JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
 					for (Object categoricalChoiceObject : categoricalChoicesJson) {
@@ -545,9 +546,9 @@ public class AutotuneDeployment
 				} else {
 					upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
 					lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+					// Read in step from the tunable, set it to '1' if not specified.
+					step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
 				}
-				// Read in step from the tunable, set it to '1' if not specified.
-				double step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
 
 				ArrayList<String> sloClassList = new ArrayList<>();
 				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
@@ -559,11 +560,11 @@ public class AutotuneDeployment
 
 				Tunable tunable;
 				try {
-					// check the tunable type and then invoke the corresponding constructer 
+					// check the tunable type and then invoke the corresponding constructor
 					if (tunableValueType.equalsIgnoreCase("categorical")) {
-						tunable = new Tunable(tunableName, step, tunableValueType, queriesMap, sloClassList, layerName, choices);
+						tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, choices);
 					} else {
-						tunable = new Tunable(tunableName, step, upperBound, lowerBound, tunableValueType, queriesMap, sloClassList, layerName);
+						tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
 					}
 					tunableArrayList.add(tunable);
 				} catch (InvalidBoundsException e) {
@@ -801,24 +802,23 @@ public class AutotuneDeployment
 				Map<String, String> queries = new HashMap<>(tunable.getQueries());
 
 				Tunable tunableCopy;
-				if ( tunable.getChoices().isEmpty()) {
+				if ( tunable.getValueType().equalsIgnoreCase("categorical")) {
 					tunableCopy = new Tunable(tunable.getName(),
-						tunable.getStep(),
-						tunable.getUpperBound(),
-						tunable.getLowerBound(),
-						tunable.getValueType(),
-						queries,
-						tunable.getSloClassList(),
-						tunable.getLayerName()
+							tunable.getValueType(),
+							queries,
+							tunable.getSloClassList(),
+							tunable.getLayerName(),
+							tunable.getChoices()
 					);
 				} else{
 					tunableCopy = new Tunable(tunable.getName(),
-						tunable.getStep(),
-						tunable.getValueType(),
-						queries,
-						tunable.getSloClassList(),
-						tunable.getLayerName(),
-						tunable.getChoices()
+							tunable.getValueType(),
+							queries,
+							tunable.getSloClassList(),
+							tunable.getLayerName(),
+							tunable.getStep(),
+							tunable.getUpperBound(),
+							tunable.getLowerBound()
 					);
 				}
 				tunables.add(tunableCopy);
