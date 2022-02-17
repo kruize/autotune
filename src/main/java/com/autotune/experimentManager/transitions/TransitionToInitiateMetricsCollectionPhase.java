@@ -9,7 +9,7 @@ public class TransitionToInitiateMetricsCollectionPhase extends AbstractBaseTran
     public void transit(String runId) {
         LOGGER.info("Executing transition - TransitionToInitiateMetricsCollectionPhase on thread - {} For RunId - ", Thread.currentThread().getId(), runId);
         try {
-            Thread.sleep(20000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -17,7 +17,7 @@ public class TransitionToInitiateTrialRunPhase extends AbstractBaseTransition{
             currentETD.setStatus(EMUtil.EMExpStatus.WAITING_FOR_LOAD);
         }
         try {
-            Thread.sleep(20000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

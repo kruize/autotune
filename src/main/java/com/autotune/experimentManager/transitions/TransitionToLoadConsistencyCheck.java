@@ -9,7 +9,7 @@ public class TransitionToLoadConsistencyCheck extends AbstractBaseTransition{
     public void transit(String runId) {
         LOGGER.info("Executing transition - TransitionToLoadConsistencyCheck on thread - {} For RunId - ", Thread.currentThread().getId(), runId);
         try {
-            Thread.sleep(20000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
