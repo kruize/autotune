@@ -1,6 +1,9 @@
 package com.autotune.experimentManager.data.iteration;
 
+import com.autotune.experimentManager.data.input.EMMetricInput;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class EMIterationData {
     private final int iterationIndex;
@@ -10,12 +13,13 @@ public class EMIterationData {
     private int currentCycle;
     private EMIterationResult emIterationResult;
 
-    public EMIterationData(int iterationIndex, int warmCycles, int measurementCycles) {
+    public EMIterationData(int iterationIndex, int warmCycles, int measurementCycles, ArrayList<EMMetricInput> metricInputs) {
         this.iterationIndex = iterationIndex;
         this.warmCycles = warmCycles;
         this.measurementCycles = measurementCycles;
         this.currentCycle = 1;
         this.totalCycles = this.warmCycles + this.measurementCycles;
+        emIterationResult = new EMIterationResult(warmCycles, measurementCycles, metricInputs);
     }
 
     public void incrementCycle() {
@@ -40,13 +44,5 @@ public class EMIterationData {
 
     public EMIterationResult getEmIterationResult() {
         return emIterationResult;
-    }
-
-    public void addResults(EMMetricData emMetricData) {
-        if (this.currentCycle <= this.warmCycles) {
-            getEmIterationResult().addToWarmUpList(emMetricData);
-        } else {
-            getEmIterationResult().addToMeasurementList(emMetricData);
-        }
     }
 }
