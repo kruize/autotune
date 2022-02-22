@@ -196,8 +196,8 @@ public class ServiceHelpers {
 				} else {
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
+					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 				}
-				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
 				tunablesJsonArray.put(tunableJson);
 			}
 		}

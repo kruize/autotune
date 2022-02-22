@@ -531,25 +531,6 @@ public class AutotuneDeployment
 				String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
 				String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
 
-				String upperBound = "";
-				String lowerBound = "";
-				double step = 1;
-				List<String> choices = new ArrayList<>();
-
-				// check the tunable type, if it's categorical then we need to add the choices
-				if (tunableValueType.equalsIgnoreCase("categorical")) {
-					JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
-					for (Object categoricalChoiceObject : categoricalChoicesJson) {
-						String categoricalChoice = (String) categoricalChoiceObject;
-						choices.add(categoricalChoice);
-					}
-				} else {
-					upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-					lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
-					// Read in step from the tunable, set it to '1' if not specified.
-					step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
-				}
-
 				ArrayList<String> sloClassList = new ArrayList<>();
 				JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
 
@@ -557,13 +538,28 @@ public class AutotuneDeployment
 					String sloClass = (String) sloClassObject;
 					sloClassList.add(sloClass);
 				}
-
+				String upperBound = "";
+				String lowerBound = "";
+				double step = 1;
+				List<String> choices = new ArrayList<>();
 				Tunable tunable;
 				try {
-					// check the tunable type and then invoke the corresponding constructor
+					/**
+					 * check the tunable type, if it's categorical then we need to add the choices
+					 * and then invoke the corresponding constructor
+ 					 */
 					if (tunableValueType.equalsIgnoreCase("categorical")) {
+						JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
+						for (Object categoricalChoiceObject : categoricalChoicesJson) {
+							String categoricalChoice = (String) categoricalChoiceObject;
+							choices.add(categoricalChoice);
+						}
 						tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, choices);
 					} else {
+						upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
+						lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+						// Read in step from the tunable, set it to '1' if not specified.
+						step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
 						tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
 					}
 					tunableArrayList.add(tunable);
