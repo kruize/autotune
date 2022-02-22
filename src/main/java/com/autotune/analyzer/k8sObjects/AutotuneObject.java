@@ -16,10 +16,12 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.common.data.datasource.DataSource;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -36,13 +38,15 @@ public final class AutotuneObject
 	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 	private final ObjectReference objectReference;
+	private final AutotuneSettings autotuneSettings;
 
 	public AutotuneObject(String experimentName,
 						  String namespace,
 						  String mode,
 						  SloInfo sloInfo,
 						  SelectorInfo selectorInfo,
-						  ObjectReference objectReference) throws InvalidValueException {
+						  ObjectReference objectReference,
+						  AutotuneSettings autotuneSettings) throws InvalidValueException {
 
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
@@ -60,6 +64,7 @@ public final class AutotuneObject
 			this.selectorInfo = selectorInfo;
 			this.experimentId = Utils.generateID(toString());
 			this.objectReference = objectReference;
+			this.autotuneSettings = autotuneSettings;
 		} else {
 			throw new InvalidValueException(error.toString());
 		}
@@ -91,6 +96,10 @@ public final class AutotuneObject
 
 	public ObjectReference getObjectReference() {
 		return objectReference;
+	}
+
+	public AutotuneSettings getAutotuneSettings() {
+		return autotuneSettings;
 	}
 
 	@Override

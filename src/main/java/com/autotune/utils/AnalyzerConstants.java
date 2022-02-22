@@ -100,6 +100,19 @@ public class AnalyzerConstants
 		public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
 
 		public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
+
+		public static final String SETTINGS = "settings";
+		public static final String TRIAL_SETTINGS = "trial_settings";
+		public static final String MEASUREMENT_CYCLES = "measurement_cycles";
+		public static final String WARMUP_DURATION = "warmup_duration";
+		public static final String WARMUP_CYCLES = "warmup_cycles";
+		public static final String MEASUREMENT_DURATION = "measurement_duration";
+		public static final String TRIAL_ITERATIONS = "trial_iterations";
+		public static final String DEPLOYMENT_SETTINGS = "deployment_settings";
+		public static final String DEPLOYMENT_TRACKING = "deployment_tracking";
+		public static final String TRACKERS = "trackers";
+		public static final String DEPLOYMENT_POLICY = "deployment_policy";
+		public static final String DEPLOYMENT_POLICY_TYPE = "deployment_policy_type";
 	}
 
 	/**
