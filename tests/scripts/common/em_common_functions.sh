@@ -225,16 +225,20 @@ function validate_env() {
 # input: Expected value, test name
 function validate_tunable_values() {
 	test_name_=$1
+	input_json=$2
+	deployment_name=$3
+
 	echo "Validate tunable values..."
 	echo "test_name = ${test_name_}"
-	get_expected_tunable_values
-	get_actual_tunable_values
+	get_expected_tunable_values ${input_json}
+	get_actual_tunable_values ${deployment_name}
 	validate_resources
 	validate_env
 }
 
 # Get the expected values from input JSON
 function get_expected_tunable_values() {
+	input_json=$1
 	resources=".deployments[0].containers[0].config[0].spec.template.spec.container.resources"
 
 	expected_tunable_values[mem_request]=$(cat ${input_json} | jq ${resources}.requests.memory)
@@ -257,6 +261,8 @@ function get_expected_tunable_values() {
 }
 
 function get_actual_tunable_values() {
+	app_=$1
+	app_deploy_config="${TEST_DIR}/${app_}_deploy_config.json"
 	resources_=".spec.template.spec.containers[].resources"
 	actual_tunable_values[mem_request]=$(cat ${app_deploy_config} | jq ${resources_}.requests.memory)
 	actual_tunable_values[mem_limit]=$(cat ${app_deploy_config} | jq ${resources_}.limits.memory)

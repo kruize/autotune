@@ -1,0 +1,99 @@
+{
+  "settings": {
+    "trial_settings": {
+      "measurement_cycles": "3",
+      "warmup_duration": "1min",
+      "warmup_cycles": "3",
+      "measurement_duration": "1min",
+      "iterations": "3"
+    },
+    "deployment_settings": {
+      "deployment_tracking": {"trackers": ["training"]},
+      "deployment_policy": {
+        "type": "rollingUpdate"
+      }
+    }
+  },
+  "experiment_name": "galaxies-autotune-min-http-response-time",
+  "deployments": [{
+    "deployment_name": "galaxies-sample-0",
+    "namespace": "default",
+    "containers": [{
+      "image_name": "dinogun/galaxies:1.2-jdk-11.0.10_9",
+      "container_name": "galaxies",
+      "config": [
+        {
+          "name": "update requests and limits",
+          "spec": {"template": {"spec": {"container": {"resources": {
+            "requests": {
+              "memory": "213Mi",
+              "cpu": "1"
+            },
+            "limits": {
+              "memory": "213Mi",
+              "cpu": "1"
+            }
+          }}}}}
+        },
+        {
+          "name": "update env",
+          "spec": {"template": {"spec": {"container": {"env": {"JDK_JAVA_OPTIONS": " -Dquarkus.hibernate-orm.jdbc.statement-fetch-size=47 -Dquarkus.thread-pool.queue-size=4 -Dquarkus.thread-pool.core-threads=5 -server -XX:+UseG1GC -XX:MaxRAMPercentage=70 -XX:MaxInlineLevel=43"}}}}}
+        }
+      ],
+      "container_metrics": [
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+          "name": "request_sum"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+          "name": "request_count"
+        }
+      ]
+    }],
+    "pod_metrics": [
+      {
+        "datasource": "prometheus",
+        "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+        "name": "request_sum"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/galaxies\",}[1m])",
+        "name": "request_count"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+        "name": "cpuRequest"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "MaxInlineLevel"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "name": "memoryRequest"
+      }
+    ],
+    "type": "training"
+  }],
+  "experiment_id": "7671cf10f52b288d48e3f60806af0740ec09a09360ed1da3a6e24df4cfd27256",
+  "info": {
+    "trial_info": {
+      "trial_id": "",
+      "trial_num": 0,
+      "trial_result_url": "trail data return url"
+    },
+    "datasource_info": [
+      {
+        "name": "prometheus",
+        "url": "prom url"
+      }
+    ]
+  }
+} 

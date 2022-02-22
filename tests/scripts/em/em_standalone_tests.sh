@@ -40,7 +40,7 @@ function em_standalone_tests() {
 	((TOTAL_TEST_SUITES++))
 
 
-	em_standalone_tests=("validate_single_deployment" "validate_single_deployment_diff_configs" "validate_single_deployment_diff_configs_sequentially" "validate_single_deployment_same_config" "validate_single_deployment_nondefault_ns" "validate_incorrect_ns" "invalid_input_json" "validate_no_deployment_exp")
+	em_standalone_tests=("validate_single_deployment" "validate_single_deployment_diff_configs" "validate_single_deployment_diff_configs_sequentially" "validate_single_deployment_same_config" "validate_single_deployment_nondefault_ns" "validate_incorrect_ns" "invalid_input_json" "validate_no_deployment_exp" "validate_multiple_deployments")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then

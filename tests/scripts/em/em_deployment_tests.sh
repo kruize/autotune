@@ -41,11 +41,10 @@ function validate_single_deployment() {
 	sleep 10
 	deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-	echo "**** training deployment_name = ${deployment_name}"
 	deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 	get_config ${deployment_name} 
-	validate_tunable_values ${test_name_}
+	validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 	list_trial_status "${runid}"
 
@@ -53,6 +52,8 @@ function validate_single_deployment() {
 	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 	echo "Experiment status = ${exp_status}"
 	echo "----------------------------------------------------------------------------------------------"
+
+	app_cleanup ${app}
 }
 
 # Basic Deployment validation test for Experiment manager (EM). This test deploys an application and creates an experiment with the provided config
@@ -90,11 +91,10 @@ function validate_incorrect_ns() {
 	sleep 10
 	deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-	echo "deployment_name = ${deployment_name}"
 	deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 	get_config ${deployment_name} 
-	validate_tunable_values ${test_name_}
+	validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 	list_trial_status "${runid}"
 
@@ -102,6 +102,7 @@ function validate_incorrect_ns() {
 	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 	echo "Experiment status = ${exp_status}"
 	echo "----------------------------------------------------------------------------------------------"
+	app_cleanup ${app}
 }
 
 function validate_single_deployment_nondefault_ns() {
@@ -134,11 +135,10 @@ function validate_single_deployment_nondefault_ns() {
 	sleep 10
 	deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-	echo "deployment_name = ${deployment_name}"
 	deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 	get_config ${deployment_name} ${app_namespace} 
-	validate_tunable_values ${test_name_}
+	validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 	list_trial_status "${runid}"
 
@@ -146,6 +146,7 @@ function validate_single_deployment_nondefault_ns() {
 	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 	echo "Experiment status = ${exp_status}"
 	echo "----------------------------------------------------------------------------------------------"
+	app_cleanup ${app}
 }
 
 function validate_multiple_deployment_diff_ns() {
@@ -153,7 +154,7 @@ function validate_multiple_deployment_diff_ns() {
 
 	test_name_=${FUNCNAME}
 	input_json="${TEST_DIR_}/resources/em_input_json/${app}_em_input.json"
-	echo  "************** input json = ${input_json}"
+	echo  "input json = ${input_json}"
 
 	
 	# Deploy application in default namespace 	
@@ -174,11 +175,10 @@ function validate_multiple_deployment_diff_ns() {
 	sleep 10
 	deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-	echo "deployment_name = ${deployment_name}"
 	deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 	get_config ${deployment_name} ${app_namespace} 
-	validate_tunable_values ${test_name_}
+	validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 	list_trial_status "${runid}"
 
@@ -190,13 +190,13 @@ function validate_multiple_deployment_diff_ns() {
 	# Update the json with specified field          
 	f="default"
        	replace="petclinic"
-        echo "*** find = $f replace = $replace"
+        echo "find = $f replace = $replace"
         sed -i "s|${f}|${replace}|g" ${input_json}
 	post_experiment_json "${input_json}"
 
 	app_namespace="petclinic"
 	get_config ${deployment_name} ${app_namespace} 
-	validate_tunable_values ${test_name_}
+	validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 	list_trial_status "${runid}"
 
@@ -204,6 +204,7 @@ function validate_multiple_deployment_diff_ns() {
 	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 	echo "Experiment status = ${exp_status}"
 	echo "----------------------------------------------------------------------------------------------"
+	app_cleanup ${app}
 }
 
 
@@ -225,7 +226,7 @@ function validate_single_deployment_same_config() {
 	do
 		json="${TEST_DIR_}/resources/em_input_json/${app}_em_input.json"
 		input_json="${TEST_DIR}/${app}-${i}_em_input.json"
-		echo  "************** input json = ${input_json}"
+		echo  "input json = ${input_json}"
 		cp ${json} ${input_json}
 
 		# Post the input json to /createExperimentTrial API rest end point	
@@ -234,7 +235,6 @@ function validate_single_deployment_same_config() {
 		sleep 10
 		deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-		echo "**** training deployment_name = ${deployment_name}"
 		deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 		list_trial_status "${runid}"
@@ -245,7 +245,7 @@ function validate_single_deployment_same_config() {
 			expected_exp_status="\"WAITING_FOR_LOAD\""
 			validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 			get_config ${deployment_name}
-			validate_tunable_values ${test_name_}
+			validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 		else
 			expected_exp_status="\"WAIT\""
 			validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
@@ -263,13 +263,14 @@ function validate_single_deployment_same_config() {
 		        echo "Status of the deployment is ${exp_status}"
 
 			get_config ${deployment_name}
-			validate_tunable_values ${test_name_}
+			validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 		fi
 
 		#Add validation to check if pod has been restarted if restart is 'yes' 
 
 		echo "----------------------------------------------------------------------------------------------"
 	done
+	app_cleanup ${app}
 }
 
 function validate_single_deployment_diff_configs() {
@@ -296,7 +297,7 @@ function validate_single_deployment_diff_configs() {
 		f=$(echo $f | tr -d -c 0-9)
        		replace=`expr $f + $i`
 		
-	        echo "*** find = $f replace = $replace"
+	        echo "find = $f replace = $replace"
 	        sed -i "s|${f}|${replace}|g" ${input_json}
 
 		# Post the input json to /createExperimentTrial API rest end point	
@@ -305,7 +306,6 @@ function validate_single_deployment_diff_configs() {
 		sleep 10
 		deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-		echo "**** training deployment_name = ${deployment_name}"
 		deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 		list_trial_status "${runid}"
@@ -316,7 +316,7 @@ function validate_single_deployment_diff_configs() {
 			expected_exp_status="\"WAITING_FOR_LOAD\""
 			validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 			get_config ${deployment_name}
-			validate_tunable_values ${test_name_}
+			validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 		else
 			expected_exp_status="\"WAIT\""
 			validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
@@ -334,11 +334,12 @@ function validate_single_deployment_diff_configs() {
 		        echo "Status of the deployment is ${exp_status}"
 
 			get_config ${deployment_name}
-			validate_tunable_values ${test_name_}
+			validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 		fi
 
 		echo "----------------------------------------------------------------------------------------------"
 	done
+	app_cleanup ${app}
 }
 
 function validate_single_deployment_diff_configs_sequentially() {
@@ -370,13 +371,13 @@ function validate_single_deployment_diff_configs_sequentially() {
 		f=$(echo $f | tr -d -c 0-9)
        		replace=`expr $f + $i`
 
-	        echo "*** find = $f replace = $replace"
+	        echo "find = $f replace = $replace"
 	        sed -i "s|${f}|${replace}|g" ${input_json}
 
 		# Update the json with specified field          
 		#f="23"
        		replace=`expr 23 + $i`
-	        echo "*** find = $f replace = $replace"
+	        echo "find = $f replace = $replace"
 	        sed -i "s|${f}|${replace}|g" ${input_json}
 
 
@@ -386,7 +387,6 @@ function validate_single_deployment_diff_configs_sequentially() {
 		sleep 10
 		deployment_name=$(cat ${input_json} | jq '.deployments[0].deployment_name')
 
-		echo "**** training deployment_name = ${deployment_name}"
 		deployment_name=$(echo ${deployment_name} | sed -e "s/\"//g")
 
 		# Check the status of the experiment
@@ -397,7 +397,7 @@ function validate_single_deployment_diff_configs_sequentially() {
 
 		# Check the rolling update
 		get_config ${deployment_name}
-		validate_tunable_values ${test_name_}
+		validate_tunable_values ${test_name_} ${input_json} ${deployment_name}
 
 		# Check the status of the experiment
 	        list_trial_status "${runid}"
@@ -413,6 +413,7 @@ function validate_single_deployment_diff_configs_sequentially() {
 		echo "----------------------------------------------------------------------------------------------"
 
 	done
+	app_cleanup ${app}
 }
 
 
@@ -469,6 +470,81 @@ function validate_no_deployment_exp() {
 
 	echo "----------------------------------------------------------------------------------------------"
 }
+
+function validate_multiple_deployments() {
+	instances=1
+	applications=("petclinic" "galaxies")
+
+	test_name_=${FUNCNAME}
+
+	for appln in ${applications[@]}
+	do
+		echo "Deploying $appln...."
+		# Deploy application instances
+		deploy_app ${APP_REPO} ${appln} ${instances}
+
+		# Sleep for sometime for application pods to be up
+		echo "Deploying $aapln....Done"
+	done
+
+	# Post the input json to /createExperimentTrial API rest end point
+	petclinic_input_json="${TEST_DIR_}/resources/em_input_json/petclinic_em_input.json"
+	echo  "Posting experiment EM input json = ${petclinic_input_json}"
+	post_experiment_json "${petclinic_input_json}"
+	echo "Posting experiment...done"
+
+	petclinic_runid=${runid}
+
+	# Wait for rolling update to happen
+	sleep 2
+	
+	echo "petclinic_runid = ${petclinic_runid}"
+
+	petclinic_deployment_name=$(cat ${petclinic_input_json} | jq '.deployments[0].deployment_name')
+	echo "deployment_name = ${petclinic_deployment_name}"
+	petclinic_deployment_name=$(echo ${petclinic_deployment_name} | sed -e "s/\"//g")
+	# Get the deployment json 
+	get_config ${petclinic_deployment_name}
+
+	# Post the input json to /createExperimentTrial API rest end point
+	galaxies_input_json="${TEST_DIR_}/resources/em_input_json/galaxies_em_input.json"
+	echo  "EM input json = ${galaxies_input_json}"
+	post_experiment_json "${galaxies_input_json}"
+	
+	galaxies_runid=${runid}
+
+	# Wait for rolling update to happen
+	sleep 2
+
+	echo "galaxies_runid = ${galaxies_runid}"
+	galaxies_deployment_name=$(cat ${galaxies_input_json} | jq '.deployments[0].deployment_name')
+	echo "deployment_name = ${galaxies_deployment_name}"
+	galaxies_deployment_name=$(echo ${galaxies_deployment_name} | sed -e "s/\"//g")
+	# Get the deployment json 
+	get_config ${galaxies_deployment_name}
+
+	validate_tunable_values ${test_name_} ${petclinic_input_json} ${petclinic_deployment_name}
+
+	validate_tunable_values ${test_name_} ${galaxies_input_json} ${galaxies_deployment_name}
+
+	list_trial_status "${petclinic_runid}"
+	expected_exp_status="\"WAITING_FOR_LOAD\""
+	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
+	echo "Experiment status = ${exp_status}"
+
+	list_trial_status "${galaxies_runid}"
+	expected_exp_status="\"WAITING_FOR_LOAD\""
+	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
+	echo "Experiment status = ${exp_status}"
+	echo "----------------------------------------------------------------------------------------------"
+	for appln in ${applications[@]}
+	do
+		app_cleanup ${appln}
+	done
+}
+
+# Basic Deployment validation test for Experiment manager (EM). This test deploys an application and creates an experiment with the provided config
+# that has an incorrect namespace
 
 
 function check_duplication() {
