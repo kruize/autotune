@@ -33,7 +33,7 @@ public class ExperimentTrialData {
         targetStage = EMExpStages.CREATE_CONFIG;
         this.status = EMExpStatus.CREATED;
         this.notifyTrialCompletion = false;
-        emIterationManager = new EMIterationManager(config.getEmConfigObject().getSettings().getTrialSettings().getIterations());
+        emIterationManager = new EMIterationManager(config.getEmConfigObject());
     }
 
     public String getTrialResult() {

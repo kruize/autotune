@@ -1,23 +1,31 @@
 package com.autotune.experimentManager.core;
 
+import com.autotune.experimentManager.data.input.EMConfigObject;
 import com.autotune.experimentManager.data.iteration.EMIterationData;
-import org.json.JSONObject;
+import com.autotune.experimentManager.exceptions.EMInvalidIterationId;
 
 import java.util.ArrayList;
 
 public class EMIterationManager {
     private final int iterations;
     private int currentIteration;
-    ArrayList<EMIterationData> emIterationData;
+    private ArrayList<EMIterationData> emIterationData;
 
-    public ArrayList<EMIterationData> getEmIterationData() {
+    public ArrayList<EMIterationData> getIterationDataList() {
         return emIterationData;
     }
 
-    public EMIterationManager(int iterations) {
-        this.iterations = iterations;
+    public EMIterationManager(EMConfigObject emConfigObject) {
+        this.iterations = emConfigObject.getSettings().getTrialSettings().getIterations();
         this.currentIteration = 1;
         emIterationData = new ArrayList<EMIterationData>(iterations);
+        for (int i = 0; i < iterations; i++) {
+            EMIterationData emIterationDataObj = new EMIterationData(i + 1,
+                    emConfigObject.getSettings().getTrialSettings().getWarmupCycles(),
+                    emConfigObject.getSettings().getTrialSettings().getMeasurementCycles(),
+                    emConfigObject.getDeployments().getTrainingDeployment().getMetrics());
+            emIterationData.add(emIterationDataObj);
+        }
     }
 
     public void incrementIteration() {
@@ -33,7 +41,14 @@ public class EMIterationManager {
     }
 
     public void addIterationData(EMIterationData emIterationData) {
-        getEmIterationData().add(emIterationData);
+        getIterationDataList().add(emIterationData);
+    }
+
+    public EMIterationData getIterationData(int iteration) throws EMInvalidIterationId {
+        if (iteration <= 0 || iteration > this.iterations) {
+            throw new EMInvalidIterationId();
+        }
+        return getIterationDataList().get(iteration - 1);
     }
 
 }
