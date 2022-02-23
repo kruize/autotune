@@ -21,22 +21,19 @@ import com.autotune.analyzer.k8sObjects.Metric;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestEvalExParser {
 
-    List<String> objFunctionsList = new ArrayList<>(List.of(
-            "(( throughput / transaction_response_time) /  max_response_time) * 100",
-            "request_sum/request_count",
-            "(1.25 * request_count) - (1.5 * (request_sum / request_count)) - (0.25 * request_max)",
-            "((request_count / (request_sum / request_count)) / request_max) * 100"
-    ));
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestEvalExParser.class);
+    Set<String> objFunctionsList = AutotuneSupportedTypes.OBJECTIVE_FUNCTION_LIST;
+
     @Test
     public void testValidate() {
 
@@ -47,21 +44,14 @@ public class TestEvalExParser {
     }
 
     private ArrayList<Metric> getFunctionVariables() {
-
-        String sloJson = "{\"function_variables\":[{\"name\":\"request_sum\"," +
-                "\"query\":\"rate(http_server_requests_seconds_sum{method=\\\"GET\\\"," +
-                "outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\"," +
-                "\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_count\"," +
-                "\"query\":\"rate(http_server_requests_seconds_count{method=\\\"GET\\\"," +
-                "outcome=\\\"SUCCESS\\\",status=\\\"200\\\",uri=\\\"/db\\\",}[1m])\"," +
-                "\"datasource\":\"prometheus\",\"value_type\":\"double\"},{\"name\":\"request_max\"," +
-                "\"query\":\"http_server_requests_seconds_max{method=\\\"GET\\\",outcome=\\\"SUCCESS\\\"," +
-                "status=\\\"200\\\",uri=\\\"/db\\\"}\",\"datasource\":\"prometheus\",\"value_type\":\"double\"}]}";
-
-        JSONObject functionVariablesObject = new JSONObject(sloJson.toString());
-        JSONArray functionVariables = functionVariablesObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-
         ArrayList<Metric> metricArrayList = new ArrayList<>();
+        String sloJson = readDataFromJson();
+        if (sloJson.equals("-1"))
+            return metricArrayList;
+
+        JSONObject functionVariablesObject = new JSONObject(sloJson);
+
+        JSONArray functionVariables = functionVariablesObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
 
         for (Object functionVariableObj : functionVariables) {
             JSONObject functionVariableJson = (JSONObject) functionVariableObj;
@@ -80,12 +70,36 @@ public class TestEvalExParser {
         return metricArrayList;
     }
 
+    private String readDataFromJson() {
+        String fileName = "function_variables.json";
+        InputStream ioStream;
+        try {
+            ioStream = TestEvalExParser.class.getClassLoader().getResourceAsStream(fileName);
+        } catch (NullPointerException nullPointerException){
+            LOGGER.error("Invalid FileName or File is missing ");
+            return "-1";
+        }
+        InputStreamReader isReader = new InputStreamReader(ioStream);
+        //Creating a BufferedReader object
+        BufferedReader reader = new BufferedReader(isReader);
+        StringBuffer sb = new StringBuffer();
+        String str = "";
+        try {
+            while((str = reader.readLine())!= null){
+                sb.append(str);
+            }
+        } catch (IOException ioException) {
+            LOGGER.error("File Read Error");
+        }
+        return sb.toString();
+    }
+
     @Test
     public void testParse() {
 
         for(String objFunction : objFunctionsList) {
             Map<String, String> objFunctionMap = new HashMap<>();
-            assertEquals("objective_function_map is missing or empty\n", new EvalExParser().parse(objFunction, "String", objFunctionMap));
+            assertEquals(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING, new EvalExParser().parse(objFunction, "String", objFunctionMap));
         }
     }
 
@@ -100,6 +114,11 @@ public class TestEvalExParser {
         objFunctionMap.put("request_max","400");
 
         return objFunctionMap;
+    }
+
+    public static void main(String[] args) throws IOException {
+
+
     }
 
 }

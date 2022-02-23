@@ -148,9 +148,7 @@ public class EvalExParser implements AlgebraicParser {
      * @return
      */
     private boolean areBracketsBalanced(String objFunction) {
-
         Deque<Character> stack = new ArrayDeque<>();
-
         for (int i = 0; i < objFunction.length(); i++) {
             char bracket = objFunction.charAt(i);
             if (bracket == ')') {
