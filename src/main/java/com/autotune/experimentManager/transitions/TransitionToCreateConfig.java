@@ -14,6 +14,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
 
 public class TransitionToCreateConfig extends AbstractBaseTransition {
@@ -29,9 +33,23 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
         IntOrString maxUnavailable = new IntOrString(0);
         rud.setMaxSurge(maxSurge);
         rud.setMaxUnavailable(maxUnavailable);
-        client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
-        Deployment currentDeployment = client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).withName(trialData.getConfig().getDeploymentName()).get();
-        trialData.setCurrentDeployment(currentDeployment);
+        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
+        Deployment currentDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).get();
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(currentDeployment);
+            oos.flush();
+            oos.close();
+            bos.close();
+            byte[] deploymentByteData = bos.toByteArray();
+            ByteArrayInputStream bais = new ByteArrayInputStream(deploymentByteData);
+            Object rawDeploymentObject = new ObjectInputStream(bais).readObject();
+            Deployment deepCopyCurrentDeployment = (Deployment) rawDeploymentObject;
+            trialData.setCurrentDeployment(deepCopyCurrentDeployment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         List<Container> deployedContainers = currentDeployment.getSpec().getTemplate().getSpec().getContainers();
         for (Container deployedAppContainer : deployedContainers) {
             JSONArray configs = TransistionHelper.ConfigHelper.getContainerConfig(deployedAppContainer.getName(), containerConfigs);

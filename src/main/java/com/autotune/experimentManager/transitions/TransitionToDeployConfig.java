@@ -20,7 +20,7 @@ public class TransitionToDeployConfig extends AbstractBaseTransition{
         KubernetesClient client = new DefaultKubernetesClient();
         if(emIterationManager.getCurrentIteration() == 1) {
             LOGGER.info("Launching new config to the deployment");
-            Deployment createdDeployment = client.apps().deployments().inNamespace(EMConstants.DeploymentConstants.NAMESPACE).createOrReplace(trialData.getTrailDeployment());
+            Deployment createdDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).createOrReplace(trialData.getTrailDeployment());
             trialData.setTrailDeployment(createdDeployment);
         } else {
             LOGGER.info("Restarting the pod ... ");
