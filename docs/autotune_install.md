@@ -2,8 +2,8 @@
 
 - [Clone Repositories](#Clone-Repositories)
 - [Install the required software](#Install-the-required-software)
-- [Build Auotune Docker image](#build-autotune-docker-image)
-- [Deploy Auotune using the Docker image](#deploy-autotune)
+- [Build Autotune Docker image](#build-autotune-docker-image)
+- [Deploy Autotune using the Docker image](#deploy-autotune)
 - [Demo Repo](#demo)
 
 
