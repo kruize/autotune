@@ -37,5 +37,4 @@ public class EMTrialConfig {
     public JSONArray getTrainingContainers() {
         return emConfigObject.getDeployments().getTrainingDeployment().getContainersToJSON();
     }
-
 }

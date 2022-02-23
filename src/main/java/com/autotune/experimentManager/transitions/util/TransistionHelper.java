@@ -2,6 +2,10 @@ package com.autotune.experimentManager.transitions.util;
 
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.experimentManager.data.input.metrics.EMMetricResult;
+import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
+import com.autotune.experimentManager.exceptions.EMMetricCollectionException;
 import com.autotune.experimentManager.utils.EMConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -14,6 +18,7 @@ import org.json.JSONObject;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class TransistionHelper {
     public static class LoadAnalyser {
@@ -34,6 +39,48 @@ public class TransistionHelper {
                     return containerObj.getJSONArray(EMConstants.EMJSONKeys.CONFIG);
                 }
             }
+            return null;
+        }
+    }
+
+    public static class CollectMetrics {
+        public static void startMetricCollection(ExperimentTrialData etd) {
+            for (EMMetricInput emMetricInput : etd.getConfig()
+                                                .getEmConfigObject()
+                                                .getDeployments()
+                                                .getTrainingDeployment()
+                                                .getMetrics()) {
+                String query = expandQuery(etd, emMetricInput.getQuery());
+                ArrayList<EMMetricResult> metricResults = getMetricsFromDataSource(emMetricInput.getName(), query, emMetricInput.getDataSource());
+                try {
+                    int totalCycles = etd.getEmIterationManager().getIterationData(etd.getEmIterationManager().getCurrentIteration()).getTotalCycles();
+                    if (metricResults.size() < totalCycles) {
+                        throw new EMMetricCollectionException();
+                    }
+                    int warmupCycles = etd.getEmIterationManager().getIterationData(etd.getEmIterationManager().getCurrentIteration()).getWarmCycles();
+                    EMIterationMetricResult emIterationMetricResult = etd.getEmIterationManager().getIterationData(etd.getEmIterationManager().getCurrentIteration()).getEmIterationResult().getIterationMetricResult(emMetricInput.getName());
+                    for (int i = 0; i < metricResults.size(); i++) {
+                        if (i >= warmupCycles) {
+                            emIterationMetricResult.addToMeasurementList(metricResults.get(i));
+                        } else {
+                            emIterationMetricResult.addToWarmUpList(metricResults.get(i));
+                        }
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        public static String expandQuery(ExperimentTrialData etd, String query) {
+            // Needs to be expanded based on the pod details
+            return null;
+        }
+
+        public static ArrayList<EMMetricResult> getMetricsFromDataSource(String metricName, String Query, String datasource) {
+            // Needs to be replaced with EMRestAPI for datasource querying
+            System.out.println("Collecting metrics from datasource");
             return null;
         }
     }
