@@ -18,6 +18,8 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.k8sObjects.Metric;
+import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.utils.AutotuneSupportedTypes;
 import com.udojava.evalex.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

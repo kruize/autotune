@@ -18,6 +18,9 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.k8sObjects.Metric;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.utils.AutotuneSupportedTypes;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
