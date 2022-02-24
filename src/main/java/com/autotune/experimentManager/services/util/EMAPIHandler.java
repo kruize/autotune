@@ -4,19 +4,25 @@ import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.experimentManager.data.*;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.experimentManager.services.CreateExperimentTrial;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class EMAPIHandler {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMAPIHandler.class);
     public static ExperimentTrialData createETD(JSONObject json) {
         try {
+            LOGGER.info("Creating EMTrailConfig");
             EMTrialConfig config = new EMTrialConfig(json);
+            LOGGER.info("EMTrailConfig created");
             ExperimentTrialData trailData = new ExperimentTrialData(config);
+            LOGGER.info("ETD created");
             return trailData;
         } catch (IncompatibleInputJSONException | EMInvalidInstanceCreation e) {
             e.printStackTrace();

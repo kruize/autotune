@@ -15,23 +15,19 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.datasource.DataSource;
-import com.autotune.analyzer.datasource.DataSourceFactory;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
+import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Objects;
-import java.util.Set;
-
-import static com.autotune.analyzer.deployment.AutotuneDeployment.applicationServiceStackMap;
+import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object
@@ -56,24 +52,38 @@ public class ServiceHelpers {
 	}
 
 	/**
-	 * Copy over the array of stack names for the given Autotune Object to the JSON Object provided
+	 * Copy over the array of deployments and the included stack names for the given
+	 * Autotune Object to the JSON Object provided
 	 *
-	 * @param stackJson
+	 * @param experimentJson JSON object to be updated
 	 * @param autotuneObject
 	 */
-	public static void addStackDetails(JSONObject stackJson, AutotuneObject autotuneObject) {
-		Set<String> applicationServiceStackSet = applicationServiceStackMap.get(autotuneObject.getExperimentName()).keySet();
-		if (applicationServiceStackSet == null) {
+	public static void addDeploymentDetails(JSONObject experimentJson, AutotuneObject autotuneObject) {
+		if (deploymentMap.get(autotuneObject.getExperimentName()).isEmpty()) {
 			return;
 		}
 
-		JSONArray stackArray = new JSONArray();
-		for (String containerImageName : applicationServiceStackMap.get(autotuneObject.getExperimentName()).keySet()) {
-			ApplicationServiceStack applicationServiceStack = applicationServiceStackMap.get(autotuneObject.getExperimentName()).get(containerImageName);
-			stackJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationServiceStack.getDeploymentName());
-			stackArray.put(containerImageName);
+		JSONArray deploymentArray = new JSONArray();
+		for (String deploymentName : deploymentMap.get(autotuneObject.getExperimentName()).keySet()) {
+			JSONObject deploymentJson = new JSONObject();
+			ApplicationDeployment applicationDeployment = deploymentMap.get(autotuneObject.getExperimentName()).get(deploymentName);
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationDeployment.getDeploymentName());
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.NAMESPACE, applicationDeployment.getNamespace());
+			JSONArray stackArray = new JSONArray();
+			if (!applicationDeployment.getApplicationServiceStackMap().isEmpty()) {
+				for (String stackName : applicationDeployment.getApplicationServiceStackMap().keySet()) {
+					ApplicationServiceStack applicationServiceStack = applicationDeployment.getApplicationServiceStackMap().get(stackName);
+					JSONObject stackJson = new JSONObject();
+					stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, stackName);
+					stackJson.put(AnalyzerConstants.ServiceConstants.CONTAINER_NAME, applicationServiceStack.getContainerName());
+					stackArray.put(stackJson);
+				}
+			}
+			deploymentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+			deploymentArray.put(deploymentJson);
 		}
-		stackJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
+
+		experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
 	}
 
 	/**
@@ -117,18 +127,11 @@ public class ServiceHelpers {
 				JSONObject tunableJson = new JSONObject();
 				addTunable(tunableJson, tunable);
 				String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
-				try {
-					String query = AnalyzerConstants.NONE;
-					final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
-					// If tunable has a query specified
-					if (tunableQuery != null && !tunableQuery.isEmpty()) {
-						query = Objects.requireNonNull(dataSource).getDataSourceURL() +
-								dataSource.getQueryEndpoint() + tunableQuery;
-					}
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
-				} catch (MonitoringAgentNotFoundException e) {
-					tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, tunableQuery);
+				String query = AnalyzerConstants.NONE;
+				if (tunableQuery != null && !tunableQuery.isEmpty()) {
+					query = tunableQuery;
 				}
+				tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
 				tunablesArray.put(tunableJson);
 			}
 		}
@@ -147,13 +150,7 @@ public class ServiceHelpers {
 			JSONObject functionVariableJson = new JSONObject();
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
 			functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());
-			try {
-				final DataSource dataSource = DataSourceFactory.getDataSource(AutotuneDeploymentInfo.getMonitoringAgent());
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, Objects.requireNonNull(dataSource).getDataSourceURL() +
-						dataSource.getQueryEndpoint() + functionVariable.getQuery());
-			} catch (MonitoringAgentNotFoundException e) {
-				functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
-			}
+			functionVariableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, functionVariable.getQuery());
 			functionVariablesArray.put(functionVariableJson);
 		}
 		funcVarJson.put(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES, functionVariablesArray);
@@ -184,7 +181,8 @@ public class ServiceHelpers {
 			for (String applicationTunableName : applicationSearchSpace.getTunablesMap().keySet()) {
 				Tunable tunable = applicationSearchSpace.getTunablesMap().get(applicationTunableName);
 				JSONObject tunableJson = new JSONObject();
-				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+				// Pass the full name here that includes the layer and stack names
+				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getFullName());
 				// searchSpace is passing only the tunable value and not a string
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());

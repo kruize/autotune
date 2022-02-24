@@ -17,8 +17,9 @@ package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.Utils;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +49,8 @@ public final class AutotuneConfig
 
 	private final ArrayList<Tunable> tunables;
 
+	private final ObjectReference objectReference;
+
 	public AutotuneConfig(String name,
 						  String layerName,
 						  int level,
@@ -56,7 +59,8 @@ public final class AutotuneConfig
 						  ArrayList<LayerPresenceQuery> layerPresenceQueries,
 						  String layerPresenceLabel,
 						  String layerPresenceLabelValue,
-						  ArrayList<Tunable> tunables) throws InvalidValueException {
+						  ArrayList<Tunable> tunables,
+						  ObjectReference objectReference) throws InvalidValueException {
 
 		HashMap<String, Object> map = new HashMap<>();
 		map.put(AnalyzerConstants.AutotuneConfigConstants.NAME, name);
@@ -79,7 +83,8 @@ public final class AutotuneConfig
 			this.layerPresenceLabel = layerPresenceLabel;
 			this.layerPresenceLabelValue = layerPresenceLabelValue;
 			this.tunables = new ArrayList<>(tunables);
-			this.layerId = Utils.generateID(toString());;
+			this.layerId = Utils.generateID(toString());
+			this.objectReference = objectReference;
 		} else {
 			throw new InvalidValueException(error.toString());
 		}
@@ -97,6 +102,7 @@ public final class AutotuneConfig
 		this.presence = copy.presence;
 
 		this.tunables = new ArrayList<>(copy.getTunables());
+		this.objectReference = copy.getObjectReference();
 	}
 
 	public int getLevel() {
@@ -137,6 +143,10 @@ public final class AutotuneConfig
 
 	public String getLayerId() {
 		return layerId;
+	}
+
+	public ObjectReference getObjectReference() {
+		return objectReference;
 	}
 
 	@Override

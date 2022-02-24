@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.EvalExParser;
+import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 
 import java.util.HashMap;
 
@@ -68,6 +68,17 @@ public class ValidateAutotuneObject
 		if (!AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection())) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
 		}
+
+		//check if slo_class is 'response_time' and direction is minimize
+		if (sloInfo.getSloClass().equalsIgnoreCase("response_time") && !sloInfo.getDirection().equalsIgnoreCase("minimize")) {
+			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
+		}
+
+		//check if slo_class is 'throughput' and direction is maximize
+		if (sloInfo.getSloClass().equalsIgnoreCase("throughput") && !sloInfo.getDirection().equalsIgnoreCase("maximize")) {
+			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
+		}
+
 
 		// Check if hpo_algo_impl is supported
 		if (!AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(sloInfo.getHpoAlgoImpl())) {

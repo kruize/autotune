@@ -16,7 +16,7 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 

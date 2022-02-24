@@ -18,17 +18,21 @@ package com.autotune.analyzer.deployment;
 import com.autotune.analyzer.exceptions.ClusterTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.layer.Container;
-import com.autotune.analyzer.layer.Generic;
-import com.autotune.analyzer.layer.Hotspot;
-import com.autotune.analyzer.layer.Quarkus;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.analyzer.layer.ContainerLayer;
+import com.autotune.analyzer.layer.GenericLayer;
+import com.autotune.analyzer.layer.HotspotLayer;
+import com.autotune.analyzer.layer.QuarkusLayer;
+import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KubeEventLogger;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.Hashtable;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 
 /**
  * Contains information about the current deployment by parsing the autotune config map
@@ -48,15 +52,18 @@ public class AutotuneDeploymentInfo
 	private static String rootLoggingLevel;
 	private static Hashtable<String, Class> tunableLayerPair;
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeploymentInfo.class);
+	private static KubernetesClient kubernetesClient;
+	private static KubeEventLogger kubeEventLogger;
 
 	public static void setLayerTable() {
 		tunableLayerPair = new Hashtable<String, Class>();
-		tunableLayerPair.put(LAYER_GENERIC, Generic.class);
-		tunableLayerPair.put(LAYER_CONTAINER, Container.class);
-		tunableLayerPair.put(LAYER_HOTSPOT, Hotspot.class);
-		tunableLayerPair.put(LAYER_QUARKUS, Quarkus.class);
+		tunableLayerPair.put(LAYER_GENERIC, GenericLayer.class);
+		tunableLayerPair.put(LAYER_CONTAINER, ContainerLayer.class);
+		tunableLayerPair.put(LAYER_HOTSPOT, HotspotLayer.class);
+		tunableLayerPair.put(LAYER_QUARKUS, QuarkusLayer.class);
 	}
 
+	// TODO: Need a better way to get the layer class
 	public static Class getLayer(String layerName) {
 		return tunableLayerPair.get(layerName);
 	}
@@ -106,6 +113,28 @@ public class AutotuneDeploymentInfo
 			LOGGER.error("k8s type {} is not suppported", kubernetesType);
 			throw new K8sTypeNotSupportedException();
 		}
+	}
+
+	public static void initializeKubernetesClient()
+	{
+		kubernetesClient = new DefaultKubernetesClient();
+	}
+
+	public static KubernetesClient getKubernetesClient()
+	{
+		return kubernetesClient;
+	}
+
+	public static void initiateEventLogging()
+	{
+		if (kubernetesClient != null) {
+			kubeEventLogger = new KubeEventLogger(kubernetesClient, Clock.systemUTC());
+		}
+	}
+
+	public static KubeEventLogger getKubeEventLogger()
+	{
+		return kubeEventLogger;
 	}
 
 	public static String getAuthType() {

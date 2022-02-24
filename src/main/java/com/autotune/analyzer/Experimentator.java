@@ -1,9 +1,10 @@
 package com.autotune.analyzer;
 
+import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.experiments.ExperimentTrial;
+import com.autotune.common.data.experiments.ExperimentTrial;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import org.slf4j.Logger;
@@ -11,15 +12,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
+
+/**
+ *
+ */
 public class Experimentator implements Runnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Experimentator.class);
 	private static final int MAX_NUMBER_OF_EXPERIMENTS = 1;
 	private static int num_experiments = 0;
-	public static HashMap<String, ApplicationSearchSpace> applicationSearchSpaceMap = new HashMap<>();
 	public static HashMap<String, AutotuneExperiment> experimentsMap = new HashMap<>();
-	public static Map<String, Map <String, Double>> tunablesMap = new HashMap<>();
 
 	public static void start() {
 		Experimentator experimentator = new Experimentator();
@@ -32,14 +34,16 @@ public class Experimentator implements Runnable {
 
 	}
 
+	/**
+	 *
+	 * @param autotuneObject
+	 * @param applicationDeployment
+	 */
 	public static void startExperiment(AutotuneObject autotuneObject,
-									   ApplicationServiceStack applicationServiceStack) {
+									   ApplicationDeployment applicationDeployment) {
 
 		try {
-			ApplicationSearchSpace applicationSearchSpace = updateSearchSpace(autotuneObject, applicationServiceStack);
-			applicationServiceStack.setApplicationSearchSpace(applicationSearchSpace);
-
-			AutotuneExperiment autotuneExperiment = experimentsMap.get(autotuneObject.getExperimentName());
+			AutotuneExperiment autotuneExperiment = experimentsMap.get(applicationDeployment.getDeploymentName());
 			// If a experiment is already underway, need to update it
 			if (null != autotuneExperiment) {
 				updateExperiment(autotuneExperiment);
@@ -48,13 +52,16 @@ public class Experimentator implements Runnable {
 
 			// Start a new experiment
 			ArrayList<ExperimentTrial> experimentTrials = new ArrayList<>();
-			autotuneExperiment = new AutotuneExperiment(autotuneObject.getExperimentName(),
-					autotuneObject.getExperimentId(),
+			autotuneExperiment = new AutotuneExperiment(applicationDeployment.getDeploymentName(),
+					autotuneObject.getExperimentName(),
 					autotuneObject,
 					"Pending Provisioning",
-					applicationServiceStack,
+					applicationDeployment,
 					experimentTrials);
-			experimentsMap.put(autotuneObject.getExperimentName(), autotuneExperiment);
+			experimentsMap.put(applicationDeployment.getDeploymentName(), autotuneExperiment);
+
+			ApplicationSearchSpace applicationSearchSpace = updateSearchSpace(autotuneExperiment);
+			autotuneExperiment.setApplicationSearchSpace(applicationSearchSpace);
 
 			// Autotune can only handle MAX_NUMBER_OF_EXPERIMENTS at any given time
 			if (++num_experiments <= MAX_NUMBER_OF_EXPERIMENTS) {
@@ -74,16 +81,16 @@ public class Experimentator implements Runnable {
 	private static void updateExperiment(AutotuneExperiment autotuneExperiment) {
 	}
 
-	private static ApplicationSearchSpace updateSearchSpace(AutotuneObject autotuneObject,
-															ApplicationServiceStack applicationServiceStack) {
+	private static ApplicationSearchSpace updateSearchSpace(AutotuneExperiment autotuneExperiment) {
 
 		try {
-			ApplicationSearchSpace applicationSearchSpace = applicationSearchSpaceMap.get(autotuneObject.getExperimentName());
+			ApplicationSearchSpace applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
 			if (null != applicationSearchSpace) {
 				return applicationSearchSpace;
 			}
 
-			String experimentName = autotuneObject.getExperimentName();
+			AutotuneObject autotuneObject = autotuneExperiment.getAutotuneObject();
+			String experimentName = autotuneExperiment.getExperimentName();
 			String experimentId = autotuneObject.getExperimentId();
 			String objectiveFunction = autotuneObject.getSloInfo().getObjectiveFunction();
 			String hpoAlgoImpl = autotuneObject.getSloInfo().getHpoAlgoImpl();
@@ -98,14 +105,22 @@ public class Experimentator implements Runnable {
 					direction,
 					valueType);
 
-			for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-				AutotuneConfig layer = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
-				for (Tunable tunable : layer.getTunables()) {
-					applicationSearchSpace.getTunablesMap().put(tunable.getName(), tunable);
+			for (String stackName : autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
+				ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(stackName);
+				for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
+					AutotuneConfig layer = 	applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
+					for (Tunable tunable : layer.getTunables()) {
+						StringBuilder tunableFullName = new StringBuilder(stackName)
+								.append("|")
+								.append(layerName)
+								.append("|")
+								.append(tunable.getName());
+						tunable.setStackName(stackName);
+						tunable.setFullName(tunableFullName.toString());
+						applicationSearchSpace.getTunablesMap().put(tunableFullName.toString(), tunable);
+					}
 				}
 			}
-
-			applicationSearchSpaceMap.put(experimentName, applicationSearchSpace);
 
 			return applicationSearchSpace;
 		} catch (Exception e) {

@@ -16,14 +16,14 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
 
 /**
  * Contains the tunable to optimize, along with its upper and lower bounds, value type
@@ -46,6 +46,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigE
 public class Tunable
 {
 	private final String name;
+	private String fullName;
 	private final double step;
 	private final String valueType;
 	private final Double upperBoundValue;
@@ -54,6 +55,7 @@ public class Tunable
 	private String description;
 	private Map<String, String> queries;
 	private final String layerName;
+	private String stackName;
 
     /*
     TODO Think about bounds for other valueTypes
@@ -137,6 +139,7 @@ public class Tunable
 
 	public Tunable(Tunable copy) {
 		this.name = copy.name;
+		this.fullName = copy.fullName;
 		this.step = copy.step;
 		this.upperBoundValue = copy.upperBoundValue;
 		this.lowerBoundValue = copy.lowerBoundValue;
@@ -146,10 +149,15 @@ public class Tunable
 		this.queries = copy.queries;
 		this.sloClassList = copy.sloClassList;
 		this.layerName = copy.layerName;
+		this.stackName = copy.stackName;
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public String getFullName() {
+		return fullName;
 	}
 
 	private String getBound(Double boundVal, String boundUnits, String valueType) {
@@ -196,6 +204,8 @@ public class Tunable
 		return description;
 	}
 
+	public void setFullName(String fullName) { this.fullName = fullName; }
+
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -209,6 +219,10 @@ public class Tunable
 	}
 
 	public String getLayerName() { return layerName; }
+
+	public String getStackName() { return stackName; }
+
+	public void setStackName(String stackName) { this.stackName = stackName; }
 
 	@Override
 	public String toString() {

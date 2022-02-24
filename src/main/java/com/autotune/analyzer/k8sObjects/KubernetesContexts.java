@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 /**
@@ -30,7 +30,7 @@ public class KubernetesContexts
 			.withGroup(AnalyzerConstants.GROUP)
 			.withScope(AnalyzerConstants.SCOPE)
 			.withPlural(AnalyzerConstants.AUTOTUNE_PLURALS)
-			.withVersion(AnalyzerConstants.API_VERSION)
+			.withVersion(AnalyzerConstants.API_VERSION_V1)
 			.withName(AnalyzerConstants.AUTOTUNE_RESOURCE_NAME)
 			.build();
 
@@ -39,7 +39,7 @@ public class KubernetesContexts
 			.withGroup(AnalyzerConstants.GROUP)
 			.withScope(AnalyzerConstants.SCOPE)
 			.withPlural(AnalyzerConstants.AUTOTUNE_CONFIG_PLURALS)
-			.withVersion(AnalyzerConstants.API_VERSION)
+			.withVersion(AnalyzerConstants.API_VERSION_V1)
 			.withName(AnalyzerConstants.AUTOTUNE_CONFIG_RESOURCE_NAME)
 			.build();
 
@@ -48,7 +48,7 @@ public class KubernetesContexts
 			.withGroup(AnalyzerConstants.GROUP)
 			.withScope(AnalyzerConstants.SCOPE)
 			.withPlural(AnalyzerConstants.AUTOTUNE_VARIABLE_PLURALS)
-			.withVersion(AnalyzerConstants.API_VERSION)
+			.withVersion(AnalyzerConstants.API_VERSION_V1)
 			.withName(AnalyzerConstants.AUTOTUNE_VARIABLE_RESOURCE_NAME)
 			.build();
 

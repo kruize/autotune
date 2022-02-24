@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package com.autotune.analyzer.k8sObjects;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.utils.AutotuneSupportedTypes;
+import com.autotune.utils.AutotuneSupportedTypes;
 
 /**
  * Used to detect the presence of the layer in an application. Autotune runs the query, looks for

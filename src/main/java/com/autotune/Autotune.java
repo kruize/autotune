@@ -16,19 +16,22 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
+import com.autotune.analyzer.exceptions.AutoTuneExceptionHandler;
 import com.autotune.utils.ServerContext;
 import com.autotune.experimentManager.core.ExperimentManager;
-import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.service.HealthService;
+import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.autotune.utils.ServerContext.*;
+import javax.servlet.http.HttpServletResponse;
 
 public class Autotune
 {
@@ -43,13 +46,15 @@ public class Autotune
 		Server server = new Server(AUTOTUNE_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
+		context.setErrorHandler(getErrorHandler("/AutotuneExceptionHandler"));
+		context.addServlet(AutoTuneExceptionHandler.class, "/AutotuneExceptionHandler");
 		server.setHandler(context);
 		addAutotuneServlets(context);
 
-		String autotuneMode = System.getenv(EMConstants.EMEnv.AUTOTUNE_MODE);
+		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
 
 		if (null != autotuneMode) {
-			if (autotuneMode.equalsIgnoreCase(EMConstants.EMEnv.EM_ONLY_MODE)) {
+			if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
 				startAutotuneEMOnly(context);
 			} else {
 				startAutotuneNormalMode(context);
@@ -87,5 +92,20 @@ public class Autotune
 	private static void startAutotuneNormalMode(ServletContextHandler contextHandler) {
 		Analyzer.start(contextHandler);
 		ExperimentManager.launch(contextHandler);
+	}
+
+	private static ErrorPageErrorHandler getErrorHandler(String errorHandlerPath) {
+		ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
+		errorHandler.addErrorPage(HttpServletResponse.SC_BAD_REQUEST, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_UNAUTHORIZED, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_FORBIDDEN, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_NOT_FOUND, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_METHOD_NOT_ALLOWED, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_CONFLICT, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_NOT_IMPLEMENTED, errorHandlerPath);
+		errorHandler.addErrorPage(HttpServletResponse.SC_SERVICE_UNAVAILABLE, errorHandlerPath);
+		errorHandler.addErrorPage("java.lang.Throwable", errorHandlerPath);
+		return errorHandler;
 	}
 }

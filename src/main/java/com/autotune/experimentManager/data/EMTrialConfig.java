@@ -1,79 +1,41 @@
 package com.autotune.experimentManager.data;
 
+import com.autotune.experimentManager.data.input.EMConfigObject;
+import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.experimentManager.services.util.EMAPIHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EMTrialConfig {
-    private final JSONObject inputJSON;
-    private final JSONObject configInfo;
-    private final JSONObject configSettings;
-    private final JSONArray configDeployments;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMTrialConfig.class);
+    final EMConfigObject emConfigObject;
 
-    private JSONObject parseConfigInfo() throws IncompatibleInputJSONException {
-        if (inputJSON.has("info"))
-            return inputJSON.getJSONObject("info");
-        throw new IncompatibleInputJSONException();
+    public EMTrialConfig(JSONObject jsonObject) throws EMInvalidInstanceCreation, IncompatibleInputJSONException {
+        LOGGER.info("Creating EMConfigObject");
+        emConfigObject = new EMConfigObject(jsonObject);
     }
 
-    private JSONObject parseConfigSettings() throws IncompatibleInputJSONException {
-        if (inputJSON.has("settings"))
-            return inputJSON.getJSONObject("settings");
-        throw new IncompatibleInputJSONException();
-    }
-
-    private JSONArray parseConfigDeployments() throws IncompatibleInputJSONException {
-        if (inputJSON.has("deployments"))
-            return inputJSON.getJSONArray("deployments");
-        throw new IncompatibleInputJSONException();
-    }
-
-    public EMTrialConfig(JSONObject inputJSON) throws IncompatibleInputJSONException {
-        this.inputJSON = inputJSON;
-        this.configInfo = parseConfigInfo();
-        this.configSettings = parseConfigSettings();
-        this.configDeployments = parseConfigDeployments();
-    }
-
-    public JSONObject getConfigSettings() {
-        return this.configSettings;
-    }
-
-    public JSONArray getConfigDeployments() {
-        return this.configDeployments;
-    }
-
-    public JSONArray getTrainingConfigs() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getJSONArray("config");
-            }
-        }
-        return null;
+    public EMConfigObject getEmConfigObject() {
+        return emConfigObject;
     }
 
     public String getDeploymentName() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getString("deployment_name");
-            }
-        }
-        return null;
+        return emConfigObject.getDeployments().getTrainingDeployment().getDeploymentName();
     }
 
     public String getDeploymentStrategy() {
-        return configSettings.getJSONObject("deployment_settings").getJSONObject("deployment_policy").getString("type");
+        return emConfigObject.getSettings().getDeploymentSettings().getDeploymentPolicy().getType();
     }
 
     public String getDeploymentNamespace() {
-        for (Object deploymentConfig : configDeployments) {
-            JSONObject castedDeploymentConfig = (JSONObject) deploymentConfig;
-            if(castedDeploymentConfig.getString("type").equalsIgnoreCase("training")) {
-                return castedDeploymentConfig.getString("namespace");
-            }
-        }
-        return "default";
+        return emConfigObject.getDeployments().getTrainingDeployment().getNamespace();
     }
+
+    public JSONArray getTrainingContainers() {
+        return emConfigObject.getDeployments().getTrainingDeployment().getContainersToJSON();
+    }
+
 }
