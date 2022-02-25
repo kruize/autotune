@@ -3,7 +3,6 @@ package com.autotune.experimentManager.transitions;
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.transitions.util.TransistionHelper;
-import com.autotune.experimentManager.utils.EMConstants;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.RollingUpdateDeployment;
@@ -34,11 +33,11 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
         rud.setMaxSurge(maxSurge);
         rud.setMaxUnavailable(maxUnavailable);
         client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
-        Deployment currentDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).get();
+        Deployment defaultDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).get();
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(currentDeployment);
+            oos.writeObject(defaultDeployment);
             oos.flush();
             oos.close();
             bos.close();
@@ -46,11 +45,11 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
             ByteArrayInputStream bais = new ByteArrayInputStream(deploymentByteData);
             Object rawDeploymentObject = new ObjectInputStream(bais).readObject();
             Deployment deepCopyCurrentDeployment = (Deployment) rawDeploymentObject;
-            trialData.setCurrentDeployment(deepCopyCurrentDeployment);
+            trialData.setDefaultDeployment(deepCopyCurrentDeployment);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<Container> deployedContainers = currentDeployment.getSpec().getTemplate().getSpec().getContainers();
+        List<Container> deployedContainers = defaultDeployment.getSpec().getTemplate().getSpec().getContainers();
         for (Container deployedAppContainer : deployedContainers) {
             JSONArray configs = TransistionHelper.ConfigHelper.getContainerConfig(deployedAppContainer.getName(), containerConfigs);
             for (Object config : configs) {
@@ -107,7 +106,7 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
             }
         }
 
-        trialData.setTrailDeployment(currentDeployment);
+        trialData.setTrailDeployment(defaultDeployment);
         processNextTransition(runId);
     }
 }

@@ -1,6 +1,5 @@
 package com.autotune.experimentManager.transitions;
 
-import com.autotune.experimentManager.core.EMTrialManager;
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -18,7 +17,7 @@ public class TransitionToCleanDeployment implements BaseTransition{
         trialData.setStatus(EMUtil.EMExpStatus.COMPLETED);
         KubernetesClient client = new DefaultKubernetesClient();
         LOGGER.info("Rolling back the pod to old config... ");
-        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).createOrReplace(trialData.getCurrentDeployment());
+        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).createOrReplace(trialData.getDefaultDeployment());
         LOGGER.info("Done.");
     }
 
