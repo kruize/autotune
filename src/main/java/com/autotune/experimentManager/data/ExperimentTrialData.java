@@ -13,7 +13,7 @@ public class ExperimentTrialData {
     private String trialResultError;
     private EMTrialConfig config;
     private EMIterationManager emIterationManager;
-    private Deployment currentDeployment;
+    private Deployment defaultDeployment;
     private Deployment trailDeployment;
     private EMExpStages currentStage;
     private EMExpStages targetStage;
@@ -80,12 +80,12 @@ public class ExperimentTrialData {
         this.targetStage = targetStage;
     }
 
-    public Deployment getCurrentDeployment() {
-        return currentDeployment;
+    public Deployment getDefaultDeployment() {
+        return defaultDeployment;
     }
 
-    public void setCurrentDeployment(Deployment currentDeployment) {
-        this.currentDeployment = currentDeployment;
+    public void setDefaultDeployment(Deployment defaultDeployment) {
+        this.defaultDeployment = defaultDeployment;
     }
 
     public Deployment getTrailDeployment() {
