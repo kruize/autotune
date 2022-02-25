@@ -29,3 +29,39 @@ tunables:
   slo_class:
   - response_time
   - throughput
+
+- name: balanced
+  description: 'Garbage collection policy'
+  value_type: categorical
+  choices:
+    - g1gc
+    - serialgc
+    - parallelgc
+    - cmsgc
+    - zgc
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
+- name: TieredCompilation
+  description: 'Tiered Compilation'
+  value_type: categorical
+  choices:
+    - true
+    - false
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
+- name: AllowParallelDefineClass
+  description: 'Whether to allow parallel define class or not'
+  value_type: categorical
+  choices:
+    - true
+    - false
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage

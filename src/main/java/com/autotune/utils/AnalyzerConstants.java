@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,6 +132,7 @@ public class AnalyzerConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
+		public static final String TUNABLE_CHOICES = "tunable_choices";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";

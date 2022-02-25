@@ -95,6 +95,12 @@ spec:
                 lower_bound:
                   description: 'Lower bound of the recommendations generated for the tunable'
                   type: string
+                choices:
+                  description: 'Categorical choice recommendations generated for the tunable'
+                  type: array
+                  items:
+                    description: 'Categorical choice input'
+                    type: string
                 value_type:
                   description: 'Value type of the query response (double, string, int)'
                   type: string
@@ -123,8 +129,6 @@ spec:
                     type: string
               required:
               - name
-              - upper_bound
-              - lower_bound
               - value_type
               - slo_class
         required:

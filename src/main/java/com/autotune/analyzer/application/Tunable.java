@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
+import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.utils.AutotuneSupportedTypes;
-
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,7 +27,7 @@ import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 import static com.autotune.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
 
 /**
- * Contains the tunable to optimize, along with its upper and lower bounds, value type
+ * Contains the tunable to optimize, along with its upper & lower bounds or categorical choices, value type
  * and the list of slo_class (throughput, response_time, right_size, etc.) for which it is applicable.
  *
  * Example:
@@ -45,16 +46,16 @@ import static com.autotune.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
  */
 public class Tunable
 {
-	private final String name;
+	private String name;
 	private String fullName;
-	private final double step;
-	private final String valueType;
-	private final Double upperBoundValue;
-	private final Double lowerBoundValue;
-	private final String boundUnits;
+	private double step;
+	private String valueType;
+	private Double upperBoundValue;
+	private Double lowerBoundValue;
+	private String boundUnits;
 	private String description;
 	private Map<String, String> queries;
-	private final String layerName;
+	private String layerName;
 	private String stackName;
 
     /*
@@ -63,6 +64,7 @@ public class Tunable
     */
 
 	public ArrayList<String> sloClassList;
+	public List<String> choices;
 
 	private void validateBounds(Double upperBoundValue,
 								Double lowerBoundValue,
@@ -98,24 +100,50 @@ public class Tunable
 		}
 	}
 
+	/**
+	 * invoked when tunables contain categorical choices
+	 *
+	 * @param name
+	 * @param valueType
+	 * @param queries
+	 * @param sloClassList
+	 * @param layerName
+	 * @param choices
+	 */
 	public Tunable(String name,
-				   double step,
-				   String upperBound,
-				   String lowerBound,
 				   String valueType,
 				   Map<String, String> queries,
 				   ArrayList<String> sloClassList,
-				   String layerName) throws InvalidBoundsException {
-		this.queries = queries;
-		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
-		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
-		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
-		this.step = Objects.requireNonNull(step, ZERO_STEP);
-		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
-			this.layerName = layerName;
-		else
-			this.layerName = "generic";
+				   String layerName,
+				   List<String> choices) {
+		setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
+		this.choices = Objects.requireNonNull(choices, INVALID_TUNABLE_CHOICE);
+	}
 
+	/**
+	 * invoked when tunables contain upper & lower bounds values
+	 * 
+	 * @param name
+	 * @param valueType
+	 * @param queries
+	 * @param sloClassList
+	 * @param layerName
+	 * @param step
+	 * @param upperBound
+	 * @param lowerBound
+	 * @throws InvalidBoundsException
+	 */
+	public Tunable(String name,
+				   String valueType,
+				   Map<String, String> queries,
+				   ArrayList<String> sloClassList,
+				   String layerName,
+				   double step,
+				   String upperBound,
+				   String lowerBound
+				   ) throws InvalidBoundsException {
+		setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
+		this.step = Objects.requireNonNull(step, ZERO_STEP);
 		/* Parse the value for the bounds from the strings passed in */
 		Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
 		Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
@@ -150,6 +178,29 @@ public class Tunable
 		this.sloClassList = copy.sloClassList;
 		this.layerName = copy.layerName;
 		this.stackName = copy.stackName;
+	}
+
+	/**
+	 *
+	 * @param queries
+	 * @param name
+	 * @param valueType
+	 * @param sloClassList
+	 * @param layerName
+	 */
+	private void setCommonTunableParameters(Map<String, String> queries,
+											String name,
+											String valueType,
+											ArrayList<String> sloClassList,
+											String layerName) {
+		this.queries = queries;
+		this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
+		this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
+		this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
+		if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+			this.layerName = layerName;
+		else
+			this.layerName = "generic";
 	}
 
 	public String getName() {
@@ -223,6 +274,10 @@ public class Tunable
 	public String getStackName() { return stackName; }
 
 	public void setStackName(String stackName) { this.stackName = stackName; }
+
+	public List<String> getChoices() {
+		return choices;
+	}
 
 	@Override
 	public String toString() {
