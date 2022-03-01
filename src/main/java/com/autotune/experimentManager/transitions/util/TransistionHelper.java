@@ -43,7 +43,7 @@ public class TransistionHelper {
             // Need to get data from ETD and process it
             ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
             JSONObject retJsonObj = new JSONObject("{\"experiment_name\":\""+ trialData.getConfig().getEmConfigObject().getMetadata().getApplicationName() +"\"," +
-                    "\"deployments\":[{\"deployment_name\":\"galaxies-sample\"," +
+                    "\"deployments\":[{\"deployment_name\":\""+ trialData.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getDeploymentName() +"\"," +
                     "\"namespace\":\"default\"," +
                     "\"containers\":[{\"image_name\":\"dinogun/galaxies:1.2-jdk-11.0.10_9\"," +
                     "\"container_name\":\"galaxies\"," +
