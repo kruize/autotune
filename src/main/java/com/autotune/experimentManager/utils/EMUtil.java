@@ -50,7 +50,11 @@ public class EMUtil {
         /**
          * Initial stage
          */
-        INIT(0, 1, false, null),
+        INIT(0,
+                1,
+                false,
+                null,
+                false),
         /**
          * CREATE_CONFIG:
          *   Description: Stage in EM Trial Lifecycle where the configuration for a particular trial is being created
@@ -58,7 +62,11 @@ public class EMUtil {
          *   Successor Stage: DEPLOY_CONFIG
          *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
          */
-        CREATE_CONFIG(1, 1, false, EMConstants.TransitionClasses.CREATE_CONFIG),
+        CREATE_CONFIG(1,
+                1,
+                false,
+                EMConstants.TransitionClasses.CREATE_CONFIG,
+                false),
         /**
          * DEPLOY_CONFIG:
          *   Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
@@ -66,32 +74,79 @@ public class EMUtil {
          *   Successor Stage: INITIATE_TRAIL_RUN_PHASE
          *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
          */
-        DEPLOY_CONFIG(2, 1, false, EMConstants.TransitionClasses.DEPLOY_CONFIG),
-        INITIATE_TRIAL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRIAL_RUN_PHASE),
-        INITIAL_LOAD_CHECK(3, 2, true, EMConstants.TransitionClasses.INITIAL_LOAD_CHECK),
-        LOAD_CONSISTENCY_CHECK(3, 3, true, EMConstants.TransitionClasses.LOAD_CONSISTENCY_CHECK),
-        INITIATE_METRICS_COLLECTION_PHASE(4, 1, false, EMConstants.TransitionClasses.INITIATE_METRICS_COLLECTION_PHASE),
-        COLLECT_METRICS(4, 1, true, EMConstants.TransitionClasses.COLLECT_METRICS),
-        CREATE_RESULT_DATA(5, 1, false, EMConstants.TransitionClasses.CREATE_RESULT_DATA),
-        SEND_RESULT_DATA(5, 2, false, EMConstants.TransitionClasses.SEND_RESULT_DATA),
-        CLEAN_OR_ROLLBACK_DEPLOYMENT(6, 1, true, EMConstants.TransitionClasses.CLEAN_OR_ROLLBACK_DEPLOYMENT),
+        DEPLOY_CONFIG(2,
+                1,
+                false,
+                EMConstants.TransitionClasses.DEPLOY_CONFIG,
+                false),
+        INITIATE_TRAIL_RUN_PHASE(3,
+                1,
+                false,
+                EMConstants.TransitionClasses.INITIATE_TRAIL_RUN_PHASE,
+                false),
+        INITIAL_LOAD_CHECK(3,
+                2,
+                false,
+                EMConstants.TransitionClasses.INITIAL_LOAD_CHECK,
+                false),
+        LOAD_CONSISTENCY_CHECK(3,
+                3,
+                false,
+                EMConstants.TransitionClasses.LOAD_CONSISTENCY_CHECK,
+                false),
+        INITIATE_METRICS_COLLECTION_PHASE(4,
+                1,
+                false,
+                EMConstants.TransitionClasses.INITIATE_METRICS_COLLECTION_PHASE,
+                false),
+        COLLECT_METRICS(4,
+                2,
+                false,
+                EMConstants.TransitionClasses.COLLECT_METRICS,
+                false),
+        METRIC_COLLECTION_CYCLE(4,
+                3,
+                true,
+                EMConstants.TransitionClasses.METRIC_COLLECTION_CYCLE,
+                true),
+        CREATE_RESULT_DATA(5,
+                1,
+                false,
+                EMConstants.TransitionClasses.CREATE_RESULT_DATA,
+                false),
+        SEND_RESULT_DATA(5,
+                2,
+                false,
+                EMConstants.TransitionClasses.SEND_RESULT_DATA,
+                false),
+        CLEAN_OR_ROLLBACK_DEPLOYMENT(6,
+                1,
+                false,
+                EMConstants.TransitionClasses.CLEAN_OR_ROLLBACK_DEPLOYMENT,
+                false),
         /**
          * Final or exiting stage
          */
-        EXIT(7, 1, false, null)
+        EXIT(7,
+                1,
+                false,
+                null,
+                false)
         ;
 
         private int stage;
         private int intermediate_stage;
         private boolean isScheduled;
         private String className;
+        private boolean isCycle;
         private static final EMExpStages values[] = values();
 
-        private EMExpStages(final int stage, final int intermediate_stage, final boolean isScheduled, final String className) {
+        private EMExpStages(final int stage, final int intermediate_stage, final boolean isScheduled, final String className, final boolean isCycle) {
             this.stage = stage;
             this.intermediate_stage = intermediate_stage;
             this.isScheduled = isScheduled;
             this.className = className;
+            this.isCycle = isCycle;
         }
 
         /**
@@ -114,6 +169,8 @@ public class EMUtil {
         public boolean isScheduled() {
             return isScheduled;
         }
+
+        public boolean isCycle() { return isCycle; }
 
         /**
          * Returns the name of the class which is responsible for processing a particular stage
@@ -167,9 +224,25 @@ public class EMUtil {
                 .toString();
     }
 
-    public JSONObject generateMetricsMap(ExperimentTrialData etd) {
+    public static JSONObject generateMetricsMap(ExperimentTrialData etd) {
         ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
 
         return null;
+    }
+
+    public static boolean breakingCondition(EMExpStages stage, ExperimentTrialData etd) {
+        // Need to implement breaking condition for each cycling stage
+        return true;
+    }
+
+    public static int getDelayTimerForStage (EMExpStages stage, ExperimentTrialData etd) {
+        if (!stage.isScheduled()) {
+            return 0;
+        }
+        if (stage == EMExpStages.METRIC_COLLECTION_CYCLE) {
+            // return cycle duration in seconds
+            return 1000;
+        }
+        return 0;
     }
 }
