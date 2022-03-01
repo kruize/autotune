@@ -42,8 +42,8 @@ public class TransistionHelper {
         public static JSONObject getMetricsJson(String runId) {
             // Need to get data from ETD and process it
             ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
-            JSONObject retJsonObj = new JSONObject("{\"experiment_name\":\"galaxies-autotune-min-http-response-time\"," +
-                    "\"deployments\":[{\"deployment_name\":\"galaxies-sample\"," +
+            JSONObject retJsonObj = new JSONObject("{\"experiment_name\":\""+ trialData.getConfig().getEmConfigObject().getMetadata().getApplicationName() +"\"," +
+                    "\"deployments\":[{\"deployment_name\":\""+ trialData.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getDeploymentName() +"\"," +
                     "\"namespace\":\"default\"," +
                     "\"containers\":[{\"image_name\":\"dinogun/galaxies:1.2-jdk-11.0.10_9\"," +
                     "\"container_name\":\"galaxies\"," +
@@ -75,7 +75,7 @@ public class TransistionHelper {
                     "\"summary_results\":{\"general_info\":{\"max\":21466," +
                     "\"min\":2.11," +
                     "\"mean\":21045}}}]}]," +
-                    "\"experiment_id\":\"7671cf10f52b288d48e3f60806af0740ec09a09360ed1da3a6e24df4cfd27256\"," +
+                    "\"experiment_id\":\"" + trialData.getConfig().getEmConfigObject().getMetadata().getExpId() + "\"," +
                     "\"info\":{\"trial_info\":{\"trial_id\":\"\"," +
                     "\"trial_num\":0}}}");
             return retJsonObj;
