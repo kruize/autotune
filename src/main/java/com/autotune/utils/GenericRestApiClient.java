@@ -25,15 +25,22 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This is generic wrapper class used to retrieve RESTAPI response.
@@ -116,9 +123,15 @@ public class GenericRestApiClient {
      * @return Json object which contains API response.
      * @throws IOException
      */
-    private JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException {
+    private JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String jsonOutputInString = "";
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true).build();
+        SSLConnectionSocketFactory sslConnectionSocketFactory =
+                new SSLConnectionSocketFactory(sslContext, new String[]
+                        {"SSLv2Hello", "SSLv3", "TLSv1","TLSv1.1", "TLSv1.2" }, null,
+                        NoopHostnameVerifier.INSTANCE);
+        try (CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build()) {
             HttpRequestBase httpRequestBase = null;
             if (methodType.equalsIgnoreCase("GET")) {
                 httpRequestBase = new HttpGet(this.baseURL
