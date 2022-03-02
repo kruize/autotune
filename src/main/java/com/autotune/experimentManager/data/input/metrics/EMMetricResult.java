@@ -24,7 +24,9 @@ public class EMMetricResult implements ConvertToJSON {
             isPercentileResultsAvailable = true;
         }
         emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(EMConstants.EMJSONKeys.GENERAL_INFO));
-        emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(EMConstants.EMJSONKeys.PERCENTILE_INFO));
+        if (isPercentileResultsAvailable){
+            emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(EMConstants.EMJSONKeys.PERCENTILE_INFO));
+        }
     }
 
 
