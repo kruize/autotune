@@ -104,13 +104,38 @@ spec:
                     description: 'actual name of the monitoring agent software'
                     type: string
                 required:
-                - type
+                - name
                 - value
                 type: object
+            settings:
+              trial_settings:
+                measurement_cycles:
+                  description: 'test'
+                  type: string
+                warmup_duration:
+                  description: 'test'
+                  type: string
+                warmup_cycles:
+                  description: 'test'
+                  type: string
+                measurement_duration:
+                  description: 'test'
+                  type: string
+                iterations:
+                  description: 'test'
+                  type: string
+              deployment_settings:
+                deployment_tracking:
+                  type: array
+                  trackers:
+                    description: 'test'
+                    type: string
+              deployment_policy:
+                type:
+                  description: 'test'
+                  type: string
             required:
-            - slo
-            - mode
-            - selector
+            -
             type: object
         required:
         - spec

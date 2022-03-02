@@ -25,6 +25,10 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.k8sObjects.*;
+import com.autotune.common.data.experiments.DeploymentPolicy;
+import com.autotune.common.data.experiments.DeploymentSettings;
+import com.autotune.common.data.experiments.DeploymentTracking;
+import com.autotune.common.data.experiments.TrialSettings;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -422,18 +426,74 @@ public class AutotuneDeployment
 					resourceVersion,
 					uid);
 
+			JSONObject settingsJson = null;
+			if (specJson != null) {
+				settingsJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SETTINGS);
+			}
+
+			AutotuneSettings autotuneSettings = getAutotuneSettingsData(settingsJson);
+
 			return new AutotuneObject(name,
 					namespace,
 					mode,
 					sloInfo,
 					selectorInfo,
-					objectReference
-			);
+					objectReference,
+					autotuneSettings);
 
 		} catch (InvalidValueException | NullPointerException | JSONException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	/**
+	 * Parse Autotune JSON and create object for AutotuneSettings
+	 * @param settingsJson
+	 * @return
+	 */
+	private static AutotuneSettings getAutotuneSettingsData(JSONObject settingsJson) {
+		String measurementCycles = settingsJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.TRIAL_SETTINGS)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.MEASUREMENT_CYCLES);
+		String warmupDuration = settingsJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.TRIAL_SETTINGS)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.WARMUP_DURATION);
+		String warmupCycles = settingsJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.TRIAL_SETTINGS)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.WARMUP_CYCLES);
+		String measurementDuration = settingsJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.TRIAL_SETTINGS)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.MEASUREMENT_DURATION);
+		String trialIterations = settingsJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.TRIAL_SETTINGS)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.TRIAL_ITERATIONS);
+
+		TrialSettings trialSettings = new TrialSettings(trialIterations,
+				warmupDuration,
+				warmupCycles,
+				measurementDuration,
+				measurementCycles
+		);
+
+		String deployment_policy_type = settingsJson
+				.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.DEPLOYMENT_POLICY)
+				.optString(AnalyzerConstants.AutotuneObjectConstants.DEPLOYMENT_POLICY_TYPE);
+
+		DeploymentPolicy deploymentPolicy = new DeploymentPolicy(deployment_policy_type);
+
+		ArrayList<String> trackers = new ArrayList<>();
+		JSONObject deploymentSettingsJson = settingsJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.DEPLOYMENT_SETTINGS);
+		JSONArray deploymentTrackingArr = new JSONArray();
+		if (deploymentSettingsJson != null) {
+			deploymentTrackingArr = deploymentSettingsJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.DEPLOYMENT_TRACKING);
+		}
+
+		for (Object deploymentSettingsObj : deploymentTrackingArr) {
+			JSONObject deploymentTrackingJson = (JSONObject) deploymentSettingsObj;
+			String variableName = deploymentTrackingJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+
+			trackers.add(deploymentTrackingJson.optString(AnalyzerConstants.AutotuneObjectConstants.TRACKERS));
+		}
+		DeploymentTracking deploymentTracking = new DeploymentTracking(trackers);
+		DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy, deploymentTracking);
+
+		return new AutotuneSettings(trialSettings,deploymentSettings,deploymentPolicy);
 	}
 
 	/**
