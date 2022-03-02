@@ -118,10 +118,4 @@ public class TestEvalExParser {
 
         return objFunctionMap;
     }
-
-    public static void main(String[] args) throws IOException {
-
-
-    }
-
 }
