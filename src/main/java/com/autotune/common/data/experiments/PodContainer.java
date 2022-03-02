@@ -17,7 +17,7 @@ package com.autotune.common.data.experiments;
 
 import com.autotune.analyzer.k8sObjects.Metric;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -28,7 +28,7 @@ public class PodContainer {
 	private Resources requests;
 	private Resources limits;
 	private String runtimeOptions;
-	private ArrayList<Metric> containerMetrics;
+	private HashMap<String, Metric> containerMetrics;
 
 	public PodContainer(String stackName, String containerName) {
 		this.stackName = stackName;
@@ -57,9 +57,9 @@ public class PodContainer {
 		this.runtimeOptions = runtimeOptions;
 	}
 
-	public ArrayList<Metric> getContainerMetrics() { return containerMetrics; }
+	public HashMap<String, Metric> getContainerMetrics() { return containerMetrics; }
 
-	public void setContainerMetrics(ArrayList<Metric> containerMetrics) {
+	public void setContainerMetrics(HashMap<String, Metric> containerMetrics) {
 		this.containerMetrics = containerMetrics;
 	}
 }

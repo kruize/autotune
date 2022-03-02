@@ -5,7 +5,8 @@ import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.common.data.experiments.ExperimentTrial;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -17,15 +18,15 @@ public class AutotuneExperiment {
     private String experimentStatus;
     private final ApplicationDeployment applicationDeployment;
     private ApplicationSearchSpace applicationSearchSpace;
-    ArrayList<ExperimentTrial> experimentTrials;
-    private Thread experimentThread;
+    HashMap<Integer, ExperimentTrial> experimentTrials;
+    private RunExperiment experimentThread;
 
     public AutotuneExperiment(String deploymentName,
                               String experimentName,
                               AutotuneObject autotuneObject,
                               String experimentStatus,
                               ApplicationDeployment applicationDeployment,
-                              ArrayList<ExperimentTrial> experimentTrials) {
+                              HashMap<Integer, ExperimentTrial> experimentTrials) {
         this.deploymentName = deploymentName;
         this.experimentName = experimentName;
         this.autotuneObject = autotuneObject;
@@ -58,7 +59,7 @@ public class AutotuneExperiment {
         return applicationDeployment;
     }
 
-    public ArrayList<ExperimentTrial> getExperimentTrials() {
+    public Map<Integer, ExperimentTrial> getExperimentTrials() {
         return experimentTrials;
     }
 
@@ -70,11 +71,11 @@ public class AutotuneExperiment {
         this.applicationSearchSpace = applicationSearchSpace;
     }
 
-    public Thread getExperimentThread() {
+    public RunExperiment getExperimentThread() {
         return experimentThread;
     }
 
-    public void setExperimentThread(Thread experimentThread) {
+    public void setExperimentThread(RunExperiment experimentThread) {
         this.experimentThread = experimentThread;
     }
 }

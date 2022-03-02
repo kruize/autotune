@@ -10,9 +10,7 @@ import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-
 
 /**
  *
@@ -51,7 +49,7 @@ public class Experimentator implements Runnable {
 			}
 
 			// Start a new experiment
-			ArrayList<ExperimentTrial> experimentTrials = new ArrayList<>();
+			HashMap<Integer, ExperimentTrial> experimentTrials = new HashMap<>();
 			autotuneExperiment = new AutotuneExperiment(applicationDeployment.getDeploymentName(),
 					autotuneObject.getExperimentName(),
 					autotuneObject,
@@ -66,16 +64,19 @@ public class Experimentator implements Runnable {
 			// Autotune can only handle MAX_NUMBER_OF_EXPERIMENTS at any given time
 			if (++num_experiments <= MAX_NUMBER_OF_EXPERIMENTS) {
 				RunExperiment runExperiment = new RunExperiment(autotuneExperiment);
+				autotuneExperiment.setExperimentThread(runExperiment);
 				Thread runExp = new Thread(runExperiment);
-				autotuneExperiment.setExperimentThread(runExp);
 				runExp.start();
-			} else {
-				// TODO: Need to push the experiments to a queue
-				// Do nothing for now
+				runExp.join();
+				summarize(autotuneExperiment);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void summarize(AutotuneExperiment autotuneExperiment) {
+
 	}
 
 	private static void updateExperiment(AutotuneExperiment autotuneExperiment) {

@@ -16,17 +16,23 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.data.experiments.*;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import com.autotune.analyzer.k8sObjects.Metric;
 import com.autotune.analyzer.k8sObjects.SloInfo;
 import com.autotune.analyzer.layer.Layer;
+import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,7 +45,10 @@ import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObject
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
-public class TrialHelpers {
+public class TrialHelpers
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrialHelpers.class);
+
     /**
      * Convert the given ExperimentTrial object to JSON. This will be sent to the EM module
      *
@@ -117,13 +126,15 @@ public class TrialHelpers {
          * deployments object section
          */
         JSONArray deploymentsArrayObjs = new JSONArray();
-        for (TrialDetails deployment : experimentTrial.getTrialDetails()) {
+        for (String deploymentType : experimentTrial.getTrialDetails().keySet()) {
+            TrialDetails deployment = experimentTrial.getTrialDetails().get(deploymentType);
             /*
              * com/autotune/analyzer/experiments/Container.java object
              * experimentTrialJSON -> deployments -> container
              */
             JSONArray containersJsonArray = new JSONArray();
-            for (PodContainer podContainer : deployment.getPodContainers()) {
+            for (String stackName : deployment.getPodContainers().keySet()) {
+                PodContainer podContainer = deployment.getPodContainers().get(stackName);
                 /*
                  * resources object
                  * experimentTrialJSON -> deployments -> container -> config -> resources
@@ -156,6 +167,7 @@ public class TrialHelpers {
                  * experimentTrialJSON -> deployments -> config -> env
                  */
                 JSONObject envValues = new JSONObject();
+                envValues.put("JAVA_OPTIONS", podContainer.getRuntimeOptions());
                 envValues.put("JDK_JAVA_OPTIONS", podContainer.getRuntimeOptions());
 
                 JSONObject env = new JSONObject();
@@ -183,7 +195,8 @@ public class TrialHelpers {
                  * experimentTrialJSON -> deployments -> metrics
                  */
                 JSONArray containerMetricArrayObjects = new JSONArray();
-                for (Metric metricObjects : podContainer.getContainerMetrics()) {
+                for (String metricName : podContainer.getContainerMetrics().keySet()) {
+                    Metric metricObjects = podContainer.getContainerMetrics().get(metricName);
                     JSONObject obj = new JSONObject();
                     obj.put("name", metricObjects.getName());
                     obj.put("query", metricObjects.getQuery());
@@ -209,7 +222,8 @@ public class TrialHelpers {
              * experimentTrialJSON -> deployments -> metrics
              */
             JSONArray podMetricArrayObjects = new JSONArray();
-            for (Metric metricObjects : deployment.getPodMetrics()) {
+            for (String metricName : deployment.getPodMetrics().keySet()) {
+                Metric metricObjects = deployment.getPodMetrics().get(metricName);
                 JSONObject obj = new JSONObject();
                 obj.put("name", metricObjects.getName());
                 obj.put("query", metricObjects.getQuery());
@@ -230,6 +244,50 @@ public class TrialHelpers {
         experimentTrialJSON.put("deployments", deploymentsArrayObjs);
 
         return experimentTrialJSON;
+    }
+
+    /**
+     * Update the results obtained from EM to the corresponding AutotuneExperiment object for further processing
+     *
+     * @param trialNumber
+     * @param autotuneExperiment
+     * @param trialResultsJson
+     * @throws InvalidValueException
+     */
+    public static void updateExperimentTrial(int trialNumber,
+                                             AutotuneExperiment autotuneExperiment,
+                                             JSONObject trialResultsJson) throws InvalidValueException, IncompatibleInputJSONException {
+        String tracker = "training";
+        ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNumber);
+        if (null == experimentTrial) {
+            LOGGER.error("Invalid results JSON: Invalid trialNumber: " + trialNumber);
+            throw new InvalidValueException("Invalid results JSON: Invalid trialNumber: " + trialNumber);
+        }
+        TrialDetails trialDetails = experimentTrial.getTrialDetails().get(tracker);
+        if (null == trialDetails) {
+            LOGGER.error("Invalid results JSON: Deployment tracker: " + tracker + " not found");
+            throw new InvalidValueException("Invalid results JSON: Deployment tracker: " + tracker + " not found");
+        }
+
+        JSONArray deploymentsArray = trialResultsJson.getJSONArray("deployments");
+        if (null == deploymentsArray) {
+            LOGGER.error("Invalid results JSON: Deployments Array not found");
+            throw new InvalidValueException("Invalid results JSON: Deployments Array not found");
+        }
+        JSONObject deployment = deploymentsArray.getJSONObject(0);
+        JSONArray podMetricsArray = deployment.getJSONArray("pod_metrics");
+        if (null == podMetricsArray) {
+            LOGGER.error("Invalid results JSON: pod_metrics Array not found");
+            throw new InvalidValueException("Invalid results JSON: pod_metrics Array not found");
+        }
+        for (Object metricPodObject : podMetricsArray) {
+            JSONObject podMetric = (JSONObject) metricPodObject;
+            EMMetricResult emMetricResult = new EMMetricResult(podMetric.getJSONObject("summary_results"));
+            String metricName = podMetric.getString("name");
+            Metric metric = trialDetails.getPodMetrics().get(metricName);
+            metric.setEmMetricResult(emMetricResult);
+        }
+        LOGGER.info("Successfully updated results for trialNum: " + trialNumber);
     }
 
     /**
@@ -277,7 +335,7 @@ public class TrialHelpers {
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
                 deploymentSettings);
 
-        ArrayList<TrialDetails> deployments = new ArrayList<>();
+        HashMap<String, TrialDetails> deployments = new HashMap<>();
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
         // TODO: The runtime layer will know how to pass the options to container through kubernetes
@@ -286,20 +344,19 @@ public class TrialHelpers {
 
         System.out.println(trialConfigJson);
         HashMap<String, PodContainer> containersHashMap = new HashMap<>();
-        ArrayList<PodContainer> podContainers = new ArrayList<>();
-        ArrayList<Metric> podMetrics = new ArrayList<>();
+        HashMap<String, PodContainer> podContainers = new HashMap<>();
+        HashMap<String, Metric> podMetrics = new HashMap<>();
 
         // Create the metrics array
         // First iterate through the objective function variables
         SloInfo sloInfo = autotuneObject.getSloInfo();
         for (Metric metric : sloInfo.getFunctionVariables()) {
-            podMetrics.add(metric);
+            podMetrics.put(metric.getName(), metric);
         }
 
         // Parse the incoming trialConfigJson for all the tunables
         JSONArray trialConfigArray = new JSONArray(trialConfigJson);
         for (Object trialConfigObject : trialConfigArray) {
-            ArrayList<Metric> containerMetrics = new ArrayList<>();
             JSONObject trialConfig = (JSONObject) trialConfigObject;
             String tunableName = trialConfig.getString("tunable_name");
             Tunable tunable = autotuneExperiment.getApplicationSearchSpace().getTunablesMap().get(tunableName);
@@ -320,7 +377,7 @@ public class TrialHelpers {
                 podContainer = new PodContainer(applicationServiceStack.getStackName(),
                         applicationServiceStack.getContainerName());
                 containersHashMap.put(tunable.getStackName(), podContainer);
-                podContainers.add(podContainer);
+                podContainers.put(tunable.getStackName(), podContainer);
             }
             Class<Layer> classRef = AutotuneDeploymentInfo.getLayer(tunable.getLayerName());
             try {
@@ -338,16 +395,23 @@ public class TrialHelpers {
             }
 
             // Now add any queries associated with this tunable into the metrics array
+            System.out.println("New Trial: tunable: " + tunableName + " Query Mon agent: " + AutotuneDeploymentInfo.getMonitoringAgent());
             String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
             if (tunableQuery != null && !tunableQuery.isEmpty()) {
+                HashMap<String, Metric> containerMetrics = podContainer.getContainerMetrics();
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
                         AutotuneDeploymentInfo.getMonitoringAgent(),
                         tunable.getValueType());
-                containerMetrics.add(queryMetric);
-            }
 
-            podContainer.setContainerMetrics(containerMetrics);
+                if (containerMetrics == null) {
+                    containerMetrics = new HashMap<>();
+                    podContainer.setContainerMetrics(containerMetrics);
+                }
+                containerMetrics.put(queryMetric.getName(), queryMetric);
+            } else {
+                System.out.println("New Trial: tunable: " + tunableName + " No container metrics");
+            }
         }
 
         for (String tracker : trackers ) {
@@ -361,7 +425,7 @@ public class TrialHelpers {
                     podMetrics,
                     podContainers
             );
-            deployments.add(deployment);
+            deployments.put(tracker, deployment);
         }
 
         ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentName(),

@@ -31,6 +31,13 @@ public class AutotuneConstants {
         public static final String EM_ONLY_MODE = "EM_ONLY";
     }
 
+    public static class HpoOperations {
+        private HpoOperations() { }
+        public static final String NEW_TRIAL = "EXP_TRIAL_GENERATE_NEW";
+        public static final String CONTINUE_TRIAL = "EXP_TRIAL_GENERATE_SUBSEQUENT";
+        public static final String TRIAL_RESULT = "EXP_TRIAL_RESULT";
+    }
+
     public static class JSONKeys {
         private JSONKeys() { }
         public static final String CONTAINERS = "containers";

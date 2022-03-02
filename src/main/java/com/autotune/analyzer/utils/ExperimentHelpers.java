@@ -32,7 +32,8 @@ public class ExperimentHelpers {
 		experimentJSON.put("Application Layers", appLayersJSONArray);
 
 		JSONArray trialsJSONArray = new JSONArray();
-		for (ExperimentTrial experimentTrial : autotuneExperiment.getExperimentTrials()) {
+		for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
+			ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
 			JSONObject trialsJSON = new JSONObject();
 			trialsJSON.put("Trial no", experimentTrial.getTrialInfo().getTrialNum());
 			trialsJSONArray.put(trialsJSON);

@@ -18,6 +18,7 @@ package com.autotune.common.data.experiments;
 import com.autotune.analyzer.k8sObjects.Metric;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -30,8 +31,8 @@ public class TrialDetails {
     private String result;
     private String resultInfo;
     private String resultError;
-    private ArrayList<Metric> podMetrics;
-    private ArrayList<PodContainer> podContainers;
+    private HashMap<String, Metric> podMetrics;
+    private HashMap<String, PodContainer> podContainers;
 
     public TrialDetails(String deploymentType,
 						String deploymentName,
@@ -40,8 +41,8 @@ public class TrialDetails {
 						String result,
 						String resultInfo,
 						String resultError,
-						ArrayList<Metric> podMetrics,
-						ArrayList<PodContainer> podContainers) {
+						HashMap<String, Metric> podMetrics,
+						HashMap<String, PodContainer> podContainers) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;
@@ -87,11 +88,11 @@ public class TrialDetails {
 
     public String getResultError() { return resultError; }
 
-    public ArrayList<Metric> getPodMetrics() {
+    public HashMap<String, Metric> getPodMetrics() {
         return podMetrics;
     }
 
-    public ArrayList<PodContainer> getPodContainers() {
+    public HashMap<String, PodContainer> getPodContainers() {
         return podContainers;
     }
 }
