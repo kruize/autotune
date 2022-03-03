@@ -48,7 +48,7 @@ public class EMConfigDeploymentSettings implements ConvertToJSON {
     public JSONObject toJSON() {
         JSONObject subObject = new JSONObject();
         subObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_POLICY, getDeploymentPolicy().toJSON());
-        subObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING, getDeploymentTracker().toJSON().getJSONArray(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING));
+        subObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING, getDeploymentTracker().toJSON());
         return  subObject;
     }
 }

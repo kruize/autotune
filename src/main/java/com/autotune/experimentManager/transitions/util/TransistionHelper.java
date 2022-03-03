@@ -85,15 +85,15 @@ public class TransistionHelper {
                     JSONObject contMetJson = (JSONObject) contMetObj;
                     contMetJson.remove("datasource");
                     contMetJson.remove("query");
-                    if (contMetJson.getString("name") == "cpuRequest") {
+                    if (contMetJson.getString("name").equalsIgnoreCase("cpuRequest")) {
                         contMetJson.put("summary_results", cpuRequestResult);
-                    } else if (contMetJson.getString("name") == "memRequest") {
+                    } else if (contMetJson.getString("name").equalsIgnoreCase("memoryRequest")) {
                         contMetJson.put("summary_results", memoryRequestResult);
-                    } else if (contMetJson.getString("name") == "request_sum") {
+                    } else if (contMetJson.getString("name").equalsIgnoreCase("request_sum")) {
                         contMetJson.put("summary_results", requestSumResult);
-                    } else if (contMetJson.getString("name") == "request_count") {
+                    } else if (contMetJson.getString("name").equalsIgnoreCase("request_count")) {
                         contMetJson.put("summary_results", requestCountResult);
-                    } else if (contMetJson.getString("name") == "JvmMemoryUsed") {
+                    } else if (contMetJson.getString("name").equalsIgnoreCase("JvmMemoryUsed")) {
                         contMetJson.put("summary_results", jvmMemUsedResult);
                     }
                 }
@@ -103,15 +103,15 @@ public class TransistionHelper {
                 JSONObject podmetJson = (JSONObject) podmetobj;
                 podmetJson.remove("datasource");
                 podmetJson.remove("query");
-                if (podmetJson.getString("name") == "cpuRequest") {
+                if (podmetJson.getString("name").equalsIgnoreCase("cpuRequest")) {
                     podmetJson.put("summary_results", cpuRequestResult);
-                } else if (podmetJson.getString("name") == "memRequest") {
+                } else if (podmetJson.getString("name").equalsIgnoreCase("memoryRequest")) {
                     podmetJson.put("summary_results", memoryRequestResult);
-                } else if (podmetJson.getString("name") == "request_sum") {
+                } else if (podmetJson.getString("name").equalsIgnoreCase("request_sum")) {
                     podmetJson.put("summary_results", requestSumResult);
-                } else if (podmetJson.getString("name") == "request_count") {
+                } else if (podmetJson.getString("name").equalsIgnoreCase("request_count")) {
                     podmetJson.put("summary_results", requestCountResult);
-                } else if (podmetJson.getString("name") == "JvmMemoryUsed") {
+                } else if (podmetJson.getString("name").equalsIgnoreCase("JvmMemoryUsed")) {
                     podmetJson.put("summary_results", jvmMemUsedResult);
                 }
             }
