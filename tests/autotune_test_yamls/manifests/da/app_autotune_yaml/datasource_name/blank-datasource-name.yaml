@@ -20,5 +20,5 @@ spec:
     matchURI: ""
     matchService: "https"
   datasource:
-    name: " "
+    name: "PROMETHEUS"
     value: "PROMETHEUS_URL"
