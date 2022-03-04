@@ -16,8 +16,8 @@ public class EMMetricResult implements ConvertToJSON {
     }
 
     public EMMetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!jsonObject.has(EMConstants.EMJSONKeys.GENERAL_INFO) ||
-            !jsonObject.has(EMConstants.EMJSONKeys.PERCENTILE_INFO)) {
+        if (!(jsonObject.has(EMConstants.EMJSONKeys.GENERAL_INFO) ||
+            jsonObject.has(EMConstants.EMJSONKeys.PERCENTILE_INFO))) {
             throw new IncompatibleInputJSONException();
         }
         if (jsonObject.has(EMConstants.EMJSONKeys.PERCENTILE_INFO)) {
@@ -29,6 +29,29 @@ public class EMMetricResult implements ConvertToJSON {
         }
     }
 
+    public EMMetricGenericResults getEmMetricGenericResults() {
+        return emMetricGenericResults;
+    }
+
+    public EMMetricPercentileResults getEmMetricPercentileResults() {
+        return emMetricPercentileResults;
+    }
+
+    public boolean isPercentileResultsAvailable() {
+        return isPercentileResultsAvailable;
+    }
+
+    public void setEmMetricGenericResults(EMMetricGenericResults emMetricGenericResults) {
+        this.emMetricGenericResults = emMetricGenericResults;
+    }
+
+    public void setEmMetricPercentileResults(EMMetricPercentileResults emMetricPercentileResults) {
+        this.emMetricPercentileResults = emMetricPercentileResults;
+    }
+
+    public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
+        isPercentileResultsAvailable = percentileResultsAvailable;
+    }
 
     @Override
     public JSONObject toJSON() {
