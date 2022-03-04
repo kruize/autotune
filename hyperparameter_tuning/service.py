@@ -89,9 +89,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         """Process EXP_TRIAL_GENERATE_NEW operation."""
         is_valid_json_object = validate_trial_generate_json(json_object)
 
-        if is_valid_json_object and json_object["id"] not in autotune_object_ids.keys():
-            get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
-            trial_number = get_trial_number(json_object["id"])
+        if is_valid_json_object and json_object["experiment_id"] not in autotune_object_ids.keys():
+            get_search_create_study(json_object["experiment_id"], json_object["operation"], json_object["url"])
+            trial_number = get_trial_number(json_object["experiment_id"])
             self._set_response(200, str(trial_number))
         else:
             self._set_response(400, "-1")
@@ -100,18 +100,18 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         """Process EXP_TRIAL_GENERATE_SUBSEQUENT operation."""
         is_valid_json_object = validate_trial_generate_json(json_object)
 
-        if is_valid_json_object and json_object["id"] in autotune_object_ids.keys():
-            get_search_create_study(json_object["id"], json_object["operation"], json_object["url"])
-            trial_number = get_trial_number(json_object["id"])
+        if is_valid_json_object and json_object["experiment_id"] in autotune_object_ids.keys():
+            get_search_create_study(json_object["experiment_id"], json_object["operation"], json_object["url"])
+            trial_number = get_trial_number(json_object["experiment_id"])
             self._set_response(200, str(trial_number))
         else:
             self._set_response(400, "-1")
 
     def handle_result_operation(self, json_object):
         """Process EXP_TRIAL_RESULT operation."""
-        if (json_object["id"] in autotune_object_ids.keys() and
-                json_object["trial_number"] == get_trial_number(json_object["id"])):
-            set_result(json_object["id"], json_object["trial_result"], json_object["result_value_type"],
+        if (json_object["experiment_id"] in autotune_object_ids.keys() and
+                json_object["trial_number"] == get_trial_number(json_object["experiment_id"])):
+            set_result(json_object["experiment_id"], json_object["trial_result"], json_object["result_value_type"],
                        json_object["result_value"])
             self._set_response(200, "0")
         else:

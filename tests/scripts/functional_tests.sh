@@ -57,6 +57,10 @@ do
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;
+			hpo)
+				HPO_SERVICE=1
+				;;
+
 		esac
 		;;
 	i)

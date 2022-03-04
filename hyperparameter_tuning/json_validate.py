@@ -4,7 +4,7 @@ from jsonschema import validate, draft7_format_checker
 trial_generate_schema = {
     "type": "object",
     "properties": {
-        "id": {"type": "string"},
+        "experiment_id": {"type": "string"},
         "url": {
             "type": "string",
             "format": "uri"
@@ -16,7 +16,7 @@ trial_generate_schema = {
             ]
         }
     },
-    "required": ["id", "url", "operation"],
+    "required": ["experiment_id", "url", "operation"],
     "additionalProperties": False
 }
 

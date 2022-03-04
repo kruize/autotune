@@ -134,16 +134,17 @@ function post_experiment_json() {
 	form_hpo_curl_cmd "experiment_trials"
 	echo "HPO curl cmd =  $hpo_curl_cmd"
 
-	post_cmd=$(${hpo_curl_cmd}  -d "${json_array_}"  -w '\n%{http_code}' 2>&1)
+	post_cmd=$(${hpo_curl_cmd}  -d '${json_array_}'  -w '\n%{http_code}' 2>&1)
 
-	# Example curl command: curl -H "Content-Type: application/json" -d {"id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
-	post_experiment_cmd="${hpo_curl_cmd} -d ${json_array_}  -w '\n%{http_code}'"
+	# Example curl command: curl -H "Content-Type: application/json" -d {"experiment_id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
+	post_experiment_cmd="${hpo_curl_cmd} -d '${json_array_}'  -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment= ${post_experiment_cmd}" | tee -a ${LOG_} ${LOG}
 	echo "" | tee -a ${LOG_} ${LOG}
 
 	echo "${post_cmd}" >> ${LOG_} ${LOG}
+
 
 	http_code=$(tail -n1 <<< "${post_cmd}")
 	response=$(echo -e "${post_cmd}" | tail -2 | head -1)
@@ -225,8 +226,8 @@ function run_post_tests(){
 			check_server_status
 		fi
 
-		# Get the id from search space JSON
-		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		# Get the experiment id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].experiment_id | tr -d '""')
 
 		if [ "${hpo_test_name}" == "hpo_post_exp_result" ]; then
 			exp="valid-experiment"
@@ -265,6 +266,7 @@ function run_post_tests(){
 			((TESTS++))
 			error_message "${failed}"
 		else
+			echo "********* actual_result = $actual_result expected_result = ${expected_result_}"
 			compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 		fi
 		echo ""
@@ -284,7 +286,7 @@ function run_post_tests(){
 	echo "*********************************************************************************************************" | tee -a ${LOG_} ${LOG}
 }
 
-# Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_NEW" and check if experiments have started from the beginning
+# Do a post on experiment_trials for the same experiment id again with "operation: EXP_TRIAL_GENERATE_NEW" and check if experiments have started from the beginning
 function post_duplicate_experiments() {
 	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
@@ -313,7 +315,7 @@ function post_duplicate_experiments() {
 	fi
 }
 
-# Do a post on experiment_trials for the same id again with "operation: EXP_TRIAL_GENERATE_SUBSEQUENT" and check if same experiment continues
+# Do a post on experiment_trials for the same experiment id again with "operation: EXP_TRIAL_GENERATE_SUBSEQUENT" and check if same experiment continues
 function operation_generate_subsequent() {
 	create_post_exp_json_array "${current_id}"
 	post_experiment_json "${hpo_post_experiment_json[$exp]}"
@@ -370,8 +372,8 @@ function other_post_experiment_tests() {
 			check_server_status
 		fi
 		
-		# Get the id from search space JSON
-		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		# Get the experiment id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].experiment_id | tr -d '""')
 		
 		operation=$(echo ${operation//-/_})
 		${operation}
@@ -398,48 +400,48 @@ function run_get_trial_json_test() {
 	url="http://localhost:8085/experiment_trials"
 	case "${exp_trial}" in
 		invalid-id)
-			get_trial_json=$(${curl} ''${url}'?id=124365213472&trial_number=0'  -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id=124365213472&trial_number=0' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id=124365213472&trial_number=0'  -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id=124365213472&trial_number=0' -w '\n%{http_code}'"
 			;;
 		empty-id)
-			get_trial_json=$(${curl} ''${url}'?id= &trial_number=0' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id= &trial_number=0' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id= &trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id= &trial_number=0' -w '\n%{http_code}'"
 			;;
 		no-id)
 			get_trial_json=$(${curl} ''${url}'?trial_number=0' -w '\n%{http_code}' 2>&1)
 			get_trial_json_cmd="${curl} '${url}?trial_number=0' -w '\n%{http_code}'"
 			;;
 		null-id)
-			get_trial_json=$(${curl} ''${url}'?id=null &trial_number=0' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id=null &trial_number=0' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id=null &trial_number=0' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id=null &trial_number=0' -w '\n%{http_code}'"
 			;;
 		only-valid-id)
-			get_trial_json=$(${curl} ''${url}'?id='${current_id}'' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id='${current_id}'' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id='${current_id}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id='${current_id}'' -w '\n%{http_code}'"
 			;;
 		invalid-trial-number)
-			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id='${current_id}'&trial_number=102yrt' -w '\n%{http_code}'"
 			;;
 		empty-trial-number)
-			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id='${current_id}'&trial_number=' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id='${current_id}'&trial_number=' -w '\n%{http_code}'"
 			;;
 		no-trial-number)
-			get_trial_json=$(${curl} ''${url}'?id='${current_id}'' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id='${current_id}'' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id='${current_id}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id='${current_id}'' -w '\n%{http_code}'"
 			;;
 		null-trial-number)
-			get_trial_json=$(${curl} ''${url}'?id='${current_id}'&trial_number=null' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id='${current_id}'&trial_number=null' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id='${current_id}'&trial_number=null' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id='${current_id}'&trial_number=null' -w '\n%{http_code}'"
 			;;
 		only-valid-trial-number)
 			get_trial_json=$(${curl} ''${url}'?trial_number=0' -w '\n%{http_code}' 2>&1)
 			get_trial_json_cmd="${curl} '${url}?trial_number=0' -w '\n%{http_code}'"
 			;;
 		valid-exp-trial)
-			get_trial_json=$(${curl} ''${url}'?id=a123&trial_number='${trial_num}'' -w '\n%{http_code}' 2>&1)
-			get_trial_json_cmd="${curl} '${url}?id=a123&trial_number=${trial_num}' -w '\n%{http_code}'"
+			get_trial_json=$(${curl} ''${url}'?experiment_id=a123&trial_number='${trial_num}'' -w '\n%{http_code}' 2>&1)
+			get_trial_json_cmd="${curl} '${url}?experiment_id=a123&trial_number=${trial_num}' -w '\n%{http_code}'"
 			;;
 	esac
 	
@@ -476,8 +478,8 @@ function get_trial_json_invalid_tests() {
 			check_server_status
 		fi
 		
-		# Get the id from search space JSON
-		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		# Get the experiment id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].experiment_id | tr -d '""')
 
 		create_post_exp_json_array ${current_id}
 		
@@ -607,8 +609,8 @@ function get_trial_json_valid_tests() {
 			check_server_status
 		fi
 			
-		# Get the id from search space JSON
-		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		# Get the experiment id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].experiment_id | tr -d '""')
 
 		# Post a valid experiment to RM-HPO /experiment_trials API.
 		exp="valid-experiment"
@@ -654,7 +656,7 @@ function post_experiment_result_json() {
 
 	post_result=$(${hpo_curl_cmd}  -d "${exp_result}"  -w '\n%{http_code}' 2>&1)
 
-	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
+	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"experiment_id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
 	post_exp_result_cmd="${hpo_curl_cmd} -d ${exp_result} -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
@@ -693,7 +695,7 @@ function post_duplicate_exp_result() {
 		sleep 5
 
 		# Post the duplicate experiment result to HPO /experiment_trials API.
-		echo -n "Post the same experiment result to HPO again for the same id and trial number..."
+		echo -n "Post the same experiment result to HPO again for the same experiment_id and trial number..."
 		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
@@ -733,9 +735,9 @@ function post_same_id_different_exp_result() {
 		# Sleep for few seconds to reduce the ambiguity
 		sleep 5
 
-		# Post a different valid experiment result for the same id and trial number to HPO /experiment_trials API.
+		# Post a different valid experiment result for the same experiment_id and trial number to HPO /experiment_trials API.
 		experiment_result="valid-different-result"
-		echo -n "Post the differnt experiment result to HPO again for the same id and trial number..."
+		echo -n "Post the differnt experiment result to HPO again for the same experiment_id and trial number..."
 		create_post_exp_result_json_array "${current_id}" "${trial_num}"
 		post_experiment_result_json "${hpo_post_exp_result_json[$experiment_result]}"
 
@@ -780,8 +782,8 @@ function other_exp_result_post_tests() {
 		fi
 
 
-		# Get the id from search space JSON
-		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].id | tr -d '""')
+		# Get the experiment_id from search space JSON
+		current_id=$(cat ${SEARCH_SPACE_JSON} | jq .[].experiment_id | tr -d '""')
 
 		operation=$(echo ${operation//-/_})
 		${operation}
