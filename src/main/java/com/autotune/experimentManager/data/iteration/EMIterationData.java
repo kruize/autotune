@@ -22,6 +22,10 @@ public class EMIterationData {
         emIterationResult = new EMIterationResult(warmCycles, measurementCycles, metricInputs);
     }
 
+    public int getCurrentCycle() {
+        return currentCycle;
+    }
+
     public void incrementCycle() {
         this.currentCycle++;
     }
