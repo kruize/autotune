@@ -43,7 +43,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
@@ -360,7 +360,7 @@ public class TrialHelpers
         JSONArray trialConfigArray = new JSONArray(trialConfigJson);
         for (Object trialConfigObject : trialConfigArray) {
             JSONObject trialConfig = (JSONObject) trialConfigObject;
-            String tunableName = trialConfig.getString(LAYER_NAME);
+            String tunableName = trialConfig.getString(TUNABLE_NAME);
             Tunable tunable = autotuneExperiment.getApplicationSearchSpace().getTunablesMap().get(tunableName);
             if (tunable == null) {
                 System.out.println("ERROR: tunable is null for tunableName: " + tunableName);

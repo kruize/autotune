@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 public class EMConfigDeployments implements ConvertToJSON {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMConfigDeployments.class);
-    private EMConfigTrainingDeployment trainingDeployment;
-    private EMConfigProductionDeployment productionDeployment;
+    private EMConfigTrainingDeployment trainingDeployment = null;
+    private EMConfigProductionDeployment productionDeployment = null;
 
     public EMConfigTrainingDeployment getTrainingDeployment() {
         return trainingDeployment;
@@ -57,8 +57,10 @@ public class EMConfigDeployments implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONArray jsonArray = new JSONArray();
-        jsonArray.put(getTrainingDeployment().toJSON());
-        jsonArray.put(getProductionDeployment().toJSON());
+        if (null != getTrainingDeployment())
+            jsonArray.put(getTrainingDeployment().toJSON());
+        if (null != getProductionDeployment())
+            jsonArray.put(getProductionDeployment().toJSON());
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMConstants.EMJSONKeys.DEPLOYMENTS, jsonArray);
         return jsonObject;

@@ -100,6 +100,8 @@ public class AnalyzerConstants
 		public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
 
 		public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
+
+
 	}
 
 	/**
@@ -127,6 +129,7 @@ public class AnalyzerConstants
 		public static final String QUERIES = "queries";
 
 		public static final String NAME = "name";
+		public static final String TUNABLE_NAME = "tunable_name";
 		public static final String QUERY = "query";
 		public static final String KEY = "key";
 		public static final String VALUE_TYPE = "value_type";

@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
+import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -108,6 +109,12 @@ public class ValidateAutotuneObject
 			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName()))
 				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
 		}
+
+		// Check if objective_function is correctly formatted
+		if (!new EvalExParser().validate(sloInfo.getObjectiveFunction(), sloInfo.getFunctionVariables())) {
+			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+		}
+
 		return errorString;
 	}
 }

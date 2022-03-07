@@ -1,0 +1,16 @@
+{
+  "function_variables": [
+    {
+      "name": "request_sum",
+      "query": "rate(http_server_requests_seconds_sum{exception=\"None\",method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+      "datasource": "prometheus",
+      "value_type": "double"
+    },
+    {
+      "name": "request_count",
+      "query": "rate(http_server_requests_seconds_count{exception=\"None\",method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/webjars/**\",}[1m])",
+      "datasource": "prometheus",
+      "value_type": "double"
+    }
+  ]
+}
