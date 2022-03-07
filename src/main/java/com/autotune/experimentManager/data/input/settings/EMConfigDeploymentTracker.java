@@ -50,8 +50,6 @@ public class EMConfigDeploymentTracker implements ConvertToJSON {
         JSONArray trackerArray = new JSONArray(this.trackerList);
         JSONObject trackerJsonObject =  new JSONObject();
         trackerJsonObject.put(EMConstants.EMJSONKeys.TRACKERS, trackerArray);
-        JSONObject depTrackObject = new JSONObject();
-        depTrackObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING, trackerJsonObject);
-        return depTrackObject;
+        return trackerJsonObject;
     }
 }
