@@ -33,6 +33,10 @@ public class EMDataSourceInfo implements ConvertToJSONArray {
         }
     }
 
+    public ArrayList<EMDataSourceDefinition> getDatasources() {
+        return datasources;
+    }
+
     @Override
     public JSONArray toJSON() {
         JSONArray datasourceJsonArray = new JSONArray();

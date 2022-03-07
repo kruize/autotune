@@ -63,6 +63,20 @@ public class EMConstants {
 		}
 	}
 
+	public static class DataSources {
+		private DataSources() { }
+
+		public static String PROMETHEUS = "prometheus";
+	}
+
+	public static class HttpConstants {
+		private HttpConstants() { }
+		public static class MethodType {
+			private MethodType() { }
+			public static String GET = "GET";
+		}
+	}
+
 	public static class EMJSONKeys {
 		private EMJSONKeys() { }
         public static final String CONTAINERS = "containers";

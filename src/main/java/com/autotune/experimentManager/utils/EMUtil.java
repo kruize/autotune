@@ -252,4 +252,14 @@ public class EMUtil {
         }
         return 0;
     }
+
+    public static String getBaseDataSourceUrl(String url, String datasource) {
+        if (datasource.equalsIgnoreCase(EMConstants.DataSources.PROMETHEUS)) {
+            return (new StringBuilder())
+                    .append(url)
+                    .append("/api/v1/query")
+                    .toString();
+        }
+        return null;
+    }
 }
