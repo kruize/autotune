@@ -6,7 +6,7 @@ import com.autotune.experimentManager.utils.EMUtil;
 
 public class EMTransitionRegistry {
     public static boolean validateStages(EMUtil.EMExpStages fromStage, EMUtil.EMExpStages toStage) {
-        if(fromStage.ordinal() >= toStage.ordinal())
+        if(fromStage.ordinal() > toStage.ordinal())
             return false;
         return true;
     }
@@ -17,6 +17,7 @@ public class EMTransitionRegistry {
         }
         return EMUtil.EMExpStages.get(currentStage.ordinal() + 1);
     }
+
     public static EMUtil.EMExpStages getNextStage(EMUtil.EMExpStages currentStage, String runId) {
         if (EMUtil.EMExpStages.getSize() <= (currentStage.ordinal() + 1)){
             return currentStage;

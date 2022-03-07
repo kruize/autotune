@@ -3,6 +3,7 @@ package com.autotune.experimentManager.transitions;
 import com.autotune.experimentManager.core.EMIterationManager;
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.data.iteration.EMIterationData;
 import com.autotune.experimentManager.utils.EMConstants;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -30,6 +31,10 @@ public class TransitionToDeployConfig extends AbstractBaseTransition{
                     .restart();
             LOGGER.info("Done.");
         }
+        EMIterationData emIterationData = new EMIterationData(emIterationManager.getCurrentIteration(),
+                                                              trialData.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles(),
+                                                              trialData.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementCycles());
+        emIterationManager.addIterationData(emIterationData);
         processNextTransition(runId);
     }
 }

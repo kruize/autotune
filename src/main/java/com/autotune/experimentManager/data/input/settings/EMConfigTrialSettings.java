@@ -50,9 +50,9 @@ public class EMConfigTrialSettings implements ConvertToJSON {
         if(trialSettingsJSON.has(EMConstants.EMJSONKeys.TOTAL_DURATION)){
             this.totalDuration = trialSettingsJSON.getString(EMConstants.EMJSONKeys.TOTAL_DURATION);
         }
-        this.warmupCycles = trialSettingsJSON.getInt(EMConstants.EMJSONKeys.WARMUP_CYCLES);
+        this.warmupCycles = Integer.parseInt(trialSettingsJSON.getString(EMConstants.EMJSONKeys.WARMUP_CYCLES));
         this.warmupDuration = trialSettingsJSON.getString(EMConstants.EMJSONKeys.WARMUP_DURATION);
-        this.measurementCycles = trialSettingsJSON.getInt(EMConstants.EMJSONKeys.MEASUREMENT_CYCLES);
+        this.measurementCycles = Integer.parseInt(trialSettingsJSON.getString(EMConstants.EMJSONKeys.MEASUREMENT_CYCLES));
         this.measurementDuration = trialSettingsJSON.getString(EMConstants.EMJSONKeys.MEASUREMENT_DURATION);
         if (!trialSettingsJSON.has(EMConstants.EMJSONKeys.ITERATIONS)) {
             this.iterations = 3;

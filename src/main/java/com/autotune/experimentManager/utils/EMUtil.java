@@ -232,10 +232,12 @@ public class EMUtil {
 
     public static boolean breakingCondition(EMExpStages stage, ExperimentTrialData etd) {
         // Need to implement breaking condition for each cycling stage
-        return ((etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles()
+        boolean result = ((etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles()
                 + etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementCycles())
                 ==
-                etd.getEmIterationManager().getEmIterationData().get(etd.getEmIterationManager().getCurrentIteration()).getCurrentCycle());
+                etd.getEmIterationManager().getEmIterationData().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
+        System.out.println(result);
+        return result;
     }
 
 
@@ -246,7 +248,7 @@ public class EMUtil {
         }
         if (stage == EMExpStages.METRIC_COLLECTION_CYCLE) {
             // return cycle duration in seconds
-            return 10000;
+            return 10;
         }
         return 0;
     }

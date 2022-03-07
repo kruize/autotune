@@ -11,7 +11,7 @@ public abstract class AbstractBaseTransition implements BaseTransition {
     @Override
     public void processNextTransition(String runId) {
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
-        EMUtil.EMExpStages nextStage = EMTransitionRegistry.getNextStage(trialData.getTargetStage());
+        EMUtil.EMExpStages nextStage = EMTransitionRegistry.getNextStage(trialData.getTargetStage(), runId);
         trialData.setCurrentStage(trialData.getTargetStage());
         trialData.setTargetStage(nextStage);
         // TODO: need to check if the stage is isScheduled and take a decision to push in appropriate queue
