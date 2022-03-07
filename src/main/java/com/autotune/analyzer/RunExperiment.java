@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Timestamp;
+import java.time.Instant;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
@@ -21,7 +23,6 @@ import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 public class RunExperiment implements Runnable
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RunExperiment.class);
-	private static final int MAX_NUMBER_OF_TRIALS = 10;
 	private final AutotuneExperiment autotuneExperiment;
 
 	public RunExperiment(AutotuneExperiment autotuneExperiment) {
@@ -70,13 +71,14 @@ public class RunExperiment implements Runnable
 		int max = 10;
 		double rand;
 
-		for (int i = 0; i<MAX_NUMBER_OF_TRIALS; i++) {
+		for (int i = 0; i<autotuneExperiment.getExperimentSummary().getTotalTrials(); i++) {
 			try {
 				autotuneExperiment.setExperimentStatus("[ ]: Getting Experiment Trial Config");
-				System.out.println(hpoTrial.toString());
+				LOGGER.debug(hpoTrial.toString());
 
 				/* STEP 1: Send a request for a trail config from Optuna */
 				trialNumber = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, hpoTrial.toString()));
+				autotuneExperiment.initializeTrial(trialNumber);
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Experiment Trial Config");
 				LOGGER.info("Optuna Trial No: " + trialNumber);
 				StringBuilder trialConfigUrl = new StringBuilder(OPTUNA_TRIALS_END_POINT)
@@ -89,7 +91,7 @@ public class RunExperiment implements Runnable
 				/* STEP 2: We got a trial id from Optuna, now use that to get the actual config */
 				String trialConfigJson = HttpUtils.getDataFromURL(trialConfigURL, "");
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Experiment Trial Config Info");
-				System.out.println(trialConfigJson);
+				LOGGER.info(trialConfigJson);
 
 				/* STEP 3: Now create a trial to be passed to experiment manager to run */
 				ExperimentTrial experimentTrial = TrialHelpers.createDefaultExperimentTrial(trialNumber,
@@ -103,7 +105,7 @@ public class RunExperiment implements Runnable
 				LOGGER.info(experimentTrialJSON.toString(4));
 				URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);
 				String runId = HttpUtils.postRequest(createExperimentTrialURL, experimentTrialJSON.toString());
-				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Received Run Id: " + runId);
+				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Running trial with EM Run Id: " + runId);
 
 				/* STEP 5: Now wait for the results to be posted by EM */
 				receive();
@@ -114,11 +116,15 @@ public class RunExperiment implements Runnable
 				TrialDetails trialDetails = experimentTrial.getTrialDetails().get("training");
 				Metric reqSum = trialDetails.getPodMetrics().get("request_sum");
 				Metric reqCount = trialDetails.getPodMetrics().get("request_count");
+				trialDetails.setEndTime(Timestamp.from(Instant.now()));
 
 				double reqSumMean = reqSum.getEmMetricResult().getEmMetricGenericResults().getMean();
 				double reqCountMean = reqCount.getEmMetricResult().getEmMetricGenericResults().getMean();
 				double rspTime = reqSumMean / reqCountMean;
 				LOGGER.info("Calculated rspTime (" + rspTime + ") = reqSumMean (" + reqSumMean + ") / reqCountMean (" + reqCountMean + ");");
+
+				trialDetails.setResult(String.valueOf(rspTime));
+				trialDetails.setResultError("None");
 
 				JSONObject sendTrialResult = new JSONObject();
 				sendTrialResult.put("id", experimentId);
@@ -134,7 +140,10 @@ public class RunExperiment implements Runnable
 				LOGGER.info("Optuna Trial No: " + trialNumber + " result response: " + response);
 				autotuneExperiment.setExperimentStatus("[ " + trialNumber + " ]: Successfully sent result to HPO");
 
-				/* STEP 8: Now get a subsequent config from Optuna for a fresh trial */
+				/* STEP 8: Compare and Summarize the result just obtained */
+				autotuneExperiment.summarizeTrial(trialDetails);
+
+				/* STEP 9: Now get a subsequent config from Optuna for a fresh trial */
 				hpoTrial.remove("operation");
 				hpoTrial.put("operation", CONTINUE_TRIAL);
 

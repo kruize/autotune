@@ -27,6 +27,9 @@ public class ExperimentTrial {
     private final TrialInfo trialInfo;
     private final DatasourceInfo datasourceInfo;
     private final ExperimentSettings experimentSettings;
+    // HashMap of parallel trials being monitored for this trial
+    // Eg. training and production
+    // uses tracker as key. tracker = "training" or "production"
     private final HashMap<String, TrialDetails> trialDetails;
 
     public ExperimentTrial(String experimentName,

@@ -1,9 +1,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.AutotuneExperiment;
-import com.autotune.analyzer.Experimentator;
 import com.autotune.analyzer.RunExperiment;
-import com.autotune.analyzer.deployment.AutotuneDeployment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.data.experiments.ExperimentTrial;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -64,6 +62,9 @@ public class ListExperiments extends HttpServlet
 
 		// Read in the experiment name and the deployment name in the received JSON from EM
 		String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
+		JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
+		int trialNumber = trialInfoJson.getInt("trial_num");
+
 		JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
 		for (Object deploymentObject : deploymentsJsonArray) {
 			JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
@@ -78,7 +79,7 @@ public class ListExperiments extends HttpServlet
 			}
 
 			try {
-				updateExperimentTrial(0, autotuneExperiment, trialResultsJson);
+				updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
 			} catch (InvalidValueException | IncompatibleInputJSONException e) {
 				e.printStackTrace();
 			}

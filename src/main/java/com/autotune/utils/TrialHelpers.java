@@ -16,7 +16,6 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.AutotuneExperiment;
-import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
@@ -38,10 +37,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
@@ -358,7 +360,7 @@ public class TrialHelpers
         JSONArray trialConfigArray = new JSONArray(trialConfigJson);
         for (Object trialConfigObject : trialConfigArray) {
             JSONObject trialConfig = (JSONObject) trialConfigObject;
-            String tunableName = trialConfig.getString("tunable_name");
+            String tunableName = trialConfig.getString(LAYER_NAME);
             Tunable tunable = autotuneExperiment.getApplicationSearchSpace().getTunablesMap().get(tunableName);
             if (tunable == null) {
                 System.out.println("ERROR: tunable is null for tunableName: " + tunableName);
@@ -419,12 +421,13 @@ public class TrialHelpers
                     autotuneExperiment.getDeploymentName(),
                     autotuneExperiment.getApplicationDeployment().getNamespace(),
                     "",
-                    "",
-                    "",
-                    "",
+                    "--Trial Running--",
+                    "--Trial Running--",
+                    "--Trial Running--",
                     podMetrics,
                     podContainers
             );
+            deployment.setStartTime(Timestamp.from(Instant.now()));
             deployments.put(tracker, deployment);
         }
 
