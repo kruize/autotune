@@ -97,9 +97,9 @@ function hpo_api_tests() {
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES} 
 }
 
-function form_hpo_curl_cmd {
+function form_hpo_api_url {
 	API=$1
-	# Form the curl command based on the cluster type
+	# Form the URL command based on the cluster type
 	case $cluster_type in
 		openshift) ;;
 		minikube)
@@ -114,12 +114,12 @@ function form_hpo_curl_cmd {
         esac
 
         if [ $cluster_type == "openshift" ]; then
-                hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}/${API}"
+                hpo_curl_cmd="${URL}/${API}"
         else
-                hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}:${PORT}/${API}"
+                hpo_curl_cmd="${URL}:${PORT}/${API}"
 		if [[ ${HPO_SERVICE} == 1 ]]; then
 			URL="http://localhost"
-			hpo_curl_cmd="curl -s -H 'Content-Type: application/json' ${URL}:${PORT}/${API}"
+			hpo_curl_cmd="${URL}:${PORT}/${API}"
 		fi
 
         fi
@@ -131,10 +131,19 @@ function form_hpo_curl_cmd {
 function post_experiment_json() {
 	json_array_=$1
 
-	form_hpo_curl_cmd "experiment_trials"
+	echo "*************************************"
+	echo "json_array = ${json_array_}"
+	echo "*************************************"
+	form_hpo_api_url "experiment_trials"
 	echo "HPO curl cmd =  $hpo_curl_cmd"
 
-	post_cmd=$(${hpo_curl_cmd}  -d '${json_array_}'  -w '\n%{http_code}' 2>&1)
+	sleep 10
+
+	post_cmd=$(curl -s -H 'Content-Type: application/json' ${hpo_curl_cmd}  -d "${json_array_}"  -w '\n%{http_code}' 2>&1)
+
+	echo "----------------------------------------"
+	echo "post_cmd: $post_cmd"
+	echo "----------------------------------------"
 
 	# Example curl command: curl -H "Content-Type: application/json" -d {"experiment_id" : "a123", "url" : "http://localhost:8080/searchSpace", "operation" : "EXP_TRIAL_GENERATE_NEW"}  http://localhost:8085/experiment_trials -w n%{http_code}
 	post_experiment_cmd="${hpo_curl_cmd} -d '${json_array_}'  -w '\n%{http_code}'"
@@ -150,6 +159,7 @@ function post_experiment_json() {
 	response=$(echo -e "${post_cmd}" | tail -2 | head -1)
 
 	echo "Response is ${response}" >> ${LOG_} ${LOG}
+	echo "http_code is $http_code Response is ${response}"
 }
 
 # Check if the servers have started
@@ -247,7 +257,7 @@ function run_post_tests(){
 			expected_log_msg="${hpo_error_messages[$post_test]}"
 		fi
 
-		if [[ "${post_test}" == valid* ]]; then
+		if [[ "${post_test}" == valid* || "${post_test}" == multiple_id || "${post_test}" == multiple_url ]]; then
 			expected_result_="200"
 			expected_behaviour="RESPONSE_CODE = 200 OK"
 		else
@@ -256,6 +266,9 @@ function run_post_tests(){
 		fi
 
 		actual_result="${http_code}"
+		echo "***************** service log ********************"
+		cat "${TESTS_}/service.log"
+		echo "***************** service log ********************"
 		if [[ "${http_code}" -eq "000" ]]; then
 			if grep -q "${expected_log_msg}" "${TESTS_}/service.log" ; then
 				failed=0 
@@ -266,7 +279,7 @@ function run_post_tests(){
 			((TESTS++))
 			error_message "${failed}"
 		else
-			echo "********* actual_result = $actual_result expected_result = ${expected_result_}"
+			echo "actual_result = $actual_result expected_result = ${expected_result_}"
 			compare_result "${hpo_test_name}" "${expected_result_}" "${expected_behaviour}"
 		fi
 		echo ""
@@ -651,13 +664,21 @@ function get_trial_json_valid_tests() {
 function post_experiment_result_json() {
 	exp_result=$1
 
-	form_hpo_curl_cmd "experiment_trials"
+	echo "exp_result json = ${exp_result}"
+	echo "*************************************"
+	form_hpo_api_url "experiment_trials"
 	echo "HPO curl cmd =  $hpo_curl_cmd"
 
-	post_result=$(${hpo_curl_cmd}  -d "${exp_result}"  -w '\n%{http_code}' 2>&1)
+	sleep 10
+
+	post_result=$(curl -s -H 'Content-Type: application/json' ${hpo_curl_cmd}  -d "${exp_result}"  -w '\n%{http_code}' 2>&1)
+
+	echo "----------------------------------------"
+	echo "post_result: $post_result"
+	echo "----------------------------------------"
 
 	# Example curl command used to post the experiment result: curl -H "Content-Type: application/json" -d {"experiment_id" : null, "trial_number": 0, "trial_result": "success", "result_value_type": "double", "result_value": 98.78, "operation" : "EXP_TRIAL_RESULT"} http://localhost:8085/experiment_trials -w n%{http_code}
-	post_exp_result_cmd="${hpo_curl_cmd} -d ${exp_result} -w '\n%{http_code}'"
+	post_exp_result_cmd="${hpo_curl_cmd} -d "${exp_result}" -w '\n%{http_code}'"
 
 	echo "" | tee -a ${LOG_} ${LOG}
 	echo "Command used to post the experiment result= ${post_exp_result_cmd}" | tee -a ${LOG_} ${LOG}
@@ -668,6 +689,7 @@ function post_experiment_result_json() {
 	http_code=$(tail -n1 <<< "${post_result}")
 	response=$(echo -e "${post_result}" | tail -2 | head -1)
 	echo "Response is ${response}" >> ${LOG_} ${LOG}
+	echo "http_code = $http_code response = $response"
 }
 
 # Post duplicate experiment results to HPO /experiment_trials API and validate the result
@@ -808,7 +830,7 @@ function hpo_post_experiment() {
 }
 
 # Tests for RM-HPO GET trial JSON API
-function rm_hpo_get_trial_json(){
+function hpo_get_trial_json(){
 	for test in "${!rm_hpo_get_trial_json_tests[@]}"
 	do
 		${test} "${FUNCNAME}"

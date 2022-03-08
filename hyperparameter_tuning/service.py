@@ -76,9 +76,10 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         """Serve a GET request."""
         if re.search(api_endpoint, self.path):
             query = parse_qs(urlparse(self.path).query)
-            if ("id" in query and "trial_number" in query and query["id"][0] in autotune_object_ids.keys() and
-                    query["trial_number"][0] == str(get_trial_number(query["id"][0]))):
-                data = get_trial_json_object(query["id"][0])
+
+            if ("experiment_id" in query and "trial_number" in query and query["experiment_id"][0] in autotune_object_ids.keys() and
+                    query["trial_number"][0] == str(get_trial_number(query["experiment_id"][0]))):
+                data = get_trial_json_object(query["experiment_id"][0])
                 self._set_response(200, data)
             else:
                 self._set_response(404, "-1")
