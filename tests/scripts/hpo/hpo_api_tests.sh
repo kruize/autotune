@@ -471,7 +471,7 @@ function run_get_trial_json_test() {
 # input: test name 
 function get_trial_json_invalid_tests() {
 	__test_name__=$1
-	IFS=' ' read -r -a get_trial_json_invalid_tests <<<  ${rm_hpo_get_trial_json_tests[$FUNCNAME]}
+	IFS=' ' read -r -a get_trial_json_invalid_tests <<<  ${hpo_get_trial_json_tests[$FUNCNAME]}
 	for exp_trial in "${get_trial_json_invalid_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${exp_trial}"
@@ -498,7 +498,7 @@ function get_trial_json_invalid_tests() {
 		
 		# Post a valid experiment to RM-HPO /experiment_trials API.
 		exp="valid-experiment"
-		post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+		post_experiment_json "${hpo_post_experiment_json[$exp]}"
 
 		run_get_trial_json_test ${exp_trial}
 
@@ -507,6 +507,7 @@ function get_trial_json_invalid_tests() {
 		expected_result_="^4[0-9][0-9]"
 		expected_behaviour="RESPONSE_CODE = 4XX BAD REQUEST"
 
+		echo "actual_result = $actual_result"
 		compare_result ${__test_name__} ${expected_result_} "${expected_behaviour}"
 		echo ""
 		
@@ -601,7 +602,7 @@ function validate_exp_trial() {
 function get_trial_json_valid_tests() {
 	__test_name__=$1
 
-	IFS=' ' read -r -a get_trial_json_valid_tests <<<  ${rm_hpo_get_trial_json_tests[$FUNCNAME]}
+	IFS=' ' read -r -a get_trial_json_valid_tests <<<  ${hpo_get_trial_json_tests[$FUNCNAME]}
 	for exp_trial in "${get_trial_json_valid_tests[@]}"
 	do
 		TESTS_="${TEST_DIR}/${FUNCNAME}"
@@ -629,7 +630,7 @@ function get_trial_json_valid_tests() {
 		exp="valid-experiment"
 		if [ "${exp_trial}" == "valid-exp-trial" ]; then
 			create_post_exp_json_array ${current_id}
-			post_experiment_json "${rm_hpo_post_experiment_json[$exp]}"
+			post_experiment_json "${hpo_post_experiment_json[$exp]}"
 			trial_num="${response}"
 		else
 			operation_generate_subsequent
@@ -831,7 +832,7 @@ function hpo_post_experiment() {
 
 # Tests for RM-HPO GET trial JSON API
 function hpo_get_trial_json(){
-	for test in "${!rm_hpo_get_trial_json_tests[@]}"
+	for test in "${!hpo_get_trial_json_tests[@]}"
 	do
 		${test} "${FUNCNAME}"
 	done 

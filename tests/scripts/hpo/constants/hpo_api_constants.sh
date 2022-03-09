@@ -47,8 +47,8 @@ run_post_experiment_tests=("invalid-id"
 other_post_experiment_tests=("post-duplicate-experiments" "operation-generate-subsequent")
 
 # Tests to be carried out for HPO module API to get trial json  
-declare -A rm_hpo_get_trial_json_tests
-rm_hpo_get_trial_json_tests=([get_trial_json_invalid_tests]='invalid-id empty-id no-id null-id only-valid-id invalid-trial-number empty-trial-number no-trial-number null-trial-number only-valid-trial-number'
+declare -A hpo_get_trial_json_tests
+hpo_get_trial_json_tests=([get_trial_json_invalid_tests]='invalid-id empty-id no-id null-id only-valid-id invalid-trial-number empty-trial-number no-trial-number null-trial-number only-valid-trial-number'
                              [get_trial_json_valid_tests]='valid-exp-trial valid-exp-trial-generate-subsequent')
 
 # Tests to be carried out for HPO module API to post experiment results 
