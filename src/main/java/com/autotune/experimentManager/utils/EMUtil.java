@@ -22,6 +22,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EMUtil {
     /**
@@ -264,5 +267,67 @@ public class EMUtil {
                     .toString();
         }
         return null;
+    }
+
+    public static int getTimeValue(String timestr) {
+        String workingstr = timestr.replace(EMConstants.Patterns.WHITESPACE_PATTERN, "");
+        Pattern pattern = Pattern.compile(EMConstants.Patterns.DURATION_PATTERN);
+        Matcher matcher = pattern.matcher(workingstr);
+        if (matcher.find()) {
+            if (null != matcher.group(1)) {
+                return Integer.parseInt(matcher.group(1));
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    public static TimeUnit getTimeUnit(String timestr) {
+        String workingstr = timestr.replace(EMConstants.Patterns.WHITESPACE_PATTERN, "");
+        Pattern pattern = Pattern.compile(EMConstants.Patterns.DURATION_PATTERN);
+        Matcher matcher = pattern.matcher(workingstr);
+        if (matcher.find()) {
+            if (null != matcher.group(2).trim()) {
+                String trimmedDurationUnit = matcher.group(2).trim();
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SINGLE_LC)
+                    || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_SINGULAR)
+                    || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
+                    || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_SINGULAR)
+                    || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_PLURAL)) {
+                    return TimeUnit.SECONDS;
+                }
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SINGLE_LC)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_PLURAL)) {
+                    return TimeUnit.MINUTES;
+                }
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SINGLE_LC)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_PLURAL)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_PLURAL)) {
+                    return TimeUnit.HOURS;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static int getTimeUnitInSeconds(TimeUnit unit) {
+        switch (unit) {
+            case SECONDS -> {
+                return 1;
+            }
+            case MINUTES -> {
+                return EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+            }
+            case HOURS -> {
+                return EMConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+            }
+            default -> {
+                return Integer.MIN_VALUE;
+            }
+        }
     }
 }

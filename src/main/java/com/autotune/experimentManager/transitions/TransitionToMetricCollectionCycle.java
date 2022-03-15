@@ -2,6 +2,8 @@ package com.autotune.experimentManager.transitions;
 
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.data.input.metrics.EMMetricResult;
+import com.autotune.experimentManager.data.iteration.EMMetricData;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.GenericRestApiClient;
@@ -14,6 +16,7 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
     public void transit(String runId) {
         System.out.println("Running metrics collection");
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
+        EMMetricResult emMetricData = new EMMetricResult();
         GenericRestApiClient apiClient = new GenericRestApiClient(
                                                 EMUtil.getBaseDataSourceUrl(
                                                     trialData.getConfig().getEmConfigObject().getInfo().getDataSourceInfo().getDatasources().get(0).getUrl(),

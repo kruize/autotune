@@ -264,4 +264,10 @@ public class EMConstants {
 		public static String THROUGHPUT = "throughput";
 		public static String RESPONSE_TIME = "response_time";
 	}
+
+	public static class Patterns {
+		private Patterns() { }
+		public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
+		public static String WHITESPACE_PATTERN = "\\s";
+	}
 }
