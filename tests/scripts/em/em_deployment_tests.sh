@@ -473,7 +473,7 @@ function validate_no_deployment_exp() {
 
 function validate_multiple_deployments() {
 	instances=1
-	applications=("petclinic" "galaxies")
+	applications=("petclinic" "galaxies" "tfb-qrh")
 
 	test_name_=${FUNCNAME}
 
@@ -513,6 +513,7 @@ function validate_multiple_deployments() {
 	
 	galaxies_runid=${runid}
 
+
 	# Wait for rolling update to happen
 	sleep 2
 
@@ -523,9 +524,29 @@ function validate_multiple_deployments() {
 	# Get the deployment json 
 	get_config ${galaxies_deployment_name}
 
+	# Post the input json to /createExperimentTrial API rest end point
+	tfb_qrh_input_json="${TEST_DIR_}/resources/em_input_json/tfb-qrh_em_input.json"
+	echo  "EM input json = ${tfb_qrh_input_json}"
+	post_experiment_json "${tfb_qrh_input_json}"
+	
+	tfb_runid=${runid}
+
+	# Wait for rolling update to happen
+	sleep 2
+
+	echo "tfb_runid = ${tfb_runid}"
+	tfb_deployment_name=$(cat ${tfb_qrh_input_json} | jq '.deployments[0].deployment_name')
+	echo "deployment_name = ${tfb_deployment_name}"
+	tfb_deployment_name=$(echo ${tfb_deployment_name} | sed -e "s/\"//g")
+	# Get the deployment json 
+	get_config ${tfb_deployment_name}
+
+
 	validate_tunable_values ${test_name_} ${petclinic_input_json} ${petclinic_deployment_name}
 
 	validate_tunable_values ${test_name_} ${galaxies_input_json} ${galaxies_deployment_name}
+
+	validate_tunable_values ${test_name_} ${tfb_qrh_input_json} ${tfb_deployment_name}
 
 	list_trial_status "${petclinic_runid}"
 	expected_exp_status="\"WAITING_FOR_LOAD\""
@@ -533,6 +554,11 @@ function validate_multiple_deployments() {
 	echo "Experiment status = ${exp_status}"
 
 	list_trial_status "${galaxies_runid}"
+	expected_exp_status="\"WAITING_FOR_LOAD\""
+	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
+	echo "Experiment status = ${exp_status}"
+
+	list_trial_status "${tfb_runid}"
 	expected_exp_status="\"WAITING_FOR_LOAD\""
 	validate_exp_status "${exp_status}" "${expected_exp_status}" "${test_name_}"
 	echo "Experiment status = ${exp_status}"

@@ -325,6 +325,8 @@ function set_app_folder() {
 	app_name=$1
 	if [ "${app_name}" == "petclinic" ]; then
 		APP_FOLDER="spring-petclinic"
+	elif [ "${app_name}" == "tfb-qrh" ]; then
+                APP_FOLDER="techempower"
 	else
 		APP_FOLDER="${app_name}"
 	fi
@@ -375,9 +377,17 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${CLUSTER_TYPE} -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+                else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${CLUSTER_TYPE} -s "localhost" -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	fi
 	echo "done"
 }
