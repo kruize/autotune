@@ -135,7 +135,8 @@ public class AnalyzerConstants
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
-		public static final String TUNABLE_CHOICES = "tunable_choices";
+		public static final String CATEGORICAL_TYPE = "categorical";
+		public static final String TUNABLE_CHOICES = "choices";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";

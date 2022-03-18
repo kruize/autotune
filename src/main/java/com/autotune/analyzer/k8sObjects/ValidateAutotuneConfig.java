@@ -23,6 +23,8 @@ import com.autotune.utils.AnalyzerErrorConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+
 /**
  * Check if the AutotuneConfig object in the kubernetes cluster is valid
  */
@@ -85,7 +87,7 @@ public class ValidateAutotuneConfig
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
 					}
 
-					if (tunable.getStep() == 0) {
+					if (!tunable.getValueType().equals(CATEGORICAL_TYPE) && tunable.getStep() == 0) {
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.ZERO_STEP);
 					}
 				}
