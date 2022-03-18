@@ -1,11 +1,16 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.AutotuneExperiment;
-import com.autotune.analyzer.application.ApplicationServiceStack;
+import com.autotune.analyzer.k8sObjects.AutotuneObject;
+import com.autotune.common.data.experiments.ExperimentSummary;
 import com.autotune.common.data.experiments.ExperimentTrial;
-import com.autotune.analyzer.k8sObjects.AutotuneConfig;
+import com.autotune.common.data.experiments.TrialDetails;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import static com.autotune.analyzer.utils.ServiceHelpers.addDeploymentDetails;
+import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
 
 /**
  *
@@ -14,31 +19,47 @@ public class ExperimentHelpers {
 
 	public static JSONObject experimentToJSON(AutotuneExperiment autotuneExperiment) {
 
-		JSONObject experimentJSON = new JSONObject();
-		experimentJSON.put("Id", autotuneExperiment.getDeploymentName());
-		experimentJSON.put("Name", autotuneExperiment.getExperimentName());
-		experimentJSON.put("Status", autotuneExperiment.getExperimentStatus());
-
-		JSONArray appLayersJSONArray = new JSONArray();
-		for (String applicationServiceStackName : autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
-			ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(applicationServiceStackName);
-			for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-				AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
-				JSONObject appLayersObj = new JSONObject();
-				appLayersObj.put(applicationServiceStackName, autotuneConfig.getLevel());
-				appLayersJSONArray.put(appLayersObj);
-			}
+		JSONObject experimentJson = new JSONObject();
+		AutotuneObject autotuneObject = autotuneExperiment.getAutotuneObject();
+		if (null == autotuneObject) {
+			return experimentJson;
 		}
-		experimentJSON.put("Application Layers", appLayersJSONArray);
+
+		experimentJson.put(TRIAL_STATUS, autotuneExperiment.getExperimentStatus());
+		ExperimentSummary experimentSummary = autotuneExperiment.getExperimentSummary();
+		JSONObject trialSummary = new JSONObject();
+		trialSummary.put(TOTAL_TRIALS, experimentSummary.getTotalTrials());
+		trialSummary.put(TRIALS_COMPLETED, experimentSummary.getTrialsCompleted());
+		trialSummary.put(TRIALS_ONGOING, experimentSummary.getTrialsOngoing());
+		trialSummary.put(TRIALS_PASSED, experimentSummary.getTrialsPassed());
+		trialSummary.put(TRIALS_FAILED, experimentSummary.getTrialsFailed());
+		trialSummary.put(BEST_TRIAL, experimentSummary.getBestTrial());
+		experimentJson.put(TRIALS_SUMMARY, trialSummary);
+
+		addExperimentDetails(experimentJson, autotuneObject);
+		addDeploymentDetails(experimentJson, autotuneObject);
 
 		JSONArray trialsJSONArray = new JSONArray();
-		for (ExperimentTrial experimentTrial : autotuneExperiment.getExperimentTrials()) {
+		for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
+			ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
 			JSONObject trialsJSON = new JSONObject();
-			trialsJSON.put("Trial no", experimentTrial.getTrialInfo().getTrialNum());
+			trialsJSON.put(TRIAL_NUMBER, experimentTrial.getTrialInfo().getTrialNum());
+			TrialDetails trainingTrialDetails = experimentTrial.getTrialDetails().get(TRAINING);
+			trialsJSON.put(TRIAL_RESULT, trainingTrialDetails.getResult());
+			trialsJSON.put(TRIAL_ERRORS, trainingTrialDetails.getResultError());
+			StringBuilder durationSeconds;
+			if (null != trainingTrialDetails.getEndTime()) {
+				long milliseconds = (trainingTrialDetails.getEndTime().getTime()
+						- trainingTrialDetails.getStartTime().getTime()) / 1000;
+				durationSeconds = new StringBuilder(String.valueOf(milliseconds)).append(SECONDS);
+			} else {
+				durationSeconds = new StringBuilder(NA);
+			}
+			trialsJSON.put(TRIAL_DURATION, durationSeconds);
 			trialsJSONArray.put(trialsJSON);
 		}
-		experimentJSON.put("Experiment Trials", trialsJSONArray);
+		experimentJson.put(EXPERIMENT_TRIALS, trialsJSONArray);
 
-		return experimentJSON;
+		return experimentJson;
 	}
 }

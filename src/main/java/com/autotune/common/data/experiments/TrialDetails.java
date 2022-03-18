@@ -17,7 +17,9 @@ package com.autotune.common.data.experiments;
 
 import com.autotune.analyzer.k8sObjects.Metric;
 
-import java.util.ArrayList;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.HashMap;
 
 /**
  *
@@ -30,9 +32,27 @@ public class TrialDetails {
     private String result;
     private String resultInfo;
     private String resultError;
-    private ArrayList<Metric> podMetrics;
-    private ArrayList<PodContainer> podContainers;
+    private Timestamp startTime;
+    private Timestamp endTime;
+    // Hashmap of metrics associated with the Pod
+    // Uses metric name as key
+    private HashMap<String, Metric> podMetrics;
+    // Hashmap of containers being tracked for this trial
+    // Uses stack name (docker image name) as key
+    private HashMap<String, PodContainer> podContainers;
 
+    /**
+     *
+     * @param deploymentType
+     * @param deploymentName
+     * @param deploymentNameSpace
+     * @param state
+     * @param result
+     * @param resultInfo
+     * @param resultError
+     * @param podMetrics
+     * @param podContainers
+     */
     public TrialDetails(String deploymentType,
 						String deploymentName,
 						String deploymentNameSpace,
@@ -40,8 +60,8 @@ public class TrialDetails {
 						String result,
 						String resultInfo,
 						String resultError,
-						ArrayList<Metric> podMetrics,
-						ArrayList<PodContainer> podContainers) {
+						HashMap<String, Metric> podMetrics,
+						HashMap<String, PodContainer> podContainers) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;
@@ -53,33 +73,19 @@ public class TrialDetails {
         this.podContainers = podContainers;
     }
 
-    public String getDeploymentType() {
-        return deploymentType;
-    }
+    public String getDeploymentType() { return deploymentType; }
 
-    public String getDeploymentName() {
-        return deploymentName;
-    }
+    public String getDeploymentName() { return deploymentName; }
 
-    public String getDeploymentNameSpace() {
-        return deploymentNameSpace;
-    }
+    public String getDeploymentNameSpace() { return deploymentNameSpace; }
 
-    public String getState() {
-        return state;
-    }
+    public String getState() { return state; }
 
-    public void setState(String state) {
-        this.state = state;
-    }
+    public void setState(String state) { this.state = state; }
 
-    public String getResult() {
-        return result;
-    }
+    public String getResult() { return result; }
 
-    public void setResult(String result) {
-        this.result = result;
-    }
+    public void setResult(String result) { this.result = result; }
 
     public String getResultInfo() { return resultInfo; }
 
@@ -87,11 +93,17 @@ public class TrialDetails {
 
     public String getResultError() { return resultError; }
 
-    public ArrayList<Metric> getPodMetrics() {
-        return podMetrics;
-    }
+    public void setResultError(String resultError) { this.resultError = resultError; }
 
-    public ArrayList<PodContainer> getPodContainers() {
-        return podContainers;
-    }
+    public Timestamp getStartTime() { return startTime; }
+
+    public void setStartTime(Timestamp startTime) { this.startTime = startTime; }
+
+    public Timestamp getEndTime() { return endTime; }
+
+    public void setEndTime(Timestamp endTime) { this.endTime = endTime; }
+
+    public HashMap<String, Metric> getPodMetrics() { return podMetrics; }
+
+    public HashMap<String, PodContainer> getPodContainers() { return podContainers; }
 }

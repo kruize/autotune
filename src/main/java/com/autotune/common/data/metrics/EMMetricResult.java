@@ -24,15 +24,15 @@ public class EMMetricResult implements ConvertToJSON {
     }
 
     public EMMetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.GENERAL_INFO) ||
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.GENERAL_INFO) &&
             !jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             throw new IncompatibleInputJSONException();
         }
+        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.GENERAL_INFO));
         if (jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             isPercentileResultsAvailable = true;
+            emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
         }
-        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.GENERAL_INFO));
-        emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
     }
 
 
@@ -44,5 +44,13 @@ public class EMMetricResult implements ConvertToJSON {
             jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
         }
         return jsonObject;
+    }
+
+    public EMMetricGenericResults getEmMetricGenericResults() {
+        return emMetricGenericResults;
+    }
+
+    public EMMetricPercentileResults getEmMetricPercentileResults() {
+        return emMetricPercentileResults;
     }
 }

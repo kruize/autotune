@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.experiments;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -27,7 +27,10 @@ public class ExperimentTrial {
     private final TrialInfo trialInfo;
     private final DatasourceInfo datasourceInfo;
     private final ExperimentSettings experimentSettings;
-    private final ArrayList<TrialDetails> trialDetails;
+    // HashMap of parallel trials being monitored for this trial
+    // Eg. training and production
+    // uses tracker as key. tracker = "training" or "production"
+    private final HashMap<String, TrialDetails> trialDetails;
 
     public ExperimentTrial(String experimentName,
                            String experimentId,
@@ -35,7 +38,7 @@ public class ExperimentTrial {
                            TrialInfo trialInfo,
                            DatasourceInfo datasourceInfo,
                            ExperimentSettings experimentSettings,
-                           ArrayList<TrialDetails> trialDetails) {
+                           HashMap<String, TrialDetails> trialDetails) {
         this.experimentId = experimentId;
         this.namespace = namespace;
         this.experimentName = experimentName;
@@ -69,7 +72,7 @@ public class ExperimentTrial {
         return experimentSettings;
     }
 
-    public ArrayList<TrialDetails> getTrialDetails() {
+    public HashMap<String, TrialDetails> getTrialDetails() {
         return trialDetails;
     }
 }

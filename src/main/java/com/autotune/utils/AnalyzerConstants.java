@@ -129,12 +129,14 @@ public class AnalyzerConstants
 		public static final String QUERIES = "queries";
 
 		public static final String NAME = "name";
+		public static final String TUNABLE_NAME = "tunable_name";
 		public static final String QUERY = "query";
 		public static final String KEY = "key";
 		public static final String VALUE_TYPE = "value_type";
 		public static final String UPPER_BOUND = "upper_bound";
 		public static final String LOWER_BOUND = "lower_bound";
-		public static final String TUNABLE_CHOICES = "tunable_choices";
+		public static final String CATEGORICAL_TYPE = "categorical";
+		public static final String TUNABLE_CHOICES = "choices";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";
@@ -176,5 +178,25 @@ public class AnalyzerConstants
 		public static final String LAYER_DETAILS = "layer_details";
 		public static final String LAYERS = "layers";
 		public static final String QUERY_URL = "query_url";
+
+		public static final String TRAINING = "training";
+		public static final String PRODUCTION = "production";
+
+		public static final String TOTAL_TRIALS = "total_trials";
+		public static final String TRIALS_COMPLETED = "trials_completed";
+		public static final String TRIALS_ONGOING = "trials_ongoing";
+		public static final String TRIALS_PASSED = "trials_passed";
+		public static final String TRIALS_FAILED = "trials_failed";
+		public static final String BEST_TRIAL = "best_trial";
+		public static final String TRIALS_SUMMARY = "trials_summary";
+		public static final String TRIAL_STATUS = "status";
+		public static final String TRIAL_NUMBER = "trial_number";
+		public static final String TRIAL_RESULT = "trial_result";
+		public static final String TRIAL_ERRORS = "trial_errors";
+		public static final String TRIAL_DURATION = "trial_duration";
+		public static final String EXPERIMENT_TRIALS = "experiment_trials";
+		public static final String NA = "NA";
+		public static final String SECONDS = " seconds";
+
 	}
 }

@@ -46,7 +46,7 @@ class TrialDetails:
 def perform_experiment():
     # Loop to be replaced by a queueing mechanism to determine if the result has been received
     while TrialDetails.trial_result_received == -1:
-        time.sleep(10)
+        time.sleep(1)
     return TrialDetails.result_value, TrialDetails.trial_result
 
 

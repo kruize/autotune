@@ -4,15 +4,15 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.common.data.experiments.ExperimentSummary;
 import com.autotune.common.data.experiments.ExperimentTrial;
 import com.autotune.analyzer.k8sObjects.AutotuneConfig;
 import com.autotune.analyzer.k8sObjects.AutotuneObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.TreeMap;
 
 /**
  *
@@ -20,6 +20,7 @@ import java.util.HashMap;
 public class Experimentator implements Runnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Experimentator.class);
 	private static final int MAX_NUMBER_OF_EXPERIMENTS = 1;
+	private static final int MAX_NUMBER_OF_TRIALS = 10;
 	private static int num_experiments = 0;
 	public static HashMap<String, AutotuneExperiment> experimentsMap = new HashMap<>();
 
@@ -51,11 +52,20 @@ public class Experimentator implements Runnable {
 			}
 
 			// Start a new experiment
-			ArrayList<ExperimentTrial> experimentTrials = new ArrayList<>();
+			TreeMap<Integer, ExperimentTrial> experimentTrials = new TreeMap<>();
+			ExperimentSummary experimentSummary = new ExperimentSummary(MAX_NUMBER_OF_TRIALS,
+					0,
+					0,
+					0,
+					0,
+					0,
+					-1
+			);
 			autotuneExperiment = new AutotuneExperiment(applicationDeployment.getDeploymentName(),
 					autotuneObject.getExperimentName(),
 					autotuneObject,
 					"Pending Provisioning",
+					experimentSummary,
 					applicationDeployment,
 					experimentTrials);
 			experimentsMap.put(applicationDeployment.getDeploymentName(), autotuneExperiment);
@@ -66,12 +76,11 @@ public class Experimentator implements Runnable {
 			// Autotune can only handle MAX_NUMBER_OF_EXPERIMENTS at any given time
 			if (++num_experiments <= MAX_NUMBER_OF_EXPERIMENTS) {
 				RunExperiment runExperiment = new RunExperiment(autotuneExperiment);
+				autotuneExperiment.setExperimentThread(runExperiment);
 				Thread runExp = new Thread(runExperiment);
-				autotuneExperiment.setExperimentThread(runExp);
 				runExp.start();
-			} else {
-				// TODO: Need to push the experiments to a queue
-				// Do nothing for now
+				runExp.join();
+				// autotuneExperiment.summarize();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

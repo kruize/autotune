@@ -8,6 +8,15 @@ details: hotspot tunables
 layer_presence:
   queries:
   - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Old.+"}'
+    key: pod
+  - datasource: 'prometheus'
     query: 'jvm_memory_used_bytes{area="heap",id=~"Eden.+"}'
     key: pod
   - datasource: 'prometheus'
@@ -30,15 +39,15 @@ tunables:
   - response_time
   - throughput
 
-- name: balanced
+- name: gc
   description: 'Garbage collection policy'
   value_type: categorical
   choices:
-    - g1gc
-    - serialgc
-    - parallelgc
-    - cmsgc
-    - zgc
+    - G1GC
+    - ParallelGC
+    - SerialGC
+    - ShenandoahGC
+    - ZGC
   slo_class:
     - response_time
     - throughput
@@ -48,8 +57,8 @@ tunables:
   description: 'Tiered Compilation'
   value_type: categorical
   choices:
-    - true
-    - false
+    - 'true'
+    - 'false'
   slo_class:
     - response_time
     - throughput
@@ -59,8 +68,8 @@ tunables:
   description: 'Whether to allow parallel define class or not'
   value_type: categorical
   choices:
-    - true
-    - false
+    - 'true'
+    - 'false'
   slo_class:
     - response_time
     - throughput

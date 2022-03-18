@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.k8sObjects;
 
+import com.autotune.common.data.metrics.EMMetricResult;
+
 /**
  * Holds the variables used in the objective_function for the autotune object
  *
@@ -31,6 +33,7 @@ public final class Metric
 	private final String query;
 	private final String datasource;
 	private final String valueType;
+	private EMMetricResult emMetricResult;
 
 	public Metric(String name,
 				  String query,
@@ -56,5 +59,13 @@ public final class Metric
 
 	public String getValueType() {
 		return valueType;
+	}
+
+	public EMMetricResult getEmMetricResult() {
+		return emMetricResult;
+	}
+
+	public void setEmMetricResult(EMMetricResult emMetricResult) {
+		this.emMetricResult = emMetricResult;
 	}
 }
