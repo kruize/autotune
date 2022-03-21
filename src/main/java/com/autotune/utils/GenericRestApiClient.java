@@ -138,7 +138,7 @@ public class GenericRestApiClient {
                         + URLEncoder.encode(queryString, StandardCharsets.UTF_8)
                 );
             }
-            if (this.authHeaderString != null || !this.authHeaderString.isEmpty()) {
+            if (this.authHeaderString != null && !this.authHeaderString.isEmpty()) {
                 httpRequestBase.setHeader("Authorization", this.authHeaderString);
             }
             LOGGER.debug("Executing request " + httpRequestBase.getRequestLine());

@@ -254,7 +254,16 @@ public class EMUtil {
         }
         if (stage == EMExpStages.METRIC_COLLECTION_CYCLE) {
             // return cycle duration in seconds
-            return 10;
+            int current_cycle = etd.getEmIterationManager().getEmIterationData().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle();
+            int warmup_cycles = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles();
+            String warmup_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupDuration();
+            String measurement_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementDuration();
+            if (current_cycle <= warmup_cycles) {
+                return getTimeValue(warmup_duration) * getTimeUnitInSeconds(getTimeUnit(warmup_duration));
+            } else {
+                return getTimeValue(measurement_duration) * getTimeUnitInSeconds(getTimeUnit(measurement_duration));
+            }
+//            return 10;
         }
         return 0;
     }
@@ -263,7 +272,17 @@ public class EMUtil {
         if (datasource.equalsIgnoreCase(EMConstants.DataSources.PROMETHEUS)) {
             return (new StringBuilder())
                     .append(url)
-                    .append("/api/v1/query")
+                    .append("/api/v1/query?query=")
+                    .toString();
+        }
+        return null;
+    }
+
+    public static String formatQueryForURL(String query) {
+        if (null != query) {
+            return (new StringBuilder())
+                    .append("?query=")
+                    .append(query)
                     .toString();
         }
         return null;
