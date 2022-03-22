@@ -123,13 +123,13 @@ public class GenericRestApiClient {
      * @return Json object which contains API response.
      * @throws IOException
      */
-    private JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String jsonOutputInString = "";
         SSLContext sslContext = SSLContexts.custom()
-                .loadTrustMaterial((chain, authType) -> true).build();
+                .loadTrustMaterial((chain, authType) -> true).build();  //overriding the standard certificate verification process and trust all certificate chains regardless of their validity
         SSLConnectionSocketFactory sslConnectionSocketFactory =
                 new SSLConnectionSocketFactory(sslContext, new String[]
-                        {"SSLv2Hello", "SSLv3", "TLSv1","TLSv1.1", "TLSv1.2" }, null,
+                        {"SSLv2Hello", "TLSv1","TLSv1.1", "TLSv1.2" }, null,
                         NoopHostnameVerifier.INSTANCE);
         try (CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build()) {
             HttpRequestBase httpRequestBase = null;
