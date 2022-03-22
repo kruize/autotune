@@ -4,15 +4,17 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.data.experiments.ExperimentSummary;
-import com.autotune.common.data.experiments.ExperimentTrial;
-import com.autotune.analyzer.k8sObjects.AutotuneConfig;
-import com.autotune.analyzer.k8sObjects.AutotuneObject;
+import com.autotune.common.experiments.ExperimentSummary;
+import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.k8sObjects.AutotuneConfig;
+import com.autotune.common.k8sObjects.AutotuneObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.TreeMap;
+
+import static com.autotune.utils.ExperimentMessages.RunExperiment.INITIAL_STATUS;
 
 /**
  *
@@ -64,7 +66,7 @@ public class Experimentator implements Runnable {
 			autotuneExperiment = new AutotuneExperiment(applicationDeployment.getDeploymentName(),
 					autotuneObject.getExperimentName(),
 					autotuneObject,
-					"Pending Provisioning",
+					INITIAL_STATUS,
 					experimentSummary,
 					applicationDeployment,
 					experimentTrials);

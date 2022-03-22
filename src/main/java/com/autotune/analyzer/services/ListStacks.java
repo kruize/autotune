@@ -16,7 +16,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.deployment.AutotuneDeployment;
-import com.autotune.analyzer.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.AutotuneObject;
 import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;

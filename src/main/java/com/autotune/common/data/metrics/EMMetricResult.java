@@ -1,6 +1,6 @@
 package com.autotune.common.data.metrics;
 
-import com.autotune.common.data.interfaces.ConvertToJSON;
+import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;

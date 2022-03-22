@@ -2,12 +2,16 @@ package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.common.data.experiments.ExperimentSummary;
-import com.autotune.common.data.experiments.ExperimentTrial;
-import com.autotune.common.data.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.experiments.ExperimentSummary;
+import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.TrialDetails;
 
 import java.util.TreeMap;
+
+import static com.autotune.utils.AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE;
+import static com.autotune.utils.AnalyzerConstants.AutotuneObjectConstants.MINIMIZE;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.TRAINING;
 
 /**
  *
@@ -121,11 +125,11 @@ public class AutotuneExperiment {
         } else {
             double currentResult = Double.parseDouble(trialDetails.getResult());
             ExperimentTrial bestExperimentTrial = getExperimentTrials().get(bestTrial);
-            TrialDetails bestTrialDetails = bestExperimentTrial.getTrialDetails().get("training");
+            TrialDetails bestTrialDetails = bestExperimentTrial.getTrialDetails().get(TRAINING);
             double bestResult = Double.parseDouble(bestTrialDetails.getResult());
             String direction = autotuneObject.getSloInfo().getDirection();
-            if ((direction.equals("minimize") && currentResult < bestResult) ||
-                    (direction.equals("maximize") && currentResult > bestResult)) {
+            if ((direction.equals(MINIMIZE) && currentResult < bestResult) ||
+                    (direction.equals(MAXIMIZE) && currentResult > bestResult)) {
                 experimentSummary.setBestTrial(currentTrial);
             }
         }

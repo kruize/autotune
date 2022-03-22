@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.analyzer.k8sObjects.AutotuneConfig;
+import com.autotune.common.k8sObjects.AutotuneConfig;
 
 import java.util.HashMap;
 import java.util.Map;

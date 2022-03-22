@@ -1,10 +1,10 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.AutotuneExperiment;
-import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.common.data.experiments.ExperimentSummary;
-import com.autotune.common.data.experiments.ExperimentTrial;
-import com.autotune.common.data.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.experiments.ExperimentSummary;
+import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.TrialDetails;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

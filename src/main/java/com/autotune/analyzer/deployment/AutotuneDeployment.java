@@ -24,7 +24,7 @@ import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.k8sObjects.*;
+import com.autotune.common.k8sObjects.*;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;

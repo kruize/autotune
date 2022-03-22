@@ -3,7 +3,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.common.data.experiments.ExperimentTrial;
+import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;

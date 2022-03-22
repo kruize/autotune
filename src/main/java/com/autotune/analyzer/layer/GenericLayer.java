@@ -1,7 +1,7 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.data.experiments.PodContainer;
+import com.autotune.common.experiments.PodContainer;
 import org.json.JSONObject;
 
 public class GenericLayer implements Layer {
