@@ -104,7 +104,7 @@ spec:
                     description: 'actual name of the monitoring agent software'
                     type: string
                 required:
-                - type
+                - name
                 - value
                 type: object
             required:
