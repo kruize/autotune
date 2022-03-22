@@ -16,7 +16,6 @@ spec:
         name: autotune
         operatorframework.io/os.linux: supported
     spec:
-      automountServiceAccountToken: false
       serviceAccountName: autotune-sa
       containers:
       - name: autotune-optuna
@@ -94,29 +93,6 @@ spec:
         ports:
          - name: autotune-port
            containerPort: 8080
-        volumeMounts:
-          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-            name: kube-api-access
-            readOnly: true
-      volumes:
-        - name: kube-api-access
-          projected:
-            defaultMode: 420
-            sources:
-            - serviceAccountToken:
-                expirationSeconds: 3600
-                path: token
-            - configMap:
-                items:
-                - key: ca.crt
-                  path: ca.crt
-                name: kube-root-ca.crt
-            - downwardAPI:
-                items:
-                - fieldRef:
-                    apiVersion: v1
-                    fieldPath: metadata.namespace
-                  path: namespace
 ---
 apiVersion: v1
 kind: Service
