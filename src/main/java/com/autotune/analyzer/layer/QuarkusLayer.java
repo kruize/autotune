@@ -1,8 +1,13 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.data.experiments.PodContainer;
+import com.autotune.common.experiments.PodContainer;
 import org.json.JSONObject;
+
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
+import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
+import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.QUARKUS;
+import static com.autotune.utils.AutotuneConstants.JSONKeys.EQUALS;
 
 public class QuarkusLayer extends GenericLayer implements Layer {
 	@Override
@@ -14,9 +19,9 @@ public class QuarkusLayer extends GenericLayer implements Layer {
 			runtimeOptions = new StringBuilder(podContainer.getRuntimeOptions());
 		}
 		String tunableName = tunable.getName();
-		if (tunableName.contains("quarkus")) {
-			runtimeOptions.append(" -D").append(tunableName).append("=")
-					.append(tunableJSON.getLong("tunable_value"));
+		if (tunableName.contains(QUARKUS)) {
+			runtimeOptions.append(DOPTION).append(tunableName).append(EQUALS)
+					.append(tunableJSON.getLong(TUNABLE_VALUE));
 			podContainer.setRuntimeOptions(runtimeOptions.toString());
 		}
 	}

@@ -33,13 +33,26 @@ public class AutotuneConstants {
 
     public static class HpoOperations {
         private HpoOperations() { }
-        public static final String NEW_TRIAL = "EXP_TRIAL_GENERATE_NEW";
-        public static final String CONTINUE_TRIAL = "EXP_TRIAL_GENERATE_SUBSEQUENT";
-        public static final String TRIAL_RESULT = "EXP_TRIAL_RESULT";
+        public static final String EXP_TRIAL_GENERATE_NEW = "EXP_TRIAL_GENERATE_NEW";
+        public static final String EXP_TRIAL_GENERATE_SUBSEQUENT = "EXP_TRIAL_GENERATE_SUBSEQUENT";
+        public static final String EXP_TRIAL_RESULT = "EXP_TRIAL_RESULT";
+        public static final String ID = "id";
+        public static final String URL = "url";
+        public static final String OPERATION = "operation";
     }
 
     public static class JSONKeys {
         private JSONKeys() { }
+
+        public static final String QUESTION_MARK = "?";
+        public static final String AMPERSAND = "&";
+        public static final String EQUALS = "=";
+        public static final String PLUS = "+";
+        public static final String MINUS = "-";
+
+        public static final String REQUEST_SUM = "request_sum";
+        public static final String REQUEST_COUNT = "request_count";
+
         public static final String CONTAINERS = "containers";
         public static final String IMAGE_NAME = "image_name";
         public static final String CONTAINER_NAME = "container_name";
@@ -53,6 +66,7 @@ public class AutotuneConstants {
         public static String TRIAL_NUM = "trial_num";
         public static String TRIAL_RESULT_URL = "trial_result_url";
         public static String URL = "url";
+
         // Settings section
         public static String TRACKERS = "trackers";
         public static String SETTINGS = "settings";
@@ -82,10 +96,28 @@ public class AutotuneConstants {
         public static String NAME = "name";
         public static String QUERY = "query";
         public static String DATASOURCE = "datasource";
+
+        public static String CPU = "cpu";
+        public static String MEMORY = "memory";
+        public static String REQUESTS = "requests";
+        public static String LIMITS = "limits";
+        public static String RESOURCES = "resources";
+        public static String CONTAINER = "container";
+        public static String TEMPLATE = "template";
+
+        public static String JAVA_OPTIONS = "JAVA_OPTIONS";
+        public static String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
+        public static String ENV = "ENV";
+        public static String TRIAL_RUNNING = "--Trial Running--";
+
+        public static String RESULT_VALUE = "result_value";
+        public static String RESULT_VALUE_TYPE = "result_value_type";
+
         public static String METRIC_INFO = "metric_info";
         public static String METRICS_RESULTS = "metrics_results";
         public static String WARMUP_RESULTS = "warmup_results";
         public static String MEASUREMENT_RESULTS = "measurement_results";
+        public static String SUMMARY_RESULTS = "summary_results";
         public static String ITERATION_RESULT = "iteration_result";
         public static String GENERAL_INFO = "general_info";
         public static String RESULTS = "results";

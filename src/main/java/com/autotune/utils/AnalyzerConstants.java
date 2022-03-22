@@ -22,9 +22,9 @@ import java.util.regex.Pattern;
 /**
  * Holds constants used in other parts of the codebase
  */
-public class AnalyzerConstants
-{
-	private AnalyzerConstants() { }
+public class AnalyzerConstants {
+	private AnalyzerConstants() {
+	}
 
 	// Used to parse autotune configmaps
 	public static final String K8S_TYPE = "K8S_TYPE";
@@ -72,7 +72,8 @@ public class AnalyzerConstants
 	 * Used to parse the Autotune kind resource
 	 */
 	public static class AutotuneObjectConstants {
-		private AutotuneObjectConstants() { }
+		private AutotuneObjectConstants() {
+		}
 
 		public static final String SPEC = "spec";
 		public static final String SLO = "slo";
@@ -85,6 +86,9 @@ public class AnalyzerConstants
 		public static final String QUERY = "query";
 		public static final String VALUE_TYPE = "value_type";
 		public static final String DATASOURCE = "datasource";
+
+		public static final String MINIMIZE = "minimize";
+		public static final String MAXIMIZE = "maximize";
 
 		public static final String SELECTOR = "selector";
 		public static final String MATCH_LABEL = "matchLabel";
@@ -108,7 +112,8 @@ public class AnalyzerConstants
 	 * Used to parse the AutotuneConfig resource
 	 */
 	public static class AutotuneConfigConstants {
-		private AutotuneConfigConstants() { }
+		private AutotuneConfigConstants() {
+		}
 
 		public static final String METADATA = "metadata";
 		public static final String NAMESPACE = "namespace";
@@ -130,6 +135,7 @@ public class AnalyzerConstants
 
 		public static final String NAME = "name";
 		public static final String TUNABLE_NAME = "tunable_name";
+		public static final String TUNABLE_VALUE = "tunable_value";
 		public static final String QUERY = "query";
 		public static final String KEY = "key";
 		public static final String VALUE_TYPE = "value_type";
@@ -137,6 +143,8 @@ public class AnalyzerConstants
 		public static final String LOWER_BOUND = "lower_bound";
 		public static final String CATEGORICAL_TYPE = "categorical";
 		public static final String TUNABLE_CHOICES = "choices";
+		public static final String TRUE = "true";
+		public static final String FALSE = "false";
 
 		public static final String DOUBLE = "double";
 		public static final String LONG = "long";
@@ -164,7 +172,8 @@ public class AnalyzerConstants
 	 * Contains Strings used in REST services
 	 */
 	public static class ServiceConstants {
-		private ServiceConstants() { }
+		private ServiceConstants() {
+		}
 
 		public static final String JSON_CONTENT_TYPE = "application/json";
 		public static final String CHARACTER_ENCODING = "UTF-8";
@@ -198,5 +207,67 @@ public class AnalyzerConstants
 		public static final String NA = "NA";
 		public static final String SECONDS = " seconds";
 
+	}
+
+	/**
+	 * Contains Strings used in the HOTSPOT Layer
+	 */
+	public static class HotspotConstants {
+		private HotspotConstants() {
+		}
+
+		public static final String XXOPTION = " -XX:";
+		public static final String USE = "+Use";
+		public static final String SERVER = " -server";
+		public static final String MAX_RAM_PERCENTAGE = "MaxRAMPercentage";
+		public static final String GC = "gc";
+		public static final String TIERED_COMPILATION = "TieredCompilation";
+		public static final String ALLOW_PARALLEL_DEFINE_CLASS = "AllowParallelDefineClass";
+		public static final String ALLOW_VECTORIZE_ON_DEMAND = "AllowVectorizeOnDemand";
+		public static final String ALWAYS_COMPILE_LOOP_METHODS = "AlwaysCompileLoopMethods";
+		public static final String ALWAYS_PRE_TOUCH = "AlwaysPreTouch";
+		public static final String ALWAYS_TENURE = "AlwaysTenure";
+		public static final String BACKGROUND_COMPILATION = "BackgroundCompilation";
+		public static final String DO_ESCAPE_ANALYSIS = "DoEscapeAnalysis";
+		public static final String USE_INLINE_CACHES = "UseInlineCaches";
+		public static final String USE_LOOP_PREDICATE = "UseLoopPredicate";
+		public static final String USE_STRING_DEDUPLICATION = "UseStringDeduplication";
+		public static final String USE_SUPER_WORD = "UseSuperWord";
+		public static final String USE_TYPE_SPECULATION = "UseTypeSpeculation";
+		public static final String COMPILE_THRESHOLD_SCALING = "CompileThresholdScaling";
+		public static final String MAX_INLINE_LEVEL = "MaxInlineLevel";
+		public static final String FREQ_INLINE_SIZE = "FreqInlineSize";
+		public static final String MIN_INLINING_THRESHOLD = "MinInliningThreshold";
+		public static final String COMPILE_THRESHOLD = "CompileThreshold";
+		public static final String CONC_GC_THREADS = "ConcGCThreads";
+		public static final String PARALLEL_GC_THREADS = "ParallelGCThreads";
+		public static final String INLINE_SMALL_CODE = "InlineSmallCode";
+		public static final String LOOP_UNROLL_LIMIT = "LoopUnrollLimit";
+		public static final String LOOP_UNROLL_MIN = "LoopUnrollMin";
+		public static final String MIN_SURVIVOR_RATIO = "MinSurvivorRatio";
+		public static final String NEW_RATIO = "NewRatio";
+		public static final String TIERED_STOP_AT_LEVEL = "TieredStopAtLevel";
+	}
+
+	/**
+	 * Contains Strings used in the QUARKUS Layer
+	 */
+	public static class QuarkusConstants {
+		private QuarkusConstants() {
+		}
+
+		public static final String QUARKUS = "quarkus";
+		public static final String DOPTION = " -D";
+	}
+
+	/**
+	 * Contains Strings used in the Container Layer
+	 */
+	public static class ContainerConstants {
+		private ContainerConstants() {
+		}
+
+		public static final String CPU_REQUEST = "cpuRequest";
+		public static final String MEM_REQUEST = "memoryRequest";
 	}
 }

@@ -18,12 +18,13 @@ package com.autotune.utils;
 /**
  * Contains strings describing the errors encountered
  */
-public class AnalyzerErrorConstants
-{
-	private AnalyzerErrorConstants() { }
+public class AnalyzerErrorConstants {
+	private AnalyzerErrorConstants() {
+	}
 
 	public static class AutotuneConfigErrors {
-		private AutotuneConfigErrors() { }
+		private AutotuneConfigErrors() {
+		}
 
 		public final static String AUTOTUNE_CONFIG_NAME_NULL = "AutotuneConfig object name cannot be null or empty\n";
 		public final static String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
@@ -39,7 +40,8 @@ public class AnalyzerErrorConstants
 	}
 
 	public static class AutotuneObjectErrors {
-		private AutotuneObjectErrors() { }
+		private AutotuneObjectErrors() {
+		}
 
 		public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
 		public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";
@@ -57,7 +59,8 @@ public class AnalyzerErrorConstants
 	}
 
 	public static class AutotuneServiceMessages {
-		private AutotuneServiceMessages() { }
+		private AutotuneServiceMessages() {
+		}
 
 		public static final String AUTOTUNE_OBJECTS_NOT_FOUND = "Error: No objects of kind Autotune found!";
 		public static final String ERROR_EXPERIMENT_NAME = "Error: Experiment Name ";
@@ -67,5 +70,13 @@ public class AnalyzerErrorConstants
 		public static final String ERROR_LAYER = "Error: Layer (AutotuneConfig) object ";
 		public static final String ERROR_SLO_CLASS = "Error: Tunables matching slo_class ";
 		public static final String ERROR_STACK_NAME = "Error: Experiment related to Stack (Container Image) ";
+	}
+
+	public static class RunExperimentMessages {
+		private RunExperimentMessages() {
+		}
+
+		public static final String AUTOTUNE_OBJECTS_NOT_FOUND = "Error: No objects of kind Autotune found!";
+
 	}
 }

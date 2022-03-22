@@ -21,10 +21,10 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.common.data.experiments.*;
-import com.autotune.analyzer.k8sObjects.AutotuneObject;
-import com.autotune.analyzer.k8sObjects.Metric;
-import com.autotune.analyzer.k8sObjects.SloInfo;
+import com.autotune.common.experiments.*;
+import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.analyzer.layer.Layer;
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -43,8 +43,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
+import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
+import static com.autotune.utils.AnalyzerConstants.AutotuneObjectConstants.SPEC;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.TRAINING;
+import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
 public class TrialHelpers
@@ -60,48 +64,48 @@ public class TrialHelpers
     public static JSONObject experimentTrialToJSON(ExperimentTrial experimentTrial) {
         // Top level experimentTrialJSON Object
         JSONObject experimentTrialJSON = new JSONObject();
-        experimentTrialJSON.put("experiment_id", experimentTrial.getExperimentId());
-        experimentTrialJSON.put("namespace", experimentTrial.getNamespace());
-        experimentTrialJSON.put("experiment_name", experimentTrial.getExperimentName());
+        experimentTrialJSON.put(EXPERIMENT_ID, experimentTrial.getExperimentId());
+        experimentTrialJSON.put(NAMESPACE, experimentTrial.getNamespace());
+        experimentTrialJSON.put(EXPERIMENT_NAME, experimentTrial.getExperimentName());
 
         /*
          * Info object
          * experimentTrialJSON -> info
          */
         JSONObject trialInfoValues = new JSONObject();
-        trialInfoValues.put("trial_id", experimentTrial.getTrialInfo().getTrialId());
-        trialInfoValues.put("trial_num", experimentTrial.getTrialInfo().getTrialNum());
-        trialInfoValues.put("trial_result_url", experimentTrial.getTrialInfo().getTrialResultURL());
+        trialInfoValues.put(TRIAL_ID, experimentTrial.getTrialInfo().getTrialId());
+        trialInfoValues.put(TRIAL_NUM, experimentTrial.getTrialInfo().getTrialNum());
+        trialInfoValues.put(TRIAL_RESULT_URL, experimentTrial.getTrialInfo().getTrialResultURL());
 
         JSONObject datasourceInfo = new JSONObject();
-        datasourceInfo.put("name", experimentTrial.getDatasourceInfo().getName());
-        datasourceInfo.put("url", experimentTrial.getDatasourceInfo().getUrl().toString());
+        datasourceInfo.put(NAME, experimentTrial.getDatasourceInfo().getName());
+        datasourceInfo.put(URL, experimentTrial.getDatasourceInfo().getUrl().toString());
 
         JSONArray datasourceArray = new JSONArray();
         datasourceArray.put(datasourceInfo);
 
         JSONObject infoValues = new JSONObject();
-        infoValues.put("trial_info", trialInfoValues);
-        infoValues.put("datasource_info", datasourceArray);
+        infoValues.put(TRIAL_INFO, trialInfoValues);
+        infoValues.put(DATASOURCE_INFO, datasourceArray);
 
-        experimentTrialJSON.put("info", infoValues);
+        experimentTrialJSON.put(INFO, infoValues);
         /*
          * trialSettings object
          * experimentTrialJSON -> settings -> trail_settings
          */
         JSONObject trialSettingsValues = new JSONObject();
-        trialSettingsValues.put("iterations", experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
-        trialSettingsValues.put("warmup_duration", experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupDuration());
-        trialSettingsValues.put("warmup_cycles", experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles());
-        trialSettingsValues.put("measurement_duration", experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementDuration());
-        trialSettingsValues.put("measurement_cycles", experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementCycles());
+        trialSettingsValues.put(ITERATIONS, experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
+        trialSettingsValues.put(WARMUP_DURATION, experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupDuration());
+        trialSettingsValues.put(WARMUP_CYCLES, experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles());
+        trialSettingsValues.put(MEASUREMENT_DURATION, experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementDuration());
+        trialSettingsValues.put(MEASUREMENT_CYCLES, experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementCycles());
 
         /*
          * deploymentPolicy object
          * experimentTrialJSON -> settings -> deployment_settings -> deployment_policy
          */
         JSONObject deploymentPolicyValues = new JSONObject();
-        deploymentPolicyValues.put("type", experimentTrial.getExperimentSettings().getDeploymentSettings().getDeploymentPolicy().getDeploymentType());
+        deploymentPolicyValues.put(TYPE, experimentTrial.getExperimentSettings().getDeploymentSettings().getDeploymentPolicy().getDeploymentType());
 
         /*
          * deployment_tracking object
@@ -112,17 +116,17 @@ public class TrialHelpers
             trackersArray.put(trackerObjs);
         }
         JSONObject trackers = new JSONObject();
-        trackers.put("trackers", trackersArray);
+        trackers.put(TRACKERS, trackersArray);
 
         JSONObject deploymentSettingsValues = new JSONObject();
-        deploymentSettingsValues.put("deployment_policy", deploymentPolicyValues);
-        deploymentSettingsValues.put("deployment_tracking", trackers);
+        deploymentSettingsValues.put(DEPLOYMENT_POLICY, deploymentPolicyValues);
+        deploymentSettingsValues.put(DEPLOYMENT_TRACKING, trackers);
 
         JSONObject experimentSettingsValues = new JSONObject();
-        experimentSettingsValues.put("trial_settings", trialSettingsValues);
-        experimentSettingsValues.put("deployment_settings", deploymentSettingsValues);
+        experimentSettingsValues.put(TRIAL_SETTINGS, trialSettingsValues);
+        experimentSettingsValues.put(DEPLOYMENT_SETTINGS, deploymentSettingsValues);
         // Update experimentTrialJSON
-        experimentTrialJSON.put("settings", experimentSettingsValues);
+        experimentTrialJSON.put(SETTINGS, experimentSettingsValues);
 
         /*
          * deployments object section
@@ -143,50 +147,50 @@ public class TrialHelpers
                  */
                 JSONObject requestsValues = new JSONObject();
                 /* CPU Value should only be */
-                requestsValues.put("cpu", podContainer.getRequests().getCpu());
-                requestsValues.put("memory", podContainer.getRequests().getMemory());
+                requestsValues.put(CPU, podContainer.getRequests().getCpu());
+                requestsValues.put(MEMORY, podContainer.getRequests().getMemory());
                 JSONObject resourcesValues = new JSONObject();
-                resourcesValues.put("requests", requestsValues);
-                resourcesValues.put("limits", requestsValues);
+                resourcesValues.put(REQUESTS, requestsValues);
+                resourcesValues.put(LIMITS, requestsValues);
                 JSONObject resources = new JSONObject();
-                resources.put("resources", resourcesValues);
+                resources.put(RESOURCES, resourcesValues);
 
                 JSONObject containerJson = new JSONObject();
-                containerJson.put("container", resources);
+                containerJson.put(CONTAINER, resources);
 
                 JSONObject tspec = new JSONObject();
-                tspec.put("spec", containerJson);
+                tspec.put(SPEC, containerJson);
 
                 JSONObject template = new JSONObject();
-                template.put("template", tspec);
+                template.put(TEMPLATE, tspec);
 
                 JSONObject resObject = new JSONObject();
-                resObject.put("name", "update requests and limits");
-                resObject.put("spec", template);
+                resObject.put(NAME, "update requests and limits");
+                resObject.put(SPEC, template);
 
                 /*
                  * env object
                  * experimentTrialJSON -> deployments -> config -> env
                  */
                 JSONObject envValues = new JSONObject();
-                envValues.put("JAVA_OPTIONS", podContainer.getRuntimeOptions());
-                envValues.put("JDK_JAVA_OPTIONS", podContainer.getRuntimeOptions());
+                envValues.put(JAVA_OPTIONS, podContainer.getRuntimeOptions());
+                envValues.put(JDK_JAVA_OPTIONS, podContainer.getRuntimeOptions());
 
                 JSONObject env = new JSONObject();
-                env.put("env", envValues);
+                env.put(ENV, envValues);
 
                 JSONObject containere = new JSONObject();
-                containere.put("container", env);
+                containere.put(CONTAINER, env);
 
                 JSONObject tspece = new JSONObject();
-                tspece.put("spec", containere);
+                tspece.put(SPEC, containere);
 
                 JSONObject templatee = new JSONObject();
-                templatee.put("template", tspece);
+                templatee.put(TEMPLATE, tspece);
 
                 JSONObject envObject = new JSONObject();
-                envObject.put("name", "update env");
-                envObject.put("spec", templatee);
+                envObject.put(NAME, "update env");
+                envObject.put(SPEC, templatee);
 
                 JSONArray configArrayObjects = new JSONArray();
                 configArrayObjects.put(resObject);
@@ -200,9 +204,9 @@ public class TrialHelpers
                 for (String metricName : podContainer.getContainerMetrics().keySet()) {
                     Metric metricObjects = podContainer.getContainerMetrics().get(metricName);
                     JSONObject obj = new JSONObject();
-                    obj.put("name", metricObjects.getName());
-                    obj.put("query", metricObjects.getQuery());
-                    obj.put("datasource", metricObjects.getDatasource());
+                    obj.put(NAME, metricObjects.getName());
+                    obj.put(QUERY, metricObjects.getQuery());
+                    obj.put(DATASOURCE, metricObjects.getDatasource());
                     containerMetricArrayObjects.put(obj);
                 }
 
@@ -211,10 +215,10 @@ public class TrialHelpers
                  * experimentTrialJSON -> deployments -> config
                  */
                 JSONObject configObject = new JSONObject();
-                configObject.put("image_name", podContainer.getStackName());
-                configObject.put("container_name", podContainer.getContainerName());
-                configObject.put("config", configArrayObjects);
-                configObject.put("container_metrics", containerMetricArrayObjects);
+                configObject.put(IMAGE_NAME, podContainer.getStackName());
+                configObject.put(CONTAINER_NAME, podContainer.getContainerName());
+                configObject.put(CONFIG, configArrayObjects);
+                configObject.put(CONTAINER_METRICS, containerMetricArrayObjects);
 
                 containersJsonArray.put(configObject);
             }
@@ -227,23 +231,23 @@ public class TrialHelpers
             for (String metricName : deployment.getPodMetrics().keySet()) {
                 Metric metricObjects = deployment.getPodMetrics().get(metricName);
                 JSONObject obj = new JSONObject();
-                obj.put("name", metricObjects.getName());
-                obj.put("query", metricObjects.getQuery());
-                obj.put("datasource", metricObjects.getDatasource());
+                obj.put(NAME, metricObjects.getName());
+                obj.put(QUERY, metricObjects.getQuery());
+                obj.put(DATASOURCE, metricObjects.getDatasource());
                 podMetricArrayObjects.put(obj);
             }
 
             JSONObject deploymentObject = new JSONObject();
-            deploymentObject.put("type", deployment.getDeploymentType());
-            deploymentObject.put("deployment_name", deployment.getDeploymentName());
-            deploymentObject.put("namespace", deployment.getDeploymentNameSpace());
-            deploymentObject.put("pod_metrics", podMetricArrayObjects);
-            deploymentObject.put("containers", containersJsonArray);
+            deploymentObject.put(TYPE, deployment.getDeploymentType());
+            deploymentObject.put(DEPLOYMENT_NAME, deployment.getDeploymentName());
+            deploymentObject.put(NAMESPACE, deployment.getDeploymentNameSpace());
+            deploymentObject.put(POD_METRICS, podMetricArrayObjects);
+            deploymentObject.put(CONTAINERS, containersJsonArray);
 
             // Add this deployment tracker object to the deployment object array
             deploymentsArrayObjs.put(deploymentObject);
         }
-        experimentTrialJSON.put("deployments", deploymentsArrayObjs);
+        experimentTrialJSON.put(DEPLOYMENTS, deploymentsArrayObjs);
 
         return experimentTrialJSON;
     }
@@ -259,7 +263,7 @@ public class TrialHelpers
     public static void updateExperimentTrial(int trialNumber,
                                              AutotuneExperiment autotuneExperiment,
                                              JSONObject trialResultsJson) throws InvalidValueException, IncompatibleInputJSONException {
-        String tracker = "training";
+        String tracker = TRAINING;
         ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNumber);
         if (null == experimentTrial) {
             LOGGER.error("Invalid results JSON: Invalid trialNumber: " + trialNumber);
@@ -277,15 +281,15 @@ public class TrialHelpers
             throw new InvalidValueException("Invalid results JSON: Deployments Array not found");
         }
         JSONObject deployment = deploymentsArray.getJSONObject(0);
-        JSONArray podMetricsArray = deployment.getJSONArray("pod_metrics");
+        JSONArray podMetricsArray = deployment.getJSONArray(POD_METRICS);
         if (null == podMetricsArray) {
             LOGGER.error("Invalid results JSON: pod_metrics Array not found");
             throw new InvalidValueException("Invalid results JSON: pod_metrics Array not found");
         }
         for (Object metricPodObject : podMetricsArray) {
             JSONObject podMetric = (JSONObject) metricPodObject;
-            EMMetricResult emMetricResult = new EMMetricResult(podMetric.getJSONObject("summary_results"));
-            String metricName = podMetric.getString("name");
+            EMMetricResult emMetricResult = new EMMetricResult(podMetric.getJSONObject(SUMMARY_RESULTS));
+            String metricName = podMetric.getString(NAME);
             Metric metric = trialDetails.getPodMetrics().get(metricName);
             metric.setEmMetricResult(emMetricResult);
         }
@@ -313,12 +317,12 @@ public class TrialHelpers
                 "1min",
                 "3"
         );
-        DeploymentPolicy deploymentPolicy = new DeploymentPolicy("rollingUpdate");
+        DeploymentPolicy deploymentPolicy = new DeploymentPolicy(ROLLING_UPDATE);
 
         StringBuilder trialResultUrl = new StringBuilder(LIST_EXPERIMENTS_END_POINT)
                 .append("?")
                 .append(EXPERIMENT_NAME)
-                .append("=")
+                .append(EQUALS)
                 .append(autotuneExperiment.getExperimentName());
 
         TrialInfo trialInfo = new TrialInfo("",
@@ -329,7 +333,7 @@ public class TrialHelpers
                 new URL(AutotuneDeploymentInfo.getMonitoringAgentEndpoint()));
 
         ArrayList<String> trackers = new ArrayList<>();
-        trackers.add("training");
+        trackers.add(TRAINING);
         // trackers.add("production");
         DeploymentTracking deploymentTracking = new DeploymentTracking(trackers);
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
@@ -421,9 +425,9 @@ public class TrialHelpers
                     autotuneExperiment.getDeploymentName(),
                     autotuneExperiment.getApplicationDeployment().getNamespace(),
                     "",
-                    "--Trial Running--",
-                    "--Trial Running--",
-                    "--Trial Running--",
+                    TRIAL_RUNNING,
+                    TRIAL_RUNNING,
+                    TRIAL_RUNNING,
                     podMetrics,
                     podContainers
             );
