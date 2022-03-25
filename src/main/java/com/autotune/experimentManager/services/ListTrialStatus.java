@@ -87,7 +87,7 @@ public class ListTrialStatus extends HttpServlet {
 
 
         resp.setStatus(HttpServletResponse.SC_OK);
-        resp.getWriter().println(API_RESPONSE_ARRAY.toString());
+        resp.getWriter().println(API_RESPONSE_ARRAY.toString(4));
     }
 
     @Override
