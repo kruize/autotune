@@ -15,9 +15,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class TransistionHelper {
@@ -49,7 +46,7 @@ public class TransistionHelper {
                                                 .getEmConfigObject()
                                                 .getDeployments()
                                                 .getTrainingDeployment()
-                                                .getMetrics()) {
+                                                .getPodMetrics()) {
                 String query = expandQuery(etd, emMetricInput.getQuery());
                 ArrayList<EMMetricResult> metricResults = getMetricsFromDataSource(emMetricInput.getName(), query, emMetricInput.getDataSource());
                 try {

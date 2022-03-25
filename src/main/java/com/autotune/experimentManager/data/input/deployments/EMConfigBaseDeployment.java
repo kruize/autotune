@@ -11,8 +11,8 @@ public abstract class EMConfigBaseDeployment {
     abstract public void setType(String type);
     abstract public void setDeploymentName(String deploymentName);
     abstract public void setNamespace(String namespace);
-    abstract public ArrayList<EMMetricInput> getMetrics();
-    abstract public void setMetrics(ArrayList<EMMetricInput> metrics);
+    abstract public ArrayList<EMMetricInput> getPodMetrics();
+    abstract public void setPodMetrics(ArrayList<EMMetricInput> podMetrics);
     abstract public ArrayList<EMConfigDeploymentContainerConfig> getContainers();
     abstract public void setContainers(ArrayList<EMConfigDeploymentContainerConfig> containerConfigs);
 }

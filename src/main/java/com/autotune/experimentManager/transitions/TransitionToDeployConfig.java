@@ -31,10 +31,6 @@ public class TransitionToDeployConfig extends AbstractBaseTransition{
                     .restart();
             LOGGER.info("Done.");
         }
-        EMIterationData emIterationData = new EMIterationData(emIterationManager.getCurrentIteration(),
-                                                              trialData.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles(),
-                                                              trialData.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementCycles());
-        emIterationManager.addIterationData(emIterationData);
         processNextTransition(runId);
     }
 }

@@ -5,16 +5,15 @@ import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
 import com.autotune.experimentManager.data.input.deployments.EMConfigDeploymentContainerConfig;
 import com.autotune.experimentManager.data.input.metrics.EMMetricResult;
-import com.autotune.experimentManager.data.iteration.EMMetricData;
+import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.GenericRestApiClient;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
@@ -34,7 +33,7 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                                                 )
                                              );
 
-            ArrayList<EMMetricInput> pod_metrics = trialData.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
+            ArrayList<EMMetricInput> pod_metrics = trialData.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getPodMetrics();
             ArrayList<EMMetricInput> container_metrics = new ArrayList<EMMetricInput>();
             for (EMConfigDeploymentContainerConfig config : trialData.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getContainers()) {
                 container_metrics.addAll(config.getContainerMetrics());
@@ -44,7 +43,41 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                 JSONObject jsonObject = apiClient.fetchMetricsJson(
                         EMConstants.HttpConstants.MethodType.GET,
                         metricInput.getQuery());
-                System.out.println(jsonObject.toString(2));
+                if (jsonObject.has("status")
+                    && jsonObject.getString("status").equalsIgnoreCase("success")) {
+                    if (jsonObject.has("data")
+                        && jsonObject.getJSONObject("data").has("result")
+                        && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
+                        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+                        for (Object result_obj: result) {
+                            JSONObject result_json = (JSONObject) result_obj;
+                            if (result_json.has("value")
+                                && !result_json.getJSONArray("value").isEmpty()) {
+                                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
+                                        .getIterationDataList()
+                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
+                                        .getEmIterationResult()
+                                        .getIterationMetricResult(metricInput.getName());
+                                EMMetricResult emMetricResult = new EMMetricResult(false);
+                                emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
+                                if (trialData.getEmIterationManager()
+                                        .getIterationDataList()
+                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
+                                        >
+                                        trialData.getEmIterationManager()
+                                                .getIterationDataList()
+                                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
+                                ) {
+
+                                    emIterationMetricResult.addToMeasurementList(emMetricResult);
+                                }
+                                else {
+                                    emIterationMetricResult.addToWarmUpList(emMetricResult);
+                                }
+                            }
+                        }
+                    }
+                }
             }
             KubernetesClient client = new DefaultKubernetesClient();
             System.out.println(podLabel);
@@ -69,14 +102,50 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                 JSONObject jsonObject = apiClient.fetchMetricsJson(
                         EMConstants.HttpConstants.MethodType.GET,
                         reframedQuery);
-                System.out.println(jsonObject.toString(2));
+                if (jsonObject.has("status")
+                        && jsonObject.getString("status").equalsIgnoreCase("success")) {
+                    if (jsonObject.has("data")
+                            && jsonObject.getJSONObject("data").has("result")
+                            && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
+                        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+                        for (Object result_obj: result) {
+                            JSONObject result_json = (JSONObject) result_obj;
+                            if (result_json.has("value")
+                                    && !result_json.getJSONArray("value").isEmpty()) {
+                                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
+                                        .getIterationDataList()
+                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
+                                        .getEmIterationResult()
+                                        .getIterationMetricResult(metricInput.getName());
+                                EMMetricResult emMetricResult = new EMMetricResult(false);
+                                emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
+                                if (trialData.getEmIterationManager()
+                                        .getIterationDataList()
+                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
+                                        >
+                                        trialData.getEmIterationManager()
+                                                .getIterationDataList()
+                                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
+                                ) {
+
+                                    emIterationMetricResult.addToMeasurementList(emMetricResult);
+                                }
+                                else {
+                                    emIterationMetricResult.addToWarmUpList(emMetricResult);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Current Cycle - " + trialData.getEmIterationManager().getEmIterationData().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
-        trialData.getEmIterationManager().getEmIterationData().get(trialData.getEmIterationManager().getCurrentIteration()-1).incrementCycle();
-        System.out.println("Next Cycle - " + trialData.getEmIterationManager().getEmIterationData().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
+        System.out.println("Live Metric Map :");
+        EMUtil.printMetricMap(trialData);
+        System.out.println("Current Cycle - " + trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
+        trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).incrementCycle();
+        System.out.println("Next Cycle - " + trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
         processNextTransition(runId);
     }
 }

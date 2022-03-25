@@ -76,13 +76,13 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
     }
 
     @Override
-    public ArrayList<EMMetricInput> getMetrics() {
+    public ArrayList<EMMetricInput> getPodMetrics() {
         return this.metrics;
     }
 
     @Override
-    public void setMetrics(ArrayList<EMMetricInput> metrics) {
-        this.metrics = metrics;
+    public void setPodMetrics(ArrayList<EMMetricInput> podMetrics) {
+        this.metrics = podMetrics;
     }
 
     @Override
@@ -110,10 +110,10 @@ public class EMConfigProductionDeployment extends EMConfigBaseDeployment impleme
         jsonObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_NAME, getDeploymentName());
         jsonObject.put(EMConstants.EMJSONKeys.NAMESPACE, getNamespace());
         JSONArray jsonArray = new JSONArray();
-        for (EMMetricInput mtrcs : getMetrics()) {
+        for (EMMetricInput mtrcs : getPodMetrics()) {
             jsonArray.put(mtrcs.toJSON());
         }
-        jsonObject.put(EMConstants.EMJSONKeys.POD_METRICS, getMetrics());
+        jsonObject.put(EMConstants.EMJSONKeys.POD_METRICS, getPodMetrics());
         jsonObject.put(EMConstants.EMJSONKeys.CONTAINERS, getContainersToJSON());
         return jsonObject;
     }

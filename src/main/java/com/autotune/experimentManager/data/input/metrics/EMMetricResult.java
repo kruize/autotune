@@ -10,6 +10,30 @@ public class EMMetricResult implements ConvertToJSON {
     private EMMetricPercentileResults emMetricPercentileResults;
     private boolean isPercentileResultsAvailable;
 
+    public EMMetricGenericResults getEmMetricGenericResults() {
+        return emMetricGenericResults;
+    }
+
+    public void setEmMetricGenericResults(EMMetricGenericResults emMetricGenericResults) {
+        this.emMetricGenericResults = emMetricGenericResults;
+    }
+
+    public EMMetricPercentileResults getEmMetricPercentileResults() {
+        return emMetricPercentileResults;
+    }
+
+    public void setEmMetricPercentileResults(EMMetricPercentileResults emMetricPercentileResults) {
+        this.emMetricPercentileResults = emMetricPercentileResults;
+    }
+
+    public boolean isPercentileResultsAvailable() {
+        return isPercentileResultsAvailable;
+    }
+
+    public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
+        isPercentileResultsAvailable = percentileResultsAvailable;
+    }
+
     public EMMetricResult (boolean needsPercentileInfo) {
         emMetricGenericResults = new EMMetricGenericResults();
         emMetricPercentileResults = null;

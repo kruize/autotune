@@ -16,8 +16,12 @@
 
 package com.autotune.experimentManager.utils;
 
+import com.autotune.experimentManager.core.EMIterationManager;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.experimentManager.data.input.metrics.EMMetricResult;
+import com.autotune.experimentManager.data.iteration.EMIterationData;
+import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -228,7 +232,7 @@ public class EMUtil {
     }
 
     public static JSONObject generateMetricsMap(ExperimentTrialData etd) {
-        ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
+        ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getPodMetrics();
 
         return null;
     }
@@ -240,7 +244,7 @@ public class EMUtil {
             result = ((etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles()
                     + etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementCycles())
                     <
-                    etd.getEmIterationManager().getEmIterationData().get(etd.getEmIterationManager().getCurrentIteration() - 1).getCurrentCycle());
+                    etd.getEmIterationManager().getIterationDataList().get(etd.getEmIterationManager().getCurrentIteration() - 1).getCurrentCycle());
             System.out.println(result);
         }
         return result;
@@ -254,16 +258,16 @@ public class EMUtil {
         }
         if (stage == EMExpStages.METRIC_COLLECTION_CYCLE) {
             // return cycle duration in seconds
-            int current_cycle = etd.getEmIterationManager().getEmIterationData().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle();
-            int warmup_cycles = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles();
-            String warmup_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupDuration();
-            String measurement_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementDuration();
-            if (current_cycle <= warmup_cycles) {
-                return getTimeValue(warmup_duration) * getTimeUnitInSeconds(getTimeUnit(warmup_duration));
-            } else {
-                return getTimeValue(measurement_duration) * getTimeUnitInSeconds(getTimeUnit(measurement_duration));
-            }
-//            return 10;
+//            int current_cycle = etd.getEmIterationManager().getIterationDataList().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle();
+//            int warmup_cycles = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles();
+//            String warmup_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupDuration();
+//            String measurement_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementDuration();
+//            if (current_cycle <= warmup_cycles) {
+//                return getTimeValue(warmup_duration) * getTimeUnitInSeconds(getTimeUnit(warmup_duration));
+//            } else {
+//                return getTimeValue(measurement_duration) * getTimeUnitInSeconds(getTimeUnit(measurement_duration));
+//            }
+            return 10;
         }
         return 0;
     }
@@ -346,6 +350,25 @@ public class EMUtil {
             }
             default -> {
                 return Integer.MIN_VALUE;
+            }
+        }
+    }
+
+    public static void printMetricMap(ExperimentTrialData etd) {
+        EMIterationManager emIterationManager = etd.getEmIterationManager();
+        ArrayList<EMIterationData> emIterationDataList = emIterationManager.getIterationDataList();
+        for (EMIterationData emIterationData : emIterationDataList) {
+            System.out.println("Iteration - " + emIterationData.getIterationIndex());
+            ArrayList<EMMetricInput> emMetricInputArrayList = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getAllMetrics();
+            for (EMMetricInput emMetricInput : emMetricInputArrayList) {
+                System.out.println("Metric - " + emMetricInput.getName());
+                EMIterationMetricResult emIterationMetricResult = emIterationData.getEmIterationResult().getIterationMetricResult(emMetricInput.getName());
+                for (EMMetricResult warmupResult : emIterationMetricResult.getWarmUpResults()) {
+                    System.out.println(warmupResult.toJSON().toString(2));
+                }
+                for (EMMetricResult measurementResults : emIterationMetricResult.getMeasurementResults()) {
+                    System.out.println(measurementResults.toJSON().toString(2));
+                }
             }
         }
     }

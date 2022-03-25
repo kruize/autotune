@@ -23,7 +23,7 @@ public class EMIterationManager {
             EMIterationData emIterationDataObj = new EMIterationData(i + 1,
                     emConfigObject.getSettings().getTrialSettings().getWarmupCycles(),
                     emConfigObject.getSettings().getTrialSettings().getMeasurementCycles(),
-                    emConfigObject.getDeployments().getTrainingDeployment().getMetrics());
+                    emConfigObject.getDeployments().getTrainingDeployment().getAllMetrics());
             emIterationData.add(emIterationDataObj);
         }
     }

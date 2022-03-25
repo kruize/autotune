@@ -12,7 +12,11 @@ public class EMMetricGenericResults implements ConvertToJSON {
     private float spike;
 
     public EMMetricGenericResults() {
-
+        this.score = Float.MIN_VALUE;
+        this.error = Float.MIN_VALUE;
+        this.mean = Float.MIN_VALUE;
+        this.mode = Float.MIN_VALUE;
+        this.spike = Float.MIN_VALUE;
     }
 
     public EMMetricGenericResults(JSONObject jsonObject) {
@@ -66,11 +70,16 @@ public class EMMetricGenericResults implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.SPIKE, spike);
-        jsonObject.put(EMConstants.EMJSONKeys.ERROR, error);
-        jsonObject.put(EMConstants.EMJSONKeys.MODE, mode);
-        jsonObject.put(EMConstants.EMJSONKeys.MEAN, mean);
-        jsonObject.put(EMConstants.EMJSONKeys.SCORE, score);
+        if (this.spike != Float.MIN_VALUE)
+            jsonObject.put(EMConstants.EMJSONKeys.SPIKE, spike);
+        if (this.error != Float.MIN_VALUE)
+            jsonObject.put(EMConstants.EMJSONKeys.ERROR, error);
+        if (this.mode != Float.MIN_VALUE)
+            jsonObject.put(EMConstants.EMJSONKeys.MODE, mode);
+        if (this.mean != Float.MIN_VALUE)
+            jsonObject.put(EMConstants.EMJSONKeys.MEAN, mean);
+        if (this.score != Float.MIN_VALUE)
+            jsonObject.put(EMConstants.EMJSONKeys.SCORE, score);
         return jsonObject;
     }
 }
