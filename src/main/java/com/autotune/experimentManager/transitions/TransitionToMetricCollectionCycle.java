@@ -9,6 +9,8 @@ import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.GenericRestApiClient;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONArray;
@@ -22,7 +24,7 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
     public void transit(String runId) {
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
         EMMetricResult emMetricData = new EMMetricResult();
-        String podLabel = "app=galaxies-deployment";
+        String podLabel = "app=tfb-qrh-deployment";
         String contName = null;
         try {
             System.out.println("Running metrics collection");
@@ -81,6 +83,9 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
             }
             KubernetesClient client = new DefaultKubernetesClient();
             System.out.println(podLabel);
+            for (Pod pod : client.pods().inNamespace(trialData.getConfig().getDeploymentNamespace()).list().getItems()) {
+                System.out.println(pod.getMetadata().toString());
+            }
             String podName = client.pods().inNamespace(trialData.getConfig().getDeploymentNamespace()).withLabel(podLabel).list().getItems().get(0).getMetadata().getName();
             System.out.println("PodName - " + podName);
             for (EMMetricInput metricInput: container_metrics) {
