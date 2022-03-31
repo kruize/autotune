@@ -141,4 +141,8 @@ public class AutotuneConstants {
         public static String DURATION = "duration";
         public static String PERCENTILE_INFO = "percentile_info";
     }
+
+    public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
+    public static final String MINIKUBE = "minikube";
+    public static final String OPENSHIFT = "openshift";
 }

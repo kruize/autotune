@@ -94,7 +94,7 @@ function install_prometheus() {
 			break;
 		fi
 	done
-	check_running prometheus-k8s-1
+	check_running prometheus-k8s-1 ${prometheus_ns}
 	sleep 2
 }
 

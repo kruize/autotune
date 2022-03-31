@@ -94,8 +94,23 @@ else
 	unset BUILD_PARAMS
 fi
 echo ${BUILD_PARAMS}
-docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
-check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
-docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${OPTUNA_DOCKER_IMAGE} -f ${OPTUNA_DOCKERFILE} .
-check_err "Docker build of ${OPTUNA_DOCKER_IMAGE} failed."
-docker images | grep -e "TAG" -e "${AUTOTUNE_REPO}" -e "${OPTUNA_REPO}" | grep "${DOCKER_TAG}"
+
+BUILDTMPFILE=/tmp/docker_build_log.$$
+BUILDER="docker"
+
+${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
+build_error=$(grep 'Error:\|unknown flag:' ${BUILDTMPFILE})
+
+if [ -n "${build_error}" ]; then
+	echo '--format=docker not supported'
+	${BUILDER} build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
+	check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
+	${BUILDER} build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${OPTUNA_DOCKER_IMAGE} -f ${OPTUNA_DOCKERFILE} .
+	check_err "Docker build of ${OPTUNA_DOCKER_IMAGE} failed."
+else
+	echo '--format=docker supported'
+	${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${OPTUNA_DOCKER_IMAGE} -f ${OPTUNA_DOCKERFILE} .
+	check_err "Docker build of ${OPTUNA_DOCKER_IMAGE} failed."
+fi
+
+${BUILDER} images | grep -e "TAG" -e "${AUTOTUNE_REPO}" -e "${OPTUNA_REPO}" | grep "${DOCKER_TAG}"

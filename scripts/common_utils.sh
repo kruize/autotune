@@ -20,10 +20,10 @@
 function check_running() {
 	
 	check_pod=$1
-	prometheus_ns="monitoring"
-	kubectl_cmd="kubectl -n ${prometheus_ns}"
+	check_pod_ns=$2
+	kubectl_cmd="kubectl -n ${check_pod_ns}"
 
-	echo "Info: Waiting for ${check_pod} to come up..."
+	echo "Info: Waiting for ${check_pod} to come up....."
 	err_wait=0
 	while true;
 	do

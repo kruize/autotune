@@ -17,16 +17,25 @@ package com.autotune.common.data.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.HttpUtils;
+import com.autotune.utils.auth_models.BearerAccessToken;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class PrometheusDataSource implements DataSource
@@ -34,11 +43,9 @@ public class PrometheusDataSource implements DataSource
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
 	private final String dataSourceURL;
-	private final String token;
 
-	public PrometheusDataSource(String monitoringAgentEndpoint, String token) {
+	public PrometheusDataSource(String monitoringAgentEndpoint) {
 		this.dataSourceURL = monitoringAgentEndpoint;
-		this.token = token;
 	}
 
 	/**
@@ -54,8 +61,10 @@ public class PrometheusDataSource implements DataSource
 		return AnalyzerConstants.PROMETHEUS_API;
 	}
 
-	public String getToken() {
-		return token;
+	public String getToken() throws IOException {
+		String fileName = AutotuneConstants.AUTH_MOUNT_PATH+"token";
+		String authToken = new String(Files.readAllBytes(Paths.get(fileName)));
+		return authToken;
 	}
 
 	private JSONArray getAsJsonArray(String response) throws IndexOutOfBoundsException {
@@ -88,24 +97,26 @@ public class PrometheusDataSource implements DataSource
 	 * @throws MalformedURLException
 	 */
 	public ArrayList<String> getAppsForLayer(String query, String key) throws MalformedURLException {
-		try {
-			query = URLEncoder.encode(query, "UTF-8");
-		} catch (UnsupportedEncodingException ignored) { }
-
-		String queryURL = dataSourceURL + getQueryEndpoint() + query;
-		String response = HttpUtils.getDataFromURL(new URL(queryURL), token);
-		LOGGER.debug("Query URL is: {}", queryURL);
-		LOGGER.debug("Query response: {}", response);
-		JSONObject responseJson = new JSONObject(response);
+		String response = null;
 		ArrayList<String> valuesList = new ArrayList<>();
-
-		int level = 0;
+		String queryURL = dataSourceURL + getQueryEndpoint() + query;
+		LOGGER.debug("Query URL is: {}", queryURL);
 		try {
-			DataSourceFactory.parseJsonForKey(responseJson, key, valuesList, level);
-		} catch (TooManyRecursiveCallsException e) {
-			e.printStackTrace();
+			GenericRestApiClient genericRestApiClient = new GenericRestApiClient(
+					dataSourceURL + getQueryEndpoint(),
+					new BearerAccessToken(this.getToken())
+			);
+			JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
+			int level = 0;
+			try {
+				DataSourceFactory.parseJsonForKey(responseJson, key, valuesList, level);
+				LOGGER.debug("Applications for the query: {}", valuesList.toString());
+			} catch (TooManyRecursiveCallsException e) {
+				e.printStackTrace();
+			}
+		} catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+			LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
 		}
-		LOGGER.debug("Applications for the query: {}", valuesList.toString());
 		return valuesList;
 	}
 }

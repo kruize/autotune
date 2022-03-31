@@ -22,16 +22,19 @@ AUTOTUNE_OPERATOR_CRD="manifests/autotune-operator-crd.yaml"
 AUTOTUNE_CONFIG_CRD="manifests/autotune-config-crd.yaml"
 AUTOTUNE_QUERY_VARIABLE_CRD="manifests/autotune-query-variable-crd.yaml"
 AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="manifests/autotune-operator-deployment.yaml_template"
+AUTOTUNE_DEPLOY_OPENSHIFT_MANIFEST_TEMPLATE="manifests/autotune-operator-openshift-deployment.yaml_template"
 AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
 AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune-operator-rolebinding.yaml_template"
 AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
 AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
 AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
 SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
+AUTOTUNE_OPENSHIFT_NAMESPACE="openshift-tuning"
 AUTOTUNE_SA_NAME="autotune-sa"
 AUTOTUNE_CONFIGMAPS="manifests/configmaps"
 AUTOTUNE_CONFIGS="manifests/autotune-configs"
-AUTOTUNE_QUERY_VARIABLES="manifests/autotune-query-variables"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="manifests/autotune-query-variables/query-variable.yaml_template"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST="manifests/autotune-query-variables/query-variable.yaml"
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
@@ -43,6 +46,7 @@ OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
+. ${SCRIPTS_DIR}/openshift-helpers.sh
 . ${SCRIPTS_DIR}/common_utils.sh
 
 # Defaults for the script
@@ -56,7 +60,7 @@ autotune_ns=""
 # docker: loop timeout is turned off by default
 timeout=-1
 
-function ctrlc_handler () {
+function ctrlc_handler() {
 	# Check if cluster type is docker
 	if [[ "$cluster_type" == "docker" ]]; then
 		# Terminate the containers [autotune && grafana && prometheus && cadvisor]
@@ -67,14 +71,14 @@ function ctrlc_handler () {
 }
 
 # Handle SIGHUP(1), SIGINT(2), SIGQUIT(3) for cleaning up containers in docker case
-trap "ctrlc_handler" 1 2 3 
+trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
 	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	echo " -s: Deploy autotune [Default]"
-        echo " -t: Terminate autotune deployment"
+	echo " -t: Terminate autotune deployment"
 	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
 	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
 	echo " -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]"
