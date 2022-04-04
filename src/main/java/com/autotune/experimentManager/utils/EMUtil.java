@@ -25,6 +25,7 @@ import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -371,5 +372,29 @@ public class EMUtil {
                 }
             }
         }
+    }
+
+    public enum QueryType {
+        SYSTEM,
+        CONTAINER,
+        RUNTIME,
+        MIDDLEWARE,
+        APPLICATION
+    }
+
+    public static QueryType detectQueryType(String query) {
+        if (query.toLowerCase().contains("jvm")) {
+            System.out.println("Runtime query");
+            return QueryType.RUNTIME;
+        }
+        return QueryType.CONTAINER;
+    }
+
+    public static boolean needsAggregatedResult(String query) {
+        if (query.toLowerCase().contains("jvm")) {
+            System.out.println("Needs aggregated results");
+            return true;
+        }
+        return false;
     }
 }

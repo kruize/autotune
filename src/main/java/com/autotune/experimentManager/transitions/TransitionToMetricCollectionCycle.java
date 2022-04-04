@@ -101,29 +101,42 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                 }
                 System.out.println(reframedQuery);
                 if (reframedQuery.contains("CONTAINER_LABEL")) {
-                    reframedQuery = reframedQuery.split("\\{")[0] + "{container=\""+contName+"\",pod=\""+podName+"\"}";
+                    if (reframedQuery.split("\\}").length > 1 && null != reframedQuery.split("\\}")[1]){
+                        System.out.println("Splitting");
+                        reframedQuery = reframedQuery.split("\\{")[0] + "{container=\""+contName+"\",pod=\""+podName+"\"}" + reframedQuery.split("\\}")[1];
+                    } else {
+                        reframedQuery = reframedQuery.split("\\{")[0] + "{container=\""+contName+"\",pod=\""+podName+"\"}";
+                    }
                 }
                 System.out.println("Reframed Query - " + reframedQuery);
                 JSONObject jsonObject = apiClient.fetchMetricsJson(
                         EMConstants.HttpConstants.MethodType.GET,
                         reframedQuery);
+
                 if (jsonObject.has("status")
                         && jsonObject.getString("status").equalsIgnoreCase("success")) {
                     if (jsonObject.has("data")
                             && jsonObject.getJSONObject("data").has("result")
                             && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
                         JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
-                        for (Object result_obj: result) {
-                            JSONObject result_json = (JSONObject) result_obj;
-                            if (result_json.has("value")
-                                    && !result_json.getJSONArray("value").isEmpty()) {
+                        if (EMUtil.QueryType.RUNTIME == EMUtil.detectQueryType(reframedQuery)) {
+                            if (EMUtil.needsAggregatedResult(reframedQuery)) {
+                                System.out.println("Aggregating values");
+                                Float aggregatedValue = 0.0f;
+                                for (Object result_obj: result) {
+                                    JSONObject result_json = (JSONObject) result_obj;
+                                    if (result_json.has("value")
+                                            && !result_json.getJSONArray("value").isEmpty()) {
+                                        aggregatedValue = aggregatedValue + Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                    }
+                                }
                                 EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
                                         .getIterationDataList()
                                         .get(trialData.getEmIterationManager().getCurrentIteration()-1)
                                         .getEmIterationResult()
                                         .getIterationMetricResult(metricInput.getName());
                                 EMMetricResult emMetricResult = new EMMetricResult(false);
-                                emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
+                                emMetricResult.getEmMetricGenericResults().setMean(aggregatedValue);
                                 if (trialData.getEmIterationManager()
                                         .getIterationDataList()
                                         .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
@@ -137,6 +150,34 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                                 }
                                 else {
                                     emIterationMetricResult.addToWarmUpList(emMetricResult);
+                                }
+                            }
+                        } else {
+                            for (Object result_obj: result) {
+                                JSONObject result_json = (JSONObject) result_obj;
+                                if (result_json.has("value")
+                                        && !result_json.getJSONArray("value").isEmpty()) {
+                                    EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
+                                            .getIterationDataList()
+                                            .get(trialData.getEmIterationManager().getCurrentIteration()-1)
+                                            .getEmIterationResult()
+                                            .getIterationMetricResult(metricInput.getName());
+                                    EMMetricResult emMetricResult = new EMMetricResult(false);
+                                    emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
+                                    if (trialData.getEmIterationManager()
+                                            .getIterationDataList()
+                                            .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
+                                            >
+                                            trialData.getEmIterationManager()
+                                                    .getIterationDataList()
+                                                    .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
+                                    ) {
+
+                                        emIterationMetricResult.addToMeasurementList(emMetricResult);
+                                    }
+                                    else {
+                                        emIterationMetricResult.addToWarmUpList(emMetricResult);
+                                    }
                                 }
                             }
                         }
