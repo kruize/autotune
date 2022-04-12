@@ -24,8 +24,8 @@ import com.autotune.experimentManager.data.iteration.EMIterationData;
 import com.autotune.experimentManager.data.iteration.EMIterationMetricResult;
 import org.json.JSONObject;
 
+import java.sql.Time;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -254,23 +254,27 @@ public class EMUtil {
 
 
     public static int getDelayTimerForStage (EMExpStages stage, ExperimentTrialData etd) {
+        int delayTimer = 0;
         if (!stage.isScheduled()) {
-            return 0;
+            return delayTimer;
         }
         if (stage == EMExpStages.METRIC_COLLECTION_CYCLE) {
             // return cycle duration in seconds
-//            int current_cycle = etd.getEmIterationManager().getIterationDataList().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle();
-//            int warmup_cycles = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles();
-//            String warmup_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupDuration();
-//            String measurement_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementDuration();
-//            if (current_cycle <= warmup_cycles) {
-//                return getTimeValue(warmup_duration) * getTimeUnitInSeconds(getTimeUnit(warmup_duration));
-//            } else {
-//                return getTimeValue(measurement_duration) * getTimeUnitInSeconds(getTimeUnit(measurement_duration));
-//            }
-            return 10;
+            int current_cycle = etd.getEmIterationManager().getIterationDataList().get(etd.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle();
+            int warmup_cycles = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupCycles();
+            String warmup_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getWarmupDuration();
+            String measurement_duration = etd.getConfig().getEmConfigObject().getSettings().getTrialSettings().getMeasurementDuration();
+            if (current_cycle <= warmup_cycles) {
+                delayTimer = getTimeValue(warmup_duration) * getTimeUnitInSeconds(getTimeUnit(warmup_duration));
+                System.out.println("delayTimer - " + delayTimer + " seconds");
+            } else {
+                delayTimer = getTimeValue(measurement_duration) * getTimeUnitInSeconds(getTimeUnit(measurement_duration));
+                System.out.println("delayTimer - " + delayTimer + " seconds");
+            }
+//            return 10;
         }
-        return 0;
+        System.out.println("delayTimer - " + delayTimer + " seconds");
+        return delayTimer;
     }
 
     public static String getBaseDataSourceUrl(String url, String datasource) {
@@ -299,6 +303,7 @@ public class EMUtil {
         Matcher matcher = pattern.matcher(workingstr);
         if (matcher.find()) {
             if (null != matcher.group(1)) {
+                System.out.println("match found, integer - " + Integer.parseInt(matcher.group(1)));
                 return Integer.parseInt(matcher.group(1));
             }
         }
@@ -312,11 +317,13 @@ public class EMUtil {
         if (matcher.find()) {
             if (null != matcher.group(2).trim()) {
                 String trimmedDurationUnit = matcher.group(2).trim();
+                System.out.println(trimmedDurationUnit);
                 if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SINGLE_LC)
                     || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_SINGULAR)
                     || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
                     || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_SINGULAR)
                     || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit seconds");
                     return TimeUnit.SECONDS;
                 }
                 if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SINGLE_LC)
@@ -324,6 +331,7 @@ public class EMUtil {
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit minutes");
                     return TimeUnit.MINUTES;
                 }
                 if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SINGLE_LC)
@@ -331,27 +339,26 @@ public class EMUtil {
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_PLURAL)
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit hours");
                     return TimeUnit.HOURS;
                 }
             }
         }
-        return null;
+        return TimeUnit.MINUTES;
     }
 
     public static int getTimeUnitInSeconds(TimeUnit unit) {
-        switch (unit) {
-            case SECONDS -> {
-                return 1;
-            }
-            case MINUTES -> {
-                return EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
-            }
-            case HOURS -> {
-                return EMConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
-            }
-            default -> {
-                return Integer.MIN_VALUE;
-            }
+        System.out.println("In getTimeUnitInSeconds");
+        System.out.println(unit);
+        if (unit.equals(TimeUnit.SECONDS)) {
+            return 1;
+        } else if (unit.equals(TimeUnit.MINUTES)) {
+            System.out.println("In minutes");
+            return EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        } else if (unit.equals(TimeUnit.HOURS)) {
+            return EMConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        } else {
+            return Integer.MIN_VALUE;
         }
     }
 
@@ -382,6 +389,12 @@ public class EMUtil {
         APPLICATION
     }
 
+    public enum MetricResultType {
+        MEAN,
+        MIN,
+        MAX
+    }
+
     public static QueryType detectQueryType(String query) {
         if (query.toLowerCase().contains("jvm")) {
             System.out.println("Runtime query");
@@ -396,5 +409,47 @@ public class EMUtil {
             return true;
         }
         return false;
+    }
+
+    public static String buildQueryForType(String baseQuery, MetricResultType metricResultType) {
+        String returnQuery = baseQuery;
+        if (metricResultType == MetricResultType.MEAN) {
+            if (baseQuery.contains("rate")) {
+                returnQuery = baseQuery;
+            } else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "rate(" + baseQuery + ")";
+            }else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "sum(" + baseQuery + ")";
+            }
+        } else if (metricResultType == MetricResultType.MAX) {
+            if (baseQuery.contains("http_server_requests_seconds")) {
+                returnQuery = baseQuery.replace("rate", "max_over_time");
+            } else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "max_over_time(" + baseQuery + ")";
+            } else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "max(" + baseQuery + ")";
+            }
+        } else if (metricResultType == MetricResultType.MIN) {
+            if (baseQuery.contains("http_server_requests_seconds")) {
+                returnQuery = baseQuery.replace("rate", "min_over_time");
+            }  else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "min_over_time(" + baseQuery + ")";
+            } else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "min(" + baseQuery + ")";
+            }
+        }
+        return returnQuery;
     }
 }

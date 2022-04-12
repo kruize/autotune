@@ -42,43 +42,61 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                 contName = config.getContainerName();
             }
             for (EMMetricInput metricInput : pod_metrics) {
-                JSONObject jsonObject = apiClient.fetchMetricsJson(
-                        EMConstants.HttpConstants.MethodType.GET,
-                        metricInput.getQuery());
-                if (jsonObject.has("status")
-                    && jsonObject.getString("status").equalsIgnoreCase("success")) {
-                    if (jsonObject.has("data")
-                        && jsonObject.getJSONObject("data").has("result")
-                        && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
-                        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
-                        for (Object result_obj: result) {
-                            JSONObject result_json = (JSONObject) result_obj;
-                            if (result_json.has("value")
-                                && !result_json.getJSONArray("value").isEmpty()) {
-                                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
-                                        .getIterationDataList()
-                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
-                                        .getEmIterationResult()
-                                        .getIterationMetricResult(metricInput.getName());
-                                EMMetricResult emMetricResult = new EMMetricResult(false);
-                                emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
-                                if (trialData.getEmIterationManager()
-                                        .getIterationDataList()
-                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
-                                        >
-                                        trialData.getEmIterationManager()
-                                                .getIterationDataList()
-                                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
-                                ) {
-
-                                    emIterationMetricResult.addToMeasurementList(emMetricResult);
-                                }
-                                else {
-                                    emIterationMetricResult.addToWarmUpList(emMetricResult);
+                Float mean_value = Float.MAX_VALUE;
+                Float min_value = Float.MAX_VALUE;
+                Float max_value = Float.MAX_VALUE;
+                for (EMUtil.MetricResultType type : EMUtil.MetricResultType.values()) {
+                    String query = EMUtil.buildQueryForType(metricInput.getQuery(), type);
+                    System.out.println("Query before calling prometheus - " + query);
+                    JSONObject jsonObject = apiClient.fetchMetricsJson(
+                            EMConstants.HttpConstants.MethodType.GET,
+                            query);
+                    if (jsonObject.has("status")
+                            && jsonObject.getString("status").equalsIgnoreCase("success")) {
+                        if (jsonObject.has("data")
+                                && jsonObject.getJSONObject("data").has("result")
+                                && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
+                            JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+                            for (Object result_obj: result) {
+                                JSONObject result_json = (JSONObject) result_obj;
+                                if (result_json.has("value")
+                                        && !result_json.getJSONArray("value").isEmpty()) {
+                                    if (type == EMUtil.MetricResultType.MEAN)
+                                        mean_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                    else if (type == EMUtil.MetricResultType.MAX)
+                                        max_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                    else if (type == EMUtil.MetricResultType.MIN)
+                                        min_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
                                 }
                             }
                         }
                     }
+                }
+                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
+                        .getIterationDataList()
+                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
+                        .getEmIterationResult()
+                        .getIterationMetricResult(metricInput.getName());
+                EMMetricResult emMetricResult = new EMMetricResult(false);
+                if (mean_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMean(mean_value);
+                if (min_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMin(min_value);
+                if (max_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMax(max_value);
+                if (trialData.getEmIterationManager()
+                        .getIterationDataList()
+                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
+                        >
+                        trialData.getEmIterationManager()
+                                .getIterationDataList()
+                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
+                ) {
+
+                    emIterationMetricResult.addToMeasurementList(emMetricResult);
+                }
+                else {
+                    emIterationMetricResult.addToWarmUpList(emMetricResult);
                 }
             }
             KubernetesClient client = new DefaultKubernetesClient();
@@ -109,79 +127,81 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
                     }
                 }
                 System.out.println("Reframed Query - " + reframedQuery);
-                JSONObject jsonObject = apiClient.fetchMetricsJson(
-                        EMConstants.HttpConstants.MethodType.GET,
-                        reframedQuery);
-
-                if (jsonObject.has("status")
-                        && jsonObject.getString("status").equalsIgnoreCase("success")) {
-                    if (jsonObject.has("data")
-                            && jsonObject.getJSONObject("data").has("result")
-                            && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
-                        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
-                        if (EMUtil.QueryType.RUNTIME == EMUtil.detectQueryType(reframedQuery)) {
-                            if (EMUtil.needsAggregatedResult(reframedQuery)) {
-                                System.out.println("Aggregating values");
-                                Float aggregatedValue = 0.0f;
+                Float mean_value = Float.MAX_VALUE;
+                Float min_value = Float.MAX_VALUE;
+                Float max_value = Float.MAX_VALUE;
+                for (EMUtil.MetricResultType type : EMUtil.MetricResultType.values()) {
+                    String query = EMUtil.buildQueryForType(reframedQuery, type);
+                    System.out.println("Query before calling prometheus - " + query);
+                    JSONObject jsonObject = apiClient.fetchMetricsJson(
+                            EMConstants.HttpConstants.MethodType.GET,
+                            query);
+                    if (jsonObject.has("status")
+                            && jsonObject.getString("status").equalsIgnoreCase("success")) {
+                        if (jsonObject.has("data")
+                                && jsonObject.getJSONObject("data").has("result")
+                                && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
+                            JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+                            if (EMUtil.QueryType.RUNTIME == EMUtil.detectQueryType(reframedQuery)) {
+                                if (EMUtil.needsAggregatedResult(reframedQuery)) {
+                                    System.out.println("Aggregating values");
+                                    Float aggregatedValue = 0.0f;
+                                    for (Object result_obj: result) {
+                                        JSONObject result_json = (JSONObject) result_obj;
+                                        if (result_json.has("value")
+                                                && !result_json.getJSONArray("value").isEmpty()) {
+                                            aggregatedValue = aggregatedValue + Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                        }
+                                    }
+                                    if (type == EMUtil.MetricResultType.MEAN)
+                                        mean_value = aggregatedValue;
+                                    else if (type == EMUtil.MetricResultType.MAX)
+                                        max_value = aggregatedValue;
+                                    else if (type == EMUtil.MetricResultType.MIN)
+                                        min_value = aggregatedValue;
+                                }
+                            } else {
                                 for (Object result_obj: result) {
                                     JSONObject result_json = (JSONObject) result_obj;
                                     if (result_json.has("value")
                                             && !result_json.getJSONArray("value").isEmpty()) {
-                                        aggregatedValue = aggregatedValue + Float.parseFloat(result_json.getJSONArray("value").getString(1));
-                                    }
-                                }
-                                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
-                                        .getIterationDataList()
-                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
-                                        .getEmIterationResult()
-                                        .getIterationMetricResult(metricInput.getName());
-                                EMMetricResult emMetricResult = new EMMetricResult(false);
-                                emMetricResult.getEmMetricGenericResults().setMean(aggregatedValue);
-                                if (trialData.getEmIterationManager()
-                                        .getIterationDataList()
-                                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
-                                        >
-                                        trialData.getEmIterationManager()
-                                                .getIterationDataList()
-                                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
-                                ) {
-
-                                    emIterationMetricResult.addToMeasurementList(emMetricResult);
-                                }
-                                else {
-                                    emIterationMetricResult.addToWarmUpList(emMetricResult);
-                                }
-                            }
-                        } else {
-                            for (Object result_obj: result) {
-                                JSONObject result_json = (JSONObject) result_obj;
-                                if (result_json.has("value")
-                                        && !result_json.getJSONArray("value").isEmpty()) {
-                                    EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
-                                            .getIterationDataList()
-                                            .get(trialData.getEmIterationManager().getCurrentIteration()-1)
-                                            .getEmIterationResult()
-                                            .getIterationMetricResult(metricInput.getName());
-                                    EMMetricResult emMetricResult = new EMMetricResult(false);
-                                    emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(result_json.getJSONArray("value").getString(1)));
-                                    if (trialData.getEmIterationManager()
-                                            .getIterationDataList()
-                                            .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
-                                            >
-                                            trialData.getEmIterationManager()
-                                                    .getIterationDataList()
-                                                    .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
-                                    ) {
-
-                                        emIterationMetricResult.addToMeasurementList(emMetricResult);
-                                    }
-                                    else {
-                                        emIterationMetricResult.addToWarmUpList(emMetricResult);
+                                        if (type == EMUtil.MetricResultType.MEAN)
+                                            mean_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                        else if (type == EMUtil.MetricResultType.MAX)
+                                            max_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
+                                        else if (type == EMUtil.MetricResultType.MIN)
+                                            min_value = Float.parseFloat(result_json.getJSONArray("value").getString(1));
                                     }
                                 }
                             }
                         }
                     }
+                }
+                EMIterationMetricResult emIterationMetricResult = trialData.getEmIterationManager()
+                        .getIterationDataList()
+                        .get(trialData.getEmIterationManager().getCurrentIteration()-1)
+                        .getEmIterationResult()
+                        .getIterationMetricResult(metricInput.getName());
+                EMMetricResult emMetricResult = new EMMetricResult(false);
+                if (mean_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMean(mean_value);
+                if (min_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMin(min_value);
+                if (max_value != Float.MAX_VALUE)
+                    emMetricResult.getEmMetricGenericResults().setMax(max_value);
+                if (trialData.getEmIterationManager()
+                        .getIterationDataList()
+                        .get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle()
+                        >
+                        trialData.getEmIterationManager()
+                                .getIterationDataList()
+                                .get(trialData.getEmIterationManager().getCurrentIteration()-1).getWarmCycles()
+                ) {
+
+                    emIterationMetricResult.addToMeasurementList(emMetricResult);
+                }
+                else {
+                    emIterationMetricResult.addToWarmUpList(emMetricResult);
                 }
             }
         } catch (Exception e) {

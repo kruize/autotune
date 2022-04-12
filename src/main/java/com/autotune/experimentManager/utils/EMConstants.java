@@ -146,6 +146,8 @@ public class EMConstants {
 		public static String CYCLES = "cycles";
 		public static String DURATION = "duration";
 		public static String PERCENTILE_INFO = "percentile_info";
+		public static String MIN = "min";
+		public static String MAX = "max";
 	}
 
 	public static class InputJsonKeys {

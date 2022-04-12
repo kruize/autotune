@@ -14,6 +14,10 @@ public class TransitionToCleanDeployment implements BaseTransition{
     public void transit(String runId) {
         LOGGER.info("Executing transition - TransitionToCleanDeployment on thread - {} For RunId - ", Thread.currentThread().getId(), runId);
         ExperimentTrialData trialData = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
+        System.out.println("Final Metric Map :");
+        System.out.println("--------------- METRIC MAP START ---------------");
+        EMUtil.printMetricMap(trialData);
+        System.out.println("--------------- METRIC MAP END ---------------");
         trialData.setStatus(EMUtil.EMExpStatus.COMPLETED);
         KubernetesClient client = new DefaultKubernetesClient();
         LOGGER.info("Rolling back the pod to old config... ");
