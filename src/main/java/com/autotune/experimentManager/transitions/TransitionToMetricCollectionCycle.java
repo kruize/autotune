@@ -207,8 +207,6 @@ public class TransitionToMetricCollectionCycle extends AbstractBaseTransition{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Live Metric Map :");
-        EMUtil.printMetricMap(trialData);
         System.out.println("Current Cycle - " + trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
         trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).incrementCycle();
         System.out.println("Next Cycle - " + trialData.getEmIterationManager().getIterationDataList().get(trialData.getEmIterationManager().getCurrentIteration()-1).getCurrentCycle());
