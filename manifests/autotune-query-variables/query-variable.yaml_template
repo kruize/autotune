@@ -1,7 +1,8 @@
 apiVersion: "recommender.com/v1"
 kind: "AutotuneQueryVariable"
 metadata:
-  name: "minikube"
+  name: "{{ CLUSTER_TYPE }}"
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
 query_variables:
   - name: '$POD_LABEL$'
     value: 'pod'

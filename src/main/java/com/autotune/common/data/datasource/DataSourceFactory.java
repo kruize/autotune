@@ -19,6 +19,7 @@ import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneConstants;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -48,10 +49,8 @@ public class DataSourceFactory
 		if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
 			monitoringAgentEndpoint = getMonitoringAgentEndpoint();
 
-		String token = AutotuneDeploymentInfo.getAuthToken();
-
 		if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
-			return new PrometheusDataSource(monitoringAgentEndpoint, token);
+			return new PrometheusDataSource(monitoringAgentEndpoint);
 
 		LOGGER.error("Datasource " + dataSource + " not supported");
 		return null;
@@ -79,7 +78,13 @@ public class DataSourceFactory
 				try {
 					String clusterIP = service.getSpec().getClusterIP();
 					int port = service.getSpec().getPorts().get(0).getPort();
-					return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+					LOGGER.info(AutotuneDeploymentInfo.getClusterType());
+					if (AutotuneDeploymentInfo.getKubernetesType().equalsIgnoreCase(AutotuneConstants.MINIKUBE)) {
+						return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+					}
+					if (AutotuneDeploymentInfo.getKubernetesType().equalsIgnoreCase(AutotuneConstants.OPENSHIFT)) {
+						return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
+					}
 				} catch (Exception e) {
 					throw new MonitoringAgentNotFoundException();
 				}

@@ -41,6 +41,7 @@ public class AnalyzerConstants {
 	public static final String PROMETHEUS_API = "/api/v1/query?query=";
 
 	public static final String HTTP_PROTOCOL = "http";
+	public static final String HTTPS_PROTOCOL = "https";
 
 	// Used in Configuration for accessing the autotune objects from kubernetes
 	public static final String SCOPE = "Namespaced";

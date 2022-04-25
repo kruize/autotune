@@ -647,7 +647,7 @@ public class AutotuneDeployment
 				podList = client.pods().inAnyNamespace().list();
 			}
 			if (podList == null) {
-				LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+				LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				return;
 			}
 			DataSource autotuneDataSource = null;
@@ -667,7 +667,7 @@ public class AutotuneDeployment
 								layerPresenceQuery.getLayerPresenceKey());
 						appsForAllQueries.addAll(apps);
 					} catch (MalformedURLException | NullPointerException e) {
-						LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+						LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 					}
 				}
 				// We now have a list of apps that have the label and the key specified by the user.
@@ -710,10 +710,10 @@ public class AutotuneDeployment
 						}
 					}
 				} else {
-					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+					LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 				}
 			} else {
-				LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+				LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -748,7 +748,7 @@ public class AutotuneDeployment
 				}
 
 				if (podList.getItems().isEmpty()) {
-					LOGGER.error(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+					LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 					return;
 				}
 				for (Pod pod : podList.getItems()) {
