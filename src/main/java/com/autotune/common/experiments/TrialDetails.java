@@ -16,6 +16,7 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -24,8 +25,11 @@ import java.util.HashMap;
  *
  */
 public class TrialDetails {
+    @SerializedName("type")
     private String deploymentType;
+    @SerializedName("deployment_name")
     private final String deploymentName;
+    @SerializedName("namespace")
     private final String deploymentNameSpace;
     private String state;
     private String result;
@@ -35,9 +39,11 @@ public class TrialDetails {
     private Timestamp endTime;
     // Hashmap of metrics associated with the Pod
     // Uses metric name as key
+    @SerializedName("pod_metrics")
     private HashMap<String, Metric> podMetrics;
     // Hashmap of containers being tracked for this trial
     // Uses stack name (docker image name) as key
+    @SerializedName("containers")
     private HashMap<String, PodContainer> podContainers;
 
     /**
@@ -105,4 +111,21 @@ public class TrialDetails {
     public HashMap<String, Metric> getPodMetrics() { return podMetrics; }
 
     public HashMap<String, PodContainer> getPodContainers() { return podContainers; }
+
+    @Override
+    public String toString() {
+        return "TrialDetails{" +
+                "deploymentType='" + deploymentType + '\'' +
+                ", deploymentName='" + deploymentName + '\'' +
+                ", deploymentNameSpace='" + deploymentNameSpace + '\'' +
+                ", state='" + state + '\'' +
+                ", result='" + result + '\'' +
+                ", resultInfo='" + resultInfo + '\'' +
+                ", resultError='" + resultError + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", podMetrics=" + podMetrics +
+                ", podContainers=" + podContainers +
+                '}';
+    }
 }

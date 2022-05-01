@@ -1,5 +1,6 @@
 package com.autotune.experimentManager.core;
 
+import com.autotune.experimentManager.services.InitiateExperimentTrail;
 import com.autotune.experimentManager.services.ListTrialStatus;
 
 import com.autotune.experimentManager.services.CreateExperimentTrial;
@@ -72,5 +73,7 @@ public class ExperimentManager {
         context.addServlet(CreateExperimentTrial.class, ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL);
         context.addServlet(ListExperimentTrail.class, ServerContext.EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL);
         context.addServlet(ListTrialStatus.class, ServerContext.EXPERIMENT_MANAGER_LIST_TRIAL_STATUS);
+        context.addServlet(InitiateExperimentTrail.class, ServerContext.EXPERIMENT_MANAGER_INTIATE_EXPERIMENT_TRAIL);
+
     }
 }

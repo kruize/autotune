@@ -15,21 +15,29 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashMap;
 
 /**
  *
  */
 public class ExperimentTrial {
+    @SerializedName("experiment_id")
     private final String experimentId;
     private final String namespace;
+    @SerializedName("experiment_name")
     private final String experimentName;
+    @SerializedName("trial_info")
     private final TrialInfo trialInfo;
+    @SerializedName("datasource_info")
     private final DatasourceInfo datasourceInfo;
+    @SerializedName("settings")
     private final ExperimentSettings experimentSettings;
     // HashMap of parallel trials being monitored for this trial
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
+    @SerializedName("deployments")
     private final HashMap<String, TrialDetails> trialDetails;
 
     public ExperimentTrial(String experimentName,
@@ -74,5 +82,18 @@ public class ExperimentTrial {
 
     public HashMap<String, TrialDetails> getTrialDetails() {
         return trialDetails;
+    }
+
+    @Override
+    public String toString() {
+        return "ExperimentTrial{" +
+                "experimentId='" + experimentId + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", experimentName='" + experimentName + '\'' +
+                ", trialInfo=" + trialInfo +
+                ", datasourceInfo=" + datasourceInfo +
+                ", experimentSettings=" + experimentSettings +
+                ", trialDetails=" + trialDetails +
+                '}';
     }
 }

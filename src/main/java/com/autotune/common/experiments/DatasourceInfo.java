@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.net.URL;
 
 /**
@@ -35,5 +37,13 @@ public class DatasourceInfo {
 
 	public URL getUrl() {
 		return url;
+	}
+
+	@Override
+	public String toString() {
+		return "DatasourceInfo{" +
+				"name='" + name + '\'' +
+				", url=" + url +
+				'}';
 	}
 }

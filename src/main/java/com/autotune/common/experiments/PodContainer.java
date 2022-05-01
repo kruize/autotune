@@ -16,6 +16,8 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
@@ -23,12 +25,17 @@ import java.util.HashMap;
  *
  */
 public class PodContainer {
+	@SerializedName("image_name")
 	private final String stackName;
+	@SerializedName("container_name")
 	private final String containerName;
 	private Resources requests;
 	private Resources limits;
 	private String runtimeOptions;
+	@SerializedName("container_metrics")
 	private HashMap<String, Metric> containerMetrics;
+	@SerializedName("config")
+	private HashMap<String, HashMap<String, JsonObject> > trailConfigs;
 
 	public PodContainer(String stackName, String containerName) {
 		this.stackName = stackName;
@@ -61,5 +68,18 @@ public class PodContainer {
 
 	public void setContainerMetrics(HashMap<String, Metric> containerMetrics) {
 		this.containerMetrics = containerMetrics;
+	}
+
+	@Override
+	public String toString() {
+		return "PodContainer{" +
+				"stackName='" + stackName + '\'' +
+				", containerName='" + containerName + '\'' +
+				", requests=" + requests +
+				", limits=" + limits +
+				", runtimeOptions='" + runtimeOptions + '\'' +
+				", containerMetrics=" + containerMetrics +
+				", trailConfigs=" + trailConfigs +
+				'}';
 	}
 }

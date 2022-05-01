@@ -36,7 +36,10 @@ public class EMInterface {
 			int trialNumber = experimentTrial.getTrialInfo().getTrialNum();
 			// Prepare to send the trial config to EM
 			JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
-
+			JSONObject experimentTrialJSONObject = TrialHelpers.experimentTrialToJSONObject(experimentTrial);
+			LOGGER.info("***********************************************");
+			LOGGER.info(experimentTrialJSONObject.toString(4));
+			LOGGER.info("***********************************************");
 			/* STEP 4: Send trial to EM */
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENDING_TRIAL_CONFIG_INFO);
 			LOGGER.info(experimentTrialJSON.toString(4));

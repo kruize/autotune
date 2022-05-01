@@ -15,11 +15,15 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  */
 public class DeploymentSettings {
+    @SerializedName("deployment_policy")
     private final DeploymentPolicy deploymentPolicy;
+    @SerializedName("deployment_tracking")
     private final DeploymentTracking deploymentTracking;
 
     public DeploymentSettings(DeploymentPolicy deploymentPolicy, DeploymentTracking deploymentTracking) {
@@ -33,5 +37,13 @@ public class DeploymentSettings {
 
     public DeploymentTracking getDeploymentTracking() {
         return deploymentTracking;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentSettings{" +
+                "deploymentPolicy=" + deploymentPolicy +
+                ", deploymentTracking=" + deploymentTracking +
+                '}';
     }
 }

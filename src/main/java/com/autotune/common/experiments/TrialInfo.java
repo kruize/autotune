@@ -15,12 +15,17 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  */
 public class TrialInfo {
+    @SerializedName("trial_id")
     private final String trialId;
+    @SerializedName("trial_num")
     private final int trialNum;
+    @SerializedName("trial_result_url")
     private final String trialResultURL;
 
     public TrialInfo(String trialId,
@@ -41,5 +46,15 @@ public class TrialInfo {
 
     public String getTrialResultURL() {
         return trialResultURL;
+    }
+
+
+    @Override
+    public String toString() {
+        return "TrialInfo{" +
+                "trialId='" + trialId + '\'' +
+                ", trialNum=" + trialNum +
+                ", trialResultURL='" + trialResultURL + '\'' +
+                '}';
     }
 }

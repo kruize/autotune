@@ -15,12 +15,15 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 
 /**
  *
  */
 public class DeploymentTracking {
+    @SerializedName("trackers")
     private final ArrayList<String> trackers;
 
     public DeploymentTracking(ArrayList<String> trackers) {
@@ -29,5 +32,12 @@ public class DeploymentTracking {
 
     public ArrayList<String> getTrackers() {
         return trackers;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentTracking{" +
+                "trackers=" + trackers.toString() +
+                '}';
     }
 }

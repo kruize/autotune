@@ -68,4 +68,15 @@ public final class Metric
 	public void setEmMetricResult(EMMetricResult emMetricResult) {
 		this.emMetricResult = emMetricResult;
 	}
+
+	@Override
+	public String toString() {
+		return "Metric{" +
+				"name='" + name + '\'' +
+				", query='" + query + '\'' +
+				", datasource='" + datasource + '\'' +
+				", valueType='" + valueType + '\'' +
+				", emMetricResult=" + emMetricResult +
+				'}';
+	}
 }

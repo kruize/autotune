@@ -15,11 +15,15 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  */
 public class ExperimentSettings {
+    @SerializedName("trial_settings")
     private final TrialSettings trialSettings;
+    @SerializedName("deployment_settings")
     private final DeploymentSettings deploymentSettings;
 
     public ExperimentSettings(TrialSettings trialSettings, DeploymentSettings deploymentSettings) {
@@ -33,5 +37,13 @@ public class ExperimentSettings {
 
     public DeploymentSettings getDeploymentSettings() {
         return deploymentSettings;
+    }
+
+    @Override
+    public String toString() {
+        return "ExperimentSettings{" +
+                "trialSettings=" + trialSettings +
+                ", deploymentSettings=" + deploymentSettings +
+                '}';
     }
 }

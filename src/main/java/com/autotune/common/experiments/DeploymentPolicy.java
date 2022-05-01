@@ -15,10 +15,13 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  */
 public class DeploymentPolicy {
+    @SerializedName("type")
     private final String deploymentType;
 
     public DeploymentPolicy(String deploymentType) {
@@ -27,5 +30,12 @@ public class DeploymentPolicy {
 
     public String getDeploymentType() {
         return deploymentType;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentPolicy{" +
+                "deploymentType='" + deploymentType + '\'' +
+                '}';
     }
 }

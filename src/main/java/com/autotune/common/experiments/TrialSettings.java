@@ -15,14 +15,21 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  */
 public class TrialSettings {
+    @SerializedName("iterations")
     private final String trialIterations;
+    @SerializedName("warmup_duration")
     private final String trialWarmupDuration;
+    @SerializedName("warmup_cycles")
     private final String trialWarmupCycles;
+    @SerializedName("measurement_duration")
     private final String trialMeasurementDuration;
+    @SerializedName("measurement_cycles")
     private final String trialMeasurementCycles;
 
     public TrialSettings(String trialIterations,
@@ -48,4 +55,15 @@ public class TrialSettings {
     public String getTrialWarmupCycles() { return trialWarmupCycles; }
 
     public String getTrialMeasurementCycles() { return trialMeasurementCycles; }
+
+    @Override
+    public String toString() {
+        return "TrialSettings{" +
+                "trialIterations='" + trialIterations + '\'' +
+                ", trialWarmupDuration='" + trialWarmupDuration + '\'' +
+                ", trialWarmupCycles='" + trialWarmupCycles + '\'' +
+                ", trialMeasurementDuration='" + trialMeasurementDuration + '\'' +
+                ", trialMeasurementCycles='" + trialMeasurementCycles + '\'' +
+                '}';
+    }
 }
