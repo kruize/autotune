@@ -45,26 +45,7 @@ public class PodContainer {
     private HashMap<String, Metric> containerMetrics;
     /**
      * Contains set of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
-     * These instructions are tagged to TrialNumber.
-     * Example:
-     * "0123": {
-     *                             "update env": {
-     *                                 "JAVA_OPTIONS": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=23 -XX:+UseG1GC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=78 -Dquarkus.thread-pool.core-threads=2",
-     *                                 "JDK_JAVA_OPTIONS": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=23 -XX:+UseG1GC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=78 -Dquarkus.thread-pool.core-threads=2"
-     *                             },
-     *                             "update requests and limits": {
-     *                                 "requests": {
-     *                                     "memory": 229,
-     *                                     "cpu": "1.39"
-     *                                 },
-     *                                 "limits": {
-     *                                     "memory": 229,
-     *                                     "cpu": "1.39"
-     *                                 }
-     *                             }
-     * }
-     *
-     * Here 0123 is the TrialNumber, and "update env" and "update requests and limits" are keys under TrialNumber:0123
+     * These instructions are tagged to runiD.
      */
     @SerializedName("config")
     private HashMap<String, HashMap<String, JsonObject>> trailConfigs;
