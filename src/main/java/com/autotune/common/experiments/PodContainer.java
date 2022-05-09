@@ -45,7 +45,7 @@ public class PodContainer {
     private HashMap<String, Metric> containerMetrics;
     /**
      * Contains set of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
-     * These instructions are tagged to runiD.
+     * These instructions are tagged to TrialNumber.
      */
     @SerializedName("config")
     private HashMap<String, HashMap<String, JsonObject>> trailConfigs;
