@@ -40,7 +40,7 @@ public class EMConstants {
     public static class TransitionClasses {
         public static final String CREATE_CONFIG = "com.autotune.experimentManager.transitions.TransitionToCreateConfig";
         public static final String DEPLOY_CONFIG = "com.autotune.experimentManager.transitions.TransitionToDeployConfig";
-        public static final String INITIATE_TRAIL_RUN_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateTrailRunPhase";
+        public static final String INITIATE_TRIAL_RUN_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateTrialRunPhase";
         public static final String INITIAL_LOAD_CHECK = "com.autotune.experimentManager.transitions.TransitionToInitialLoadCheck";
         public static final String LOAD_CONSISTENCY_CHECK = "com.autotune.experimentManager.transitions.TransitionToLoadConsistencyCheck";
         public static final String INITIATE_METRICS_COLLECTION_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateMetricsCollectionPhase";
@@ -105,10 +105,10 @@ public class EMConstants {
         private InputJsonKeys() {
         }
 
-        public static class GetTrailStatusInputKeys {
+        public static class GetTrialStatusInputKeys {
             public static String RUN_ID = "runId";
 
-            private GetTrailStatusInputKeys() {
+            private GetTrialStatusInputKeys() {
             }
         }
 

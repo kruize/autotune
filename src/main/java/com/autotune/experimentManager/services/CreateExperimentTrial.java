@@ -28,14 +28,14 @@ import java.util.stream.Collectors;
 
 
 /**
- * RestAPI Servlet used to load experiment trail in JSON format using POST.
+ * RestAPI Servlet used to load experiment trial in JSON format using POST methode.
  */
 public class CreateExperimentTrial extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     private static final String SERVLETCONTEXT_EM_KEY = "EM";
 
     /**
-     * This API supports POST methode which is used to initiate experimental trails.
+     * This API supports POST methode which is used to initiate experimental trials.
      * Input payload should be in the format of JSON. Please refer documentation for more details.
      * /experimentTrialRESTAPIHandler is API endpoint,
      * HTTP STATUS CODE - 201 is returned if experiment loaded successfully.
