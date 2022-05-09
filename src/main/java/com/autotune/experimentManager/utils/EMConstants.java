@@ -25,7 +25,7 @@ public class EMConstants {
     public static class APIPaths {
         public static final String CREATE_EXPERIMENT_TRIAL = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
         public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
-        public static final String EXPERIMENT_MANAGER_INITIATE_EXPERIMENT_TRAIL = ServerContext.ROOT_CONTEXT + "initiateExperimentTrial";
+
         private APIPaths() {
         }
     }
@@ -40,7 +40,7 @@ public class EMConstants {
     public static class TransitionClasses {
         public static final String CREATE_CONFIG = "com.autotune.experimentManager.transitions.TransitionToCreateConfig";
         public static final String DEPLOY_CONFIG = "com.autotune.experimentManager.transitions.TransitionToDeployConfig";
-        public static final String INITIATE_TRAIL_RUN_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateTrailRunPhase";
+        public static final String INITIATE_TRIAL_RUN_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateTrialRunPhase";
         public static final String INITIAL_LOAD_CHECK = "com.autotune.experimentManager.transitions.TransitionToInitialLoadCheck";
         public static final String LOAD_CONSISTENCY_CHECK = "com.autotune.experimentManager.transitions.TransitionToLoadConsistencyCheck";
         public static final String INITIATE_METRICS_COLLECTION_PHASE = "com.autotune.experimentManager.transitions.TransitionToInitiateMetricsCollectionPhase";
@@ -48,6 +48,7 @@ public class EMConstants {
         public static final String CREATE_RESULT_DATA = "com.autotune.experimentManager.transitions.TransitionToCreateResultData";
         public static final String SEND_RESULT_DATA = "com.autotune.experimentManager.transitions.TransitionToSendResultData";
         public static final String CLEAN_OR_ROLLBACK_DEPLOYMENT = "com.autotune.experimentManager.transitions.TransitionToCleanDeployment";
+
         private TransitionClasses() {
         }
     }
@@ -55,6 +56,7 @@ public class EMConstants {
     public static class DeploymentStrategies {
         public static String ROLLING_UPDATE = "rollingUpdate";
         public static String NEW_DEPLOYMENT = "newDeployment";
+
         private DeploymentStrategies() {
         }
     }
@@ -73,6 +75,7 @@ public class EMConstants {
         public static class ExperimentManager {
             public static String INITIALIZE_EM = "Initializing EM";
             public static String ADD_EM_SERVLETS = "Adding EM Servlets";
+
             private ExperimentManager() {
             }
         }
@@ -81,6 +84,7 @@ public class EMConstants {
             public static String START_TRANSITION_FOR_RUNID = "Starting transition {} for RUN ID - {}";
             public static String END_TRANSITION_FOR_RUNID = "Ending transition {} for RUN ID - {}";
             public static String RUNNING_TRANSITION_ON_THREAD_ID = "Running Transition on Thread ID - {}";
+
             private RunExperiment() {
             }
         }
@@ -91,6 +95,7 @@ public class EMConstants {
             public static String START_EXECUTE_TRIAL = "Starting to execute a trial";
             public static String START_SCHEDULED_EXECUTE_TRIAL = "Starting to execute a scheduled trial";
             public static String START_STAGE_PROCESSORS = "Starting stage processors";
+
             private EMExecutorService() {
             }
         }
@@ -100,16 +105,17 @@ public class EMConstants {
         private InputJsonKeys() {
         }
 
-        public static class GetTrailStatusInputKeys {
+        public static class GetTrialStatusInputKeys {
             public static String RUN_ID = "runId";
 
-            private GetTrailStatusInputKeys() {
+            private GetTrialStatusInputKeys() {
             }
         }
 
         public static class DeploymentKeys {
             public static String PARENT_DEPLOYMENT_NAME = "parent_deployment_name";
             public static String TRAINING_DEPLOYMENT_NAME = "training_deployment_name";
+
             private DeploymentKeys() {
             }
         }
@@ -122,6 +128,7 @@ public class EMConstants {
         public static class DeploymentTypes {
             public static String TRAINING = "training";
             public static String PRODUCTION = "production";
+
             private DeploymentTypes() {
             }
         }
@@ -135,6 +142,7 @@ public class EMConstants {
         public static int EXECUTORS_MULTIPLIER = 1;
         // Maximum number of executors per CPU core
         public static int MAX_EXECUTORS_MULTIPLIER = 4;
+
         private EMSettings() {
         }
     }
