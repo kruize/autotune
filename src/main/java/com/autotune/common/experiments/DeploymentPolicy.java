@@ -18,13 +18,13 @@ package com.autotune.common.experiments;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Experiment Manger deploys application based on Kubernetes Deployment Strategy like
+ * Experiment Manager deploys application based on Kubernetes Deployment Strategy like
  * . Rolling deployment
  * . Recreate
  * . Ramped slow rollout
  * . Best-effort controlled rollout
  * . Canary deployment   etc.
- * deploymentType is used to mention Kubernetes Deployment Strategy. Example
+ *   deploymentType is used to mention Kubernetes Deployment Strategy. Example
  *        "deployment_policy": {
  *                  "type": "rollingUpdate"
  *         }

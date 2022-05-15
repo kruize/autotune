@@ -16,6 +16,7 @@
 package com.autotune.experimentManager.services;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,8 @@ public class CreateExperimentTrial extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial experimentTrial = gson.fromJson(inputData, ExperimentTrial.class);
             LOGGER.debug(experimentTrial.toString());
-            response.setStatus(HttpServletResponse.SC_OK);
+            new ExperimentTrialHandler(experimentTrial).startExperimentTrials();  // Call this on thread to make it asynchronous
+            response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (Exception e) {
             LOGGER.error("{}", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

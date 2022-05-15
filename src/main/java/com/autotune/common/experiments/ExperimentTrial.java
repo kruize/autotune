@@ -20,7 +20,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 
 /**
- * A storage object, which is used to feed information about trail details for Experiment manager to perform experiments suggested by Analyser.
+ * A storage object, which is used to feed information about trial details for Experiment manager to perform experiments suggested by Analyser.
  */
 public class ExperimentTrial {
     @SerializedName("experiment_id")

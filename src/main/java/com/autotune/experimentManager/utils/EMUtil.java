@@ -36,7 +36,7 @@ public class EMUtil {
     * DEPLOY_CONFIG:
     *   Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
     *   Predecessor Stage: CREATE_CONFIG
-    *   Successor Stage: INITIATE_TRAIL_RUN_PHASE
+    *   Successor Stage: INITIATE_TRIAL_RUN_PHASE
     *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
     *
     * Details of respective stages will be added once they are implemented
@@ -59,11 +59,11 @@ public class EMUtil {
          * DEPLOY_CONFIG:
          *   Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
          *   Predecessor Stage: CREATE_CONFIG
-         *   Successor Stage: INITIATE_TRAIL_RUN_PHASE
+         *   Successor Stage: INITIATE_TRIAL_RUN_PHASE
          *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
          */
         DEPLOY_CONFIG(2, 1, false, EMConstants.TransitionClasses.DEPLOY_CONFIG),
-        INITIATE_TRAIL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRIAL_RUN_PHASE),
+        INITIATE_TRIAL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRIAL_RUN_PHASE),
         INITIAL_LOAD_CHECK(3, 2, true, EMConstants.TransitionClasses.INITIAL_LOAD_CHECK),
         LOAD_CONSISTENCY_CHECK(3, 3, true, EMConstants.TransitionClasses.LOAD_CONSISTENCY_CHECK),
         INITIATE_METRICS_COLLECTION_PHASE(4, 1, false, EMConstants.TransitionClasses.INITIATE_METRICS_COLLECTION_PHASE),
