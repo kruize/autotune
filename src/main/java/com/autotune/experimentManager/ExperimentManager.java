@@ -17,26 +17,24 @@
 package com.autotune.experimentManager;
 
 import com.autotune.experimentManager.core.EMExecutorService;
-import com.autotune.experimentManager.settings.EMSettings;
 import com.autotune.experimentManager.core.EMScheduledStageProcessor;
 import com.autotune.experimentManager.core.EMStageProcessor;
-import com.autotune.experimentManager.utils.EMConstants;
-
 import com.autotune.experimentManager.services.CreateExperimentTrial;
 import com.autotune.experimentManager.services.ListTrialStatus;
-
+import com.autotune.experimentManager.settings.EMSettings;
+import com.autotune.experimentManager.utils.EMConstants;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
-
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class ExperimentManager {
-    private ExperimentManager() { }
-
     public static EMExecutorService emExecutorService;
     public static EMStageProcessor emStageProcessor;
     public static EMScheduledStageProcessor emScheduledStageProcessor;
+
+    private ExperimentManager() {
+    }
 
     public static void initializeEM() {
         // Initializes the executor services needed by the EM
