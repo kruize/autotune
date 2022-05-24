@@ -18,7 +18,7 @@ package com.autotune.common.experiments;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Experiment Manger deploys application based on Kubernetes Deployment Strategy like
+ * Experiment Manager deploys application based on Kubernetes Deployment Strategy like
  * . Rolling deployment
  * . Recreate
  * . Ramped slow rollout

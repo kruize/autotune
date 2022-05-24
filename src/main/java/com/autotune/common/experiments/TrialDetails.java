@@ -22,15 +22,13 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
- * A data util used to hold detailed information about trails.
+ * A data util used to store detailed information about trials.
  * Example
- *     "deployments": {
- *         "OptunaStudy": {
- *             "pod_metrics": { ....
- *             },
- *             "deployment_name": "tfb-qrh-sample",
- *             "namespace": "default",
- *
+ * "deployments": {
+ *      "OptunaStudy": {
+ *          "pod_metrics": { ....},
+ *          "deployment_name": "tfb-qrh-sample",
+ *          "namespace": "default",
  */
 public class TrialDetails {
     @SerializedName("deployment_name")
@@ -42,12 +40,6 @@ public class TrialDetails {
      */
     @SerializedName("type")
     private final String deploymentType;
-    private String state;
-    private String result;
-    private String resultInfo;
-    private String resultError;
-    private Timestamp startTime;
-    private Timestamp endTime;
     // Hashmap of metrics associated with the Pod
     // Uses metric name as key
     @SerializedName("pod_metrics")
@@ -56,7 +48,12 @@ public class TrialDetails {
     // Uses stack name (docker image name) as key
     @SerializedName("containers")
     private final HashMap<String, PodContainer> podContainers;
-
+    private String state;
+    private String result;
+    private String resultInfo;
+    private String resultError;
+    private Timestamp startTime;
+    private Timestamp endTime;
     /**
      * @param deploymentType
      * @param deploymentName

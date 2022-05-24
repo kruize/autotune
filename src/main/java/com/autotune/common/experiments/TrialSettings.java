@@ -18,15 +18,15 @@ package com.autotune.common.experiments;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This object holds information about trail run configurations.
+ * This object holds information about trial run configurations.
  * Example
- *        "trial_settings": {
- *             "measurement_cycles": "3",
- *             "warmup_duration": "1min",
- *             "warmup_cycles": "3",
- *             "measurement_duration": "1min",
- *             "iterations": "3"
- *         }
+ * "trial_settings": {
+ *      "measurement_cycles": "3",
+ *      "warmup_duration": "1min",
+ *      "warmup_cycles": "3",
+ *      "measurement_duration": "1min",
+ *      "iterations": "3"
+ * }
  */
 public class TrialSettings {
     /**
