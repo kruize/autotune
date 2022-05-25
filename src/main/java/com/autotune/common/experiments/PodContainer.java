@@ -57,17 +57,14 @@ public class PodContainer {
     private HashMap<String, Metric> containerMetrics;
     // Hashmap of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
     // Key will be trialNumber
-    /**
-     * Contains set of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
-     * These instructions are tagged to TrialNumber.
-     */
     @SerializedName("config")
     private HashMap<String, ContainerConfigData> trialConfigs;
-
+    
     public PodContainer(String stackName, String containerName) {
         this.stackName = stackName;
         this.containerName = containerName;
     }
+
 
     public HashMap<String, ContainerConfigData> getTrialConfigs() {
         return trialConfigs;

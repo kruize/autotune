@@ -18,7 +18,7 @@ package com.autotune.common.experiments;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This class is used to hold high level information about Trials.
+ * This class is used to hold high level information about trials.
  * Example
  *   "trial_info": {
  *         "trial_id": "",
