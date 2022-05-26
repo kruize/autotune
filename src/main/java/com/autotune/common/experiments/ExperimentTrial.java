@@ -39,13 +39,13 @@ public class ExperimentTrial {
     /**
      * Example
      * "deployments": {
-     * "training": {
-     * "pod_metrics": {...},
-     * "deployment_name": "tfb-qrh-sample",
-     * "namespace": "default",
-     * "containers": {...},
-     * "type": "training"
-     * }
+     *      "training": {
+     *                      "pod_metrics": {...},
+     *                      "deployment_name": "tfb-qrh-sample",
+     *                      "namespace": "default",
+     *                      "containers": {...},
+     *                      "type": "training"
+     *      }
      * }
      */
     @SerializedName("deployments")

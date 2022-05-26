@@ -20,11 +20,11 @@ import com.google.gson.annotations.SerializedName;
 /**
  * This class is used to hold high level information about trials.
  * Example
- *   "trial_info": {
- *         "trial_id": "",
- *         "trial_num": 0,
- *         "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
- *     },
+ *  "trial_info": {
+ *      "trial_id": "",
+ *      "trial_num": 0,
+ *      "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+ *  },
  */
 public class TrialInfo {
     @SerializedName("trial_id")

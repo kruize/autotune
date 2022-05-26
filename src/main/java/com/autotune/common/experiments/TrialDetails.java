@@ -22,14 +22,13 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
- * A data util used to hold detailed information about trials.
+ * A data util used to store detailed information about trials.
  * Example
  * "deployments": {
- * "OptunaStudy": {
- * "pod_metrics": { ....
- * },
- * "deployment_name": "tfb-qrh-sample",
- * "namespace": "default",
+ *      "OptunaStudy": {
+ *          "pod_metrics": { ....},
+ *          "deployment_name": "tfb-qrh-sample",
+ *          "namespace": "default",
  */
 public class TrialDetails {
     @SerializedName("deployment_name")
@@ -55,7 +54,6 @@ public class TrialDetails {
     private String resultError;
     private Timestamp startTime;
     private Timestamp endTime;
-
     /**
      * @param deploymentType
      * @param deploymentName
