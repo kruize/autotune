@@ -24,7 +24,7 @@ import com.google.gson.annotations.SerializedName;
  * . Ramped slow rollout
  * . Best-effort controlled rollout
  * . Canary deployment   etc.
- * deploymentType is used to mention Kubernetes Deployment Strategy. Example
+ *   deploymentType is used to mention Kubernetes Deployment Strategy. Example
  *        "deployment_policy": {
  *                  "type": "rollingUpdate"
  *         }

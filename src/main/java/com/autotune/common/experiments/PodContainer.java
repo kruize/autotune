@@ -24,14 +24,12 @@ import java.util.HashMap;
 /**
  * Data utilities for storing information about containers.
  * Example
- * "containers": {
- *      "kruize/tfb-qrh:1.13.2.F_mm.v1": {
- *          "image_name": "kruize/tfb-qrh:1.13.2.F_mm.v1",
- *          "container_name": "tfb-server",
- *          "container_metrics":....,
- *          "config": {
- *                      "0": {
- *                              "update env": {.....
+ *      "containers": {
+ *                 "kruize/tfb-qrh:1.13.2.F_mm.v1": {
+ *                     "image_name": "kruize/tfb-qrh:1.13.2.F_mm.v1",
+ *                     "container_name": "tfb-server",
+ *                     "container_metrics":....,
+ *                     "config": { ......
  */
 public class PodContainer {
     @SerializedName("image_name")
@@ -84,11 +82,20 @@ public class PodContainer {
      * }
      */
     @SerializedName("config")
-    private HashMap<String, HashMap<String, JsonObject>> trialConfigs;
-
+    private HashMap<String, ContainerConfigData> trialConfigs;
+    
     public PodContainer(String stackName, String containerName) {
         this.stackName = stackName;
         this.containerName = containerName;
+    }
+
+
+    public HashMap<String, ContainerConfigData> getTrialConfigs() {
+        return trialConfigs;
+    }
+
+    public void setTrialConfigs(HashMap<String, ContainerConfigData> trialConfigs) {
+        this.trialConfigs = trialConfigs;
     }
 
     public String getStackName() {
@@ -116,4 +123,5 @@ public class PodContainer {
                 ", trialConfigs=" + trialConfigs +
                 '}';
     }
+
 }

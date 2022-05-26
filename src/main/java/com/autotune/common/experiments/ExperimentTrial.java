@@ -35,7 +35,7 @@ public class ExperimentTrial {
     @SerializedName("settings")
     private final ExperimentSettings experimentSettings;
     // HashMap of parallel trials being monitored for this trial
-    // uses' tracker as key. tracker = "training" or "production"
+    // uses tracker as key. tracker = "training" or "production"
     /**
      * Example
      * "deployments": {

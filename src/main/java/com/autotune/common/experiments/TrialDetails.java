@@ -25,7 +25,7 @@ import java.util.HashMap;
  * A data util used to store detailed information about trials.
  * Example
  * "deployments": {
- *      "OptunaStudy": {
+ *      "training": {
  *          "pod_metrics": { ....},
  *          "deployment_name": "tfb-qrh-sample",
  *          "namespace": "default",
