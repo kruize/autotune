@@ -22,14 +22,6 @@ public class EMConstants {
     private EMConstants() {
     }
 
-    public static class APIPaths {
-        public static final String CREATE_EXPERIMENT_TRIAL = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
-        public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
-
-        private APIPaths() {
-        }
-    }
-
     public static class DeploymentConstants {
         public static String NAMESPACE = "default";
 

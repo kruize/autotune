@@ -31,4 +31,6 @@ public class ServerContext
 	public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
 	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
 	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
+	public static final String CREATE_EXPERIMENT_TRIAL = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
+	public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
 }

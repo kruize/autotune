@@ -28,6 +28,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
+import static com.autotune.analyzer.utils.ServerContext.CREATE_EXPERIMENT_TRIAL;
+import static com.autotune.analyzer.utils.ServerContext.LIST_TRIAL_STATUS;
+
 public class ExperimentManager {
     public static EMExecutorService emExecutorService;
     public static EMStageProcessor emStageProcessor;
@@ -64,7 +67,7 @@ public class ExperimentManager {
     }
 
     private static void addEMServlets(ServletContextHandler context) {
-        context.addServlet(CreateExperimentTrial.class, EMConstants.APIPaths.CREATE_EXPERIMENT_TRIAL);
-        context.addServlet(ListTrialStatus.class, EMConstants.APIPaths.LIST_TRIAL_STATUS);
+        context.addServlet(CreateExperimentTrial.class,CREATE_EXPERIMENT_TRIAL);
+        context.addServlet(ListTrialStatus.class, LIST_TRIAL_STATUS);
     }
 }
