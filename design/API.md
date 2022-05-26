@@ -334,7 +334,7 @@ Create experiment trials using input JSON provided by Analyser module.
 **Request**
 `POST /createExperimentTrial`
 
-`curl -H 'Accept: application/json' -X POST http://<URL>:<PORT>/createExperimentTrial`
+`curl -H 'Accept: application/json' -X POST http://<URL>:<PORT>/createExperimentTrial` --data 'copy paste below JSON'
 ```
 {
     "settings": {
