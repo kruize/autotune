@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,26 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
- *
+ * Utility to hold list of trackers information about deploymentPolicy.
+ * Example
+ *         "deployment_settings": {
+ *             "deployment_tracking": {
+ *                 "trackers": [
+ *                     "training"
+ *                 ]
+ *             },
+ *             "deployment_policy": {
+ *                 "type": "rollingUpdate"
+ *             }
+ *         }
  */
 public class DeploymentSettings {
+    @SerializedName("deployment_policy")
     private final DeploymentPolicy deploymentPolicy;
+    @SerializedName("deployment_tracking")
     private final DeploymentTracking deploymentTracking;
 
     public DeploymentSettings(DeploymentPolicy deploymentPolicy, DeploymentTracking deploymentTracking) {
@@ -33,5 +48,13 @@ public class DeploymentSettings {
 
     public DeploymentTracking getDeploymentTracking() {
         return deploymentTracking;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentSettings{" +
+                "deploymentPolicy=" + deploymentPolicy +
+                ", deploymentTracking=" + deploymentTracking +
+                '}';
     }
 }

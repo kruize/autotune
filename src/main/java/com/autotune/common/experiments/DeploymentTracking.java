@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,20 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 
 /**
- *
+ * Example
+ *             "deployment_tracking": {
+ *                 "trackers": [
+ *                     "training"
+ *                 ]
+ *             }
  */
 public class DeploymentTracking {
+    @SerializedName("trackers")
     private final ArrayList<String> trackers;
 
     public DeploymentTracking(ArrayList<String> trackers) {
@@ -29,5 +37,12 @@ public class DeploymentTracking {
 
     public ArrayList<String> getTrackers() {
         return trackers;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentTracking{" +
+                "trackers=" + trackers.toString() +
+                '}';
     }
 }

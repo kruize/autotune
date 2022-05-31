@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,38 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
- *
+ * This object holds information about trail run configurations.
+ * Example
+ *        "trial_settings": {
+ *             "measurement_cycles": "3",
+ *             "warmup_duration": "1min",
+ *             "warmup_cycles": "3",
+ *             "measurement_duration": "1min",
+ *             "iterations": "3"
+ *         }
  */
 public class TrialSettings {
+    /**
+     * Indicates number of times that same tails should get executed to collect accurate metrics.
+     */
+    @SerializedName("iterations")
     private final String trialIterations;
+    /**
+     * Total time took by cluster/Node to spin up newly created deployments pods .
+     */
+    @SerializedName("warmup_duration")
     private final String trialWarmupDuration;
+    /**
+     * Indicates number of times that same tails should get executed to collect accurate metrics after warmup_durations.
+     */
+    @SerializedName("warmup_cycles")
     private final String trialWarmupCycles;
+    @SerializedName("measurement_duration")
     private final String trialMeasurementDuration;
+    @SerializedName("measurement_cycles")
     private final String trialMeasurementCycles;
 
     public TrialSettings(String trialIterations,
@@ -41,11 +65,30 @@ public class TrialSettings {
         return trialMeasurementDuration;
     }
 
-    public String getTrialIterations() { return trialIterations; }
+    public String getTrialIterations() {
+        return trialIterations;
+    }
 
-    public String getTrialWarmupDuration() { return trialWarmupDuration; }
+    public String getTrialWarmupDuration() {
+        return trialWarmupDuration;
+    }
 
-    public String getTrialWarmupCycles() { return trialWarmupCycles; }
+    public String getTrialWarmupCycles() {
+        return trialWarmupCycles;
+    }
 
-    public String getTrialMeasurementCycles() { return trialMeasurementCycles; }
+    public String getTrialMeasurementCycles() {
+        return trialMeasurementCycles;
+    }
+
+    @Override
+    public String toString() {
+        return "TrialSettings{" +
+                "trialIterations='" + trialIterations + '\'' +
+                ", trialWarmupDuration='" + trialWarmupDuration + '\'' +
+                ", trialWarmupCycles='" + trialWarmupCycles + '\'' +
+                ", trialMeasurementDuration='" + trialMeasurementDuration + '\'' +
+                ", trialMeasurementCycles='" + trialMeasurementCycles + '\'' +
+                '}';
+    }
 }

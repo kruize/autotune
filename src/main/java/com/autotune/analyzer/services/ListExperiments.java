@@ -38,7 +38,7 @@ public class ListExperiments extends HttpServlet
 			AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentName);
 			for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
 				ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
-				JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
+				String experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
 				experimentTrialJSONArray.put(experimentTrialJSON);
 			}
 		}

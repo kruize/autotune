@@ -35,11 +35,11 @@ public class EMInterface {
 		try {
 			int trialNumber = experimentTrial.getTrialInfo().getTrialNum();
 			// Prepare to send the trial config to EM
-			JSONObject experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
+			String experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
 
 			/* STEP 4: Send trial to EM */
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENDING_TRIAL_CONFIG_INFO);
-			LOGGER.info(experimentTrialJSON.toString(4));
+			LOGGER.info(experimentTrialJSON);
 			URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);
 			String runId = HttpUtils.postRequest(createExperimentTrialURL, experimentTrialJSON.toString());
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RUNNING_TRIAL + runId);
