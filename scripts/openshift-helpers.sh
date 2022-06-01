@@ -17,15 +17,10 @@
 
 ###############################  v OPENSHIFT v #################################
 
-function check_prometheus_installation() {
+function check_openshift_prometheus_installation() {
 	echo
 	echo "Info: Checking pre requisites for openshift..."
-	kubectl_tool=$(which kubectl)
-	check_err "Error: Please install the kubectl tool"
-	# Check to see if kubectl supports kustomize
-	kubectl kustomize --help >/dev/null 2>/dev/null
-	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
-
+	check_kustomize
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s")
 	if [ "${prometheus_pod_running}" == "" ]; then
@@ -111,7 +106,7 @@ function openshift_start() {
 		autotune_ns=${AUTOTUNE_OPENSHIFT_NAMESPACE}
 	fi
 
-	check_prometheus_installation
+	check_openshift_prometheus_installation
 	openshift_first
 	openshift_deploy
 }

@@ -62,7 +62,6 @@ function minikube_deploy() {
 	echo "Deploying AutotuneConfig objects"
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGS}
 
-
 	echo "Info: Deploying autotune yaml to minikube cluster"
 
 	# Replace autotune docker image in deployment yaml
@@ -102,12 +101,7 @@ function minikube_start() {
 function check_prometheus_installation() {
 	echo
 	echo "Info: Checking pre requisites for minikube..."
-	kubectl_tool=$(which kubectl)
-	check_err "Error: Please install the kubectl tool"
-	# Check to see if kubectl supports kustomize
-	kubectl kustomize --help >/dev/null 2>/dev/null
-	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
-
+	check_kustomize
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
 	if [ "${prometheus_pod_running}" == "" ]; then
@@ -154,7 +148,7 @@ function minikube_terminate() {
 
 	echo
 	echo "Removing AutotuneQueryVariable objects"
-	${kubectl_cmd} delete -f ${AUTOTUNE_QUERY_VARIABLES_MANIFEST} 2>/dev/null
+	${kubectl_cmd} delete -f ${AUTOTUNE_QUERY_VARIABLES} 2>/dev/null
 	
 	echo
 	echo "Removing Autotune configmap"

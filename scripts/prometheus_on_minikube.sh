@@ -31,7 +31,7 @@ function install_prometheus() {
 	kubectl_tool=$(which kubectl)
 	check_err "Error: Please install the kubectl tool"
 
-	kubectl kustomize --help >/dev/null 2>/dev/null
+	kubectl --help | grep "kustomize" >/dev/null
 	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
 
 	prometheus_ns="monitoring"
