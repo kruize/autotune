@@ -128,7 +128,13 @@ public class EMConstants {
 		public static String MEASUREMENT_RESULTS = "measurement_results";
 		public static String ITERATION_RESULT = "iteration_result";
 		public static String GENERAL_INFO = "general_info";
+		public static String SUMMARY = "summary";
+		public static String RESULT_OUTCOME = "result_outcome";
+		public static String SUCCESS = "SUCCESS";
+		public static String FAILED = "FAILED";
 		public static String RESULTS = "results";
+		public static String RESULT = "result";
+		public static String RESULT_ERROR = "result_error";
 		public static String SCORE = "score";
 		public static String ERROR = "error";
 		public static String MEAN = "mean";

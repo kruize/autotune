@@ -8,7 +8,16 @@ import org.json.JSONObject;
 public class EMMetricResult implements ConvertToJSON {
     private EMMetricGenericResults emMetricGenericResults;
     private EMMetricPercentileResults emMetricPercentileResults;
+    private EMMetricResultSummary emMetricResultSummary;
     private boolean isPercentileResultsAvailable;
+
+    public EMMetricResultSummary getEmMetricResultSummary() {
+        return emMetricResultSummary;
+    }
+
+    public void setEmMetricResultSummary(EMMetricResultSummary emMetricResultSummary) {
+        this.emMetricResultSummary = emMetricResultSummary;
+    }
 
     public EMMetricGenericResults getEmMetricGenericResults() {
         return emMetricGenericResults;
@@ -36,6 +45,7 @@ public class EMMetricResult implements ConvertToJSON {
 
     public EMMetricResult (boolean needsPercentileInfo) {
         emMetricGenericResults = new EMMetricGenericResults();
+        emMetricResultSummary = new EMMetricResultSummary();
         emMetricPercentileResults = null;
         if (needsPercentileInfo == true) {
             emMetricPercentileResults = new EMMetricPercentileResults();
@@ -67,6 +77,7 @@ public class EMMetricResult implements ConvertToJSON {
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(EMConstants.EMJSONKeys.GENERAL_INFO, emMetricGenericResults.toJSON());
+        jsonObject.put(EMConstants.EMJSONKeys.SUMMARY, emMetricResultSummary.toJSON());
         if (isPercentileResultsAvailable) {
             jsonObject.put(EMConstants.EMJSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
         }

@@ -87,10 +87,10 @@ public class EMUtil {
                 false,
                 EMConstants.TransitionClasses.DEPLOY_CONFIG,
                 false),
-        INITIATE_TRAIL_RUN_PHASE(3,
+        INITIATE_TRIAL_RUN_PHASE(3,
                 1,
                 false,
-                EMConstants.TransitionClasses.INITIATE_TRAIL_RUN_PHASE,
+                EMConstants.TransitionClasses.INITIATE_TRIAL_RUN_PHASE,
                 false),
         INITIAL_LOAD_CHECK(3,
                 2,
@@ -362,7 +362,7 @@ public class EMUtil {
         }
     }
 
-    public static void printMetricMap(ExperimentTrialData etd) {
+    public static void  printMetricMap(ExperimentTrialData etd) {
         EMIterationManager emIterationManager = etd.getEmIterationManager();
         ArrayList<EMIterationData> emIterationDataList = emIterationManager.getIterationDataList();
         for (EMIterationData emIterationData : emIterationDataList) {
