@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,32 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
+ * A data util used to hold detailed information about trails.
+ * Example
+ *     "deployments": {
+ *         "OptunaStudy": {
+ *             "pod_metrics": { ....
+ *             },
+ *             "deployment_name": "tfb-qrh-sample",
+ *             "namespace": "default",
  *
  */
 public class TrialDetails {
-    private String deploymentType;
+    @SerializedName("deployment_name")
     private final String deploymentName;
+    @SerializedName("namespace")
     private final String deploymentNameSpace;
+    /**
+     * deploymentType : [rollingUpdate]
+     */
+    @SerializedName("type")
+    private final String deploymentType;
     private String state;
     private String result;
     private String resultInfo;
@@ -35,10 +50,31 @@ public class TrialDetails {
     private Timestamp endTime;
     // Hashmap of metrics associated with the Pod
     // Uses metric name as key
-    private HashMap<String, Metric> podMetrics;
+    @SerializedName("pod_metrics")
+    private final HashMap<String, Metric> podMetrics;
     // Hashmap of containers being tracked for this trial
     // Uses stack name (docker image name) as key
-    private HashMap<String, PodContainer> podContainers;
+    @SerializedName("containers")
+    private final HashMap<String, PodContainer> podContainers;
+
+    /**
+     * @param deploymentType
+     * @param deploymentName
+     * @param deploymentNameSpace
+     * @param podMetrics
+     * @param podContainers
+     */
+    public TrialDetails(String deploymentType,
+                        String deploymentName,
+                        String deploymentNameSpace,
+                        HashMap<String, Metric> podMetrics,
+                        HashMap<String, PodContainer> podContainers) {
+        this.deploymentType = deploymentType;
+        this.deploymentName = deploymentName;
+        this.deploymentNameSpace = deploymentNameSpace;
+        this.podMetrics = podMetrics;
+        this.podContainers = podContainers;
+    }
 
     /**
      *
@@ -53,14 +89,14 @@ public class TrialDetails {
      * @param podContainers
      */
     public TrialDetails(String deploymentType,
-						String deploymentName,
-						String deploymentNameSpace,
-						String state,
-						String result,
-						String resultInfo,
-						String resultError,
-						HashMap<String, Metric> podMetrics,
-						HashMap<String, PodContainer> podContainers) {
+                        String deploymentName,
+                        String deploymentNameSpace,
+                        String state,
+                        String result,
+                        String resultInfo,
+                        String resultError,
+                        HashMap<String, Metric> podMetrics,
+                        HashMap<String, PodContainer> podContainers) {
         this.deploymentType = deploymentType;
         this.deploymentName = deploymentName;
         this.deploymentNameSpace = deploymentNameSpace;
@@ -72,37 +108,89 @@ public class TrialDetails {
         this.podContainers = podContainers;
     }
 
-    public String getDeploymentType() { return deploymentType; }
 
-    public String getDeploymentName() { return deploymentName; }
+    public String getDeploymentType() {
+        return deploymentType;
+    }
 
-    public String getDeploymentNameSpace() { return deploymentNameSpace; }
+    public String getDeploymentName() {
+        return deploymentName;
+    }
 
-    public String getState() { return state; }
+    public String getDeploymentNameSpace() {
+        return deploymentNameSpace;
+    }
 
-    public void setState(String state) { this.state = state; }
+    public String getState() {
+        return state;
+    }
 
-    public String getResult() { return result; }
+    public void setState(String state) {
+        this.state = state;
+    }
 
-    public void setResult(String result) { this.result = result; }
+    public String getResult() {
+        return result;
+    }
 
-    public String getResultInfo() { return resultInfo; }
+    public void setResult(String result) {
+        this.result = result;
+    }
 
-    public void setResultInfo(String resultInfo) { this.resultInfo = resultInfo; }
+    public String getResultInfo() {
+        return resultInfo;
+    }
 
-    public String getResultError() { return resultError; }
+    public void setResultInfo(String resultInfo) {
+        this.resultInfo = resultInfo;
+    }
 
-    public void setResultError(String resultError) { this.resultError = resultError; }
+    public String getResultError() {
+        return resultError;
+    }
 
-    public Timestamp getStartTime() { return startTime; }
+    public void setResultError(String resultError) {
+        this.resultError = resultError;
+    }
 
-    public void setStartTime(Timestamp startTime) { this.startTime = startTime; }
+    public Timestamp getStartTime() {
+        return startTime;
+    }
 
-    public Timestamp getEndTime() { return endTime; }
+    public void setStartTime(Timestamp startTime) {
+        this.startTime = startTime;
+    }
 
-    public void setEndTime(Timestamp endTime) { this.endTime = endTime; }
+    public Timestamp getEndTime() {
+        return endTime;
+    }
 
-    public HashMap<String, Metric> getPodMetrics() { return podMetrics; }
+    public void setEndTime(Timestamp endTime) {
+        this.endTime = endTime;
+    }
 
-    public HashMap<String, PodContainer> getPodContainers() { return podContainers; }
+    public HashMap<String, Metric> getPodMetrics() {
+        return podMetrics;
+    }
+
+    public HashMap<String, PodContainer> getPodContainers() {
+        return podContainers;
+    }
+
+    @Override
+    public String toString() {
+        return "TrialDetails{" +
+                "deploymentType='" + deploymentType + '\'' +
+                ", deploymentName='" + deploymentName + '\'' +
+                ", deploymentNameSpace='" + deploymentNameSpace + '\'' +
+                ", state='" + state + '\'' +
+                ", result='" + result + '\'' +
+                ", resultInfo='" + resultInfo + '\'' +
+                ", resultError='" + resultError + '\'' +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", podMetrics=" + podMetrics +
+                ", podContainers=" + podContainers +
+                '}';
+    }
 }

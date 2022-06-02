@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,35 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
+ *  Example
+ *  "settings": {
+ *         "trial_settings": {
+ *             "measurement_cycles": "3",
+ *             "warmup_duration": "1min",
+ *             "warmup_cycles": "3",
+ *             "measurement_duration": "1min",
+ *             "iterations": "3"
+ *         },
+ *         "deployment_settings": {
+ *             "deployment_tracking": {
+ *                 "trackers": [
+ *                     "training"
+ *                 ]
+ *             },
+ *             "deployment_policy": {
+ *                 "type": "rollingUpdate"
+ *             }
+ *         }
+ *     },
  *
  */
 public class ExperimentSettings {
+    @SerializedName("trial_settings")
     private final TrialSettings trialSettings;
+    @SerializedName("deployment_settings")
     private final DeploymentSettings deploymentSettings;
 
     public ExperimentSettings(TrialSettings trialSettings, DeploymentSettings deploymentSettings) {
@@ -33,5 +57,13 @@ public class ExperimentSettings {
 
     public DeploymentSettings getDeploymentSettings() {
         return deploymentSettings;
+    }
+
+    @Override
+    public String toString() {
+        return "ExperimentSettings{" +
+                "trialSettings=" + trialSettings +
+                ", deploymentSettings=" + deploymentSettings +
+                '}';
     }
 }

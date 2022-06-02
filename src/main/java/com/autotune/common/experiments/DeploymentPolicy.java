@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,22 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
- *
+ * Experiment Manager deploys application based on Kubernetes Deployment Strategy like
+ * . Rolling deployment
+ * . Recreate
+ * . Ramped slow rollout
+ * . Best-effort controlled rollout
+ * . Canary deployment   etc.
+ * deploymentType is used to mention Kubernetes Deployment Strategy. Example
+ *        "deployment_policy": {
+ *                  "type": "rollingUpdate"
+ *         }
  */
 public class DeploymentPolicy {
+    @SerializedName("type")
     private final String deploymentType;
 
     public DeploymentPolicy(String deploymentType) {
@@ -27,5 +39,12 @@ public class DeploymentPolicy {
 
     public String getDeploymentType() {
         return deploymentType;
+    }
+
+    @Override
+    public String toString() {
+        return "DeploymentPolicy{" +
+                "deploymentType='" + deploymentType + '\'' +
+                '}';
     }
 }

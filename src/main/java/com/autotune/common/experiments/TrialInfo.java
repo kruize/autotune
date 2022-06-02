@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,26 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
- *
+ * This class is used to hold high level information about Trails.
+ * Example
+ *   "trial_info": {
+ *         "trial_id": "",
+ *         "trial_num": 0,
+ *         "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+ *     },
  */
 public class TrialInfo {
+    @SerializedName("trial_id")
     private final String trialId;
+    @SerializedName("trial_num")
     private final int trialNum;
+    /**
+     * URL is used to postback metric results back to analyser.
+     */
+    @SerializedName("trial_result_url")
     private final String trialResultURL;
 
     public TrialInfo(String trialId,
@@ -41,5 +55,15 @@ public class TrialInfo {
 
     public String getTrialResultURL() {
         return trialResultURL;
+    }
+
+
+    @Override
+    public String toString() {
+        return "TrialInfo{" +
+                "trialId='" + trialId + '\'' +
+                ", trialNum=" + trialNum +
+                ", trialResultURL='" + trialResultURL + '\'' +
+                '}';
     }
 }

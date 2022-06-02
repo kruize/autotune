@@ -55,6 +55,14 @@ function check_running() {
 	echo
 }
 
+function check_kustomize() {
+	kubectl_tool=$(which kubectl)
+	check_err "Error: Please install the kubectl tool"
+	# Check to see if kubectl supports kustomize
+	kubectl --help | grep "kustomize" >/dev/null
+	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
+}
+
 # Check error code from last command, exit on error
 check_err() {
 	err=$?
