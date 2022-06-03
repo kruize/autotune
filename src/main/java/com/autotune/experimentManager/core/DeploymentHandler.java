@@ -35,6 +35,8 @@ public class DeploymentHandler {
     private final String nameSpace;
     private final String deploymentName;
     private final ContainerConfigData containerConfigData;
+    private KubernetesClient client;
+    private boolean alreadyDeployedJustRestart = false;
 
     public DeploymentHandler(String nameSpace, String deploymentName, ContainerConfigData containerConfigData) {
         this.nameSpace = nameSpace;
@@ -42,27 +44,79 @@ public class DeploymentHandler {
         this.containerConfigData = containerConfigData;
     }
 
-    public void startDeploying() {
-        LOGGER.debug("START DEPLOYING");
+    public KubernetesClient getKubernetesClient() {
+        if (null == client) {
+            this.client = new DefaultKubernetesClient();
+        }
+        return this.client;
+    }
+
+    public Deployment getModifiedDeployment() {
+        Deployment defaultDeployment = null;
         try {
-            KubernetesClient client = new DefaultKubernetesClient();
-            Deployment defaultDeployment = client.apps().deployments().inNamespace(this.nameSpace).withName(this.deploymentName).get();
-            List<Container> deployedContainers = defaultDeployment.getSpec().getTemplate().getSpec().getContainers();
-            for (Container deployedAppContainer : deployedContainers) {
-                ResourceRequirements resourcesRequirement = deployedAppContainer.getResources();
-                resourcesRequirement.setRequests(this.containerConfigData.getRequestPropertiesMap());
-                resourcesRequirement.setLimits(this.containerConfigData.getLimitPropertiesMap());
-                deployedAppContainer.setResources(resourcesRequirement);
-                deployedAppContainer.setEnv(this.containerConfigData.getEnvList());
-            }
-            //defaultDeployment.getSpec().getTemplate().getSpec().setContainers(deployedContainers);
-            //Check here if deployment type is rolling-update   .withName(this.deploymentName)
-            Deployment t = client.apps().deployments().inNamespace(this.nameSpace).createOrReplace(defaultDeployment);
+            defaultDeployment = getKubernetesClient()
+                    .apps()
+                    .deployments()
+                    .inNamespace(this.nameSpace)
+                    .withName(this.deploymentName)
+                    .get();
+            defaultDeployment
+                    .getSpec()
+                    .getTemplate()
+                    .getSpec()
+                    .getContainers()
+                    .forEach(
+                            (deployedAppContainer) -> {
+                                ResourceRequirements resourcesRequirement = deployedAppContainer.getResources();
+                                resourcesRequirement.setRequests(this.containerConfigData.getRequestPropertiesMap());
+                                resourcesRequirement.setLimits(this.containerConfigData.getLimitPropertiesMap());
+                                deployedAppContainer.setResources(resourcesRequirement);
+                                deployedAppContainer.setEnv(this.containerConfigData.getEnvList());
+                            }
+                    );
         } catch (Exception e) {
             LOGGER.error(e.toString());
-            LOGGER.error(e.getMessage(),e.getStackTrace().toString());
+            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
+            e.printStackTrace();
+        }
+        return defaultDeployment;
+    }
+
+    public void initiateDeploy() {
+        LOGGER.debug("START DEPLOYING");
+        try {
+            if (!this.alreadyDeployedJustRestart) {
+                //Check here if deployment type is rolling-update   .withName(this.deploymentName)
+                getKubernetesClient()
+                        .apps()
+                        .deployments()
+                        .inNamespace(this.nameSpace)
+                        .withName(this.deploymentName)
+                        .createOrReplace(this.getModifiedDeployment());
+                this.alreadyDeployedJustRestart = true;
+            } else {
+                this.rolloutRestartDeployment();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.toString());
+            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
             e.printStackTrace();
         }
         LOGGER.debug("END DEPLOYING");
+    }
+
+    public void rolloutRestartDeployment() {
+        LOGGER.debug("rolloutRestartDeployment");
+        try {
+            getKubernetesClient()
+                    .apps()
+                    .deployments()
+                    .inNamespace(this.nameSpace)
+                    .withName(this.deploymentName)
+                    .rolling()
+                    .restart();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
+        }
     }
 }

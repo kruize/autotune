@@ -39,18 +39,24 @@ public class ContainerLayer extends GenericLayer implements Layer {
     @Override
     public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
         String tunableName = tunable.getName();
-        Map<String, Quantity> requestPropertiesMap = new HashMap<String, Quantity>();
+
+        Map<String, Quantity> requestPropertiesMap = containerConfigData.getRequestPropertiesMap();
+        if (null == requestPropertiesMap) {
+            requestPropertiesMap = new HashMap<>();
+        }
         switch (tunableName) {
             case CPU_REQUEST:
                 String cpu = tunableJSON.getDouble(TUNABLE_VALUE) +
                         tunable.getBoundUnits();
                 LOGGER.debug("CPU Request: " + cpu);
                 requestPropertiesMap.put(AutotuneConstants.JSONKeys.CPU, new Quantity(cpu));
+                break;
             case MEM_REQUEST:
                 String memory = tunableJSON.getDouble(TUNABLE_VALUE) +
                         tunable.getBoundUnits();
                 LOGGER.debug("Mem Request: " + memory);
                 requestPropertiesMap.put(AutotuneConstants.JSONKeys.MEMORY, new Quantity(memory));
+                break;
         }
         containerConfigData.setRequestPropertiesMap(requestPropertiesMap);
         containerConfigData.setLimitPropertiesMap(requestPropertiesMap);

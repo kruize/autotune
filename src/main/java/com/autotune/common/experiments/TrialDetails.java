@@ -87,6 +87,14 @@ public class TrialDetails {
         this.podContainers = podContainers;
     }
 
+    public TrialDetails(String deploymentType, String deploymentName, String deploymentNameSpace, HashMap<String, Metric> podMetrics, HashMap<String, PodContainer> podContainers) {
+        this.deploymentType = deploymentType;
+        this.deploymentName = deploymentName;
+        this.deploymentNameSpace = deploymentNameSpace;
+        this.podMetrics = podMetrics;
+        this.podContainers = podContainers;
+    }
+
     public String getDeploymentType() {
         return deploymentType;
     }
