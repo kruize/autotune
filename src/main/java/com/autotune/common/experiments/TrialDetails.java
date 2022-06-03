@@ -42,12 +42,6 @@ public class TrialDetails {
      */
     @SerializedName("type")
     private final String deploymentType;
-    private String state;
-    private String result;
-    private String resultInfo;
-    private String resultError;
-    private Timestamp startTime;
-    private Timestamp endTime;
     // Hashmap of metrics associated with the Pod
     // Uses metric name as key
     @SerializedName("pod_metrics")
@@ -56,28 +50,13 @@ public class TrialDetails {
     // Uses stack name (docker image name) as key
     @SerializedName("containers")
     private final HashMap<String, PodContainer> podContainers;
-
+    private String state;
+    private String result;
+    private String resultInfo;
+    private String resultError;
+    private Timestamp startTime;
+    private Timestamp endTime;
     /**
-     * @param deploymentType
-     * @param deploymentName
-     * @param deploymentNameSpace
-     * @param podMetrics
-     * @param podContainers
-     */
-    public TrialDetails(String deploymentType,
-                        String deploymentName,
-                        String deploymentNameSpace,
-                        HashMap<String, Metric> podMetrics,
-                        HashMap<String, PodContainer> podContainers) {
-        this.deploymentType = deploymentType;
-        this.deploymentName = deploymentName;
-        this.deploymentNameSpace = deploymentNameSpace;
-        this.podMetrics = podMetrics;
-        this.podContainers = podContainers;
-    }
-
-    /**
-     *
      * @param deploymentType
      * @param deploymentName
      * @param deploymentNameSpace
@@ -108,6 +87,13 @@ public class TrialDetails {
         this.podContainers = podContainers;
     }
 
+    public TrialDetails(String deploymentType, String deploymentName, String deploymentNameSpace, HashMap<String, Metric> podMetrics, HashMap<String, PodContainer> podContainers) {
+        this.deploymentType = deploymentType;
+        this.deploymentName = deploymentName;
+        this.deploymentNameSpace = deploymentNameSpace;
+        this.podMetrics = podMetrics;
+        this.podContainers = podContainers;
+    }
 
     public String getDeploymentType() {
         return deploymentType;

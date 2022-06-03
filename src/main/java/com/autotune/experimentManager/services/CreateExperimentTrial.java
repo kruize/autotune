@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.experimentManager.services;
 
 import com.autotune.common.experiments.ExperimentTrial;
@@ -30,7 +29,8 @@ import java.util.stream.Collectors;
 
 
 /**
- * RestAPI Servlet used to load experiment trial in JSON format using POST.
+ * RestAPI Servlet used to load experiment trial in JSON format using POST method.
+ * JSON format sample can be found here autotune/examples/createExperimentTrial.json
  */
 public class CreateExperimentTrial extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
@@ -39,7 +39,7 @@ public class CreateExperimentTrial extends HttpServlet {
     /**
      * This API supports POST methode which is used to initiate experimental trials.
      * Input payload should be in the format of JSON. Please refer documentation for more details.
-     * /experimentTrialRESTAPIHandler is API endpoint,
+     * /createExperimentTrial is API endpoint,
      * HTTP STATUS CODE - 201 is returned if experiment loaded successfully.
      * HTTP STATUS CODE - 500 is returned for any error.
      *
@@ -56,7 +56,7 @@ public class CreateExperimentTrial extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial experimentTrial = gson.fromJson(inputData, ExperimentTrial.class);
             LOGGER.debug(experimentTrial.toString());
-            new ExperimentTrialHandler(experimentTrial).startExperimentTrials();     // Call this in thread to make it asynchronous
+            new ExperimentTrialHandler(experimentTrial).startExperimentTrials();  // Call this on thread to make it asynchronous
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (Exception e) {
             LOGGER.error("{}", e);

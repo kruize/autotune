@@ -43,21 +43,21 @@ public class PodContainer {
     /**
      * Example
      * "container_metrics": {
-     * "MaxInlineLevel": {
-     * "datasource": "prometheus",
-     * "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-     * "name": "MaxInlineLevel"
-     * },
-     * "memoryRequest": {
-     * "datasource": "prometheus",
-     * "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-     * "name": "memoryRequest"
-     * },
-     * "cpuRequest": {
-     * "datasource": "prometheus",
-     * "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
-     * "name": "cpuRequest"
-     * }
+     *          "MaxInlineLevel": {
+     *                      "datasource": "prometheus",
+     *                      "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+     *                      "name": "MaxInlineLevel"
+     *          },
+     *          "memoryRequest": {
+     *                      "datasource": "prometheus",
+     *                      "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+     *                      "name": "memoryRequest"
+     *          },
+     *          "cpuRequest": {
+     *                      "datasource": "prometheus",
+     *                      "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+     *                      "name": "cpuRequest"
+     *          }
      * }
      */
     @SerializedName("container_metrics")
@@ -65,12 +65,27 @@ public class PodContainer {
     // Hashmap of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
     // Key will be trialNumber
     /**
-     * Hashmap contains list of instructions for containers to update runtime Environment, Resources like Cpu or Memory etc.
-     * Key is TrialNumber .
+     * Example:
+     * "0123": {
+     *          "update env": {
+     *              "JAVA_OPTIONS": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=23 -XX:+UseG1GC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=78 -Dquarkus.thread-pool.core-threads=2",
+     *              "JDK_JAVA_OPTIONS": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=23 -XX:+UseG1GC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=78 -Dquarkus.thread-pool.core-threads=2"
+     *          },
+     *          "update requests and limits": {
+     *              "requests": {
+     *              "memory": 229,
+     *              "cpu": "1.39"
+     *          },
+     *          "limits": {
+     *              "memory": 229,
+     *              "cpu": "1.39"
+     *          }
+     *      }
+     * }
      */
     @SerializedName("config")
     private HashMap<String, ContainerConfigData> trialConfigs;
-
+    
     public PodContainer(String stackName, String containerName) {
         this.stackName = stackName;
         this.containerName = containerName;

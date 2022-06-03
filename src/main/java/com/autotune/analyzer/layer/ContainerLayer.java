@@ -40,8 +40,8 @@ public class ContainerLayer extends GenericLayer implements Layer {
     public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
         String tunableName = tunable.getName();
 
-        Map<String, Quantity> requestPropertiesMap =  containerConfigData.getRequestPropertiesMap();
-        if(null == requestPropertiesMap){
+        Map<String, Quantity> requestPropertiesMap = containerConfigData.getRequestPropertiesMap();
+        if (null == requestPropertiesMap) {
             requestPropertiesMap = new HashMap<>();
         }
         switch (tunableName) {

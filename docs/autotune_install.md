@@ -1,4 +1,4 @@
-# Autotune Installation
+# Kruize Autotune Installation
 
 - [Clone Repositories](#Clone-Repositories)
 - [Install the required software](#Install-the-required-software)
@@ -128,4 +128,4 @@ Info: Access Autotune at http://192.168.39.12:30113/listAutotuneTunables
 
 # Demo
 
-Please see the [demo](https://github.com/kruize/autotune-demo) repo for more details on how to use Autotune.
+Please see the [demo](https://github.com/kruize/kruize-demos) repo for more details on how to use Autotune.

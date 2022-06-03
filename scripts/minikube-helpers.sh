@@ -102,6 +102,7 @@ function check_prometheus_installation() {
 	echo
 	echo "Info: Checking pre requisites for minikube..."
 	check_kustomize
+
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
 	if [ "${prometheus_pod_running}" == "" ]; then
