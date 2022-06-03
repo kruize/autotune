@@ -52,11 +52,9 @@ public class ExperimentTrialHandler {
                     new DeploymentHandler(trialDetails.getDeploymentNameSpace(), trialDetails.getDeploymentName(), containerConfigData).startDeploying();
                     //check load handler
                     //Collect Metrics
-
                 });
             });
         });
         //Accumulate and Mertics
     }
-
 }

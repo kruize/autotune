@@ -28,11 +28,7 @@ tag="v0.8.0"
 function install_prometheus() {
 	echo
 	echo "Info: Checking pre requisites for prometheus..."
-	kubectl_tool=$(which kubectl)
-	check_err "Error: Please install the kubectl tool"
-
-	kubectl --help | grep "kustomize" >/dev/null
-	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
+	check_kustomize
 
 	prometheus_ns="monitoring"
 	kubectl_cmd="kubectl -n ${prometheus_ns}"

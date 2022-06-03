@@ -58,7 +58,7 @@ public class DeploymentHandler {
             //defaultDeployment.getSpec().getTemplate().getSpec().setContainers(deployedContainers);
             //Check here if deployment type is rolling-update   .withName(this.deploymentName)
             Deployment t = client.apps().deployments().inNamespace(this.nameSpace).createOrReplace(defaultDeployment);
-        }catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error(e.toString());
             LOGGER.error(e.getMessage(),e.getStackTrace().toString());
             e.printStackTrace();

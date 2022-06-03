@@ -25,27 +25,40 @@ import java.util.UUID;
 
 public class EMUtil {
     /**
-    * EMExpStages is a collection of all stages that an experiment trial goes through to complete its lifecycle.
-    *
-    * Each trial starts at INIT stage and ends at EXIT stage
-    *
-    * Each subsequent stage between INIT and EXIT represent a particular portion of trial lifecycle as described below
-    *
-    * CREATE_CONFIG:
-    *   Description: Stage in EM Trial Lifecycle where the configuration for a particular trial is being created
-    *   Predecessor Stage: INIT
-    *   Successor Stage: DEPLOY_CONFIG
-    *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
-    *
-    * DEPLOY_CONFIG:
-    *   Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
-    *   Predecessor Stage: CREATE_CONFIG
-    *   Successor Stage: INITIATE_TRAIL_RUN_PHASE
-    *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
-    *
-    * Details of respective stages will be added once they are implemented
-    *
-    */
+     * Utility to return a Unique ID
+     */
+    public static String createUUID() {
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Returns the NSD (NameSpace and Deployment) key by concating two strings
+     * `namespace` and `deploymentName` with a colon `:`
+     */
+    public static String formatNSDKey(String namespace, String deploymentName) {
+        return (new StringBuilder())
+                .append(namespace)
+                .append(":")
+                .append(deploymentName)
+                .toString();
+    }
+
+    /**
+     * EMExpStages is a collection of all stages that an experiment trial goes through to complete its lifecycle.
+     * Each trial starts at INIT stage and ends at EXIT stage
+     * Each subsequent stage between INIT and EXIT represent a particular portion of trial lifecycle as described below
+     * CREATE_CONFIG:
+     * Description: Stage in EM Trial Lifecycle where the configuration for a particular trial is being created
+     * Predecessor Stage: INIT
+     * Successor Stage: DEPLOY_CONFIG
+     * Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
+     * DEPLOY_CONFIG:
+     * Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
+     * Predecessor Stage: CREATE_CONFIG
+     * Successor Stage: INITIATE_TRIAL_RUN_PHASE
+     * Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
+     * Details of respective stages will be added once they are implemented
+     */
     public enum EMExpStages {
         /**
          * Initial stage
@@ -53,21 +66,20 @@ public class EMUtil {
         INIT(0, 1, false, null),
         /**
          * CREATE_CONFIG:
-         *   Description: Stage in EM Trial Lifecycle where the configuration for a particular trial is being created
-         *   Predecessor Stage: INIT
-         *   Successor Stage: DEPLOY_CONFIG
-         *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
+         * Description: Stage in EM Trial Lifecycle where the configuration for a particular trial is being created
+         * Predecessor Stage: INIT
+         * Successor Stage: DEPLOY_CONFIG
+         * Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
          */
         CREATE_CONFIG(1, 1, false, EMConstants.TransitionClasses.CREATE_CONFIG),
         /**
          * DEPLOY_CONFIG:
-         *   Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
-         *   Predecessor Stage: CREATE_CONFIG
-         *   Successor Stage: INITIATE_TRAIL_RUN_PHASE
-         *   Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
+         * Description: Stage in EM Trial Lifecycle where the created configuration for a trial is deployed in the node
+         * Predecessor Stage: CREATE_CONFIG
+         * Successor Stage: INITIATE_TRIAL_RUN_PHASE
+         * Stage Type: Regular (Regular stages will be processed instantly by EM without any wait)
          */
-        DEPLOY_CONFIG(2, 1, false, EMConstants.TransitionClasses.DEPLOY_CONFIG),
-        INITIATE_TRAIL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRAIL_RUN_PHASE),
+        DEPLOY_CONFIG(2, 1, false, EMConstants.TransitionClasses.DEPLOY_CONFIG), INITIATE_TRIAL_RUN_PHASE(3, 1, false, EMConstants.TransitionClasses.INITIATE_TRIAL_RUN_PHASE),
         INITIAL_LOAD_CHECK(3, 2, true, EMConstants.TransitionClasses.INITIAL_LOAD_CHECK),
         LOAD_CONSISTENCY_CHECK(3, 3, true, EMConstants.TransitionClasses.LOAD_CONSISTENCY_CHECK),
         INITIATE_METRICS_COLLECTION_PHASE(4, 1, false, EMConstants.TransitionClasses.INITIATE_METRICS_COLLECTION_PHASE),
@@ -78,20 +90,27 @@ public class EMUtil {
         /**
          * Final or exiting stage
          */
-        EXIT(7, 1, false, null)
-        ;
+        EXIT(7, 1, false, null);
 
-        private int stage;
-        private int intermediate_stage;
-        private boolean isScheduled;
-        private String className;
-        private static final EMExpStages values[] = values();
+        private static final EMExpStages[] values = values();
+        private final int stage;
+        private final int intermediate_stage;
+        private final boolean isScheduled;
+        private final String className;
 
-        private EMExpStages(final int stage, final int intermediate_stage, final boolean isScheduled, final String className) {
+        EMExpStages(final int stage, final int intermediate_stage, final boolean isScheduled, final String className) {
             this.stage = stage;
             this.intermediate_stage = intermediate_stage;
             this.isScheduled = isScheduled;
             this.className = className;
+        }
+
+        public static EMExpStages get(int ordinal) {
+            return values[ordinal];
+        }
+
+        public static int getSize() {
+            return values().length;
         }
 
         /**
@@ -122,22 +141,15 @@ public class EMUtil {
             return className;
         }
 
-        public static EMExpStages get(int ordinal) { return values[ordinal]; }
-
-        public static int getSize() {
-            return values().length;
-        }
-
     }
 
     /**
-    * Statuses are the informative responses to the user at a high level about the life cycle of a trial
-    *
-    * If a trial is just created the status would be `CREATED`
-    * If a trial is waiting for load or any other param to start or continue the status would be `WAIT`
-    * If a trial is undergoing the metric collection or getting run to collect metrics the status would be `IN_PROGRESS`
-    * If a trial has completed its iterations and sent metrics to USER and exited the status would be `COMPLETED`
-    */
+     * Statuses are the informative responses to the user at a high level about the life cycle of a trial
+     * If a trial is just created the status would be `CREATED`
+     * If a trial is waiting for load or any other param to start or continue the status would be `WAIT`
+     * If a trial is undergoing the metric collection or getting run to collect metrics the status would be `IN_PROGRESS`
+     * If a trial has completed its iterations and sent metrics to USER and exited the status would be `COMPLETED`
+     */
     public enum EMExpStatus {
         CREATED,
         WAIT,
@@ -146,30 +158,5 @@ public class EMUtil {
         APPLYING_LOAD,
         COLLECTING_METRICS,
         COMPLETED
-    }
-
-    /**
-     * Utility to return a Unique ID
-     */
-    public static String createUUID() {
-        return UUID.randomUUID().toString();
-    }
-
-    /**
-     * Returns the NSD (NameSpace and Deployment) key by concating two strings
-     * `namespace` and `deploymentName` with a colon `:`
-     */
-    public static String formatNSDKey(String namespace, String deploymentName) {
-        return (new StringBuilder())
-                .append(namespace)
-                .append(":")
-                .append(deploymentName)
-                .toString();
-    }
-
-    public JSONObject generateMetricsMap(ExperimentTrialData etd) {
-        ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
-
-        return null;
     }
 }

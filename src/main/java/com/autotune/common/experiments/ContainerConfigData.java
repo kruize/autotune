@@ -32,17 +32,17 @@ public class ContainerConfigData {
     // Hashmap of Container request for resource quantity like cpu memory
     // Key will be requests
     /** Example
-     * "requests": {
-     * "cpu": {
-     * "amount": "2.11",
-     * "format": "",
-     * "additionalProperties": {}
-     * },
-     * "memory": {
-     * "amount": "160.0",
-     * "format": "",
-     * "additionalProperties": {}
-     * }
+	 *	"requests": {
+	 *	 	"cpu": {
+	 *		 	"amount": "2.11",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		},
+	 *		"memory": {
+	 *		 	"amount": "160.0",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		}
      * }
      */
     @SerializedName("requests")
@@ -52,16 +52,16 @@ public class ContainerConfigData {
     /**
      * Example
      * "limits": {
-     * "cpu": {
-     * "amount": "2.11",
-     * "format": "",
-     * "additionalProperties": {}
-     * },
-     * "memory": {
-     * "amount": "160.0",
-     * "format": "",
-     * "additionalProperties": {}
-     * }
+	 *		 "cpu": {
+	 *		 	"amount": "2.11",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		 },
+	 *		 "memory": {
+	 *		 	"amount": "160.0",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		 }
      * }
      */
     @SerializedName("limits")
@@ -70,16 +70,16 @@ public class ContainerConfigData {
     /**
      * Example
      * "env": [
-     * {
-     * "name": "JAVA_OPTIONS",
-     * "additionalProperties": {},
-     * "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-     * },
-     * {
-     * "name": "JDK_JAVA_OPTIONS",
-     * "additionalProperties": {},
-     * "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-     * }
+     *      {
+     *          "name": "JAVA_OPTIONS",
+     *          "additionalProperties": {},
+     *          "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+     *      },
+     *      {
+     *          "name": "JDK_JAVA_OPTIONS",
+     *          "additionalProperties": {},
+     *          "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+     *      }
      * ]
      */
     @SerializedName("env")

@@ -37,6 +37,18 @@ public class ExperimentTrial {
     // HashMap of parallel trials being monitored for this trial
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
+    /**
+     * Example
+     * "deployments": {
+     *      "training": {
+     *                      "pod_metrics": {...},
+     *                      "deployment_name": "tfb-qrh-sample",
+     *                      "namespace": "default",
+     *                      "containers": {...},
+     *                      "type": "training"
+     *      }
+     * }
+     */
     @SerializedName("deployments")
     private final HashMap<String, TrialDetails> trialDetails;
 
@@ -55,7 +67,6 @@ public class ExperimentTrial {
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
     }
-
 
     public String getExperimentId() {
         return experimentId;
