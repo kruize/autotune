@@ -41,13 +41,18 @@ public class QuarkusLayer extends GenericLayer implements Layer {
 		LOGGER.debug(tunableJSON.toString());
 		StringBuilder runtimeOptions = new StringBuilder();
 		ArrayList<EnvVar> environmentalAmendList = (ArrayList<EnvVar>) containerConfigData.getEnvList();
+		String tunableName = tunable.getName();
+		if (tunableName.contains("quarkus")) {
+			tunableName = "-D" + tunableName;
+		}
 		if( environmentalAmendList.size() == 0) {
-			runtimeOptions.append(tunable.getName()).append(EQUALS).append(tunableJSON.get("tunable_value") ).append(" ");
+			runtimeOptions.append(tunableName).append(EQUALS).append(tunableJSON.get("tunable_value") ).append(" ");
 			environmentalAmendList.add(new EnvVar(JAVA_OPTIONS, runtimeOptions.toString(), null));
 		}else {
+			String finalTunableName = tunableName;
 			environmentalAmendList.forEach((envVir) -> {
 				if (envVir.getName().equalsIgnoreCase(JAVA_OPTIONS)) {
-					runtimeOptions.append(envVir.getValue()).append(tunable.getName()).append(EQUALS).append(tunableJSON.get("tunable_value") ).append(" ");
+					runtimeOptions.append(envVir.getValue()).append(finalTunableName).append(EQUALS).append(tunableJSON.get("tunable_value") ).append(" ");
 					envVir.setValue(runtimeOptions.toString());
 				}
 			});

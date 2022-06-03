@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 /**
  * Service class helper used to control and execute Lifecycle of Experiments using trial numbers.
@@ -46,17 +47,25 @@ public class ExperimentTrialHandler {
 
     public void startExperimentTrials() {
         LOGGER.debug("Start Exp Trial");
+        int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
         this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
             trialDetails.getPodContainers().forEach((imageName, podContainer) -> {
                 podContainer.getTrialConfigs().forEach((trialNumber, containerConfigData) -> {
-                    new DeploymentHandler(trialDetails.getDeploymentNameSpace(), trialDetails.getDeploymentName(), containerConfigData).startDeploying();
-                    //check load handler
-                    //Collect Metrics
-
+                    DeploymentHandler deploymentHandler = new DeploymentHandler(
+                            trialDetails.getDeploymentNameSpace(),
+                            trialDetails.getDeploymentName(),
+                            containerConfigData);
+                    IntStream.rangeClosed(1, numberOFIterations).forEach(
+                            i -> {
+                                deploymentHandler.initiateDeploy();
+                                //check if load applied to deployment
+                                //collect warmup and measurement cycles metrics
+                            }
+                    );
                 });
             });
         });
-        //Accumulate and Mertics
+        //Accumulate and send metrics
     }
 
 }
