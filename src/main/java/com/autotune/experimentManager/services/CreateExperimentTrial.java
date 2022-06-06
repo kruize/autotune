@@ -56,10 +56,21 @@ public class CreateExperimentTrial extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial experimentTrial = gson.fromJson(inputData, ExperimentTrial.class);
             LOGGER.debug(experimentTrial.toString());
-            new ExperimentTrialHandler(experimentTrial).startExperimentTrials();  // Call this on thread to make it asynchronous
+            // check if exp name avaiable in servlet context
+            // if yes return status 200
+            // if no store in servlet context
+            new Thread() {
+                @Override
+                public void run() {
+                    new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
+                }
+            }.start();
+            // Call this on thread to make it asynchronous
             response.setStatus(HttpServletResponse.SC_CREATED);
+            LOGGER.debug("Experiment Trail No : " + experimentTrial.getTrialInfo().getTrialNum() + "Started Processing");
         } catch (Exception e) {
-            LOGGER.error("{}", e);
+            LOGGER.error(e.toString());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
