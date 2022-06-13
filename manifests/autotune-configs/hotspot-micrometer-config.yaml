@@ -40,7 +40,7 @@ tunables:
   - throughput
 
 # Enable zGC if Java >=17
-- name: GCPolicy
+- name: gc
   description: 'Garbage collection policy'
   value_type: categorical
   choices:
@@ -98,9 +98,10 @@ tunables:
   - throughput
   - resource_usage
 
-# ConcGCThreads dependent on ParallelGCThreads. JVM exits if ParallelGCThreads < ConcGCThreads
+# ConcGCThreads dependent on ParallelGCThreads. JVM exits if ParallelGCThreads < ConcGCThreads.
+# Upper bound is based on cpus and ParallelGCThreads.
 - name: ConcGCThreads
-  description: 'Number of threads concurrent gc will use.'
+  description: 'Number of threads concurrent gc will use. Default is 0'
   value_type: integer
   upper_bound: '8'
   lower_bound: '0'
@@ -115,7 +116,7 @@ tunables:
   value_type: integer
   upper_bound: '5000'
   lower_bound: '500'
-  step: 1
+  step: 5
   slo_class:
   - response_time
   - throughput
@@ -190,6 +191,30 @@ tunables:
   value_type: integer
   upper_bound: '100'
   lower_bound: '20'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
+# Recommended value for OpenJDK containers is 4.
+- name: GCTimeRatio
+  description: 'Adaptive size policy application time to GC time ratio. Default is 99'
+  value_type: integer
+  upper_bound: '100'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
+# Recommended value for OpenJDK containers is 90.
+- name: AdaptiveSizePolicyWeight
+  description: 'Weight given to exponential resizing, between 0 and 100. Default is 10'
+  value_type: integer
+  upper_bound: '100'
+  lower_bound: '1'
   step: 1
   slo_class:
   - response_time
