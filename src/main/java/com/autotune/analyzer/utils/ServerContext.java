@@ -24,6 +24,7 @@ public class ServerContext
 	public static final int AUTOTUNE_PORT = 8080;
 
 	public static final String ROOT_CONTEXT = "/";
+	public static final String UI_CONTEXT = ROOT_CONTEXT + "ui/";
 	public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
 	public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
 	public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
@@ -33,4 +34,6 @@ public class ServerContext
 	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
 	public static final String CREATE_EXPERIMENT_TRIAL = ServerContext.ROOT_CONTEXT + "createExperimentTrial";
 	public static final String LIST_TRIAL_STATUS = ServerContext.ROOT_CONTEXT + "listTrialStatus";
+	public static final String GET_NAMESPACES = ServerContext.UI_CONTEXT + "getNamespaces";
+	public static final String GET_DEPLOYMENTS = ServerContext.UI_CONTEXT + "getDeployments";
 }

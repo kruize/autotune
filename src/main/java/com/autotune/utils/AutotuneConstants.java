@@ -31,4 +31,26 @@ public class AutotuneConstants {
         public static final String EM_ONLY_MODE = "EM_ONLY";
     }
 
+    public static class UISMConstants {
+        private UISMConstants() { }
+        public static class UISMJsonKeys {
+            private UISMJsonKeys() { }
+            public static final String UISM_VERSION = "uism_version";
+            public static final String NAMESPACES = "namespaces";
+            public static final String DATA = "data";
+            public static final String STATUS = "status";
+        }
+
+        public static class UISMDefaults {
+            private UISMDefaults() { }
+            public static final String UISM_VERSION = "v0.1";
+        }
+
+        public static class UISMStandard {
+            private UISMStandard() { }
+            public static final String SUCCESS_STATUS = "success";
+            public static final String FAILURE_STATUS = "failure";
+        }
+    }
+
 }
