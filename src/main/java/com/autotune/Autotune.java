@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune;
 
+import com.autotune.UserInterfaceSupport.UISM;
 import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.utils.ServerContext;
 import com.autotune.experimentManager.ExperimentManager;
@@ -44,7 +45,6 @@ public class Autotune
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		server.setHandler(context);
 		addAutotuneServlets(context);
-
 		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
 
 		if (null != autotuneMode) {
@@ -86,5 +86,6 @@ public class Autotune
 	private static void startAutotuneNormalMode(ServletContextHandler contextHandler) {
 		Analyzer.start(contextHandler);
 		ExperimentManager.start(contextHandler);
+		UISM.start(contextHandler);
 	}
 }

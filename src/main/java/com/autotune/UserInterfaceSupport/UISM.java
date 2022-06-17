@@ -28,6 +28,7 @@ public class UISM {
 
     private static void initializeUISM() {
         // Need to implement any functionality required at the time of UISM initialization
+        System.out.println("In Initialisation module");
     }
 
 

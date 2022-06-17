@@ -60,6 +60,8 @@ public class GetNamespaces extends HttpServlet {
                     AutotuneConstants.UISMConstants.UISMJsonKeys.DATA,
                     dataJson
             );
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().println(returnJson.toString(4));
         } catch (Exception e) {
