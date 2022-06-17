@@ -19,6 +19,7 @@ rules:
   - endpoints
   - persistentvolumeclaims
   - events
+  - namespaces
   verbs:
   - '*'
 - apiGroups:
