@@ -37,6 +37,8 @@ public class AutotuneConstants {
             private UISMJsonKeys() { }
             public static final String UISM_VERSION = "uism_version";
             public static final String NAMESPACES = "namespaces";
+            public static final String NAMESPACE = "namespace";
+            public static final String DEPLOYMENTS = "deployments";
             public static final String DATA = "data";
             public static final String STATUS = "status";
         }

@@ -1,5 +1,6 @@
 package com.autotune.UserInterfaceSupport;
 
+import com.autotune.UserInterfaceSupport.services.GetDeployments;
 import com.autotune.UserInterfaceSupport.services.GetNamespaces;
 import com.autotune.experimentManager.services.CreateExperimentTrial;
 import com.autotune.experimentManager.services.ListTrialStatus;
@@ -53,5 +54,6 @@ public class UISM {
 
     private static void addUISMServlets(ServletContextHandler context) {
         context.addServlet(GetNamespaces.class,GET_NAMESPACES);
+        context.addServlet(GetDeployments.class, GET_DEPLOYMENTS);
     }
 }
