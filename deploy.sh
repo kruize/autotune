@@ -42,8 +42,8 @@ AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # source all the helpers scripts
-. ${SCRIPTS_DIR}/minikube-helpers.sh
-. ${SCRIPTS_DIR}/common_utils.sh
+. "${SCRIPTS_DIR}"/minikube-helpers.sh
+. "${SCRIPTS_DIR}"/common_utils.sh
 
 # Defaults for the script
 # minikube is the default cluster type
