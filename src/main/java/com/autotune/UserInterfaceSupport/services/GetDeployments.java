@@ -38,8 +38,13 @@ public class GetDeployments extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+        response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+        response.addHeader("Access-Control-Max-Age", "1728000");
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
+            System.out.println("Input Data : " + inputData);
             JSONObject inputJson = new JSONObject(inputData);
             if (!inputJson.has(AutotuneConstants.UISMConstants.UISMJsonKeys.NAMESPACE)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
