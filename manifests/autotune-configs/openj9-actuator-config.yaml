@@ -1,0 +1,53 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "openj9"
+layer_name: openj9
+layer_level: 1
+details: openj9 tunables
+layer_presence:
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"nursery-.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"tenured-.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"tenured"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"balanced.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"JavaHeap"}'
+    key: pod
+
+tunables:
+- name: MaxInlineLevel
+  description: 'maximum number of nested calls that are inlined. Default is 9'
+  value_type: integer
+  upper_bound: '50'
+  lower_bound: '9'
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+
+- name: gc
+  description: 'Garbage collection policy'
+  value_type: categorical
+  choices:
+    - gencon
+    - balanced
+    - optavgpause
+    - optthruput
+    - metronome
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
