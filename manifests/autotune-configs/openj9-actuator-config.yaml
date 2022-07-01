@@ -24,30 +24,55 @@ layer_presence:
     key: pod
 
 tunables:
-- name: MaxInlineLevel
-  description: 'maximum number of nested calls that are inlined. Default is 9'
-  value_type: integer
-  upper_bound: '50'
-  lower_bound: '9'
-  queries:
-  - datasource: 'prometheus'
-    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
-  step: 1
-  slo_class:
-  - response_time
-  - throughput
-
 - name: gc
   description: 'Garbage collection policy'
   value_type: categorical
   choices:
-    - gencon
-    - balanced
-    - optavgpause
-    - optthruput
-    - metronome
+    - 'gencon'
+    - 'balanced'
+    - 'optavgpause'
+    - 'optthruput'
+    - 'metronome'
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
   slo_class:
     - response_time
     - throughput
     - resource_usage
+
+# Upper bound depends on cpu limits. Defaults to n-1 where n is no.of cpus
+- name: gcthreads
+  description: 'No.of threads gc uses for parallel operations'
+  value_type: integer
+  upper_bound: '4'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
+- name: virtualized
+  description: 'optimize virtual environments'
+  value_type: categorical
+  choices:
+    - 'true'
+    - 'false'
+  slo_class:
+    - response_time
+    - throughput
+    - resource_usage
+
+- name: AlwaysPreTouch
+  description: 'Force all freshly committed pages to be pre-touched. Default is false'
+  value_type: categorical
+  choices:
+    - 'true'
+    - 'false'
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
 

@@ -26,33 +26,33 @@ layer_presence:
     query: 'jvm_memory_used_bytes{area="heap",id=~"Old.+"}'
     key: pod
 tunables:
-- name: MaxInlineLevel
-  description: 'maximum number of nested calls that are inlined. Default is 9'
-  value_type: integer
-  upper_bound: '50'
-  lower_bound: '9'
-  queries:
-  - datasource: 'prometheus'
-    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
-  step: 1
-  slo_class:
-  - response_time
-  - throughput
-
 # Enable zGC if Java >=17
 - name: gc
   description: 'Garbage collection policy'
   value_type: categorical
   choices:
-    - G1GC
-    - ParallelGC
-    - SerialGC
-    - ShenandoahGC
-    - ZGC
+    - 'G1GC'
+    - 'ParallelGC'
+    - 'SerialGC'
+    - 'ShenandoahGC'
+    - 'ZGC'
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
   slo_class:
     - response_time
     - throughput
     - resource_usage
+
+- name: MaxInlineLevel
+  description: 'maximum number of nested calls that are inlined. Default is 9'
+  value_type: integer
+  upper_bound: '50'
+  lower_bound: '9'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
 
 - name: FreqInlineSize
   description: 'The maximum bytecode size of a frequent method to be inlined. Default is 325'
