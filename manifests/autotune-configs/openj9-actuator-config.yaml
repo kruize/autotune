@@ -53,17 +53,6 @@ tunables:
     - throughput
     - resource_usage
 
-- name: virtualized
-  description: 'optimize virtual environments'
-  value_type: categorical
-  choices:
-    - 'true'
-    - 'false'
-  slo_class:
-    - response_time
-    - throughput
-    - resource_usage
-
 - name: AlwaysPreTouch
   description: 'Force all freshly committed pages to be pre-touched. Default is false'
   value_type: categorical
@@ -74,5 +63,3 @@ tunables:
   - response_time
   - throughput
   - resource_usage
-
-
