@@ -458,3 +458,544 @@ Create experiment trials using input JSON provided by Analyser module.
 ```
 201
 ```
+
+
+### List Trial Status
+
+**Request**
+`GET /listTrialStatus` Gives the status of the Trial(s)
+
+
+`GET /listTrialStatus?exp_name=<experiment name>` Gives the Trial status of the trials in a particular experiment
+
+Example for `exp_name` set to `quarkus-resteasy-autotune-min-http-response-time-db`
+**Response**
+```
+[
+    {
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                {
+                    "name": "request_sum",
+                    "dataSource": "prometheus"
+                },
+                {
+                    "name": "request_count",
+                    "dataSource": "prometheus"
+                }
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "summary_results" : {
+                            "general_info": {
+                                "min": 1836408,
+                                "max": 19167073,
+                                "mean": 18765576
+                            }
+                        },
+                        "name": "memoryRequest"
+                    },
+                    {
+                        "summary_results": {
+                            "general_info": {
+                                "min": 0.01836408,
+                                "max": 0.019167073,
+                                "mean": 0.018765576
+                            }
+                        },
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 1,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }},
+        "status": "COMPLETED"
+    }
+]
+```
+
+`GET /listTrialStatus?exp_name=<experiment name>&status=<status>` Gives the Trial status of the trials in a particular experiment which matches the given status
+
+Example for `status` as `COMPLETED`
+
+
+**Response**
+
+```
+[
+    {
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                {
+                    "name": "request_sum",
+                    "dataSource": "prometheus"
+                },
+                {
+                    "name": "request_count",
+                    "dataSource": "prometheus"
+                }
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "summary_results" : {
+                            "general_info": {
+                                "min": 1536408,
+                                "max": 1767073,
+                                "mean": 16765576
+                            }
+                        },
+                        "name": "memoryRequest"
+                    },
+                    {
+                        "summary_results": {
+                            "general_info": {
+                                "min": 0.01536408,
+                                "max": 0.017167073,
+                                "mean": 0.016765576
+                            }
+                        },
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 1,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }},
+        "status": "COMPLETED"
+    },
+    {
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                {
+                    "name": "request_sum",
+                    "dataSource": "prometheus"
+                },
+                {
+                    "name": "request_count",
+                    "dataSource": "prometheus"
+                }
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "summary_results" : {
+                            "general_info": {
+                                "min": 1836408,
+                                "max": 19167073,
+                                "mean": 18765576
+                            }
+                        },
+                        "name": "memoryRequest"
+                    },
+                    {
+                        "summary_results": {
+                            "general_info": {
+                                "min": 0.01836408,
+                                "max": 0.019167073,
+                                "mean": 0.018765576
+                            }
+                        },
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 2,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }},
+        "status": "COMPLETED"
+    },
+]
+```
+
+`GET /listTrialStatus?exp_name=<experiment name>&verbose=<true/false>` Gives the Trial status of the trials in a particular experiment with detailed output of iterations and cycles and metrics collected at each phase. By default verbose is `false` and the api returns only summary if available
+
+Example for `verbose` is set to `true`
+
+
+**Response**
+
+
+```
+[
+    {
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "iteration_results": [
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.028764741,
+                                            "max": 0.028764741,
+                                            "mean": 0.028764741
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.02646923,
+                                            "max": 0.02646923,
+                                            "mean": 0.02646923
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.015272777,
+                                            "max": 0.03555568,
+                                            "mean": 0.025765896
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 1,
+                                "measurement_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.015272777,
+                                            "max": 0.03555568,
+                                            "mean": 0.025803935
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.014145565,
+                                            "max": 0.03555568,
+                                            "mean": 0.024007667
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.014145565,
+                                            "max": 0.039553355,
+                                            "mean": 0.024823695
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.20012215,
+                                            "max": 0.20012215,
+                                            "mean": 0.20012215
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.023426516,
+                                            "max": 0.023426516,
+                                            "mean": 0.023426516
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017135207,
+                                            "max": 0.023426516,
+                                            "mean": 0.020118417
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 2,
+                                "measurement_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017135207,
+                                            "max": 0.024063969,
+                                            "mean": 0.02155136
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017135207,
+                                            "max": 0.03490772,
+                                            "mean": 0.023852905
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.015921338,
+                                            "max": 0.03490772,
+                                            "mean": 0.023242423
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.20822306,
+                                            "max": 0.20822306,
+                                            "mean": 0.20822306
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.013513867,
+                                            "max": 0.013513867,
+                                            "mean": 0.013513867
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 3,
+                                "measurement_results": []
+                            }
+                        ],
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 2,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }},
+        "status": "COLLECTING_METRICS"
+    },
+    {
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "iteration_results": [
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {}
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.01836408,
+                                            "max": 0.019167073,
+                                            "mean": 0.018765576
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017719252,
+                                            "max": 0.02040143,
+                                            "mean": 0.018912958
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 1,
+                                "measurement_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.008669471,
+                                            "max": 0.02040143,
+                                            "mean": 0.017281653
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.008669471,
+                                            "max": 0.02040143,
+                                            "mean": 0.017522506
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.008669471,
+                                            "max": 0.026968002,
+                                            "mean": 0.018652223
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {}
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.018662803,
+                                            "max": 0.01922652,
+                                            "mean": 0.018944662
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017208576,
+                                            "max": 0.01922652,
+                                            "mean": 0.018489202
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 2,
+                                "measurement_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017208576,
+                                            "max": 0.01922652,
+                                            "mean": 0.01831504
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017208576,
+                                            "max": 0.01922652,
+                                            "mean": 0.018352233
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017208576,
+                                            "max": 0.019931443,
+                                            "mean": 0.018316248
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "warmup_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.018642442,
+                                            "max": 0.018642442,
+                                            "mean": 0.018642442
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.017879914,
+                                            "max": 0.029544305,
+                                            "mean": 0.022022223
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.013003985,
+                                            "max": 0.029544305,
+                                            "mean": 0.02083616
+                                        }
+                                    }
+                                ],
+                                "iteration_index": 3,
+                                "measurement_results": [
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.009872468,
+                                            "max": 0.029544305,
+                                            "mean": 0.019016853
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.009872468,
+                                            "max": 0.029544305,
+                                            "mean": 0.019888066
+                                        }
+                                    },
+                                    {
+                                        "summary": {"result_outcome": "SUCCESS"},
+                                        "general_info": {
+                                            "min": 0.008647251,
+                                            "max": 0.029544305,
+                                            "mean": 0.018989839
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 1,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }},
+        "status": "COMPLETED"
+    }
+]
+```
