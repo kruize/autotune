@@ -56,7 +56,7 @@ The experiment manager contains the following main building blocks:
 
 - ### Building blocks.
   - Dispatcher handler
-    - This block is used to accept input requests in the form of JSON format, which contains experimental tunables along with evaluation metrics queries. This handler is used with the Taskmanger handler to run multiple trials in parallel per deployment.
+    - This block is used to accept input requests in the form of JSON format, which contains experimental tunables along with evaluation metrics queries. This handler is used with the Taskmanager handler to run multiple trials in parallel per deployment.
   - TaskManger
     - This block is designed as an event-driven architecture where RestAPI will produce trials and store them in a queue. And there will be a scheduler running for every specific given delay to check if any messages are in queue and trigger the Iteration Manager if any new trials are found.
   - IterationManger
@@ -71,6 +71,10 @@ The experiment manager contains the following main building blocks:
     - A Summarizer is a sub-block for one of the steps in the Iteration Manager where it helps in summerizing metrics results to find Max, Min, Percentile, Average, Mean, etc.
 
 - ### Logical representation.
+
+<p align="center">
+  <img src="/design/images/EMLogical.png">
+</p>
 
 - ### Schema representation.
 
