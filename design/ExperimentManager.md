@@ -78,6 +78,10 @@ The experiment manager contains the following main building blocks:
 
 - ### Schema representation.
 
+<p align="center">
+  <img src="/design/images/EMSchema.png">
+</p>
+
 - ### Dispatcher flow.
 
 - ### TaskManger flow.
