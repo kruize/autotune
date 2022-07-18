@@ -57,16 +57,16 @@ The experiment manager contains the following main building blocks:
 - ### Building blocks.
   - Dispatcher handler
     - This block is used to accept input requests in the form of JSON format, which contains experimental tunables along with evaluation metrics queries. This handler is used with the Taskmanager handler to run multiple trials in parallel per deployment.
-  - TaskManger
+  - Task Manager
     - This block is designed as an event-driven architecture where RestAPI will produce trials and store them in a queue. And there will be a scheduler running for every specific given delay to check if any messages are in queue and trigger the Iteration Manager if any new trials are found.
-  - IterationManger
+  - Iteration Manager
     - This block is used to perform primary tasks such as
       Deploy and gather metrics for a specified number of iterations.
-      Following the completion, summarise the metrics results and send them to the recommendation manager or user. The Recommendation Manager further evaluates the metrics results and suggests more trials if needed.
+      Following the completion, summarise the metrics results and send them to the end user. The end user further evaluates the metrics results and suggests more trials if needed.
   - Target Handler
     - This block contributes to the provision of a wrapper API around the Kubernetes Java client for running experiment trials on the Kubernetes environment.
   - Datasource Handler
-    - These blocks help in the collection of metrics results using data sources like Promethus, Instana, Datadog etc.
+    - These blocks help in the collection of metrics results using data sources like Prometheus, Instana, Datadog etc.
   - Summarizer
     - A Summarizer is a sub-block for one of the steps in the Iteration Manager where it helps in summerizing metrics results to find Max, Min, Percentile, Average, Mean, etc.
 
@@ -80,7 +80,7 @@ The experiment manager contains the following main building blocks:
 
 - ### Dispatcher flow.
 
-- ### TaskManger flow.
+- ### TaskManager flow.
 
 - ### Target Handler flow.
 
