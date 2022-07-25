@@ -18,6 +18,8 @@
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.13</apachehttpclient-version>
+        <kubernetes-version>16.0.0</kubernetes-version>
+        <gson-version>2.9.0</gson-version>
     </properties>
     <dependencies>
         <dependency>
@@ -129,7 +131,13 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.9.0</version>
+            <version>${gson-version}</version>
+        </dependency>
+        <!-- Java Kubernetes client-->
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+            <version>${kubernetes-version}</version>
         </dependency>
     </dependencies>
     <build>
