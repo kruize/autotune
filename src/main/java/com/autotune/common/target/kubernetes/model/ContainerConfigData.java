@@ -16,9 +16,8 @@
 package com.autotune.common.target.kubernetes.model;
 
 import com.google.gson.annotations.SerializedName;
-import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.proto.V1;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.Quantity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,7 +83,7 @@ public class ContainerConfigData {
      * ]
      */
     @SerializedName("env")
-    private List<V1EnvVar> envList = new ArrayList<V1EnvVar>();
+    private List<EnvVar> envList = new ArrayList<EnvVar>();
 
     public ContainerConfigData() {
     }
@@ -105,11 +104,11 @@ public class ContainerConfigData {
         LimitPropertiesMap = limitPropertiesMap;
     }
 
-    public List<V1EnvVar> getEnvList() {
+    public List<EnvVar> getEnvList() {
         return envList;
     }
 
-    public void setEnvList(List<V1EnvVar> envList) {
+    public void setEnvList(List<EnvVar> envList) {
         this.envList = envList;
     }
 

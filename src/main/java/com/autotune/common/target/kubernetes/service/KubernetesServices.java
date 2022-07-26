@@ -16,8 +16,9 @@
 
 package com.autotune.common.target.kubernetes.service;
 
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1Namespace;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -27,13 +28,9 @@ import java.util.List;
  * with Kubernetes cluster.
  */
 public interface KubernetesServices {
-    List<V1Namespace> getNamespaceList();
-
-    List<String> getDeploymentNameList(String namespace);
-
-    List<String> getPodNameList(String namespace);
-
-    V1Deployment getDeployment(JSONObject deploymentDetails);
-
+    List<Namespace> getNamespaces();
+    List<Pod> getPodsBy(String namespace);
+    Deployment getDeploymentBy(String namespace,String deploymentName);
+    Deployment getDeploymentBy(JSONObject deploymentDetails);
     boolean deployDeployment(JSONObject deploymentDetails);
 }
