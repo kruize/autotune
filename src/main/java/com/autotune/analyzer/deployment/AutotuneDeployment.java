@@ -86,6 +86,7 @@ public class AutotuneDeployment
 	 * @throws IOException if unable to get Kubernetes config
 	 */
 	public static void getAutotuneObjects(final AutotuneDeployment autotuneDeployment) throws IOException {
+		// Integrate with common interface to use TargetHandler
 		KubernetesClient client = AutotuneDeploymentInfo.getKubernetesClient();
 
 		/* Watch for events (additions, modifications or deletions) of autotune objects */
