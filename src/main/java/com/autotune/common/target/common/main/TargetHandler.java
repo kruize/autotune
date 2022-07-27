@@ -34,4 +34,6 @@ public interface TargetHandler<T> {
     void deployApplication(JSONObject deploymentDetails) throws TargetHandlerException;
 
     List<T> collectMetrics(List<T> results) throws TargetHandlerException;
+
+    void shutdownConnection();
 }

@@ -49,6 +49,8 @@ public class TargetHandlerMainTest {
             );
         } catch (TargetHandlerException e) {
             e.printStackTrace();
+        }finally {
+            targetHandler.shutdownConnection();
         }
     }
 

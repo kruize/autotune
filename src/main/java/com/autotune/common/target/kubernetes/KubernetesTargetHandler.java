@@ -67,6 +67,12 @@ public class KubernetesTargetHandler implements TargetHandler {
         return null;
     }
 
+    /**
+     *  close kubernetes client connection
+     */
+    public void shutdownConnection(){
+        this.kubernetesServices.shutdownClient();
+    }
 
 
 }

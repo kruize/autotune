@@ -33,4 +33,5 @@ public interface KubernetesServices {
     Deployment getDeploymentBy(String namespace,String deploymentName);
     Deployment getDeploymentBy(JSONObject deploymentDetails);
     boolean deployDeployment(JSONObject deploymentDetails);
+    boolean shutdownClient();
 }

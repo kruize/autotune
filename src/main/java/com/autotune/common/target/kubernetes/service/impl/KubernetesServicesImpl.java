@@ -166,4 +166,16 @@ public class KubernetesServicesImpl implements KubernetesServices {
         return deployed;
     }
 
+    @Override
+    public boolean shutdownClient() {
+        boolean closed=false;
+        try{
+            kubernetesClient.close();
+            closed=true;
+        }catch (Exception e) {
+            new TargetHandlerException(e, "shutdownClient failed!");
+        }
+        return closed;
+    }
+
 }
