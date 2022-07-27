@@ -16,17 +16,20 @@
 
 package com.autotune.common.target.kubernetes.service.impl;
 
+import com.autotune.common.target.common.exception.TargetHandlerConnectException;
+import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.kubernetes.model.ContainerConfigData;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.apis.AppsV1Api;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.autotune.common.target.kubernetes.params.KubeConstants.*;
@@ -37,112 +40,142 @@ import static com.autotune.common.target.kubernetes.params.KubeConstants.*;
  */
 public class KubernetesServicesImpl implements KubernetesServices {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesServicesImpl.class);
+    private KubernetesClient kubernetesClient;
 
     public KubernetesServicesImpl() {
+        try {
+            this.kubernetesClient = new DefaultKubernetesClient();
+        } catch (Exception e) {
+            new TargetHandlerConnectException(e, "Default connection to kubernetes failed!");
+        }
     }
 
     /**
      * getNamespaceList query and return list of Namespace object
      * later it will be processed further into JSON with only required attributes.
      *
-     * @return List<V1Namespace>
+     * @return List<Namespace>
      */
     @Override
-    public List<V1Namespace> getNamespaceList() {
-        CoreV1Api api = new CoreV1Api();
-        List<V1Namespace> kubernetesNamespaceList = new ArrayList<>();
-        V1NamespaceList namespaceList = null;
+    public List<Namespace> getNamespaces() {
+        List<Namespace> namespaceList = null;
         try {
-            namespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null, null);
-        } catch (ApiException e) {
-            LOGGER.error(e.getMessage());
+            namespaceList = kubernetesClient.namespaces().list().getItems();
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getNamespaces failed!");
         }
-        if (namespaceList != null) {
-            for (V1Namespace namespace : namespaceList.getItems()) {
-                kubernetesNamespaceList.add(namespace);
-            }
-        }
-        return kubernetesNamespaceList;
+        return namespaceList;
     }
 
     /**
-     * TODO
+     * Return list of pods in specified namespace.
      *
      * @param namespace
      * @return
      */
-    @Override
-    public List<String> getDeploymentNameList(String namespace) {
-        return null;
+    public List<Pod> getPodsBy(String namespace) {
+        List<Pod> podList = null;
+        try {
+            podList = kubernetesClient
+                    .pods()
+                    .inNamespace(namespace)
+                    .list()
+                    .getItems();
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getPodsBy failed!");
+        }
+        return podList;
     }
 
     /**
-     * TODO
+     * Get deployment object
      *
      * @param namespace
+     * @param deploymentName
      * @return
      */
     @Override
-    public List<String> getPodNameList(String namespace) {
-        return null;
-    }
-
-    /**
-     * gets deployment object using input as namespace and deploymentname
-     *
-     * @param deploymentDetails
-     * @return V1Deployment
-     */
-    @Override
-    public V1Deployment getDeployment(JSONObject deploymentDetails) {
-        String namespace = deploymentDetails.getString(NAMESPACE);
-        String deploymentName = deploymentDetails.getString(DEPLOYMENT_NAME);
-        AppsV1Api api = new AppsV1Api();
-        V1Deployment deployment = null;
+    public Deployment getDeploymentBy(String namespace, String deploymentName) {
+        Deployment deployment = null;
         try {
-            V1DeploymentList v1DeploymentList = api.listNamespacedDeployment(namespace, null, null, null, null, null, null, null, null, null, false);
-            for (V1Deployment v1Deployment : v1DeploymentList.getItems()) {
-                if (v1Deployment.getMetadata().getName().equalsIgnoreCase(deploymentName)) {
-                    deployment = v1Deployment;
-                    break;
-                }
-            }
-        } catch (ApiException e) {
-            LOGGER.error("{}", e.getCode());
-            LOGGER.error(e.getResponseBody());
+            deployment = kubernetesClient
+                    .apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .withName(deploymentName)
+                    .get();
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getDeploymentBy(namespace,deploymentName) failed!");
         }
         return deployment;
     }
 
     /**
-     * sets Requests,Limit and some environments for existing deployment
+     * Get deployment object using json input
+     *
+     * @param deploymentDetails
+     * @return
+     */
+    @Override
+    public Deployment getDeploymentBy(JSONObject deploymentDetails) {
+        Deployment deployment = null;
+        try {
+            String namespace = deploymentDetails.getString(NAMESPACE);
+            String deploymentName = deploymentDetails.getString(DEPLOYMENT_NAME);
+            deployment = getDeploymentBy(namespace, deploymentName);
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getDeploymentBy failed!");
+        }
+        return deployment;
+    }
+
+    /**
+     * set Requests,Limit and environments for existing deployment
      *
      * @param deploymentDetails
      * @return
      */
     @Override
     public boolean deployDeployment(JSONObject deploymentDetails) {
-        V1Deployment existingDeployment = this.getDeployment(deploymentDetails);
-        ContainerConfigData containerConfigData = (ContainerConfigData) deploymentDetails.get(CONTAINER_CONFIG_DATA);
-        if (existingDeployment != null) {
-            existingDeployment
-                    .getSpec()
-                    .getTemplate()
-                    .getSpec()
-                    .getContainers()
-                    .forEach(
-                            (deployedAppContainer) -> {
-                                V1ResourceRequirements resourceRequirements = deployedAppContainer.getResources();
-                                resourceRequirements.setRequests(containerConfigData.getRequestPropertiesMap());
-                                resourceRequirements.setLimits(containerConfigData.getLimitPropertiesMap());
-                                deployedAppContainer.setResources(resourceRequirements);
-                                deployedAppContainer.setEnv(containerConfigData.getEnvList());
-                            }
-                    );
-        } else {
-            //Todo create new deployment
+        boolean deployed = false;
+        try {
+            Deployment existingDeployment = getDeploymentBy(deploymentDetails);
+            ContainerConfigData containerConfigData = (ContainerConfigData) deploymentDetails.get(CONTAINER_CONFIG_DATA);
+            if (existingDeployment != null) {
+                existingDeployment
+                        .getSpec()
+                        .getTemplate()
+                        .getSpec()
+                        .getContainers()   //TODO : Check for which container config should get applied
+                        .forEach(
+                                (deployedAppContainer) -> {
+                                    ResourceRequirements resourceRequirements = deployedAppContainer.getResources();
+                                    resourceRequirements.setRequests(containerConfigData.getRequestPropertiesMap());
+                                    resourceRequirements.setLimits(containerConfigData.getLimitPropertiesMap());
+                                    deployedAppContainer.setResources(resourceRequirements);
+                                    deployedAppContainer.setEnv(containerConfigData.getEnvList());
+                                }
+                        );
+                deployed = true;
+            } else {
+                //TODO : create new deployment
+            }
+        } catch (Exception e) {
+            new TargetHandlerException(e, "deployDeployment failed!");
         }
-        return false;
+        return deployed;
+    }
+
+    @Override
+    public boolean shutdownClient() {
+        boolean closed=false;
+        try{
+            kubernetesClient.close();
+            closed=true;
+        }catch (Exception e) {
+            new TargetHandlerException(e, "shutdownClient failed!");
+        }
+        return closed;
     }
 
 }

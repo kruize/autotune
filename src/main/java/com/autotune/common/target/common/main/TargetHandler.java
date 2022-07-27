@@ -31,9 +31,9 @@ import java.util.List;
  */
 
 public interface TargetHandler<T> {
-    void connect() throws TargetHandlerConnectException;
-
     void deployApplication(JSONObject deploymentDetails) throws TargetHandlerException;
 
     List<T> collectMetrics(List<T> results) throws TargetHandlerException;
+
+    void shutdownConnection();
 }

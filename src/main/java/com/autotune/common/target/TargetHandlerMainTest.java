@@ -38,15 +38,9 @@ public class TargetHandlerMainTest {
          * getNamespaces
          * etc.
          */
+        JSONObject containerConfigJSON = initiate();
+
         TargetHandler targetHandler = new KubernetesTargetHandler();
-        try {
-            targetHandler.connect();
-        } catch (TargetHandlerConnectException e) {
-            e.printStackTrace();
-        }
-        ContainerConfigData containerConfigData = new ContainerConfigData();
-        String containerConfigJSONStr = new Gson().toJson(containerConfigData);
-        JSONObject containerConfigJSON = new JSONObject(containerConfigJSONStr);
         try {
             targetHandler.deployApplication(new JSONObject()
                     .put(NAMESPACE, "monitoring")
@@ -55,6 +49,14 @@ public class TargetHandlerMainTest {
             );
         } catch (TargetHandlerException e) {
             e.printStackTrace();
+        }finally {
+            targetHandler.shutdownConnection();
         }
+    }
+
+    private static JSONObject initiate() {
+        ContainerConfigData containerConfigData = new ContainerConfigData();
+        String containerConfigJSONStr = new Gson().toJson(containerConfigData);
+        return new JSONObject(containerConfigJSONStr);
     }
 }

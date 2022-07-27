@@ -18,12 +18,11 @@ package com.autotune.common.target.kubernetes;
 import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.common.main.TargetHandler;
-import com.autotune.common.target.kubernetes.params.KubernetesConfig;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.util.Config;
+
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,31 +31,16 @@ import java.util.List;
 
 /**
  * KubernetesTargetHandler implements TargetHandler and facilitates to communicate with Kubernetes java client api by implementing
- * Connect
  * DeployApplication
  * Collect metrics
  */
 public class KubernetesTargetHandler implements TargetHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesTargetHandler.class);
-    private final KubernetesConfig config;
+
     private final KubernetesServices kubernetesServices;
 
     public KubernetesTargetHandler() {
-        this.config = new KubernetesConfig();
         this.kubernetesServices = new KubernetesServicesImpl();
-    }
-
-    /**
-     * Connect() function is used to connect to kubernetes Java client.
-     * at present this scripts support only connection within cluster.
-     *
-     * @throws TargetHandlerConnectException
-     */
-    @Override
-    public void connect() throws TargetHandlerConnectException {
-        if (this.config.isFromCluster()) {
-            connectFromCluster();
-        }
     }
 
     /**
@@ -78,26 +62,17 @@ public class KubernetesTargetHandler implements TargetHandler {
      * @return
      * @throws TargetHandlerException
      */
-
     @Override
     public List collectMetrics(List results) throws TargetHandlerException {
         return null;
     }
 
     /**
-     * connectFromCluster helps to connect to Kubernetes API when this program is running inside cluster.
-     *
-     * @throws TargetHandlerConnectException
+     *  close kubernetes client connection
      */
-    private void connectFromCluster() throws TargetHandlerConnectException {
-        ApiClient apiClient = null;
-        try {
-            apiClient = Config.fromCluster();
-            System.out.println("Successfully connected to kubernetes.");
-        } catch (Exception e) {
-            throw new TargetHandlerConnectException(e, "Error with Kubernetes connection due to : " + e.getMessage());
-        }
-        Configuration.setDefaultApiClient(apiClient);
+    public void shutdownConnection(){
+        this.kubernetesServices.shutdownClient();
     }
+
 
 }
