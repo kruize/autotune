@@ -15,11 +15,12 @@
  *******************************************************************************/
 package com.autotune.common.target;
 
-import com.autotune.common.target.common.exception.TargetHandlerConnectException;
+
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.common.main.TargetHandler;
 import com.autotune.common.target.kubernetes.KubernetesTargetHandler;
 import com.autotune.common.target.kubernetes.model.ContainerConfigData;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.google.gson.Gson;
 import org.json.JSONObject;
 
@@ -49,8 +50,9 @@ public class TargetHandlerMainTest {
             );
         } catch (TargetHandlerException e) {
             e.printStackTrace();
-        }finally {
-            targetHandler.shutdownConnection();
+        } finally {
+            KubernetesServices ks = (KubernetesServices) targetHandler.getService();
+            ks.shutdownClient();
         }
     }
 

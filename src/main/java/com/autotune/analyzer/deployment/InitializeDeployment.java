@@ -61,7 +61,6 @@ public class InitializeDeployment
 
 		AutotuneDeploymentInfo.setLayerTable();
 
-		AutotuneDeploymentInfo.initializeKubernetesClient();
 		AutotuneDeploymentInfo.initiateEventLogging();
 
 		AutotuneDeploymentInfo.logDeploymentInfo();

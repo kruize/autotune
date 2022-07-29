@@ -15,14 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.target.kubernetes;
 
-import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.common.main.TargetHandler;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,11 +64,18 @@ public class KubernetesTargetHandler implements TargetHandler {
     }
 
     /**
-     *  close kubernetes client connection
+     * close kubernetes client connection
      */
-    public void shutdownConnection(){
+    public void shutdownConnection() {
         this.kubernetesServices.shutdownClient();
     }
 
-
+    /**
+     * get Kubernetesservice object
+     * @return
+     */
+    @Override
+    public Object getService() {
+        return this.kubernetesServices;
+    }
 }

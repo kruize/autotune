@@ -16,15 +16,10 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ContainerConfigData;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import com.autotune.common.target.common.main.TargetHandler;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * Service class helper used to deploy application after considering Container config details
@@ -35,67 +30,27 @@ public class DeploymentHandler {
     private final String nameSpace;
     private final String deploymentName;
     private final ContainerConfigData containerConfigData;
-    private KubernetesClient client;
     private boolean alreadyDeployedJustRestart = false;
+    private final TargetHandler targetHandler;
 
-    public DeploymentHandler(String nameSpace, String deploymentName, ContainerConfigData containerConfigData) {
+    public DeploymentHandler(String nameSpace, String deploymentName, ContainerConfigData containerConfigData, TargetHandler targetHandler) {
         this.nameSpace = nameSpace;
         this.deploymentName = deploymentName;
         this.containerConfigData = containerConfigData;
+        this.targetHandler = targetHandler;
     }
 
-    public KubernetesClient getKubernetesClient() {
-        if (null == client) {
-            this.client = new DefaultKubernetesClient();
-        }
-        return this.client;
-    }
-
-    public Deployment getModifiedDeployment() {
-        Deployment defaultDeployment = null;
-        try {
-            defaultDeployment = getKubernetesClient()
-                    .apps()
-                    .deployments()
-                    .inNamespace(this.nameSpace)
-                    .withName(this.deploymentName)
-                    .get();
-            defaultDeployment
-                    .getSpec()
-                    .getTemplate()
-                    .getSpec()
-                    .getContainers()
-                    .forEach(
-                            (deployedAppContainer) -> {
-                                ResourceRequirements resourcesRequirement = deployedAppContainer.getResources();
-                                resourcesRequirement.setRequests(this.containerConfigData.getRequestPropertiesMap());
-                                resourcesRequirement.setLimits(this.containerConfigData.getLimitPropertiesMap());
-                                deployedAppContainer.setResources(resourcesRequirement);
-                                deployedAppContainer.setEnv(this.containerConfigData.getEnvList());
-                            }
-                    );
-        } catch (Exception e) {
-            LOGGER.error(e.toString());
-            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
-            e.printStackTrace();
-        }
-        return defaultDeployment;
-    }
 
     public void initiateDeploy() {
         LOGGER.debug("START DEPLOYING");
+        KubernetesServices kubernetesServices = (KubernetesServices) this.targetHandler.getService();
         try {
             if (!this.alreadyDeployedJustRestart) {
                 //Check here if deployment type is rolling-update   .withName(this.deploymentName)
-                getKubernetesClient()
-                        .apps()
-                        .deployments()
-                        .inNamespace(this.nameSpace)
-                        .withName(this.deploymentName)
-                        .createOrReplace(this.getModifiedDeployment());
+                kubernetesServices.deployDeployment(this.nameSpace, this.deploymentName, this.containerConfigData);
                 this.alreadyDeployedJustRestart = true;
             } else {
-                this.rolloutRestartDeployment();
+                kubernetesServices.restartDeployment(this.nameSpace, this.deploymentName);
             }
         } catch (Exception e) {
             LOGGER.error(e.toString());
@@ -105,18 +60,5 @@ public class DeploymentHandler {
         LOGGER.debug("END DEPLOYING");
     }
 
-    public void rolloutRestartDeployment() {
-        LOGGER.debug("rolloutRestartDeployment");
-        try {
-            getKubernetesClient()
-                    .apps()
-                    .deployments()
-                    .inNamespace(this.nameSpace)
-                    .withName(this.deploymentName)
-                    .rolling()
-                    .restart();
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
-        }
-    }
+
 }

@@ -16,7 +16,6 @@
 
 package com.autotune.common.target.common.main;
 
-import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import org.json.JSONObject;
 
@@ -35,5 +34,5 @@ public interface TargetHandler<T> {
 
     List<T> collectMetrics(List<T> results) throws TargetHandlerException;
 
-    void shutdownConnection();
+    Object getService();
 }
