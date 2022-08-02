@@ -54,6 +54,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
      */
     public void initialize(){
         try {
+            //ToDO based on some analysis decide if we need to have singleton to get client.
             this.kubernetesClient = new DefaultKubernetesClient();
         } catch (Exception e) {
             new TargetHandlerConnectException(e, "Default connection to kubernetes failed!");
