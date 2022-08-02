@@ -35,8 +35,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static com.autotune.common.target.kubernetes.params.KubeConstants.*;
-
 /**
  * KubernetesServicesImpl implements functions which are used to
  * communicate with Kubernetes cluster.
@@ -52,7 +50,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     /**
      * kubernetesClient client connection established inside cluster itself
      */
-    public void initialize(){
+    public void initialize() {
         try {
             this.kubernetesClient = new DefaultKubernetesClient();
         } catch (Exception e) {
@@ -128,6 +126,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
 
     /**
      * Return POD using name.
+     *
      * @param namespace
      * @param name
      * @return
@@ -142,7 +141,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                         .inNamespace(namespace)
                         .withName(name).get();
             } else {
-              throw new Exception("Namespace is mandatory to getpobby using name.");
+                throw new Exception("Namespace is mandatory to getpobby using name.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "getPodsBy failed!");
@@ -258,7 +257,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .apps()
                     .deployments()
                     .inNamespace(namespace)
-                    .withLabel(labelKey,labelValue)
+                    .withLabel(labelKey, labelValue)
                     .list()
                     .getItems();
         } catch (Exception e) {

@@ -23,10 +23,8 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
@@ -47,7 +45,7 @@ public interface KubernetesServices {
     List<Pod> getPodsBy(String namespace);
 
     //get all pod by name
-    Pod getPodsBy(String namespace,String name);
+    Pod getPodsBy(String namespace, String name);
 
     //get all pods using String namespace, String labelKey, String labelValue
     List<Pod> getPodsBy(String namespace, String labelKey, String labelValue);
