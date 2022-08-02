@@ -88,6 +88,7 @@ public class AutotuneDeployment {
         // Integrate with common interface to use TargetHandler
 
         /* Watch for events (additions, modifications or deletions) of autotune objects */
+        // TO do remove this kube reference and have it implemented at KubernetesService
         Watcher<String> autotuneObjectWatcher = new Watcher<>() {
             @Override
             public void eventReceived(Action action, String resource) {
