@@ -53,6 +53,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
      * kubernetesClient client connection established inside cluster itself
      */
     public void initialize(){
+        //ToDo getcluster information and set variables for ref
         try {
             this.kubernetesClient = new DefaultKubernetesClient();
         } catch (Exception e) {
