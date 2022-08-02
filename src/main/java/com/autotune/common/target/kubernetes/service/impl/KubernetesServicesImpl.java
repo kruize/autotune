@@ -28,7 +28,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +46,13 @@ public class KubernetesServicesImpl implements KubernetesServices {
     private KubernetesClient kubernetesClient;
 
     public KubernetesServicesImpl() {
+        initialize();
+    }
+
+    /**
+     * kubernetesClient client connection established inside cluster itself
+     */
+    public void initialize(){
         try {
             this.kubernetesClient = new DefaultKubernetesClient();
         } catch (Exception e) {
@@ -118,6 +124,30 @@ public class KubernetesServicesImpl implements KubernetesServices {
             new TargetHandlerException(e, "getPodsBy failed!");
         }
         return podList;
+    }
+
+    /**
+     * Return POD using name.
+     * @param namespace
+     * @param name
+     * @return
+     */
+    @Override
+    public Pod getPodsBy(String namespace, String name) {
+        Pod podObj = null;
+        try {
+            if (namespace != null) {
+                podObj = kubernetesClient
+                        .pods()
+                        .inNamespace(namespace)
+                        .withName(name).get();
+            } else {
+              throw new Exception("Namespace is mandatory to getpobby using name.");
+            }
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getPodsBy failed!");
+        }
+        return podObj;
     }
 
     /**
@@ -220,23 +250,21 @@ public class KubernetesServicesImpl implements KubernetesServices {
         return deployment;
     }
 
-    /**
-     * Get deployment object using json input
-     *
-     * @param deploymentDetails
-     * @return
-     */
     @Override
-    public Deployment getDeploymentBy(JSONObject deploymentDetails) {
-        Deployment deployment = null;
+    public List<Deployment> getDeploymentsBy(String namespace, String deploymentName, String labelKey, String labelValue) {
+        List<Deployment> deploymentList = null;
         try {
-            String namespace = deploymentDetails.getString(NAMESPACE);
-            String deploymentName = deploymentDetails.getString(DEPLOYMENT_NAME);
-            deployment = getDeploymentBy(namespace, deploymentName);
+            deploymentList = kubernetesClient
+                    .apps()
+                    .deployments()
+                    .inNamespace(namespace)
+                    .withLabel(labelKey,labelValue)
+                    .list()
+                    .getItems();
         } catch (Exception e) {
-            new TargetHandlerException(e, "getDeploymentBy failed!");
+            new TargetHandlerException(e, "getDeploymentBy(namespace,deploymentName) failed!");
         }
-        return deployment;
+        return deploymentList;
     }
 
     /**
@@ -247,7 +275,6 @@ public class KubernetesServicesImpl implements KubernetesServices {
      * @param newDeployment
      * @return
      */
-    @Override
     public boolean replaceDeployment(String namespace, String deploymentName, Deployment newDeployment) {
         boolean deployed = false;
         try {
@@ -265,27 +292,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     }
 
     /**
-     * set Requests,Limit and environments for existing deployment
-     *
-     * @param deploymentDetails
-     * @return
-     */
-    @Override
-    public boolean deployDeployment(JSONObject deploymentDetails) {
-        boolean deployed = false;
-        try {
-            String namespace = deploymentDetails.getString(NAMESPACE);
-            String deploymentName = deploymentDetails.getString(DEPLOYMENT_NAME);
-            ContainerConfigData containerConfigData = (ContainerConfigData) deploymentDetails.get(CONTAINER_CONFIG_DATA);
-            deployed = deployDeployment(namespace, deploymentName, containerConfigData);
-        } catch (Exception e) {
-            new TargetHandlerException(e, "deployDeployment failed!");
-        }
-        return deployed;
-    }
-
-    /**
-     * Restart deployment.
+     * Restart deployment. Used by EM to restart deployment during warmup/measurements cycles.
      *
      * @param namespace
      * @param deploymentName
@@ -310,7 +317,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     }
 
     /**
-     * Deploy deployment using following params.
+     * start Deploying using following params. Used by EM to apply config from trials
      *
      * @param namespace
      * @param deploymentName
@@ -318,7 +325,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
      * @return
      */
     @Override
-    public boolean deployDeployment(String namespace, String deploymentName, ContainerConfigData containerConfigData) {
+    public boolean startDeploying(String namespace, String deploymentName, ContainerConfigData containerConfigData) {
         boolean deployed = false;
         try {
             Deployment existingDeployment = getDeploymentBy(namespace, deploymentName);
@@ -329,7 +336,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deployed = true;
                 }
             } else {
-                //TODO : create new deployment
+                throw new Exception("Deployment does not exist.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "deployDeployment failed!");
@@ -346,7 +353,6 @@ public class KubernetesServicesImpl implements KubernetesServices {
      * @param containerConfigData
      * @return
      */
-    @Override
     public Deployment getAmendedDeployment(String namespace, String deploymentName, Deployment existingDeployment, ContainerConfigData containerConfigData) {
         try {
             existingDeployment
@@ -466,15 +472,6 @@ public class KubernetesServicesImpl implements KubernetesServices {
         }
     }
 
-    /**
-     * Get Kubernetes client.
-     *
-     * @return
-     */
-    @Override
-    public KubernetesClient getClient() {
-        return this.kubernetesClient;
-    }
 
     /**
      * Close connection with Kubernetes.

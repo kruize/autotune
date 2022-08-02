@@ -16,7 +16,6 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.target.common.main.TargetHandler;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +29,9 @@ import java.util.stream.IntStream;
 public class ExperimentTrialHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentTrialHandler.class);
     private ExperimentTrial experimentTrial;
-    private final TargetHandler targetHandler;
 
-    public ExperimentTrialHandler(ExperimentTrial experimentTrial, TargetHandler targetHandler) {
+    public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
         this.experimentTrial = experimentTrial;
-        this.targetHandler = targetHandler;
     }
 
     public ExperimentTrial getExperimentTrial() {
@@ -58,8 +55,8 @@ public class ExperimentTrialHandler {
                     DeploymentHandler deploymentHandler = new DeploymentHandler(
                             trialDetails.getDeploymentNameSpace(),
                             trialDetails.getDeploymentName(),
-                            containerConfigData,
-                            targetHandler);
+                            containerConfigData
+                            );
                     IntStream.rangeClosed(1, numberOFIterations).forEach(
                             i -> {
                                 deploymentHandler.initiateDeploy();
@@ -70,8 +67,6 @@ public class ExperimentTrialHandler {
                 });
             });
         });
-        KubernetesServices kubernetesServices = (KubernetesServices) targetHandler.getService();
-        kubernetesServices.shutdownClient();
         //Accumulate and send metrics
     }
 

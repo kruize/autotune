@@ -16,8 +16,8 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ContainerConfigData;
-import com.autotune.common.target.common.main.TargetHandler;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,23 +31,22 @@ public class DeploymentHandler {
     private final String deploymentName;
     private final ContainerConfigData containerConfigData;
     private boolean alreadyDeployedJustRestart = false;
-    private final TargetHandler targetHandler;
 
-    public DeploymentHandler(String nameSpace, String deploymentName, ContainerConfigData containerConfigData, TargetHandler targetHandler) {
+    public DeploymentHandler(String nameSpace, String deploymentName, ContainerConfigData containerConfigData) {
         this.nameSpace = nameSpace;
         this.deploymentName = deploymentName;
         this.containerConfigData = containerConfigData;
-        this.targetHandler = targetHandler;
     }
 
 
     public void initiateDeploy() {
         LOGGER.debug("START DEPLOYING");
-        KubernetesServices kubernetesServices = (KubernetesServices) this.targetHandler.getService();
+        KubernetesServices kubernetesServices = null;
         try {
+            kubernetesServices = new KubernetesServicesImpl();
             if (!this.alreadyDeployedJustRestart) {
                 //Check here if deployment type is rolling-update   .withName(this.deploymentName)
-                kubernetesServices.deployDeployment(this.nameSpace, this.deploymentName, this.containerConfigData);
+                kubernetesServices.startDeploying(this.nameSpace, this.deploymentName, this.containerConfigData);
                 this.alreadyDeployedJustRestart = true;
             } else {
                 kubernetesServices.restartDeployment(this.nameSpace, this.deploymentName);
@@ -56,6 +55,9 @@ public class DeploymentHandler {
             LOGGER.error(e.toString());
             LOGGER.error(e.getMessage(), e.getStackTrace().toString());
             e.printStackTrace();
+        }finally {
+            if (kubernetesServices!=null)
+                kubernetesServices.shutdownClient();
         }
         LOGGER.debug("END DEPLOYING");
     }

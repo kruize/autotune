@@ -31,68 +31,60 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * List of methode that gets implemented which are used to communicate
  * with Kubernetes cluster.
  */
 public interface KubernetesServices {
-    //get all namespaces
+    //get all namespaces. Used by GUI
     List<Namespace> getNamespaces();
 
-    //get all service list
+    //get all service list. Used by GUI and Other modules to fetch endpoints for services like prometheus etc.
     List<Service> getServicelist(String namespace);
 
-    //get all pods
+    //get all pods.
     List<Pod> getPodsBy(String namespace);
+
+    //get all pod by name
+    Pod getPodsBy(String namespace,String name);
 
     //get all pods using String namespace, String labelKey, String labelValue
     List<Pod> getPodsBy(String namespace, String labelKey, String labelValue);
 
-    //get replicas set
+    //get replicas set. Get map of pods matching the autotune object using the labels.
     List<ReplicaSet> getReplicasBy(String namespace, String labelKey, String labelValue);
 
     //get Deployment object
     Deployment getDeploymentBy(String namespace, String deploymentName);
 
-    //get Deployment object using JSONObject
-    Deployment getDeploymentBy(JSONObject deploymentDetails);
+    //get list of Deployments object based on  labelKey, labelValue
+    List<Deployment> getDeploymentsBy(String namespace, String deploymentName, String labelKey, String labelValue);
 
-    //Restart deployment
+    //Restart deployment. Used by EM to restart deployment during warmup/measurements cycle.
     boolean restartDeployment(String namespace, String deploymentName);
 
-    //Replace deployment with new deployment
-    boolean replaceDeployment(String namespace, String deploymentName, Deployment newDeployment);
-
     //Deploy deployment using config
-    boolean deployDeployment(String namespace, String deploymentName, ContainerConfigData containerConfigData);
+    boolean startDeploying(String namespace, String deploymentName, ContainerConfigData containerConfigData);
 
-    //Deploy deployment using config
-    boolean deployDeployment(JSONObject deploymentDetails);
-
-    //get amendment deployment
-    Deployment getAmendedDeployment(String namespace, String deploymentName, Deployment existingDeployment, ContainerConfigData containerConfigData);
-
-    //get events
+    //get events.
     Event getEvent(String namespace, String eventName);
 
-    //get environment variable from CRD's
+    //get environment variable from CRD's. Parse AutotuneConfig JSON and create matching AutotuneConfig object
     Map<String, Object> getCRDEnvMap(CustomResourceDefinitionContext crd, String namespace, String kubernetesType);
 
-    //Get kubernetes client
-    KubernetesClient getClient();
-
-    //Create Event
+    //Create Event. Event logging class that allows creating or replacing events with custom messages and reasons
     boolean createEvent(String namespace, String eventName, Event newEvent);
 
-    //Replace event
+    //Replace event. Event logging class that allows creating or replacing events with custom messages and reasons
     boolean replaceEvent(String namespace, String eventName, Event newEvent);
 
     //Close connection with kubernetes
     boolean shutdownClient();
 
-    //Add watcher
+    //Add watcher. Used to register watch endpoints.
     void addWatcher(CustomResourceDefinitionContext crd, Watcher watcher);
 
-    //Watch endpoints
+    //Watch endpoints. Used to trigger events based on some action to kubernetes resources.
     void watchEndpoints(CustomResourceDefinitionContext crd);
 }
