@@ -48,7 +48,6 @@ public class KubeEventLogger implements EventLogger {
         try {
             kubernetesServices = new KubernetesServicesImpl();
             String eventName = componentName + "." + ((reason + message + type + objectName).hashCode() & 0x7FFFFFFF);
-            //Event existing = kubeClient.events().inNamespace(namespace).withName(eventName).get();
             Event existing = kubernetesServices.getEvent(namespace,eventName);
             String timestamp = Instant.now(clock).toString();
             if (existing != null && existing.getType().equals(type.name()) && existing.getReason().equals(reason) && existing.getInvolvedObject().getName().equals(objectName) && existing.getInvolvedObject().getKind().equals(kind)) {
