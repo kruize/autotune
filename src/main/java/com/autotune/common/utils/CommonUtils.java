@@ -28,7 +28,13 @@ public class CommonUtils {
      * For now only Queryable and File based datasources are supported
      */
     public enum AutotuneDatasourceTypes {
+        /**
+         * If the datasource is queryable (datastore, database)
+         */
         QUERYABLE,
+        /**
+         * If the datasource is file based (Cgroup files)
+         */
         FILE,
     }
 
@@ -65,7 +71,13 @@ public class CommonUtils {
      * NOT_RELIABLE -  states that the datasource is not reliable
      */
     public enum DatasourceReliabilityStatus {
+        /**
+         * We set the status as Reliable if the datasource is up and running and it provides information
+         */
         RELIABLE,
+        /**
+         * We set the status as Not Reliable if the datasource is up and not providing information
+         */
         NOT_RELIABLE,
     }
 }

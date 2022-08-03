@@ -31,6 +31,13 @@ import com.autotune.common.utils.CommonUtils.AutotuneDatasourceTypes;
  *  var name:   Type String
  *  var type:   Type AutotuneDatasourceTypes
  *  var source: Type String
+ *
+ *  Example for prometheus implementation:
+ *
+ *  - name: Prometheus
+ *  - type: AutotuneDatasourceTypes.QUERYABLE
+ *  - source: http://10.98.45.63:9090
+ *
  */
 
 public interface AutotuneDatasource {
