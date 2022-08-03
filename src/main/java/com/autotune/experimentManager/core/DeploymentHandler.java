@@ -55,8 +55,8 @@ public class DeploymentHandler {
             LOGGER.error(e.toString());
             LOGGER.error(e.getMessage(), e.getStackTrace().toString());
             e.printStackTrace();
-        }finally {
-            if (kubernetesServices!=null)
+        } finally {
+            if (kubernetesServices != null)
                 kubernetesServices.shutdownClient();
         }
         LOGGER.debug("END DEPLOYING");
