@@ -25,16 +25,19 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.common.k8sObjects.*;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.variables.Variables;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSetList;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -86,8 +89,6 @@ public class AutotuneDeployment
 	 * @throws IOException if unable to get Kubernetes config
 	 */
 	public static void getAutotuneObjects(final AutotuneDeployment autotuneDeployment) throws IOException {
-		KubernetesClient client = AutotuneDeploymentInfo.getKubernetesClient();
-
 		/* Watch for events (additions, modifications or deletions) of autotune objects */
 		Watcher<String> autotuneObjectWatcher = new Watcher<>() {
 			@Override
@@ -98,7 +99,7 @@ public class AutotuneDeployment
 					case "ADDED":
 						autotuneObject = getAutotuneObject(resource);
 						if (autotuneObject != null) {
-							addAutotuneObject(autotuneObject, client);
+							addAutotuneObject(autotuneObject);
 							String autotuneObjectStr = autotuneObject.getExperimentName();
 							// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
 							// For each of these applicationServiceStacks, we need to start the experiments
@@ -120,7 +121,7 @@ public class AutotuneDeployment
 							// Check if any of the values have changed from the existing object in the map
 							if (autotuneObjectMap.get(autotuneObject.getExperimentName()).getExperimentId() != autotuneObject.getExperimentId()) {
 								deleteExistingAutotuneObject(resource);
-								addAutotuneObject(autotuneObject, client);
+								addAutotuneObject(autotuneObject);
 
 								String autotuneObjectStr = autotuneObject.getExperimentName();
 								// Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
@@ -145,6 +146,8 @@ public class AutotuneDeployment
 				}
 			}
 
+
+
 			@Override
 			public void onClose(KubernetesClientException e) { }
 		};
@@ -156,7 +159,7 @@ public class AutotuneDeployment
 
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
-						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
+						autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
 						if (autotuneConfig != null) {
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
 							LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
@@ -164,7 +167,7 @@ public class AutotuneDeployment
 						}
 						break;
 					case "MODIFIED":
-						autotuneConfig = getAutotuneConfig(resource, client, KubernetesContexts.getAutotuneVariableContext());
+						autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
 						if (autotuneConfig != null) {
 							deleteExistingConfig(resource);
 							autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
@@ -183,21 +186,20 @@ public class AutotuneDeployment
 			public void onClose(KubernetesClientException e) { }
 		};
 
-		/* Register custom watcher for autotune object and autotuneconfig object*/
-		client.customResource(KubernetesContexts.getAutotuneCrdContext()).watch(autotuneObjectWatcher);
-		client.customResource(KubernetesContexts.getAutotuneConfigContext()).watch(autotuneConfigWatcher);
+		KubernetesServices kubernetesServices = new KubernetesServicesImpl();
+		kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
+		kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
 	}
 
 	/**
 	 * Add autotuneobject to monitoring map and match pods and autotuneconfigs
 	 * @param autotuneObject
-	 * @param client
 	 */
-	private static void addAutotuneObject(AutotuneObject autotuneObject, KubernetesClient client) {
+	private static void addAutotuneObject(AutotuneObject autotuneObject) {
 		autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
 		System.out.println("Autotune Object: " + autotuneObject.getExperimentName() + ": Finding Layers");
 
-		matchPodsToAutotuneObject(autotuneObject, client);
+		matchPodsToAutotuneObject(autotuneObject);
 
 		for (String autotuneConfig : autotuneConfigMap.keySet()) {
 			addLayerInfo(autotuneConfigMap.get(autotuneConfig), autotuneObject);
@@ -247,17 +249,17 @@ public class AutotuneDeployment
 	 * Get map of pods matching the autotune object using the labels.
 	 *
 	 * @param autotuneObject
-	 * @param client KubernetesClient to get pods in cluster
 	 */
-	private static void matchPodsToAutotuneObject(AutotuneObject autotuneObject, KubernetesClient client) {
+	private static void matchPodsToAutotuneObject(AutotuneObject autotuneObject) {
+		KubernetesServices kubernetesServices = null;
 		try {
 			String userLabelKey = autotuneObject.getSelectorInfo().getMatchLabel();
 			String userLabelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
-
+			kubernetesServices = new KubernetesServicesImpl();
 			String namespace = autotuneObject.getNamespace();
 			String experimentName = autotuneObject.getExperimentName();
-			PodList podList = client.pods().inNamespace(namespace).withLabel(userLabelKey, userLabelValue).list();
-			if (podList.getItems().isEmpty()) {
+			List<Pod> podList = new KubernetesServicesImpl().getPodsBy(namespace, userLabelKey, userLabelValue);
+			if (podList.isEmpty()) {
 				LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 				// TODO: No matching pods with the userLabelKey found, need to warn the user.
 				return;
@@ -265,7 +267,7 @@ public class AutotuneDeployment
 
 			// We now have a list of pods. Get the stack (ie docker image) for each pod.
 			// Add the unique set of stacks and create an ApplicationServiceStack object for each.
-			for (Pod pod : podList.getItems()) {
+			for (Pod pod : podList) {
 				ObjectMeta podMetadata = pod.getMetadata();
 				String podTemplateHash = podMetadata.getLabels().get(POD_TEMPLATE_HASH);
 				String status = pod.getStatus().getPhase();
@@ -273,18 +275,18 @@ public class AutotuneDeployment
 				// To find that we first find the replicaset corresponding to the pod template hash
 				// Replicaset name is of the form 'deploymentName-podTemplateHash'
 				// So to get the deployment name we remove the '-podTemplateHash' from the Replicaset name
-				ReplicaSetList replicaSetList = client.apps().replicaSets().inNamespace(namespace).withLabel(POD_TEMPLATE_HASH, podTemplateHash).list();
-				if (replicaSetList.getItems().isEmpty()) {
+				List<ReplicaSet> replicaSetList = kubernetesServices.getReplicasBy(namespace, POD_TEMPLATE_HASH, podTemplateHash);
+				if (replicaSetList.isEmpty()) {
 					LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
 					// TODO: No matching pods with the userLabelKey found, need to warn the user.
 					return;
 				}
 				String deploymentName = null;
-				for (ReplicaSet replicaSet : replicaSetList.getItems()) {
+				for (ReplicaSet replicaSet : replicaSetList) {
 					String replicasetName = replicaSet.getMetadata().getName();
 					StringBuilder podHashSb = new StringBuilder("-").append(podTemplateHash);
 					deploymentName = replicasetName.replace(podHashSb.toString(), "");
-					Deployment deployment = client.apps().deployments().inNamespace(namespace).withName(deploymentName).get();
+					Deployment deployment = kubernetesServices.getDeploymentBy(namespace, deploymentName);
 					LOGGER.debug("Pod: " + podMetadata.getName()
 							+ " podTemplateHash: " + podTemplateHash
 							+ " replicasetName: " + replicasetName
@@ -440,12 +442,13 @@ public class AutotuneDeployment
 	 * Parse AutotuneConfig JSON and create matching AutotuneConfig object
 	 *
 	 * @param autotuneConfigResource  The JSON file for the autotuneconfig resource in the cluster.
-	 * @param client
 	 * @param autotuneVariableContext
 	 */
 	@SuppressWarnings("unchecked")
-	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource, KubernetesClient client, CustomResourceDefinitionContext autotuneVariableContext) {
+	private static AutotuneConfig getAutotuneConfig(String autotuneConfigResource,  CustomResourceDefinitionContext autotuneVariableContext) {
+		KubernetesServices kubernetesServices = null;
 		try {
+			kubernetesServices = new KubernetesServicesImpl();
 			JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
 			JSONObject metadataJson = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
 			JSONObject presenceJson = autotuneConfigJson.optJSONObject(AutotuneConfigConstants.LAYER_PRESENCE);
@@ -465,7 +468,7 @@ public class AutotuneDeployment
 			// Get the autotunequeryvariables for the current kubernetes environment
 			ArrayList<Map<String, String>> queryVarList = null;
 			try {
-				Map<String, Object> envVariblesMap = client.customResource(autotuneVariableContext).get(namespace, AutotuneDeploymentInfo.getKubernetesType());
+				Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, AutotuneDeploymentInfo.getKubernetesType());
 				queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
 			} catch (Exception e) {
 				LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
@@ -637,14 +640,15 @@ public class AutotuneDeployment
 	 * @param autotuneObject
 	 */
 	private static void addQueryLayer(AutotuneConfig layer, AutotuneObject autotuneObject)  {
+		KubernetesServices kubernetesServices = null;
 		try {
 			// TODO: This query needs to be optimized to only check for pods in the right namespace
-			KubernetesClient client = new DefaultKubernetesClient();
-			PodList podList = null;
+			kubernetesServices = new KubernetesServicesImpl();
+			List<Pod> podList = null;
 			if (autotuneObject != null) {
-				podList = client.pods().inNamespace(autotuneObject.getNamespace()).list();
+				podList = kubernetesServices.getPodsBy(autotuneObject.getNamespace());
 			} else {
-				podList = client.pods().inAnyNamespace().list();
+				podList = kubernetesServices.getPodsBy(null);
 			}
 			if (podList == null) {
 				LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
@@ -675,7 +679,7 @@ public class AutotuneDeployment
 				if (!appsForAllQueries.isEmpty()) {
 					for (String application : appsForAllQueries) {
 						List<Container> containers = null;
-						for (Pod pod : podList.getItems()) {
+						for (Pod pod : podList) {
 							if (pod.getMetadata().getName().contains(application)) {
 								// We found a POD that matches the app name, now get its containers
 								containers = pod.getSpec().getContainers();
@@ -717,6 +721,10 @@ public class AutotuneDeployment
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if (kubernetesServices != null) {
+				kubernetesServices.shutdownClient();
+			}
 		}
 	}
 
@@ -734,24 +742,24 @@ public class AutotuneDeployment
 
 		// Match layer presence queries if any
 		addQueryLayer(layer, autotuneObject);
-
+		KubernetesServices kubernetesServices = null;
 		try {
+			kubernetesServices = new KubernetesServicesImpl();
 			String layerPresenceLabel = layer.getLayerPresenceLabel();
 			String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
 			if (layerPresenceLabel != null) {
-				KubernetesClient client = new DefaultKubernetesClient();
-				PodList podList = null;
+				List<Pod> podList = null;
 				if (autotuneObject != null) {
-					podList = client.pods().inNamespace(autotuneObject.getNamespace()).withLabel(layerPresenceLabel, layerPresenceLabelValue).list();
+					podList = kubernetesServices.getPodsBy(autotuneObject.getNamespace(), layerPresenceLabel, layerPresenceLabelValue);
 				} else {
-					podList = client.pods().inAnyNamespace().withLabel(layerPresenceLabel, layerPresenceLabelValue).list();
+					podList = kubernetesServices.getPodsBy(null, layerPresenceLabel, layerPresenceLabelValue);
 				}
 
-				if (podList.getItems().isEmpty()) {
+				if (podList.isEmpty()) {
 					LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
 					return;
 				}
-				for (Pod pod : podList.getItems()) {
+				for (Pod pod : podList) {
 					for (Container container : pod.getSpec().getContainers()) {
 						String containerImageName = container.getImage();
 						if (autotuneObject != null) {
@@ -776,6 +784,10 @@ public class AutotuneDeployment
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if (kubernetesServices != null) {
+				kubernetesServices.shutdownClient();
+			}
 		}
 	}
 

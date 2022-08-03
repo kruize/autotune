@@ -18,18 +18,18 @@ package com.autotune.common.data.datasource;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceList;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Creates and configures the datasource class for the specified datasource string
@@ -65,14 +65,15 @@ public class DataSourceFactory
 	 */
 	private static String getMonitoringAgentEndpoint() throws MonitoringAgentNotFoundException {
 		//No endpoint was provided in the configmap, find the endpoint from the service.
-		KubernetesClient client = new DefaultKubernetesClient();
-		ServiceList serviceList = client.services().inAnyNamespace().list();
+		KubernetesServices kubernetesServices = new KubernetesServicesImpl();
+		List<Service> serviceList = kubernetesServices.getServicelist(null);
+		kubernetesServices.shutdownClient();
 		String monitoringAgentService = AutotuneDeploymentInfo.getMonitoringAgentService();
 
 		if (monitoringAgentService == null)
 			throw new MonitoringAgentNotFoundException();
 
-		for (Service service : serviceList.getItems()) {
+		for (Service service : serviceList) {
 			String serviceName = service.getMetadata().getName();
 			if (serviceName.toLowerCase().equals(monitoringAgentService)) {
 				try {

@@ -16,6 +16,7 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,8 @@ public class ExperimentTrialHandler {
                     DeploymentHandler deploymentHandler = new DeploymentHandler(
                             trialDetails.getDeploymentNameSpace(),
                             trialDetails.getDeploymentName(),
-                            containerConfigData);
+                            containerConfigData
+                            );
                     IntStream.rangeClosed(1, numberOFIterations).forEach(
                             i -> {
                                 deploymentHandler.initiateDeploy();
