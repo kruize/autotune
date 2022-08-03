@@ -329,7 +329,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             Deployment existingDeployment = getDeploymentBy(namespace, deploymentName);
             if (existingDeployment != null) {
-                Deployment newDeployment = getAmendedDeployment(namespace, deploymentName, existingDeployment, containerConfigData);
+                Deployment newDeployment = amendDeployment(namespace, deploymentName, existingDeployment, containerConfigData);
                 if (newDeployment != null) {
                     replaceDeployment(namespace, deploymentName, newDeployment);
                     deployed = true;
@@ -352,7 +352,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
      * @param containerConfigData
      * @return
      */
-    public Deployment getAmendedDeployment(String namespace, String deploymentName, Deployment existingDeployment, ContainerConfigData containerConfigData) {
+    public Deployment amendDeployment(String namespace, String deploymentName, Deployment existingDeployment, ContainerConfigData containerConfigData) {
         try {
             existingDeployment
                     .getSpec()

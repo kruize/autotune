@@ -54,8 +54,7 @@ public class KubeEventLogger implements EventLogger {
             if (existing != null && existing.getType().equals(type.name()) && existing.getReason().equals(reason) && existing.getInvolvedObject().getName().equals(objectName) && existing.getInvolvedObject().getKind().equals(kind)) {
                 existing.setCount(existing.getCount() + 1);
                 existing.setLastTimestamp(timestamp);
-                kubernetesServices.replaceEvent(namespace,eventName,existing);
-                //kubeClient.events().inNamespace(namespace).withName(eventName).replace(existing);
+                kubernetesServices.replaceEvent(namespace, eventName, existing);
             } else {
                 Event newEvent = new EventBuilder()
                         .withNewMetadata()
@@ -76,8 +75,10 @@ public class KubeEventLogger implements EventLogger {
             }
         } catch (KubernetesClientException e) {
             LOGGER.warn("Error reporting event: {}", e.getMessage());
-        }finally {
-            if(kubernetesServices!=null)    kubernetesServices.shutdownClient();
+        } finally {
+            if (kubernetesServices != null) {
+                kubernetesServices.shutdownClient();
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ import java.util.Map;
 
 
 /**
- * List of methode that gets implemented which are used to communicate
+ * List of methods that gets implemented which are used to communicate
  * with Kubernetes cluster.
  */
 public interface KubernetesServices {
