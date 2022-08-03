@@ -61,12 +61,6 @@ public interface AutotuneDatasource {
     public AutotuneDatasourceTypes getType();
 
     /**
-     * Set the type of AutotuneDatasource
-     * @param type
-     */
-    public void setType(AutotuneDatasourceTypes type);
-
-    /**
      * Return the source
      * The source can be an entity or a way how we access the datasource
      * Example:
