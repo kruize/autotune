@@ -1,12 +1,23 @@
 package com.autotune.common.data.datasource.queryable;
 
 import com.autotune.common.data.datasource.AutotuneDatasourceServiceability;
+import com.autotune.common.experiments.DatasourceInfo;
 import com.autotune.common.utils.CommonConstants;
 import com.autotune.common.utils.CommonUtils;
 
 public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource implements AutotuneDatasourceServiceability {
-    private String name = CommonConstants.AutotuneDatasource.Prometheus.DEFAULT_NAME;
-    private String source = null;
+    private String name;
+    private String source;
+
+    public PrometheusAutotuneDatasource() {
+        this.name = CommonConstants.AutotuneDatasource.Prometheus.DEFAULT_NAME;
+        this.source = null;
+    }
+
+    public PrometheusAutotuneDatasource(DatasourceInfo datasourceInfo) {
+        this.name = datasourceInfo.getName();
+        this.source = datasourceInfo.getUrl().toString();
+    }
 
     /**
      * Get the name of the datasource
