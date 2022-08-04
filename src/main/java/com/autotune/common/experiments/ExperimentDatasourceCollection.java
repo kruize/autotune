@@ -18,7 +18,9 @@ public class ExperimentDatasourceCollection implements AutotuneDatasourceCollect
 
     @Override
     public CommonUtils.AddDataSourceStatus addDataSource(AutotuneDatasource autotuneDatasource) throws AutotuneDatasourceAlreadyExists {
-        return null;
+        if (experimentDatasourceMap.containsKey(autotuneDatasource.getName()))
+            throw new AutotuneDatasourceAlreadyExists();
+
     }
 
     @Override
