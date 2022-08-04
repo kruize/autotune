@@ -61,6 +61,7 @@ public class CommonUtils {
     public enum DatasourceReachabilityStatus {
         REACHABLE,
         NOT_REACHABLE,
+        SOURCE_NOT_SET
     }
 
     /**
