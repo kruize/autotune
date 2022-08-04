@@ -5,7 +5,7 @@ import com.autotune.common.experiments.DatasourceInfo;
 import com.autotune.common.utils.CommonConstants;
 import com.autotune.common.utils.CommonUtils;
 
-public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource implements AutotuneDatasourceServiceability {
+public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource {
     private String name;
     private String source;
 
