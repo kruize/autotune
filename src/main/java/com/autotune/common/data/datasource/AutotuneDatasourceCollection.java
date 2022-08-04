@@ -47,7 +47,7 @@ public interface AutotuneDatasourceCollection {
      * @param datasourceName name of the datasource to be returned
      * @return the particular AutotuneDatasource object
      */
-    public AutotuneDatasource getDatasource(String datasourceName);
+    public AutotuneDatasource getDatasource(String datasourceName) throws AutotuneDatasourceDoesNotExist;
 
     /**
      * Returns the datasource collection map

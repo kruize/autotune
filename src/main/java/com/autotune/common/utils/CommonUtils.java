@@ -48,7 +48,8 @@ public class CommonUtils {
     public enum AddDataSourceStatus {
         SUCCESS,
         FAILURE,
-        DATASOURCE_NOT_REACHABLE
+        DATASOURCE_NOT_REACHABLE,
+        INVALID_DATASOURCE
     }
 
     /**

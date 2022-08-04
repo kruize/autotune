@@ -20,21 +20,34 @@ public class ExperimentDatasourceCollection implements AutotuneDatasourceCollect
     public CommonUtils.AddDataSourceStatus addDataSource(AutotuneDatasource autotuneDatasource) throws AutotuneDatasourceAlreadyExists {
         if (experimentDatasourceMap.containsKey(autotuneDatasource.getName()))
             throw new AutotuneDatasourceAlreadyExists();
-
+        switch (autotuneDatasource.isReachable()) {
+            case NOT_REACHABLE:
+                return CommonUtils.AddDataSourceStatus.DATASOURCE_NOT_REACHABLE;
+            case SOURCE_NOT_SET:
+                return CommonUtils.AddDataSourceStatus.INVALID_DATASOURCE;
+            case REACHABLE:
+                experimentDatasourceMap.put(autotuneDatasource.getName(), autotuneDatasource);
+                return CommonUtils.AddDataSourceStatus.SUCCESS;
+        }
+        return CommonUtils.AddDataSourceStatus.FAILURE;
     }
 
     @Override
-    public AutotuneDatasource getDatasource(String datasourceName) {
-        return null;
+    public AutotuneDatasource getDatasource(String datasourceName) throws AutotuneDatasourceDoesNotExist {
+        if (experimentDatasourceMap.containsKey(datasourceName))
+            return experimentDatasourceMap.get(datasourceName);
+        throw new AutotuneDatasourceDoesNotExist();
     }
 
     @Override
     public Map<String, AutotuneDatasource> getDatasourceMap() {
-        return null;
+        return this.experimentDatasourceMap;
     }
 
     @Override
     public void removeDataSource(String datasourceName) throws AutotuneDatasourceDoesNotExist {
-
+        if (experimentDatasourceMap.containsKey(datasourceName))
+            experimentDatasourceMap.remove(datasourceName);
+        throw new AutotuneDatasourceDoesNotExist();
     }
 }
