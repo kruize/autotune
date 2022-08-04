@@ -40,7 +40,7 @@ import com.autotune.common.utils.CommonUtils.AutotuneDatasourceTypes;
  *
  */
 
-public interface AutotuneDatasource {
+public interface AutotuneDatasource extends AutotuneDatasourceServiceability {
 
     /**
      * Function to return the name of the datasource
