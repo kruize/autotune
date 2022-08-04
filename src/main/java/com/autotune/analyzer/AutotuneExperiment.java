@@ -28,6 +28,7 @@ public class AutotuneExperiment {
     // Uses trial_number as key
     TreeMap<Integer, ExperimentTrial> experimentTrials;
     private RunExperiment experimentThread;
+    private String HPOoperation;
 
     public AutotuneExperiment(String deploymentName,
                               String experimentName,
@@ -77,6 +78,14 @@ public class AutotuneExperiment {
 
     public ApplicationSearchSpace getApplicationSearchSpace() {
         return applicationSearchSpace;
+    }
+
+    public String getHPOoperation() {
+        return HPOoperation;
+    }
+
+    public void setHPOoperation(String HPOoperation) {
+        this.HPOoperation = HPOoperation;
     }
 
     public void setApplicationSearchSpace(ApplicationSearchSpace applicationSearchSpace) {

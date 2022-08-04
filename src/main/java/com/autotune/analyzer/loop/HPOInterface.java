@@ -109,4 +109,39 @@ public class HPOInterface {
 		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(TRAINING);
 		autotuneExperiment.summarizeTrial(trialDetails);
 	}
+	/**
+	 * @param experimentTrial
+	 * @param experimentTrialsURL
+	 */
+	public static void postTrialResultToHPO(
+			ExperimentTrial experimentTrial,
+			URL experimentTrialsURL) {
+		try {
+			int trialNumber = experimentTrial.getTrialInfo().getTrialNum();
+			int min = 1;
+			int max = 10;
+			double rand;
+
+			//String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
+			String experimentId = experimentTrial.getExperimentId();
+			JSONObject sendTrialResult = new JSONObject();
+			sendTrialResult.put(ID, experimentId);
+			sendTrialResult.put(TRIAL_NUMBER, trialNumber);
+			sendTrialResult.put(TRIAL_RESULT, "success");
+			sendTrialResult.put(RESULT_VALUE_TYPE, "double");
+			rand = Math.random() * (max - min + 1) + min;
+			sendTrialResult.put(RESULT_VALUE, rand);
+			sendTrialResult.put(OPERATION, EXP_TRIAL_RESULT);
+
+			/* STEP 7: Now send the calculated result back to Optuna */
+			LOGGER.debug(experimentTrialsURL.toString());
+			LOGGER.debug(sendTrialResult.toString());
+			int response = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, sendTrialResult.toString()));
+			LOGGER.info("Optuna Trial No: " + trialNumber + " result response: " + response);
+
+		} catch (Exception e) {
+			LOGGER.error(e.toString());
+			e.printStackTrace();
+		}
+	}
 }
