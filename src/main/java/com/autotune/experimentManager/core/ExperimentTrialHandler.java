@@ -18,6 +18,7 @@ package com.autotune.experimentManager.core;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -44,60 +45,6 @@ public class ExperimentTrialHandler {
     public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
         this.experimentTrial = experimentTrial;
     }
-
-    public ExperimentTrial getExperimentTrial() {
-        return experimentTrial;
-    }
-
-    public void setExperimentTrial(ExperimentTrial experimentTrial) {
-        this.experimentTrial = experimentTrial;
-    }
-
-    public ArrayList<String> getTrackers() {
-        return this.experimentTrial.getExperimentSettings().getDeploymentSettings().getDeploymentTracking().getTrackers();
-    }
-
-    public void startExperimentTrials() {
-        LOGGER.debug("Start Exp Trial");
-        int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
-        this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
-            trialDetails.getPodContainers().forEach((imageName, podContainer) -> {
-                podContainer.getTrialConfigs().forEach((trialNumber, containerConfigData) -> {
-                    DeploymentHandler deploymentHandler = new DeploymentHandler(
-                            trialDetails.getDeploymentNameSpace(),
-                            trialDetails.getDeploymentName(),
-                            containerConfigData
-                            );
-                    IntStream.rangeClosed(1, numberOFIterations).forEach(
-                            i -> {
-                                deploymentHandler.initiateDeploy();
-                                //check if load applied to deployment
-                                //collect warmup and measurement cycles metrics
-                            }
-                    );
-                });
-            });
-        });
-        //Accumulate and send metrics
-        JSONObject retJson = getDummyMetricJson(this.experimentTrial);
-        // POST the result back to HPO
-        URL experimentTrialsURL = null;
-        URL trial_result_url = null;
-        try {
-            experimentTrialsURL = new URL(OPTUNA_TRIALS_END_POINT);
-            trial_result_url = new URL(this.experimentTrial.getTrialInfo().getTrialResultURL());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        postTrialResultToHPO(this.experimentTrial, experimentTrialsURL);  // this will be called inside analyser api
-        try {
-            Thread.sleep(1000 * 10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        HttpUtils.postRequest(trial_result_url, retJson.toString());
-    }
-
 
     public static JSONObject getDummyMetricJson(ExperimentTrial experimentTrial) {
         JSONObject percentile_info = new JSONObject().
@@ -154,6 +101,72 @@ public class ExperimentTrialHandler {
         System.out.println(deployments);
         retJson.put("deployments", deployments);
         return retJson;
+    }
+
+    public ExperimentTrial getExperimentTrial() {
+        return experimentTrial;
+    }
+
+    public void setExperimentTrial(ExperimentTrial experimentTrial) {
+        this.experimentTrial = experimentTrial;
+    }
+
+    public ArrayList<String> getTrackers() {
+        return this.experimentTrial.getExperimentSettings().getDeploymentSettings().getDeploymentTracking().getTrackers();
+    }
+
+    public void startExperimentTrials() {
+        LOGGER.debug("Start Exp Trial");
+        int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
+        this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
+            trialDetails.getPodContainers().forEach((imageName, podContainer) -> {
+                podContainer.getTrialConfigs().forEach((trialNumber, containerConfigData) -> {
+                    KubernetesServices kubernetesServices = null;
+                    try {
+                        kubernetesServices = new KubernetesServicesImpl();
+                        DeploymentHandler deploymentHandler = new DeploymentHandler(
+                                trialDetails.getDeploymentNameSpace(),
+                                trialDetails.getDeploymentName(),
+                                containerConfigData,
+                                kubernetesServices
+                        );
+                        IntStream.rangeClosed(1, numberOFIterations).forEach(
+                                i -> {
+                                    deploymentHandler.initiateDeploy();
+                                    //Check if deployment is ready
+                                    for (int j = 120; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {
+                                        try {
+                                            LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum());
+                                            Thread.sleep(1000);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    if (!deploymentHandler.isDeploymentReady())
+                                        LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                                    //check if load applied to deployment
+                                    //collect warmup and measurement cycles metrics
+                                }
+                        );
+                    } catch (Exception e) {
+                        LOGGER.error(e.toString());
+                    } finally {
+                        if (kubernetesServices != null)
+                            kubernetesServices.shutdownClient();
+                    }
+                });
+            });
+        });
+        //Accumulate and send metrics
+        JSONObject retJson = getDummyMetricJson(this.experimentTrial);
+        URL trial_result_url = null;
+        try {
+            trial_result_url = new URL(this.experimentTrial.getTrialInfo().getTrialResultURL());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        LOGGER.debug("POST to URL. {}", trial_result_url);
+        HttpUtils.postRequest(trial_result_url, retJson.toString());
     }
 
 }

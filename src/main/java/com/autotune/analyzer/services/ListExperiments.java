@@ -16,14 +16,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.EXP_TRIAL_GENERATE_SUBSEQUENT;
 import static com.autotune.utils.ExperimentMessages.RunExperiment.*;
+import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
@@ -41,8 +45,8 @@ public class ListExperiments extends HttpServlet {
             AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentName);
             for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
                 ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
-                JSONObject experimentTrialJSON = new JSONObject(TrialHelpers.experimentTrialToJSON(experimentTrial));
-                experimentTrialJSONArray.put(experimentTrialJSON);
+                JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
+                experimentTrialJSONArray.put(experimentTrialJSON.get(0));
             }
         }
         response.getWriter().println(experimentTrialJSONArray.toString(4));
@@ -57,12 +61,29 @@ public class ListExperiments extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
+
         String trialResultsData = request.getReader().lines().collect(Collectors.joining());
         JSONObject trialResultsJson = new JSONObject(trialResultsData);
+
         String deployment_name = trialResultsJson.getString("deployment_name");
         JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
         int trialNumber = trialInfoJson.getInt("trial_num");
         AutotuneExperiment autotuneExperiment = experimentsMap.get(deployment_name);
+        ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNumber);
+        LOGGER.debug("POST Trials to HPO.");
+        // POST the result back to HPO
+        URL experimentTrialsURL = null;
+        try {
+            experimentTrialsURL = new URL(OPTUNA_TRIALS_END_POINT);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        postTrialResultToHPO(experimentTrial, experimentTrialsURL);
+        try {
+            Thread.sleep(1000 * 10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ExperimentSummary es = autotuneExperiment.getExperimentSummary();
         es.setTrialsCompleted(es.getTrialsCompleted() + 1);
         es.setTrialsPassed(es.getTrialsPassed() + 1);

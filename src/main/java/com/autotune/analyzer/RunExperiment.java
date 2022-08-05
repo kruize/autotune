@@ -77,6 +77,7 @@ public class RunExperiment {
             } else {
                 hpoTrial.put(OPERATION, EXP_TRIAL_GENERATE_SUBSEQUENT);
             }
+
             ExperimentTrial experimentTrial = getNewTrialFromHPO(autotuneExperiment, experimentTrialsURL, hpoTrial);
             if (null != experimentTrial)
                 SendTrialToEM(autotuneExperiment, experimentTrial);

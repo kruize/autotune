@@ -22,6 +22,8 @@ import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -469,6 +471,31 @@ public class KubernetesServicesImpl implements KubernetesServices {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean isDeploymentReady(String namespace, String deploymentName) {
+        boolean deploymentReady = false;
+        try {
+            Deployment existingDeployment = getDeploymentBy(namespace, deploymentName);
+            if (existingDeployment != null) {
+                DeploymentSpec spec = existingDeployment.getSpec();
+                DeploymentStatus status = existingDeployment.getStatus();
+                if (status == null || status.getReplicas() == null || status.getAvailableReplicas() == null) {
+                    deploymentReady = false;
+                } else if (spec == null || spec.getReplicas() == null) {
+                    deploymentReady = false;
+                } else {
+                    deploymentReady = spec.getReplicas().intValue() == status.getReplicas() &&
+                            spec.getReplicas().intValue() <= status.getAvailableReplicas();
+                }
+            }else {
+                throw new Exception("Deployment does not exist.");
+            }
+        } catch (Exception e) {
+            new TargetHandlerException(e, "getDeploymentStatus failed!");
+        }
+        return deploymentReady;
     }
 
 
