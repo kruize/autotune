@@ -23,6 +23,7 @@ public class Experimentator implements Runnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Experimentator.class);
 	private static final int MAX_NUMBER_OF_EXPERIMENTS = 1;
 	private static final int MAX_NUMBER_OF_TRIALS = 10;
+	private static final int NUMBER_OF_PARALLEL_TRIALS = 1;
 	private static int num_experiments = 0;
 	public static HashMap<String, AutotuneExperiment> experimentsMap = new HashMap<>();
 
@@ -114,7 +115,9 @@ public class Experimentator implements Runnable {
 					objectiveFunction,
 					hpoAlgoImpl,
 					direction,
-					valueType);
+					valueType,
+					MAX_NUMBER_OF_TRIALS,
+					NUMBER_OF_PARALLEL_TRIALS);
 
 			for (String stackName : autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
 				ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(stackName);

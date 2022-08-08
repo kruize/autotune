@@ -31,7 +31,6 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/da/configmap_yaml_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_id_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_layer_config_id_tests.sh
-. ${SCRIPTS_DIR}/hpo/hpo_api_tests.sh
 
 # Iterate through the commandline options
 while getopts i:o:r:-: gopts
@@ -111,7 +110,6 @@ function functional_test() {
 		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
 	else
 		execute_da_testsuites
-		execute_hpo_testsuites
 	fi
 }
 
@@ -145,23 +143,12 @@ function execute_da_testsuites() {
 	autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
 }
 
-# Execute all tests for HPO (Hyperparameter Optimization) module
-function execute_hpo_testsuites() {
-	testcase=""
-	# perform the HPO API tests
-	hpo_api_tests > >(tee "${RESULTS}/hpo_api_tests.log") 2>&1
-}
-
 # Perform the specific testsuite if specified 
 if [ ! -z "${testmodule}" ]; then
 	case "${testmodule}" in
-	   da)
-                # Execute tests for Dependency Analyzer Module 
-                execute_da_testsuites
-                ;;
-           hpo)
-		# Execute tests for Hyperparameter Optimization (HPO) Module 
-                execute_hpo_testsuites
+	da)
+		# Execute tests for Dependency Analyzer Module 
+		execute_da_testsuites
 		;;
 	esac
 elif [ ! -z "${testsuite}" ]; then

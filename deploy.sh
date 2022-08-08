@@ -37,12 +37,14 @@ AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="manifests/autotune-query-variables/q
 AUTOTUNE_QUERY_VARIABLES_MANIFEST="manifests/autotune-query-variables/query-variable.yaml"
 
 AUTOTUNE_PORT="8080"
-AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
-OPTUNA_DOCKER_REPO="kruize/autotune_optuna"
+AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
 #Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
-OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
+HPO_DOCKER_REPO="docker.io/kruize/hpo"
+# From the kruize/hpo repo
+HPO_VERSION=0.0.2
+HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}
 
 # source all the helpers scripts
 . ${SCRIPTS_DIR}/minikube-helpers.sh
@@ -75,13 +77,13 @@ trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	echo " -s: Deploy autotune [Default]"
 	echo " -t: Terminate autotune deployment"
 	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
 	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
-	echo " -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]"
+	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
 	exit -1
@@ -138,7 +140,7 @@ do
 		autotune_ns="${OPTARG}"
 		;;
 	o)
-		OPTUNA_DOCKER_IMAGE="${OPTARG}"
+		HPO_DOCKER_IMAGE="${OPTARG}"
 		;;
 	s)
 		setup=1

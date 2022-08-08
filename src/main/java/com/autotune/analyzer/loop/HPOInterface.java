@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.EQUALS;
@@ -36,7 +37,7 @@ public class HPOInterface {
 													 URL experimentTrialsURL,
 													 JSONObject hpoTrial) {
 		try {
-			String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
+			String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + STATUS_GET_TRIAL_CONFIG);
 			LOGGER.debug(hpoTrial.toString());
 
@@ -48,8 +49,8 @@ public class HPOInterface {
 			LOGGER.info("Optuna Trial No: " + trialNumber);
 
 			StringBuilder trialConfigUrl = new StringBuilder(OPTUNA_TRIALS_END_POINT)
-					.append(QUESTION_MARK).append(ID)
-					.append(EQUALS).append(experimentId)
+					.append(QUESTION_MARK).append(EXPERIMENT_NAME)
+					.append(EQUALS).append(experimentName)
 					.append(AMPERSAND).append(TRIAL_NUMBER)
 					.append(EQUALS).append(trialNumber);
 			java.net.URL trialConfigURL = null;

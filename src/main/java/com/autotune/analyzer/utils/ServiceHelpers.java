@@ -28,6 +28,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
+import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object
@@ -109,7 +110,7 @@ public class ServiceHelpers {
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
 		tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 
-		if (tunable.getValueType().equalsIgnoreCase("categorical")) {
+		if (tunable.getValueType().equalsIgnoreCase(CATEGORICAL_TYPE)) {
 			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES, tunable.getChoices());
 		} else {
 			tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
@@ -180,6 +181,8 @@ public class ServiceHelpers {
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.EXPERIMENT_ID, applicationSearchSpace.getExperimentId());
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, applicationSearchSpace.getHpoAlgoImpl());
 		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, applicationSearchSpace.getValueType());
+		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.TOTAL_TRIALS, applicationSearchSpace.getTotalTrials());
+		applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.PARALLEL_TRIALS, applicationSearchSpace.getParallelTrials());
 
 		JSONArray tunablesJsonArray = new JSONArray();
 		if (!applicationSearchSpace.getTunablesMap().isEmpty()) {
@@ -191,7 +194,7 @@ public class ServiceHelpers {
 				// searchSpace is passing only the tunable value and not a string
 				tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
 				// check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values
-				if (tunable.getValueType().equalsIgnoreCase("categorical")) {
+				if (tunable.getValueType().equalsIgnoreCase(CATEGORICAL_TYPE)) {
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES,tunable.getChoices());
 				} else {
 					tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());

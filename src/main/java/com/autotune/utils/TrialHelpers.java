@@ -126,11 +126,11 @@ public class TrialHelpers {
         ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationSearchSpace();
         AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
 
-        TrialSettings trialSettings = new TrialSettings("3",
-                "1min",
-                "3",
-                "1min",
-                "3"
+        TrialSettings trialSettings = new TrialSettings("1",
+                "5sec",
+                "1",
+                "10sec",
+                "1"
         );
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy(ROLLING_UPDATE);
 

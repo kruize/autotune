@@ -88,6 +88,8 @@ public class AnalyzerConstants {
 		public static final String VALUE_TYPE = "value_type";
 		public static final String DATASOURCE = "datasource";
 
+		public static final String TOTAL_TRIALS = "total_trials";
+		public static final String PARALLEL_TRIALS = "parallel_trials";
 		public static final String MINIMIZE = "minimize";
 		public static final String MAXIMIZE = "maximize";
 
@@ -220,34 +222,39 @@ public class AnalyzerConstants {
 		public static final String XXOPTION = " -XX:";
 		public static final String USE = "+Use";
 		public static final String SERVER = " -server";
-		public static final String MAX_RAM_PERCENTAGE = "MaxRAMPercentage";
-		public static final String GC = "gc";
-		public static final String TIERED_COMPILATION = "TieredCompilation";
 		public static final String ALLOW_PARALLEL_DEFINE_CLASS = "AllowParallelDefineClass";
 		public static final String ALLOW_VECTORIZE_ON_DEMAND = "AllowVectorizeOnDemand";
 		public static final String ALWAYS_COMPILE_LOOP_METHODS = "AlwaysCompileLoopMethods";
 		public static final String ALWAYS_PRE_TOUCH = "AlwaysPreTouch";
 		public static final String ALWAYS_TENURE = "AlwaysTenure";
 		public static final String BACKGROUND_COMPILATION = "BackgroundCompilation";
+		public static final String COMPILE_THRESHOLD = "CompileThreshold";
+		public static final String COMPILE_THRESHOLD_SCALING = "CompileThresholdScaling";
+		public static final String CONC_GC_THREADS = "ConcGCThreads";
 		public static final String DO_ESCAPE_ANALYSIS = "DoEscapeAnalysis";
+		public static final String FREQ_INLINE_SIZE = "FreqInlineSize";
+		public static final String GC = "gc";
+		public static final String INLINE_SMALL_CODE = "InlineSmallCode";
+		public static final String LOOP_UNROLL_LIMIT = "LoopUnrollLimit";
+		public static final String LOOP_UNROLL_MIN = "LoopUnrollMin";
+		public static final String MAX_INLINE_LEVEL = "MaxInlineLevel";
+		public static final String MAX_RAM_PERCENTAGE = "MaxRAMPercentage";
+		public static final String MIN_INLINING_THRESHOLD = "MinInliningThreshold";
+		public static final String MIN_SURVIVOR_RATIO = "MinSurvivorRatio";
+		public static final String NETTY_BUFFER_CHECK = "nettyBufferCheck";
+		public static final String NETTY_BUFFER_CHECKBOUNDS = "io.netty.buffer.checkBounds";
+		public static final String NETTY_BUFFER_CHECKACCESSIBLE = "io.netty.buffer.checkAccessible";
+		public static final String NEW_RATIO = "NewRatio";
+		public static final String PARALLEL_GC_THREADS = "ParallelGCThreads";
+		public static final String STACK_TRACE_IN_THROWABLE = "StackTraceInThrowable";
+		public static final String TIERED_COMPILATION = "TieredCompilation";
+		public static final String TIERED_STOP_AT_LEVEL = "TieredStopAtLevel";
 		public static final String USE_INLINE_CACHES = "UseInlineCaches";
 		public static final String USE_LOOP_PREDICATE = "UseLoopPredicate";
 		public static final String USE_STRING_DEDUPLICATION = "UseStringDeduplication";
 		public static final String USE_SUPER_WORD = "UseSuperWord";
 		public static final String USE_TYPE_SPECULATION = "UseTypeSpeculation";
-		public static final String COMPILE_THRESHOLD_SCALING = "CompileThresholdScaling";
-		public static final String MAX_INLINE_LEVEL = "MaxInlineLevel";
-		public static final String FREQ_INLINE_SIZE = "FreqInlineSize";
-		public static final String MIN_INLINING_THRESHOLD = "MinInliningThreshold";
-		public static final String COMPILE_THRESHOLD = "CompileThreshold";
-		public static final String CONC_GC_THREADS = "ConcGCThreads";
-		public static final String PARALLEL_GC_THREADS = "ParallelGCThreads";
-		public static final String INLINE_SMALL_CODE = "InlineSmallCode";
-		public static final String LOOP_UNROLL_LIMIT = "LoopUnrollLimit";
-		public static final String LOOP_UNROLL_MIN = "LoopUnrollMin";
-		public static final String MIN_SURVIVOR_RATIO = "MinSurvivorRatio";
-		public static final String NEW_RATIO = "NewRatio";
-		public static final String TIERED_STOP_AT_LEVEL = "TieredStopAtLevel";
+
 	}
 
 	/**

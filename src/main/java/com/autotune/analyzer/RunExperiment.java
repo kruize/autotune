@@ -1,7 +1,9 @@
 package com.autotune.analyzer;
 
+import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.utils.ServerContext;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import static com.autotune.analyzer.loop.EMInterface.ProcessTrialResultFromEM;
 import static com.autotune.analyzer.loop.HPOInterface.getNewTrialFromHPO;
 import static com.autotune.analyzer.loop.EMInterface.SendTrialToEM;
 import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
+import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.DEPLOYMENT_NAME;
@@ -58,13 +61,13 @@ public class RunExperiment implements Runnable
 	 */
 	@Override
 	public void run() {
-		String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
-		StringBuilder searchSpaceUrl = new StringBuilder(ServerContext.SEARCH_SPACE_END_POINT)
-				.append(QUESTION_MARK).append(DEPLOYMENT_NAME)
-				.append(EQUALS).append(autotuneExperiment.getDeploymentName());
+		String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
+		ApplicationSearchSpace applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+		JSONArray searchSpaceJsonArray = new JSONArray();
+		addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
+
 		JSONObject hpoTrial = new JSONObject();
-		hpoTrial.put(ID, experimentId);
-		hpoTrial.put(URL, searchSpaceUrl.toString());
+		hpoTrial.put(SEARCHSPACE, searchSpaceJsonArray.get(0));
 		hpoTrial.put(OPERATION, EXP_TRIAL_GENERATE_NEW);
 
 		URL experimentTrialsURL = null;
@@ -93,6 +96,8 @@ public class RunExperiment implements Runnable
 
 				// Now get a subsequent config from Optuna for a fresh trial
 				hpoTrial.remove(OPERATION);
+				hpoTrial.remove(SEARCHSPACE);
+				hpoTrial.put(EXPERIMENT_NAME, experimentName);
 				hpoTrial.put(OPERATION, EXP_TRIAL_GENERATE_SUBSEQUENT);
 
 				Thread.sleep(1000);

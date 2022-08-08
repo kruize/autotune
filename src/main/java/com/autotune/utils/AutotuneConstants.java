@@ -39,6 +39,7 @@ public class AutotuneConstants {
         public static final String ID = "id";
         public static final String URL = "url";
         public static final String OPERATION = "operation";
+        public static final String SEARCHSPACE = "search_space";
     }
 
     public static class JSONKeys {
