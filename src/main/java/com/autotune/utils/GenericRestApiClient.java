@@ -57,6 +57,8 @@ public class GenericRestApiClient {
     private OAuth2Config oAuth2Config;  //Yet to implement
     private String authHeaderString;
 
+    private CloseableHttpClient client;
+
     /**
      * Initializes a new instance just by passing baseURL which does not need any authentication.
      * @param baseURL
@@ -148,6 +150,13 @@ public class GenericRestApiClient {
         return new JSONObject(jsonOutputInString);
     }
 
+    public boolean isSuccess(String endpoint, JSONObject data, String methodType) {
+        if (null == this.client) {
+            this.client = getClient();
+        }
+        return true;
+    }
+
     private static class StringResponseHandler implements ResponseHandler<String> {
         @Override
         public String handleResponse(HttpResponse response) throws IOException {
@@ -161,6 +170,24 @@ public class GenericRestApiClient {
         }
 
 
+    }
+
+    private CloseableHttpClient getClient() {
+        try {
+            SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  //overriding the standard certificate verification process and trust all certificate chains regardless of their validity
+            SSLConnectionSocketFactory sslConnectionSocketFactory =
+                    new SSLConnectionSocketFactory(sslContext, new String[]
+                            {"TLSv1.2" }, null,
+                            NoopHostnameVerifier.INSTANCE);
+            return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private int getStatusCode() {
+        return 0;
     }
 
 

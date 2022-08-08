@@ -1,9 +1,9 @@
 package com.autotune.common.data.datasource.queryable;
 
-import com.autotune.common.data.datasource.AutotuneDatasourceServiceability;
 import com.autotune.common.experiments.DatasourceInfo;
 import com.autotune.common.utils.CommonConstants;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.GenericRestApiClient;
 
 public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource {
     private String name;
@@ -53,7 +53,7 @@ public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource {
      */
     @Override
     public void setSource(String source) {
-        if((null != source) && (0 != source.trim().length()))
+        if((null != source) && (0 != source.trim().length()) && isReady(source))
             this.source = source;
     }
 
@@ -68,6 +68,9 @@ public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource {
         /**
          * Implementation needed for reachability
          */
+        if (isReady(this.source)) {
+            return CommonUtils.DatasourceReachabilityStatus.REACHABLE;
+        }
         return CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
     }
 
@@ -77,5 +80,16 @@ public class PrometheusAutotuneDatasource extends QueryableAutotuneDatasource {
          * Needs appropriate implementation
          */
         return CommonUtils.DatasourceReliabilityStatus.NOT_RELIABLE;
+    }
+
+    public boolean isReady(String source) {
+        if (null != source) {
+            GenericRestApiClient client = new GenericRestApiClient(this.source);
+            // Client need to have a generic function to pass response
+            return client.isSuccess(CommonConstants.AutotuneDatasource.Prometheus.READINESS_ENDPOINT,
+                    null,
+                    CommonConstants.Http.MethodTypes.GET);
+        }
+        return false;
     }
 }
