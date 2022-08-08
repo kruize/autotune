@@ -39,7 +39,7 @@ public class EMInterface {
 
 			/* STEP 4: Send trial to EM */
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENDING_TRIAL_CONFIG_INFO);
-			LOGGER.info(experimentTrialJSON);
+			//LOGGER.info(experimentTrialJSON);
 			URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);
 			String runId = HttpUtils.postRequest(createExperimentTrialURL, experimentTrialJSON.toString());
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RUNNING_TRIAL + runId);
