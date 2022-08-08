@@ -11,12 +11,12 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.autotune.analyzer.loop.EMInterface.ProcessTrialResultFromEM;
+import static com.autotune.analyzer.loop.EMInterface.*;
 import static com.autotune.analyzer.loop.HPOInterface.getNewTrialFromHPO;
-import static com.autotune.analyzer.loop.EMInterface.SendTrialToEM;
 import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
+import static com.autotune.utils.AutotuneConstants.JSONKeys.URL;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.DEPLOYMENT_NAME;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.URL;

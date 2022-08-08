@@ -110,4 +110,5 @@ public class HPOInterface {
 		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(TRAINING);
 		autotuneExperiment.summarizeTrial(trialDetails);
 	}
+
 }

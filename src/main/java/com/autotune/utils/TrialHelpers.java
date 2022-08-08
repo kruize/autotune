@@ -64,7 +64,7 @@ public class TrialHelpers {
     public static String experimentTrialToJSON(ExperimentTrial experimentTrial) {
         Gson gsonObj = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
         String gsonStr = gsonObj.toJson(experimentTrial);
-        return gsonStr;
+        return "["+gsonStr+"]";
     }
 
     /**

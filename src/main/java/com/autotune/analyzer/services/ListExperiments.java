@@ -23,71 +23,71 @@ import static com.autotune.analyzer.Experimentator.experimentsMap;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 
-public class ListExperiments extends HttpServlet
-{
-	private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
+public class ListExperiments extends HttpServlet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
 
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.setStatus(HttpServletResponse.SC_OK);
-		response.setContentType(JSON_CONTENT_TYPE);
-		response.setCharacterEncoding(CHARACTER_ENCODING);
 
-		JSONArray experimentTrialJSONArray = new JSONArray();
-		for (String deploymentName : experimentsMap.keySet()) {
-			AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentName);
-			for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
-				ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
-				JSONObject experimentTrialJSON = new JSONObject(TrialHelpers.experimentTrialToJSON(experimentTrial));
-				experimentTrialJSONArray.put(experimentTrialJSON);
-			}
-		}
-		response.getWriter().println(experimentTrialJSONArray.toString(4));
-		response.getWriter().close();
-	}
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
 
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.setStatus(HttpServletResponse.SC_OK);
-		response.setContentType(JSON_CONTENT_TYPE);
-		response.setCharacterEncoding(CHARACTER_ENCODING);
+        JSONArray experimentTrialJSONArray = new JSONArray();
+        for (String deploymentName : experimentsMap.keySet()) {
+            AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentName);
+            for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
+                ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
+                JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
+                experimentTrialJSONArray.put(experimentTrialJSON.get(0));
+            }
+        }
+        response.getWriter().println(experimentTrialJSONArray.toString(4));
+        response.getWriter().close();
+    }
 
-		LOGGER.info("Processing trial result...");
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
 
-		String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-		// String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
+        LOGGER.info("Processing trial result...");
 
-		String trialResultsData = request.getReader().lines().collect(Collectors.joining());
-		JSONObject trialResultsJson = new JSONObject(trialResultsData);
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
 
-		// Read in the experiment name and the deployment name in the received JSON from EM
-		String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
-		JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
-		int trialNumber = trialInfoJson.getInt("trial_num");
+        String trialResultsData = request.getReader().lines().collect(Collectors.joining());
+        JSONObject trialResultsJson = new JSONObject(trialResultsData);
 
-		JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
-		for (Object deploymentObject : deploymentsJsonArray) {
-			JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
-			String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
-			AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
+        // Read in the experiment name and the deployment name in the received JSON from EM
+        String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
+        JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
+        int trialNumber = trialInfoJson.getInt("trial_num");
 
-			// Check if the passed in JSON has the same info as in the URL
-			if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
-				LOGGER.error("Bad results JSON passed: ", experimentNameJson);
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				break;
-			}
+        JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
+        for (Object deploymentObject : deploymentsJsonArray) {
+            JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
+            String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
+            AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
 
-			try {
-				updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
-			} catch (InvalidValueException | IncompatibleInputJSONException e) {
-				e.printStackTrace();
-			}
-			RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
-			// Received a metrics JSON from EM after a trial, let the waiting thread know
-			LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
-			runExperiment.send();
-		}
-		response.getWriter().close();
-	}
+            // Check if the passed in JSON has the same info as in the URL
+            if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
+                LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                break;
+            }
+
+            try {
+                updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
+            } catch (InvalidValueException | IncompatibleInputJSONException e) {
+                e.printStackTrace();
+            }
+            RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
+            // Received a metrics JSON from EM after a trial, let the waiting thread know
+            LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
+            runExperiment.send();
+        }
+        response.getWriter().close();
+    }
 }

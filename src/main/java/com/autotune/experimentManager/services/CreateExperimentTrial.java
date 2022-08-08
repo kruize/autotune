@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -54,12 +56,23 @@ public class CreateExperimentTrial extends HttpServlet {
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            ExperimentTrial experimentTrial = gson.fromJson(inputData, ExperimentTrial.class);
-            LOGGER.debug(experimentTrial.toString());
-            new ExperimentTrialHandler(experimentTrial).startExperimentTrials();  // Call this on thread to make it asynchronous
+            ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
+            List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
+            experimentTrialList.forEach(
+                    (experimentTrial) -> {
+                        LOGGER.debug("Experiment name {} with trial number {}  started processing",experimentTrial.getExperimentName(),experimentTrial.getTrialInfo().getTrialNum());
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
+                            }
+                        }.start();
+                    }
+            );
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (Exception e) {
-            LOGGER.error("{}", e);
+            LOGGER.error(e.toString());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

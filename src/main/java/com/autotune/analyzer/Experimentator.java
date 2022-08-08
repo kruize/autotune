@@ -21,7 +21,7 @@ import static com.autotune.utils.ExperimentMessages.RunExperiment.INITIAL_STATUS
  */
 public class Experimentator implements Runnable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Experimentator.class);
-	private static final int MAX_NUMBER_OF_EXPERIMENTS = 1;
+	private static final int MAX_NUMBER_OF_EXPERIMENTS = 2;
 	private static final int MAX_NUMBER_OF_TRIALS = 10;
 	private static final int NUMBER_OF_PARALLEL_TRIALS = 1;
 	private static int num_experiments = 0;
@@ -83,7 +83,6 @@ public class Experimentator implements Runnable {
 				Thread runExp = new Thread(runExperiment);
 				runExp.start();
 				runExp.join();
-				// autotuneExperiment.summarize();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
