@@ -2,9 +2,10 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.RunExperiment;
-import com.autotune.common.experiments.ExperimentSummary;
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,22 +17,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.Experimentator.experimentsMap;
-import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
-import static com.autotune.utils.AutotuneConstants.HpoOperations.EXP_TRIAL_GENERATE_SUBSEQUENT;
-import static com.autotune.utils.ExperimentMessages.RunExperiment.*;
-import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
+import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
-    private static final int TRIAL_RUN_LIMIT = 10;
 
 
     @Override
@@ -55,50 +48,46 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		/*
-			Dummy values are set here once metric collection implemented will change logic accordingly
-		 */
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
+        LOGGER.info("Processing trial result...");
+
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
+
         String trialResultsData = request.getReader().lines().collect(Collectors.joining());
         JSONObject trialResultsJson = new JSONObject(trialResultsData);
 
-        String deployment_name = trialResultsJson.getString("deployment_name");
+        // Read in the experiment name and the deployment name in the received JSON from EM
+        String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
         JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
         int trialNumber = trialInfoJson.getInt("trial_num");
-        AutotuneExperiment autotuneExperiment = experimentsMap.get(deployment_name);
-        ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNumber);
-        LOGGER.debug("POST Trials to HPO.");
-        // POST the result back to HPO
-        URL experimentTrialsURL = null;
-        try {
-            experimentTrialsURL = new URL(OPTUNA_TRIALS_END_POINT);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        postTrialResultToHPO(experimentTrial, experimentTrialsURL);
-        try {
-            Thread.sleep(1000 * 10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        ExperimentSummary es = autotuneExperiment.getExperimentSummary();
-        es.setTrialsCompleted(es.getTrialsCompleted() + 1);
-        es.setTrialsPassed(es.getTrialsPassed() + 1);
-        TrialDetails trialDetails = autotuneExperiment.getExperimentTrials().get(trialNumber).getTrialDetails().get(TRAINING);
-        trialDetails.setResult("SUCCESS");
-        trialDetails.setResultError("None");
-        trialDetails.setEndTime(Timestamp.from(Instant.now()));
-        autotuneExperiment.setHPOoperation(EXP_TRIAL_GENERATE_SUBSEQUENT);
-        if(es.getTrialsCompleted() < TRIAL_RUN_LIMIT) {
-            RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
-            runExperiment.run();
-        }else{
-            autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENT_RESULT_TO_HPO );
-            autotuneExperiment.summarizeTrial(trialDetails);//es.setBestTrial(1);
-        }
-    }
 
+        JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
+        for (Object deploymentObject : deploymentsJsonArray) {
+            JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
+            String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
+            AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
+
+            // Check if the passed in JSON has the same info as in the URL
+            if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
+                LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                break;
+            }
+
+            try {
+                updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
+            } catch (InvalidValueException | IncompatibleInputJSONException e) {
+                e.printStackTrace();
+            }
+            RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
+            // Received a metrics JSON from EM after a trial, let the waiting thread know
+            LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
+            runExperiment.send();
+        }
+        response.getWriter().close();
+    }
 }

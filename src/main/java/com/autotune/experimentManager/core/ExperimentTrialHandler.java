@@ -60,6 +60,13 @@ public class ExperimentTrialHandler {
                 ).
                 put("name", "request_sum").
                 put("datasource", "prometheus"));
+        podMetrics.put(new JSONObject().
+                put("summary_results", new JSONObject().
+                        put("percentile_info", percentile_info).
+                        put("general_info", general_info)
+                ).
+                put("name", "request_count").
+                put("datasource", "prometheus"));
         JSONArray containers = new JSONArray();
 
         HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
@@ -166,6 +173,7 @@ public class ExperimentTrialHandler {
             e.printStackTrace();
         }
         LOGGER.debug("POST to URL. {}", trial_result_url);
+        LOGGER.debug(retJson.toString());
         HttpUtils.postRequest(trial_result_url, retJson.toString());
     }
 

@@ -58,7 +58,7 @@ public class HPOInterface {
 			/* STEP 2: We got a trial id from Optuna, now use that to get the actual config */
 			String trialConfigJson = HttpUtils.getDataFromURL(trialConfigURL, "");
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RECEIVED_TRIAL_CONFIG_INFO);
-			LOGGER.info(trialConfigJson);
+			//LOGGER.info(trialConfigJson);
 
 			/* STEP 3: Now create a trial to be passed to experiment manager to run */
 			ExperimentTrial experimentTrial = null;
