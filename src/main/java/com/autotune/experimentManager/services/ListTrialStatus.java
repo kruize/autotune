@@ -18,6 +18,7 @@ package com.autotune.experimentManager.services;
 
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
+import com.autotune.experimentManager.services.util.EMAPIHandler;
 import com.autotune.experimentManager.transitions.util.TransistionHelper;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -28,7 +29,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This class is the handler for the endpoint `listTrialStatus`
@@ -38,56 +38,30 @@ import java.util.ArrayList;
 public class ListTrialStatus extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-//        String inputData = req.getReader().lines().collect(Collectors.joining());
-//        JSONObject json = new JSONObject(inputData);
-//        String runId = json.getString(EMConstants.InputJsonKeys.GetTrailStatusInputKeys.RUN_ID);
-        ArrayList<String> runIdList = new ArrayList<String>();
-        boolean validRunId = true;
-        String runIdParam = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.RUN_ID);
-        if (null != runIdParam) {
-            runIdList.add(runIdParam);
+        String experiment_name = null;
+        String trial_num = null;
+        // Setting off verbose to false by default
+        boolean verbose = false;
+
+        // Extract Experiment Name if exist
+        experiment_name = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.EXPERIMENT_NAME);
+        // Extract Trial Number if exist
+        trial_num = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.TRIAL_NUM);
+        // Extract Verbose option if exist
+        String checkVerbose = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.VERBOSE);
+        if (null != checkVerbose && checkVerbose.equalsIgnoreCase("true")) {
+            verbose = true;
+        }
+
+        // get the status JSON based on the type of requirement sent by the user
+        JSONObject API_RESPONSE = EMAPIHandler.getStatusJson(experiment_name, trial_num, verbose);
+
+        if (null != API_RESPONSE.getString("Error")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         } else {
-            EMMapper.getInstance().getMap().forEach((key, value) -> {
-                runIdList.add((String) key);
-            });
+            resp.setStatus(HttpServletResponse.SC_OK);
         }
-
-        JSONArray API_RESPONSE_ARRAY = new JSONArray();
-
-        for (String runId : runIdList) {
-            validRunId = true;
-            JSONObject API_RESPONSE = null;
-
-            if (null == runId) {
-                API_RESPONSE = new JSONObject();
-                API_RESPONSE.put(EMConstants.InputJsonKeys.ListTrialStatusKeys.ERROR, "Run ID cannot be null");
-                validRunId = false;
-            } else if (!EMMapper.getInstance().getMap().containsKey(runId)) {
-                API_RESPONSE = new JSONObject();
-                API_RESPONSE.put(EMConstants.InputJsonKeys.ListTrialStatusKeys.ERROR, "Invalid Run ID");
-                validRunId = false;
-            }
-
-            String completeStatus = req.getParameter("completeStatus");
-            String summary = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.SUMMARY);
-
-            if(validRunId) {
-                if (null != summary && summary.equalsIgnoreCase("true")) {
-                    ExperimentTrialData etd = (ExperimentTrialData) EMMapper.getInstance().getMap().get(runId);
-                    if (etd.getStatus() == EMUtil.EMExpStatus.COMPLETED) {
-                        API_RESPONSE = TransistionHelper.MetricsFormatter.getMetricsJson(runId);
-                        API_RESPONSE.put(EMConstants.InputJsonKeys.ListTrialStatusKeys.STATUS, ((ExperimentTrialData) EMMapper.getInstance().getMap().get(runId)).getStatus().toString());
-                    }
-                }
-            }
-
-            API_RESPONSE_ARRAY.put(API_RESPONSE);
-        }
-
-
-
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.getWriter().println(API_RESPONSE_ARRAY.toString(4));
+        resp.getWriter().println(API_RESPONSE.toString(4));
     }
 
     @Override

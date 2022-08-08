@@ -142,6 +142,9 @@ public class EMConstants {
 			public static String ERROR = "error";
 			public static String SUMMARY = "summary";
 			public static String COMPLETE_STATUS = "completeStatus";
+			public static String EXPERIMENT_NAME = "experiment_name";
+			public static String TRIAL_NUM = "trial_num";
+			public static String VERBOSE = "verbose";
 		}
 		public static class DeploymentKeys {
 			private DeploymentKeys() { }
