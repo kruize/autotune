@@ -2,7 +2,6 @@ package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.utils.ServerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -12,14 +11,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static com.autotune.analyzer.loop.EMInterface.*;
-import static com.autotune.analyzer.loop.HPOInterface.getNewTrialFromHPO;
+import static com.autotune.analyzer.loop.HPOInterface.getTrialFromHPO;
 import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.URL;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.DEPLOYMENT_NAME;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.URL;
 import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
 
 /**
@@ -80,7 +76,7 @@ public class RunExperiment implements Runnable
 		for (int i = 0; i<autotuneExperiment.getExperimentSummary().getTotalTrials(); i++) {
 			try {
 				// Request a new trial config from HPO and return a trial config
-				ExperimentTrial experimentTrial = getNewTrialFromHPO(autotuneExperiment, experimentTrialsURL, hpoTrial);
+				ExperimentTrial experimentTrial = getTrialFromHPO(autotuneExperiment, experimentTrialsURL, hpoTrial);
 
 				// Now send the trial to EM to actually deploy it
 				SendTrialToEM(autotuneExperiment, experimentTrial);
@@ -97,6 +93,7 @@ public class RunExperiment implements Runnable
 				// Now get a subsequent config from Optuna for a fresh trial
 				hpoTrial.remove(OPERATION);
 				hpoTrial.remove(SEARCHSPACE);
+				hpoTrial.remove(EXPERIMENT_NAME);
 				hpoTrial.put(EXPERIMENT_NAME, experimentName);
 				hpoTrial.put(OPERATION, EXP_TRIAL_GENERATE_SUBSEQUENT);
 

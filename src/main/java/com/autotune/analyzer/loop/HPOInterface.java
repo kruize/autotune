@@ -3,6 +3,7 @@ package com.autotune.analyzer.loop;
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.utils.AutotuneConstants;
 import com.autotune.utils.HttpUtils;
 import com.autotune.utils.TrialHelpers;
 import org.json.JSONObject;
@@ -33,13 +34,13 @@ public class HPOInterface {
 	 * @param hpoTrial
 	 * @return
 	 */
-	public static ExperimentTrial getNewTrialFromHPO(AutotuneExperiment autotuneExperiment,
-													 URL experimentTrialsURL,
-													 JSONObject hpoTrial) {
+	public static ExperimentTrial getTrialFromHPO(AutotuneExperiment autotuneExperiment,
+												  URL experimentTrialsURL,
+												  JSONObject hpoTrial) {
 		try {
 			String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
 			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + STATUS_GET_TRIAL_CONFIG);
-			LOGGER.debug(hpoTrial.toString());
+			LOGGER.info(hpoTrial.toString());
 
 			/* STEP 1: Send a request for a trial config from Optuna */
 			int trialNumber = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, hpoTrial.toString()));
@@ -91,9 +92,9 @@ public class HPOInterface {
 		int max = 10;
 		double rand;
 
-		String experimentId = autotuneExperiment.getAutotuneObject().getExperimentId();
+		String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
 		JSONObject sendTrialResult = new JSONObject();
-		sendTrialResult.put(ID, experimentId);
+		sendTrialResult.put(EXPERIMENT_NAME, experimentName);
 		sendTrialResult.put(TRIAL_NUMBER, trialNumber);
 		sendTrialResult.put(TRIAL_RESULT, "success");
 		sendTrialResult.put(RESULT_VALUE_TYPE, "double");
@@ -102,7 +103,7 @@ public class HPOInterface {
 		sendTrialResult.put(OPERATION, EXP_TRIAL_RESULT);
 
 		/* STEP 7: Now send the calculated result back to Optuna */
-		int response = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, sendTrialResult.toString()));
+		String response = HttpUtils.postRequest(experimentTrialsURL, sendTrialResult.toString());
 		LOGGER.info("Optuna Trial No: " + trialNumber + " result response: " + response);
 		autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENT_RESULT_TO_HPO);
 
