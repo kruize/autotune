@@ -53,7 +53,6 @@ modify_autotune_config_tests=("add_new_tunable"
 "multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune_operator:test"
-OPTUNA_IMAGE="kruize/autotune_optuna:test"
 total_time=0
 matched=0
 sanity=0
@@ -127,7 +126,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${OPTUNA_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -155,8 +154,7 @@ function setup_prometheus() {
 function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
-	OPTUNA_IMAGE=$3
-	CONFIGMAP_DIR=$4
+	CONFIGMAP_DIR=$3
 	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
@@ -172,10 +170,10 @@ function deploy_autotune() {
 		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP_DIR}"
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR}"
 	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP}"
+		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP}"
 	fi	
 	echo "CMD= ${cmd}"
 	${cmd}

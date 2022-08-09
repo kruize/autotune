@@ -21,7 +21,7 @@ package com.autotune.utils;
 public class ServerContext
 {
 	public static final int AUTOTUNE_PORT = 8080;
-	public static final int OPTUNA_PORT = 8085;
+	public static final int HPO_PORT = 8085;
 
 	// Analyzer end points
 	public static final String ROOT_CONTEXT = "/";
@@ -40,10 +40,10 @@ public class ServerContext
 	public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
 	public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
 
-	// Optuna End Points
-	public static final String OPTUNA_SERVER_PORT = "http://localhost:" + OPTUNA_PORT;
-	public static final String OPTUNA_TRIALS = ROOT_CONTEXT + "experiment_trials";
-	public static final String OPTUNA_TRIALS_END_POINT = OPTUNA_SERVER_PORT + OPTUNA_TRIALS;
+	// HPO End Points
+	public static final String HPO_SERVER_PORT = "http://localhost:" + HPO_PORT;
+	public static final String HPO_TRIALS = ROOT_CONTEXT + "experiment_trials";
+	public static final String HPO_TRIALS_END_POINT = HPO_SERVER_PORT + HPO_TRIALS;
 
 	public static final String EXPERIMENT_MANAGER_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
 	public static final String EXPERIMENT_MANAGER_CREATE_TRIAL = ROOT_CONTEXT + "createExperimentTrial";

@@ -58,7 +58,7 @@ public class TrialHelpers {
     /**
      * Convert the given ExperimentTrial object to JSON. This will be sent to the EM module
      *
-     * @param experimentTrial object that holds the trial config from Optuna
+     * @param experimentTrial object that holds the trial config from HPO
      * @return Equivalent JSONObject that is accepted by EM
      */
     public static String experimentTrialToJSON(ExperimentTrial experimentTrial) {
@@ -114,9 +114,9 @@ public class TrialHelpers {
     /**
      * Create a ExperimentTrial object that holds the trial config to be deployed to the k8s cluster
      *
-     * @param trialNumber        passed in from Optuna
+     * @param trialNumber        passed in from HPO
      * @param autotuneExperiment from the user
-     * @param trialConfigJson    from Optuna
+     * @param trialConfigJson    from HPO
      * @return ExperimentTrial object
      */
     public static ExperimentTrial createDefaultExperimentTrial(int trialNumber,
@@ -126,11 +126,11 @@ public class TrialHelpers {
         ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationSearchSpace();
         AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
 
-        TrialSettings trialSettings = new TrialSettings("3",
-                "1min",
-                "3",
-                "1min",
-                "3"
+        TrialSettings trialSettings = new TrialSettings("1",
+                "5sec",
+                "1",
+                "10sec",
+                "1"
         );
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy(ROLLING_UPDATE);
 

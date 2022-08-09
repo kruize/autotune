@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TRUE;
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
 import static com.autotune.utils.AnalyzerConstants.HotspotConstants.*;
+import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
 
 /**
@@ -72,7 +73,16 @@ public class HotspotLayer extends GenericLayer implements Layer {
                 runtimeOptions.append(XXOPTION).append(USE)
                         .append(tunableJSON.getString(TUNABLE_VALUE));
                 break;
-            case TIERED_COMPILATION:
+            case NETTY_BUFFER_CHECK:
+                /**
+                 * -Dio.netty.buffer.checkBounds=TUNABLE_VALUE
+                 * -Dio.netty.buffer.checkAccessible=TUNABLE_VALUE
+                 */
+                runtimeOptions.append(DOPTION).append(NETTY_BUFFER_CHECKBOUNDS)
+                        .append(EQUALS).append(tunableJSON.getString(TUNABLE_VALUE));
+                runtimeOptions.append(DOPTION).append(NETTY_BUFFER_CHECKACCESSIBLE)
+                        .append(EQUALS).append(tunableJSON.getString(TUNABLE_VALUE));
+                break;
             case ALLOW_PARALLEL_DEFINE_CLASS:
             case ALLOW_VECTORIZE_ON_DEMAND:
             case ALWAYS_COMPILE_LOOP_METHODS:
@@ -80,6 +90,8 @@ public class HotspotLayer extends GenericLayer implements Layer {
             case ALWAYS_TENURE:
             case BACKGROUND_COMPILATION:
             case DO_ESCAPE_ANALYSIS:
+            case STACK_TRACE_IN_THROWABLE:
+            case TIERED_COMPILATION:
             case USE_INLINE_CACHES:
             case USE_LOOP_PREDICATE:
             case USE_STRING_DEDUPLICATION:
@@ -95,17 +107,17 @@ public class HotspotLayer extends GenericLayer implements Layer {
                 runtimeOptions.append(XXOPTION).append(tunableName).append(EQUALS)
                         .append(tunableJSON.getDouble(TUNABLE_VALUE));
                 break;
-            case MAX_INLINE_LEVEL:
-            case FREQ_INLINE_SIZE:
-            case MIN_INLINING_THRESHOLD:
             case COMPILE_THRESHOLD:
             case CONC_GC_THREADS:
-            case PARALLEL_GC_THREADS:
+            case FREQ_INLINE_SIZE:
             case INLINE_SMALL_CODE:
             case LOOP_UNROLL_LIMIT:
             case LOOP_UNROLL_MIN:
+            case MAX_INLINE_LEVEL:
+            case MIN_INLINING_THRESHOLD:
             case MIN_SURVIVOR_RATIO:
             case NEW_RATIO:
+            case PARALLEL_GC_THREADS:
             case TIERED_STOP_AT_LEVEL:
             default:
                 runtimeOptions.append(XXOPTION).append(tunableName).append(EQUALS)

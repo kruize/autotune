@@ -64,7 +64,7 @@ public class ListStackLayers extends HttpServlet {
      *                           "layer_name": "container",
      *                           "layer_details": "generic container tunables"
      *                       }],
-     *                       "stack_name": "dinogun/autotune_optuna:0.0.5"
+     *                       "stack_name": "dinogun/hpo:0.0.5"
      *                   },
      *                   {
      *                       "layers": [{

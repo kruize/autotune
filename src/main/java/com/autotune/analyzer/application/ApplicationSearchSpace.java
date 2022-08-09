@@ -29,6 +29,8 @@ public class ApplicationSearchSpace
 	private final String hpoAlgoImpl;
 	private final String direction;
 	private final String valueType;
+	private final Integer totalTrials;
+	private final Integer parallelTrials;
 
 	Map<String, Tunable> tunablesMap;
 
@@ -37,13 +39,17 @@ public class ApplicationSearchSpace
 								  String objectiveFunction,
 								  String hpoAlgoImpl,
 								  String direction,
-								  String valueType) {
+								  String valueType,
+								  Integer totalTrials,
+								  Integer parallelTrials) {
 		this.experimentName = experimentName;
 		this.experimentId = experimentId;
 		this.objectiveFunction = objectiveFunction;
 		this.hpoAlgoImpl = hpoAlgoImpl;
 		this.direction = direction;
 		this.valueType = valueType;
+		this.totalTrials = totalTrials;
+		this.parallelTrials = parallelTrials;
 
 		this.tunablesMap = new HashMap<>();
 	}
@@ -73,4 +79,8 @@ public class ApplicationSearchSpace
 	public String getValueType() {
 		return valueType;
 	}
+
+	public Integer getTotalTrials() { return totalTrials; }
+
+	public Integer getParallelTrials() { return parallelTrials; }
 }

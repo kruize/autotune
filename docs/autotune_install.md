@@ -59,10 +59,9 @@ Build autotune docker image 'autotune:test' with the following command
 $ ./build.sh -i autotune:test
 
 
-   Usage: ./build.sh [-d] [-v version_string] [-i autotune_docker_image] [-o optuna_docker_image]
+   Usage: ./build.sh [-d] [-v version_string] [-i autotune_docker_image]
 	-d: build in dev friendly mode
 	-i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
-	-o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]
 	-v: build as specific autotune version
 
 ```
@@ -77,17 +76,17 @@ Let us now deploy autotune using the docker image onto the minikube cluster
 ```
 $ ./deploy.sh -c minikube -i autotune:test
 
-  Usage: ./deploy.sh [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [-s start] [-t terminate]
+  Usage: ./deploy.sh [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [-s start] [-t terminate]
         -s: Deploy autotune [Default]
         -t: Terminate autotune deployment
         -c: kubernetes cluster type. At present we support only minikube [Default - minikube]
-        -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
-        -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]
+        -i: deploy with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
+        -o: deploy with specific hpo docker image name [Default - kruize/hpo:<current hpo version>]
         -n: Namespace to which autotune is deployed [Default - monitoring for cluster type minikube]
         -d: Config maps directory [Default - manifests/configmaps]
 
   For example,
-  ./deploy.sh -c minikube -i <docker hub user>/autotune_operator:test -o <docker hub user>/autotune_optuna:test
+  ./deploy.sh -c minikube -i <docker hub user>/autotune_operator:test -o <docker hub user>/hpo:test
 
 
 Info: Checking pre requisites for minikube...
