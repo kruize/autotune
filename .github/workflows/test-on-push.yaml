@@ -45,9 +45,7 @@ jobs:
       - name: Docker Push
         run: |
           docker tag autotune_operator:test kruize/autotune_operator:test
-          docker tag autotune_optuna:test kruize/autotune_optuna:test
           docker push kruize/autotune_operator:test
-          docker push kruize/autotune_optuna:test
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube  
@@ -56,5 +54,4 @@ jobs:
       - name: Deploy autotune
         run: |
           echo Deploy autotune  
-          ./deploy.sh -c minikube -i kruize/autotune_operator:test -o kruize/autotune_optuna:test
-
+          ./deploy.sh -c minikube -i kruize/autotune_operator:test

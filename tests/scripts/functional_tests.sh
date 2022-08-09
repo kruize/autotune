@@ -61,9 +61,6 @@ do
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
 		;;
-	o)
-		OPTUNA_DOCKER_IMAGE="${OPTARG}"
-		;;
 	r)
 		APP_REPO="${OPTARG}"		
 		;;

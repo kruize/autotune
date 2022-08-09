@@ -148,7 +148,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [-o optuna image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--hpo specifying this flag starts the HPO service]
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory]
 ```
 
 Where values for test_autotune.sh are:
@@ -156,7 +156,6 @@ Where values for test_autotune.sh are:
 ```
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
                         [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune_operator:test
-                        [ -o ] : optional. Optuna docker image to be used for testing, default - kruize/autotune_optuna:test
 			[ -r ] : Location of benchmarks
 			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)
 			[ --testmodule ]: Module to be tested. Use testmodule=help, to list the modules to be tested
@@ -164,7 +163,6 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
-			[ --hpo ] : optional. Specifying this option runs HPO tests in standalone mode without using the docker image for optuna]
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 
@@ -181,9 +179,4 @@ For example,
 To run the tests specific to a autotune module use the "testmodule" option. For example, to run all the tests for dependency analyzer module execute the below command:
 ```
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testmodule=da -r /home/benchmarks --resultsdir=/home/results
-```
-
-To run all tests for Hyperparameter Optimization (hpo) module execute the below command:
-```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testmodule=hpo /home/benchmarks --resultsdir=/home/results
 ```

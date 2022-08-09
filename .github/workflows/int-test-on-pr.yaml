@@ -47,7 +47,7 @@ jobs:
         run: |
           echo Build autotune
           cd autotune
-          ./build.sh -i autotune_operator:int-test -o autotune_optuna:int-test
+          ./build.sh -i autotune_operator:int-test
           docker images | grep autotune     
 
       - name: Install Prometheus on minikube
@@ -70,7 +70,7 @@ jobs:
         run: |
           echo Running Dependency Analyzer tests
           cd autotune/tests
-          ./test_autotune.sh -c minikube -i autotune_operator:int-test -o autotune_optuna:int-test --tctype=functional --testmodule=da --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
+          ./test_autotune.sh -c minikube -i autotune_operator:int-test --tctype=functional --testmodule=da --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
 
           cd ${GITHUB_WORKSPACE}
           ls

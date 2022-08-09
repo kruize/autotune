@@ -16,7 +16,7 @@ import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
 import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
-import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
+import static com.autotune.utils.ServerContext.HPO_TRIALS_END_POINT;
 
 /**
  *
@@ -68,7 +68,7 @@ public class RunExperiment implements Runnable
 
 		URL experimentTrialsURL = null;
 		try {
-			experimentTrialsURL = new URL(OPTUNA_TRIALS_END_POINT);
+			experimentTrialsURL = new URL(HPO_TRIALS_END_POINT);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -90,7 +90,7 @@ public class RunExperiment implements Runnable
 				// POST the result back to HPO
 				postTrialResultToHPO(autotuneExperiment, experimentTrial, experimentTrialsURL);
 
-				// Now get a subsequent config from Optuna for a fresh trial
+				// Now get a subsequent config from HPO for a fresh trial
 				hpoTrial.remove(OPERATION);
 				hpoTrial.remove(SEARCHSPACE);
 				hpoTrial.remove(EXPERIMENT_NAME);

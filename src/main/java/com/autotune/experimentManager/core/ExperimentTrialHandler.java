@@ -32,9 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.IntStream;
 
-import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
-import static com.autotune.utils.ServerContext.OPTUNA_TRIALS_END_POINT;
-
 /**
  * Service class helper used to control and execute Lifecycle of Experiments using trial numbers.
  */

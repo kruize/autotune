@@ -54,7 +54,7 @@ public class ListStacks extends HttpServlet
      *                 "name": "autotune",
      *                 "namespace": "monitoring",
      *                 "stacks": [
-     *                    "dinogun/autotune_optuna:0.0.5",
+     *                    "dinogun/hpo:0.0.5",
      *                    "dinogun/autotune_operator:0.0.5"
      *                 ]
      *             }

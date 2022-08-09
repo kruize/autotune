@@ -22,7 +22,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
- * A data util used to hold detailed information about trails.
+ * A data util used to hold detailed information about trials.
  * Example
  *     "deployments": {
  *         "OptunaStudy": {
