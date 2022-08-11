@@ -19,6 +19,7 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -30,6 +31,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 /**
@@ -41,6 +44,19 @@ public class ExperimentTrialHandler {
 
     public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
         this.experimentTrial = experimentTrial;
+        String experimentName = experimentTrial.getExperimentName();
+        String trialNum = String.valueOf(experimentTrial.getTrialInfo().getTrialNum());
+        ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expTrialMap = EMMapper.getInstance().getExpTrialMap();
+        if (expTrialMap.containsKey(experimentName)) {
+            HashMap<String, ExperimentTrial> expMap = expTrialMap.get(experimentName);
+            if (!expMap.containsKey(trialNum)) {
+                expMap.put(trialNum, experimentTrial);
+            }
+        } else {
+            HashMap<String, ExperimentTrial> trialMap = new HashMap<String, ExperimentTrial>();
+            trialMap.put(trialNum, experimentTrial);
+            expTrialMap.put(experimentName, trialMap);
+        }
     }
 
     public static JSONObject getDummyMetricJson(ExperimentTrial experimentTrial) {
