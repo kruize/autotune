@@ -20,18 +20,20 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 
 /**
- * A storage object, which is used to feed information about trail details for Experiment manager to perform experiments suggested by Analyser.
+ * A storage object, which is used to feed information about trial details
+ * for Experiment manager to perform experiments suggested by Analyser.
  */
 public class ExperimentTrial {
-    @SerializedName("experiment_id")
-    private final String experimentId;
-    private final String namespace;
     @SerializedName("experiment_name")
     private final String experimentName;
+    @SerializedName("resource")
+    private final ResourceDetails resourceDetails;
+    @SerializedName("experiment_id")
+    private final String experimentId;
     @SerializedName("trial_info")
     private final TrialInfo trialInfo;
     @SerializedName("datasource_info")
-    private final DatasourceInfo datasourceInfo;
+    private final HashMap<String, DatasourceInfo> datasourceInfo;
     @SerializedName("settings")
     private final ExperimentSettings experimentSettings;
     // HashMap of parallel trials being monitored for this trial
@@ -40,47 +42,38 @@ public class ExperimentTrial {
     /**
      * Example
      * "deployments": {
-     *      "training": {
-     *                      "pod_metrics": {...},
-     *                      "deployment_name": "tfb-qrh-sample",
-     *                      "namespace": "default",
-     *                      "containers": {...},
-     *                      "type": "training"
-     *      }
+     * "training": {
+     * "pod_metrics": {...},
+     * "deployment_name": "tfb-qrh-sample",
+     * "namespace": "default",
+     * "containers": {...},
+     * "type": "training"
+     * }
      * }
      */
     @SerializedName("deployments")
     private final HashMap<String, TrialDetails> trialDetails;
 
-    public ExperimentTrial(String experimentName,
-                           String experimentId,
-                           String namespace,
-                           TrialInfo trialInfo,
-                           DatasourceInfo datasourceInfo,
-                           ExperimentSettings experimentSettings,
-                           HashMap<String, TrialDetails> trialDetails) {
-        this.experimentId = experimentId;
-        this.namespace = namespace;
+    public ExperimentTrial(String experimentName, ResourceDetails resourceDetails, String experimentId, TrialInfo trialInfo, HashMap<String, DatasourceInfo> datasourceInfo, ExperimentSettings experimentSettings, HashMap<String, TrialDetails> trialDetails) {
         this.experimentName = experimentName;
+        this.resourceDetails = resourceDetails;
+        this.experimentId = experimentId;
         this.trialInfo = trialInfo;
         this.datasourceInfo = datasourceInfo;
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
     }
 
+
     public String getExperimentId() {
         return experimentId;
-    }
-
-    public String getNamespace() {
-        return namespace;
     }
 
     public String getExperimentName() {
         return experimentName;
     }
 
-    public DatasourceInfo getDatasourceInfo() {
+    public HashMap<String, DatasourceInfo> getDatasourceInfo() {
         return datasourceInfo;
     }
 
@@ -96,12 +89,16 @@ public class ExperimentTrial {
         return trialDetails;
     }
 
+    public ResourceDetails getResourceDetails() {
+        return resourceDetails;
+    }
+
     @Override
     public String toString() {
         return "ExperimentTrial{" +
-                "experimentId='" + experimentId + '\'' +
-                ", namespace='" + namespace + '\'' +
-                ", experimentName='" + experimentName + '\'' +
+                "experimentName='" + experimentName + '\'' +
+                ", resourceDetails=" + resourceDetails +
+                ", experimentId='" + experimentId + '\'' +
                 ", trialInfo=" + trialInfo +
                 ", datasourceInfo=" + datasourceInfo +
                 ", experimentSettings=" + experimentSettings +

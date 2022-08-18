@@ -20,22 +20,22 @@ import java.net.URL;
 /**
  * This Data object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
  * Example
- *     "datasource_info": {
- *         "name": "prometheus",
- *         "url": "http://10.101.144.137:9090"
- *     }
+ * "datasource_info": {
+ * "name": "prometheus",
+ * "url": "http://10.101.144.137:9090"
+ * }
  */
 public class DatasourceInfo {
-    private final String name;
+    private final String provider;
     private final URL url;
 
-    public DatasourceInfo(String name, URL url) {
-        this.name = name;
+    public DatasourceInfo(String provider, URL url) {
+        this.provider = provider;
         this.url = url;
     }
 
-    public String getName() {
-        return name;
+    public String getProvider() {
+        return provider;
     }
 
     public URL getUrl() {
@@ -45,7 +45,7 @@ public class DatasourceInfo {
     @Override
     public String toString() {
         return "DatasourceInfo{" +
-                "name='" + name + '\'' +
+                "provider='" + provider + '\'' +
                 ", url=" + url +
                 '}';
     }

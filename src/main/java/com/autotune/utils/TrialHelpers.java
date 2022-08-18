@@ -144,8 +144,10 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
+        HashMap<String,DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
         DatasourceInfo datasourceInfo = new DatasourceInfo(AutotuneDeploymentInfo.getMonitoringAgent(),
                 new URL(AutotuneDeploymentInfo.getMonitoringAgentEndpoint()));
+        datasourceInfoHashMap.put(AutotuneDeploymentInfo.getMonitoringAgent(),datasourceInfo);
 
         ArrayList<String> trackers = new ArrayList<>();
         trackers.add(TRAINING);
@@ -259,14 +261,16 @@ public class TrialHelpers {
                     autotuneExperiment.getApplicationDeployment().getNamespace(), podMetrics, podContainers);
             trailDetailsMap.put(tracker, trialDetails);
         }
+        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(),null);
         ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentName(),
-                appSearchSpace.getExperimentId(),
-                autotuneObject.getNamespace(),
-                trialInfo,
-                datasourceInfo,
-                experimentSettings,
-                deployments
-        );
+        resourceDetails,
+        appSearchSpace.getExperimentId(),
+        trialInfo,
+        datasourceInfoHashMap,
+        experimentSettings,
+        trailDetailsMap);
+
+
 
         return experimentTrial;
     }
