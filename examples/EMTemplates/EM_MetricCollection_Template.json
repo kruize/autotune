@@ -25,42 +25,30 @@
         }
       },
       "container_metrics": {
-        "MaxInlineLevel": {
-          "datasource": "prometheus1",
-          "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-          "name": "MaxInlineLevel"
-        },
-        "memoryRequest": {
-          "datasource": "prometheus1",
-          "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-          "name": "memoryRequest"
-        },
-        "cpuRequest": {
-          "datasource": "prometheus1",
-          "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
-          "name": "cpuRequest"
+        "container_name": {
+          "MaxInlineLevel": {
+            "datasource": "prometheus1",
+            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "name": "MaxInlineLevel"
+          },
+          "memoryRequest": {
+            "datasource": "prometheus1",
+            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "name": "memoryRequest"
+          },
+          "cpuRequest": {
+            "datasource": "prometheus1",
+            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+            "name": "cpuRequest"
+          }
         }
       }
     },
     "settings": {
-      "collection_intervals": {
-              "days": {
-                "SUN": false,
-                "MON": false,
-                "TUE": false,
-                "WED": true,
-                "THU": true,
-                "FRI": true,
-                "SAT": false
-              },
-              "start": {
-                "hour": "04",
-                "minutes": "25",
-                "timezone": ""
-              },
-              "repeat": "repeat",
-              "times": "3",
-              "unit": "hour"
+      "trial_settings": {
+        "measurement_cycles": "3",
+        "iterations": "3",
+        "unit": "hour"
       }
     }
   }
