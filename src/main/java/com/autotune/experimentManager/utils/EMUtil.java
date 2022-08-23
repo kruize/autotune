@@ -22,6 +22,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EMUtil {
     /**
@@ -171,5 +174,143 @@ public class EMUtil {
         ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
 
         return null;
+    }
+
+
+    public static int getTimeValue(String timestr) {
+        String workingstr = timestr.replace(EMConstants.Patterns.WHITESPACE_PATTERN, "");
+        Pattern pattern = Pattern.compile(EMConstants.Patterns.DURATION_PATTERN);
+        Matcher matcher = pattern.matcher(workingstr);
+        if (matcher.find()) {
+            if (null != matcher.group(1)) {
+                System.out.println("match found, integer - " + Integer.parseInt(matcher.group(1)));
+                return Integer.parseInt(matcher.group(1));
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    public static TimeUnit getTimeUnit(String timestr) {
+        String workingstr = timestr.replace(EMConstants.Patterns.WHITESPACE_PATTERN, "");
+        Pattern pattern = Pattern.compile(EMConstants.Patterns.DURATION_PATTERN);
+        Matcher matcher = pattern.matcher(workingstr);
+        if (matcher.find()) {
+            if (null != matcher.group(2).trim()) {
+                String trimmedDurationUnit = matcher.group(2).trim();
+                System.out.println(trimmedDurationUnit);
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SINGLE_LC)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.SECOND_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit seconds");
+                    return TimeUnit.SECONDS;
+                }
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SINGLE_LC)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.MINUTE_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit minutes");
+                    return TimeUnit.MINUTES;
+                }
+                if (trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SINGLE_LC)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_SHORT_LC_PLURAL)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_SINGULAR)
+                        || trimmedDurationUnit.equalsIgnoreCase(EMConstants.TimeUnitsExt.HOUR_LC_PLURAL)) {
+                    System.out.println("match found getTimeUnit hours");
+                    return TimeUnit.HOURS;
+                }
+            }
+        }
+        return TimeUnit.MINUTES;
+    }
+
+    public static int getTimeUnitInSeconds(TimeUnit unit) {
+        System.out.println("In getTimeUnitInSeconds");
+        System.out.println(unit);
+        if (unit.equals(TimeUnit.SECONDS)) {
+            return 1;
+        } else if (unit.equals(TimeUnit.MINUTES)) {
+            System.out.println("In minutes");
+            return EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        } else if (unit.equals(TimeUnit.HOURS)) {
+            return EMConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * EMConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        } else {
+            return Integer.MIN_VALUE;
+        }
+    }
+
+    public enum QueryType {
+        SYSTEM,
+        CONTAINER,
+        RUNTIME,
+        MIDDLEWARE,
+        APPLICATION
+    }
+
+    public enum MetricResultType {
+        MEAN,
+        MIN,
+        MAX
+    }
+
+    public static QueryType detectQueryType(String query) {
+        if (query.toLowerCase().contains("jvm")) {
+            System.out.println("Runtime query");
+            return QueryType.RUNTIME;
+        }
+        return QueryType.CONTAINER;
+    }
+
+    public static boolean needsAggregatedResult(String query) {
+        if (query.toLowerCase().contains("jvm")) {
+            System.out.println("Needs aggregated results");
+            return true;
+        }
+        return false;
+    }
+
+    public static String buildQueryForType(String baseQuery, MetricResultType metricResultType) {
+        String returnQuery = baseQuery;
+        if (metricResultType == MetricResultType.MEAN) {
+            if (baseQuery.contains("rate")) {
+                returnQuery = baseQuery;
+            } else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "rate(" + baseQuery + ")";
+            }else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "sum(" + baseQuery + ")";
+            }
+        } else if (metricResultType == MetricResultType.MAX) {
+            if (baseQuery.contains("http_server_requests_seconds")) {
+                returnQuery = baseQuery.replace("rate", "max_over_time");
+            } else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "max_over_time(" + baseQuery + ")";
+            } else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "max(" + baseQuery + ")";
+            }
+        } else if (metricResultType == MetricResultType.MIN) {
+            if (baseQuery.contains("http_server_requests_seconds")) {
+                returnQuery = baseQuery.replace("rate", "min_over_time");
+            }  else if (baseQuery.contains("container_cpu_usage_seconds_total")) {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "min_over_time(" + baseQuery + ")";
+            } else {
+                baseQuery = baseQuery.replaceAll("\\(|\\)", "");
+                System.out.println("base Query - " + baseQuery);
+                returnQuery = "min(" + baseQuery + ")";
+            }
+        }
+        return returnQuery;
     }
 }
