@@ -15,6 +15,9 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.metrics.iteration.IterationResult;
+
+import java.util.ArrayList;
 
 /**
  * Holds the variables used in the objective_function for the autotune object
@@ -31,6 +34,7 @@ public final class Metric {
     private final String datasource;
     private final String valueType;
     private EMMetricResult emMetricResult;
+    private ArrayList<IterationResult> iterationResults;
 
     public Metric(String name,
                   String query,
@@ -40,6 +44,7 @@ public final class Metric {
         this.query = query;
         this.datasource = datasource;
         this.valueType = valueType;
+        this.iterationResults = new ArrayList<IterationResult>();
     }
 
     public String getName() {
@@ -60,6 +65,14 @@ public final class Metric {
 
     public EMMetricResult getEmMetricResult() {
         return emMetricResult;
+    }
+
+    public ArrayList<IterationResult> getIterationResults() {
+        return iterationResults;
+    }
+
+    public void setIterationResults(ArrayList<IterationResult> iterationResults) {
+        this.iterationResults = iterationResults;
     }
 
     public void setEmMetricResult(EMMetricResult emMetricResult) {
