@@ -16,10 +16,19 @@
 
 package com.autotune.experimentManager.utils;
 
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.utils.GenericRestApiClient;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -176,6 +185,26 @@ public class EMUtil {
         return null;
     }
 
+    public static String getBaseDataSourceUrl(String url, String datasource) {
+        if (datasource.equalsIgnoreCase(EMConstants.DataSources.PROMETHEUS)) {
+            return (new StringBuilder())
+                    .append(url)
+                    .append("/api/v1/query?query=")
+                    .toString();
+        }
+        return null;
+    }
+
+    public static String formatQueryForURL(String query) {
+        if (null != query) {
+            return (new StringBuilder())
+                    .append("?query=")
+                    .append(query)
+                    .toString();
+        }
+        return null;
+    }
+
 
     public static int getTimeValue(String timestr) {
         String workingstr = timestr.replace(EMConstants.Patterns.WHITESPACE_PATTERN, "");
@@ -226,6 +255,17 @@ public class EMUtil {
         }
         return TimeUnit.MINUTES;
     }
+    
+    public static String getShortRepOfTimeUnit(TimeUnit timeUnit) {
+        if (timeUnit.equals(TimeUnit.HOURS))
+            return EMConstants.TimeUnitsExt.HOUR_SINGLE_LC;
+        if (timeUnit.equals(TimeUnit.MINUTES))
+            return EMConstants.TimeUnitsExt.MINUTE_SINGLE_LC;
+        if (timeUnit.equals(TimeUnit.SECONDS))
+            return EMConstants.TimeUnitsExt.SECOND_SINGLE_LC;
+        return null;
+    }
+
 
     public static int getTimeUnitInSeconds(TimeUnit unit) {
         System.out.println("In getTimeUnitInSeconds");
@@ -312,5 +352,129 @@ public class EMUtil {
             }
         }
         return returnQuery;
+    }
+
+    public static boolean checkIfDataExists(JSONObject jsonObject) {
+        if (jsonObject.has("status")
+                && jsonObject.getString("status").equalsIgnoreCase("success")) {
+            if (jsonObject.has("data")
+                    && jsonObject.getJSONObject("data").has("result")
+                    && !jsonObject.getJSONObject("data").getJSONArray("result").isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static EMMetricResult getPodMetricResult(GenericRestApiClient apiClient,
+                                                 String datasource,
+                                                 String query,
+                                                 String namespace,
+                                                 String timeUnit,
+                                                 String timevalue) {
+        String podLabel = "app=tfb-qrh-deployment";
+        KubernetesClient client = new DefaultKubernetesClient();
+        String podName = client.pods().inNamespace(namespace).withLabel(podLabel).list().getItems().get(0).getMetadata().getName();
+        String reframedQuery = query;
+        return null;
+    }
+
+    public static EMMetricResult getContainerMetricResult(GenericRestApiClient apiClient,
+                                                 String contName,
+                                                 String datasource,
+                                                 String query,
+                                                 String namespace,
+                                                 String timeUnit,
+                                                 String timevalue) {
+        EMMetricResult emMetricResult = new EMMetricResult();
+        String podLabel = "app=tfb-qrh-deployment";
+        KubernetesClient client = new DefaultKubernetesClient();
+        String podName = client.pods().inNamespace(namespace).withLabel(podLabel).list().getItems().get(0).getMetadata().getName();
+        String reframedQuery = query;
+        if (reframedQuery.contains("CONTAINER_LABEL")) {
+            if (reframedQuery.split("\\}").length > 1 && null != reframedQuery.split("\\}")[1]){
+                System.out.println("Splitting");
+                reframedQuery = reframedQuery.split("\\{")[0] + "{container=\""+contName+"\",image!=\"\",pod=\""+podName+"\"}" + reframedQuery.split("\\}")[1];
+            } else {
+                reframedQuery = reframedQuery.split("\\{")[0] + "{container=\""+contName+"\",image!=\"\",pod=\""+podName+"\"}";
+            }
+        }
+        System.out.println("Reframed Query - " + reframedQuery);
+        Float mean_value = Float.MAX_VALUE;
+        Float min_value = Float.MAX_VALUE;
+        Float max_value = Float.MAX_VALUE;
+        if (reframedQuery.contains("container_cpu_usage_seconds_total") || reframedQuery.contains("container_memory_working_set_bytes")) {
+            if (reframedQuery.split("\\}").length > 1 && null != reframedQuery.split("\\}")[1]) {
+                reframedQuery = reframedQuery.split("\\}")[0] + "}[" + timevalue + timeUnit + "])";
+            } else {
+                reframedQuery = reframedQuery + "[" + timevalue + timeUnit + "]";
+            }
+            query = reframedQuery;
+            if (reframedQuery.contains("rate")) {
+                query = reframedQuery.replaceAll("rate", "").replaceAll("\\(", "").replaceAll("\\)", "");
+            }
+            System.out.println("Query before calling prometheus - " + query);
+            JSONObject jsonObject = null;
+            try {
+                jsonObject = apiClient.fetchMetricsJson(
+                        EMConstants.HttpConstants.MethodType.GET,
+                        query);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            } catch (KeyManagementException e) {
+                e.printStackTrace();
+            }
+            if (!checkIfDataExists(jsonObject)) {
+                return null;
+            }
+            JSONObject result_json = (JSONObject) jsonObject.getJSONObject("data").getJSONArray("result").get(0);
+            if (result_json.has("values")
+                    && !result_json.getJSONArray("values").isEmpty()) {
+                ArrayList<Float> raw_values = new ArrayList<Float>();
+                ArrayList<Float> diff_values = new ArrayList<Float>();
+                ArrayList<Float> valuesArray = raw_values;
+                for (Object json_obj : result_json.getJSONArray("values")) {
+                    JSONArray jsonArray = (JSONArray) json_obj;
+                    raw_values.add(Float.parseFloat(jsonArray.getString(1)));
+                }
+                if (reframedQuery.contains("container_cpu_usage_seconds_total")) {
+                    for (int i = 0; i < (raw_values.size() - 1); i++) {
+                        diff_values.add((raw_values.get(i+1) - raw_values.get(i))/30);
+                    }
+                    valuesArray = diff_values;
+                }
+                min_value = Float.MAX_VALUE;
+                max_value = Float.MIN_VALUE;
+                Float sum = 0.0f;
+                for (Float item : valuesArray) {
+                    if (item > max_value) {
+                        max_value = item;
+                    }
+                    if (item < min_value) {
+                        min_value = item;
+                    }
+                    sum = sum + item;
+                }
+                mean_value = sum/valuesArray.size();
+            } else {
+                System.out.println("Values not found");
+            }
+            System.out.println("Min Value - " + min_value);
+            System.out.println("Max Value - " + max_value);
+            System.out.println("Mean Value - " + mean_value);
+            if (mean_value != Float.MAX_VALUE && !mean_value.isNaN())
+                emMetricResult.getEmMetricGenericResults().setMean(mean_value);
+            if (min_value != Float.MAX_VALUE && !min_value.isNaN())
+                emMetricResult.getEmMetricGenericResults().setMin(min_value);
+            if (max_value != Float.MAX_VALUE && !max_value.isNaN())
+                emMetricResult.getEmMetricGenericResults().setMax(max_value);
+            return emMetricResult;
+        }
+
+        return null;
     }
 }

@@ -258,4 +258,18 @@ public class EMConstants {
 		public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
 		public static String WHITESPACE_PATTERN = "\\s";
 	}
+
+	public static class DataSources {
+		private DataSources() { }
+
+		public static String PROMETHEUS = "prometheus";
+	}
+
+	public static class HttpConstants {
+		private HttpConstants() { }
+		public static class MethodType {
+			private MethodType() { }
+			public static String GET = "GET";
+		}
+	}
 }
