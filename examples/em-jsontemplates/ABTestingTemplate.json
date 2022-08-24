@@ -1,6 +1,8 @@
 [
   {
     "experiment_name": "Compare performance objective of A/B software releases",
+    "mode": "Apply/MetricCollectionOnly",
+    "environment": "QA/PROD",
     "resource": {
       "namespace": "Default",
       "deployment_name": "tfb-qrh-sample"
@@ -25,38 +27,34 @@
         }
       }
     },
-    "metrics": {
-      "pod_metrics": {
-        "container_name": {
-          "request_sum": {
-            "datasource": "prometheus1",
-            "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
-            "name": "request_sum"
-          },
-          "request_count": {
-            "datasource": "prometheus1",
-            "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
-            "name": "request_count"
-          }
-        }
+    "pod_metrics": {
+      "request_sum": {
+        "datasource": "prometheus1",
+        "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+        "name": "request_sum"
       },
-      "container_metrics": {
-        "container_name": {
-          "MaxInlineLevel": {
-            "datasource": "prometheus1",
-            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-            "name": "MaxInlineLevel"
-          },
-          "memoryRequest": {
-            "datasource": "prometheus1",
-            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-            "name": "memoryRequest"
-          },
-          "cpuRequest": {
-            "datasource": "prometheus1",
-            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
-            "name": "cpuRequest"
-          }
+      "request_count": {
+        "datasource": "prometheus1",
+        "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+        "name": "request_count"
+      }
+    },
+    "container_metrics": {
+      "container_name": {
+        "MaxInlineLevel": {
+          "datasource": "prometheus1",
+          "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+          "name": "MaxInlineLevel"
+        },
+        "memoryRequest": {
+          "datasource": "prometheus1",
+          "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+          "name": "memoryRequest"
+        },
+        "cpuRequest": {
+          "datasource": "prometheus1",
+          "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+          "name": "cpuRequest"
         }
       }
     },
