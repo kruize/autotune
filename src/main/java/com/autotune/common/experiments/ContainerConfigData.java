@@ -29,6 +29,10 @@ import java.util.Map;
  */
 
 public class ContainerConfigData {
+    @SerializedName("image_name")
+    private String stackName;
+    @SerializedName("container_name")
+    private String containerName;
     // Hashmap of Container request for resource quantity like cpu memory
     // Key will be requests
     /** Example
@@ -112,10 +116,28 @@ public class ContainerConfigData {
         this.envList = envList;
     }
 
+    public String getStackName() {
+        return stackName;
+    }
+
+    public void setStackName(String stackName) {
+        this.stackName = stackName;
+    }
+
+    public String getContainerName() {
+        return containerName;
+    }
+
+    public void setContainerName(String containerName) {
+        this.containerName = containerName;
+    }
+
     @Override
     public String toString() {
         return "ContainerConfigData{" +
-                "requestPropertiesMap=" + requestPropertiesMap +
+                "stackName='" + stackName + '\'' +
+                ", containerName='" + containerName + '\'' +
+                ", requestPropertiesMap=" + requestPropertiesMap +
                 ", LimitPropertiesMap=" + LimitPropertiesMap +
                 ", envList=" + envList +
                 '}';

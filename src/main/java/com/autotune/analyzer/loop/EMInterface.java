@@ -59,10 +59,9 @@ public class EMInterface {
 
 		LOGGER.info("Processing trial result for " + trialNumber);
 
-		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(TRAINING);
-		Metric reqSum = trialDetails.getPodMetrics().get(REQUEST_SUM);
-		Metric reqCount = trialDetails.getPodMetrics().get(REQUEST_COUNT);
-		trialDetails.setEndTime(Timestamp.from(Instant.now()));
+		Metric reqSum = experimentTrial.getPodMetricsHashMap().get(REQUEST_SUM);
+		Metric reqCount = experimentTrial.getPodMetricsHashMap().get(REQUEST_COUNT);
+		experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setEndTime(Timestamp.from(Instant.now()));
 
 		// TODO: Need to parse all the obj function results and calculate the result
 		double reqSumMean = reqSum.getEmMetricResult().getEmMetricGenericResults().getMean();
@@ -70,7 +69,7 @@ public class EMInterface {
 		double rspTime = reqSumMean / reqCountMean;
 		LOGGER.info("Calculated rspTime (" + rspTime + ") = reqSumMean (" + reqSumMean + ") / reqCountMean (" + reqCountMean + ");");
 
-		trialDetails.setResult(String.valueOf(rspTime));
-		trialDetails.setResultError("None");
+		experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(String.valueOf(rspTime));
+		experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResultError("None");
 	}
 }

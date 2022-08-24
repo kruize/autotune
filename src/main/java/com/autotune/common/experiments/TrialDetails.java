@@ -23,89 +23,38 @@ import java.util.HashMap;
 
 /**
  * A data util used to hold detailed information about trials.
- * Example
- *     "deployments": {
- *         "OptunaStudy": {
- *             "pod_metrics": { ....
- *             },
- *             "deployment_name": "tfb-qrh-sample",
- *             "namespace": "default",
- *
  */
 public class TrialDetails {
-    @SerializedName("deployment_name")
-    private final String deploymentName;
-    @SerializedName("namespace")
-    private final String deploymentNameSpace;
     /**
-     * deploymentType : [rollingUpdate]
+     *  Config related to request, limits , env etc
      */
-    @SerializedName("type")
-    private final String deploymentType;
-    // Hashmap of metrics associated with the Pod
-    // Uses metric name as key
-    @SerializedName("pod_metrics")
-    private final HashMap<String, Metric> podMetrics;
-    // Hashmap of containers being tracked for this trial
-    // Uses stack name (docker image name) as key
-    @SerializedName("containers")
-    private final HashMap<String, PodContainer> podContainers;
+    @SerializedName("config")
+    private ContainerConfigData configData ;
+
     private String state;
     private String result;
     private String resultInfo;
     private String resultError;
     private Timestamp startTime;
     private Timestamp endTime;
-    /**
-     * @param deploymentType
-     * @param deploymentName
-     * @param deploymentNameSpace
-     * @param state
-     * @param result
-     * @param resultInfo
-     * @param resultError
-     * @param podMetrics
-     * @param podContainers
-     */
-    public TrialDetails(String deploymentType,
-                        String deploymentName,
-                        String deploymentNameSpace,
-                        String state,
+
+    public TrialDetails(ContainerConfigData configData) {
+        this.configData = configData;
+    }
+
+    public TrialDetails(String state,
                         String result,
                         String resultInfo,
-                        String resultError,
-                        HashMap<String, Metric> podMetrics,
-                        HashMap<String, PodContainer> podContainers) {
-        this.deploymentType = deploymentType;
-        this.deploymentName = deploymentName;
-        this.deploymentNameSpace = deploymentNameSpace;
+                        String resultError
+    ) {
+
         this.state = state;
         this.result = result;
         this.resultInfo = resultInfo;
         this.resultError = resultError;
-        this.podMetrics = podMetrics;
-        this.podContainers = podContainers;
     }
 
-    public TrialDetails(String deploymentType, String deploymentName, String deploymentNameSpace, HashMap<String, Metric> podMetrics, HashMap<String, PodContainer> podContainers) {
-        this.deploymentType = deploymentType;
-        this.deploymentName = deploymentName;
-        this.deploymentNameSpace = deploymentNameSpace;
-        this.podMetrics = podMetrics;
-        this.podContainers = podContainers;
-    }
 
-    public String getDeploymentType() {
-        return deploymentType;
-    }
-
-    public String getDeploymentName() {
-        return deploymentName;
-    }
-
-    public String getDeploymentNameSpace() {
-        return deploymentNameSpace;
-    }
 
     public String getState() {
         return state;
@@ -155,28 +104,20 @@ public class TrialDetails {
         this.endTime = endTime;
     }
 
-    public HashMap<String, Metric> getPodMetrics() {
-        return podMetrics;
-    }
-
-    public HashMap<String, PodContainer> getPodContainers() {
-        return podContainers;
+    public ContainerConfigData getConfigData() {
+        return configData;
     }
 
     @Override
     public String toString() {
         return "TrialDetails{" +
-                "deploymentType='" + deploymentType + '\'' +
-                ", deploymentName='" + deploymentName + '\'' +
-                ", deploymentNameSpace='" + deploymentNameSpace + '\'' +
+                "configData=" + configData +
                 ", state='" + state + '\'' +
                 ", result='" + result + '\'' +
                 ", resultInfo='" + resultInfo + '\'' +
                 ", resultError='" + resultError + '\'' +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
-                ", podMetrics=" + podMetrics +
-                ", podContainers=" + podContainers +
                 '}';
     }
 }

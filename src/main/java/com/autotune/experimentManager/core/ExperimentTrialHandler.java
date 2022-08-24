@@ -82,13 +82,13 @@ public class ExperimentTrialHandler {
                 put("datasource", "prometheus"));
         JSONArray containers = new JSONArray();
 
-        HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
-        String imageName = podContainerHashMap.keySet().iterator().next();
+        //HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
+        String imageName = ""; //podContainerHashMap.keySet().iterator().next();
 
         containers.put(new JSONObject().put(
                 "image_name", imageName
         ).put(
-                "container_name", podContainerHashMap.get(imageName).getContainerName()
+                "container_name", ""//podContainerHashMap.get(imageName).getContainerName()
         ).put(
                 "container_metrics", new JSONArray().put(
                         new JSONObject().put(
@@ -104,15 +104,15 @@ public class ExperimentTrialHandler {
         deployments.put(
                 new JSONObject().
                         put("pod_metrics", podMetrics).
-                        put("deployment_name", experimentTrial.getTrialDetails().get("training").getDeploymentName()).
-                        put("namespace", experimentTrial.getTrialDetails().get("training").getDeploymentNameSpace()).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
                         put("type", "training").
                         put("containers", containers)
         );
         JSONObject retJson = new JSONObject();
         retJson.put("experiment_name", experimentTrial.getExperimentName());
         retJson.put("experiment_id", experimentTrial.getExperimentId());
-        retJson.put("deployment_name", experimentTrial.getTrialDetails().get("training").getDeploymentName());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
         retJson.put("info", new JSONObject().put("trial_info",
                 new JSONObject(
                         new Gson().toJson(experimentTrial.getTrialInfo())
@@ -131,51 +131,44 @@ public class ExperimentTrialHandler {
         this.experimentTrial = experimentTrial;
     }
 
-    public ArrayList<String> getTrackers() {
-        return this.experimentTrial.getExperimentSettings().getDeploymentSettings().getDeploymentTracking().getTrackers();
-    }
-
     public void startExperimentTrials() {
         LOGGER.debug("Start Exp Trial");
         int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
         this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
-            trialDetails.getPodContainers().forEach((imageName, podContainer) -> {
-                podContainer.getTrialConfigs().forEach((trialNumber, containerConfigData) -> {
-                    KubernetesServices kubernetesServices = null;
-                    try {
-                        kubernetesServices = new KubernetesServicesImpl();
-                        DeploymentHandler deploymentHandler = new DeploymentHandler(
-                                trialDetails.getDeploymentNameSpace(),
-                                trialDetails.getDeploymentName(),
-                                containerConfigData,
-                                kubernetesServices
-                        );
-                        IntStream.rangeClosed(1, numberOFIterations).forEach(
-                                i -> {
-                                    deploymentHandler.initiateDeploy();
-                                    //Check if deployment is ready
-                                    for (int j = 120; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {
-                                        try {
-                                            LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum());
-                                            Thread.sleep(1000);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                    if (!deploymentHandler.isDeploymentReady())
-                                        LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                                    //check if load applied to deployment
-                                    //collect warmup and measurement cycles metrics
+            KubernetesServices kubernetesServices = null;
+            try {
+                kubernetesServices = new KubernetesServicesImpl();
+                DeploymentHandler deploymentHandler = new DeploymentHandler(
+                        this.experimentTrial.getResourceDetails().getNamespace(),
+                        this.experimentTrial.getResourceDetails().getDeploymentName(),
+                        trialDetails.getConfigData(),
+                        kubernetesServices
+                );
+                IntStream.rangeClosed(1, numberOFIterations).forEach(
+                        i -> {
+                            deploymentHandler.initiateDeploy();
+                            //Check if deployment is ready
+                            for (int j = 120; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {
+                                try {
+                                    LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum());
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
                                 }
-                        );
-                    } catch (Exception e) {
-                        LOGGER.error(e.toString());
-                    } finally {
-                        if (kubernetesServices != null)
-                            kubernetesServices.shutdownClient();
-                    }
-                });
-            });
+                            }
+                            if (!deploymentHandler.isDeploymentReady())
+                                LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                            //check if load applied to deployment
+                            //collect warmup and measurement cycles metrics
+                        }
+                );
+
+            } catch (Exception e) {
+                LOGGER.error(e.toString());
+            } finally {
+                if (kubernetesServices != null)
+                    kubernetesServices.shutdownClient();
+            }
         });
         //Accumulate and send metrics
         JSONObject retJson = getDummyMetricJson(this.experimentTrial);

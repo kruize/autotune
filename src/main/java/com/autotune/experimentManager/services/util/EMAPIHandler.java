@@ -89,51 +89,60 @@ public class EMAPIHandler {
     }
 
     public static JSONObject getStatusJson(String experimentName, String trialNum, boolean verbose) {
-        // Get the experiment map
-        ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expMap = EMMapper.getInstance().getExpTrialMap();
-
-        // Create an empty return JSON which will be populated based on the given requirement
+        LOGGER.debug("getStatusJson");
         JSONObject returnJson = new JSONObject();
+        try {
+            // Get the experiment map
+            ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expMap = EMMapper.getInstance().getExpTrialMap();
 
-        // Scenerio - No Experiment name given
-        if (null == experimentName) {
-            if (expMap.size() == 0) {
-                returnJson.put("Error", "No Experiments found");
-            } else {
-                for (String key : expMap.keySet()) {
-                    JSONObject resJson = new JSONObject();
-                    resJson.put("Status", "COMPLETED");
-                    returnJson.put(key, resJson);
-                }
-            }
-            return returnJson;
-        }
+            // Create an empty return JSON which will be populated based on the given requirement
+            returnJson = new JSONObject();
 
-
-        if (null != experimentName && expMap.containsKey(experimentName)) {
-            // Scenerio - Experiment name given but no trial given
-            if (null == trialNum) {
-                HashMap<String, ExperimentTrial> trialHashMap = expMap.get(experimentName);
-                for (String key : trialHashMap.keySet()) {
-                    JSONObject resJson = getDummyTrialJSON(trialHashMap.get(key), verbose);
-                    resJson.put("Status", "COMPLETED");
-                    returnJson.put(key, resJson);
-                }
-                return returnJson;
-            } else {
-                // Scenerio - Experiment name and trial num are given
-                if (expMap.get(experimentName).containsKey(trialNum)) {
-                    JSONObject resJson = getDummyTrialJSON(expMap.get(experimentName).get(trialNum), verbose);
-                    resJson.put("Status", "COMPLETED");
-                    returnJson.put(trialNum, resJson);
+            // Scenerio - No Experiment name given
+            if (null == experimentName) {
+                if (expMap.size() == 0) {
+                    LOGGER.debug("No Experiments found");
+                    returnJson.put("Error", "No Experiments found");
                 } else {
-                    returnJson.put("Error", "Invalid trial number");
+                    LOGGER.debug("Experiments found {}",expMap.size() );
+                    for (String key : expMap.keySet()) {
+                        JSONObject resJson = new JSONObject();
+                        resJson.put("Status", "COMPLETED");
+                        returnJson.put(key, resJson);
+                    }
                 }
-
                 return returnJson;
             }
-        } else {
-            returnJson.put("Error", "Invalid Experiment Name");
+
+
+            if (null != experimentName && expMap.containsKey(experimentName)) {
+                // Scenerio - Experiment name given but no trial given
+                if (null == trialNum) {
+                    HashMap<String, ExperimentTrial> trialHashMap = expMap.get(experimentName);
+                    for (String key : trialHashMap.keySet()) {
+                        JSONObject resJson = getDummyTrialJSON(trialHashMap.get(key), verbose);
+                        resJson.put("Status", "COMPLETED");
+                        returnJson.put(key, resJson);
+                    }
+                    return returnJson;
+                } else {
+                    // Scenerio - Experiment name and trial num are given
+                    if (expMap.get(experimentName).containsKey(trialNum)) {
+                        JSONObject resJson = getDummyTrialJSON(expMap.get(experimentName).get(trialNum), verbose);
+                        resJson.put("Status", "COMPLETED");
+                        returnJson.put(trialNum, resJson);
+                    } else {
+                        returnJson.put("Error", "Invalid trial number");
+                    }
+
+                    return returnJson;
+                }
+            } else {
+                returnJson.put("Error", "Invalid Experiment Name");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            LOGGER.debug(e.getMessage());
         }
 
         return returnJson;
@@ -188,8 +197,9 @@ public class EMAPIHandler {
 
         JSONArray containers = new JSONArray();
 
-        HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
-        String imageName = podContainerHashMap.keySet().iterator().next();
+        //HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
+        //String imageName = podContainerHashMap.keySet().iterator().next();
+        String imageName = "";
         JSONArray containerMetrics = new JSONArray();
         for (int i = 0; i < 2; i++) {
             JSONObject resultJSON = new JSONObject();
@@ -233,7 +243,7 @@ public class EMAPIHandler {
         containers.put(new JSONObject().put(
                 "image_name", imageName
         ).put(
-                "container_name", podContainerHashMap.get(imageName).getContainerName()
+                "container_name", experimentTrial.getResourceDetails().getDeploymentName()
         ).put(
                 "container_metrics", containerMetrics
         ));
@@ -241,15 +251,15 @@ public class EMAPIHandler {
         deployments.put(
                 new JSONObject().
                         put("pod_metrics", podMetrics).
-                        put("deployment_name", experimentTrial.getTrialDetails().get("training").getDeploymentName()).
-                        put("namespace", experimentTrial.getTrialDetails().get("training").getDeploymentNameSpace()).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
                         put("type", "training").
                         put("containers", containers)
         );
         JSONObject retJson = new JSONObject();
         retJson.put("experiment_name", experimentTrial.getExperimentName());
         retJson.put("experiment_id", experimentTrial.getExperimentId());
-        retJson.put("deployment_name", experimentTrial.getTrialDetails().get("training").getDeploymentName());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
         retJson.put("info", new JSONObject().put("trial_info",
                 new JSONObject(
                         new Gson().toJson(experimentTrial.getTrialInfo())

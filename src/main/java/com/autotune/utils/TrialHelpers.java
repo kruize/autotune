@@ -41,7 +41,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
@@ -70,10 +69,6 @@ public class TrialHelpers {
     /**
      * Update the results obtained from EM to the corresponding AutotuneExperiment object for further processing
      *
-     * @param trialNumber
-     * @param autotuneExperiment
-     * @param trialResultsJson
-     * @throws InvalidValueException
      */
     public static void updateExperimentTrial(int trialNumber,
                                              AutotuneExperiment autotuneExperiment,
@@ -84,10 +79,10 @@ public class TrialHelpers {
             LOGGER.error("Invalid results JSON: Invalid trialNumber: " + trialNumber);
             throw new InvalidValueException("Invalid results JSON: Invalid trialNumber: " + trialNumber);
         }
-        TrialDetails trialDetails = experimentTrial.getTrialDetails().get(tracker);
+        HashMap<String, TrialDetails> trialDetails = experimentTrial.getTrialDetails();
         if (null == trialDetails) {
-            LOGGER.error("Invalid results JSON: Deployment tracker: " + tracker + " not found");
-            throw new InvalidValueException("Invalid results JSON: Deployment tracker: " + tracker + " not found");
+            LOGGER.error("Invalid results JSON: trialDetails: not found");
+            throw new InvalidValueException("Invalid results JSON: trialDetails not found");
         }
 
         JSONArray deploymentsArray = trialResultsJson.getJSONArray("deployments");
@@ -105,7 +100,7 @@ public class TrialHelpers {
             JSONObject podMetric = (JSONObject) metricPodObject;
             EMMetricResult emMetricResult = new EMMetricResult(podMetric.getJSONObject(SUMMARY_RESULTS));
             String metricName = podMetric.getString(NAME);
-            Metric metric = trialDetails.getPodMetrics().get(metricName);
+            Metric metric = experimentTrial.getPodMetricsHashMap().get(metricName);
             metric.setEmMetricResult(emMetricResult);
         }
         LOGGER.info("Successfully updated results for trialNum: " + trialNumber);
@@ -122,7 +117,6 @@ public class TrialHelpers {
     public static ExperimentTrial createDefaultExperimentTrial(int trialNumber,
                                                                AutotuneExperiment autotuneExperiment,
                                                                String trialConfigJson) throws MalformedURLException {
-        LOGGER.info("*********************~~~~~~~~createDefaultExperimentTrial~~~~~~~~~~***************************************");
         ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationSearchSpace();
         AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
 
@@ -144,21 +138,16 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        HashMap<String,DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
         DatasourceInfo datasourceInfo = new DatasourceInfo(AutotuneDeploymentInfo.getMonitoringAgent(),
                 new URL(AutotuneDeploymentInfo.getMonitoringAgentEndpoint()));
-        datasourceInfoHashMap.put(AutotuneDeploymentInfo.getMonitoringAgent(),datasourceInfo);
-
-        ArrayList<String> trackers = new ArrayList<>();
-        trackers.add(TRAINING);
-        // trackers.add("production");
-        DeploymentTracking deploymentTracking = new DeploymentTracking(trackers);
+        HashMap<String,DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
+        datasourceInfoHashMap.put(AutotuneDeploymentInfo.getMonitoringAgent(),datasourceInfo);  //Change key value as per YAML input
+        DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
                 deploymentSettings);
 
-        HashMap<String, TrialDetails> deployments = new HashMap<>();
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
         // TODO: The runtime layer will know how to pass the options to container through kubernetes
@@ -166,18 +155,19 @@ public class TrialHelpers {
         // TODO: The -XX:MaxRAMPercentage will be based on actual observation of the size of the heap
 
         System.out.println(trialConfigJson);
-        HashMap<String, PodContainer> containersHashMap = new HashMap<>();
-        HashMap<String, PodContainer> podContainers = new HashMap<>();
-        HashMap<String, Metric> podMetrics = new HashMap<>();
 
-        // Create the metrics array
-        // First iterate through the objective function variables
+
+        String experimentName = appSearchSpace.getExperimentName();
+        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(),autotuneExperiment.getDeploymentName());
+        String experimentID = appSearchSpace.getExperimentId();
+        HashMap<String,TrialDetails> trialsMap = new HashMap<>();
+        ContainerConfigData configData = new ContainerConfigData();
+        HashMap<String, Metric> podMetricsHashMap = new HashMap<>();
+        HashMap<String, HashMap<String, Metric>> containerMetricsHashMap = new HashMap<>();
         SloInfo sloInfo = autotuneObject.getSloInfo();
         for (Metric metric : sloInfo.getFunctionVariables()) {
-            podMetrics.put(metric.getName(), metric);
+            podMetricsHashMap.put(metric.getName(), metric);
         }
-
-        // Parse the incoming trialConfigJson for all the tunables
         JSONArray trialConfigArray = new JSONArray(trialConfigJson);
         for (Object trialConfigObject : trialConfigArray) {
             JSONObject trialConfig = (JSONObject) trialConfigObject;
@@ -186,31 +176,13 @@ public class TrialHelpers {
             if (tunable == null) {
                 System.out.println("ERROR: tunable is null for tunableName: " + tunableName);
             }
-            PodContainer podContainer = null;
-            if (containersHashMap != null
-                    && !containersHashMap.isEmpty()
-                    && containersHashMap.containsKey(tunable.getStackName())) {
-                podContainer = containersHashMap.get(tunable.getStackName());
-            } else {
-                ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
-                if (applicationServiceStack == null) {
-                    // TODO: Can this be null?
-                    System.out.println("ERROR: applicationServiceStack is null for stackName: " + tunable.getStackName());
-                }
-                podContainer = new PodContainer(applicationServiceStack.getStackName(),
-                        applicationServiceStack.getContainerName());
-                HashMap<String, ContainerConfigData> trialConfigMap = new HashMap<>();
-                ContainerConfigData containerConfigData = new ContainerConfigData();
-                trialConfigMap.put(String.valueOf(trialNumber), containerConfigData);
-                containersHashMap.put(tunable.getStackName(), podContainer);
-                podContainer.setTrialConfigs(trialConfigMap);
-                podContainers.put(tunable.getStackName(), podContainer);
-            }
+            ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
+            String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
             Class<Layer> classRef = AutotuneDeploymentInfo.getLayer(tunable.getLayerName());
             try {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
                 Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, ContainerConfigData.class);
-                method.invoke(inst, tunable, trialConfig, podContainer.getTrialConfigs().get(String.valueOf(trialNumber)));
+                method.invoke(inst, tunable, trialConfig, configData);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
@@ -220,57 +192,37 @@ public class TrialHelpers {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
-
-            // Now add any queries associated with this tunable into the metrics array
-            System.out.println("New Trial: tunable: " + tunableName + " Query Mon agent: " + AutotuneDeploymentInfo.getMonitoringAgent());
-            String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
             if (tunableQuery != null && !tunableQuery.isEmpty()) {
-                HashMap<String, Metric> containerMetrics = podContainer.getContainerMetrics();
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
                         AutotuneDeploymentInfo.getMonitoringAgent(),
                         tunable.getValueType());
-
-                if (containerMetrics == null) {
-                    containerMetrics = new HashMap<>();
-                    podContainer.setContainerMetrics(containerMetrics);
+                if (containerMetricsHashMap != null
+                        && !containerMetricsHashMap.isEmpty()
+                        && containerMetricsHashMap.containsKey(applicationServiceStack.getContainerName())) {
+                    containerMetricsHashMap.get(applicationServiceStack.getContainerName())
+                            .put(queryMetric.getName(), queryMetric);
+                }else{
+                    HashMap<String,Metric> localMetricMap = new HashMap<>();
+                    localMetricMap.put(queryMetric.getName(), queryMetric);
+                    containerMetricsHashMap.put(applicationServiceStack.getContainerName(),localMetricMap);
                 }
-                containerMetrics.put(queryMetric.getName(), queryMetric);
             } else {
                 System.out.println("New Trial: tunable: " + tunableName + " No container metrics");
             }
         }
-
-        for (String tracker : trackers) {
-            TrialDetails deployment = new TrialDetails(tracker,
-                    autotuneExperiment.getDeploymentName(),
-                    autotuneExperiment.getApplicationDeployment().getNamespace(),
-                    "",
-                    TRIAL_RUNNING,
-                    TRIAL_RUNNING,
-                    TRIAL_RUNNING,
-                    podMetrics,
-                    podContainers
-            );
-            deployment.setStartTime(Timestamp.from(Instant.now()));
-            deployments.put(tracker, deployment);
-        }
-        HashMap<String, TrialDetails> trailDetailsMap = new HashMap<>();
-        for (String tracker : trackers) {
-            TrialDetails trialDetails = new TrialDetails(ROLLING_UPDATE, autotuneExperiment.getDeploymentName(),
-                    autotuneExperiment.getApplicationDeployment().getNamespace(), podMetrics, podContainers);
-            trailDetailsMap.put(tracker, trialDetails);
-        }
-        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(),null);
-        ExperimentTrial experimentTrial = new ExperimentTrial(appSearchSpace.getExperimentName(),
-        resourceDetails,
-        appSearchSpace.getExperimentId(),
-        trialInfo,
-        datasourceInfoHashMap,
-        experimentSettings,
-        trailDetailsMap);
-
-
+        TrialDetails trialDetails = new TrialDetails(configData);
+        trialDetails.setStartTime(Timestamp.from(Instant.now()));
+        trialsMap.put(String.valueOf(trialNumber),trialDetails);
+        String mode = null;
+        String environment = null;
+        ExperimentTrial experimentTrial = new ExperimentTrial(experimentName,
+                mode, environment, resourceDetails, experimentID,
+                podMetricsHashMap, containerMetricsHashMap, trialInfo,
+                datasourceInfoHashMap,
+                experimentSettings,
+                trialsMap
+        );
 
         return experimentTrial;
     }

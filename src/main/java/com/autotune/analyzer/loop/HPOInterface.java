@@ -107,7 +107,7 @@ public class HPOInterface {
 		autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENT_RESULT_TO_HPO);
 
 		/* STEP 8: Compare and Summarize the result just obtained */
-		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(TRAINING);
+		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(String.valueOf(trialNumber));
 		autotuneExperiment.summarizeTrial(trialDetails);
 	}
 
