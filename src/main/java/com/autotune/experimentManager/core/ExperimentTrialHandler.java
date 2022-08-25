@@ -162,11 +162,13 @@ public class ExperimentTrialHandler {
                                             e.printStackTrace();
                                         }
                                     }
-                                    if (!deploymentHandler.isDeploymentReady())
+                                    if (!deploymentHandler.isDeploymentReady()) {
                                         LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                                    //check if load applied to deployment
-                                    //collect warmup and measurement cycles metrics
-                                    MetricsHandler.collectMetrics(this.experimentTrial, i);
+                                    } else {
+                                        // check if load applied to deployment
+                                        // collect warmup and measurement cycles metrics
+                                        MetricsHandler.collectMetrics(this.experimentTrial, i);
+                                    }
                                 }
                         );
                     } catch (Exception e) {
