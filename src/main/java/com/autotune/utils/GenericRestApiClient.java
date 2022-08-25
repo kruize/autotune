@@ -139,7 +139,7 @@ public class GenericRestApiClient {
                 );
             }
             // Checks if auth string is null and then checks if it's not empty
-            if (this.authHeaderString != null && !this.authHeaderString.isEmpty()) {
+            if (null != this.authHeaderString && !this.authHeaderString.isEmpty()) {
                 httpRequestBase.setHeader("Authorization", this.authHeaderString);
             }
             LOGGER.debug("Executing request " + httpRequestBase.getRequestLine());
