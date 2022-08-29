@@ -18,6 +18,8 @@ package com.autotune.experimentManager.data.dao;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 
+import java.util.List;
+
 /**
  * Experiment trial Object's Data access object.
  */
@@ -26,6 +28,8 @@ public interface ExperimentTrialDao {
     public void addExperiments();
     // List all experiments trial.
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments();
+    // List all deployments names for experiments
+    public List<String> getAllDeploymentNames();
     // List all trial for given experiment.
     // List status of experiments.
     // Get error message.

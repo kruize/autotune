@@ -44,9 +44,8 @@ public class ExperimentTrialDaoImpl implements ExperimentTrialDao {
     }
 
     /**
-     * * AddExperiment into local storage
-     * * Set Error if duplicate trials found.
-     * * Set Error if duplicate deployments found.
+     *  AddExperiment into local storage
+     *  Set Error if duplicate trials found.
      */
     @Override
     public void addExperiments() {
@@ -103,6 +102,18 @@ public class ExperimentTrialDaoImpl implements ExperimentTrialDao {
     @Override
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments() {
         return this.existingExperimentTrialMap;
+    }
+
+    @Override
+    public List<String> getAllDeploymentNames() {
+        List<String> deploymentNameList = new ArrayList<>();
+        this.existingExperimentTrialMap.forEach(
+                (expName,expTrial)->{
+                    ExperimentTrial et =(ExperimentTrial)expTrial;
+                    deploymentNameList.add(et.getResourceDetails().getDeploymentName());
+                }
+        );
+        return deploymentNameList;
     }
 
     @Override
