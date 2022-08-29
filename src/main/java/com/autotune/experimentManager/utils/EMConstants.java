@@ -64,6 +64,9 @@ public class EMConstants {
 
 	public static class EMJSONKeys {
 		private EMJSONKeys() { }
+
+		public static final String EM_STORAGE_CONTEXT_KEY = "experimentDetailsMap";
+		public static final String EM_REGISTERED_DEPLOYMENTS = "registeredDeployments";
         public static final String CONTAINERS = "containers";
 		public static final String IMAGE_NAME = "image_name";
 		public static final String CONTAINER_NAME = "container_name";
