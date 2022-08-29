@@ -18,8 +18,8 @@ package com.autotune.experimentManager.services;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
-import com.autotune.experimentManager.data.TrialInterface;
-import com.autotune.experimentManager.data.TrialInterfaceImpl;
+import com.autotune.experimentManager.data.dao.ExperimentTrialDao;
+import com.autotune.experimentManager.data.dao.ExperimentTrialDaoImpl;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class CreateExperimentTrial extends HttpServlet {
      * Input payload should be in the format of JSON. Please refer documentation for more details.
      * /createExperimentTrial is API endpoint,
      * HTTP STATUS CODE - 201 is returned if experiment loaded successfully.
-     * HTTP STATUS CODE - 400 or 500 is returned for any error.
+     * HTTP STATUS CODE - 500 is returned for any error.
      *
      * @param request
      * @param response
@@ -88,9 +88,6 @@ public class CreateExperimentTrial extends HttpServlet {
             response.setContentType(JSON_CONTENT_TYPE);
             response.setCharacterEncoding(CHARACTER_ENCODING);
             response.setStatus(HttpServletResponse.SC_CREATED);
-            PrintWriter out = response.getWriter();
-            out.append(new Gson().toJson(trialInterface.listExperiments()));
-            out.flush();
         } catch (Exception e) {
             LOGGER.error(e.toString());
             e.printStackTrace();
