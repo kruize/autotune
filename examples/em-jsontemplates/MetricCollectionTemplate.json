@@ -26,22 +26,23 @@
       }
     },
     "container_metrics": {
-      "container_name": {
-        "MaxInlineLevel": {
-          "datasource": "prometheus1",
-          "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-          "name": "MaxInlineLevel"
-        },
-        "memoryRequest": {
-          "datasource": "prometheus1",
-          "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-          "name": "memoryRequest"
-        },
-        "cpuRequest": {
-          "datasource": "prometheus1",
-          "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
-          "name": "cpuRequest"
-        }
+      "memoryRequest": {
+        "name": "memoryRequest",
+        "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "datasource": "prometheus",
+        "valueType": "double"
+      },
+      "gc": {
+        "name": "gc",
+        "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+        "datasource": "prometheus",
+        "valueType": "categorical"
+      },
+      "cpuRequest": {
+        "name": "cpuRequest",
+        "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+        "datasource": "prometheus",
+        "valueType": "double"
       }
     },
     "settings": {
