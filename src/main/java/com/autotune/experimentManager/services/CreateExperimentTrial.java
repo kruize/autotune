@@ -15,21 +15,28 @@
  *******************************************************************************/
 package com.autotune.experimentManager.services;
 
-import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
+import com.autotune.experimentManager.data.ExperimentDetailsMap;
+import com.autotune.experimentManager.data.dao.ExperimentTrialDao;
+import com.autotune.experimentManager.data.dao.ExperimentTrialDaoImpl;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 
 /**
@@ -45,7 +52,7 @@ public class CreateExperimentTrial extends HttpServlet {
      * Input payload should be in the format of JSON. Please refer documentation for more details.
      * /createExperimentTrial is API endpoint,
      * HTTP STATUS CODE - 201 is returned if experiment loaded successfully.
-     * HTTP STATUS CODE - 500 is returned for any error.
+     * HTTP STATUS CODE - 400 or 500 is returned for any error.
      *
      * @param request
      * @param response
@@ -53,28 +60,37 @@ public class CreateExperimentTrial extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws java.io.IOException {
-        Gson gson = new GsonBuilder()
-                .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
-                .create();
+            throws ServletException, java.io.IOException {
+        Gson gson = new Gson();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
+            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
-            experimentTrialList.forEach(
-                    (experimentTrial) -> {
-                        experimentTrial.initialiseFlags();
-                        LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
-                            }
-                        }.start();
-                    }
-            );
+            ExperimentTrialDao experimentTrialDao = new ExperimentTrialDaoImpl(experimentTrialList, existExperimentTrialMap);
+            experimentTrialDao.addExperiments();
+            if (null == experimentTrialDao.getErrorMessage()) {
+                experimentTrialList.forEach(
+                        (experimentTrial) -> {
+                            LOGGER.debug("Experiment name {} with trial number {}  started processing", experimentTrial.getExperimentName(), experimentTrial.getTrialInfo().getTrialNum());
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
+                                }
+                            }.start();
+                        }
+                );
+            } else {
+                response.sendError(experimentTrialDao.getHttpResponseCode(), experimentTrialDao.getErrorMessage());
+            }
+            response.setContentType(JSON_CONTENT_TYPE);
+            response.setCharacterEncoding(CHARACTER_ENCODING);
             response.setStatus(HttpServletResponse.SC_CREATED);
+            PrintWriter out = response.getWriter();
+            out.append(new Gson().toJson(experimentTrialDao.listExperiments()));
+            out.flush();
         } catch (Exception e) {
             LOGGER.error(e.toString());
             e.printStackTrace();

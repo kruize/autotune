@@ -16,7 +16,8 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
-import com.autotune.analyzer.exceptions.AutoTuneExceptionHandler;
+import com.autotune.analyzer.exceptions.AutotuneErrorHandler;
+import com.autotune.service.InitiateListener;
 import com.autotune.utils.ServerContext;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.service.HealthService;
@@ -31,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.autotune.utils.ServerContext.*;
+
 import javax.servlet.http.HttpServletResponse;
 
 public class Autotune
@@ -46,11 +48,15 @@ public class Autotune
 		Server server = new Server(AUTOTUNE_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
-		context.setErrorHandler(getErrorHandler("/AutotuneExceptionHandler"));
-		context.addServlet(AutoTuneExceptionHandler.class, "/AutotuneExceptionHandler");
+		context.setErrorHandler(new AutotuneErrorHandler());
+		/**
+		 *  Adding Listener to initiate variables during server start.
+		 */
+		InitiateListener contextListener = new InitiateListener();
+		context.addEventListener(contextListener);
 		server.setHandler(context);
+		server.addBean(new AutotuneErrorHandler());
 		addAutotuneServlets(context);
-
 		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
 
 		if (null != autotuneMode) {
@@ -94,18 +100,5 @@ public class Autotune
 		ExperimentManager.launch(contextHandler);
 	}
 
-	private static ErrorPageErrorHandler getErrorHandler(String errorHandlerPath) {
-		ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
-		errorHandler.addErrorPage(HttpServletResponse.SC_BAD_REQUEST, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_UNAUTHORIZED, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_FORBIDDEN, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_NOT_FOUND, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_METHOD_NOT_ALLOWED, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_CONFLICT, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_NOT_IMPLEMENTED, errorHandlerPath);
-		errorHandler.addErrorPage(HttpServletResponse.SC_SERVICE_UNAVAILABLE, errorHandlerPath);
-		errorHandler.addErrorPage("java.lang.Throwable", errorHandlerPath);
-		return errorHandler;
-	}
+
 }
