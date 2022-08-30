@@ -20,8 +20,13 @@ import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.experimentManager.core.interceptor.EMLoadInterceptor;
 import com.autotune.experimentManager.data.EMMapper;
+<<<<<<< HEAD
 import com.autotune.experimentManager.utils.EMConstants;
+=======
+import com.autotune.experimentManager.utils.EMUtil;
+>>>>>>> Adds load interceptor mechanism
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -140,6 +145,7 @@ public class ExperimentTrialHandler {
     public void startExperimentTrials() {
         LOGGER.debug("Start Exp Trial");
         int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
+        EMLoadInterceptor emLoadInterceptor = new EMLoadInterceptor();
         String imageName = "";
         String containerName = "";
         this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
@@ -167,10 +173,19 @@ public class ExperimentTrialHandler {
                                     e.printStackTrace();
                                 }
                             }
-                            if (!deploymentHandler.isDeploymentReady())
+                            if (!deploymentHandler.isDeploymentReady()) {
                                 LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                            //check if load applied to deployment
-                            //collect warmup and measurement cycles metrics
+                            } else {
+                                //check if load applied to deployment
+
+                                // Checks if the load can be detected with the attributes of experiment trial
+                                if (EMUtil.InterceptorDetectionStatus.DETECTED == emLoadInterceptor.detect(this.experimentTrial)) {
+                                    // Proceed to check if load is available (minimal variation)
+                                    if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == emLoadInterceptor.isAvailable(this.experimentTrial)) {
+                                        // Will proceed for metric cycles if the load is detected
+                                    }
+                                }
+                            }
                         }
                 );
 

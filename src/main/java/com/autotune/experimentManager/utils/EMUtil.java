@@ -172,4 +172,14 @@ public class EMUtil {
 
         return null;
     }
+
+    public enum InterceptorDetectionStatus {
+        DETECTED,
+        NOT_DETECTED
+    }
+
+    public enum InterceptorAvailabilityStatus {
+        AVAILABLE,
+        NOT_AVAILABLE
+    }
 }
