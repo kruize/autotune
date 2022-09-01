@@ -73,7 +73,7 @@ public class CreateExperimentTrial extends HttpServlet {
             if (null == experimentTrialDao.getErrorMessage()) {
                 experimentTrialList.forEach(
                         (experimentTrial) -> {
-                            LOGGER.debug("Experiment name {} with trial number {}  started processing", experimentTrial.getExperimentName(), experimentTrial.getTrialInfo().getTrialNum());
+                            LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
                             new Thread() {
                                 @Override
                                 public void run() {
