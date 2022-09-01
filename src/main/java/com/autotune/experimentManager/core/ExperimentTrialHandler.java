@@ -17,9 +17,11 @@ package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.PodContainer;
+import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.EMMapper;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -29,10 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 /**
@@ -45,17 +46,19 @@ public class ExperimentTrialHandler {
     public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
         this.experimentTrial = experimentTrial;
         String experimentName = experimentTrial.getExperimentName();
-        String trialNum = String.valueOf(experimentTrial.getTrialInfo().getTrialNum());
-        ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expTrialMap = EMMapper.getInstance().getExpTrialMap();
-        if (expTrialMap.containsKey(experimentName)) {
-            HashMap<String, ExperimentTrial> expMap = expTrialMap.get(experimentName);
-            if (!expMap.containsKey(trialNum)) {
-                expMap.put(trialNum, experimentTrial);
+        if (null != experimentTrial.getTrialInfo() && experimentTrial.getTrialInfo().getTrialNum() != -1) {
+            String trialNum = String.valueOf(experimentTrial.getTrialInfo().getTrialNum());
+            ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expTrialMap = EMMapper.getInstance().getExpTrialMap();
+            if (expTrialMap.containsKey(experimentName)) {
+                HashMap<String, ExperimentTrial> expMap = expTrialMap.get(experimentName);
+                if (!expMap.containsKey(trialNum)) {
+                    expMap.put(trialNum, experimentTrial);
+                }
+            } else {
+                HashMap<String, ExperimentTrial> trialMap = new HashMap<String, ExperimentTrial>();
+                trialMap.put(trialNum, experimentTrial);
+                expTrialMap.put(experimentName, trialMap);
             }
-        } else {
-            HashMap<String, ExperimentTrial> trialMap = new HashMap<String, ExperimentTrial>();
-            trialMap.put(trialNum, experimentTrial);
-            expTrialMap.put(experimentName, trialMap);
         }
     }
 
@@ -81,14 +84,16 @@ public class ExperimentTrialHandler {
                 put("name", "request_count").
                 put("datasource", "prometheus"));
         JSONArray containers = new JSONArray();
-
-        //HashMap<String, PodContainer> podContainerHashMap = experimentTrial.getTrialDetails().get("training").getPodContainers();
-        String imageName = ""; //podContainerHashMap.keySet().iterator().next();
-
+        String imageName = "";
+        String containerName = "";
+        HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
+        Map.Entry<String,TrialDetails> entry = trialDetailsHashMap.entrySet().iterator().next();
+        imageName = entry.getValue().getConfigData().getContainerName();
+        containerName = entry.getValue().getConfigData().getStackName();
         containers.put(new JSONObject().put(
                 "image_name", imageName
         ).put(
-                "container_name", ""//podContainerHashMap.get(imageName).getContainerName()
+                "container_name", containerName
         ).put(
                 "container_metrics", new JSONArray().put(
                         new JSONObject().put(
@@ -113,12 +118,13 @@ public class ExperimentTrialHandler {
         retJson.put("experiment_name", experimentTrial.getExperimentName());
         retJson.put("experiment_id", experimentTrial.getExperimentId());
         retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
-        retJson.put("info", new JSONObject().put("trial_info",
-                new JSONObject(
-                        new Gson().toJson(experimentTrial.getTrialInfo())
-                )
-        ));
-        System.out.println(deployments);
+        if (null != experimentTrial.getTrialInfo()) {
+            retJson.put("info", new JSONObject().put("trial_info",
+                    new JSONObject(
+                            new Gson().toJson(experimentTrial.getTrialInfo())
+                    )
+            ));
+        }
         retJson.put("deployments", deployments);
         return retJson;
     }
@@ -134,6 +140,8 @@ public class ExperimentTrialHandler {
     public void startExperimentTrials() {
         LOGGER.debug("Start Exp Trial");
         int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
+        String imageName = "";
+        String containerName = "";
         this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
             KubernetesServices kubernetesServices = null;
             try {
@@ -148,10 +156,13 @@ public class ExperimentTrialHandler {
                         i -> {
                             deploymentHandler.initiateDeploy();
                             //Check if deployment is ready
-                            for (int j = 120; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {
+                            int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
+                            long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
+                            int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
+                            for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
                                 try {
-                                    LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum());
-                                    Thread.sleep(1000);
+                                    LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
+                                    Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -165,6 +176,7 @@ public class ExperimentTrialHandler {
 
             } catch (Exception e) {
                 LOGGER.error(e.toString());
+                e.printStackTrace();
             } finally {
                 if (kubernetesServices != null)
                     kubernetesServices.shutdownClient();
@@ -173,14 +185,17 @@ public class ExperimentTrialHandler {
         //Accumulate and send metrics
         JSONObject retJson = getDummyMetricJson(this.experimentTrial);
         URL trial_result_url = null;
-        try {
-            trial_result_url = new URL(this.experimentTrial.getTrialInfo().getTrialResultURL());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+        if (null != this.experimentTrial.getTrialInfo() && null!= this.experimentTrial.getTrialInfo().getTrialResultURL()) {
+            try {
+                trial_result_url = new URL(this.experimentTrial.getTrialInfo().getTrialResultURL());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            LOGGER.debug("POST to URL. {}", trial_result_url);
+            HttpUtils.postRequest(trial_result_url, retJson.toString());
         }
-        LOGGER.debug("POST to URL. {}", trial_result_url);
         LOGGER.debug(retJson.toString());
-        HttpUtils.postRequest(trial_result_url, retJson.toString());
     }
+
 
 }
