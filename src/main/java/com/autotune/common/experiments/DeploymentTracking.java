@@ -19,30 +19,11 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
-/**
- * Example
- *             "deployment_tracking": {
- *                 "trackers": [
- *                     "training"
- *                 ]
- *             }
- */
 public class DeploymentTracking {
-    @SerializedName("trackers")
-    private final ArrayList<String> trackers;
 
-    public DeploymentTracking(ArrayList<String> trackers) {
-        this.trackers = trackers;
+    public DeploymentTracking(){
+
     }
 
-    public ArrayList<String> getTrackers() {
-        return trackers;
-    }
 
-    @Override
-    public String toString() {
-        return "DeploymentTracking{" +
-                "trackers=" + trackers.toString() +
-                '}';
-    }
 }

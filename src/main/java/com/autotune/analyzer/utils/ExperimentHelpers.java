@@ -44,7 +44,7 @@ public class ExperimentHelpers {
 			ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
 			JSONObject trialsJSON = new JSONObject();
 			trialsJSON.put(TRIAL_NUMBER, experimentTrial.getTrialInfo().getTrialNum());
-			TrialDetails trainingTrialDetails = experimentTrial.getTrialDetails().get(TRAINING);
+			TrialDetails trainingTrialDetails = experimentTrial.getTrialDetails().get(String.valueOf(trialNum));
 			trialsJSON.put(TRIAL_RESULT, trainingTrialDetails.getResult());
 			trialsJSON.put(TRIAL_ERRORS, trainingTrialDetails.getResultError());
 			StringBuilder durationSeconds;

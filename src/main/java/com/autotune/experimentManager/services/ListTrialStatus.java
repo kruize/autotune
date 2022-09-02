@@ -56,11 +56,12 @@ public class ListTrialStatus extends HttpServlet {
         // get the status JSON based on the type of requirement sent by the user
         JSONObject API_RESPONSE = EMAPIHandler.getStatusJson(experiment_name, trial_num, verbose);
 
-        if (null != API_RESPONSE.getString("Error")) {
+
+       /* if (null != API_RESPONSE.getString("Error")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         } else {
             resp.setStatus(HttpServletResponse.SC_OK);
-        }
+        }*/
         resp.getWriter().println(API_RESPONSE.toString(4));
     }
 

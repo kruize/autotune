@@ -246,7 +246,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .withName(deploymentName)
                     .get();
         } catch (Exception e) {
-            new TargetHandlerException(e, "getDeploymentBy(namespace,deploymentName) failed!");
+            new TargetHandlerException(e, "failed ot get deployment with name: "+deploymentName+" under namespace: "+ namespace);
         }
         return deployment;
     }
@@ -363,11 +363,18 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .getContainers()   //TODO : Check for which container config should get applied
                     .forEach(
                             (deployedAppContainer) -> {
-                                ResourceRequirements resourceRequirements = deployedAppContainer.getResources();
-                                resourceRequirements.setRequests(containerConfigData.getRequestPropertiesMap());
-                                resourceRequirements.setLimits(containerConfigData.getLimitPropertiesMap());
-                                deployedAppContainer.setResources(resourceRequirements);
-                                deployedAppContainer.setEnv(containerConfigData.getEnvList());
+                                if(deployedAppContainer.getName().equals(containerConfigData.getContainerName())) {
+                                    ResourceRequirements resourceRequirements = deployedAppContainer.getResources();
+                                    if (null != containerConfigData.getRequestPropertiesMap())
+                                        resourceRequirements.setRequests(containerConfigData.getRequestPropertiesMap());
+                                    if (null != containerConfigData.getLimitPropertiesMap())
+                                        resourceRequirements.setLimits(containerConfigData.getLimitPropertiesMap());
+                                    deployedAppContainer.setResources(resourceRequirements);
+                                    if (null != containerConfigData.getEnvList())
+                                        deployedAppContainer.setEnv(containerConfigData.getEnvList());
+                                    if (null != containerConfigData.getStackName())
+                                        deployedAppContainer.setImage(containerConfigData.getStackName());
+                                }
                             }
                     );
         } catch (Exception e) {
