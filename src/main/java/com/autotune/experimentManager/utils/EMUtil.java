@@ -252,4 +252,37 @@ public class EMUtil {
             flagEntry.setValue(true);
         }
     }
+
+    public static JSONObject runMetricQuery(String query,
+                                            String podName,
+                                            String datasource) {
+        String constructedQuery = formatQueryWithPodName(query, podName);
+        JSONObject returnObj = runQueryWithDatasourceClient(constructedQuery, datasource);
+        // Needs to be implemented
+        return returnObj;
+    }
+
+    private static JSONObject runQueryWithDatasourceClient(String constructedQuery, String datasource) {
+        // Needs to be implemented
+        return null;
+    }
+
+    private static String formatQueryWithPodName(String query, String podName) {
+        // Needs to be implemented
+        return null;
+    }
+
+    public static String getCurrentPodNameOfTrial(ExperimentTrial experimentTrial) {
+        // Needs to be implemented
+        // Need to call the platform specific client to get the pod name
+        return null;
+    }
+
+    public static boolean isMetricResultValid(String name, String datasource, JSONObject resultJSON) {
+        // Needs to be implemented
+        // will be part of metric validation later
+        // Based on the name of metric and datasource the resultJSON need to be validated if the required
+        // output or result is available in JSON
+        return false;
+    }
 }

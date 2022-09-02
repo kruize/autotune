@@ -1,11 +1,16 @@
 package com.autotune.experimentManager.core.interceptor;
 
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.core.ExperimentTrialHandler;
-import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.autotune.common.k8sObjects.Metric;
+import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class EMLoadInterceptor implements LoadInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMLoadInterceptor.class);
@@ -18,7 +23,18 @@ public class EMLoadInterceptor implements LoadInterceptor {
     @Override
     public EMUtil.InterceptorDetectionStatus detect(ExperimentTrial experimentTrial) {
         // Needs to be implemented
-        return EMUtil.InterceptorDetectionStatus.DETECTED;
+        boolean detectable = false;
+        HashMap<String, Metric> podMetrics = experimentTrial.getPodMetricsHashMap();
+        String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
+        for (Map.Entry<String, Metric> podMetricEntry : podMetrics.entrySet()) {
+            Metric podMetric = podMetricEntry.getValue();
+            JSONObject resultJSON = EMUtil.runMetricQuery(podMetric.getQuery(), podName, podMetric.getDatasource());
+            detectable = EMUtil.isMetricResultValid(podMetric.getName(), podMetric.getDatasource(), resultJSON);
+            if (detectable) {
+                return EMUtil.InterceptorDetectionStatus.DETECTED;
+            }
+        }
+        return EMUtil.InterceptorDetectionStatus.NOT_DETECTED;
     }
 
     /**
