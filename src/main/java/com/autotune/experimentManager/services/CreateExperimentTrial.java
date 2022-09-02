@@ -25,7 +25,9 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +45,8 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
  * RestAPI Servlet used to load experiment trial in JSON format using POST method.
  * JSON format sample can be found here autotune/examples/createExperimentTrial.json
  */
+
+@WebServlet(asyncSupported=true)
 public class CreateExperimentTrial extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     private static final String SERVLETCONTEXT_EM_KEY = "EM";
@@ -61,6 +65,7 @@ public class CreateExperimentTrial extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, java.io.IOException {
+        AsyncContext ac = request.startAsync();
         Gson gson = new Gson();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
@@ -95,6 +100,8 @@ public class CreateExperimentTrial extends HttpServlet {
             LOGGER.error(e.toString());
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }finally {
+            ac.complete();
         }
     }
 }
