@@ -52,7 +52,7 @@ public class CreateExperimentTrial extends HttpServlet {
      * Input payload should be in the format of JSON. Please refer documentation for more details.
      * /createExperimentTrial is API endpoint,
      * HTTP STATUS CODE - 201 is returned if experiment loaded successfully.
-     * HTTP STATUS CODE - 500 is returned for any error.
+     * HTTP STATUS CODE - 400 or 500 is returned for any error.
      *
      * @param request
      * @param response
