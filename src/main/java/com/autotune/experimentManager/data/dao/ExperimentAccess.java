@@ -23,9 +23,9 @@ import java.util.List;
 /**
  * Experiment trial Object's Data access object.
  */
-public interface ExperimentTrialDao {
+public interface ExperimentAccess {
     // Add experiment trial object.
-    public void addExperiments();
+    public void addExperiments(List<ExperimentTrial> experimentTrialList);
     // List all experiments trial.
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments();
     // List all deployments names for experiments

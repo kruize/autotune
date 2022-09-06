@@ -31,16 +31,14 @@ import java.util.stream.Collectors;
  * Experiment's Local storage Data access implementation .
  *
  */
-public class ExperimentTrialDaoImpl implements ExperimentTrialDao {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentTrialDaoImpl.class);
-    private final List<ExperimentTrial> experimentTrialList;
+public class ExperimentAccessImpl implements ExperimentAccess {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentAccessImpl.class);
     private final ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap;
 
     private String errorMessage;
     private int httpResponseCode;
 
-    public ExperimentTrialDaoImpl(List<ExperimentTrial> experimentTrialList, ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
-        this.experimentTrialList = experimentTrialList;
+    public ExperimentAccessImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
         this.existingExperimentTrialMap = existingExperimentTrialMap;
     }
 
@@ -49,11 +47,11 @@ public class ExperimentTrialDaoImpl implements ExperimentTrialDao {
      *  Set Error if duplicate trials found.
      */
     @Override
-    public void addExperiments() {
+    public void addExperiments(List<ExperimentTrial> experimentTrialList) {
         List<ExperimentTrial> validExpTrialList = new ArrayList<>();
         List<ExperimentTrial> successExperimentTrials = new ArrayList<>();
         HashMap<String, HashMap<String, TrialDetails>> successTrialDetailsList = new HashMap<>();
-        this.experimentTrialList.forEach(
+        experimentTrialList.forEach(
                 (experimentTrial) -> {
                     Object obj = this.existingExperimentTrialMap.get(experimentTrial.getExperimentName());
                     if (obj == null)

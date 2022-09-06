@@ -18,8 +18,8 @@ package com.autotune.experimentManager.services;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
-import com.autotune.experimentManager.data.dao.ExperimentTrialDao;
-import com.autotune.experimentManager.data.dao.ExperimentTrialDaoImpl;
+import com.autotune.experimentManager.data.dao.ExperimentAccess;
+import com.autotune.experimentManager.data.dao.ExperimentAccessImpl;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.google.gson.Gson;
@@ -74,10 +74,9 @@ public class CreateExperimentTrial extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
-            ExperimentTrialDao experimentTrialDao = new ExperimentTrialDaoImpl(experimentTrialList, existExperimentTrialMap);
-            experimentTrialDao.addExperiments();
-            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
-            if (null == experimentTrialDao.getErrorMessage()) {
+            ExperimentAccess experimentAccess = new ExperimentAccessImpl(existExperimentTrialMap);
+            experimentAccess.addExperiments(experimentTrialList);            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
+            if (null == experimentAccess.getErrorMessage()) {
                 for (ExperimentTrial experimentTrial : experimentTrialList) {
                     try {
                         /**
@@ -92,13 +91,13 @@ public class CreateExperimentTrial extends HttpServlet {
                     }
                 }
             } else {
-                response.sendError(experimentTrialDao.getHttpResponseCode(), experimentTrialDao.getErrorMessage());
+                response.sendError(experimentAccess.getHttpResponseCode(), experimentAccess.getErrorMessage());
             }
             response.setContentType(JSON_CONTENT_TYPE);
             response.setCharacterEncoding(CHARACTER_ENCODING);
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
-            out.append(new Gson().toJson(experimentTrialDao.listExperiments()));
+            out.append(new Gson().toJson(experimentAccess.listExperiments()));
             out.flush();
         } catch (Exception e) {
             LOGGER.error(e.toString());
