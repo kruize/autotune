@@ -90,8 +90,25 @@ public class ExperimentTrial {
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
 
+
     // Non JSON field
     private transient HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+
+    /**
+     * Will be used to update the status of the trial
+     *
+     * Valid Statuses:
+     *         CREATED,
+     *         QUEUED,
+     *         IN_PROGRESS,
+     *         WAITING_FOR_LOAD,
+     *         COLLECTING_METRICS,
+     *         COMPLETED
+     *
+     * As the project is actively developed these statuses might be changed in future,
+     * Please refer to latest at com.autotune.experimentManager.utils.EMUtil.EMExpStatus
+     */
+    private EMUtil.EMExpStatus status;
 
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
@@ -110,6 +127,7 @@ public class ExperimentTrial {
         this.datasourceInfoHashMap = datasourceInfoHashMap;
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
+        this.status = EMUtil.EMExpStatus.CREATED;
         resetFlagsMap();
     }
 
@@ -166,6 +184,21 @@ public class ExperimentTrial {
     public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
         return flagsMap;
     }
+    /**
+     * Returns the status of the trial
+     * @return EMExpStatus status
+     */
+    public EMUtil.EMExpStatus getStatus() {
+        return status;
+    }
+
+    /**
+     * Set the status of the trial
+     * @param status
+     */
+    public void setStatus(EMUtil.EMExpStatus status) {
+        this.status = status;
+    }
 
     @Override
     public String toString() {
@@ -183,8 +216,6 @@ public class ExperimentTrial {
                 ", experimentSettings=" + experimentSettings +
                 '}';
     }
-
-
 }
 
 

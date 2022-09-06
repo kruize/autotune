@@ -56,7 +56,7 @@ public class EMAPIHandler {
                         depList.add(runId);
                         EMMapper.getInstance().getMap().put(runId, trialData);
                         lastETD.setNotifyTrialCompletion(true);
-                        trialData.setStatus(EMUtil.EMExpStatus.WAIT);
+                        trialData.setStatus(EMUtil.EMExpStatus.QUEUED);
                     }
                 }
             } else {
@@ -121,7 +121,7 @@ public class EMAPIHandler {
                     HashMap<String, ExperimentTrial> trialHashMap = expMap.get(experimentName);
                     for (String key : trialHashMap.keySet()) {
                         JSONObject resJson = getDummyTrialJSON(trialHashMap.get(key), verbose);
-                        resJson.put("Status", "COMPLETED");
+                        resJson.put("Status", trialHashMap.get(key).getStatus().toString());
                         returnJson.put(key, resJson);
                     }
                     return returnJson;
@@ -129,7 +129,7 @@ public class EMAPIHandler {
                     // Scenerio - Experiment name and trial num are given
                     if (expMap.get(experimentName).containsKey(trialNum)) {
                         JSONObject resJson = getDummyTrialJSON(expMap.get(experimentName).get(trialNum), verbose);
-                        resJson.put("Status", "COMPLETED");
+                        resJson.put("Status", expMap.get(experimentName).get(trialNum).getStatus().toString());
                         returnJson.put(trialNum, resJson);
                     } else {
                         returnJson.put("Error", "Invalid trial number");
