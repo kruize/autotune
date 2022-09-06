@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.queue;
+package com.autotune.common.parallelengine.worker;
 
-import java.util.concurrent.Callable;
 /**
- * EventConsumer is a Callable run in a separate thread
- * and receive data from AutotuneQueue.
- * @author bipkumar
- *
+ * Execute methode should be implemented by Workers like IterationManger etc.
  */
-public class EventConsumer implements Callable<AutotuneDTO> {
-	private final AutotuneQueue queue;
-	private AutotuneDTO taskDto;
-
-	public EventConsumer(AutotuneQueue queue) {
-		this.queue = queue;
-	}
-
-	@Override
-	public AutotuneDTO call() throws Exception {
-		try {
-			taskDto = queue.get();
-
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return taskDto;
-	}
+public interface AutotuneWorker {
+    void execute(Object o);
 }
