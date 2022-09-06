@@ -16,11 +16,12 @@
 package com.autotune.experimentManager.services;
 
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.core.ExperimentTrialHandler;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.dao.ExperimentTrialDao;
 import com.autotune.experimentManager.data.dao.ExperimentTrialDaoImpl;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
  * JSON format sample can be found here autotune/examples/createExperimentTrial.json
  */
 
-@WebServlet(asyncSupported=true)
+@WebServlet(asyncSupported = true)
 public class CreateExperimentTrial extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     private static final String SERVLETCONTEXT_EM_KEY = "EM";
@@ -75,18 +76,21 @@ public class CreateExperimentTrial extends HttpServlet {
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
             ExperimentTrialDao experimentTrialDao = new ExperimentTrialDaoImpl(experimentTrialList, existExperimentTrialMap);
             experimentTrialDao.addExperiments();
+            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
             if (null == experimentTrialDao.getErrorMessage()) {
-                experimentTrialList.forEach(
-                        (experimentTrial) -> {
-                            LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
-                            new Thread() {
-                                @Override
-                                public void run() {
-                                    new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
-                                }
-                            }.start();
-                        }
-                );
+                for (ExperimentTrial experimentTrial : experimentTrialList) {
+                    try {
+                        /**
+                         * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
+                         */
+                        //ToDO  Make sure Trials of same experiments not get executed in parallel.
+                        emExecutor.getAutotuneQueue().put(experimentTrial);
+                    } catch (InterruptedException e) {
+                        LOGGER.debug(e.getMessage());
+                        e.printStackTrace();
+                        break;
+                    }
+                }
             } else {
                 response.sendError(experimentTrialDao.getHttpResponseCode(), experimentTrialDao.getErrorMessage());
             }
@@ -100,7 +104,7 @@ public class CreateExperimentTrial extends HttpServlet {
             LOGGER.error(e.toString());
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }finally {
+        } finally {
             ac.complete();
         }
     }
