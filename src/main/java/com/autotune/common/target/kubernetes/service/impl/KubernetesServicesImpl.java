@@ -246,7 +246,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .withName(deploymentName)
                     .get();
         } catch (Exception e) {
-            new TargetHandlerException(e, "failed ot get deployment with name: "+deploymentName+" under namespace: "+ namespace);
+            new TargetHandlerException(e, "failed to get deployment with name: "+deploymentName+" under namespace: "+ namespace);
         }
         return deployment;
     }
