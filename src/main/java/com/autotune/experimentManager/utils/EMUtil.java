@@ -182,4 +182,12 @@ public class EMUtil {
         AVAILABLE,
         NOT_AVAILABLE
     }
+
+    public static int timeToSleep(int iteration) {
+        if (0 <= iteration) {
+            int index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;
+            return index;
+        }
+        return 0;
+    }
 }

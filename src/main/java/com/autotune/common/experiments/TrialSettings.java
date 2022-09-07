@@ -49,6 +49,8 @@ public class TrialSettings {
     @SerializedName("measurement_cycles")
     private final String trialMeasurementCycles;
 
+    private boolean forceCollectMetrics;
+
     public TrialSettings(String trialIterations,
                          String trialWarmupDuration,
                          String trialWarmupCycles,
@@ -59,6 +61,7 @@ public class TrialSettings {
         this.trialWarmupCycles = trialWarmupCycles;
         this.trialMeasurementDuration = trialMeasurementDuration;
         this.trialMeasurementCycles = trialMeasurementCycles;
+        this.forceCollectMetrics = false;
     }
 
     public String getTrialMeasurementDuration() {
@@ -79,6 +82,14 @@ public class TrialSettings {
 
     public String getTrialMeasurementCycles() {
         return trialMeasurementCycles;
+    }
+
+    public boolean isForceCollectMetrics() {
+        return forceCollectMetrics;
+    }
+
+    public void setForceCollectMetrics(boolean forceCollectMetrics) {
+        this.forceCollectMetrics = forceCollectMetrics;
     }
 
     @Override

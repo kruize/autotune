@@ -23,8 +23,12 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.experimentManager.core.interceptor.EMLoadInterceptor;
 import com.autotune.experimentManager.data.EMMapper;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.autotune.experimentManager.utils.EMConstants;
 =======
+=======
+import com.autotune.experimentManager.utils.EMConstants;
+>>>>>>> Adds the proceed to collection of metrics check
 import com.autotune.experimentManager.utils.EMUtil;
 >>>>>>> Adds load interceptor mechanism
 import com.autotune.utils.HttpUtils;
@@ -159,39 +163,71 @@ public class ExperimentTrialHandler {
                         kubernetesServices
                 );
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
-                        i -> {
-                            deploymentHandler.initiateDeploy();
-                            //Check if deployment is ready
-                            int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
-                            long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
-                            int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
-                            for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
-                                try {
-                                    LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
-                                    Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            if (!deploymentHandler.isDeploymentReady()) {
-                                LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                            } else {
-                                //check if load applied to deployment
-
-                                // Checks if the load can be detected with the attributes of experiment trial
-                                if (EMUtil.InterceptorDetectionStatus.DETECTED == emLoadInterceptor.detect(this.experimentTrial)) {
-                                    // Proceed to check if load is available (minimal variation)
-                                    if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == emLoadInterceptor.isAvailable(this.experimentTrial)) {
-                                        // Will proceed for metric cycles if the load is detected
-                                    }
-                                }
+                    i -> {
+                        boolean proceedToMetricsCollection = false;
+                        deploymentHandler.initiateDeploy();
+                        //Check if deployment is ready
+                        int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
+                        long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
+                        int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
+                        for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
+                            try {
+                                LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
+                                Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
                         }
-                );
+                        if (!deploymentHandler.isDeploymentReady()) {
+                            LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                        } else {
+                            //check if load applied to deployment
 
+                            // Checks if the load can be detected with the attributes of experiment trial
+                            if (EMUtil.InterceptorDetectionStatus.DETECTED == emLoadInterceptor.detect(this.experimentTrial)) {
+                                EMUtil.InterceptorAvailabilityStatus currentAvailability = emLoadInterceptor.isAvailable(this.experimentTrial);
+                                // This loop mechanism will be part of an abstraction later (Threshold loop abstraction)
+                                // for now just like deployment handler we run a for loop and constantly poll for the load availability
+                                for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.CHECK_LOAD_AVAILABILITY_THRESHOLD; j++) {
+                                    // Proceed to check if load is available (minimal variation)
+                                    if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == currentAvailability) {
+                                        // Will proceed for metric cycles if the load is detected
+                                        proceedToMetricsCollection = true;
+                                        // breaking the load availability loop
+                                        break;
+                                    }
+                                    try {
+                                        LOGGER.debug("The Load is not yet available, will be checking it again");
+                                        // Will be replaced by a exponential looper mechanism
+                                        Thread.sleep(EMUtil.timeToSleep(j) * 1000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    currentAvailability = emLoadInterceptor.isAvailable(this.experimentTrial);
+                                }
+                                if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE != currentAvailability) {
+                                    LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
+                                    if (this.experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
+                                        proceedToMetricsCollection = true;
+                                    }
+                                }
+                            } else {
+                                LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
+                                if (this.experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
+                                    proceedToMetricsCollection = true;
+                                }
+                            }
+                            if (!proceedToMetricsCollection) {
+                                LOGGER.debug("Proceeding to next trial and this trial cannot be completed due to lack of metrics collection. Will be marked as failed trial");
+                                // Need to implement a exiting functionality
+                            } else {
+                                //collect warmup and measurement cycles metrics
+                            }
+                        }
+                    }
+                );
             } catch (Exception e) {
                 LOGGER.error(e.toString());
-                e.printStackTrace();
             } finally {
                 if (kubernetesServices != null)
                     kubernetesServices.shutdownClient();
@@ -211,6 +247,4 @@ public class ExperimentTrialHandler {
         }
         LOGGER.debug(retJson.toString());
     }
-
-
 }
