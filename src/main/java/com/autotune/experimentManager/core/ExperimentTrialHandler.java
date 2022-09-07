@@ -22,15 +22,9 @@ import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.core.interceptor.EMLoadInterceptor;
 import com.autotune.experimentManager.data.EMMapper;
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 import com.autotune.experimentManager.utils.EMConstants;
-=======
-=======
-import com.autotune.experimentManager.utils.EMConstants;
->>>>>>> Adds the proceed to collection of metrics check
 import com.autotune.experimentManager.utils.EMUtil;
->>>>>>> Adds load interceptor mechanism
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -228,6 +222,7 @@ public class ExperimentTrialHandler {
                 );
             } catch (Exception e) {
                 LOGGER.error(e.toString());
+                e.printStackTrace();
             } finally {
                 if (kubernetesServices != null)
                     kubernetesServices.shutdownClient();
