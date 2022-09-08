@@ -158,7 +158,6 @@ public class ExperimentTrialHandler {
                 );
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
                     i -> {
-                        boolean proceedToMetricsCollection = false;
                         deploymentHandler.initiateDeploy();
                         //Check if deployment is ready
                         int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
@@ -178,44 +177,15 @@ public class ExperimentTrialHandler {
                             //check if load applied to deployment
 
                             // Checks if the load can be detected with the attributes of experiment trial
-                            if (EMUtil.InterceptorDetectionStatus.DETECTED == emLoadInterceptor.detect(this.experimentTrial)) {
-                                EMUtil.InterceptorAvailabilityStatus currentAvailability = emLoadInterceptor.isAvailable(this.experimentTrial);
-                                // This loop mechanism will be part of an abstraction later (Threshold loop abstraction)
-                                // for now just like deployment handler we run a for loop and constantly poll for the load availability
-                                for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.CHECK_LOAD_AVAILABILITY_THRESHOLD; j++) {
-                                    // Proceed to check if load is available (minimal variation)
-                                    if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == currentAvailability) {
-                                        // Will proceed for metric cycles if the load is detected
-                                        proceedToMetricsCollection = true;
-                                        // breaking the load availability loop
-                                        break;
-                                    }
-                                    try {
-                                        LOGGER.debug("The Load is not yet available, will be checking it again");
-                                        // Will be replaced by a exponential looper mechanism
-                                        Thread.sleep(EMUtil.timeToSleep(j) * 1000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    currentAvailability = emLoadInterceptor.isAvailable(this.experimentTrial);
-                                }
-                                if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE != currentAvailability) {
-                                    LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
-                                    if (this.experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
-                                        proceedToMetricsCollection = true;
-                                    }
-                                }
-                            } else {
-                                LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
-                                if (this.experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
-                                    proceedToMetricsCollection = true;
-                                }
-                            }
-                            if (!proceedToMetricsCollection) {
-                                LOGGER.debug("Proceeding to next trial and this trial cannot be completed due to lack of metrics collection. Will be marked as failed trial");
-                                // Need to implement a exiting functionality
-                            } else {
-                                //collect warmup and measurement cycles metrics
+                            EMUtil.InterceptorFlowDecision loadInterceptorDecision = emLoadInterceptor.verifyLoadToProceed(this.experimentTrial);
+                            switch (loadInterceptorDecision) {
+                                case PROCEED:
+                                    // Proceed as the load is detectable and available
+                                    break;
+                                case EXIT:
+                                    // Exit the trial gracefully and mark the trial as failed as
+                                    // we cannot proceed to collect metrics
+                                    break;
                             }
                         }
                     }

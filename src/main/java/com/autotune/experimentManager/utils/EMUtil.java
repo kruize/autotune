@@ -190,4 +190,15 @@ public class EMUtil {
         }
         return 0;
     }
+
+    public enum InterceptorFlowDecision {
+        // To proceed ahead in the flow
+        PROCEED,
+        // To wait and check later for the intercepted entity
+        WAIT,
+        // Take another path / workflow as current workflow has issues
+        DETOUR,
+        // Couldn't proceed in anyway, gracefully exit the workflow
+        EXIT
+    }
 }
