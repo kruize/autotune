@@ -174,17 +174,14 @@ public class ExperimentTrialHandler {
                         if (!deploymentHandler.isDeploymentReady()) {
                             LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
                         } else {
-                            //check if load applied to deployment
-
-                            // Checks if the load can be detected with the attributes of experiment trial
-                            EMUtil.InterceptorFlowDecision loadInterceptorDecision = emLoadInterceptor.verifyLoadToProceed(this.experimentTrial);
-                            switch (loadInterceptorDecision) {
-                                case PROCEED:
-                                    // Proceed as the load is detectable and available
+                            // Proceeding to load check as deployment is successful
+                            EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
+                            switch (loadAvailabilityStatus) {
+                                case LOAD_AVAILABLE:
+                                    // Proceed to collect metrics as load is available
                                     break;
-                                case EXIT:
-                                    // Exit the trial gracefully and mark the trial as failed as
-                                    // we cannot proceed to collect metrics
+                                case LOAD_NOT_AVAILABLE:
+                                    // Proceed to exit gracefully as load is not available
                                     break;
                             }
                         }

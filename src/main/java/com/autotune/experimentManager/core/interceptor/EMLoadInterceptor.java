@@ -7,7 +7,7 @@ import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EMLoadInterceptor implements BaseInterceptor {
+public class EMLoadInterceptor implements LoadInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMLoadInterceptor.class);
     /**
      * Load detection module which returns DETECTED if the load can be detected
@@ -29,12 +29,13 @@ public class EMLoadInterceptor implements BaseInterceptor {
      */
     @Override
     public EMUtil.InterceptorAvailabilityStatus isAvailable(ExperimentTrial experimentTrial) {
+        // Set ready for load
         // Needs to be implemented
         return EMUtil.InterceptorAvailabilityStatus.AVAILABLE;
     }
 
-    public EMUtil.InterceptorFlowDecision verifyLoadToProceed(ExperimentTrial experimentTrial) {
-        boolean proceedToMetricsCollection = false;
+    @Override
+    public EMUtil.LoadAvailabilityStatus isLoadAvailable(ExperimentTrial experimentTrial) {
         if (EMUtil.InterceptorDetectionStatus.DETECTED == this.detect(experimentTrial)) {
             EMUtil.InterceptorAvailabilityStatus currentAvailability = this.isAvailable(experimentTrial);
             // This loop mechanism will be part of an abstraction later (Threshold loop abstraction)
@@ -43,9 +44,7 @@ public class EMLoadInterceptor implements BaseInterceptor {
                 // Proceed to check if load is available (minimal variation)
                 if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == currentAvailability) {
                     // Will proceed for metric cycles if the load is detected
-                    proceedToMetricsCollection = true;
-                    // breaking the load availability loop
-                    break;
+                    return  EMUtil.LoadAvailabilityStatus.LOAD_AVAILABLE;
                 }
                 try {
                     LOGGER.debug("The Load is not yet available, will be checking it again");
@@ -56,22 +55,8 @@ public class EMLoadInterceptor implements BaseInterceptor {
                 }
                 currentAvailability = this.isAvailable(experimentTrial);
             }
-            if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE != currentAvailability) {
-                LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
-                if (experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
-                    proceedToMetricsCollection = true;
-                }
-            }
-        } else {
-            LOGGER.debug("Load cannot be detected for the particular trial, proceed to collect metrics if it can be ignored");
-            if (experimentTrial.getExperimentSettings().getTrialSettings().isForceCollectMetrics()) {
-                proceedToMetricsCollection = true;
-            }
-        }
-        if (proceedToMetricsCollection) {
-            return  EMUtil.InterceptorFlowDecision.PROCEED;
         }
         LOGGER.debug("Proceeding to next trial and this trial cannot be completed due to lack of metrics collection. Will be marked as failed trial");
-        return EMUtil.InterceptorFlowDecision.EXIT;
+        return EMUtil.LoadAvailabilityStatus.LOAD_NOT_AVAILABLE;
     }
 }

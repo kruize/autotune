@@ -183,6 +183,11 @@ public class EMUtil {
         NOT_AVAILABLE
     }
 
+    public enum LoadAvailabilityStatus {
+        LOAD_AVAILABLE,
+        LOAD_NOT_AVAILABLE
+    }
+
     public static int timeToSleep(int iteration) {
         if (0 <= iteration) {
             int index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;

@@ -8,6 +8,7 @@ import com.autotune.experimentManager.utils.EMUtil;
  * for the some entity which is needed to proceed further in EM flow
  *
  * It's named as interceptor as it intercepts a flow to check if that can proceed
+ *
  */
 public interface BaseInterceptor {
     /**
