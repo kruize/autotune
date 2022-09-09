@@ -1,6 +1,7 @@
 package com.autotune.experimentManager.utils;
 
 import java.util.Locale;
+import java.util.SplittableRandom;
 
 public class EMConstants {
 
@@ -253,5 +254,14 @@ public class EMConstants {
 		public static String MEM_QUERY_NAME = "memRequest";
 		public static String THROUGHPUT = "throughput";
 		public static String RESPONSE_TIME = "response_time";
+
+		public static class BackOffThresholds {
+			private BackOffThresholds() { }
+			public static int CHECK_LOAD_AVAILABILITY_THRESHOLD = 10;
+			public static int[] EXPONENTIAL_BACKOFF_INTERVALS = {1, 3, 4, 7, 11};
+			public static int DEFUALT_LINEAR_BACKOFF_INTERVAL = 1;
+		}
 	}
+
+
 }
