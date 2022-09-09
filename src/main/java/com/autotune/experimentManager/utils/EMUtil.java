@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.experimentManager.utils;
 
 import com.autotune.experimentManager.data.ExperimentTrialData;
@@ -169,7 +168,6 @@ public class EMUtil {
 
     public JSONObject generateMetricsMap(ExperimentTrialData etd) {
         ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
-
         return null;
     }
 
@@ -188,22 +186,25 @@ public class EMUtil {
         LOAD_NOT_AVAILABLE
     }
 
-    public static int timeToSleep(int iteration) {
-        if (0 <= iteration) {
-            int index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;
-            return index;
-        }
-        return 0;
+    public enum ThresholdIntervalType {
+        EXPONENTIAL,
+        LINEAR
     }
 
-    public enum InterceptorFlowDecision {
-        // To proceed ahead in the flow
-        PROCEED,
-        // To wait and check later for the intercepted entity
-        WAIT,
-        // Take another path / workflow as current workflow has issues
-        DETOUR,
-        // Couldn't proceed in anyway, gracefully exit the workflow
-        EXIT
+    public static int timeToSleep(int iteration, ThresholdIntervalType type) {
+        int time = 0;
+        if (type == null) {
+            type = ThresholdIntervalType.LINEAR;
+        }
+        if (0 <= iteration) {
+            int index = 0;
+            if (type == ThresholdIntervalType.LINEAR) {
+                time = EMConstants.StandardDefaults.BackOffThresholds.DEFUALT_LINEAR_BACKOFF_INTERVAL;
+            } else if (type == ThresholdIntervalType.EXPONENTIAL) {
+                index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;
+                time = EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS[index];
+            }
+        }
+        return time;
     }
 }

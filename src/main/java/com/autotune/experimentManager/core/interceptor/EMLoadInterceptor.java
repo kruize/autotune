@@ -49,7 +49,7 @@ public class EMLoadInterceptor implements LoadInterceptor {
                 try {
                     LOGGER.debug("The Load is not yet available, will be checking it again");
                     // Will be replaced by a exponential looper mechanism
-                    Thread.sleep(EMUtil.timeToSleep(j) * 1000);
+                    Thread.sleep(EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.EXPONENTIAL) * 1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
