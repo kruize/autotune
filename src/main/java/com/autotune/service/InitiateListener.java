@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -57,11 +56,10 @@ public class InitiateListener implements ServletContextListener {
                 ParallelEngineConfigs.EM_MAX_POOL_SIZE,
                 ParallelEngineConfigs.EM_CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(),
-                new ThreadPoolExecutor.AbortPolicy(),
                 emQueue,
-                IterationManager.class,
-                ParallelEngineConfigs.EM_DELAY_IN_SECS);
+                new ThreadPoolExecutor.AbortPolicy(),
+                IterationManager.class
+        );
         sce.getServletContext().setAttribute(ParallelEngineConfigs.EM_EXECUTOR, EMExecutor);
 
     }

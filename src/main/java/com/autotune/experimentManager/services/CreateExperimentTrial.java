@@ -17,6 +17,8 @@ package com.autotune.experimentManager.services;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.access.ExperimentAccess;
 import com.autotune.experimentManager.data.access.ExperimentAccessImpl;
@@ -75,7 +77,8 @@ public class CreateExperimentTrial extends HttpServlet {
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
             ExperimentAccess experimentAccess = new ExperimentAccessImpl(existExperimentTrialMap);
-            experimentAccess.addExperiments(experimentTrialList);            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
+            experimentAccess.addExperiments(experimentTrialList);
+            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
             if (null == experimentAccess.getErrorMessage()) {
                 for (ExperimentTrial experimentTrial : experimentTrialList) {
                     try {
@@ -83,8 +86,17 @@ public class CreateExperimentTrial extends HttpServlet {
                          * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
                          */
                         //ToDO  Make sure Trials of same experiments not get executed in parallel.
-                        emExecutor.getAutotuneQueue().put(experimentTrial);
-                    } catch (InterruptedException e) {
+                        emExecutor.submit(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        AutotuneWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
+                                        theWorker.execute(experimentTrial);
+                                    }
+                                }
+                        );
+
+                    } catch (Exception e) {
                         LOGGER.debug(e.getMessage());
                         e.printStackTrace();
                         break;
