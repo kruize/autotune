@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.experimentManager.utils;
 
 import com.autotune.experimentManager.data.ExperimentTrialData;
@@ -169,7 +168,43 @@ public class EMUtil {
 
     public JSONObject generateMetricsMap(ExperimentTrialData etd) {
         ArrayList<EMMetricInput> emMetricInputs = etd.getConfig().getEmConfigObject().getDeployments().getTrainingDeployment().getMetrics();
-
         return null;
+    }
+
+    public enum InterceptorDetectionStatus {
+        DETECTED,
+        NOT_DETECTED
+    }
+
+    public enum InterceptorAvailabilityStatus {
+        AVAILABLE,
+        NOT_AVAILABLE
+    }
+
+    public enum LoadAvailabilityStatus {
+        LOAD_AVAILABLE,
+        LOAD_NOT_AVAILABLE
+    }
+
+    public enum ThresholdIntervalType {
+        EXPONENTIAL,
+        LINEAR
+    }
+
+    public static int timeToSleep(int iteration, ThresholdIntervalType type) {
+        int time = 0;
+        if (type == null) {
+            type = ThresholdIntervalType.LINEAR;
+        }
+        if (0 <= iteration) {
+            int index = 0;
+            if (type == ThresholdIntervalType.LINEAR) {
+                time = EMConstants.StandardDefaults.BackOffThresholds.DEFUALT_LINEAR_BACKOFF_INTERVAL;
+            } else if (type == ThresholdIntervalType.EXPONENTIAL) {
+                index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;
+                time = EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS[index];
+            }
+        }
+        return time;
     }
 }

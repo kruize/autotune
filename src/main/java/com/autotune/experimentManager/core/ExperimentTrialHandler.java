@@ -20,8 +20,11 @@ import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.experimentManager.core.interceptor.EMLoadInterceptor;
 import com.autotune.experimentManager.data.EMMapper;
+
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
 import org.json.JSONArray;
@@ -140,6 +143,7 @@ public class ExperimentTrialHandler {
     public void startExperimentTrials() {
         LOGGER.debug("Start Exp Trial");
         int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
+        EMLoadInterceptor emLoadInterceptor = new EMLoadInterceptor();
         String imageName = "";
         String containerName = "";
         this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
@@ -153,27 +157,36 @@ public class ExperimentTrialHandler {
                         kubernetesServices
                 );
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
-                        i -> {
-                            deploymentHandler.initiateDeploy();
-                            //Check if deployment is ready
-                            int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
-                            long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
-                            int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
-                            for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
-                                try {
-                                    LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
-                                    Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                    i -> {
+                        deploymentHandler.initiateDeploy();
+                        //Check if deployment is ready
+                        int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
+                        long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
+                        int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
+                        for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
+                            try {
+                                LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
+                                Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
-                            if (!deploymentHandler.isDeploymentReady())
-                                LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                            //check if load applied to deployment
-                            //collect warmup and measurement cycles metrics
                         }
+                        if (!deploymentHandler.isDeploymentReady()) {
+                            LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                        } else {
+                            // Proceeding to load check as deployment is successful
+                            EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
+                            switch (loadAvailabilityStatus) {
+                                case LOAD_AVAILABLE:
+                                    // Proceed to collect metrics as load is available
+                                    break;
+                                case LOAD_NOT_AVAILABLE:
+                                    // Proceed to exit gracefully as load is not available
+                                    break;
+                            }
+                        }
+                    }
                 );
-
             } catch (Exception e) {
                 LOGGER.error(e.toString());
                 e.printStackTrace();
@@ -196,6 +209,4 @@ public class ExperimentTrialHandler {
         }
         LOGGER.debug(retJson.toString());
     }
-
-
 }
