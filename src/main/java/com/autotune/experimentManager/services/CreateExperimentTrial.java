@@ -64,13 +64,13 @@ public class CreateExperimentTrial extends HttpServlet {
         Gson gson = new Gson();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
-            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
+            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
-            TrialInterface trialInterface = new TrialInterfaceImpl(existExperimentTrialMap);
-            trialInterface.addExperiments(experimentTrialList);
-            if (null == trialInterface.getErrorMessage()) {
+            ExperimentAccess experimentAccess = new ExperimentAccessImpl(existExperimentTrialMap);
+            experimentAccess.addExperiments(experimentTrialList);
+            if (null == experimentAccess.getErrorMessage()) {
                 experimentTrialList.forEach(
                         (experimentTrial) -> {
                             LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
@@ -83,11 +83,14 @@ public class CreateExperimentTrial extends HttpServlet {
                         }
                 );
             } else {
-                response.sendError(trialInterface.getHttpResponseCode(), trialInterface.getErrorMessage());
+                response.sendError(experimentAccess.getHttpResponseCode(), experimentAccess.getErrorMessage());
             }
             response.setContentType(JSON_CONTENT_TYPE);
             response.setCharacterEncoding(CHARACTER_ENCODING);
             response.setStatus(HttpServletResponse.SC_CREATED);
+            PrintWriter out = response.getWriter();
+            out.append(new Gson().toJson(experimentAccess.listExperiments()));
+            out.flush();
         } catch (Exception e) {
             LOGGER.error(e.toString());
             e.printStackTrace();

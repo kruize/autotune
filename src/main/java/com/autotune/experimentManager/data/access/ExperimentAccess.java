@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.experimentManager.data.dao;
+package com.autotune.experimentManager.data.access;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 
 /**
- * Experiment trial Object's Data access object.
+ * List of method to add/delete/get experiment detail.
  */
 public interface ExperimentAccess {
     // Add experiment trial object.
