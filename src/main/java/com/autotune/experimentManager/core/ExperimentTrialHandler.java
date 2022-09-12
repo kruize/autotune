@@ -159,32 +159,29 @@ public class ExperimentTrialHandler {
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
                     i -> {
                         deploymentHandler.initiateDeploy();
+
                         //Check if deployment is ready
-                        int deploymentIsReadyWithinMinute = EMConstants.TimeConv.DEPLOYMENT_IS_READY_WITHIN_MINUTE;
-                        long millisMinutes = TimeUnit.MINUTES.toMillis(deploymentIsReadyWithinMinute);
-                        int count = (int)millisMinutes/EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS;
-                        for (int j = count; j > 0 && !deploymentHandler.isDeploymentReady(); j--) {   //Parameterize sleep duration hardcoded for 120
-                            try {
-                                LOGGER.debug("Still deployment is not ready for ExpName {} trail No {}", this.experimentTrial.getExperimentName(), tracker);
-                                Thread.sleep(EMConstants.TimeConv.DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                        EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady();
+                        switch (deploymentReadinessStatus) {
+                            case READY:
+                                break;
+                            case NOT_READY:
+                                LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                                break;
                         }
-                        if (!deploymentHandler.isDeploymentReady()) {
-                            LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                        } else {
-                            // Proceeding to load check as deployment is successful
-                            EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
-                            switch (loadAvailabilityStatus) {
-                                case LOAD_AVAILABLE:
-                                    // Proceed to collect metrics as load is available
-                                    break;
-                                case LOAD_NOT_AVAILABLE:
-                                    // Proceed to exit gracefully as load is not available
-                                    break;
-                            }
+
+                        // Proceeding to load check as deployment is successful
+                        EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
+                        switch (loadAvailabilityStatus) {
+                            case LOAD_AVAILABLE:
+                                // Proceed to collect metrics as load is available
+                                break;
+                            case LOAD_NOT_AVAILABLE:
+                                // Proceed to exit gracefully as load is not available
+                                break;
                         }
+
+                        // Collect metrics
                     }
                 );
             } catch (Exception e) {

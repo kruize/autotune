@@ -258,10 +258,9 @@ public class EMConstants {
 		public static class BackOffThresholds {
 			private BackOffThresholds() { }
 			public static int CHECK_LOAD_AVAILABILITY_THRESHOLD = 10;
+			public static int DEPLOYMENT_READINESS_THRESHOLD = 10;
 			public static int[] EXPONENTIAL_BACKOFF_INTERVALS = {1, 3, 4, 7, 11};
-			public static int DEFUALT_LINEAR_BACKOFF_INTERVAL = 1;
+			public static int DEFAULT_LINEAR_BACKOFF_INTERVAL = 1;
 		}
 	}
-
-
 }

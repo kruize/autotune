@@ -191,6 +191,11 @@ public class EMUtil {
         LINEAR
     }
 
+    public enum DeploymentReadinessStatus {
+        READY,
+        NOT_READY
+    }
+
     public static int timeToSleep(int iteration, ThresholdIntervalType type) {
         int time = 0;
         if (type == null) {
@@ -199,7 +204,7 @@ public class EMUtil {
         if (0 <= iteration) {
             int index = 0;
             if (type == ThresholdIntervalType.LINEAR) {
-                time = EMConstants.StandardDefaults.BackOffThresholds.DEFUALT_LINEAR_BACKOFF_INTERVAL;
+                time = EMConstants.StandardDefaults.BackOffThresholds.DEFAULT_LINEAR_BACKOFF_INTERVAL;
             } else if (type == ThresholdIntervalType.EXPONENTIAL) {
                 index = iteration % EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS.length;
                 time = EMConstants.StandardDefaults.BackOffThresholds.EXPONENTIAL_BACKOFF_INTERVALS[index];
