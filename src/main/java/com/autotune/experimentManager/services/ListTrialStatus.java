@@ -16,19 +16,30 @@
 
 package com.autotune.experimentManager.services;
 
+import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.experimentManager.data.EMMapper;
+import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.services.util.EMAPIHandler;
 import com.autotune.experimentManager.transitions.util.TransistionHelper;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
+import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
+
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * This class is the handler for the endpoint `listTrialStatus`
@@ -36,6 +47,15 @@ import java.io.IOException;
  * Returns the status for the requested trial id
  */
 public class ListTrialStatus extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    ExperimentDetailsMap<String, ExperimentTrial> existingExperiments;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        this.existingExperiments = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String experiment_name = null;
@@ -53,16 +73,41 @@ public class ListTrialStatus extends HttpServlet {
             verbose = true;
         }
 
-        // get the status JSON based on the type of requirement sent by the user
-        JSONObject API_RESPONSE = EMAPIHandler.getStatusJson(experiment_name, trial_num, verbose);
+        resp.setContentType(JSON_CONTENT_TYPE);
+        resp.setCharacterEncoding(CHARACTER_ENCODING);
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        PrintWriter out = resp.getWriter();
+        JSONObject returnJson = new JSONObject();
 
-
-       /* if (null != API_RESPONSE.getString("Error")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-            resp.setStatus(HttpServletResponse.SC_OK);
-        }*/
-        resp.getWriter().println(API_RESPONSE.toString(4));
+        if (null == experiment_name){
+            this.existingExperiments.forEach((expName,experimentTObj)->{
+                JSONObject trialJson = new JSONObject();
+                ((ExperimentTrial) experimentTObj).getTrialDetails().forEach((trialNum,trialDetail)->{
+                    trialJson.put(trialNum,new JSONObject().put("STATUS" , "COMPLETED"));
+                });
+                returnJson.put((String) expName,trialJson);
+            });
+        }else{
+            ExperimentTrial et = (ExperimentTrial) this.existingExperiments.get(experiment_name);
+            if (null != et) {
+                JSONObject trialJson = new JSONObject();
+                if (null != trial_num){
+                    TrialDetails td = et.getTrialDetails().get(trial_num);
+                    if(null != td) {
+                        trialJson.put(trial_num, new JSONObject().put("STATUS", "COMPLETED"));
+                    }
+                }else {
+                    et.getTrialDetails().forEach((trialNum, trialDetail) -> {
+                        trialJson.put(trialNum, new JSONObject().put("STATUS", "COMPLETED"));
+                    });
+                }
+                returnJson.put(experiment_name,trialJson);
+            }
+        }
+        out.append(
+                returnJson.toString()
+        );
+        out.flush();
     }
 
     @Override
