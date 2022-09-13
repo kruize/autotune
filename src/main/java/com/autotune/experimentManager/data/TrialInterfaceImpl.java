@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.experimentManager.data.access;
+package com.autotune.experimentManager.data;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,14 +29,14 @@ import java.util.stream.Collectors;
 /**
  * Experiment's Local storage Data access implementation .
  */
-public class ExperimentAccessImpl implements ExperimentAccess {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentAccessImpl.class);
+public class TrialInterfaceImpl implements TrialInterface {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrialInterfaceImpl.class);
     private final ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap;
 
     private String errorMessage;
     private int httpResponseCode;
 
-    public ExperimentAccessImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
+    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
         this.existingExperimentTrialMap = existingExperimentTrialMap;
     }
 

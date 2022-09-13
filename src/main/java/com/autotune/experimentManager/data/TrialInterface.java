@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.experimentManager.data.access;
+package com.autotune.experimentManager.data;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * List of method to add/delete/get experiment detail.
  */
-public interface ExperimentAccess {
+public interface TrialInterface {
     // Add experiment trial object.
     public void addExperiments(List<ExperimentTrial> experimentTrialList);
     // List all experiments trial.
