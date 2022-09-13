@@ -1,8 +1,5 @@
 package com.autotune.experimentManager.utils;
 
-import java.util.Locale;
-import java.util.SplittableRandom;
-
 public class EMConstants {
 
 	private EMConstants() { }
@@ -261,6 +258,13 @@ public class EMConstants {
 			public static int DEPLOYMENT_READINESS_THRESHOLD = 10;
 			public static int[] EXPONENTIAL_BACKOFF_INTERVALS = {1, 3, 4, 7, 11};
 			public static int DEFAULT_LINEAR_BACKOFF_INTERVAL = 1;
+		}
+
+		public static class EMFlowFlags {
+			private EMFlowFlags() { }
+			public static boolean DEFAULT_NEEDS_DEPLOYMENT = false;
+			public static boolean DEFAULT_CHECK_LOAD = false;
+			public static boolean DEFAULT_COLLECT_METRICS = false;
 		}
 	}
 }
