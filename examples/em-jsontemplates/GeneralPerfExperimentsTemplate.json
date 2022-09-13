@@ -4,7 +4,7 @@
     "mode": "Apply/MetricCollectionOnly",
     "environment": "QA/PROD",
     "resource": {
-      "namespace": "Default",
+      "namespace": "default",
       "deployment_name": "tfb-qrh-sample"
     },
     "datasource_info": {
@@ -109,7 +109,7 @@
   {
     "experiment_name": "quarkus-resteasy-autotune-max-throughput",
     "resource": {
-      "namespace": "Default",
+      "namespace": "default",
       "deployment_name": "tfb-qrh-sample2"
     },
     "datasource_info": {
