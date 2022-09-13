@@ -158,18 +158,20 @@ public class ExperimentTrialHandler {
                 );
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
                     i -> {
+                        // Check for deployment needed to be implemented
                         deploymentHandler.initiateDeploy();
-
-                        //Check if deployment is ready
-                        EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady();
+                        // Check if deployment is ready
+                        EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady(this.experimentTrial);
                         switch (deploymentReadinessStatus) {
                             case READY:
                                 break;
                             case NOT_READY:
+                                // Gracefuly exit for this iteration
                                 LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
                                 break;
                         }
 
+                        // Check for load check needs and proceed to this
                         // Proceeding to load check as deployment is successful
                         EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
                         switch (loadAvailabilityStatus) {
@@ -180,7 +182,6 @@ public class ExperimentTrialHandler {
                                 // Proceed to exit gracefully as load is not available
                                 break;
                         }
-
                         // Collect metrics
                     }
                 );

@@ -16,6 +16,7 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -60,7 +61,7 @@ public class DeploymentHandler {
         LOGGER.debug("END DEPLOYING");
     }
 
-    public EMUtil.DeploymentReadinessStatus isDeploymentReady() {
+    public EMUtil.DeploymentReadinessStatus isDeploymentReady(ExperimentTrial experimentTrial) {
         boolean running = false;
         try {
             for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.DEPLOYMENT_READINESS_THRESHOLD; j++) {
@@ -68,7 +69,11 @@ public class DeploymentHandler {
                 if (true == running) {
                     return  EMUtil.DeploymentReadinessStatus.READY;
                 }
-                LOGGER.debug("");
+                LOGGER.debug("Deployment for experiment - \"{}\" with trial number - \"{}\"  is not ready after {} checks, Will be checking after {} secs",
+                        experimentTrial.getExperimentName(),
+                        experimentTrial.getTrialInfo().getTrialNum(),
+                        j+1,
+                        EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR));
                 // Will be replaced by a exponential looper mechanism
                 Thread.sleep(EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR) * 1000);
             }
