@@ -21,8 +21,8 @@ import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
-import com.autotune.experimentManager.data.access.ExperimentAccess;
-import com.autotune.experimentManager.data.access.ExperimentAccessImpl;
+import com.autotune.experimentManager.data.TrialInterface;
+import com.autotune.experimentManager.data.TrialInterfaceImpl;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.google.gson.Gson;
@@ -95,7 +95,7 @@ public class CreateExperimentTrial extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentTrial> experimentTrialList = Arrays.asList(new Gson().fromJson(inputData, ExperimentTrial[].class));
-            ExperimentAccess experimentAccess = new ExperimentAccessImpl(this.existingExperiments);
+            TrialInterface experimentAccess = new TrialInterfaceImpl(this.existingExperiments);
             experimentAccess.addExperiments(experimentTrialList);
             if (null == experimentAccess.getErrorMessage()) {
                 submitTask(experimentTrialList);
