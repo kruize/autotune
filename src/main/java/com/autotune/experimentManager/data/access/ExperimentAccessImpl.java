@@ -70,7 +70,7 @@ public class ExperimentAccessImpl implements ExperimentAccess {
                                 });
                             } else {
                                 this.setHttpResponseCode(400);
-                                this.setErrorMessage("Following trials : " + commonTrials + " Already exist in Experiment.");
+                                this.setErrorMessage("Following trials : " + commonTrials + " Already exist for Experiment :  " + experimentTrial.getExperimentName());
                                 return;
                             }
                         } else {

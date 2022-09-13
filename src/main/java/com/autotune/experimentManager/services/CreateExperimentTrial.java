@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.services;
 
+import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
@@ -25,6 +26,8 @@ import com.autotune.experimentManager.data.access.ExperimentAccessImpl;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +38,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,6 +58,7 @@ public class CreateExperimentTrial extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
     AutotuneExecutor emExecutor;
+    ExperimentDetailsMap<String, ExperimentTrial> existingExperiments;
 
     public CreateExperimentTrial() {
         super();
@@ -62,6 +66,7 @@ public class CreateExperimentTrial extends HttpServlet {
 
     /**
      * Get the instance of Task manager executor which helps in executing experiments asynchronously.
+     *
      * @param config
      * @throws ServletException
      */
@@ -69,6 +74,7 @@ public class CreateExperimentTrial extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         this.emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
+        this.existingExperiments = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
     }
 
     /**
@@ -86,52 +92,68 @@ public class CreateExperimentTrial extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, java.io.IOException {
         AsyncContext ac = request.startAsync();
-        Gson gson = new Gson();
-        HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
-            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
-            List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
-            ExperimentAccess experimentAccess = new ExperimentAccessImpl(existExperimentTrialMap);
+            List<ExperimentTrial> experimentTrialList = Arrays.asList(new Gson().fromJson(inputData, ExperimentTrial[].class));
+            ExperimentAccess experimentAccess = new ExperimentAccessImpl(this.existingExperiments);
             experimentAccess.addExperiments(experimentTrialList);
             if (null == experimentAccess.getErrorMessage()) {
-                for (ExperimentTrial experimentTrial : experimentTrialList) {
-                    try {
-                        /**
-                         * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
-                         */
-                        //ToDo  Make sure new Experiments having identical deployments not get executed in parallel.
-                        this.emExecutor.submit(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        AutotuneWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
-                                        theWorker.execute(experimentTrial);
-                                    }
-                                }
-                        );
-                    } catch (Exception e) {
-                        LOGGER.debug(e.getMessage());
-                        e.printStackTrace();
-                        break;
-                    }
-                }
+                submitTask(experimentTrialList);
             } else {
-                response.sendError(experimentAccess.getHttpResponseCode(), experimentAccess.getErrorMessage());
+                sendErrorResponse(response, null, experimentAccess.getHttpResponseCode(), experimentAccess.getErrorMessage());
             }
-            response.setContentType(JSON_CONTENT_TYPE);
-            response.setCharacterEncoding(CHARACTER_ENCODING);
-            response.setStatus(HttpServletResponse.SC_CREATED);
-            PrintWriter out = response.getWriter();
-            out.append(new Gson().toJson(experimentAccess.listExperiments()));
-            out.flush();
+            sendSuccessResponse(response);
+        } catch (JsonParseException e) {
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Not able to parse JSON due to " + e.getMessage());
         } catch (Exception e) {
-            LOGGER.error(e.toString());
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
         } finally {
             ac.complete();
+        }
+    }
+
+    private void sendSuccessResponse(HttpServletResponse response) throws IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(HttpServletResponse.SC_CREATED);
+        PrintWriter out = response.getWriter();
+        out.append(
+                new Gson().toJson(
+                        new AutotuneResponse(null, HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                )
+        );
+        out.flush();
+    }
+
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
+    }
+
+    public void submitTask(List<ExperimentTrial> experimentTrialList) {
+        for (ExperimentTrial experimentTrial : experimentTrialList) {
+            try {
+                /**
+                 * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
+                 */
+                //ToDo  Make sure new Experiments having identical deployments not get executed in parallel.
+                this.emExecutor.submit(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                AutotuneWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
+                                theWorker.execute(experimentTrial);
+                            }
+                        }
+                );
+            } catch (Exception e) {
+                throw e;
+                //sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
+            }
         }
     }
 

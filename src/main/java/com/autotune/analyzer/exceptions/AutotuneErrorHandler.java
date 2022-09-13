@@ -40,10 +40,10 @@ public class AutotuneErrorHandler extends ErrorPageErrorHandler {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String origMessage = (String) request.getAttribute("javax.servlet.error.message");
-        String errorCode = "HTTP " + response.getStatus();
+        int errorCode = response.getStatus();
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(new ErrorResponse(origMessage, errorCode, "", "ERROR")));
+                new Gson().toJson(new AutotuneResponse(origMessage, errorCode, "", "ERROR")));
         out.flush();
     }
 }
