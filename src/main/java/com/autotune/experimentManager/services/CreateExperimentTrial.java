@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.AsyncContext;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -51,8 +52,25 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 
 @WebServlet(asyncSupported = true)
 public class CreateExperimentTrial extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
-    private static final String SERVLETCONTEXT_EM_KEY = "EM";
+    AutotuneExecutor emExecutor;
+
+    public CreateExperimentTrial() {
+        super();
+    }
+
+    /**
+     * Get the instance of Task manager executor which helps in executing experiments asynchronously.
+     *
+     * @param config
+     * @throws ServletException
+     */
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        this.emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
+    }
 
     /**
      * This API supports POST methode which is used to initiate experimental trials.
@@ -78,15 +96,14 @@ public class CreateExperimentTrial extends HttpServlet {
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
             ExperimentAccess experimentAccess = new ExperimentAccessImpl(existExperimentTrialMap);
             experimentAccess.addExperiments(experimentTrialList);
-            AutotuneExecutor emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
             if (null == experimentAccess.getErrorMessage()) {
                 for (ExperimentTrial experimentTrial : experimentTrialList) {
                     try {
                         /**
                          * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
                          */
-                        //ToDO  Make sure Trials of same experiments not get executed in parallel.
-                        emExecutor.submit(
+                        //ToDo  Make sure new Experiments having identical deployments not get executed in parallel.
+                        this.emExecutor.submit(
                                 new Runnable() {
                                     @Override
                                     public void run() {
@@ -95,7 +112,6 @@ public class CreateExperimentTrial extends HttpServlet {
                                     }
                                 }
                         );
-
                     } catch (Exception e) {
                         LOGGER.debug(e.getMessage());
                         e.printStackTrace();
@@ -118,5 +134,14 @@ public class CreateExperimentTrial extends HttpServlet {
         } finally {
             ac.complete();
         }
+    }
+
+    /**
+     * Shutdown executor when server gets shutdown.
+     */
+    @Override
+    public void destroy() {
+        this.emExecutor.shutdown();
+        super.destroy();
     }
 }
