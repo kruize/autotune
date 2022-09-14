@@ -82,7 +82,7 @@ public class DeploymentHandler {
             LOGGER.error(e.getMessage(), e.getStackTrace().toString());
             e.printStackTrace();
         }
-        if (running) {
+        if (true == running) {
             return EMUtil.DeploymentReadinessStatus.READY;
         }
         return EMUtil.DeploymentReadinessStatus.NOT_READY;
