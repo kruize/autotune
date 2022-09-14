@@ -91,7 +91,7 @@ public class ExperimentTrial {
     // uses tracker as key. tracker = "training" or "production"
 
     // Non JSON field
-    private HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+    private transient HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
 
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
