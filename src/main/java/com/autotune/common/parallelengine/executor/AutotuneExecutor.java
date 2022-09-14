@@ -16,7 +16,8 @@
 package com.autotune.common.parallelengine.executor;
 
 /**
- * This is class used as a Consumer to initiate workers in parallel.
+ * Class used by Consumers to initiate workers in parallel.
+ * ToDO Implement Logging and Exception Handling
  */
 
 import java.util.concurrent.BlockingQueue;
