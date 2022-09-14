@@ -3,6 +3,7 @@ package com.autotune.experimentManager.data.input.settings;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,10 @@ public class EMConfigDeploymentSettings implements ConvertToJSON {
 
     public EMConfigDeploymentSettings(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigDeploymentSettings");
-        if(!jsonObject.has(EMConstants.EMJSONKeys.DEPLOYMENT_SETTINGS)) {
+        if(!jsonObject.has(AutotuneConstants.JSONKeys.DEPLOYMENT_SETTINGS)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONObject contentObject = jsonObject.getJSONObject(EMConstants.EMJSONKeys.DEPLOYMENT_SETTINGS);
+        JSONObject contentObject = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.DEPLOYMENT_SETTINGS);
         deploymentTracker = new EMConfigDeploymentTracker(contentObject);
         deploymentPolicy = new EMConfigDeploymentPolicy(contentObject);
     }
@@ -47,8 +48,8 @@ public class EMConfigDeploymentSettings implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject subObject = new JSONObject();
-        subObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_POLICY, getDeploymentPolicy().toJSON());
-        subObject.put(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING, getDeploymentTracker().toJSON());
+        subObject.put(AutotuneConstants.JSONKeys.DEPLOYMENT_POLICY, getDeploymentPolicy().toJSON());
+        subObject.put(AutotuneConstants.JSONKeys.DEPLOYMENT_TRACKING, getDeploymentTracker().toJSON());
         return  subObject;
     }
 }

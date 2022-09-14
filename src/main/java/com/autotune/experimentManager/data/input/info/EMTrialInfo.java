@@ -2,6 +2,7 @@ package com.autotune.experimentManager.data.input.info;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,18 +39,18 @@ public class EMTrialInfo {
 
     public EMTrialInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
-        if (!jsonObject.has(EMConstants.EMJSONKeys.TRIAL_INFO)) {
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.TRIAL_INFO)) {
             throw  new IncompatibleInputJSONException();
         }
-        JSONObject subObj = jsonObject.getJSONObject(EMConstants.EMJSONKeys.TRIAL_INFO);
+        JSONObject subObj = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.TRIAL_INFO);
         if (null != subObj) {
-            if (!subObj.has(EMConstants.EMJSONKeys.TRIAL_ID) || !subObj.has(EMConstants.EMJSONKeys.TRIAL_NUM)) {
+            if (!subObj.has(AutotuneConstants.JSONKeys.TRIAL_ID) || !subObj.has(AutotuneConstants.JSONKeys.TRIAL_NUM)) {
                 throw new IncompatibleInputJSONException();
             }
-            this.trialId = subObj.getString(EMConstants.EMJSONKeys.TRIAL_ID);
-            this.trialNum = subObj.getInt(EMConstants.EMJSONKeys.TRIAL_NUM);
-            if(subObj.has(EMConstants.EMJSONKeys.TRIAL_RESULT_URL)){
-                this.trialResultUrl = subObj.getString(EMConstants.EMJSONKeys.TRIAL_RESULT_URL);
+            this.trialId = subObj.getString(AutotuneConstants.JSONKeys.TRIAL_ID);
+            this.trialNum = subObj.getInt(AutotuneConstants.JSONKeys.TRIAL_NUM);
+            if(subObj.has(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL)){
+                this.trialResultUrl = subObj.getString(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL);
             }
         } else {
             throw new IncompatibleInputJSONException();
@@ -71,9 +72,9 @@ public class EMTrialInfo {
     public JSONObject toJSON() {
 
         JSONObject infoJsonObject = new JSONObject();
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_ID, this.trialId);
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_NUM, this.trialNum);
-        infoJsonObject.put(EMConstants.EMJSONKeys.TRIAL_RESULT_URL, this.trialResultUrl);
+        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_ID, this.trialId);
+        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_NUM, this.trialNum);
+        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL, this.trialResultUrl);
 
 
         return infoJsonObject;

@@ -1,9 +1,8 @@
 package com.autotune.experimentManager.data.input.info;
 
-import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSONArray;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -17,10 +16,10 @@ public class EMDataSourceInfo implements ConvertToJSONArray {
 
     public EMDataSourceInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMDataSourceInfo");
-        if (!jsonObject.has(EMConstants.EMJSONKeys.DATASOURCE_INFO)) {
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.DATASOURCE_INFO)) {
             throw  new IncompatibleInputJSONException();
         }
-        JSONArray subObj = jsonObject.getJSONArray(EMConstants.EMJSONKeys.DATASOURCE_INFO);
+        JSONArray subObj = jsonObject.getJSONArray(AutotuneConstants.JSONKeys.DATASOURCE_INFO);
         if (null != subObj) {
             datasources = new ArrayList<EMDataSourceDefinition>();
             for (Object obj : subObj) {

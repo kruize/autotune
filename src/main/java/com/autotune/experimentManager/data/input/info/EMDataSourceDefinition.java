@@ -2,7 +2,7 @@ package com.autotune.experimentManager.data.input.info;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,18 +29,18 @@ public class EMDataSourceDefinition implements ConvertToJSON {
     }
 
     public EMDataSourceDefinition(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!jsonObject.has(EMConstants.EMJSONKeys.URL) || !jsonObject.has(EMConstants.EMJSONKeys.NAME)) {
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.URL) || !jsonObject.has(AutotuneConstants.JSONKeys.NAME)) {
             throw  new IncompatibleInputJSONException();
         }
-        this.name = jsonObject.getString(EMConstants.EMJSONKeys.NAME);
-        this.url = jsonObject.getString(EMConstants.EMJSONKeys.URL);
+        this.name = jsonObject.getString(AutotuneConstants.JSONKeys.NAME);
+        this.url = jsonObject.getString(AutotuneConstants.JSONKeys.URL);
     }
 
     @Override
     public JSONObject toJSON() {
         JSONObject datasourceDefJsonObj = new JSONObject();
-        datasourceDefJsonObj.put(EMConstants.EMJSONKeys.NAME, getName());
-        datasourceDefJsonObj.put(EMConstants.EMJSONKeys.URL, getUrl());
+        datasourceDefJsonObj.put(AutotuneConstants.JSONKeys.NAME, getName());
+        datasourceDefJsonObj.put(AutotuneConstants.JSONKeys.URL, getUrl());
         return datasourceDefJsonObj;
     }
 }

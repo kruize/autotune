@@ -3,6 +3,7 @@ package com.autotune.experimentManager.data.input.settings;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,14 +29,14 @@ public class EMConfigDeploymentTracker implements ConvertToJSON {
 
     public EMConfigDeploymentTracker(JSONObject jsonObject) throws IncompatibleInputJSONException {
         this.trackerList = new ArrayList<String>();
-        if (!jsonObject.has(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING)) {
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.DEPLOYMENT_TRACKING)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONObject trackingObject = jsonObject.getJSONObject(EMConstants.EMJSONKeys.DEPLOYMENT_TRACKING);
-        if(!trackingObject.has(EMConstants.EMJSONKeys.TRACKERS)) {
+        JSONObject trackingObject = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.DEPLOYMENT_TRACKING);
+        if(!trackingObject.has(AutotuneConstants.JSONKeys.TRACKERS)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONArray trackersList = trackingObject.getJSONArray(EMConstants.EMJSONKeys.TRACKERS);
+        JSONArray trackersList = trackingObject.getJSONArray(AutotuneConstants.JSONKeys.TRACKERS);
         for (Object o: trackersList.toList()) {
             LOGGER.info("In the loop");
             if (null != o) {
@@ -49,7 +50,7 @@ public class EMConfigDeploymentTracker implements ConvertToJSON {
     public JSONObject toJSON() {
         JSONArray trackerArray = new JSONArray(this.trackerList);
         JSONObject trackerJsonObject =  new JSONObject();
-        trackerJsonObject.put(EMConstants.EMJSONKeys.TRACKERS, trackerArray);
+        trackerJsonObject.put(AutotuneConstants.JSONKeys.TRACKERS, trackerArray);
         return trackerJsonObject;
     }
 }

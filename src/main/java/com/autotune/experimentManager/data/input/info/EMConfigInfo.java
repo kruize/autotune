@@ -4,6 +4,7 @@ import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.data.input.metadata.EMConfigMetaData;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +32,12 @@ public class EMConfigInfo implements ConvertToJSON {
 
     public EMConfigInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
-        if (!jsonObject.has(EMConstants.EMJSONKeys.INFO)) {
+        if (!jsonObject.has(AutotuneConstants.JSONKeys.INFO)) {
             throw  new IncompatibleInputJSONException();
         }
-        JSONObject subObj = jsonObject.getJSONObject(EMConstants.EMJSONKeys.INFO);
+        JSONObject subObj = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.INFO);
         if (null != subObj) {
-            if (!subObj.has(EMConstants.EMJSONKeys.TRIAL_INFO) || !subObj.has(EMConstants.EMJSONKeys.DATASOURCE_INFO)) {
+            if (!subObj.has(AutotuneConstants.JSONKeys.TRIAL_INFO) || !subObj.has(AutotuneConstants.JSONKeys.DATASOURCE_INFO)) {
                 throw new IncompatibleInputJSONException();
             }
             trialInfo = new EMTrialInfo(subObj);
@@ -49,8 +50,8 @@ public class EMConfigInfo implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.TRIAL_INFO, trialInfo.toJSON());
-        jsonObject.put(EMConstants.EMJSONKeys.DATASOURCE_INFO, dataSourceInfo.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.TRIAL_INFO, trialInfo.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.DATASOURCE_INFO, dataSourceInfo.toJSON());
         return jsonObject;
     }
 }

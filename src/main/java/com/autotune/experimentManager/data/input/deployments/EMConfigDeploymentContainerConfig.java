@@ -4,7 +4,7 @@ import com.autotune.experimentManager.data.input.EMMetricInput;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -60,15 +60,15 @@ public class EMConfigDeploymentContainerConfig implements ConvertToJSON {
     }
 
     public EMConfigDeploymentContainerConfig(JSONObject container) throws IncompatibleInputJSONException, EMInvalidInstanceCreation {
-        if (!container.has(EMConstants.EMJSONKeys.IMAGE_NAME)
-            || !container.has(EMConstants.EMJSONKeys.CONTAINER_NAME)
-            || !container.has(EMConstants.EMJSONKeys.CONFIG)) {
+        if (!container.has(AutotuneConstants.JSONKeys.IMAGE_NAME)
+            || !container.has(AutotuneConstants.JSONKeys.CONTAINER_NAME)
+            || !container.has(AutotuneConstants.JSONKeys.CONFIG)) {
             throw new IncompatibleInputJSONException();
         }
-        this.config = container.getJSONArray(EMConstants.EMJSONKeys.CONFIG);
-        this.imageName = container.getString(EMConstants.EMJSONKeys.IMAGE_NAME);
-        this.containerName = container.getString(EMConstants.EMJSONKeys.CONTAINER_NAME);
-        JSONArray metrics = container.getJSONArray(EMConstants.EMJSONKeys.CONTAINER_METRICS);
+        this.config = container.getJSONArray(AutotuneConstants.JSONKeys.CONFIG);
+        this.imageName = container.getString(AutotuneConstants.JSONKeys.IMAGE_NAME);
+        this.containerName = container.getString(AutotuneConstants.JSONKeys.CONTAINER_NAME);
+        JSONArray metrics = container.getJSONArray(AutotuneConstants.JSONKeys.CONTAINER_METRICS);
         this.containerMetrics = new ArrayList<EMMetricInput>();
         for (Object metric : metrics) {
             JSONObject metricObj = (JSONObject) metric;
@@ -79,10 +79,10 @@ public class EMConfigDeploymentContainerConfig implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.IMAGE_NAME, getImageName());
-        jsonObject.put(EMConstants.EMJSONKeys.CONTAINER_NAME, getContainerName());
-        jsonObject.put(EMConstants.EMJSONKeys.CONFIG, getConfig());
-        jsonObject.put(EMConstants.EMJSONKeys.CONTAINER_METRICS, getContainerMetricsJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.IMAGE_NAME, getImageName());
+        jsonObject.put(AutotuneConstants.JSONKeys.CONTAINER_NAME, getContainerName());
+        jsonObject.put(AutotuneConstants.JSONKeys.CONFIG, getConfig());
+        jsonObject.put(AutotuneConstants.JSONKeys.CONTAINER_METRICS, getContainerMetricsJSON());
         return jsonObject;
     }
 

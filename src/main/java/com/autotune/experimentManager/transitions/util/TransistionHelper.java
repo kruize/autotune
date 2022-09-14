@@ -3,6 +3,7 @@ package com.autotune.experimentManager.transitions.util;
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -30,8 +31,8 @@ public class TransistionHelper {
         public static JSONArray getContainerConfig(String containerName, JSONArray containersConfig) {
             for (Object obj : containersConfig) {
                 JSONObject containerObj = (JSONObject) obj;
-                if (containerObj.getString(EMConstants.EMJSONKeys.CONTAINER_NAME).equalsIgnoreCase(containerName)) {
-                    return containerObj.getJSONArray(EMConstants.EMJSONKeys.CONFIG);
+                if (containerObj.getString(AutotuneConstants.JSONKeys.CONTAINER_NAME).equalsIgnoreCase(containerName)) {
+                    return containerObj.getJSONArray(AutotuneConstants.JSONKeys.CONFIG);
                 }
             }
             return null;
