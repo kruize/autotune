@@ -44,7 +44,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "configmap_yaml_tests"
 "autotune_id_tests"
 "autotune_layer_config_id_tests"
-"hpo_api_tests")
+"hpo_api_tests"
+"em_standalone_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -324,6 +325,8 @@ function set_app_folder() {
 	app_name=$1
 	if [ "${app_name}" == "petclinic" ]; then
 		APP_FOLDER="spring-petclinic"
+	elif [ "${app_name}" == "tfb-qrh" ]; then
+                APP_FOLDER="techempower"
 	else
 		APP_FOLDER="${app_name}"
 	fi
@@ -374,9 +377,17 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+                else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s "localhost" -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	fi
 	echo "done"
 }
