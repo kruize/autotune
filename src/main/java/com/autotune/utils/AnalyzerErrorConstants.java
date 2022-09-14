@@ -22,15 +22,15 @@ public class AnalyzerErrorConstants {
 	private AnalyzerErrorConstants() {
 	}
 
-	public static class AutotuneConfigErrors {
+	public static final class AutotuneConfigErrors {
 		private AutotuneConfigErrors() {
 		}
 
-		public final static String AUTOTUNE_CONFIG_NAME_NULL = "AutotuneConfig object name cannot be null or empty\n";
-		public final static String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
-		public final static String BOTH_LAYER_QUERY_AND_LABEL_SET = "Both layerPresenceQuery and layerPresenceLabel cannot be set\n";
-		public final static String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
-		public final static String NO_TUNABLES = "AutotuneConfig has no tunables\n";
+		public static final String AUTOTUNE_CONFIG_NAME_NULL = "AutotuneConfig object name cannot be null or empty\n";
+		public static final String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
+		public static final String BOTH_LAYER_QUERY_AND_LABEL_SET = "Both layerPresenceQuery and layerPresenceLabel cannot be set\n";
+		public static final String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
+		public static final String NO_TUNABLES = "AutotuneConfig has no tunables\n";
 		public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
 		public static final String INVALID_SLO_CLASS = "Invalid slo_class for tunable ";
 		public static final String TUNABLE_NAME_EMPTY = "Tunable name cannot be empty";
@@ -39,7 +39,7 @@ public class AnalyzerErrorConstants {
 		public static final String INVALID_TUNABLE_CHOICE = "Invalid categorical choice for tunable ";
 	}
 
-	public static class AutotuneObjectErrors {
+	public static final class AutotuneObjectErrors {
 		private AutotuneObjectErrors() {
 		}
 
@@ -58,7 +58,7 @@ public class AnalyzerErrorConstants {
 		public static final String INVALID_DIRECTION_FOR_SLO_CLASS = "Invalid direction for slo_class\n";
 	}
 
-	public static class AutotuneServiceMessages {
+	public static final class AutotuneServiceMessages {
 		private AutotuneServiceMessages() {
 		}
 
@@ -72,7 +72,7 @@ public class AnalyzerErrorConstants {
 		public static final String ERROR_STACK_NAME = "Error: Experiment related to Stack (Container Image) ";
 	}
 
-	public static class RunExperimentMessages {
+	public static final class RunExperimentMessages {
 		private RunExperimentMessages() {
 		}
 

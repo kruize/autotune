@@ -72,7 +72,7 @@ public class AnalyzerConstants {
 	/**
 	 * Used to parse the Autotune kind resource
 	 */
-	public static class AutotuneObjectConstants {
+	public static final class AutotuneObjectConstants {
 		private AutotuneObjectConstants() {
 		}
 
@@ -114,7 +114,7 @@ public class AnalyzerConstants {
 	/**
 	 * Used to parse the AutotuneConfig resource
 	 */
-	public static class AutotuneConfigConstants {
+	public static final class AutotuneConfigConstants {
 		private AutotuneConfigConstants() {
 		}
 
@@ -174,7 +174,7 @@ public class AnalyzerConstants {
 	/**
 	 * Contains Strings used in REST services
 	 */
-	public static class ServiceConstants {
+	public static final class ServiceConstants {
 		private ServiceConstants() {
 		}
 
@@ -215,7 +215,7 @@ public class AnalyzerConstants {
 	/**
 	 * Contains Strings used in the HOTSPOT Layer
 	 */
-	public static class HotspotConstants {
+	public static final class HotspotConstants {
 		private HotspotConstants() {
 		}
 
@@ -260,7 +260,7 @@ public class AnalyzerConstants {
 	/**
 	 * Contains Strings used in the QUARKUS Layer
 	 */
-	public static class QuarkusConstants {
+	public static final class QuarkusConstants {
 		private QuarkusConstants() {
 		}
 
@@ -271,7 +271,7 @@ public class AnalyzerConstants {
 	/**
 	 * Contains Strings used in the Container Layer
 	 */
-	public static class ContainerConstants {
+	public static final class ContainerConstants {
 		private ContainerConstants() {
 		}
 
