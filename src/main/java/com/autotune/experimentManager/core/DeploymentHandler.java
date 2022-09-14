@@ -16,7 +16,10 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,17 +61,30 @@ public class DeploymentHandler {
         LOGGER.debug("END DEPLOYING");
     }
 
-    public boolean isDeploymentReady() {
+    public EMUtil.DeploymentReadinessStatus isDeploymentReady(ExperimentTrial experimentTrial) {
         boolean running = false;
         try {
-            running = this.kubernetesServices.isDeploymentReady(this.nameSpace, this.deploymentName);
+            for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.DEPLOYMENT_READINESS_THRESHOLD; j++) {
+                running = this.kubernetesServices.isDeploymentReady(this.nameSpace, this.deploymentName);
+                if (true == running) {
+                    return  EMUtil.DeploymentReadinessStatus.READY;
+                }
+                LOGGER.debug("Deployment for experiment - \"{}\" with trial number - \"{}\"  is not ready after {} checks, Will be checking after {} secs",
+                        experimentTrial.getExperimentName(),
+                        experimentTrial.getTrialInfo().getTrialNum(),
+                        j+1,
+                        EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR));
+                // Will be replaced by a exponential looper mechanism
+                Thread.sleep(EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR) * 1000);
+            }
         } catch (Exception e) {
             LOGGER.error(e.toString());
             LOGGER.error(e.getMessage(), e.getStackTrace().toString());
             e.printStackTrace();
         }
-        return running;
+        if (true == running) {
+            return EMUtil.DeploymentReadinessStatus.READY;
+        }
+        return EMUtil.DeploymentReadinessStatus.NOT_READY;
     }
-
-
 }
