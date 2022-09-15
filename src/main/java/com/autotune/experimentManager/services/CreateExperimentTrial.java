@@ -15,9 +15,11 @@
  *******************************************************************************/
 package com.autotune.experimentManager.services;
 
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +54,9 @@ public class CreateExperimentTrial extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws java.io.IOException {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                .create();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
@@ -60,6 +64,7 @@ public class CreateExperimentTrial extends HttpServlet {
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
             experimentTrialList.forEach(
                     (experimentTrial) -> {
+                        experimentTrial.initialiseFlags();
                         LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
                         new Thread() {
                             @Override

@@ -1,5 +1,6 @@
 package com.autotune.experimentManager.services.util;
 
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.PodContainer;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -10,6 +11,7 @@ import com.autotune.experimentManager.services.CreateExperimentTrial;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -262,7 +264,10 @@ public class EMAPIHandler {
         retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
         retJson.put("info", new JSONObject().put("trial_info",
                 new JSONObject(
-                        new Gson().toJson(experimentTrial.getTrialInfo())
+                        new GsonBuilder()
+                                .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                .create()
+                                .toJson(experimentTrial.getTrialInfo())
                 )
         ));
         System.out.println(deployments);

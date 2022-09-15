@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.core;
 
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.experiments.TrialDetails;
@@ -27,6 +28,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.HttpUtils;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -125,7 +127,10 @@ public class ExperimentTrialHandler {
         if (null != experimentTrial.getTrialInfo()) {
             retJson.put("info", new JSONObject().put("trial_info",
                     new JSONObject(
-                            new Gson().toJson(experimentTrial.getTrialInfo())
+                            new GsonBuilder()
+                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .create()
+                                    .toJson(experimentTrial.getTrialInfo())
                     )
             ));
         }
