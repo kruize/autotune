@@ -128,6 +128,9 @@ public class ExperimentTrial {
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
         this.status = EMUtil.EMExpStatus.CREATED;
+        // Creating it here instead of creator of Instance to create it as we set the
+        // flags to default below
+        this.flagsMap = new HashMap<EMUtil.EMFlowFlags, Boolean>();
         resetFlagsMap();
     }
 
