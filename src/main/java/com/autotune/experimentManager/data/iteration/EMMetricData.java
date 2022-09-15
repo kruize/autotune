@@ -6,6 +6,7 @@ import com.autotune.experimentManager.data.input.metrics.EMMetricResult;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
 public class EMMetricData implements ConvertToJSON {
@@ -18,15 +19,15 @@ public class EMMetricData implements ConvertToJSON {
     }
 
     public EMMetricData(JSONObject jsonObject) throws EMInvalidInstanceCreation, IncompatibleInputJSONException {
-        emMetricInput =  new EMMetricInput(jsonObject.getJSONObject(EMConstants.EMJSONKeys.METRIC_INFO));
-        emMetricResult = new EMMetricResult(jsonObject.getJSONObject(EMConstants.EMJSONKeys.METRICS_RESULTS));
+        emMetricInput =  new EMMetricInput(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.METRIC_INFO));
+        emMetricResult = new EMMetricResult(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.METRICS_RESULTS));
     }
 
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject =  new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.METRIC_INFO, emMetricInput.toJSON());
-        jsonObject.put(EMConstants.EMJSONKeys.METRICS_RESULTS, emMetricResult.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.METRIC_INFO, emMetricInput.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.METRICS_RESULTS, emMetricResult.toJSON());
         return jsonObject;
     }
 }

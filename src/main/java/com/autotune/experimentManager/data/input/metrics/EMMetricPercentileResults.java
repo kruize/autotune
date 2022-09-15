@@ -2,6 +2,7 @@ package com.autotune.experimentManager.data.input.metrics;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
 public class EMMetricPercentileResults implements ConvertToJSON {
@@ -20,15 +21,15 @@ public class EMMetricPercentileResults implements ConvertToJSON {
     }
 
     public EMMetricPercentileResults(JSONObject jsonObject) {
-        this.percentile50 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_50_0);
-        this.percentile95 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_95_0);
-        this.percentile97 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_97_0);
-        this.percentile99 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_99_0);
-        this.percentile99Point9 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_99_9);
-        this.percentile99Point99 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_99_99);
-        this.percentile99Point999 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_99_999);
-        this.percentile99Point9999 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_99_9999);
-        this.percentile100 = jsonObject.getFloat(EMConstants.EMJSONKeys.P_100_0);
+        this.percentile50 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_50_0);
+        this.percentile95 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_95_0);
+        this.percentile97 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_97_0);
+        this.percentile99 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_0);
+        this.percentile99Point9 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_9);
+        this.percentile99Point99 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_99);
+        this.percentile99Point999 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_999);
+        this.percentile99Point9999 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_9999);
+        this.percentile100 = jsonObject.getFloat(AutotuneConstants.JSONKeys.P_100_0);
     }
 
     public float getPercentile50() {
@@ -106,15 +107,15 @@ public class EMMetricPercentileResults implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.P_50_0, percentile50);
-        jsonObject.put(EMConstants.EMJSONKeys.P_95_0, percentile95);
-        jsonObject.put(EMConstants.EMJSONKeys.P_97_0, percentile97);
-        jsonObject.put(EMConstants.EMJSONKeys.P_99_0, percentile99);
-        jsonObject.put(EMConstants.EMJSONKeys.P_99_9, percentile99Point9);
-        jsonObject.put(EMConstants.EMJSONKeys.P_99_99, percentile99Point99);
-        jsonObject.put(EMConstants.EMJSONKeys.P_99_999, percentile99Point999);
-        jsonObject.put(EMConstants.EMJSONKeys.P_99_9999, percentile99Point9999);
-        jsonObject.put(EMConstants.EMJSONKeys.P_100_0, percentile100);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_50_0, percentile50);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_95_0, percentile95);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_97_0, percentile97);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_99_0, percentile99);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_99_9, percentile99Point9);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_99_99, percentile99Point99);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_99_999, percentile99Point999);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_99_9999, percentile99Point9999);
+        jsonObject.put(AutotuneConstants.JSONKeys.P_100_0, percentile100);
         return jsonObject;
     }
 }

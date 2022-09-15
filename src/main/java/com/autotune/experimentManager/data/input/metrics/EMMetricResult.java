@@ -3,6 +3,7 @@ package com.autotune.experimentManager.data.input.metrics;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
 public class EMMetricResult implements ConvertToJSON {
@@ -16,16 +17,16 @@ public class EMMetricResult implements ConvertToJSON {
     }
 
     public EMMetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!(jsonObject.has(EMConstants.EMJSONKeys.GENERAL_INFO) ||
-            jsonObject.has(EMConstants.EMJSONKeys.PERCENTILE_INFO))) {
+        if (!(jsonObject.has(AutotuneConstants.JSONKeys.GENERAL_INFO) ||
+            jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO))) {
             throw new IncompatibleInputJSONException();
         }
-        if (jsonObject.has(EMConstants.EMJSONKeys.PERCENTILE_INFO)) {
+        if (jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             isPercentileResultsAvailable = true;
         }
-        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(EMConstants.EMJSONKeys.GENERAL_INFO));
+        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.GENERAL_INFO));
         if (isPercentileResultsAvailable){
-            emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(EMConstants.EMJSONKeys.PERCENTILE_INFO));
+            emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
 
@@ -56,9 +57,9 @@ public class EMMetricResult implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.GENERAL_INFO, emMetricGenericResults.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.GENERAL_INFO, emMetricGenericResults.toJSON());
         if (isPercentileResultsAvailable) {
-            jsonObject.put(EMConstants.EMJSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
+            jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
         }
         return jsonObject;
     }

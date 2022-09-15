@@ -2,6 +2,7 @@ package com.autotune.experimentManager.data.input.metrics;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
 public class EMMetricGenericResults implements ConvertToJSON {
@@ -16,11 +17,11 @@ public class EMMetricGenericResults implements ConvertToJSON {
     }
 
     public EMMetricGenericResults(JSONObject jsonObject) {
-        this.score = jsonObject.getFloat(EMConstants.EMJSONKeys.SCORE);
-        this.error = jsonObject.getFloat(EMConstants.EMJSONKeys.ERROR);
-        this.mean = jsonObject.getFloat(EMConstants.EMJSONKeys.MEAN);
-        this.mode = jsonObject.getFloat(EMConstants.EMJSONKeys.MODE);
-        this.spike = jsonObject.getFloat(EMConstants.EMJSONKeys.SPIKE);
+        this.score = jsonObject.getFloat(AutotuneConstants.JSONKeys.SCORE);
+        this.error = jsonObject.getFloat(AutotuneConstants.JSONKeys.ERROR);
+        this.mean = jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN);
+        this.mode = jsonObject.getFloat(AutotuneConstants.JSONKeys.MODE);
+        this.spike = jsonObject.getFloat(AutotuneConstants.JSONKeys.SPIKE);
     }
 
     public float getScore() {
@@ -66,11 +67,11 @@ public class EMMetricGenericResults implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(EMConstants.EMJSONKeys.SPIKE, spike);
-        jsonObject.put(EMConstants.EMJSONKeys.ERROR, error);
-        jsonObject.put(EMConstants.EMJSONKeys.MODE, mode);
-        jsonObject.put(EMConstants.EMJSONKeys.MEAN, mean);
-        jsonObject.put(EMConstants.EMJSONKeys.SCORE, score);
+        jsonObject.put(AutotuneConstants.JSONKeys.SPIKE, spike);
+        jsonObject.put(AutotuneConstants.JSONKeys.ERROR, error);
+        jsonObject.put(AutotuneConstants.JSONKeys.MODE, mode);
+        jsonObject.put(AutotuneConstants.JSONKeys.MEAN, mean);
+        jsonObject.put(AutotuneConstants.JSONKeys.SCORE, score);
         return jsonObject;
     }
 }
