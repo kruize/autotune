@@ -1,4 +1,4 @@
-name: Test on Push 
+name: Test on Push to mvp_demo branch
 
 # Controls when the action will run. 
 on:
@@ -67,14 +67,3 @@ jobs:
         run: |
           docker tag autotune_operator:mvp_demo_test kruize/autotune_operator:mvp_demo_test
           docker push kruize/autotune_operator:mvp_demo_test
-
-      - name: Run tests
-        run: |
-          echo Running Basic API tests
-          cd autotune/tests
-          ./test_autotune.sh -c minikube -i kruize/autotune_operator:mvp_demo_test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
-
-          cd ${GITHUB_WORKSPACE}
-          ls
-          tar cvf autotune_test_results.tar autotune_test_results
-          ls
