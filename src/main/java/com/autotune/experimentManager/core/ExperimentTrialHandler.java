@@ -48,6 +48,7 @@ public class ExperimentTrialHandler {
 
     public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
         this.experimentTrial = experimentTrial;
+        EMUtil.setFlowFlagsBasedOnTrial(experimentTrial);
         String experimentName = experimentTrial.getExperimentName();
         if (null != experimentTrial.getTrialInfo() && experimentTrial.getTrialInfo().getTrialNum() != -1) {
             String trialNum = String.valueOf(experimentTrial.getTrialInfo().getTrialNum());
@@ -158,31 +159,52 @@ public class ExperimentTrialHandler {
                 );
                 IntStream.rangeClosed(1, numberOFIterations).forEach(
                     i -> {
-                        // Check for deployment needed to be implemented
-                        deploymentHandler.initiateDeploy();
-                        // Check if deployment is ready
-                        EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady(this.experimentTrial);
-                        switch (deploymentReadinessStatus) {
-                            case READY:
-                                break;
-                            case NOT_READY:
-                                // Gracefuly exit for this iteration
-                                LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                                break;
+                        // Check for deployment needed and proceed
+                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.NEEDS_DEPLOYMENT)) {
+                            deploymentHandler.initiateDeploy();
+                            // Check if deployment is ready
+                            EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady(this.experimentTrial);
+                            switch (deploymentReadinessStatus) {
+                                case READY:
+                                    break;
+                                case NOT_READY:
+                                    // Gracefuly exit for this iteration
+                                    LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
+                                    break;
+                            }
+                        } else {
+                            LOGGER.debug("Deployment not required for Experiment - \"{}\" with trial number - \"{}\"",
+                                    this.experimentTrial.getExperimentName(),
+                                    this.experimentTrial.getTrialInfo().getTrialNum());
                         }
 
-                        // Check for load check needs and proceed to this
-                        // Proceeding to load check as deployment is successful
-                        EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
-                        switch (loadAvailabilityStatus) {
-                            case LOAD_AVAILABLE:
-                                // Proceed to collect metrics as load is available
-                                break;
-                            case LOAD_NOT_AVAILABLE:
-                                // Proceed to exit gracefully as load is not available
-                                break;
+
+                        // Check for load check needed and proceed
+                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.CHECK_LOAD)) {
+                            // Proceeding to load check as deployment is successful
+                            EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
+                            switch (loadAvailabilityStatus) {
+                                case LOAD_AVAILABLE:
+                                    // Proceed to collect metrics as load is available
+                                    break;
+                                case LOAD_NOT_AVAILABLE:
+                                    // Proceed to exit gracefully as load is not available
+                                    break;
+                            }
+                        } else {
+                            LOGGER.debug("Load Check not required for Experiment - \"{}\" with trial number - \"{}\"",
+                                    this.experimentTrial.getExperimentName(),
+                                    this.experimentTrial.getTrialInfo().getTrialNum());
                         }
-                        // Collect metrics
+
+                        // Check for metrics collection needed and proceed
+                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.COLLECT_METRICS)) {
+                            // Collect metrics
+                        } else {
+                            LOGGER.debug("Metrics collection not required for Experiment - \"{}\" with trial number - \"{}\"",
+                                    this.experimentTrial.getExperimentName(),
+                                    this.experimentTrial.getTrialInfo().getTrialNum());
+                        }
                     }
                 );
             } catch (Exception e) {

@@ -15,11 +15,13 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.UUID;
 
 public class EMUtil {
@@ -196,6 +198,12 @@ public class EMUtil {
         NOT_READY
     }
 
+    public enum EMFlowFlags {
+        NEEDS_DEPLOYMENT, // To check if deployment needed
+        CHECK_LOAD, // To check if load detection to be done
+        COLLECT_METRICS, // To check if metrics needed to be collected
+    }
+
     public static int timeToSleep(int iteration, ThresholdIntervalType type) {
         int time = 0;
         if (type == null) {
@@ -211,5 +219,14 @@ public class EMUtil {
             }
         }
         return time;
+    }
+
+    // Parse the experiment trial settings and set the flags accordingly
+    public static void setFlowFlagsBasedOnTrial(ExperimentTrial experimentTrial) {
+        // Needs to be implemented
+        // Currently setting all flags to be true
+        for (Map.Entry<EMUtil.EMFlowFlags, Boolean> flagEntry : experimentTrial.getFlagsMap().entrySet()) {
+            flagEntry.setValue(true);
+        }
     }
 }

@@ -16,9 +16,9 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
-import com.google.gson.Gson;
+import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.annotations.SerializedName;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -90,6 +90,9 @@ public class ExperimentTrial {
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
 
+    // Non JSON field
+    private transient HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
                            HashMap<String, Metric> podMetricsHashMap, HashMap<String, HashMap<String, Metric>> containerMetricsHashMap, TrialInfo trialInfo,
@@ -107,6 +110,13 @@ public class ExperimentTrial {
         this.datasourceInfoHashMap = datasourceInfoHashMap;
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
+        resetFlagsMap();
+    }
+
+    private void resetFlagsMap() {
+        this.flagsMap.put(EMUtil.EMFlowFlags.NEEDS_DEPLOYMENT, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_NEEDS_DEPLOYMENT);
+        this.flagsMap.put(EMUtil.EMFlowFlags.CHECK_LOAD, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_CHECK_LOAD);
+        this.flagsMap.put(EMUtil.EMFlowFlags.COLLECT_METRICS, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_COLLECT_METRICS);
     }
 
     public String getExperimentId() {
@@ -151,6 +161,10 @@ public class ExperimentTrial {
 
     public String getEnvironment() {
         return environment;
+    }
+
+    public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
+        return flagsMap;
     }
 
     @Override
