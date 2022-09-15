@@ -64,7 +64,7 @@ public class CreateExperimentTrial extends HttpServlet {
         Gson gson = new Gson();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
-            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
+            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);

@@ -17,13 +17,12 @@ package com.autotune.service;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
+import com.autotune.experimentManager.utils.EMConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import com.autotune.experimentManager.utils.EMConstants.EMJSONKeys;
-
 import java.util.ArrayList;
 
 /**
@@ -35,11 +34,11 @@ public class InitiateListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
+        ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
         if (experimentDetailsMap == null) {
             experimentDetailsMap = new ExperimentDetailsMap<>();
-            sce.getServletContext().setAttribute(EMJSONKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
-            sce.getServletContext().setAttribute(EMJSONKeys.EM_REGISTERED_DEPLOYMENTS,new ArrayList<String>());
+            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
+            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS,new ArrayList<String>());
         }
     }
 
