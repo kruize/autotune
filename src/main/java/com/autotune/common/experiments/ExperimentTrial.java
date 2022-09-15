@@ -91,8 +91,10 @@ public class ExperimentTrial {
     // uses tracker as key. tracker = "training" or "production"
 
 
-    // Non JSON field
-    private transient HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+    /**
+     *  Non-JSON Field
+     */
+    private final HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
 
     /**
      * Will be used to update the status of the trial
@@ -128,8 +130,13 @@ public class ExperimentTrial {
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
         this.status = EMUtil.EMExpStatus.CREATED;
-        // Creating it here instead of creator of Instance to create it as we set the
-        // flags to default below
+        /**
+         *  Creating it here instead of creator of Instance to create it as we set the
+         *  flags to default below, as It's final this will be the only place where
+         *  the flags map is assigned to a HashMap object.
+         *
+         *  Intentionally not adding the setter for flagsMap and initialising in constructor
+         */
         this.flagsMap = new HashMap<EMUtil.EMFlowFlags, Boolean>();
         resetFlagsMap();
     }
@@ -185,7 +192,7 @@ public class ExperimentTrial {
     }
 
     public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
-        return flagsMap;
+        return this.flagsMap;
     }
     /**
      * Returns the status of the trial
