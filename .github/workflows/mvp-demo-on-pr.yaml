@@ -1,4 +1,4 @@
-name: Test on Pull Request 
+name: Test on Pull Request using mvp_demo branch
 
 # Controls when the action will run. 
 on:
@@ -56,23 +56,13 @@ jobs:
           cd autotune/scripts
           ./prometheus_on_minikube.sh -as
 
-      - name: Update Always to ImagePullPolicy in autotune deployment
+      - name: Deploy autotune
         run: |
-          echo Update Always to ImagePullPolicy in autotune deployment
-          cd autotune
+          echo Deploy autotune
           cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           cat ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
+          ./deploy.sh -c minikube -i autotune_operator:mvp_demo_test
 
-      - name: Run tests
-        run: |
-          echo Running Dependency Analyzer tests
-          cd autotune/tests
-          ./test_autotune.sh -c minikube -i autotune_operator:mvp_demo_test --tctype=functional --testsuite=basic_api_tests --resultsdir=${GITHUB_WORKSPACE} -r ${GITHUB_WORKSPACE}/benchmarks
-
-          cd ${GITHUB_WORKSPACE}
-          ls
-          tar cvf autotune_test_results.tar autotune_test_results
-          ls
