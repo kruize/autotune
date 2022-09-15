@@ -91,13 +91,6 @@ public class ExperimentTrial {
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
 
-
-    /**
-     *  Non-JSON Field
-     */
-    @Exclude
-    private HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
-
     /**
      * Will be used to update the status of the trial
      *
@@ -113,6 +106,16 @@ public class ExperimentTrial {
      * Please refer to latest at com.autotune.experimentManager.utils.EMUtil.EMExpStatus
      */
     private EMUtil.EMExpStatus status;
+
+    /**
+     *  Non-JSON Fields
+     */
+    @Exclude
+    private HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+
+    // No setter and getters should be implemented or should be implemented private
+    @Exclude
+    private boolean flagInitCheck;
 
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
@@ -150,8 +153,11 @@ public class ExperimentTrial {
          *  The GSON exclusion ignores it's initialisation so this method needs to be called
          *  explicitly after the Experiment Trial Creation
          */
-        this.flagsMap = new HashMap<EMUtil.EMFlowFlags, Boolean>();
-        resetFlagsMap();
+        if (!this.flagInitCheck) {
+            this.flagsMap = new HashMap<EMUtil.EMFlowFlags, Boolean>();
+            resetFlagsMap();
+            this.flagInitCheck = true;
+        }
     }
 
     public String getExperimentId() {
@@ -199,6 +205,9 @@ public class ExperimentTrial {
     }
 
     public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
+        if (!this.flagInitCheck) {
+            this.initialiseFlags();
+        }
         return this.flagsMap;
     }
     /**
