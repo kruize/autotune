@@ -140,13 +140,36 @@ public class EMUtil {
     * If a trial has completed its iterations and sent metrics to USER and exited the status would be `COMPLETED`
     */
     public enum EMExpStatus {
+        // Set at the time of creation
         CREATED,
-        WAIT,
+        // Set if the trial is in conflict with on going trial
+        QUEUED,
+        // Set if the trial starts running
         IN_PROGRESS,
+        // Set if deployment is needed
+        DEPLOYING,
+        // Set if deployment is successful
+        DEPLOYMENT_SUCCESSFUL,
+        // Set if deployment is failed
+        DEPLOYMENT_FAILED,
+        // Set if load check is needed
         WAITING_FOR_LOAD,
-        APPLYING_LOAD,
+        // Set if load check is successful
+        LOAD_CHECK_SUCCESSFUL,
+        // Set if load check is failed
+        LOAD_CHECK_FAILED,
+        // Set if the collection of metrics is needed
         COLLECTING_METRICS,
-        COMPLETED
+        // Set if metric collection is successful
+        METRIC_COLLECTION_SUCCESSFUL,
+        // Set if metric collection failed
+        METRIC_COLLECTION_FAILED,
+        // Set if the trial reached end of its cycle
+        TRIAL_COMPLETED,
+        // Set if the results are posted successfully
+        TRIAL_RESULT_SENT_SUCCESSFULLY,
+        // Set if the results are not sent to analyser / trail creator
+        TRIAL_RESULT_SEND_FAILED,
     }
 
     /**
