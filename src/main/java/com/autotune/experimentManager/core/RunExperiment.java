@@ -37,7 +37,7 @@ public class RunExperiment implements Callable<String> {
             LOGGER.info(EMConstants.Logs.RunExperiment.END_TRANSITION_FOR_RUNID, trailData.getTargetStage().toString(),  runId);
         }
 
-        if (trailData.getStatus().toString().equalsIgnoreCase(EMUtil.EMExpStatus.COMPLETED.toString())) {
+        if (trailData.getStatus().toString().equalsIgnoreCase(EMUtil.EMExpStatus.TRIAL_COMPLETED.toString())) {
             if (trailData.isNotifyTrialCompletion()) {
                 EMTrialManager.launchWaitingExperiment(runId);
             }
