@@ -16,10 +16,15 @@
 package com.autotune.experimentManager.workerimpl;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
+import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletContext;
 
 /**
  *  This is worker to execute experiments steps.
@@ -30,9 +35,18 @@ public class IterationManager implements AutotuneWorker {
     public IterationManager() {}
 
     @Override
-    public void execute(Object o) {
+    public void execute(Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
         ExperimentTrial experimentTrial = (ExperimentTrial) o;
         LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
-        new ExperimentTrialHandler(experimentTrial).startExperimentTrials();
+        LOGGER.debug("Status : {}",experimentTrial.getStatus());
+
+        if(experimentTrial.getStatus().equals(EMUtil.EMExpStatus.QUEUED)){
+            LOGGER.debug("Calling PreValidationHandler");
+            new PreValidationHandler().execute(experimentTrial,autotuneExecutor,context);
+        }
+        else if(experimentTrial.getStatus().equals(EMUtil.EMExpStatus.IN_PROGRESS)){
+            LOGGER.debug("Calling DeploymentHandler");
+        }
+
     }
 }

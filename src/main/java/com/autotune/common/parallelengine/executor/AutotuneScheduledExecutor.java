@@ -70,8 +70,8 @@ public class AutotuneScheduledExecutor extends ThreadPoolExecutor {
             @Override
             public void run() {
                 try {
-                    AutotuneWorker theWorker = new CallableFactory().create(worker);
-                    theWorker.execute(take);
+                    //AutotuneWorker theWorker = new CallableFactory().create(worker);
+                    //theWorker.execute(take);
                 } catch (Exception e) {
                     System.out.println(e);
                     e.printStackTrace();

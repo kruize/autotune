@@ -28,8 +28,6 @@ public interface TrialInterface {
     public void addExperiments(List<ExperimentTrial> experimentTrialList);
     // List all experiments trial.
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments();
-    // List all deployments names for experiments
-    public List<String> getAllDeploymentNames();
     // List all trial for given experiment.
     // List status of experiments.
     // Get error message.

@@ -16,6 +16,7 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
+import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -37,6 +38,7 @@ public class TrialDetails {
     private String resultError;
     private Timestamp startTime;
     private Timestamp endTime;
+    private EMUtil.EMExpStatus status = EMUtil.EMExpStatus.QUEUED;
 
     public TrialDetails(ContainerConfigData configData) {
         this.configData = configData;
@@ -106,6 +108,16 @@ public class TrialDetails {
 
     public ContainerConfigData getConfigData() {
         return configData;
+    }
+
+    public EMUtil.EMExpStatus getStatus() {
+        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
+        return status;
+    }
+
+    public void setStatus(EMUtil.EMExpStatus status) {
+        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
+        this.status = status;
     }
 
     @Override
