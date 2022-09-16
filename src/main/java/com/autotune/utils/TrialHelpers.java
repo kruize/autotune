@@ -22,6 +22,7 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.layer.Layer;
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.*;
 import com.autotune.common.k8sObjects.AutotuneObject;
@@ -61,7 +62,11 @@ public class TrialHelpers {
      * @return Equivalent JSONObject that is accepted by EM
      */
     public static String experimentTrialToJSON(ExperimentTrial experimentTrial) {
-        Gson gsonObj = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        Gson gsonObj = new GsonBuilder()
+                            .disableHtmlEscaping()
+                            .setPrettyPrinting()
+                            .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                            .create();
         String gsonStr = gsonObj.toJson(experimentTrial);
         return "["+gsonStr+"]";
     }

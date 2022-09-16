@@ -19,7 +19,7 @@ public class EMTrialManager {
                 depList.removeFirst();
                 String nextRunId = depList.getFirst();
                 ExperimentTrialData nextEtd = (ExperimentTrialData) EMMapper.getInstance().getMap().get(nextRunId);
-                if (nextEtd.getStatus().toString().equalsIgnoreCase(EMUtil.EMExpStatus.WAIT.toString())) {
+                if (nextEtd.getStatus().toString().equalsIgnoreCase(EMUtil.EMExpStatus.QUEUED.toString())) {
                     nextEtd.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
                 }
                 EMStageTransition transition = new EMStageTransition(nextRunId, EMUtil.EMExpStages.CREATE_CONFIG);

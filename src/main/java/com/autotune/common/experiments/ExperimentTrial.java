@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
+import com.autotune.common.annotations.json.Exclude;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -90,10 +91,6 @@ public class ExperimentTrial {
     // Eg. training and production
     // uses tracker as key. tracker = "training" or "production"
 
-
-    // Non JSON field
-    private transient HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
-
     /**
      * Will be used to update the status of the trial
      *
@@ -109,6 +106,16 @@ public class ExperimentTrial {
      * Please refer to latest at com.autotune.experimentManager.utils.EMUtil.EMExpStatus
      */
     private EMUtil.EMExpStatus status;
+
+    /**
+     *  Non-JSON Fields
+     */
+    @Exclude
+    private HashMap<EMUtil.EMFlowFlags, Boolean> flagsMap;
+
+    // No setter and getters should be implemented or should be implemented private
+    @Exclude
+    private boolean flagInitCheck;
 
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
@@ -128,13 +135,29 @@ public class ExperimentTrial {
         this.experimentSettings = experimentSettings;
         this.trialDetails = trialDetails;
         this.status = EMUtil.EMExpStatus.CREATED;
-        resetFlagsMap();
     }
 
     private void resetFlagsMap() {
         this.flagsMap.put(EMUtil.EMFlowFlags.NEEDS_DEPLOYMENT, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_NEEDS_DEPLOYMENT);
         this.flagsMap.put(EMUtil.EMFlowFlags.CHECK_LOAD, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_CHECK_LOAD);
         this.flagsMap.put(EMUtil.EMFlowFlags.COLLECT_METRICS, EMConstants.StandardDefaults.EMFlowFlags.DEFAULT_COLLECT_METRICS);
+    }
+
+    public void initialiseFlags() {
+        /**
+         *  Creating it here instead of creator of Instance to create it as we set the
+         *  flags to default below
+         *
+         *  Intentionally not adding the setter for flagsMap and not initialising in constructor
+         *
+         *  The GSON exclusion ignores it's initialisation so this method needs to be called
+         *  explicitly after the Experiment Trial Creation
+         */
+        if (!this.flagInitCheck) {
+            this.flagsMap = new HashMap<EMUtil.EMFlowFlags, Boolean>();
+            resetFlagsMap();
+            this.flagInitCheck = true;
+        }
     }
 
     public String getExperimentId() {
@@ -182,7 +205,10 @@ public class ExperimentTrial {
     }
 
     public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
-        return flagsMap;
+        if (!this.flagInitCheck) {
+            this.initialiseFlags();
+        }
+        return this.flagsMap;
     }
     /**
      * Returns the status of the trial
