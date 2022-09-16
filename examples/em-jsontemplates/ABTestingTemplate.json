@@ -1,8 +1,6 @@
 [
   {
     "experiment_name": "Compare performance objective of A/B software releases",
-    "mode": "Apply/MetricCollectionOnly",
-    "environment": "QA/PROD",
     "resource": {
       "namespace": "default",
       "deployment_name": "tfb-qrh-sample"
@@ -14,6 +12,9 @@
       }
     },
     "settings": {
+      "perform_experiments_workflow": true,
+      "perform_monitoring_workflow": true,
+      "wait_for_load": true,
       "trial_settings": {
         "measurement_cycles": "3",
         "warmup_duration": "1min",

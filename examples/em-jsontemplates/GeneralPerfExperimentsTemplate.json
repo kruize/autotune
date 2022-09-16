@@ -1,8 +1,6 @@
 [
     {
       "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-      "mode": "Apply/MetricCollectionOnly",
-      "environment": "QA/PROD",
       "resource": {
         "namespace": "default",
         "deployment_name": "tfb-qrh-sample"
@@ -19,6 +17,9 @@
         "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
       },
       "settings": {
+        "perform_experiments_workflow": true,
+        "perform_monitoring_workflow": true,
+        "wait_for_load": true,
         "trial_settings": {
           "measurement_cycles": "3",
           "warmup_duration": "1min",
@@ -126,6 +127,9 @@
         "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
       },
       "settings": {
+        "perform_experiments_workflow": true,
+        "perform_monitoring_workflow": true,
+        "wait_for_load": true,
         "trial_settings": {
           "measurement_cycles": "3",
           "warmup_duration": "1min",

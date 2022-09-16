@@ -1,8 +1,6 @@
 [
   {
     "experiment_name": "Collect software releases metrics",
-    "mode": "Apply/MetricCollectionOnly",
-    "environment": "QA/PROD",
     "resource": {
       "namespace": "default",
       "deployment_name": "tfb-qrh-sample"
@@ -51,6 +49,9 @@
       }
     },
     "settings": {
+      "perform_experiments_workflow": true,
+      "perform_monitoring_workflow": true,
+      "wait_for_load": true,
       "trial_settings": {
         "measurement_cycles": "3",
         "iterations": "3",
