@@ -34,10 +34,10 @@ public class InitiateListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
-        if (experimentDetailsMap == null) {
-            experimentDetailsMap = new ExperimentDetailsMap<>();
-            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
+        ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
+        if (EMExperimentTrialMap == null) {
+            EMExperimentTrialMap = new ExperimentDetailsMap<>();
+            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, EMExperimentTrialMap);
             sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS,new ArrayList<String>());
         }
     }

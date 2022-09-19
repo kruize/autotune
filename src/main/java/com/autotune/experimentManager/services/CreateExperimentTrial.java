@@ -64,11 +64,11 @@ public class CreateExperimentTrial extends HttpServlet {
         Gson gson = new Gson();
         HashMap<String, ExperimentTrial> experimentNameMap = new HashMap<String, ExperimentTrial>();
         try {
-            ExperimentDetailsMap<String, ExperimentTrial> existExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
+            ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             ExperimentTrial[] experimentTrialArray = gson.fromJson(inputData, ExperimentTrial[].class);
             List<ExperimentTrial> experimentTrialList = Arrays.asList(experimentTrialArray);
-            TrialInterface trialInterface = new TrialInterfaceImpl(existExperimentTrialMap);
+            TrialInterface trialInterface = new TrialInterfaceImpl(EMExperimentTrialMap);
             trialInterface.addExperiments(experimentTrialList);
             if (null == trialInterface.getErrorMessage()) {
                 experimentTrialList.forEach(

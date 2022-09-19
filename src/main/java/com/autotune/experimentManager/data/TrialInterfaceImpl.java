@@ -31,13 +31,13 @@ import java.util.stream.Collectors;
  */
 public class TrialInterfaceImpl implements TrialInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrialInterfaceImpl.class);
-    private final ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap;
+    private final ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap;
 
     private String errorMessage;
     private int httpResponseCode;
 
-    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
-        this.existingExperimentTrialMap = existingExperimentTrialMap;
+    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap) {
+        this.EMExperimentTrialMap = EMExperimentTrialMap;
     }
 
     /**
@@ -51,7 +51,7 @@ public class TrialInterfaceImpl implements TrialInterface {
         HashMap<String, HashMap<String, TrialDetails>> successTrialDetailsList = new HashMap<>();
         experimentTrialList.forEach(
                 (experimentTrial) -> {
-                    Object obj = this.existingExperimentTrialMap.get(experimentTrial.getExperimentName());
+                    Object obj = this.EMExperimentTrialMap.get(experimentTrial.getExperimentName());
                     if (obj == null)
                         successExperimentTrials.add(experimentTrial);
                     else {
@@ -82,12 +82,12 @@ public class TrialInterfaceImpl implements TrialInterface {
         if (null == this.getErrorMessage()) {
             successExperimentTrials.forEach(
                     (expTrial) -> {
-                        this.existingExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
+                        this.EMExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
                     }
             );
             successTrialDetailsList.forEach(
                     (expName, trialDetails) -> {
-                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.existingExperimentTrialMap.get(expName);
+                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.EMExperimentTrialMap.get(expName);
                         trialDetails.forEach((trialNumber, trailDetails) -> {
                             existingExpTrial.getTrialDetails().put(trialNumber, trailDetails);
                         });
@@ -98,13 +98,13 @@ public class TrialInterfaceImpl implements TrialInterface {
 
     @Override
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments() {
-        return this.existingExperimentTrialMap;
+        return this.EMExperimentTrialMap;
     }
 
     @Override
     public List<String> getAllDeploymentNames() {
         List<String> deploymentNameList = new ArrayList<>();
-        this.existingExperimentTrialMap.forEach(
+        this.EMExperimentTrialMap.forEach(
                 (expName,expTrial)->{
                     ExperimentTrial et =(ExperimentTrial)expTrial;
                     deploymentNameList.add(et.getResourceDetails().getDeploymentName());

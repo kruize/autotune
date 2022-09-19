@@ -12,8 +12,8 @@
       }
     },
     "settings": {
-      "perform_experiments_workflow": true,
-      "perform_monitoring_workflow": true,
+      "do_experiment": true,
+      "do_monitoring": true,
       "wait_for_load": true,
       "trial_settings": {
         "measurement_cycles": "3",
@@ -82,6 +82,7 @@
           ]
         }
       }
-    }
+    },
+    "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
   }
 ]
