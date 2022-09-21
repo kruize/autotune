@@ -17,17 +17,12 @@
 package com.autotune.experimentManager.services;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.ExperimentTrialView;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
-import com.autotune.experimentManager.data.ExperimentTrialData;
-import com.autotune.experimentManager.services.util.EMAPIHandler;
-import com.autotune.experimentManager.transitions.util.TransistionHelper;
+import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.Gson;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.servlet.ServletConfig;
@@ -37,6 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -53,7 +51,7 @@ public class ListTrialStatus extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.existingExperiments = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMJSONKeys.EM_STORAGE_CONTEXT_KEY);
+        this.existingExperiments = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
     }
 
     @Override
@@ -82,10 +80,10 @@ public class ListTrialStatus extends HttpServlet {
         if (null == experiment_name){
             this.existingExperiments.forEach((expName,experimentTObj)->{
                 JSONObject trialJson = new JSONObject();
-                ((ExperimentTrial) experimentTObj).getTrialDetails().forEach((trialNum,trialDetail)->{
+            /*    ((ExperimentTrial) experimentTObj).getTrialDetails().forEach((trialNum,trialDetail)->{
                     trialJson.put(trialNum,new JSONObject().put("STATUS" , "COMPLETED"));
-                });
-                returnJson.put((String) expName,trialJson);
+                });*/
+                returnJson.put((String) expName,experimentTObj);
             });
         }else{
             ExperimentTrial et = (ExperimentTrial) this.existingExperiments.get(experiment_name);
@@ -104,8 +102,32 @@ public class ListTrialStatus extends HttpServlet {
                 returnJson.put(experiment_name,trialJson);
             }
         }
+        resp.setContentType(JSON_CONTENT_TYPE);
+        resp.setCharacterEncoding(CHARACTER_ENCODING);
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        HashMap<String,ExperimentTrialView> experimentTrialViews = new HashMap<>();
+        this.existingExperiments.forEach((expName,experimentObj)->{
+            ExperimentTrial eObj = (ExperimentTrial) experimentObj;
+            ExperimentTrialView experimentTrialView = new ExperimentTrialView();
+            experimentTrialView.setStatus(eObj.getStatus());
+            experimentTrialView.setCreationDate(eObj.getExperimentMetaData().getCreationDate());
+            experimentTrialView.setBeginTimeStamp(eObj.getExperimentMetaData().getBeginTimestamp());
+            experimentTrialView.setEndTimeStamp(eObj.getExperimentMetaData().getEndTimestamp());
+            LinkedList<String> steps=  new LinkedList<>();
+            steps.addAll(eObj.getExperimentMetaData().getAutoTuneWorkFlow().getIterationWorkflowMap().keySet());
+            experimentTrialView.setSteps(steps);
+            LinkedHashMap<String, TrialMetaData> trialMetaDataLinkedHashMap = new LinkedHashMap<>();
+            eObj.getTrialDetails().forEach((trialNum,trialDetails)->{
+                trialMetaDataLinkedHashMap.put(trialNum,trialDetails.getTrialMetaData());
+            });
+            experimentTrialView.setTrialDetails(trialMetaDataLinkedHashMap);
+            experimentTrialViews.put(eObj.getExperimentName(), experimentTrialView);
+        });
+        out = resp.getWriter();
         out.append(
-                returnJson.toString()
+                new Gson().toJson(
+                        experimentTrialViews
+                )
         );
         out.flush();
     }

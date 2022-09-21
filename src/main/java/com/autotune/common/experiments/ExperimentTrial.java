@@ -17,10 +17,12 @@ package com.autotune.common.experiments;
 
 import com.autotune.common.annotations.json.Exclude;
 import com.autotune.common.k8sObjects.Metric;
+import com.autotune.experimentManager.data.result.ExperimentMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.annotations.SerializedName;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
@@ -116,6 +118,13 @@ public class ExperimentTrial {
     // No setter and getters should be implemented or should be implemented private
     @Exclude
     private boolean flagInitCheck;
+
+    // URL is used to post results acquired from metric queries
+    @SerializedName("trial_result_url")
+    private String trialResultURL;
+
+    //Status and timestamp data
+    private ExperimentMetaData experimentMetaData;
 
     public ExperimentTrial(String experimentName,
                            String mode, String environment, ResourceDetails resourceDetails, String experimentId,
@@ -215,6 +224,7 @@ public class ExperimentTrial {
      * @return EMExpStatus status
      */
     public EMUtil.EMExpStatus getStatus() {
+        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
         return status;
     }
 
@@ -223,6 +233,7 @@ public class ExperimentTrial {
      * @param status
      */
     public void setStatus(EMUtil.EMExpStatus status) {
+        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
         this.status = status;
     }
 
@@ -241,6 +252,24 @@ public class ExperimentTrial {
                 ", datasourceInfoHashMap=" + datasourceInfoHashMap +
                 ", experimentSettings=" + experimentSettings +
                 '}';
+    }
+
+
+
+    public ExperimentMetaData getExperimentMetaData() {
+        return experimentMetaData;
+    }
+
+    public void setExperimentMetaData(ExperimentMetaData experimentMetaData) {
+        this.experimentMetaData = experimentMetaData;
+    }
+
+    public String getTrialResultURL() {
+        return trialResultURL;
+    }
+
+    public void setTrialResultURL(String trialResultURL) {
+        this.trialResultURL = trialResultURL;
     }
 }
 

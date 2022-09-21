@@ -247,6 +247,7 @@ public class EMConstants {
 		private EMKeys() { }
 		public static final String EM_STORAGE_CONTEXT_KEY = "experimentDetailsMap";
 		public static final String EM_REGISTERED_DEPLOYMENTS = "registeredDeployments";
+		public static final String EM_KUBERNETES_SERVICE = "kubernetesService";
 	}
 
 	public static class ParallelEngineConfigs {

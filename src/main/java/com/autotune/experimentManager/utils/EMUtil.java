@@ -171,7 +171,9 @@ public class EMUtil {
         // Set if the results are not sent to analyser / trail creator
         TRIAL_RESULT_SEND_FAILED,
         COMPLETED,
-        WAIT
+        WAIT,
+        FAILED;
+
     }
 
     /**

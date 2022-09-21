@@ -16,30 +16,52 @@
 package com.autotune.service;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.parallelengine.queue.AutotuneQueue;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
+import com.autotune.experimentManager.workerimpl.IterationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Context Initializer to initialize variables like to store experiments in Map.
+ * Context Initializer to initialize variables used across modules.
  */
-
 public class InitiateListener implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(InitiateListener.class);
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
-        if (EMExperimentTrialMap == null) {
-            EMExperimentTrialMap = new ExperimentDetailsMap<>();
-            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, EMExperimentTrialMap);
-            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS,new ArrayList<String>());
+        ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
+        if (experimentDetailsMap == null) {
+            experimentDetailsMap = new ExperimentDetailsMap<>();
+            /**
+             * LocalStorage declaration for experiments.
+             */
+            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
+            sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS, new ArrayList<String>());
         }
+        AutotuneQueue<ExperimentTrial> emQueue = new AutotuneQueue<>(20000);
+        /**
+         * Thread pool executor declaration for Experiment Manager
+         */
+        AutotuneExecutor EMExecutor = new AutotuneExecutor(ParallelEngineConfigs.EM_CORE_POOL_SIZE,
+                ParallelEngineConfigs.EM_MAX_POOL_SIZE,
+                ParallelEngineConfigs.EM_CORE_POOL_KEEPALIVETIME_IN_SECS,
+                TimeUnit.SECONDS,
+                emQueue,
+                new ThreadPoolExecutor.AbortPolicy(),
+                IterationManager.class
+        );
+        sce.getServletContext().setAttribute(ParallelEngineConfigs.EM_EXECUTOR, EMExecutor);
+
     }
 
     @Override

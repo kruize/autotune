@@ -17,9 +17,13 @@ package com.autotune.experimentManager.data;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.experimentManager.data.result.ExperimentMetaData;
+import com.autotune.experimentManager.data.result.TrialMetaData;
+import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,22 +31,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Experiment's Local storage Data access implementation .
+ * Experiment Trials Local storage Data access implementation .
  */
 public class TrialInterfaceImpl implements TrialInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrialInterfaceImpl.class);
-    private final ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap;
+    private final ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap;
 
     private String errorMessage;
     private int httpResponseCode;
 
-    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap) {
-        this.EMExperimentTrialMap = EMExperimentTrialMap;
+    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
+        this.existingExperimentTrialMap = existingExperimentTrialMap;
     }
 
     /**
-     *  AddExperiment into local storage
-     *  Set Error if duplicate trials found.
+     * * AddExperiment into local storage
+     * * Set Error if duplicate trials found.
+     * * Set Error if duplicate deployments found.
      */
     @Override
     public void addExperiments(List<ExperimentTrial> experimentTrialList) {
@@ -51,7 +56,7 @@ public class TrialInterfaceImpl implements TrialInterface {
         HashMap<String, HashMap<String, TrialDetails>> successTrialDetailsList = new HashMap<>();
         experimentTrialList.forEach(
                 (experimentTrial) -> {
-                    Object obj = this.EMExperimentTrialMap.get(experimentTrial.getExperimentName());
+                    Object obj = this.existingExperimentTrialMap.get(experimentTrial.getExperimentName());
                     if (obj == null)
                         successExperimentTrials.add(experimentTrial);
                     else {
@@ -68,7 +73,7 @@ public class TrialInterfaceImpl implements TrialInterface {
                                 });
                             } else {
                                 this.setHttpResponseCode(400);
-                                this.setErrorMessage("Following trials : " + commonTrials + " Already exist in Experiment.");
+                                this.setErrorMessage("Following trials : " + commonTrials + " Already exist for Experiment :  " + experimentTrial.getExperimentName());
                                 return;
                             }
                         } else {
@@ -82,13 +87,28 @@ public class TrialInterfaceImpl implements TrialInterface {
         if (null == this.getErrorMessage()) {
             successExperimentTrials.forEach(
                     (expTrial) -> {
-                        this.EMExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
+                        expTrial.setStatus(EMUtil.EMExpStatus.QUEUED);
+                        ExperimentMetaData experimentMetaData = new ExperimentMetaData();
+                        experimentMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                        expTrial.setExperimentMetaData(experimentMetaData);
+                        expTrial.getTrialDetails().forEach((trialNumber, trailDetails)->{
+                            TrialMetaData trialMetaData = new TrialMetaData();
+                            trialMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
+                            trialMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                            trailDetails.setTrialMetaData(trialMetaData);
+                        });
+                        this.existingExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
                     }
             );
             successTrialDetailsList.forEach(
                     (expName, trialDetails) -> {
-                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.EMExperimentTrialMap.get(expName);
+                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.existingExperimentTrialMap.get(expName);
                         trialDetails.forEach((trialNumber, trailDetails) -> {
+                            TrialMetaData trialMetaData = new TrialMetaData();
+                            trialMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                            existingExpTrial.setStatus(EMUtil.EMExpStatus.QUEUED);
+                            trialMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
+                            trailDetails.setTrialMetaData(trialMetaData);
                             existingExpTrial.getTrialDetails().put(trialNumber, trailDetails);
                         });
                     }
@@ -98,19 +118,7 @@ public class TrialInterfaceImpl implements TrialInterface {
 
     @Override
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments() {
-        return this.EMExperimentTrialMap;
-    }
-
-    @Override
-    public List<String> getAllDeploymentNames() {
-        List<String> deploymentNameList = new ArrayList<>();
-        this.EMExperimentTrialMap.forEach(
-                (expName,expTrial)->{
-                    ExperimentTrial et =(ExperimentTrial)expTrial;
-                    deploymentNameList.add(et.getResourceDetails().getDeploymentName());
-                }
-        );
-        return deploymentNameList;
+        return this.existingExperimentTrialMap;
     }
 
     @Override

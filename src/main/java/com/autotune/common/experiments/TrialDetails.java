@@ -16,6 +16,7 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.k8sObjects.Metric;
+import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.annotations.SerializedName;
 
@@ -31,16 +32,19 @@ public class TrialDetails {
      */
     @SerializedName("config")
     private ContainerConfigData configData ;
-
+    private String trailID;
     private String state;
     private String result;
     private String resultInfo;
     private String resultError;
     private Timestamp startTime;
     private Timestamp endTime;
-    private EMUtil.EMExpStatus status = EMUtil.EMExpStatus.QUEUED;
+    // Status and Timestamp data
+    private TrialMetaData trialMetaData;
+    private transient boolean alreadyDeployedJustRestart = false;
 
-    public TrialDetails(ContainerConfigData configData) {
+    public TrialDetails(String trailID,ContainerConfigData configData) {
+        this.trailID = trailID;
         this.configData = configData;
     }
 
@@ -110,14 +114,28 @@ public class TrialDetails {
         return configData;
     }
 
-    public EMUtil.EMExpStatus getStatus() {
-        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
-        return status;
+    public TrialMetaData getTrialMetaData() {
+        return trialMetaData;
     }
 
-    public void setStatus(EMUtil.EMExpStatus status) {
-        if (status == null) status = EMUtil.EMExpStatus.QUEUED;
-        this.status = status;
+    public void setTrialMetaData(TrialMetaData trialMetaData) {
+        this.trialMetaData = trialMetaData;
+    }
+
+    public boolean isAlreadyDeployedJustRestart() {
+        return alreadyDeployedJustRestart;
+    }
+
+    public void setAlreadyDeployedJustRestart(boolean alreadyDeployedJustRestart) {
+        this.alreadyDeployedJustRestart = alreadyDeployedJustRestart;
+    }
+
+    public String getTrailID() {
+        return trailID;
+    }
+
+    public void setTrailID(String trailID) {
+        this.trailID = trailID;
     }
 
     @Override
