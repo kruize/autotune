@@ -36,8 +36,8 @@ public class AutoTuneWorkFlow {
     public AutoTuneWorkFlow(boolean do_experiments, boolean do_monitoring, boolean wait_for_load, String trialResultURL) throws Exception {
         LOGGER.debug("Do_experiments : {} , Do_monitoring : {}", do_experiments, do_monitoring);
         this.wait_for_load = wait_for_load;
+        iterationWorkflowMap = new LinkedHashMap<String, String>();
         if (do_experiments == true) {
-            iterationWorkflowMap = new LinkedHashMap<String, String>();
             iterationWorkflowMap.put(PreValidationHandler.class.getSimpleName().replace("Handler", ""), PreValidationHandler.class.getName());
             iterationWorkflowMap.put(DeploymentHandler.class.getSimpleName().replace("Handler", ""), DeploymentHandler.class.getName());
             iterationWorkflowMap.put(PostValidationHandler.class.getSimpleName().replace("Handler", ""), PostValidationHandler.class.getName());
@@ -45,14 +45,15 @@ public class AutoTuneWorkFlow {
                 iterationWorkflowMap.put(LoadValidationHandler.class.getSimpleName().replace("Handler", ""), LoadValidationHandler.class.getName());
             iterationWorkflowMap.put(MetricCollectionHandler.class.getSimpleName().replace("Handler", ""), MetricCollectionHandler.class.getName());
             iterationWorkflowMap.put(SummarizerHandler.class.getSimpleName().replace("Handler", ""), SummarizerHandler.class.getName());
-        } else if (do_monitoring == true) {
-            iterationWorkflowMap = new LinkedHashMap<String, String>();
+        }
+        if (do_monitoring == true) {
             iterationWorkflowMap.put(PreValidationHandler.class.getSimpleName().replace("Handler", ""), PreValidationHandler.class.getName());
             if (wait_for_load)
                 iterationWorkflowMap.put(LoadValidationHandler.class.getSimpleName().replace("Handler", ""), LoadValidationHandler.class.getName());
             iterationWorkflowMap.put(MetricCollectionHandler.class.getSimpleName().replace("Handler", ""), MetricCollectionHandler.class.getName());
             iterationWorkflowMap.put(SummarizerHandler.class.getSimpleName().replace("Handler", ""), SummarizerHandler.class.getName());
-        } else {
+        }
+        if (!do_experiments || !do_monitoring){
             throw new Exception("Workflow not defined");
         }
         trialWorkflowMap = new LinkedHashMap<String, String>();

@@ -44,6 +44,14 @@ public class PostResultsHandler implements EMHandlerInterface {
     @Override
     public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, CycleMetaData cycleMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
         try {
+            String cycleName = (cycleMetaData == null) ? "" : cycleMetaData.getCycleName();
+            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Cycle: {} - Iteration: {} - StepName: {}",
+                    experimentTrial.getExperimentName(),
+                    trialDetails.getTrailID(),
+                    cycleName,
+                    stepsMeatData.getIterationNumber(),
+                    stepsMeatData.getStepName()
+            );
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
             stepsMeatData.setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
             /**
@@ -62,7 +70,7 @@ public class PostResultsHandler implements EMHandlerInterface {
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            if (null != cycleMetaData) EMStatusUpdateHandler.updateCycleMetaDataStatus(cycleMetaData);
+            if (null != cycleMetaData) EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial,trialDetails,cycleMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
         } catch (Exception e) {

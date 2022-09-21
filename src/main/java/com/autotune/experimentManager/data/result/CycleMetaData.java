@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
  * Warmup and MeasurementCycle details like status and timestamp
  */
 public class CycleMetaData {
+    private String cycleName;
     private Date beginTimestamp;
     private Date endTimestamp;
     private LinkedHashMap<Integer, LinkedHashMap<String, StepsMetaData>> iterationWorkflow;
@@ -62,4 +63,11 @@ public class CycleMetaData {
         this.status = status;
     }
 
+    public String getCycleName() {
+        return cycleName;
+    }
+
+    public void setCycleName(String cycleName) {
+        this.cycleName = cycleName;
+    }
 }

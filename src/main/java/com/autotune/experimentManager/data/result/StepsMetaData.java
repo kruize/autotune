@@ -9,9 +9,11 @@ import java.util.Date;
  * Workflows are pre/post Validation, Deployment etc
  */
 public class StepsMetaData {
+    private String stepName;
     private Date beginTimestamp;
     private Date endTimestamp;
     private EMUtil.EMExpStatus status;
+    private int iterationNumber;
 
     public Date getBeginTimestamp() {
         return beginTimestamp;
@@ -35,5 +37,21 @@ public class StepsMetaData {
 
     public void setStatus(EMUtil.EMExpStatus status) {
         this.status = status;
+    }
+
+    public String getStepName() {
+        return stepName;
+    }
+
+    public void setStepName(String stepName) {
+        this.stepName = stepName;
+    }
+
+    public int getIterationNumber() {
+        return iterationNumber;
+    }
+
+    public void setIterationNumber(int iterationNumber) {
+        this.iterationNumber = iterationNumber;
     }
 }

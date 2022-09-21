@@ -60,7 +60,6 @@ public class IterationManager implements AutotuneWorker {
                     }
             );
         } else {
-            LOGGER.debug("Experiment name {} status is {}", experimentTrial.getExperimentName(),experimentTrial.getStatus());
             findAndSubmitTask(experimentTrial,autotuneExecutor,context);
         }
     }
@@ -77,27 +76,23 @@ public class IterationManager implements AutotuneWorker {
         if (experimentTrial.getStatus().equals(EMUtil.EMExpStatus.IN_PROGRESS)) {
             experimentTrial.getTrialDetails().forEach((trialNum, trialDetails) -> {
                 if (taskSubmitted.get()) return;
-                LOGGER.debug("Experiment name's {} trial no {} status is {}", experimentTrial.getExperimentName(), trialNum, trialDetails.getTrialMetaData().getStatus());
-                EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial,trialDetails);
                 if (trialDetails.getTrialMetaData().getStatus().equals(EMUtil.EMExpStatus.QUEUED) ||
                         trialDetails.getTrialMetaData().getStatus().equals(EMUtil.EMExpStatus.IN_PROGRESS)) {
+                    EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial,trialDetails);
                     trialDetails.getTrialMetaData().getCycles().forEach((cycleName, cycleMetaData) -> {
                         if (taskSubmitted.get()) return;
-                        LOGGER.debug("Experiment name's {} trial no {} Cycle {} status is {}", experimentTrial.getExperimentName(), trialNum, cycleName, cycleMetaData.getStatus());
                         if (cycleMetaData.getStatus().equals(EMUtil.EMExpStatus.QUEUED) ||
                                 cycleMetaData.getStatus().equals(EMUtil.EMExpStatus.IN_PROGRESS)) {
                             cycleMetaData.getIterationWorkflow().forEach((iterationNum, workflowDetail) -> {
                                 if (taskSubmitted.get()) return;
-                                LOGGER.debug("Experiment name's {} trial no {} Cycle {} Iteration num is {}", experimentTrial.getExperimentName(), trialNum, cycleName, iterationNum);
                                 workflowDetail.forEach((stepName, stepsMetaData) -> {
                                     if (taskSubmitted.get()) return;
-                                    LOGGER.debug("Experiment name's {} trial no {} Cycle {} Iteration num is {} workflow name {} status is {}", experimentTrial.getExperimentName(), trialNum, cycleName, iterationNum, stepName, stepsMetaData.getStatus());
                                     if (stepsMetaData.getStatus().equals(EMUtil.EMExpStatus.QUEUED)) {
                                         String stepClassName = experimentTrial.getExperimentMetaData().getAutoTuneWorkFlow().getIterationWorkflowMap().get(stepName);
                                         EMHandlerInterface theWorker = null;
                                         theWorker = new EMHandlerFactory().create(stepClassName);
                                         if (null != theWorker) {
-                                            EMStatusUpdateHandler.updateCycleMetaDataStatus(cycleMetaData);
+                                            EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial, trialDetails,cycleMetaData);
                                             theWorker.execute(experimentTrial,
                                                     trialDetails,
                                                     cycleMetaData,
@@ -118,7 +113,6 @@ public class IterationManager implements AutotuneWorker {
                     // Call Trial Workflow
                     trialDetails.getTrialMetaData().getTrialWorkflow().forEach((stepName,stepsMetaData)->{
                         if (taskSubmitted.get()) return;
-                        LOGGER.debug("Experiment name's {} trial no {} Trial workflow name {} status is {}", experimentTrial.getExperimentName(), trialNum, stepName, stepsMetaData.getStatus());
                         if (stepsMetaData.getStatus().equals(EMUtil.EMExpStatus.QUEUED)) {
                             String stepClassName = experimentTrial.getExperimentMetaData().getAutoTuneWorkFlow().getTrialWorkflowMap().get(stepName);
                             EMHandlerInterface theWorker = null;
@@ -143,7 +137,9 @@ public class IterationManager implements AutotuneWorker {
         }
     }
 
-
+    /*
+        initiate Metadata to track Experimental progress and workflows
+     */
     private void initWorkflow(ExperimentTrial experimentTrial) {
         try {
             //Update experiment level metadata
@@ -178,6 +174,7 @@ public class IterationManager implements AutotuneWorker {
                     }
                     cycles.forEach((cycleName, count) -> {
                         CycleMetaData cycleMetaData = new CycleMetaData();
+                        cycleMetaData.setCycleName(cycleName);
                         cycleMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
                         LinkedHashMap<Integer, LinkedHashMap<String, StepsMetaData>> cycleIterationMap = new LinkedHashMap<>();
                         IntStream.rangeClosed(1, count).forEach(
@@ -187,6 +184,8 @@ public class IterationManager implements AutotuneWorker {
                                             (workerName, workerNameClass) -> {
                                                 StepsMetaData stepsMetaData = new StepsMetaData();
                                                 stepsMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
+                                                stepsMetaData.setStepName(workerName);
+                                                stepsMetaData.setIterationNumber(i);
                                                 stepsMetaDataLinkedHashMap.put(
                                                         workerName, stepsMetaData
                                                 );
@@ -204,6 +203,7 @@ public class IterationManager implements AutotuneWorker {
                             (workerName, workerNameClass) -> {
                                 StepsMetaData stepsMetaData = new StepsMetaData();
                                 stepsMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
+                                stepsMetaData.setStepName(workerName);
                                 trialWorkflowSteps.put(
                                         workerName, stepsMetaData
                                 );
@@ -214,9 +214,11 @@ public class IterationManager implements AutotuneWorker {
                     trialDetail.setTrialMetaData(trialMetaData);
                 }
             });
-
             experimentTrial.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
-            experimentTrial.getExperimentMetaData().setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
+            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",experimentTrial.getExperimentName(),EMUtil.EMExpStatus.IN_PROGRESS);
+            if (null == experimentTrial.getExperimentMetaData().getBeginTimestamp())
+                experimentTrial.getExperimentMetaData().setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
+
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             experimentTrial.setStatus(EMUtil.EMExpStatus.FAILED);

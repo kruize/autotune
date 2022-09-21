@@ -48,6 +48,14 @@ public class DeploymentHandler implements EMHandlerInterface {
 
     @Override
     public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, CycleMetaData cycleMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+        String cycleName = (cycleMetaData == null) ? "" : cycleMetaData.getCycleName();
+        LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Cycle: {} - Iteration: {} - StepName: {}",
+                experimentTrial.getExperimentName(),
+                trialDetails.getTrailID(),
+                cycleName,
+                stepsMeatData.getIterationNumber(),
+                stepsMeatData.getStepName()
+        );
         try {
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
             stepsMeatData.setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
@@ -60,7 +68,7 @@ public class DeploymentHandler implements EMHandlerInterface {
              * Implement DeploymentHandler Logic
              */
             initiateDeploy(trialDetails);
-            EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = isDeploymentReady(experimentTrial);
+            EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = isDeploymentReady(experimentTrial,trialDetails);
             switch (deploymentReadinessStatus) {
                 case READY:
                     stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
@@ -73,7 +81,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                     LOGGER.debug("Giving up for ExpName {}", experimentTrial.getExperimentName());
                     break;
             }
-            EMStatusUpdateHandler.updateCycleMetaDataStatus(cycleMetaData);
+            EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial, trialDetails, cycleMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
             //Submit to next task
@@ -114,7 +122,7 @@ public class DeploymentHandler implements EMHandlerInterface {
         LOGGER.debug("END DEPLOYING");
     }
 
-    public EMUtil.DeploymentReadinessStatus isDeploymentReady(ExperimentTrial experimentTrial) {
+    public EMUtil.DeploymentReadinessStatus isDeploymentReady(ExperimentTrial experimentTrial, TrialDetails trialDetails) {
         boolean running = false;
         try {
             for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.DEPLOYMENT_READINESS_THRESHOLD; j++) {
@@ -124,7 +132,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                 }
                 LOGGER.debug("Deployment for experiment - \"{}\" with trial number - \"{}\"  is not ready after {} checks, Will be checking after {} secs",
                         experimentTrial.getExperimentName(),
-                        experimentTrial.getTrialInfo().getTrialNum(),
+                        trialDetails.getTrailID(),
                         j + 1,
                         EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR));
                 // Will be replaced by a exponential looper mechanism

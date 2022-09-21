@@ -35,13 +35,13 @@ import java.util.stream.Collectors;
  */
 public class TrialInterfaceImpl implements TrialInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(TrialInterfaceImpl.class);
-    private final ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap;
+    private final ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap;
 
     private String errorMessage;
     private int httpResponseCode;
 
-    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> existingExperimentTrialMap) {
-        this.existingExperimentTrialMap = existingExperimentTrialMap;
+    public TrialInterfaceImpl(ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap) {
+        this.EMExperimentTrialMap = EMExperimentTrialMap;
     }
 
     /**
@@ -56,7 +56,7 @@ public class TrialInterfaceImpl implements TrialInterface {
         HashMap<String, HashMap<String, TrialDetails>> successTrialDetailsList = new HashMap<>();
         experimentTrialList.forEach(
                 (experimentTrial) -> {
-                    Object obj = this.existingExperimentTrialMap.get(experimentTrial.getExperimentName());
+                    Object obj = this.EMExperimentTrialMap.get(experimentTrial.getExperimentName());
                     if (obj == null)
                         successExperimentTrials.add(experimentTrial);
                     else {
@@ -89,23 +89,25 @@ public class TrialInterfaceImpl implements TrialInterface {
                     (expTrial) -> {
                         expTrial.setStatus(EMUtil.EMExpStatus.QUEUED);
                         ExperimentMetaData experimentMetaData = new ExperimentMetaData();
-                        experimentMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                        experimentMetaData.setCreationDate(new Timestamp(System.currentTimeMillis()));
                         expTrial.setExperimentMetaData(experimentMetaData);
-                        expTrial.getTrialDetails().forEach((trialNumber, trailDetails)->{
+                        expTrial.getTrialDetails().forEach((trialNumber, trailDetails) -> {
                             TrialMetaData trialMetaData = new TrialMetaData();
                             trialMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
-                            trialMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                            trialMetaData.setCreationDate(new Timestamp(System.currentTimeMillis()));
                             trailDetails.setTrialMetaData(trialMetaData);
+                            trailDetails.setTrailID(trialNumber);
                         });
-                        this.existingExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
+                        this.EMExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
                     }
             );
             successTrialDetailsList.forEach(
                     (expName, trialDetails) -> {
-                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.existingExperimentTrialMap.get(expName);
+                        ExperimentTrial existingExpTrial = (ExperimentTrial) this.EMExperimentTrialMap.get(expName);
                         trialDetails.forEach((trialNumber, trailDetails) -> {
+                            trailDetails.setTrailID(trialNumber);
                             TrialMetaData trialMetaData = new TrialMetaData();
-                            trialMetaData.setCreationDate( new Timestamp(System.currentTimeMillis()) );
+                            trialMetaData.setCreationDate(new Timestamp(System.currentTimeMillis()));
                             existingExpTrial.setStatus(EMUtil.EMExpStatus.QUEUED);
                             trialMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
                             trailDetails.setTrialMetaData(trialMetaData);
@@ -118,7 +120,7 @@ public class TrialInterfaceImpl implements TrialInterface {
 
     @Override
     public ExperimentDetailsMap<String, ExperimentTrial> listExperiments() {
-        return this.existingExperimentTrialMap;
+        return this.EMExperimentTrialMap;
     }
 
     @Override
