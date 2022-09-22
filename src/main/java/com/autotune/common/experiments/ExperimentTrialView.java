@@ -31,7 +31,7 @@ public class ExperimentTrialView {
     private Timestamp creationDate;
     private Timestamp beginTimeStamp;
     private Timestamp endTimeStamp;
-    private LinkedList<String> steps;
+    private transient LinkedList<String> steps;
     private LinkedHashMap<String, TrialMetaData> trialDetails;
 
     public EMUtil.EMExpStatus getStatus() {

@@ -18,8 +18,8 @@ package com.autotune.experimentManager.handler;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
+import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -42,14 +42,12 @@ public class PostResultsHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostResultsHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, CycleMetaData cycleMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
         try {
-            String cycleName = (cycleMetaData == null) ? "" : cycleMetaData.getCycleName();
-            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Cycle: {} - Iteration: {} - StepName: {}",
+            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
-                    cycleName,
-                    stepsMeatData.getIterationNumber(),
+                    iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName()
             );
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
@@ -70,14 +68,20 @@ public class PostResultsHandler implements EMHandlerInterface {
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            if (null != cycleMetaData) EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial,trialDetails,cycleMetaData);
+            if (null != iterationMetaData)
+                EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute PostResultsHandler step for Experiment name :{} due to: {}"
-                    , experimentTrial.getExperimentName(), e.getMessage());
+            LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+                    experimentTrial.getExperimentName(),
+                    trialDetails.getTrailID(),
+                    iterationMetaData.getIterationNumber(),
+                    stepsMeatData.getStepName(),
+                    e.getMessage()
+            );
         }
     }
 }

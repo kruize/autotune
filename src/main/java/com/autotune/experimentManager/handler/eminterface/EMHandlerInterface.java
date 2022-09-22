@@ -19,18 +19,18 @@ package com.autotune.experimentManager.handler.eminterface;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
+import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 
 import javax.servlet.ServletContext;
 
 /**
- *  Execute methode executes core business logic and submit a task to IterationManger to execute next task.
- *  DeploymentHandler , MetricCollectionHandler will
+ * Execute methode executes core business logic and submit a task to IterationManger to execute next task.
+ * DeploymentHandler , MetricCollectionHandler will
  */
 public interface EMHandlerInterface {
     void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails,
-                 CycleMetaData cycleMetaData,
+                 TrialIterationMetaData iterationMetaData,
                  StepsMetaData stepsMeatData,
                  AutotuneExecutor autotuneExecutor, ServletContext context);
 }

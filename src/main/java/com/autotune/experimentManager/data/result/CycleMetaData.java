@@ -18,7 +18,6 @@ package com.autotune.experimentManager.data.result;
 import com.autotune.experimentManager.utils.EMUtil;
 
 import java.util.Date;
-import java.util.LinkedHashMap;
 
 /**
  * Warmup and MeasurementCycle details like status and timestamp
@@ -27,7 +26,6 @@ public class CycleMetaData {
     private String cycleName;
     private Date beginTimestamp;
     private Date endTimestamp;
-    private LinkedHashMap<Integer, LinkedHashMap<String, StepsMetaData>> iterationWorkflow;
     private EMUtil.EMExpStatus status;
 
 
@@ -45,14 +43,6 @@ public class CycleMetaData {
 
     public void setEndTimestamp(Date endTimestamp) {
         this.endTimestamp = endTimestamp;
-    }
-
-    public LinkedHashMap<Integer, LinkedHashMap<String, StepsMetaData>> getIterationWorkflow() {
-        return iterationWorkflow;
-    }
-
-    public void setIterationWorkflow(LinkedHashMap<Integer, LinkedHashMap<String, StepsMetaData>> iterationWorkflow) {
-        this.iterationWorkflow = iterationWorkflow;
     }
 
     public EMUtil.EMExpStatus getStatus() {

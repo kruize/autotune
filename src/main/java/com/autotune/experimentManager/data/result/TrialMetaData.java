@@ -32,7 +32,7 @@ public class TrialMetaData {
     private Timestamp creationDate;
     private Date beginTimestamp;
     private Date endTimestamp;
-    private LinkedHashMap<String, CycleMetaData> cycles;
+    private LinkedHashMap<Integer, TrialIterationMetaData> iterations;
     private EMUtil.EMExpStatus status;
     private LinkedHashMap<String, StepsMetaData> trialWorkflow;
 
@@ -50,14 +50,6 @@ public class TrialMetaData {
 
     public void setEndTimestamp(Date endTimestamp) {
         this.endTimestamp = endTimestamp;
-    }
-
-    public LinkedHashMap<String, CycleMetaData> getCycles() {
-        return cycles;
-    }
-
-    public void setCycles(LinkedHashMap<String, CycleMetaData> cycles) {
-        this.cycles = cycles;
     }
 
     public Timestamp getCreationDate() {
@@ -84,5 +76,13 @@ public class TrialMetaData {
 
     public void setTrialWorkflow(LinkedHashMap<String, StepsMetaData> trialWorkflow) {
         this.trialWorkflow = trialWorkflow;
+    }
+
+    public LinkedHashMap<Integer, TrialIterationMetaData> getIterations() {
+        return iterations;
+    }
+
+    public void setIterations(LinkedHashMap<Integer, TrialIterationMetaData> iterations) {
+        this.iterations = iterations;
     }
 }

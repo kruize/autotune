@@ -21,8 +21,8 @@ import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
-import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
+import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
@@ -40,14 +40,12 @@ public class PostValidationHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostValidationHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, CycleMetaData cycleMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
         try {
-            String cycleName = (cycleMetaData == null) ? "" : cycleMetaData.getCycleName();
-            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Cycle: {} - Iteration: {} - StepName: {}",
+            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
-                    cycleName,
-                    stepsMeatData.getIterationNumber(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName()
             );
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
@@ -57,7 +55,7 @@ public class PostValidationHandler implements EMHandlerInterface {
              */
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial, trialDetails,cycleMetaData);
+            EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
             autotuneExecutor.submit(
@@ -72,8 +70,13 @@ public class PostValidationHandler implements EMHandlerInterface {
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute PostValidationHandler step for Experiment name :{} due to: {}"
-                    , experimentTrial.getExperimentName(), e.getMessage());
+            LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+                    experimentTrial.getExperimentName(),
+                    trialDetails.getTrailID(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
+                    stepsMeatData.getStepName(),
+                    e.getMessage()
+            );
         }
     }
 }

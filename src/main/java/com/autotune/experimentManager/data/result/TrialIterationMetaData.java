@@ -3,16 +3,14 @@ package com.autotune.experimentManager.data.result;
 import com.autotune.experimentManager.utils.EMUtil;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 
-/**
- * Holds workflow level details like Status and timestamp
- * Workflows are pre/post Validation, Deployment etc
- */
-public class StepsMetaData {
-    private String stepName;
+public class TrialIterationMetaData {
     private Date beginTimestamp;
     private Date endTimestamp;
     private EMUtil.EMExpStatus status;
+    private int iterationNumber;
+    private LinkedHashMap<String, StepsMetaData> workFlow;
 
     public Date getBeginTimestamp() {
         return beginTimestamp;
@@ -38,12 +36,19 @@ public class StepsMetaData {
         this.status = status;
     }
 
-    public String getStepName() {
-        return stepName;
+    public LinkedHashMap<String, StepsMetaData> getWorkFlow() {
+        return workFlow;
     }
 
-    public void setStepName(String stepName) {
-        this.stepName = stepName;
+    public void setWorkFlow(LinkedHashMap<String, StepsMetaData> workFlow) {
+        this.workFlow = workFlow;
     }
 
+    public int getIterationNumber() {
+        return iterationNumber;
+    }
+
+    public void setIterationNumber(int iterationNumber) {
+        this.iterationNumber = iterationNumber;
+    }
 }

@@ -20,37 +20,30 @@ import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
-import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
+import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
-import com.autotune.utils.HttpUtils;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.Timestamp;
-
-import static com.autotune.experimentManager.core.ExperimentTrialHandler.getDummyMetricJson;
 
 /**
  * Summarize the Metric collection results to find min,max,avg etc.
  */
 public class SummarizerHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(SummarizerHandler.class);
+
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, CycleMetaData cycleMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
         try {
-            String cycleName = (cycleMetaData == null) ? "" : cycleMetaData.getCycleName();
-            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Cycle: {} - Iteration: {} - StepName: {}",
+            LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
-                    cycleName,
-                    stepsMeatData.getIterationNumber(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName()
             );
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
@@ -61,8 +54,9 @@ public class SummarizerHandler implements EMHandlerInterface {
 
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            if (null != cycleMetaData) EMStatusUpdateHandler.updateCycleMetaDataStatus(experimentTrial, trialDetails,cycleMetaData);
-            EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial,trialDetails);
+            if (null != iterationMetaData)
+                EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
+            EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
             autotuneExecutor.submit(
                     new Runnable() {
@@ -76,8 +70,13 @@ public class SummarizerHandler implements EMHandlerInterface {
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute SummarizerHandler step for Experiment name :{} due to: {}"
-                    , experimentTrial.getExperimentName(), e.getMessage());
+            LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+                    experimentTrial.getExperimentName(),
+                    trialDetails.getTrailID(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
+                    stepsMeatData.getStepName(),
+                    e.getMessage()
+            );
         }
     }
 }

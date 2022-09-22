@@ -15,18 +15,26 @@
  *******************************************************************************/
 package com.autotune.common.parallelengine.worker;
 
-import com.autotune.experimentManager.workerimpl.IterationManager;
+import com.autotune.experimentManager.handler.eminterface.EMHandlerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
 
 /**
  * Returns WorkerImplementation class as per Class name declared.
  * Worker implementation must be declared here
  */
 public final class CallableFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMHandlerFactory.class);
 
-    public <T extends AutotuneWorker> AutotuneWorker create(Class<T> clazz) {
+    public <T extends AutotuneWorker> AutotuneWorker create(Class<T> classType) {
         AutotuneWorker toReturn = null;
-        if (IterationManager.class.equals(clazz)) {
-            toReturn = new IterationManager();
+        try {
+            Constructor<?> constructor = classType.getConstructor();
+            toReturn = (AutotuneWorker) constructor.newInstance();
+        } catch (Exception e) {
+            LOGGER.error("Factory class not updated for Handler : {} ", classType.getName());
         }
         return toReturn;
     }
