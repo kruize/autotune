@@ -61,11 +61,11 @@ public class DeploymentHandler implements EMHandlerInterface {
              * Implement DeploymentHandler Logic
              */
             this.kubernetesServices = (KubernetesServices) context.getAttribute(EMConstants.EMKeys.EM_KUBERNETES_SERVICE);
-            this.alreadyDeployedJustRestart = trialDetails.isAlreadyDeployedJustRestart();
+            this.alreadyDeployedJustRestart = iterationMetaData.isAlreadyDeployedJustRestart();
             this.nameSpace = experimentTrial.getResourceDetails().getNamespace();
             this.deploymentName = experimentTrial.getResourceDetails().getDeploymentName();
             this.containerConfigData = trialDetails.getConfigData();
-            initiateDeploy(trialDetails);
+            initiateDeploy(iterationMetaData);
             EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = isDeploymentReady(experimentTrial, trialDetails);
             switch (deploymentReadinessStatus) {
                 case READY:
@@ -105,13 +105,13 @@ public class DeploymentHandler implements EMHandlerInterface {
         }
     }
 
-    public void initiateDeploy(TrialDetails trialDetails) {
+    public void initiateDeploy(TrialIterationMetaData iterationMetaData) {
         LOGGER.debug("START DEPLOYING");
         try {
             if (!this.alreadyDeployedJustRestart) {
                 //Check here if deployment type is rolling-update   .withName(this.deploymentName)
                 this.kubernetesServices.startDeploying(this.nameSpace, this.deploymentName, this.containerConfigData);
-                trialDetails.setAlreadyDeployedJustRestart(true);
+                iterationMetaData.setAlreadyDeployedJustRestart(true);
             } else {
                 this.kubernetesServices.restartDeployment(this.nameSpace, this.deploymentName);
             }

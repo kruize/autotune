@@ -47,7 +47,7 @@ public class PostResultsHandler implements EMHandlerInterface {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
-                    iterationMetaData.getIterationNumber(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName()
             );
             stepsMeatData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
@@ -68,8 +68,7 @@ public class PostResultsHandler implements EMHandlerInterface {
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            if (null != iterationMetaData)
-                EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
+            if (null != iterationMetaData) EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
         } catch (Exception e) {
@@ -78,7 +77,7 @@ public class PostResultsHandler implements EMHandlerInterface {
             LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
-                    iterationMetaData.getIterationNumber(),
+                    (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName(),
                     e.getMessage()
             );

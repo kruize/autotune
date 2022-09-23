@@ -41,7 +41,7 @@ public class TrialDetails {
     private Timestamp endTime;
     // Status and Timestamp data
     private TrialMetaData trialMetaData;
-    private transient boolean alreadyDeployedJustRestart = false;
+
 
     public TrialDetails(String trailID,ContainerConfigData configData) {
         this.trailID = trailID;
@@ -120,14 +120,6 @@ public class TrialDetails {
 
     public void setTrialMetaData(TrialMetaData trialMetaData) {
         this.trialMetaData = trialMetaData;
-    }
-
-    public boolean isAlreadyDeployedJustRestart() {
-        return alreadyDeployedJustRestart;
-    }
-
-    public void setAlreadyDeployedJustRestart(boolean alreadyDeployedJustRestart) {
-        this.alreadyDeployedJustRestart = alreadyDeployedJustRestart;
     }
 
     public String getTrailID() {

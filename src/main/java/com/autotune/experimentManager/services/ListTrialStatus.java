@@ -19,6 +19,7 @@ package com.autotune.experimentManager.services;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.ExperimentTrialView;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
@@ -41,7 +42,7 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 
 /**
  * This class is the handler for the endpoint `listTrialStatus`
- *
+ * <p>
  * Returns the status for the requested trial id
  */
 public class ListTrialStatus extends HttpServlet {
@@ -67,6 +68,9 @@ public class ListTrialStatus extends HttpServlet {
         trial_num = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.TRIAL_NUM);
         // Extract Verbose option if exist
         String checkVerbose = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.VERBOSE);
+        // Extract Debug option if exist
+        String debug = req.getParameter(EMConstants.InputJsonKeys.ListTrialStatusKeys.DEBUG);
+
         if (null != checkVerbose && checkVerbose.equalsIgnoreCase("true")) {
             verbose = true;
         }
@@ -77,58 +81,70 @@ public class ListTrialStatus extends HttpServlet {
         PrintWriter out = resp.getWriter();
         JSONObject returnJson = new JSONObject();
 
-        if (null == experiment_name){
-            this.existingExperiments.forEach((expName,experimentTObj)->{
-                JSONObject trialJson = new JSONObject();
-            /*    ((ExperimentTrial) experimentTObj).getTrialDetails().forEach((trialNum,trialDetail)->{
-                    trialJson.put(trialNum,new JSONObject().put("STATUS" , "COMPLETED"));
-                });*/
-                returnJson.put((String) expName,experimentTObj);
+        if (null != debug) {
+            resp.setContentType(JSON_CONTENT_TYPE);
+            resp.setCharacterEncoding(CHARACTER_ENCODING);
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            HashMap<String, ExperimentTrialView> experimentTrialViews = new HashMap<>();
+            this.existingExperiments.forEach((expName, experimentObj) -> {
+                ExperimentTrial eObj = (ExperimentTrial) experimentObj;
+                ExperimentTrialView experimentTrialView = new ExperimentTrialView();
+                experimentTrialView.setStatus(eObj.getStatus());
+                experimentTrialView.setCreationDate(eObj.getExperimentMetaData().getCreationDate());
+                experimentTrialView.setBeginTimeStamp(eObj.getExperimentMetaData().getBeginTimestamp());
+                experimentTrialView.setEndTimeStamp(eObj.getExperimentMetaData().getEndTimestamp());
+                LinkedList<String> steps = new LinkedList<>();
+                steps.addAll(eObj.getExperimentMetaData().getAutoTuneWorkFlow().getIterationWorkflowMap().keySet());
+                experimentTrialView.setSteps(steps);
+                LinkedHashMap<String, TrialMetaData> trialMetaDataLinkedHashMap = new LinkedHashMap<>();
+                eObj.getTrialDetails().forEach((trialNum, trialDetails) -> {
+                    trialMetaDataLinkedHashMap.put(trialNum, trialDetails.getTrialMetaData());
+                });
+                experimentTrialView.setTrialDetails(trialMetaDataLinkedHashMap);
+                experimentTrialViews.put(eObj.getExperimentName(), experimentTrialView);
             });
-        }else{
-            ExperimentTrial et = (ExperimentTrial) this.existingExperiments.get(experiment_name);
-            if (null != et) {
-                JSONObject trialJson = new JSONObject();
-                if (null != trial_num){
-                    TrialDetails td = et.getTrialDetails().get(trial_num);
-                    if(null != td) {
-                        trialJson.put(trial_num, new JSONObject().put("STATUS", "COMPLETED"));
-                    }
-                }else {
-                    et.getTrialDetails().forEach((trialNum, trialDetail) -> {
-                        trialJson.put(trialNum, new JSONObject().put("STATUS", "COMPLETED"));
+            out = resp.getWriter();
+            out.append(
+                    new Gson().toJson(
+                            experimentTrialViews
+                    )
+            );
+        } else {
+            JSONObject responseJson = new JSONObject();
+            if (null == experiment_name && null == trial_num) {
+                this.existingExperiments.forEach((expName, experimentTObj) -> {
+                    ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
+                    responseJson.put((String) expName, new JSONObject().put("Status", eobj.getStatus()));
+                });
+            } else if (null != experiment_name && null != trial_num) {
+                String finalTrial_num = trial_num;
+                this.existingExperiments.forEach((expName, experimentTObj) -> {
+                    ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
+                    TrialDetails trialDetails = eobj.getTrialDetails().get(finalTrial_num);
+                    JSONObject trailDetailJsonObj = new JSONObject(new Gson().toJson(trialDetails));
+                    JSONObject dummyJson = ExperimentTrialHandler.getDummyMetricJson(eobj);
+                    trailDetailJsonObj.put("deployments", dummyJson.get("deployments"));
+                    trailDetailJsonObj.put("experiment_name", dummyJson.get("experiment_name"));
+                    trailDetailJsonObj.put("deployment_name", dummyJson.get("deployment_name"));
+                    responseJson.put(finalTrial_num, trailDetailJsonObj);
+
+                });
+            } else if (null != experiment_name) {
+                this.existingExperiments.forEach((expName, experimentTObj) -> {
+                    ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
+                    ((ExperimentTrial) experimentTObj).getTrialDetails().forEach((trialNum, trialDetail) -> {
+                        JSONObject trailDetailJsonObj = new JSONObject(new Gson().toJson(trialDetail));
+                        JSONObject dummyJson = ExperimentTrialHandler.getDummyMetricJson(eobj);
+                        trailDetailJsonObj.put("deployments", dummyJson.get("deployments"));
+                        trailDetailJsonObj.put("experiment_name", dummyJson.get("experiment_name"));
+                        trailDetailJsonObj.put("deployment_name", dummyJson.get("deployment_name"));
+                        responseJson.put(trialNum, trailDetailJsonObj);
                     });
-                }
-                returnJson.put(experiment_name,trialJson);
+                });
             }
+            out = resp.getWriter();
+            out.append(responseJson.toString());
         }
-        resp.setContentType(JSON_CONTENT_TYPE);
-        resp.setCharacterEncoding(CHARACTER_ENCODING);
-        resp.setStatus(HttpServletResponse.SC_CREATED);
-        HashMap<String,ExperimentTrialView> experimentTrialViews = new HashMap<>();
-        this.existingExperiments.forEach((expName,experimentObj)->{
-            ExperimentTrial eObj = (ExperimentTrial) experimentObj;
-            ExperimentTrialView experimentTrialView = new ExperimentTrialView();
-            experimentTrialView.setStatus(eObj.getStatus());
-            experimentTrialView.setCreationDate(eObj.getExperimentMetaData().getCreationDate());
-            experimentTrialView.setBeginTimeStamp(eObj.getExperimentMetaData().getBeginTimestamp());
-            experimentTrialView.setEndTimeStamp(eObj.getExperimentMetaData().getEndTimestamp());
-            LinkedList<String> steps=  new LinkedList<>();
-            steps.addAll(eObj.getExperimentMetaData().getAutoTuneWorkFlow().getIterationWorkflowMap().keySet());
-            experimentTrialView.setSteps(steps);
-            LinkedHashMap<String, TrialMetaData> trialMetaDataLinkedHashMap = new LinkedHashMap<>();
-            eObj.getTrialDetails().forEach((trialNum,trialDetails)->{
-                trialMetaDataLinkedHashMap.put(trialNum,trialDetails.getTrialMetaData());
-            });
-            experimentTrialView.setTrialDetails(trialMetaDataLinkedHashMap);
-            experimentTrialViews.put(eObj.getExperimentName(), experimentTrialView);
-        });
-        out = resp.getWriter();
-        out.append(
-                new Gson().toJson(
-                        experimentTrialViews
-                )
-        );
         out.flush();
     }
 

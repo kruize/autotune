@@ -11,6 +11,7 @@ public class TrialIterationMetaData {
     private EMUtil.EMExpStatus status;
     private int iterationNumber;
     private LinkedHashMap<String, StepsMetaData> workFlow;
+    private transient boolean alreadyDeployedJustRestart = false;
 
     public Date getBeginTimestamp() {
         return beginTimestamp;
@@ -50,5 +51,13 @@ public class TrialIterationMetaData {
 
     public void setIterationNumber(int iterationNumber) {
         this.iterationNumber = iterationNumber;
+    }
+
+    public boolean isAlreadyDeployedJustRestart() {
+        return alreadyDeployedJustRestart;
+    }
+
+    public void setAlreadyDeployedJustRestart(boolean alreadyDeployedJustRestart) {
+        this.alreadyDeployedJustRestart = alreadyDeployedJustRestart;
     }
 }

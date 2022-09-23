@@ -89,9 +89,10 @@ public class EMConstants {
 			public static final String ERROR = "error";
 			public static final String SUMMARY = "summary";
 			public static final String COMPLETE_STATUS = "completeStatus";
-			public static final String EXPERIMENT_NAME = "experiment_name";
+			public static final String EXPERIMENT_NAME = "exp_name";
 			public static final String TRIAL_NUM = "trial_num";
 			public static final String VERBOSE = "verbose";
+			public static final String DEBUG = "debug";
 		}
 
 		public static final class DeploymentKeys {
