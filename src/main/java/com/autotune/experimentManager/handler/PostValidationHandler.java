@@ -70,7 +70,7 @@ public class PostValidationHandler implements EMHandlerInterface {
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+            LOGGER.error("Failed to execute PostValidationHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrailID(),
                     (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
