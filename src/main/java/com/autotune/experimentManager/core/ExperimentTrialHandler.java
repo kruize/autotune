@@ -94,8 +94,8 @@ public class ExperimentTrialHandler {
         String containerName = "";
         HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
         Map.Entry<String,TrialDetails> entry = trialDetailsHashMap.entrySet().iterator().next();
-        imageName = entry.getValue().getConfigData().getContainerName();
-        containerName = entry.getValue().getConfigData().getStackName();
+        imageName = entry.getValue().getConfigData().getStackName();
+        containerName = entry.getValue().getConfigData().getContainerName();
         containers.put(new JSONObject().put(
                 "image_name", imageName
         ).put(
@@ -108,6 +108,8 @@ public class ExperimentTrialHandler {
                                 "summary_results", new JSONObject().put(
                                         "general_info", general_info
                                 )
+                        ).put(
+                                "datasource" ,"prometheus"
                         )
                 )
         ));

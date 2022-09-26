@@ -151,7 +151,7 @@ public class TrialHelpers {
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
-                deploymentSettings);
+                deploymentSettings,true,true,true);
 
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
@@ -216,7 +216,7 @@ public class TrialHelpers {
                 System.out.println("New Trial: tunable: " + tunableName + " No container metrics");
             }
         }
-        TrialDetails trialDetails = new TrialDetails(configData);
+        TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber),configData);
         trialDetails.setStartTime(Timestamp.from(Instant.now()));
         trialsMap.put(String.valueOf(trialNumber),trialDetails);
         String mode = null;
@@ -228,7 +228,7 @@ public class TrialHelpers {
                 experimentSettings,
                 trialsMap
         );
-
+        experimentTrial.setTrialResultURL(trialInfo.getTrialResultURL());
         return experimentTrial;
     }
 }

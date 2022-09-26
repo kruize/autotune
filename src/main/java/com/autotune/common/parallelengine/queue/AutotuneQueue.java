@@ -13,25 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.experimentManager.data;
+package com.autotune.common.parallelengine.queue;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.data.ExperimentDetailsMap;
+import java.util.Collection;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import java.util.List;
 
 /**
- * List of method to add/delete/get experiment detail.
+ * LinkedBlockingQueue is used to declare queues for various task like Experiment Queue, Analyser Queue etc.
+ * @param <E>
  */
-public interface TrialInterface {
-    // Add experiment trial object.
-    public void addExperiments(List<ExperimentTrial> experimentTrialList);
-    // List all experiments trial.
-    public ExperimentDetailsMap<String, ExperimentTrial> listExperiments();
-    // List all trial for given experiment.
-    // List status of experiments.
-    // Get error message.
-    public String getErrorMessage();
-    // Get HTTP Response code.
-    public int getHttpResponseCode();
+public class AutotuneQueue<E> extends LinkedBlockingQueue {
+    public AutotuneQueue() {
+        super();
+    }
+
+    public AutotuneQueue(int capacity) {
+        super(capacity);
+    }
+
+    public AutotuneQueue(Collection c) {
+        super(c);
+    }
+
+    @Override
+    public void put(Object o) throws InterruptedException {
+        super.put(o);
+    }
+
+    @Override
+    public Object take() throws InterruptedException {
+        return super.take();
+    }
 }

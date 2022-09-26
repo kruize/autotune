@@ -89,9 +89,10 @@ public class EMConstants {
 			public static final String ERROR = "error";
 			public static final String SUMMARY = "summary";
 			public static final String COMPLETE_STATUS = "completeStatus";
-			public static final String EXPERIMENT_NAME = "experiment_name";
+			public static final String EXPERIMENT_NAME = "exp_name";
 			public static final String TRIAL_NUM = "trial_num";
 			public static final String VERBOSE = "verbose";
+			public static final String DEBUG = "debug";
 		}
 
 		public static final class DeploymentKeys {
@@ -247,6 +248,34 @@ public class EMConstants {
 		private EMKeys() { }
 		public static final String EM_STORAGE_CONTEXT_KEY = "experimentDetailsMap";
 		public static final String EM_REGISTERED_DEPLOYMENTS = "registeredDeployments";
+		public static final String EM_KUBERNETES_SERVICE = "kubernetesService";
+	}
+
+	public static class ParallelEngineConfigs {
+		private ParallelEngineConfigs() { }
+		/**
+		 *  MAX Queue size to stack experiments
+		 */
+		public static int EM_QUEUE_SIZE = 20000;
+		/**
+		 * Core pool size is the minimum number of workers to keep alive
+		 */
+		public static int EM_CORE_POOL_SIZE = 100;
+		/**
+		 * Maximum number of workers limit
+		 */
+		public static int EM_MAX_POOL_SIZE = 1000;
+		/**
+		 * Timeout for idle threads waiting for work. Threads use this timeout when there are more than corePoolSize present or if allowCoreThreadTimeOut. Otherwise they wait forever for new work.
+		 */
+		public static int EM_CORE_POOL_KEEPALIVETIME_IN_SECS = 5;
+		/**
+		 * the time between successive executions
+		 */
+		public static int EM_DELAY_IN_SECS = 2;
+		public static String EM_EXECUTOR = "EM_EXECUTOR";
+
+
 	}
 }
 

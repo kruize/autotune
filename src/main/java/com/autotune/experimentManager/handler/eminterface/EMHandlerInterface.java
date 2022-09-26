@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.experimentManager.data;
+
+package com.autotune.experimentManager.handler.eminterface;
 
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.data.ExperimentDetailsMap;
+import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.experimentManager.data.result.StepsMetaData;
+import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 
-import java.util.List;
+import javax.servlet.ServletContext;
 
 /**
- * List of method to add/delete/get experiment detail.
+ * Execute methode executes core business logic and submit a task to IterationManger to execute next task.
+ * DeploymentHandler , MetricCollectionHandler will
  */
-public interface TrialInterface {
-    // Add experiment trial object.
-    public void addExperiments(List<ExperimentTrial> experimentTrialList);
-    // List all experiments trial.
-    public ExperimentDetailsMap<String, ExperimentTrial> listExperiments();
-    // List all trial for given experiment.
-    // List status of experiments.
-    // Get error message.
-    public String getErrorMessage();
-    // Get HTTP Response code.
-    public int getHttpResponseCode();
+public interface EMHandlerInterface {
+    void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails,
+                 TrialIterationMetaData iterationMetaData,
+                 StepsMetaData stepsMeatData,
+                 AutotuneExecutor autotuneExecutor, ServletContext context);
 }

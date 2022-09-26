@@ -15,33 +15,33 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class ErrorResponse {
-    private String errorMessage;
-    private String errorCode;
+public class AutotuneResponse {
+    private String message;
+    private int httpcode;
     private String documentationLink;
     private String status;
 
-    public ErrorResponse(String errorMessage, String errorCode, String documentationLink, String status) {
-        this.errorMessage = errorMessage;
-        this.errorCode = errorCode;
+    public AutotuneResponse(String message, int httpcode, String documentationLink, String status) {
+        this.message = message;
+        this.httpcode = httpcode;
         this.documentationLink = documentationLink;
         this.status = status;
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getMessage() {
+        return message;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getErrorCode() {
-        return errorCode;
+    public int getHttpcode() {
+        return httpcode;
     }
 
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
+    public void setHttpcode(int httpcode) {
+        this.httpcode = httpcode;
     }
 
     public String getDocumentationLink() {

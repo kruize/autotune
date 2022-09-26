@@ -15,11 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
 
 /**
  * A data util used to hold detailed information about trials.
@@ -30,15 +29,19 @@ public class TrialDetails {
      */
     @SerializedName("config")
     private ContainerConfigData configData ;
-
+    private String trialNumber;
     private String state;
     private String result;
     private String resultInfo;
     private String resultError;
     private Timestamp startTime;
     private Timestamp endTime;
+    // Status and Timestamp data
+    private TrialMetaData trialMetaData;
 
-    public TrialDetails(ContainerConfigData configData) {
+
+    public TrialDetails(String trialNumber, ContainerConfigData configData) {
+        this.trialNumber = trialNumber;
         this.configData = configData;
     }
 
@@ -106,6 +109,22 @@ public class TrialDetails {
 
     public ContainerConfigData getConfigData() {
         return configData;
+    }
+
+    public TrialMetaData getTrialMetaData() {
+        return trialMetaData;
+    }
+
+    public void setTrialMetaData(TrialMetaData trialMetaData) {
+        this.trialMetaData = trialMetaData;
+    }
+
+    public String getTrialNumber() {
+        return trialNumber;
+    }
+
+    public void setTrialNumber(String trialNumber) {
+        this.trialNumber = trialNumber;
     }
 
     @Override
