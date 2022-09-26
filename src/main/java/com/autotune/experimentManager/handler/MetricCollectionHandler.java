@@ -45,7 +45,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName()
             );
@@ -91,7 +91,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
             e.printStackTrace();
             LOGGER.error("Failed to execute MetricCollectionHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName(),
                     e.getMessage()

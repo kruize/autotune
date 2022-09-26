@@ -50,7 +50,7 @@ public class DeploymentHandler implements EMHandlerInterface {
     public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
         LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                 experimentTrial.getExperimentName(),
-                trialDetails.getTrailID(),
+                trialDetails.getTrialNumber(),
                 iterationMetaData.getIterationNumber(),
                 stepsMeatData.getStepName()
         );
@@ -97,7 +97,7 @@ public class DeploymentHandler implements EMHandlerInterface {
             e.printStackTrace();
             LOGGER.error("Failed to execute DeploymentHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName(),
                     e.getMessage()
@@ -133,7 +133,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                 }
                 LOGGER.debug("Deployment for experiment - \"{}\" with trial number - \"{}\"  is not ready after {} checks, Will be checking after {} secs",
                         experimentTrial.getExperimentName(),
-                        trialDetails.getTrailID(),
+                        trialDetails.getTrialNumber(),
                         j + 1,
                         EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR));
                 // Will be replaced by a exponential looper mechanism

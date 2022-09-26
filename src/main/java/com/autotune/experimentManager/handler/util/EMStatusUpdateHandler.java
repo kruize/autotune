@@ -54,11 +54,11 @@ public class EMStatusUpdateHandler {
         if (queuedCount.intValue() == total) {
             iterationMetaData.setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
             iterationMetaData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
-            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrailID(), iterationMetaData.getIterationNumber(), EMUtil.EMExpStatus.IN_PROGRESS);
+            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrialNumber(), iterationMetaData.getIterationNumber(), EMUtil.EMExpStatus.IN_PROGRESS);
         } else if (completedOrFailedCount.intValue() == total) {
             iterationMetaData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             iterationMetaData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrailID(), iterationMetaData.getIterationNumber(), EMUtil.EMExpStatus.COMPLETED);
+            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrialNumber(), iterationMetaData.getIterationNumber(), EMUtil.EMExpStatus.COMPLETED);
         }
     }
 
@@ -86,11 +86,11 @@ public class EMStatusUpdateHandler {
         if (queuedCount.intValue() == totalSteps) {
             trialDetails.getTrialMetaData().setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
-            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrailID(), EMUtil.EMExpStatus.IN_PROGRESS);
+            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrialNumber(), EMUtil.EMExpStatus.IN_PROGRESS);
         } else if (completedOrFailedCount.intValue() == totalSteps) {
             trialDetails.getTrialMetaData().setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.COMPLETED);
-            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrailID(), EMUtil.EMExpStatus.COMPLETED);
+            LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}-{}-{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), trialDetails.getTrialNumber(), EMUtil.EMExpStatus.COMPLETED);
         }
     }
 

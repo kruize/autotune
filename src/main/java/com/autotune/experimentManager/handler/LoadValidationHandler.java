@@ -43,7 +43,7 @@ public class LoadValidationHandler implements EMHandlerInterface {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName()
             );
@@ -71,7 +71,7 @@ public class LoadValidationHandler implements EMHandlerInterface {
             e.printStackTrace();
             LOGGER.error("Failed to execute LoadValidationHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),
                     stepsMeatData.getStepName(),
                     e.getMessage()

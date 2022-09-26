@@ -96,7 +96,7 @@ public class TrialInterfaceImpl implements TrialInterface {
                             trialMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
                             trialMetaData.setCreationDate(new Timestamp(System.currentTimeMillis()));
                             trailDetails.setTrialMetaData(trialMetaData);
-                            trailDetails.setTrailID(trialNumber);
+                            trailDetails.setTrialNumber(trialNumber);
                         });
                         this.EMExperimentTrialMap.put(expTrial.getExperimentName(), expTrial);
                     }
@@ -105,7 +105,7 @@ public class TrialInterfaceImpl implements TrialInterface {
                     (expName, trialDetails) -> {
                         ExperimentTrial existingExpTrial = (ExperimentTrial) this.EMExperimentTrialMap.get(expName);
                         trialDetails.forEach((trialNumber, trailDetails) -> {
-                            trailDetails.setTrailID(trialNumber);
+                            trailDetails.setTrialNumber(trialNumber);
                             TrialMetaData trialMetaData = new TrialMetaData();
                             trialMetaData.setCreationDate(new Timestamp(System.currentTimeMillis()));
                             existingExpTrial.setStatus(EMUtil.EMExpStatus.QUEUED);

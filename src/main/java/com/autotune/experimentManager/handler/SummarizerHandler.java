@@ -42,7 +42,7 @@ public class SummarizerHandler implements EMHandlerInterface {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName()
             );
@@ -71,7 +71,7 @@ public class SummarizerHandler implements EMHandlerInterface {
             e.printStackTrace();
             LOGGER.error("Failed to execute SummarizerHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
                     experimentTrial.getExperimentName(),
-                    trialDetails.getTrailID(),
+                    trialDetails.getTrialNumber(),
                     (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,
                     stepsMeatData.getStepName(),
                     e.getMessage()
