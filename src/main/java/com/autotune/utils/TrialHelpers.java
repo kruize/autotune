@@ -188,6 +188,7 @@ public class TrialHelpers {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
                 Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, ContainerConfigData.class);
                 method.invoke(inst, tunable, trialConfig, configData);
+                configData.setContainerName(applicationServiceStack.getContainerName());
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
