@@ -63,17 +63,16 @@ public class TrialHelpers {
      */
     public static String experimentTrialToJSON(ExperimentTrial experimentTrial) {
         Gson gsonObj = new GsonBuilder()
-                            .disableHtmlEscaping()
-                            .setPrettyPrinting()
-                            .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
-                            .create();
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                .create();
         String gsonStr = gsonObj.toJson(experimentTrial);
-        return "["+gsonStr+"]";
+        return "[" + gsonStr + "]";
     }
 
     /**
      * Update the results obtained from EM to the corresponding AutotuneExperiment object for further processing
-     *
      */
     public static void updateExperimentTrial(int trialNumber,
                                              AutotuneExperiment autotuneExperiment,
@@ -145,13 +144,13 @@ public class TrialHelpers {
 
         DatasourceInfo datasourceInfo = new DatasourceInfo(AutotuneDeploymentInfo.getMonitoringAgent(),
                 new URL(AutotuneDeploymentInfo.getMonitoringAgentEndpoint()));
-        HashMap<String,DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
-        datasourceInfoHashMap.put(AutotuneDeploymentInfo.getMonitoringAgent(),datasourceInfo);  //Change key value as per YAML input
+        HashMap<String, DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
+        datasourceInfoHashMap.put(AutotuneDeploymentInfo.getMonitoringAgent(), datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
-                deploymentSettings,true,true,true);
+                deploymentSettings, true, true, true);
 
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
@@ -163,9 +162,9 @@ public class TrialHelpers {
 
 
         String experimentName = appSearchSpace.getExperimentName();
-        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(),autotuneExperiment.getDeploymentName());
+        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(), autotuneExperiment.getDeploymentName());
         String experimentID = appSearchSpace.getExperimentId();
-        HashMap<String,TrialDetails> trialsMap = new HashMap<>();
+        HashMap<String, TrialDetails> trialsMap = new HashMap<>();
         ContainerConfigData configData = new ContainerConfigData();
         HashMap<String, Metric> podMetricsHashMap = new HashMap<>();
         HashMap<String, HashMap<String, Metric>> containerMetricsHashMap = new HashMap<>();
@@ -188,6 +187,7 @@ public class TrialHelpers {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
                 Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, ContainerConfigData.class);
                 method.invoke(inst, tunable, trialConfig, configData);
+                configData.setContainerName(applicationServiceStack.getContainerName());
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
@@ -207,18 +207,18 @@ public class TrialHelpers {
                         && containerMetricsHashMap.containsKey(applicationServiceStack.getContainerName())) {
                     containerMetricsHashMap.get(applicationServiceStack.getContainerName())
                             .put(queryMetric.getName(), queryMetric);
-                }else{
-                    HashMap<String,Metric> localMetricMap = new HashMap<>();
+                } else {
+                    HashMap<String, Metric> localMetricMap = new HashMap<>();
                     localMetricMap.put(queryMetric.getName(), queryMetric);
-                    containerMetricsHashMap.put(applicationServiceStack.getContainerName(),localMetricMap);
+                    containerMetricsHashMap.put(applicationServiceStack.getContainerName(), localMetricMap);
                 }
             } else {
                 System.out.println("New Trial: tunable: " + tunableName + " No container metrics");
             }
         }
-        TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber),configData);
+        TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber), configData);
         trialDetails.setStartTime(Timestamp.from(Instant.now()));
-        trialsMap.put(String.valueOf(trialNumber),trialDetails);
+        trialsMap.put(String.valueOf(trialNumber), trialDetails);
         String mode = null;
         String environment = null;
         ExperimentTrial experimentTrial = new ExperimentTrial(experimentName,
