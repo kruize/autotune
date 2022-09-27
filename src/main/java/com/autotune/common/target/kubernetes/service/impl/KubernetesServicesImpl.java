@@ -247,7 +247,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .withName(deploymentName)
                     .get();
         } catch (Exception e) {
-            new TargetHandlerException(e, "failed to get deployment with name: "+deploymentName+" under namespace: "+ namespace);
+            new TargetHandlerException(e, "failed to get deployment with name: " + deploymentName + " under namespace: " + namespace);
         }
         return deployment;
     }
@@ -365,7 +365,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .getContainers()   //TODO : Check for which container config should get applied
                     .forEach(
                             (deployedAppContainer) -> {
-                                if(deployedAppContainer.getName().equals(containerConfigData.getContainerName())) {
+                                if (deployedAppContainer.getName().equals(containerConfigData.getContainerName())) {
                                     ResourceRequirements resourceRequirements = deployedAppContainer.getResources();
                                     if (null != containerConfigData.getRequestPropertiesMap())
                                         resourceRequirements.setRequests(containerConfigData.getRequestPropertiesMap());
@@ -376,7 +376,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                                         deployedAppContainer.setEnv(containerConfigData.getEnvList());
                                     if (null != containerConfigData.getStackName())
                                         deployedAppContainer.setImage(containerConfigData.getStackName());
-                                }else {
+                                } else {
                                     foundErrorInConfig.set(true);
                                     return;
                                 }
@@ -502,7 +502,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deploymentReady = spec.getReplicas().intValue() == status.getReplicas() &&
                             spec.getReplicas().intValue() <= status.getAvailableReplicas();
                 }
-            }else {
+            } else {
                 throw new Exception("Deployment does not exist.");
             }
         } catch (Exception e) {
