@@ -187,6 +187,20 @@ public class AutotuneConstants {
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
     }
 
+    public static class TimeConv {
+        private TimeConv() { }
+        public static int NO_OF_SECONDS_PER_MINUTE = 60;
+        public static int NO_OF_MINUTES_PER_HOUR = 60;
+        public static int NO_OF_HOURS_PER_DAY = 12;
+    }
+
+    public static class Patterns {
+        private Patterns() { }
+        public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
+        public static String WHITESPACE_PATTERN = "\\s";
+        public static String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+    }
+
     public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
     public static final String MINIKUBE = "minikube";
     public static final String OPENSHIFT = "openshift";

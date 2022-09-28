@@ -4,9 +4,11 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialSettings;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.experimentManager.utils.EMConstants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class MetricsValidator {
     private static MetricsValidator metricsValidator = null;
@@ -21,7 +23,7 @@ public class MetricsValidator {
         return metricsValidator;
     }
 
-    public static CommonUtils.QueryValidity validateTrialMetrics(ExperimentTrial experimentTrial) {
+    public CommonUtils.QueryValidity validateTrialMetrics(ExperimentTrial experimentTrial) {
         HashMap<String, Metric> podMetrics = experimentTrial.getPodMetricsHashMap();
         for (Map.Entry<String, Metric> podMetricEntry : podMetrics.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
@@ -43,7 +45,7 @@ public class MetricsValidator {
                 if (CommonUtils.QueryValidity.VALID != validity) {
                     return validity;
                 }
-                validity = validatePodMetrics(containerMetric);
+                validity = validateContainerMetrics(containerMetric);
                 if (CommonUtils.QueryValidity.VALID != validity) {
                     return validity;
                 }
@@ -61,6 +63,25 @@ public class MetricsValidator {
     }
 
     private static CommonUtils.QueryValidity validateBaseMetricFeatures(Metric metric, TrialSettings trialSettings) {
+        String query = metric.getQuery();
+        if (null == query) {
+            return CommonUtils.QueryValidity.NULL_QUERY;
+        }
+        if (query.isEmpty()) {
+            return CommonUtils.QueryValidity.EMPTY_QUERY;
+        }
+        boolean timeRangeFound = CommonUtils.checkIfQueryHasTimeRange(query);
+        if (timeRangeFound) {
+            String timeContent = CommonUtils.extractTimeUnitFromQuery(query);
+            boolean checkTimeMatch = CommonUtils.checkTimeMatch(timeContent, trialSettings.getTrialMeasurementDuration());
+            if (checkTimeMatch) {
+                return CommonUtils.QueryValidity.VALID;
+            }
+            return CommonUtils.QueryValidity.INVALID_RANGE;
+        }
+        /**
+         * Need to check other possibilities but for now we return valid
+         */
         return CommonUtils.QueryValidity.VALID;
     }
 }
