@@ -80,4 +80,10 @@ public class CommonUtils {
          */
         NOT_RELIABLE,
     }
+
+    public enum QueryValidity {
+        VALID,
+        INVALID_PARAMS,
+        INVALID_RANGE,
+    }
 }
