@@ -14,6 +14,9 @@
       }
     },
     "settings": {
+      "do_experiment": true,
+      "do_monitoring": true,
+      "wait_for_load": true,
       "trial_settings": {
         "measurement_cycles": "3",
         "warmup_duration": "1min",

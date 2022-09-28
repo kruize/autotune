@@ -93,11 +93,11 @@ function validate_em_ab_workflow() {
        	do
 		sleep 5 
 		list_trial_status "${experiment_name}" "${trial_num}"
-		$(( counter++ ))
+		$((counter++))
 
 		if [ ${counter} == "3" ]; then
 			echo "Status of the experiment is not as expected (COMPLETED)!"
-			exit 1
+			break
 		fi
 	done
 

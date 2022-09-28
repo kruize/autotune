@@ -56,7 +56,12 @@ function form_em_curl_cmd {
 
 	# Form the curl command based on the cluster type
         case $cluster_type in
-           openshift) ;;
+           openshift)
+		NAMESPACE="openshift-tuning"
+		echo "NAMESPACE = ${NAMESPACE}"
+		SERVER_IP=$(${kubectl_cmd} get pods -l=app=autotune -o wide -n ${NAMESPACE} -o=custom-columns=NODE:.spec.nodeName --no-headers)
+                AUTOTUNE_PORT=$(oc -n ${NAMESPACE} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+	 	;;
            minikube)
 		NAMESPACE="monitoring"   
 		echo "NAMESPACE = ${NAMESPACE}"
@@ -68,11 +73,9 @@ function form_em_curl_cmd {
            *);;
         esac
 
-        if [ $cluster_type == "openshift" ]; then
-                em_curl_cmd="curl -s -H 'Content-Type: application/json' ${AUTOTUNE_URL}/${API}"
-        else
-                em_curl_cmd="curl -s -H 'Content-Type: application/json' ${AUTOTUNE_URL}:${AUTOTUNE_PORT}/${API}"
-        fi
+	AUTOTUNE_URL="http://${SERVER_IP}"
+	echo "AUTOTUNE_URL = $AUTOTUNE_URL"
+	em_curl_cmd="curl -s -H 'Content-Type: application/json' ${AUTOTUNE_URL}:${AUTOTUNE_PORT}/${API}"
 }
 
 function list_trial_status() {
@@ -132,6 +135,8 @@ function post_experiment_json() {
 	echo "" | tee -a "${LOG}"
 	echo "Command used to post the experiment result= ${em_curl_cmd}" | tee -a "${LOG}"
 	echo "" | tee -a "${LOG}"
+
+	# Add validation to check the status of the post experiment
 
 }
 
@@ -448,14 +453,13 @@ function validate_mean() {
         test_name=$1
 	echo "Validating mean values..."
 
-	echo "trial_metrics_value["mean"] = ${trial_metrics_value['"mean"']} 99p = ${trial_metrics_value['"99p"']}"
+	echo "trial_metrics_value["mean"] = ${trial_metrics_value['"mean"']}"
 	
-	if [ 1 -eq "$(echo "${trial_metrics_value['"mean"']} < ${trial_metrics_value['"99p"']}" | bc)" ]; then
-	#f (( echo "${trial_metrics_value['"mean"']} < ${trial_metrics_value['"99p"']}" | bc -l )); then
+	if [ 1 -eq "$(echo "${trial_metrics_value['"mean"']} > 0 " | bc)" ]; then
                 failed=0
         else
                 failed=1
-        	expected_behaviour="Mean has to be less than 99 percentile"
+        	expected_behaviour="Mean has to be greater than 0"
 	        display_result "${expected_behaviour}" ${test_name} ${failed}
         fi
 }

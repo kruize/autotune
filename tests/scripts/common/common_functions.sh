@@ -135,7 +135,7 @@ function setup() {
 			NAMESPACE="monitoring"
 			;;
 		openshift)
-			NAMESPACE="openshift-monitoring"
+			NAMESPACE="openshift-tuning"
 			;;
 	esac
 }
@@ -166,7 +166,7 @@ function deploy_autotune() {
 	fi
 	
 	echo "Deploying autotune"
-	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
+	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
 	# if both autotune image and configmap  is passed
