@@ -5,7 +5,7 @@
       "environment": "QA/PROD",
       "resource": {
         "namespace": "default",
-        "deployment_name": "tfb-qrh-sample"
+        "deployment_name": "tfb-qrh-sample-0"
       },
       "datasource_info": {
         "prometheus1": {
@@ -81,7 +81,7 @@
                 "additionalProperties": {}
               },
               "memory": {
-                "amount": "160.0",
+                "amount": "180",
                 "format": "",
                 "additionalProperties": {}
               }
@@ -93,7 +93,7 @@
                 "additionalProperties": {}
               },
               "memory": {
-                "amount": "160.0",
+                "amount": "180",
                 "format": "",
                 "additionalProperties": {}
               }

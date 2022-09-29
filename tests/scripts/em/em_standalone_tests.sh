@@ -28,6 +28,7 @@ TEST_DIR_="${CURRENT_DIR}/.."
 # Source the common functions scripts
 . ${EM_DIR}/constants/em_standalone_constants.sh
 . ${EM_DIR}/em_ab_test.sh
+. ${EM_DIR}/em_genperfexp_test.sh
 . ${EM_DIR}/../common/em_common_functions.sh
 
 # Tests to validate Experiment Manager standalone 
@@ -40,7 +41,7 @@ function em_standalone_tests() {
 	((TOTAL_TEST_SUITES++))
 
 
-	em_standalone_tests=("validate_em_ab_workflow")
+	em_standalone_tests=("validate_em_ab_workflow" "validate_em_genperfexp_test")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -51,12 +52,13 @@ function em_standalone_tests() {
 	echo ""
 	TEST_SUITE_DIR="${RESULTS}/em_standalone_tests"
 	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
+	AUTOTUNE_POD_LOG="${TEST_SUITE_DIR}/autotune_pod.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
 
 	# create the autotune setup
         echo "Setting up autotune..." | tee -a ${LOG}
-        setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
+        setup "${AUTOTUNE_POD_LOG}" >> ${AUTOTUNE_SETUP_LOG} 2>&1
         echo "Setting up autotune...Done" | tee -a ${LOG}
 
 

@@ -113,8 +113,9 @@ function update_yaml() {
 # Set up the autotune 
 # input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
 function setup() {
-	CONFIGMAP_DIR=$1
-	ignore_deployment_status_check=$2
+	AUTOTUNE_POD_LOG=$1
+	CONFIGMAP_DIR=$2
+	ignore_deployment_status_check=$3
 	
 	# remove the existing autotune objects
 	autotune_cleanup 
@@ -127,7 +128,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -156,6 +157,7 @@ function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
 	CONFIGMAP_DIR=$3
+	AUTOTUNE_POD_LOG=$4
 	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
@@ -187,6 +189,19 @@ function deploy_autotune() {
 		echo "Error deploying autotune" >>/dev/stderr
 		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
+	fi
+
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
+		sleep 2
+		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
+		namespace="openshift-tuning"
+		if [ ${cluster_type} == "minikube" ]; then
+			namespace="monitoring"
+		fi
+		echo "Namespace = $namespace"
+		autotune_pod=$(kubectl get pod -n ${namespace} | grep autotune | cut -d " " -f1)
+		echo "autotune_pod = $autotune_pod"
+		kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
 	fi
 
 	popd > /dev/null

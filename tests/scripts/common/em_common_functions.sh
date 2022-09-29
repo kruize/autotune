@@ -67,7 +67,6 @@ function form_em_curl_cmd {
 		echo "NAMESPACE = ${NAMESPACE}"
                 AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
                 SERVER_IP=$(minikube ip)
-                AUTOTUNE_URL="http://${SERVER_IP}"
 		;;
            docker) ;;
            *);;
@@ -131,6 +130,13 @@ function post_experiment_json() {
 
 	exp_status_json=$(${em_curl_cmd})
 	echo "Post experiment status = $exp_status_json"
+
+	if [ -z ${exp_status_json} ]; then
+		echo "Posting experiment failed"!
+		echo "Check the autotune pod log for details"
+		echo "RESULTSDIR - ${TEST_DIR}"
+		exit 1
+	fi
 
 	echo "" | tee -a "${LOG}"
 	echo "Command used to post the experiment result= ${em_curl_cmd}" | tee -a "${LOG}"
@@ -247,7 +253,7 @@ function get_expected_tunable_values() {
 
 	requests=$(cat ${input_json} | jq ''${config}'.requests')
 	echo "requests = $requests"
-	if [ ${requests} != null ]; then
+	if [ "${requests}" != null ]; then
 	        expected_tunable_values[mem_request]=$(cat ${input_json} | jq ''${config}'.requests.memory.amount')
 	        expected_tunable_values[cpu_request]=$(cat ${input_json} | jq ''${config}'.requests.cpu.amount')
 
@@ -264,7 +270,7 @@ function get_expected_tunable_values() {
 
 	limits=$(cat ${input_json} | jq ''${config}'.limits')
 	echo "limits = $limits"
-	if [ ${limits} != null ]; then
+	if [ "${limits}" != null ]; then
         	expected_tunable_values[mem_limit]=$(cat ${input_json} | jq ''${config}'.limits.memory.amount')
         	expected_tunable_values[cpu_limit]=$(cat ${input_json} | jq ''${config}'.limits.cpu.amount')
 
@@ -283,7 +289,7 @@ function get_expected_tunable_values() {
 
 	expected_env=$(cat ${input_json} | jq ''${config}'.env')
 	echo "expected_env = $expected_env"
-	if [ ${expected_env} != null ]; then
+	if [ "${expected_env}" != null ]; then
 		expected_tunable_no=$(cat ${input_json} | jq ${config}.env | jq '. | length')
 
 	        echo "expected env tunables count = ${expected_tunable_no}"
@@ -302,7 +308,7 @@ function get_actual_tunable_values() {
 	resources_=".spec.template.spec.containers[].resources"
 	requests=$(cat ${app_deploy_config} | jq ${resources_}.requests)
 	echo "requests = $requests"
-	if [ ${requests} != null ]; then
+	if [ "${requests}" != null ]; then
 		actual_tunable_values[mem_request]=$(cat ${app_deploy_config} | jq ${resources_}.requests.memory)
 		actual_tunable_values[cpu_request]=$(cat ${app_deploy_config} | jq ${resources_}.requests.cpu)
 		echo "Memory request = ${actual_tunable_values[mem_request]}"
@@ -312,7 +318,7 @@ function get_actual_tunable_values() {
 
 	limits=$(cat ${app_deploy_config} | jq ${resources_}.limits)
 	echo "limits = $limits"
-	if [ ${limits} != null ]; then
+	if [ "${limits}" != null ]; then
 		actual_tunable_values[mem_limit]=$(cat ${app_deploy_config} | jq ${resources_}.limits.memory)
 		actual_tunable_values[cpu_limit]=$(cat ${app_deploy_config} | jq ${resources_}.limits.cpu)
 		echo "Memory limit = ${actual_tunable_values[mem_limit]}"
@@ -320,13 +326,10 @@ function get_actual_tunable_values() {
 	fi
 
 	actual_env=$(cat ${app_deploy_config} | jq .spec.template.spec.containers[].env )
-	if [ ${actual_env} != null ]; then
+	if [ "${actual_env}" != null ]; then
 		actual_tunable_no="${#actual_env[@]}"
 
-		actual_tunable_no=$(cat ${actual_env} | jq '. | length')
-
 		actual_tunable_no=$(cat ${app_deploy_config} | jq .spec.template.spec.containers[].env | jq '. | length')
-	#	((actual_tunable_no=actual_tunable_no/2))
 
 		echo "actual env tunables count = ${actual_tunable_no}"
 		echo "actual env tunables = ${actual_env[@]}"
@@ -353,7 +356,6 @@ function validate_post_result() {
 
 function get_actual_trial_details() {
 	actual_trial_details[experiment_id]=$(cat ${input_json} | jq .[].experiment_id)
-#	actual_trial_details[application_name]=$(cat ${input_json} | jq .[].application_name)
 	actual_trial_details[trial_num]=$(cat ${input_json} | jq .[].trials[].trial_num)
 	actual_trial_details[trial_run]=$(cat ${input_json} | jq .[].trials[].trial_run)
 	actual_trial_details[trial_measurement_time]=$(cat ${input_json} | jq .[].trials[].trial_measurement_time)
@@ -541,7 +543,7 @@ function validate_deployment() {
 
 		# Validate container details
 		container_name=$(echo ${container} | jq '.container_name')
-		image_name=$(echo ${container} | jq '.image_name')
+		image_name=$(echo ${container} | jq '.image')
 
 		echo "container_name = ${container_name}"
 		echo "image_name = ${image_name}"
