@@ -47,7 +47,7 @@ spec:
                       type: object
                       properties:
                         name:
-                          description: 'name of the varialbe used in objective_function'
+                          description: 'name of the variable used in objective_function'
                           type: string
                         query:
                           description: 'query expression for respective datasource'
@@ -71,18 +71,22 @@ spec:
                 - function_variables
                 type: object
               mode:
-                description: 'provide an options to either try, show or apply the recommendation'
+                description: 'Mode for this experiment. Supported modes: experiment (default), monitor'
                 type: string
-                default: "show"
+                default: 'experiment'
+              targetCluster:
+                description: 'Target cluster where the experiments are performed. Supported targets: local (default), remote'
+                type: string
+                default: 'local'
               selector:
                 description: 'test'
                 type: object
                 properties:
                   matchLabel:
-                    description: 'match lable is may be the name of the applications where recommendation system apply'
+                    description: 'match label is may be the name of the applications where recommendation system apply'
                     type: string
                   matchLabelValue:
-                    description: 'match lable value'
+                    description: 'match label value'
                     type: string
                   matchRoute:
                     description: 'test'
@@ -94,7 +98,7 @@ spec:
                     description: 'test'
                     type: string
               datasource:
-                description: 'name of the applicaton which is going to monitor the cluster and
+                description: 'name of the application which is going to monitor the cluster and
                               provide the data e.g prometheus etc'
                 properties:
                   name:

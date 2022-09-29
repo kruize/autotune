@@ -337,6 +337,7 @@ public class AutotuneDeployment
 
 			String name;
 			String mode;
+			String targetCluster;
 			SloInfo sloInfo;
 			String namespace;
 			SelectorInfo selectorInfo;
@@ -352,7 +353,8 @@ public class AutotuneDeployment
 				sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
 				slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
 				direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
-				hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL);
+				hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
+						AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
 				objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
@@ -375,11 +377,6 @@ public class AutotuneDeployment
 						valueType);
 
 				metricArrayList.add(metric);
-			}
-
-			// If the user has not specified hpoAlgoImpl, we use the default one.
-			if (hpoAlgoImpl == null || hpoAlgoImpl.isEmpty()) {
-				hpoAlgoImpl = AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL;
 			}
 
 			sloInfo = new SloInfo(slo_class,
@@ -406,7 +403,10 @@ public class AutotuneDeployment
 					matchURI,
 					matchService);
 
-			mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE);
+			mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE,
+					AnalyzerConstants.AutotuneObjectConstants.DEFAULT_MODE);
+			targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
+					AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
 			name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 			namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
 
@@ -426,6 +426,7 @@ public class AutotuneDeployment
 			return new AutotuneObject(name,
 					namespace,
 					mode,
+					targetCluster,
 					sloInfo,
 					selectorInfo,
 					objectReference

@@ -33,16 +33,16 @@ public class AutoTuneWorkFlow {
     private final LinkedHashMap<String, String> iterationWorkflowMap;
     private final LinkedHashMap<String, String> trialWorkflowMap;
 
-    public AutoTuneWorkFlow(boolean do_experiments, boolean do_monitoring, boolean wait_for_load, String trialResultURL) throws Exception {
-        LOGGER.debug("Do_experiments : {} , Do_monitoring : {}", do_experiments, do_monitoring);
+    public AutoTuneWorkFlow(boolean do_experiment, boolean do_monitoring, boolean wait_for_load, String trialResultURL) throws Exception {
+        LOGGER.debug("Do_experiment : {} , Do_monitoring : {}", do_experiment, do_monitoring);
         this.wait_for_load = wait_for_load;
         iterationWorkflowMap = new LinkedHashMap<String, String>();
 
-        if (!do_experiments && !do_monitoring){
+        if (!do_experiment && !do_monitoring){
             throw new Exception("Workflow not defined");
         }
         iterationWorkflowMap.put(PreValidationHandler.class.getSimpleName().replace("Handler", ""), PreValidationHandler.class.getName());
-        if (do_experiments == true) {
+        if (do_experiment == true) {
             iterationWorkflowMap.put(DeploymentHandler.class.getSimpleName().replace("Handler", ""), DeploymentHandler.class.getName());
             iterationWorkflowMap.put(PostValidationHandler.class.getSimpleName().replace("Handler", ""), PostValidationHandler.class.getName());
         }

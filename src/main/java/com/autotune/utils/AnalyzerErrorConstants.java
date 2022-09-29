@@ -51,6 +51,7 @@ public class AnalyzerErrorConstants {
 		public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
 		public static final String MODE_NOT_SUPPORTED = "Autotune object mode not supported\n";
+		public static final String TARGET_CLUSTER_NOT_SUPPORTED = "Autotune object targetCluster not supported\n";
 		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm not supported\n";
 		public static final String INVALID_OBJECTIVE_FUNCTION = "objective_function improperly formatted\n";
 		public static final String OBJECTIVE_FUNCTION_MAP_MISSING = "objective_function_map is missing or empty\n";

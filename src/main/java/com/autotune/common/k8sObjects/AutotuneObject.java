@@ -33,6 +33,7 @@ public final class AutotuneObject
 	private final String experimentName;
 	private final String namespace;
 	private final String mode;
+	private final String targetCluster;
 	private final SloInfo sloInfo;
 	private final SelectorInfo selectorInfo;
 	private final ObjectReference objectReference;
@@ -40,6 +41,7 @@ public final class AutotuneObject
 	public AutotuneObject(String experimentName,
 						  String namespace,
 						  String mode,
+						  String targetCluster,
 						  SloInfo sloInfo,
 						  SelectorInfo selectorInfo,
 						  ObjectReference objectReference) throws InvalidValueException {
@@ -48,6 +50,7 @@ public final class AutotuneObject
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
+		map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
 		map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
@@ -56,6 +59,7 @@ public final class AutotuneObject
 			this.experimentName = experimentName;
 			this.namespace = namespace;
 			this.mode = mode;
+			this.targetCluster = targetCluster;
 			this.sloInfo = sloInfo;
 			this.selectorInfo = selectorInfo;
 			this.experimentId = Utils.generateID(toString());
@@ -81,6 +85,10 @@ public final class AutotuneObject
 		return mode;
 	}
 
+	public String getTargetCluster() {
+		return targetCluster;
+	}
+
 	public String getNamespace() {
 		return namespace;
 	}
@@ -99,7 +107,8 @@ public final class AutotuneObject
 				"name='" + experimentName + '\'' +
 				", namespace='" + namespace + '\'' +
 				", mode='" + mode + '\'' +
-				", sloInfo=" + sloInfo +
+				", targetCluster='" + targetCluster + '\'' +
+				", sloInfo=" + sloInfo + '\'' +
 				", selectorInfo=" + selectorInfo +
 				'}';
 	}

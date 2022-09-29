@@ -33,7 +33,10 @@ public class AutotuneSupportedTypes
 			new HashSet<>(Arrays.asList("prometheus"));
 
 	public static final Set<String> MODES_SUPPORTED =
-			new HashSet<>(Arrays.asList("show", "try", "apply"));
+			new HashSet<>(Arrays.asList("experiment", "monitor"));
+
+	public static final Set<String> TARGET_CLUSTERS_SUPPORTED =
+			new HashSet<>(Arrays.asList("local", "remote"));
 
 	public static final Set<String> PRESENCE_SUPPORTED =
 			new HashSet<>(Arrays.asList("always", "", null));
