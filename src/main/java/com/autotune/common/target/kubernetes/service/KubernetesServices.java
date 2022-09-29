@@ -86,5 +86,9 @@ public interface KubernetesServices {
     //Watch endpoints. Used to trigger events based on some action to kubernetes resources.
     void watchEndpoints(CustomResourceDefinitionContext crd);
 
+    //Check if deployment is ready
     public boolean isDeploymentReady(String namespace, String deploymentName);
+
+    //Check if pods is ready
+    public boolean isPodsReady(String namespace);
 }

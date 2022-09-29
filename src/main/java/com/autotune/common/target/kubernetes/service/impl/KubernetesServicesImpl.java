@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * KubernetesServicesImpl implements functions which are used to
@@ -500,7 +502,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deploymentReady = false;
                 } else {
                     deploymentReady = spec.getReplicas().intValue() == status.getReplicas() &&
-                            spec.getReplicas().intValue() <= status.getAvailableReplicas();
+                            spec.getReplicas().intValue() <= status.getAvailableReplicas() && isPodsReady(namespace);
                 }
             } else {
                 throw new Exception("Deployment does not exist.");
@@ -510,6 +512,33 @@ public class KubernetesServicesImpl implements KubernetesServices {
         }
         return deploymentReady;
     }
+
+    @Override
+    public boolean isPodsReady(String namespace) {   //ToDo :  filter pod list using deployment name
+            boolean ready = false;
+            int podsCount = -1 ;
+            AtomicInteger podsReadyCount = new AtomicInteger();
+            try {
+                Thread.sleep(1000*30);   //ToDO Pod status may change from running to failed and hence checking if this running after 30 seconds
+                List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
+                podsCount = list.stream().collect(Collectors.toList()).size() ;
+                list.forEach((p)->{
+                    PodStatus pStatus = p.getStatus();
+                    if (pStatus.getPhase().equalsIgnoreCase("running"))
+                        podsReadyCount.set(podsReadyCount.get() + 1);
+                });
+                if (podsCount == podsReadyCount.get()) {
+                    ready = true;
+                }
+            }catch (Exception e){
+                new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
+            }
+
+            LOGGER.debug("awaitPodReadinessOrFail {}/{}  {}",podsReadyCount.get(),podsCount,ready);
+            return  ready;
+
+    }
+
 
 
     /**
