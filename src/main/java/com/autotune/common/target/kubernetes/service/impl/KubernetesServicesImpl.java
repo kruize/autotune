@@ -502,7 +502,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deploymentReady = false;
                 } else {
                     deploymentReady = spec.getReplicas().intValue() == status.getReplicas() &&
-                            spec.getReplicas().intValue() <= status.getAvailableReplicas() && isPodsReady(namespace);
+                            spec.getReplicas().intValue() <= status.getAvailableReplicas() && isPodsRunningStatus(namespace,deploymentName);
                 }
             } else {
                 throw new Exception("Deployment does not exist.");
@@ -514,12 +514,12 @@ public class KubernetesServicesImpl implements KubernetesServices {
     }
 
     @Override
-    public boolean isPodsReady(String namespace) {   //ToDo :  filter pod list using deployment name
+    public boolean isPodsRunningStatus(String namespace,String deploymentName) {   //ToDo :  filter pod list using deployment name
             boolean ready = false;
             int podsCount = -1 ;
             AtomicInteger podsReadyCount = new AtomicInteger();
             try {
-                Thread.sleep(1000*30);   //ToDO Pod status may change from running to failed and hence checking if this running after 30 seconds
+                Thread.sleep(1000*10);   //ToDO Pod status may change from running to failed and hence checking if this running after 30 seconds
                 List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
                 podsCount = list.stream().collect(Collectors.toList()).size() ;
                 list.forEach((p)->{

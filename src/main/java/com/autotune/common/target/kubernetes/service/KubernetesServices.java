@@ -89,6 +89,6 @@ public interface KubernetesServices {
     //Check if deployment is ready
     public boolean isDeploymentReady(String namespace, String deploymentName);
 
-    //Check if pods is ready
-    public boolean isPodsReady(String namespace);
+    //Check if pods are running
+    public boolean isPodsRunningStatus(String namespace,String deploymentName);
 }
