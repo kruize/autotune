@@ -102,7 +102,6 @@ public class CommonUtils {
         Matcher matcher = pattern.matcher(workingstr);
         if (matcher.find()) {
             if (null != matcher.group(1)) {
-                System.out.println("match found, integer - " + Integer.parseInt(matcher.group(1)));
                 return Integer.parseInt(matcher.group(1));
             }
         }
@@ -122,7 +121,6 @@ public class CommonUtils {
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_LC_PLURAL)) {
-                    System.out.println("match found getTimeUnit seconds");
                     return TimeUnit.SECONDS;
                 }
                 if (trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.MINUTE_SINGLE_LC)
@@ -130,7 +128,6 @@ public class CommonUtils {
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.MINUTE_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.MINUTE_LC_PLURAL)) {
-                    System.out.println("match found getTimeUnit minutes");
                     return TimeUnit.MINUTES;
                 }
                 if (trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.HOUR_SINGLE_LC)
@@ -138,7 +135,6 @@ public class CommonUtils {
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.HOUR_SHORT_LC_PLURAL)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.HOUR_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.HOUR_LC_PLURAL)) {
-                    System.out.println("match found getTimeUnit hours");
                     return TimeUnit.HOURS;
                 }
             }

@@ -65,6 +65,7 @@ public class PreValidationHandler implements EMHandlerInterface {
                 /**
                  * Need to stop the experiment.
                  */
+                System.out.println("InValid metrics");
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);

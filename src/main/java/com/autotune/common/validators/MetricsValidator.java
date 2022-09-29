@@ -4,11 +4,9 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialSettings;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.experimentManager.utils.EMConstants;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class MetricsValidator {
     private static MetricsValidator metricsValidator = null;
