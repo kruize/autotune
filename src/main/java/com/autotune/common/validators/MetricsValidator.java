@@ -137,15 +137,15 @@ public class MetricsValidator {
             String timeContent = CommonUtils.extractTimeUnitFromQuery(query);
             // Check the time match and return VALID if match found
             boolean checkTimeMatch = CommonUtils.checkTimeMatch(timeContent, trialSettings.getTrialMeasurementDuration());
-            if (checkTimeMatch) {
-                return CommonUtils.QueryValidity.VALID;
+            if (!checkTimeMatch) {
+                LOGGER.error("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", metric.getName(), metric.getQuery());
+                return CommonUtils.QueryValidity.INVALID_RANGE;
             }
-            LOGGER.error("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", metric.getName(), metric.getQuery());
-            return CommonUtils.QueryValidity.INVALID_RANGE;
         }
         /**
          * Need to check other possibilities but for now we return valid
          */
+        LOGGER.debug("Metric - {} is valid", metric.getName());
         return CommonUtils.QueryValidity.VALID;
     }
 }
