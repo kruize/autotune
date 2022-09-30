@@ -136,7 +136,6 @@ public class CommonUtils {
         if (matcher.find()) {
             if (null != matcher.group(2).trim()) {
                 String trimmedDurationUnit = matcher.group(2).trim();
-                System.out.println(trimmedDurationUnit);
                 if (trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_SINGLE_LC)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_SHORT_LC_SINGULAR)
                         || trimmedDurationUnit.equalsIgnoreCase(AutotuneConstants.TimeUnitsExt.SECOND_SHORT_LC_PLURAL)
