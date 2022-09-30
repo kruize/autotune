@@ -20,6 +20,9 @@ import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.common.utils.CommonUtils;
+import com.autotune.common.validators.MetricsValidator;
+import com.autotune.common.validators.Validator;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
@@ -53,7 +56,17 @@ public class PreValidationHandler implements EMHandlerInterface {
             stepsMeatData.setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
             /**
              * Implement Prevalidation Logic
+             *
+             * Adding the input JSON check for query validity
              */
+            MetricsValidator metricsValidator = Validator.getMetricsValidator();
+            CommonUtils.QueryValidity validMetrics = metricsValidator.validateTrialMetrics(experimentTrial);
+            if (CommonUtils.QueryValidity.VALID != validMetrics) {
+                /**
+                 * Need to stop the experiment.
+                 */
+                LOGGER.error("Metrics are invalid, exiting the experiment gracefully");
+            }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
             EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
