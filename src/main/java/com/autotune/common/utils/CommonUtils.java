@@ -87,15 +87,30 @@ public class CommonUtils {
         NOT_RELIABLE,
     }
 
+    /**
+     * QueryValidity is an ENUM which holds the possible validity status to be
+     * returned after performing a query validation
+     */
     public enum QueryValidity {
+        // If the query check is done and the query is found to be valid
         VALID,
+        // If the query is found to be having invalid parameters
         INVALID_PARAMS,
+        // If the query is found to be having invalid time ranges
         INVALID_RANGE,
+        // If the query itself is found to be invalid
         INVALID_QUERY,
+        // If the query is empty
         EMPTY_QUERY,
+        // If the query is null
         NULL_QUERY
     }
 
+    /**
+     * Extracts the time value (digits) from a time string
+     * @param timestr
+     * @return
+     */
     public static int getTimeValue(String timestr) {
         String workingstr = timestr.replace(AutotuneConstants.Patterns.WHITESPACE_PATTERN, "");
         Pattern pattern = Pattern.compile(AutotuneConstants.Patterns.DURATION_PATTERN);
@@ -108,6 +123,12 @@ public class CommonUtils {
         return Integer.MIN_VALUE;
     }
 
+    /**
+     * Extracts the time units (time measurement units eg: seconds, minutes etc)
+     * from a time string
+     * @param timestr
+     * @return
+     */
     public static TimeUnit getTimeUnit(String timestr) {
         String workingstr = timestr.replace(AutotuneConstants.Patterns.WHITESPACE_PATTERN, "");
         Pattern pattern = Pattern.compile(AutotuneConstants.Patterns.DURATION_PATTERN);
@@ -142,6 +163,11 @@ public class CommonUtils {
         return null;
     }
 
+    /**
+     * Returns the short string representation of a time unit
+     * @param timeUnit
+     * @return
+     */
     public static String getShortRepOfTimeUnit(TimeUnit timeUnit) {
         if (timeUnit.equals(TimeUnit.HOURS))
             return AutotuneConstants.TimeUnitsExt.HOUR_SINGLE_LC;
@@ -153,6 +179,11 @@ public class CommonUtils {
     }
 
 
+    /**
+     * Converts the time unit to seconds
+     * @param unit
+     * @return
+     */
     public static int getTimeUnitInSeconds(TimeUnit unit) {
         if (unit.equals(TimeUnit.SECONDS)) {
             return 1;
@@ -165,6 +196,11 @@ public class CommonUtils {
         }
     }
 
+    /**
+     * Checks if the query has a time range
+     * @param query
+     * @return
+     */
     public static boolean checkIfQueryHasTimeRange(String query) {
         String workingstr = query.replace(AutotuneConstants.Patterns.WHITESPACE_PATTERN, "");
         Pattern pattern = Pattern.compile(AutotuneConstants.Patterns.QUERY_WITH_TIME_RANGE_PATTERN);
@@ -175,12 +211,23 @@ public class CommonUtils {
         return false;
     }
 
+    /**
+     * Extracts the time range from a query
+     * @param query
+     * @return
+     */
     public static String extractTimeUnitFromQuery(String query) {
         String timeContent = query.substring(query.lastIndexOf('[') + 1);
         timeContent = timeContent.substring(0, timeContent.indexOf(']'));
         return timeContent;
     }
 
+    /**
+     * Checks if two time strings represent same time
+     * @param timeStrOne
+     * @param timeStrTwo
+     * @return
+     */
     public static boolean checkTimeMatch(String timeStrOne, String timeStrTwo) {
         int timeStrOneTimeValue = CommonUtils.getTimeValue(timeStrOne);
         TimeUnit timeStrOneTimeUnit = CommonUtils.getTimeUnit(timeStrOne);
