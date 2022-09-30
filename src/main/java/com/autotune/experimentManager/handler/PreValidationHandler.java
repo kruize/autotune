@@ -65,7 +65,20 @@ public class PreValidationHandler implements EMHandlerInterface {
                 /**
                  * Need to stop the experiment.
                  */
-                LOGGER.debug("Invalid metrics");
+                if (CommonUtils.QueryValidity.EMPTY_QUERY == validMetrics) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metrics: Query is empty");
+                } else if (CommonUtils.QueryValidity.NULL_QUERY == validMetrics) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metrics: Query is null");
+                } else if (CommonUtils.QueryValidity.INVALID_QUERY == validMetrics) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metrics: Query is invalid as it doesn't form a expected query structure");
+                } else if (CommonUtils.QueryValidity.INVALID_RANGE == validMetrics) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metrics: Query is invalid as the time range in query doesn't match the trial cycle duration");
+                }
+
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
