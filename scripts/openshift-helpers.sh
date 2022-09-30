@@ -167,6 +167,7 @@ function openshift_terminate() {
 
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_RB_MANIFEST}
+	rm ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
 
 	echo
 	echo "Removing Autotune namespace"
