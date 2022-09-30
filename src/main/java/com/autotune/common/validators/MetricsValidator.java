@@ -19,6 +19,9 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialSettings;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.experimentManager.handler.PreValidationHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +30,7 @@ import java.util.Map;
  * Class which is responsible for all metrics related validations
  */
 public class MetricsValidator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetricsValidator.class);
     private static MetricsValidator metricsValidator = null;
 
     /**
@@ -60,6 +64,19 @@ public class MetricsValidator {
             Metric podMetric = podMetricEntry.getValue();
             CommonUtils.QueryValidity validity = validateBaseMetricFeatures(podMetric, experimentTrial.getExperimentSettings().getTrialSettings());
             if (CommonUtils.QueryValidity.VALID != validity) {
+                if (CommonUtils.QueryValidity.EMPTY_QUERY == validity) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metric - {} : Query - {} is empty", podMetric.getName(), podMetric.getQuery());
+                } else if (CommonUtils.QueryValidity.NULL_QUERY == validity) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metric - {} : Query - {} is null", podMetric.getName(), podMetric.getQuery());
+                } else if (CommonUtils.QueryValidity.INVALID_QUERY == validity) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as it doesn't form a expected query structure", podMetric.getName(), podMetric.getQuery());
+                } else if (CommonUtils.QueryValidity.INVALID_RANGE == validity) {
+                    // Need to provide exact query which failed
+                    LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", podMetric.getName(), podMetric.getQuery());
+                }
                 return validity;
             }
             validity = validatePodMetrics(podMetric);
@@ -74,6 +91,19 @@ public class MetricsValidator {
                 Metric containerMetric = containerMetricEntry.getValue();
                 CommonUtils.QueryValidity validity = validateBaseMetricFeatures(containerMetric, experimentTrial.getExperimentSettings().getTrialSettings());
                 if (CommonUtils.QueryValidity.VALID != validity) {
+                    if (CommonUtils.QueryValidity.EMPTY_QUERY == validity) {
+                        // Need to provide exact query which failed
+                        LOGGER.debug("Invalid Metric - {} : Query - {} is empty", containerMetric.getName(), containerMetric.getQuery());
+                    } else if (CommonUtils.QueryValidity.NULL_QUERY == validity) {
+                        // Need to provide exact query which failed
+                        LOGGER.debug("Invalid Metric - {} : Query - {} is null", containerMetric.getName(), containerMetric.getQuery());
+                    } else if (CommonUtils.QueryValidity.INVALID_QUERY == validity) {
+                        // Need to provide exact query which failed
+                        LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as it doesn't form a expected query structure", containerMetric.getName(), containerMetric.getQuery());
+                    } else if (CommonUtils.QueryValidity.INVALID_RANGE == validity) {
+                        // Need to provide exact query which failed
+                        LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", containerMetric.getName(), containerMetric.getQuery());
+                    }
                     return validity;
                 }
                 validity = validateContainerMetrics(containerMetric);
