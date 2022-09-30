@@ -64,19 +64,6 @@ public class MetricsValidator {
             Metric podMetric = podMetricEntry.getValue();
             CommonUtils.QueryValidity validity = validateBaseMetricFeatures(podMetric, experimentTrial.getExperimentSettings().getTrialSettings());
             if (CommonUtils.QueryValidity.VALID != validity) {
-                if (CommonUtils.QueryValidity.EMPTY_QUERY == validity) {
-                    // Need to provide exact query which failed
-                    LOGGER.debug("Invalid Metric - {} : Query - {} is empty", podMetric.getName(), podMetric.getQuery());
-                } else if (CommonUtils.QueryValidity.NULL_QUERY == validity) {
-                    // Need to provide exact query which failed
-                    LOGGER.debug("Invalid Metric - {} : Query - {} is null", podMetric.getName(), podMetric.getQuery());
-                } else if (CommonUtils.QueryValidity.INVALID_QUERY == validity) {
-                    // Need to provide exact query which failed
-                    LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as it doesn't form a expected query structure", podMetric.getName(), podMetric.getQuery());
-                } else if (CommonUtils.QueryValidity.INVALID_RANGE == validity) {
-                    // Need to provide exact query which failed
-                    LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", podMetric.getName(), podMetric.getQuery());
-                }
                 return validity;
             }
             validity = validatePodMetrics(podMetric);
@@ -91,19 +78,6 @@ public class MetricsValidator {
                 Metric containerMetric = containerMetricEntry.getValue();
                 CommonUtils.QueryValidity validity = validateBaseMetricFeatures(containerMetric, experimentTrial.getExperimentSettings().getTrialSettings());
                 if (CommonUtils.QueryValidity.VALID != validity) {
-                    if (CommonUtils.QueryValidity.EMPTY_QUERY == validity) {
-                        // Need to provide exact query which failed
-                        LOGGER.debug("Invalid Metric - {} : Query - {} is empty", containerMetric.getName(), containerMetric.getQuery());
-                    } else if (CommonUtils.QueryValidity.NULL_QUERY == validity) {
-                        // Need to provide exact query which failed
-                        LOGGER.debug("Invalid Metric - {} : Query - {} is null", containerMetric.getName(), containerMetric.getQuery());
-                    } else if (CommonUtils.QueryValidity.INVALID_QUERY == validity) {
-                        // Need to provide exact query which failed
-                        LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as it doesn't form a expected query structure", containerMetric.getName(), containerMetric.getQuery());
-                    } else if (CommonUtils.QueryValidity.INVALID_RANGE == validity) {
-                        // Need to provide exact query which failed
-                        LOGGER.debug("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", containerMetric.getName(), containerMetric.getQuery());
-                    }
                     return validity;
                 }
                 validity = validateContainerMetrics(containerMetric);
@@ -148,10 +122,12 @@ public class MetricsValidator {
         String query = metric.getQuery();
         // Check if query is null and return NULL QUERY as validity
         if (null == query) {
+            LOGGER.error("Invalid Metric - {} : Query - {} is null", metric.getName(), metric.getQuery());
             return CommonUtils.QueryValidity.NULL_QUERY;
         }
         // Check if query is empty and return EMPTY QUERY as validity
         if (query.isEmpty()) {
+            LOGGER.error("Invalid Metric - {} : Query - {} is empty", metric.getName(), metric.getQuery());
             return CommonUtils.QueryValidity.EMPTY_QUERY;
         }
         // Check if query has a time range
@@ -164,6 +140,7 @@ public class MetricsValidator {
             if (checkTimeMatch) {
                 return CommonUtils.QueryValidity.VALID;
             }
+            LOGGER.error("Invalid Metric - {} : Query - {} is invalid as the time range in query doesn't match the trial cycle duration", metric.getName(), metric.getQuery());
             return CommonUtils.QueryValidity.INVALID_RANGE;
         }
         /**
