@@ -20,6 +20,7 @@ import com.autotune.common.experiments.ContainerConfigData;
 import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.utils.ExponentialBackOff;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
@@ -491,6 +492,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     @Override
     public boolean isDeploymentReady(String namespace, String deploymentName) {
         boolean deploymentReady = false;
+
         try {
             Deployment existingDeployment = getDeploymentBy(namespace, deploymentName);
             if (existingDeployment != null) {
@@ -502,7 +504,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deploymentReady = false;
                 } else {
                     deploymentReady = spec.getReplicas().intValue() == status.getReplicas() &&
-                            spec.getReplicas().intValue() <= status.getAvailableReplicas() && isPodsRunningStatus(namespace,deploymentName);
+                            spec.getReplicas().intValue() <= status.getAvailableReplicas();
                 }
             } else {
                 throw new Exception("Deployment does not exist.");
@@ -514,12 +516,33 @@ public class KubernetesServicesImpl implements KubernetesServices {
     }
 
     @Override
-    public boolean isPodsRunningStatus(String namespace,String deploymentName) {   //ToDo :  filter pod list using deployment name
+    public boolean isDeploymentReady(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff) {
+        boolean deploymentReady = false;
+        try{
+            exponentialBackOff.waitBeforeFirstTry();
+            while (exponentialBackOff.shouldRetry()) {
+                deploymentReady = isDeploymentReady(namespace,deploymentName);
+                if(deploymentReady){
+                    LOGGER.debug("Deployment is ready with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                    exponentialBackOff.doNotRetry();
+                    break;
+                }else{
+                    LOGGER.debug("Deployment not yet ready with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                    exponentialBackOff.validateBackoff();
+                }
+            }
+        }catch (Exception e) {
+            new TargetHandlerException(e, "getDeploymentStatus failed!");
+        }
+        return deploymentReady;
+    }
+
+    @Override
+    public boolean arePodsRunning(String namespace, String deploymentName) {   //ToDo :  filter pod list using deployment name
             boolean ready = false;
             int podsCount = -1 ;
             AtomicInteger podsReadyCount = new AtomicInteger();
             try {
-                Thread.sleep(1000*10);   //ToDO Pod status may change from running to failed and hence checking if this running after 30 seconds
                 List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
                 podsCount = list.stream().collect(Collectors.toList()).size() ;
                 list.forEach((p)->{
@@ -533,13 +556,30 @@ public class KubernetesServicesImpl implements KubernetesServices {
             }catch (Exception e){
                 new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
             }
-
-            LOGGER.debug("awaitPodReadinessOrFail {}/{}  {}",podsReadyCount.get(),podsCount,ready);
             return  ready;
-
     }
 
-
+    @Override
+    public boolean arePodsRunning(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff) {
+        boolean running = false;
+        try{
+            exponentialBackOff.waitBeforeFirstTry();
+            while (exponentialBackOff.shouldRetry()) {
+                running = arePodsRunning(namespace,deploymentName);
+                if(running){
+                    LOGGER.debug("PODS are running with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                    exponentialBackOff.doNotRetry();
+                    break;
+                }else{
+                    LOGGER.debug("PODS are not yet running with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                    exponentialBackOff.validateBackoff();
+                }
+            }
+        }catch (Exception e){
+            new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
+        }
+        return running;
+    }
 
     /**
      * Close connection with Kubernetes.

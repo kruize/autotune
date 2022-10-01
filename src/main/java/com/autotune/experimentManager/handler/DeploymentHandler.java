@@ -23,6 +23,7 @@ import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.utils.ExponentialBackOff;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
@@ -66,18 +67,24 @@ public class DeploymentHandler implements EMHandlerInterface {
             this.deploymentName = experimentTrial.getResourceDetails().getDeploymentName();
             this.containerConfigData = trialDetails.getConfigData();
             initiateDeploy(iterationMetaData);
-            EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = isDeploymentReady(experimentTrial, trialDetails);
-            switch (deploymentReadinessStatus) {
-                case READY:
-                    stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
+            ExponentialBackOff exponentialBackOffForDeployment = ExponentialBackOff.Builder.newInstance().build();
+            boolean deploymentReady = kubernetesServices.isDeploymentReady(nameSpace,deploymentName,exponentialBackOffForDeployment);
+            if (deploymentReady) {
+                ExponentialBackOff exponentialBackOffForPods = ExponentialBackOff.Builder.newInstance()
+                        .setMaxElapsedTimeMillis(2 * 60 * 1000)
+                        .setInitialIntervalMillis(30 * 1000)                        // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
+                        .setRandomizationFactor(0.5)
+                        .build();
+                boolean podsRunning = kubernetesServices.arePodsRunning(nameSpace, deploymentName, exponentialBackOffForPods);
+                stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
+                if (podsRunning) {
                     stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-                    break;
-                case NOT_READY:
-                    // Gracefuly exit for this iteration
-                    stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
+                } else {
                     stepsMeatData.setStatus(EMUtil.EMExpStatus.FAILED);
-                    LOGGER.debug("Giving up for ExpName {}", experimentTrial.getExperimentName());
-                    break;
+                }
+            }else{
+                stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
+                stepsMeatData.setStatus(EMUtil.EMExpStatus.FAILED);
             }
             EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
