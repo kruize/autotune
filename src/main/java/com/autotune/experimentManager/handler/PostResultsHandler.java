@@ -56,6 +56,7 @@ public class PostResultsHandler implements EMHandlerInterface {
              * Implement PostResultsHandler Logic
              */
             JSONObject retJson = getDummyMetricJson(experimentTrial);
+            retJson.put("trialNumber",trialDetails.getTrialNumber());
             URL trial_result_url = null;
             if (null != experimentTrial.getExperimentSettings() && null != experimentTrial.getTrialResultURL()) {
                 try {
@@ -64,6 +65,7 @@ public class PostResultsHandler implements EMHandlerInterface {
                     e.printStackTrace();
                 }
                 LOGGER.debug("POST to URL. {}", trial_result_url);
+                LOGGER.debug(retJson.toString());
                 HttpUtils.postRequest(trial_result_url, retJson.toString());
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));

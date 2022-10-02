@@ -63,7 +63,8 @@ public class ListExperiments extends HttpServlet {
         // Read in the experiment name and the deployment name in the received JSON from EM
         String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
         JSONObject trialInfoJson = trialResultsJson.getJSONObject("info").getJSONObject("trial_info");
-        int trialNumber = trialInfoJson.getInt("trial_num");
+        //int trialNumber = trialInfoJson.getInt("trial_num");
+        String trialNumber = trialResultsJson.getString("trialNumber");
 
         JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
         for (Object deploymentObject : deploymentsJsonArray) {

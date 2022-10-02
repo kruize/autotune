@@ -68,13 +68,15 @@ public class DeploymentHandler implements EMHandlerInterface {
             this.containerConfigData = trialDetails.getConfigData();
             initiateDeploy(iterationMetaData);
             ExponentialBackOff exponentialBackOffForDeployment = ExponentialBackOff.Builder.newInstance().build();
+            LOGGER.debug("Check if deployment is ready");
             boolean deploymentReady = kubernetesServices.isDeploymentReady(nameSpace,deploymentName,exponentialBackOffForDeployment);
             if (deploymentReady) {
                 ExponentialBackOff exponentialBackOffForPods = ExponentialBackOff.Builder.newInstance()
                         .setMaxElapsedTimeMillis(2 * 60 * 1000)
-                        .setInitialIntervalMillis(30 * 1000)                        // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
+                        .setInitialIntervalMillis(10 * 1000)                        // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
                         .setRandomizationFactor(0.5)
                         .build();
+                LOGGER.debug("Check if pods are ready");
                 boolean podsRunning = kubernetesServices.arePodsRunning(nameSpace, deploymentName, exponentialBackOffForPods);
                 stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
                 if (podsRunning) {

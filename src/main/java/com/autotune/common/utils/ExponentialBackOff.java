@@ -45,8 +45,9 @@ public final class ExponentialBackOff {
     //  increases the back off period for each retry attempt using a randomization function that grows exponentially.
     private final double randomizationFactor;
     private int numberOfTriesLeft;
-    private long retryIntervalMillis;
-    private long totalRetryIntervalMillis = 0;
+    private double retryIntervalMillis;
+    private double randomizedIntervalMillis;
+    private double totalRetryIntervalMillis = 0;
 
 
     public ExponentialBackOff(Builder builder) {
@@ -78,8 +79,8 @@ public final class ExponentialBackOff {
         double origin = 1 - randomizationFactor;
         double bound = 1 + randomizationFactor;
         double rand = ThreadLocalRandom.current().nextDouble(origin, bound);
-        this.retryIntervalMillis = (long) (this.retryIntervalMillis * rand);
-        this.totalRetryIntervalMillis += this.retryIntervalMillis;
+        this.randomizedIntervalMillis = this.retryIntervalMillis * rand;
+        this.totalRetryIntervalMillis += this.randomizedIntervalMillis;
     }
 
     public void waitBeforeFirstTry() {
@@ -97,13 +98,13 @@ public final class ExponentialBackOff {
 
     private void waitUntilNextTry() {
         try {
-            Thread.sleep(this.retryIntervalMillis);
+            Thread.sleep((long) this.randomizedIntervalMillis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public long getRetryIntervalMillis() {
+    public double getRetryIntervalMillis() {
         return retryIntervalMillis;
     }
 
@@ -121,7 +122,7 @@ public final class ExponentialBackOff {
         return maxElapsedTimeMillis;
     }
 
-    public long getTotalRetryIntervalMillis() {
+    public double getTotalRetryIntervalMillis() {
         return totalRetryIntervalMillis;
     }
 
@@ -170,4 +171,5 @@ public final class ExponentialBackOff {
             return new ExponentialBackOff(this);
         }
     }
+
 }
