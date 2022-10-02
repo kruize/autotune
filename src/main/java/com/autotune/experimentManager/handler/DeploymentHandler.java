@@ -75,6 +75,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                         .setMaxElapsedTimeMillis(2 * 60 * 1000)
                         .setInitialIntervalMillis(10 * 1000)                        // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
                         .setRandomizationFactor(0.5)
+                        .setMultiplier(0.5)
                         .build();
                 LOGGER.debug("Check if pods are ready");
                 boolean podsRunning = kubernetesServices.arePodsRunning(nameSpace, deploymentName, exponentialBackOffForPods);

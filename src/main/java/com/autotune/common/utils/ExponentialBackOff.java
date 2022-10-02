@@ -35,6 +35,8 @@ public final class ExponentialBackOff {
     public static double defaultRandomizationFactor = 0.5;
     // Some task need initial sleep before proceedings . defaults to zero.
     public static long defaultInitialIntervalMillis = 0;
+    //  increases the back off period for each retry attempt using a randomization function that grows exponentially.
+    public static double defaultMultiplier = 0.5;
     // Set retry after backoff exhausted with MaxElapsedTimeMillis , default is set to zero that means no retries.
     private final int numberOfRetries;
     // Some task need initial sleep before proceedings .
@@ -45,9 +47,10 @@ public final class ExponentialBackOff {
     //  increases the back off period for each retry attempt using a randomization function that grows exponentially.
     private final double randomizationFactor;
     private int numberOfTriesLeft;
-    private double retryIntervalMillis;
-    private double randomizedIntervalMillis;
+    private long retryIntervalMillis;
+    private long randomizedIntervalMillis;
     private double totalRetryIntervalMillis = 0;
+    private final double multiplier;
 
 
     public ExponentialBackOff(Builder builder) {
@@ -57,6 +60,7 @@ public final class ExponentialBackOff {
         this.maxElapsedTimeMillis = (builder.maxElapsedTimeMillis > 0) ? builder.maxElapsedTimeMillis : defaultMaxElapsedTimeMillis;
         this.randomizationFactor = (builder.randomizationFactor > 0) ? builder.randomizationFactor : defaultRandomizationFactor;
         this.retryIntervalMillis = (builder.retryIntervalMillis > 0) ? builder.retryIntervalMillis : defaultTimeToWait;
+        this.multiplier = (builder.multiplier > 0) ? builder.multiplier : defaultMultiplier;
     }
 
     public boolean shouldRetry() {
@@ -79,7 +83,8 @@ public final class ExponentialBackOff {
         double origin = 1 - randomizationFactor;
         double bound = 1 + randomizationFactor;
         double rand = ThreadLocalRandom.current().nextDouble(origin, bound);
-        this.randomizedIntervalMillis = this.retryIntervalMillis * rand;
+        this.randomizedIntervalMillis = (long) (this.retryIntervalMillis * rand);
+        this.retryIntervalMillis = this.retryIntervalMillis +  Math.round(this.retryIntervalMillis * this.multiplier);
         this.totalRetryIntervalMillis += this.randomizedIntervalMillis;
     }
 
@@ -98,13 +103,13 @@ public final class ExponentialBackOff {
 
     private void waitUntilNextTry() {
         try {
-            Thread.sleep((long) this.randomizedIntervalMillis);
+            Thread.sleep(this.randomizedIntervalMillis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public double getRetryIntervalMillis() {
+    public long getRetryIntervalMillis() {
         return retryIntervalMillis;
     }
 
@@ -133,6 +138,7 @@ public final class ExponentialBackOff {
         private int maxElapsedTimeMillis;
         private double randomizationFactor;
         private long retryIntervalMillis;
+        public double multiplier;
 
         private Builder() {
         }
@@ -167,9 +173,15 @@ public final class ExponentialBackOff {
             return this;
         }
 
+        public Builder setMultiplier(double multiplier) {
+            this.multiplier = multiplier;
+            return this;
+        }
+
         public ExponentialBackOff build() {
             return new ExponentialBackOff(this);
         }
     }
+
 
 }
