@@ -65,7 +65,7 @@ public final class ExponentialBackOff {
 
     public boolean shouldRetry() {
         boolean shouldRetry = false;
-        if (this.totalRetryIntervalMillis <= this.maxElapsedTimeMillis)
+        if (Math.round(this.totalRetryIntervalMillis) < this.maxElapsedTimeMillis)
             shouldRetry = true;
         else if (numberOfRetries > 0) {
             if (numberOfTriesLeft > 0) {
@@ -86,6 +86,11 @@ public final class ExponentialBackOff {
         this.randomizedIntervalMillis = (long) (this.retryIntervalMillis * rand);
         this.retryIntervalMillis = this.retryIntervalMillis + Math.round(this.retryIntervalMillis * this.multiplier);
         this.totalRetryIntervalMillis += this.randomizedIntervalMillis;
+        if (this.totalRetryIntervalMillis > this.maxElapsedTimeMillis) {
+            this.totalRetryIntervalMillis -= this.randomizedIntervalMillis;
+            this.randomizedIntervalMillis = (long) (this.maxElapsedTimeMillis - this.totalRetryIntervalMillis);
+            this.totalRetryIntervalMillis += this.randomizedIntervalMillis;
+        }
     }
 
     public void waitBeforeFirstTry() {
