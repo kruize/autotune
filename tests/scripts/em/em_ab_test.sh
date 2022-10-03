@@ -29,7 +29,7 @@ function validate_em_ab_workflow() {
 	test_name_=${FUNCNAME}
 	input_json="${TEST_DIR_}/resources/em_input_json/ABTesting.json"
 
-	echo  "************** input json = ${input_json}"
+	echo  "EM input json = ${input_json}"
 
 	# Deploy the application with the specified number of instances	
 	echo "APP_REPO = ${APP_REPO}"
@@ -59,14 +59,10 @@ function validate_em_ab_workflow() {
 
 	# Validate the tunable values
 	trial_num="A"
-#	validate_tunable_values "${test_name_}" "${input_json}" "${trial_num}" "${deployment_name}"
-#	exit 0
 
 	# Obtain the status of the experiment
 	list_trial_status "${experiment_name}" "${trial_num}"
 	expected_exp_status="\"WAITING_FOR_LOAD\""
-
-#	timeout 120s bash -c 'while [ ${exp_status} != ${expected_exp_status} ]; do sleep 5;  list_trial_status "${experiment_name}";  done'
 
 	counter=1
 	while [ "${exp_status}" != "${expected_exp_status}" ]
