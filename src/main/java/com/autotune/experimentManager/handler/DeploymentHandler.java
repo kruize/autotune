@@ -69,11 +69,11 @@ public class DeploymentHandler implements EMHandlerInterface {
             initiateDeploy(iterationMetaData);
             ExponentialBackOff exponentialBackOffForDeployment = ExponentialBackOff.Builder.newInstance().build();
             LOGGER.debug("Check if deployment is ready");
-            boolean deploymentReady = kubernetesServices.isDeploymentReady(nameSpace,deploymentName,exponentialBackOffForDeployment);
+            boolean deploymentReady = kubernetesServices.isDeploymentReady(nameSpace, deploymentName, exponentialBackOffForDeployment);
             if (deploymentReady) {
                 ExponentialBackOff exponentialBackOffForPods = ExponentialBackOff.Builder.newInstance()
                         .setMaxElapsedTimeMillis(2 * 60 * 1000)
-                        .setInitialIntervalMillis(10 * 1000)                        // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
+                        .setInitialIntervalMillis(10 * 1000)             // TODO : this value should be driven from input json OR Capture application time UP From Dry run.
                         .setRandomizationFactor(0.5)
                         .setMultiplier(0.5)
                         .build();
@@ -85,7 +85,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                 } else {
                     stepsMeatData.setStatus(EMUtil.EMExpStatus.FAILED);
                 }
-            }else{
+            } else {
                 stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
                 stepsMeatData.setStatus(EMUtil.EMExpStatus.FAILED);
             }
@@ -133,30 +133,5 @@ public class DeploymentHandler implements EMHandlerInterface {
         LOGGER.debug("END DEPLOYING");
     }
 
-    public EMUtil.DeploymentReadinessStatus isDeploymentReady(ExperimentTrial experimentTrial, TrialDetails trialDetails) {
-        boolean running = false;
-        try {
-            for (int j = 0; j < EMConstants.StandardDefaults.BackOffThresholds.DEPLOYMENT_READINESS_THRESHOLD; j++) {
-                running = this.kubernetesServices.isDeploymentReady(this.nameSpace, this.deploymentName);
-                if (true == running) {
-                    return EMUtil.DeploymentReadinessStatus.READY;
-                }
-                LOGGER.debug("Deployment for experiment - \"{}\" with trial number - \"{}\"  is not ready after {} checks, Will be checking after {} secs",
-                        experimentTrial.getExperimentName(),
-                        trialDetails.getTrialNumber(),
-                        j + 1,
-                        EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR));
-                // Will be replaced by a exponential looper mechanism
-                Thread.sleep(EMUtil.timeToSleep(j, EMUtil.ThresholdIntervalType.LINEAR) * 1000);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.toString());
-            LOGGER.error(e.getMessage(), e.getStackTrace().toString());
-            e.printStackTrace();
-        }
-        if (true == running) {
-            return EMUtil.DeploymentReadinessStatus.READY;
-        }
-        return EMUtil.DeploymentReadinessStatus.NOT_READY;
-    }
 }
+

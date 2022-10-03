@@ -49,7 +49,6 @@ public class EMStatusUpdateHandler {
                 completedOrFailedCount.set(completedOrFailedCount.get() + 1);
             }
         });
-
         int total = iterationMetaData.getWorkFlow().size();
         if (queuedCount.intValue() == total) {
             iterationMetaData.setBeginTimestamp(new Timestamp(System.currentTimeMillis()));

@@ -53,6 +53,18 @@ public class KubernetesServicesImpl implements KubernetesServices {
         initialize();
     }
 
+    public static void main(String[] args) {
+        System.out.println("Starting");
+        String namespace = "default";
+        KubernetesClient kubernetesClient = new DefaultKubernetesClient();
+        List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
+        list.forEach((pods) -> {
+            System.out.println(pods.getMetadata().getName() + "---" + pods.getStatus().toString());
+            System.out.println(pods.getStatus().getPhase());
+        });
+
+    }
+
     /**
      * kubernetesClient client connection established inside cluster itself
      */
@@ -518,20 +530,20 @@ public class KubernetesServicesImpl implements KubernetesServices {
     @Override
     public boolean isDeploymentReady(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff) {
         boolean deploymentReady = false;
-        try{
+        try {
             exponentialBackOff.waitBeforeFirstTry();
             while (exponentialBackOff.shouldRetry()) {
-                deploymentReady = isDeploymentReady(namespace,deploymentName);
-                if(deploymentReady){
-                    LOGGER.debug("Deployment is ready with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                deploymentReady = isDeploymentReady(namespace, deploymentName);
+                if (deploymentReady) {
+                    LOGGER.debug("Deployment is ready with in {}Millis / {}Millis", exponentialBackOff.getTotalRetryIntervalMillis(), exponentialBackOff.getMaxElapsedTimeMillis());
                     exponentialBackOff.doNotRetry();
                     break;
-                }else{
-                    LOGGER.debug("Deployment not yet ready with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                } else {
+                    LOGGER.debug("Deployment not yet ready with in {}Millis / {}Millis", exponentialBackOff.getTotalRetryIntervalMillis(), exponentialBackOff.getMaxElapsedTimeMillis());
                     exponentialBackOff.validateBackoff();
                 }
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             new TargetHandlerException(e, "getDeploymentStatus failed!");
         }
         return deploymentReady;
@@ -539,43 +551,43 @@ public class KubernetesServicesImpl implements KubernetesServices {
 
     @Override
     public boolean arePodsRunning(String namespace, String deploymentName) {   //ToDo :  filter pod list using deployment name
-            boolean ready = false;
-            int podsCount = -1 ;
-            AtomicInteger podsReadyCount = new AtomicInteger();
-            try {
-                List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
-                podsCount = list.stream().collect(Collectors.toList()).size() ;
-                list.forEach((p)->{
-                    PodStatus pStatus = p.getStatus();
-                    if (pStatus.getPhase().equalsIgnoreCase("running"))
-                        podsReadyCount.set(podsReadyCount.get() + 1);
-                });
-                if (podsCount == podsReadyCount.get()) {
-                    ready = true;
-                }
-            }catch (Exception e){
-                new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
+        boolean ready = false;
+        int podsCount = -1;
+        AtomicInteger podsReadyCount = new AtomicInteger();
+        try {
+            List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
+            podsCount = list.stream().collect(Collectors.toList()).size();
+            list.forEach((p) -> {
+                PodStatus pStatus = p.getStatus();
+                if (pStatus.getPhase().equalsIgnoreCase("running"))
+                    podsReadyCount.set(podsReadyCount.get() + 1);
+            });
+            if (podsCount == podsReadyCount.get()) {
+                ready = true;
             }
-            return  ready;
+        } catch (Exception e) {
+            new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
+        }
+        return ready;
     }
 
     @Override
     public boolean arePodsRunning(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff) {
         boolean running = false;
-        try{
+        try {
             exponentialBackOff.waitBeforeFirstTry();
             while (exponentialBackOff.shouldRetry()) {
-                running = arePodsRunning(namespace,deploymentName);
-                if(running){
-                    LOGGER.debug("PODS are running with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                running = arePodsRunning(namespace, deploymentName);
+                if (running) {
+                    LOGGER.debug("PODS are running with in {}Millis / {}Millis", exponentialBackOff.getTotalRetryIntervalMillis(), exponentialBackOff.getMaxElapsedTimeMillis());
                     exponentialBackOff.doNotRetry();
                     break;
-                }else{
-                    LOGGER.debug("PODS are not yet running with in {}Millis / {}Millis",exponentialBackOff.getTotalRetryIntervalMillis(),exponentialBackOff.getMaxElapsedTimeMillis());
+                } else {
+                    LOGGER.debug("PODS are not yet running with in {}Millis / {}Millis", exponentialBackOff.getTotalRetryIntervalMillis(), exponentialBackOff.getMaxElapsedTimeMillis());
                     exponentialBackOff.validateBackoff();
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             new TargetHandlerException(e, "awaitPodReadinessOrFail failed!");
         }
         return running;
@@ -596,18 +608,6 @@ public class KubernetesServicesImpl implements KubernetesServices {
             new TargetHandlerException(e, "shutdownClient failed!");
         }
         return closed;
-    }
-
-    public static void main(String[] args){
-        System.out.println("Starting");
-        String namespace = "default";
-        KubernetesClient kubernetesClient = new DefaultKubernetesClient();
-        List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
-        list.forEach((pods) -> {
-            System.out.println(pods.getMetadata().getName() + "---" + pods.getStatus().toString());
-            System.out.println(pods.getStatus().getPhase());
-        });
-
     }
 
 }

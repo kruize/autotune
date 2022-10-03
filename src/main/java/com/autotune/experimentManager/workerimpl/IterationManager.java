@@ -195,7 +195,6 @@ public class IterationManager implements AutotuneWorker {
             LOGGER.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Name:{}-Status:{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", experimentTrial.getExperimentName(), EMUtil.EMExpStatus.IN_PROGRESS);
             if (null == experimentTrial.getExperimentMetaData().getBeginTimestamp())
                 experimentTrial.getExperimentMetaData().setBeginTimestamp(new Timestamp(System.currentTimeMillis()));
-
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             experimentTrial.setStatus(EMUtil.EMExpStatus.FAILED);
