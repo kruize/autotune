@@ -77,6 +77,16 @@ function form_em_curl_cmd {
 	em_curl_cmd="curl -s -H 'Content-Type: application/json' ${AUTOTUNE_URL}:${AUTOTUNE_PORT}/${API}"
 }
 
+function list_trial_status_summary() {
+        echo "Forming the curl command to list the status of the experiment..."
+        form_em_curl_cmd "listTrialStatus"
+
+        cmd="${em_curl_cmd}"
+
+        exp_status_json=$(${cmd})
+        echo "$exp_status_json" > "${TEST_DIR}/trialSummary.log"
+}
+
 function list_trial_status() {
 	experiment_name=$1
 	trial_num=$2
