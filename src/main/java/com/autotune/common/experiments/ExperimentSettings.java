@@ -45,17 +45,21 @@ public class ExperimentSettings {
     private final TrialSettings trialSettings;
     @SerializedName("deployment_settings")
     private final DeploymentSettings deploymentSettings;
-    @SerializedName("do_experiments")
-    private final boolean do_experiments;
+    @SerializedName("do_experiment")
+    private final boolean do_experiment;
     @SerializedName("do_monitoring")
     private final boolean do_monitoring;
     @SerializedName("wait_for_load")
     private final boolean wait_for_load;
 
-    public ExperimentSettings(TrialSettings trialSettings, DeploymentSettings deploymentSettings, boolean do_experiments, boolean do_monitoring, boolean wait_for_load) {
+    public ExperimentSettings(TrialSettings trialSettings,
+                              DeploymentSettings deploymentSettings,
+                              boolean do_experiment,
+                              boolean do_monitoring,
+                              boolean wait_for_load) {
         this.trialSettings = trialSettings;
         this.deploymentSettings = deploymentSettings;
-        this.do_experiments = do_experiments;
+        this.do_experiment = do_experiment;
         this.do_monitoring = do_monitoring;
         this.wait_for_load = wait_for_load;
     }
@@ -68,8 +72,8 @@ public class ExperimentSettings {
         return deploymentSettings;
     }
 
-    public boolean isDo_experiments() {
-        return do_experiments;
+    public boolean isDo_experiment() {
+        return do_experiment;
     }
 
     public boolean isDo_monitoring() {

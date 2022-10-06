@@ -40,13 +40,6 @@ public class ExperimentTrial {
     @SerializedName("mode")
     private final String mode;
     /**
-     * Environment is used to indicate QA or PROD
-     * By default PRODUCTION environed doest not wait for load to applied
-     * Whereas in QA environment EM waits for USER to apply load.
-     */
-    @SerializedName("environment")
-    private final String environment;
-    /**
      * Namespace and Deployment Name will be mentioned here.
      */
     @SerializedName("resource")
@@ -127,13 +120,16 @@ public class ExperimentTrial {
     private ExperimentMetaData experimentMetaData;
 
     public ExperimentTrial(String experimentName,
-                           String mode, String environment, ResourceDetails resourceDetails, String experimentId,
-                           HashMap<String, Metric> podMetricsHashMap, HashMap<String, HashMap<String, Metric>> containerMetricsHashMap, TrialInfo trialInfo,
+                           String mode,
+                           ResourceDetails resourceDetails,
+                           String experimentId,
+                           HashMap<String, Metric> podMetricsHashMap,
+                           HashMap<String, HashMap<String, Metric>> containerMetricsHashMap,
+                           TrialInfo trialInfo,
                            HashMap<String, DatasourceInfo> datasourceInfoHashMap,
                            ExperimentSettings experimentSettings,
                            HashMap<String, TrialDetails> trialDetails) {
         this.mode = mode;
-        this.environment = environment;
         this.resourceDetails = resourceDetails;
         this.experimentId = experimentId;
         this.experimentName = experimentName;
@@ -209,10 +205,6 @@ public class ExperimentTrial {
         return mode;
     }
 
-    public String getEnvironment() {
-        return environment;
-    }
-
     public HashMap<EMUtil.EMFlowFlags, Boolean> getFlagsMap() {
         if (!this.flagInitCheck) {
             this.initialiseFlags();
@@ -237,25 +229,6 @@ public class ExperimentTrial {
         this.status = status;
     }
 
-    @Override
-    public String toString() {
-        return "ExperimentTrial{" +
-                "experimentName='" + experimentName + '\'' +
-                ", mode='" + mode + '\'' +
-                ", environment='" + environment + '\'' +
-                ", resourceDetails=" + resourceDetails +
-                ", experimentId='" + experimentId + '\'' +
-                ", podMetricsHashMap=" + podMetricsHashMap +
-                ", containerMetricsHashMap=" + containerMetricsHashMap +
-                ", trialDetails=" + trialDetails +
-                ", trialInfo=" + trialInfo +
-                ", datasourceInfoHashMap=" + datasourceInfoHashMap +
-                ", experimentSettings=" + experimentSettings +
-                '}';
-    }
-
-
-
     public ExperimentMetaData getExperimentMetaData() {
         return experimentMetaData;
     }
@@ -271,7 +244,20 @@ public class ExperimentTrial {
     public void setTrialResultURL(String trialResultURL) {
         this.trialResultURL = trialResultURL;
     }
+
+    @Override
+    public String toString() {
+        return "ExperimentTrial{" +
+                "experimentName='" + experimentName + '\'' +
+                ", mode='" + mode + '\'' +
+                ", resourceDetails=" + resourceDetails +
+                ", experimentId='" + experimentId + '\'' +
+                ", podMetricsHashMap=" + podMetricsHashMap +
+                ", containerMetricsHashMap=" + containerMetricsHashMap +
+                ", trialDetails=" + trialDetails +
+                ", trialInfo=" + trialInfo +
+                ", datasourceInfoHashMap=" + datasourceInfoHashMap +
+                ", experimentSettings=" + experimentSettings +
+                '}';
+    }
 }
-
-
-

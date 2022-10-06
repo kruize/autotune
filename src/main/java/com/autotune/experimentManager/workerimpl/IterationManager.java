@@ -141,7 +141,7 @@ public class IterationManager implements AutotuneWorker {
             ExperimentMetaData experimentMetaData = experimentTrial.getExperimentMetaData();
             AutoTuneWorkFlow autoTuneWorkFlow = experimentMetaData.getAutoTuneWorkFlow();
             if (null == autoTuneWorkFlow) {
-                autoTuneWorkFlow = new AutoTuneWorkFlow(experimentTrial.getExperimentSettings().isDo_experiments(),
+                autoTuneWorkFlow = new AutoTuneWorkFlow(experimentTrial.getExperimentSettings().isDo_experiment(),
                         experimentTrial.getExperimentSettings().isDo_monitoring(),
                         experimentTrial.getExperimentSettings().isWait_for_load(),
                         experimentTrial.getTrialResultURL());     //Check Workflow is Experiment or Monitoring Workflow

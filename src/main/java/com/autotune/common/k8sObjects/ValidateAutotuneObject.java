@@ -44,7 +44,13 @@ public class ValidateAutotuneObject
 
 		// Check if mode is supported
 		if (!AutotuneSupportedTypes.MODES_SUPPORTED.contains((String)map.get(AnalyzerConstants.AutotuneObjectConstants.MODE))) {
+			errorString.append("Mode: " + map.get(AnalyzerConstants.AutotuneObjectConstants.MODE) + " ");
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MODE_NOT_SUPPORTED);
+		}
+
+		// Check if targetCluster is supported
+		if (!AutotuneSupportedTypes.TARGET_CLUSTERS_SUPPORTED.contains((String)map.get(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER))) {
+			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.TARGET_CLUSTER_NOT_SUPPORTED);
 		}
 
 		// Check if matching label is set to a valid value (not null or only whitespace)

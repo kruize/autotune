@@ -149,8 +149,25 @@ public class TrialHelpers {
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
+
+        boolean do_experiments = true;
+        if (autotuneObject.getMode().equals("monitor")) {
+            do_experiments = false;
+        }
+        boolean do_monitoring = true;
+        if (autotuneObject.getTargetCluster().equals("remote")) {
+            do_monitoring = false;
+        }
+        /**
+         * Currently wait_for_load will be set to false if we have to monitor a remote cluster
+         * TODO: In the future this might need its own flag
+         */
+        boolean wait_for_load = true;
+        if (autotuneObject.getMode().equals("monitor") && autotuneObject.getTargetCluster().equals("remote")) {
+            wait_for_load = false;
+        }
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
-                deploymentSettings, true, true, true);
+                deploymentSettings, do_experiments, do_monitoring, wait_for_load);
 
         // TODO: "runtimeOptions" needs to be interpreted at a runtime level
         // TODO: That means that once we detect a certain layer, it will be associated with a runtime
@@ -158,8 +175,7 @@ public class TrialHelpers {
         // This will be the default for Java
         // TODO: The -XX:MaxRAMPercentage will be based on actual observation of the size of the heap
 
-        System.out.println(trialConfigJson);
-
+        LOGGER.info(trialConfigJson);
 
         String experimentName = appSearchSpace.getExperimentName();
         ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(), autotuneExperiment.getDeploymentName());
@@ -178,7 +194,7 @@ public class TrialHelpers {
             String tunableName = trialConfig.getString(TUNABLE_NAME);
             Tunable tunable = autotuneExperiment.getApplicationSearchSpace().getTunablesMap().get(tunableName);
             if (tunable == null) {
-                System.out.println("ERROR: tunable is null for tunableName: " + tunableName);
+                LOGGER.error("ERROR: tunable is null for tunableName: " + tunableName);
             }
             ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
             String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
@@ -213,16 +229,15 @@ public class TrialHelpers {
                     containerMetricsHashMap.put(applicationServiceStack.getContainerName(), localMetricMap);
                 }
             } else {
-                System.out.println("New Trial: tunable: " + tunableName + " No container metrics");
+                LOGGER.error("New Trial: tunable: " + tunableName + " No container metrics");
             }
         }
         TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber), configData);
         trialDetails.setStartTime(Timestamp.from(Instant.now()));
         trialsMap.put(String.valueOf(trialNumber), trialDetails);
         String mode = null;
-        String environment = null;
         ExperimentTrial experimentTrial = new ExperimentTrial(experimentName,
-                mode, environment, resourceDetails, experimentID,
+                mode, resourceDetails, experimentID,
                 podMetricsHashMap, containerMetricsHashMap, trialInfo,
                 datasourceInfoHashMap,
                 experimentSettings,
