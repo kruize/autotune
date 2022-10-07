@@ -16,6 +16,8 @@
 package com.autotune.experimentManager.utils;
 
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
 import org.json.JSONObject;
@@ -255,5 +257,56 @@ public class EMUtil {
         for (Map.Entry<EMUtil.EMFlowFlags, Boolean> flagEntry : experimentTrial.getFlagsMap().entrySet()) {
             flagEntry.setValue(true);
         }
+    }
+
+    public static String replaceQueryVars(String query, ArrayList<Map<String, String>> queryVariablesList) {
+        if (null != query) {
+            if (null != queryVariablesList) {
+                for (Map<String, String> variableMap : queryVariablesList) {
+                    String key = variableMap.get(EMConstants.QueryMapConstants.NAME);
+                    String value = variableMap.get(EMConstants.QueryMapConstants.VALUE);
+                    query = query.replace(key, value);
+                }
+            }
+        }
+        return query;
+    }
+
+    public static String formatQueryByPodName(String rawQuery, String podName) {
+        if (null == rawQuery || null == podName) {
+            return rawQuery;
+        }
+
+        if (null != rawQuery && null != podName) {
+            rawQuery = rawQuery.replace(EMConstants.QueryMapConstants.QueryVar.POD_NAME, podName);
+        }
+        return rawQuery;
+    }
+
+    public static String formatQueryByContainerName(String rawQuery, String containerName) {
+        if (null == rawQuery || null == containerName) {
+            return rawQuery;
+        }
+
+        if (null != rawQuery && null != containerName) {
+            rawQuery = rawQuery.replace(EMConstants.QueryMapConstants.QueryVar.CONTAINER_NAME, containerName);
+        }
+        return rawQuery;
+    }
+
+    public static String getCurrentPodNameOfTrial(ExperimentTrial experimentTrial) {
+        // Needs to be implemented
+        KubernetesServices kubernetesServices = null;
+        try {
+            kubernetesServices = new KubernetesServicesImpl();
+            // Need to call the platform specific client to get the pod name
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (null != kubernetesServices) {
+                kubernetesServices.shutdownClient();
+            }
+        }
+        return null;
     }
 }

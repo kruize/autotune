@@ -15,23 +15,33 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.KubernetesContexts;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
+import com.autotune.utils.AnalyzerConstants;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 /**
@@ -54,6 +64,33 @@ public class MetricCollectionHandler implements EMHandlerInterface {
             /**
              * Implement MetricCollectionHandler Logic
              */
+            // Get the autotune query variable CRD
+            CustomResourceDefinitionContext autotuneQueryVariableCRD = KubernetesContexts.getAutotuneVariableContext();
+            KubernetesServices kubernetesServices = null;
+            try {
+                // Initiate Kubernetes service
+                kubernetesServices = new KubernetesServicesImpl();
+                // Get the env variables map from kubernetes
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
+                // TODO: Move the constants to common constants or Autotune Constants
+                ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+                // Get pod name of the current trial
+                String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
+                // Listing all pod metrics
+                HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+                for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+                    Metric podMetric = podMetricEntry.getValue();
+                    String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
+                    updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
+                    // Need to run the updated query by calling the datasource
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (kubernetesServices != null) {
+                    kubernetesServices.shutdownClient();
+                }
+            }
             LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
             LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();
             String warmupCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles();
