@@ -18,38 +18,39 @@ package com.autotune.utils;
 /**
  * Holds the server context of the dependency analyzer.
  */
-public class ServerContext
-{
-	public static final int AUTOTUNE_PORT = 8080;
-	public static final int HPO_PORT = 8085;
+public class ServerContext {
+    public static final int AUTOTUNE_PORT = 8080;
+    public static final int HPO_PORT = 8085;
 
-	// Analyzer end points
-	public static final String ROOT_CONTEXT = "/";
-	public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
-	public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
-	public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
-	public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
-	public static final String LIST_STACK_LAYERS = ROOT_CONTEXT + "listStackLayers";
-	public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
-	public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
-	public static final String LIST_EXPERIMENTS = ROOT_CONTEXT + "listExperiments";
-	public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
+    // AnalyzerConstants end points
+    public static final String ROOT_CONTEXT = "/";
+    public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
+    public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
+    public static final String LIST_AUTOTUNE_TUNABLES = ROOT_CONTEXT + "listAutotuneTunables";
+    public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
+    public static final String LIST_STACK_LAYERS = ROOT_CONTEXT + "listStackLayers";
+    public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
+    public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
+    public static final String LIST_EXPERIMENTS = ROOT_CONTEXT + "listExperiments";
+    public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
+    public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
+    public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
+    public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
 
+    public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
+    public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
+    public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
 
-	public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
-	public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
-	public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
+    // HPO End Points
+    public static final String HPO_SERVER_PORT = "http://localhost:" + HPO_PORT;
+    public static final String HPO_TRIALS = ROOT_CONTEXT + "experiment_trials";
+    public static final String HPO_TRIALS_END_POINT = HPO_SERVER_PORT + HPO_TRIALS;
 
-	// HPO End Points
-	public static final String HPO_SERVER_PORT = "http://localhost:" + HPO_PORT;
-	public static final String HPO_TRIALS = ROOT_CONTEXT + "experiment_trials";
-	public static final String HPO_TRIALS_END_POINT = HPO_SERVER_PORT + HPO_TRIALS;
-
-	public static final String EXPERIMENT_MANAGER_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
-	public static final String EXPERIMENT_MANAGER_CREATE_TRIAL = ROOT_CONTEXT + "createExperimentTrial";
-	public static final String EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_CREATE_TRIAL;
-	public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL = ROOT_CONTEXT + "listExperimentTrial";
-	public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
-	public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
-	public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
+    public static final String EXPERIMENT_MANAGER_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
+    public static final String EXPERIMENT_MANAGER_CREATE_TRIAL = ROOT_CONTEXT + "createExperimentTrial";
+    public static final String EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_CREATE_TRIAL;
+    public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL = ROOT_CONTEXT + "listExperimentTrial";
+    public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
+    public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
+    public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
 }

@@ -24,35 +24,36 @@ import com.autotune.analyzer.services.*;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class Analyzer
-{
-	public static void start(ServletContextHandler contextHandler) {
-		try {
-			InitializeDeployment.setup_deployment_info();
+public class Analyzer {
+    public static void start(ServletContextHandler contextHandler) {
+        try {
+            InitializeDeployment.setup_deployment_info();
 
-		} catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
-			e.printStackTrace();
-			// Current deployment not supported. Exit
-			System.exit(1);
-		}
-		Experimentator.start();
-		AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
+        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
+            e.printStackTrace();
+            // Current deployment not supported. Exit
+            System.exit(1);
+        }
+        Experimentator.start();
+        AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
 
-		try {
-			addServlets(contextHandler);
-			AutotuneDeployment.getAutotuneObjects(autotuneDeployment);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+        try {
+            addServlets(contextHandler);
+            AutotuneDeployment.getAutotuneObjects(autotuneDeployment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	public static void addServlets(ServletContextHandler context) {
-		context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
-		context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
-		context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
-		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
-		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
-		context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
-		context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
-	}
+    public static void addServlets(ServletContextHandler context) {
+        context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
+        context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
+        context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
+        context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
+        context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
+        context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
+        context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
+        context.addServlet(CreateExperimentAPI.class, ServerContext.CREATE_EXPERIMENT);
+        context.addServlet(updateResultsAPI.class, ServerContext.UPDATE_RESULTS);
+    }
 }
