@@ -202,4 +202,9 @@ public class AutotuneConstants {
         private Patterns() {
         }
     }
+
+    public static class SupportedDatasources {
+        private SupportedDatasources() { }
+        public static String PROMETHEUS = "prometheus";
+    }
 }

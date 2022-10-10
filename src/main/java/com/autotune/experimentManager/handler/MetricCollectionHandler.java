@@ -16,6 +16,8 @@
 package com.autotune.experimentManager.handler;
 
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
+import com.autotune.common.data.datasource.AutotuneDatasourceOperator;
+import com.autotune.common.data.datasource.DatasourceOperator;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.KubernetesContexts;
@@ -33,6 +35,7 @@ import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.AnalyzerConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +74,8 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 // Initiate Kubernetes service
                 kubernetesServices = new KubernetesServicesImpl();
                 // Get the env variables map from kubernetes
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
                 // TODO: Move the constants to common constants or Autotune Constants
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
                 // Get pod name of the current trial
                 String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
@@ -83,6 +86,31 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
                     updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
                     // Need to run the updated query by calling the datasource
+                    AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
+                    if (null == ado) {
+                        // TODO: Return an error saying unsupported datasource
+                    }
+                    JSONObject resultJSON = (JSONObject) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                                                                    .get(podMetric.getDatasource())
+                                                                                    .getUrl().toString(), updatedPodQuery);
+                }
+                HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+                for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+                    String containerName = containerMapEntry.getKey();
+                    for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                        Metric containerMetric = containerMetricEntry.getValue();
+                        String updatedContainerQuery = EMUtil.replaceQueryVars(containerMetric.getQuery(), queryVarList);
+                        updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
+                        updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
+                        // Need to run the updated query by calling the datasource
+                        AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
+                        if (null == ado) {
+                            // TODO: Return an error saying unsupported datasource
+                        }
+                        JSONObject resultJSON = (JSONObject) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                .get(containerMetric.getDatasource())
+                                .getUrl().toString(), updatedContainerQuery);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
