@@ -53,8 +53,7 @@ public class Analyzer {
         context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
-        context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
-        context.addServlet(updateResults.class, ServerContext.UPDATE_RESULTS);
-        context.addServlet(Recommendation.class,ServerContext.RECOMMEND_RESULTS);
+        context.addServlet(CreateExperimentAPI.class, ServerContext.CREATE_EXPERIMENT);
+        context.addServlet(updateResultsAPI.class, ServerContext.UPDATE_RESULTS);
     }
 }
