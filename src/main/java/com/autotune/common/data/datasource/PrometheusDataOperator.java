@@ -33,7 +33,7 @@ public class PrometheusDataOperator implements AutotuneDatasourceOperator{
     }
 
     public static PrometheusDataOperator getInstance() {
-        if (null != prometheusDataOperator) {
+        if (null == prometheusDataOperator) {
             prometheusDataOperator = new PrometheusDataOperator();
         }
         return prometheusDataOperator;
