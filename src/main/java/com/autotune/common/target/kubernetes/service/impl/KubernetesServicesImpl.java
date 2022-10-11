@@ -53,18 +53,6 @@ public class KubernetesServicesImpl implements KubernetesServices {
         initialize();
     }
 
-    public static void main(String[] args) {
-        System.out.println("Starting");
-        String namespace = "default";
-        KubernetesClient kubernetesClient = new DefaultKubernetesClient();
-        List<Pod> list = kubernetesClient.pods().inNamespace(namespace).list().getItems();
-        list.forEach((pods) -> {
-            System.out.println(pods.getMetadata().getName() + "---" + pods.getStatus().toString());
-            System.out.println(pods.getStatus().getPhase());
-        });
-
-    }
-
     /**
      * kubernetesClient client connection established inside cluster itself
      */

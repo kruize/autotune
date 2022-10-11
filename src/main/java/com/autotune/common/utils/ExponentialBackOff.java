@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.utils;
 
+import com.autotune.utils.AutotuneConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +28,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ExponentialBackOff {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExponentialBackOff.class);
     // Maximum total time in Millis to complete exponential backoff approach. Default set to 10sec
-    public static long defaultMaxElapsedTimeMillis = 10 * 1000;   //1o Seconds
+    public static long defaultMaxElapsedTimeMillis = AutotuneConstants.ExponentialBackOff.MAX_ELAPSED_TIME_MILLIS;
     // Default time to wait for each retry
-    public static long defaultTimeToWait = 1000;
+    public static long defaultTimeToWait = AutotuneConstants.ExponentialBackOff.TIME_TO_WAIT;
     // increases the back off period for each retry attempt using a randomization function that grows exponentially.
     // randomized_interval = retryIntervalMillis * (random value in range [1 - randomization_factor, 1 + randomization_factor])
-    public static double defaultRandomizationFactor = 0.5;
+    public static double defaultRandomizationFactor = AutotuneConstants.ExponentialBackOff.RANDOM_FACTOR;
     // Some task need initial sleep before proceedings . defaults to zero.
-    public static long defaultInitialIntervalMillis = 0;
+    public static long defaultInitialIntervalMillis = AutotuneConstants.ExponentialBackOff.INITIAL_TIME_MILLIS;
     //  increases the back off period for each retry attempt using a randomization function that grows exponentially.
     public static double defaultMultiplier = 0.5;
     // Set retry after backoff exhausted with MaxElapsedTimeMillis , default is set to zero that means no retries.
@@ -67,12 +68,10 @@ public final class ExponentialBackOff {
         boolean shouldRetry = false;
         if (Math.round(this.totalRetryIntervalMillis) < this.maxElapsedTimeMillis)
             shouldRetry = true;
-        else if (numberOfRetries > 0) {
-            if (numberOfTriesLeft > 0) {
-                this.totalRetryIntervalMillis = 0;
-                numberOfTriesLeft -= 1;
-                shouldRetry = true;
-            }
+        else if (numberOfRetries > 0 && numberOfTriesLeft > 0) {
+            this.totalRetryIntervalMillis = 0;
+            numberOfTriesLeft -= 1;
+            shouldRetry = true;
         }
         return shouldRetry;
     }

@@ -20,19 +20,25 @@ package com.autotune.utils;
  * Constants for Autotune module
  */
 public class AutotuneConstants {
-    private AutotuneConstants() { }
+    public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
+    public static final String MINIKUBE = "minikube";
+    public static final String OPENSHIFT = "openshift";
+
+    private AutotuneConstants() {
+    }
 
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */
     public static final class StartUpMode {
-        private StartUpMode() { }
         public static final String AUTOTUNE_MODE = "AUTOTUNE_MODE";
         public static final String EM_ONLY_MODE = "EM_ONLY";
+
+        private StartUpMode() {
+        }
     }
 
     public static final class HpoOperations {
-        private HpoOperations() { }
         public static final String EXP_TRIAL_GENERATE_NEW = "EXP_TRIAL_GENERATE_NEW";
         public static final String EXP_TRIAL_GENERATE_SUBSEQUENT = "EXP_TRIAL_GENERATE_SUBSEQUENT";
         public static final String EXP_TRIAL_RESULT = "EXP_TRIAL_RESULT";
@@ -40,25 +46,34 @@ public class AutotuneConstants {
         public static final String URL = "url";
         public static final String OPERATION = "operation";
         public static final String SEARCHSPACE = "search_space";
+
+        private HpoOperations() {
+        }
+    }
+
+    public static final class ExponentialBackOff {
+        public static final int MAX_ELAPSED_TIME_MILLIS = 10 * 1000;   //10 Seconds;
+        public static final int TIME_TO_WAIT = 1000;
+        public static final double RANDOM_FACTOR = 0.5;
+        public static final long INITIAL_TIME_MILLIS = 0;
+        public static final double multiplier = 0.5;
+
+        private ExponentialBackOff() {
+        }
     }
 
     public static final class JSONKeys {
-        private JSONKeys() { }
-
         public static final String QUESTION_MARK = "?";
         public static final String AMPERSAND = "&";
         public static final String EQUALS = "=";
         public static final String PLUS = "+";
         public static final String MINUS = "-";
-
         public static final String REQUEST_SUM = "request_sum";
         public static final String REQUEST_COUNT = "request_count";
-
         public static final String CONTAINERS = "containers";
         public static final String IMAGE_NAME = "image_name";
         public static final String CONTAINER_NAME = "container_name";
         public static final String ITERATIONS = "iterations";
-
         // Info section
         public static final String INFO = "info";
         public static final String TRIAL_INFO = "trial_info";
@@ -67,7 +82,6 @@ public class AutotuneConstants {
         public static final String TRIAL_NUM = "trial_num";
         public static final String TRIAL_RESULT_URL = "trial_result_url";
         public static final String URL = "url";
-
         // Settings section
         public static final String TRACKERS = "trackers";
         public static final String SETTINGS = "settings";
@@ -87,7 +101,6 @@ public class AutotuneConstants {
         // Metadata Section
         public static final String EXPERIMENT_ID = "experiment_id";
         public static final String EXPERIMENT_NAME = "experiment_name";
-
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";
@@ -97,7 +110,6 @@ public class AutotuneConstants {
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String DATASOURCE = "datasource";
-
         public static final String CPU = "cpu";
         public static final String MEMORY = "memory";
         public static final String REQUESTS = "requests";
@@ -105,15 +117,12 @@ public class AutotuneConstants {
         public static final String RESOURCES = "resources";
         public static final String CONTAINER = "container";
         public static final String TEMPLATE = "template";
-
         public static final String JAVA_OPTIONS = "JAVA_OPTIONS";
         public static final String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
         public static final String ENV = "ENV";
         public static final String TRIAL_RUNNING = "--Trial Running--";
-
         public static final String RESULT_VALUE = "result_value";
         public static final String RESULT_VALUE_TYPE = "result_value_type";
-
         public static final String METRIC_INFO = "metric_info";
         public static final String METRICS_RESULTS = "metrics_results";
         public static final String WARMUP_RESULTS = "warmup_results";
@@ -141,67 +150,8 @@ public class AutotuneConstants {
         public static final String CYCLES = "cycles";
         public static final String DURATION = "duration";
         public static final String PERCENTILE_INFO = "percentile_info";
-    }
 
-    public static final class TimeUnitsExt {
-        private TimeUnitsExt() {
+        private JSONKeys() {
         }
-
-        public static final String SECOND_LC_SINGULAR = "second";
-        public static final String SECOND_LC_PLURAL = SECOND_LC_SINGULAR + "s";
-        public static final String SECOND_UC_SINGULAR = SECOND_LC_SINGULAR.toUpperCase();
-        public static final String SECOND_UC_PLURAL = SECOND_LC_PLURAL.toUpperCase();
-
-        public static final String SECOND_SHORT_LC_SINGULAR = "sec";
-        public static final String SECOND_SHORT_LC_PLURAL = SECOND_SHORT_LC_SINGULAR + "s";
-        public static final String SECOND_SHORT_UC_SINGULAR = SECOND_SHORT_LC_SINGULAR.toUpperCase();
-        public static final String SECOND_SHORT_UC_PLURAL = SECOND_SHORT_LC_PLURAL.toUpperCase();
-
-        public static final String SECOND_SINGLE_LC = "s";
-        public static final String SECOND_SINGLE_UC = SECOND_SINGLE_LC.toUpperCase();
-
-        public static final String MINUTE_LC_SINGULAR = "minute";
-        public static final String MINUTE_LC_PLURAL = MINUTE_LC_SINGULAR + "s";
-        public static final String MINUTE_UC_SINGULAR = MINUTE_LC_SINGULAR.toUpperCase();
-        public static final String MINUTE_UC_PLURAL = MINUTE_LC_PLURAL.toUpperCase();
-
-        public static final String MINUTE_SHORT_LC_SINGULAR = "min";
-        public static final String MINUTE_SHORT_LC_PLURAL = MINUTE_SHORT_LC_SINGULAR + "s";
-        public static final String MINUTE_SHORT_UC_SINGULAR = MINUTE_SHORT_LC_SINGULAR.toUpperCase();
-        public static final String MINUTE_SHORT_UC_PLURAL = MINUTE_SHORT_LC_PLURAL.toUpperCase();
-
-        public static final String MINUTE_SINGLE_LC = "m";
-        public static final String MINUTE_SINGLE_UC = MINUTE_SINGLE_LC.toUpperCase();
-
-        public static final String HOUR_LC_SINGULAR = "hour";
-        public static final String HOUR_LC_PLURAL = HOUR_LC_SINGULAR + "s";
-        public static final String HOUR_UC_SINGULAR = HOUR_LC_SINGULAR.toUpperCase();
-        public static final String HOUR_UC_PLURAL = HOUR_LC_PLURAL.toUpperCase();
-
-        public static final String HOUR_SHORT_LC_SINGULAR = "hr";
-        public static final String HOUR_SHORT_LC_PLURAL = HOUR_SHORT_LC_SINGULAR + "s";
-        public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
-        public static final String HOUR_SHORT_UC_PLURAL = HOUR_SHORT_LC_PLURAL.toUpperCase();
-
-        public static final String HOUR_SINGLE_LC = "h";
-        public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
     }
-
-    public static class TimeConv {
-        private TimeConv() { }
-        public static int NO_OF_SECONDS_PER_MINUTE = 60;
-        public static int NO_OF_MINUTES_PER_HOUR = 60;
-        public static int NO_OF_HOURS_PER_DAY = 12;
-    }
-
-    public static class Patterns {
-        private Patterns() { }
-        public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
-        public static String WHITESPACE_PATTERN = "\\s";
-        public static String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
-    }
-
-    public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
-    public static final String MINIKUBE = "minikube";
-    public static final String OPENSHIFT = "openshift";
 }
