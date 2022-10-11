@@ -107,9 +107,15 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         if (null == ado) {
                             // TODO: Return an error saying unsupported datasource
                         }
-                        JSONObject resultJSON = (JSONObject) ado.extract(experimentTrial.getDatasourceInfoHashMap()
-                                .get(containerMetric.getDatasource())
-                                .getUrl().toString(), updatedContainerQuery);
+                        if (null != updatedContainerQuery) {
+                            System.out.println("Updated Query - " + updatedContainerQuery);
+                            String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                    .get(containerMetric.getDatasource())
+                                    .getUrl().toString(), updatedContainerQuery);
+                            if (null != queryResult) {
+                                System.out.println("Query Result - " + queryResult);
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {

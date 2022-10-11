@@ -207,4 +207,19 @@ public class AutotuneConstants {
         private SupportedDatasources() { }
         public static String PROMETHEUS = "prometheus";
     }
+<<<<<<< HEAD
+=======
+
+    public static class HttpConstants {
+        private HttpConstants() { }
+        public static class MethodType {
+            private MethodType() { }
+            public static String GET = "GET";
+        }
+    }
+
+    public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
+    public static final String MINIKUBE = "minikube";
+    public static final String OPENSHIFT = "openshift";
+>>>>>>> Adds query extraction
 }

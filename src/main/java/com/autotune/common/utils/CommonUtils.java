@@ -240,4 +240,20 @@ public class CommonUtils {
         }
         return false;
     }
+
+    /**
+     * Get the base datasource URL for running query
+     * @param url
+     * @param datasource
+     * @return
+     */
+    public static String getBaseDataSourceUrl(String url, String datasource) {
+        if (datasource.equalsIgnoreCase(AutotuneConstants.SupportedDatasources.PROMETHEUS)) {
+            return (new StringBuilder())
+                    .append(url)
+                    .append("/api/v1/query?query=")
+                    .toString();
+        }
+        return null;
+    }
 }
