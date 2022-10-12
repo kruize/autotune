@@ -1,7 +1,9 @@
 # Autotune REST API
+
 The Autotune REST API design is proposed as follows:
 
-##  listStacks
+## listStacks
+
 Get the list of application stacks monitored by autotune.
 
 **Request**
@@ -12,6 +14,7 @@ Get the list of application stacks monitored by autotune.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStacks?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -36,6 +39,7 @@ Get the list of application stacks monitored by autotune.
 ```
 
 ## listStackLayers
+
 Returns the list of application stacks monitored by autotune along with layers detected in the stacks.
 
 **Request**
@@ -46,6 +50,7 @@ Returns the list of application stacks monitored by autotune along with layers d
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStackLayers?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -101,18 +106,22 @@ Returns the list of application stacks monitored by autotune along with layers d
 ]
 ```
 
-##  listStackTunables
+## listStackTunables
+
 Returns the list of application stacks monitored by autotune along with their tunables.
 **Request**
 `GET /listStackTunables` gives the tunables and layer information for all the application stacks monitored by autotune.
 
-`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>` for getting the tunables information of a specific application.
+`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>` for getting the tunables information of a specific
+application.
 
-`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>&layer_name=<LAYER>` for getting tunables of a specific layer for the application.
+`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>&layer_name=<LAYER>` for getting tunables of a specific layer
+for the application.
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStackTunables?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -159,7 +168,9 @@ Returns the list of application stacks monitored by autotune along with their tu
     }
 ]
 ```
-##  listAutotuneTunables
+
+## listAutotuneTunables
+
 Get the tunables supported by autotune for the SLO.
 
 **Request**
@@ -172,6 +183,7 @@ Get the tunables supported by autotune for the SLO.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?slo_class=<SLO_CLASS>`
 
 **Response**
+
 ```
 [
     {
@@ -246,7 +258,9 @@ Get the tunables supported by autotune for the SLO.
     }
 ]
 ```
-##  SearchSpace
+
+## SearchSpace
+
 Generates the search space used for the analysis.
 
 **Request**
@@ -314,7 +328,8 @@ Generates the search space used for the analysis.
 ]
 ```
 
-##  Health
+## Health
+
 Get the status of autotune.
 
 **Request**
@@ -328,133 +343,768 @@ Get the status of autotune.
 Healthy
 ```
 
-##  CreateExperimentTrial
+## CreateExperimentTrial
+
 Create experiment trials using input JSON provided by Analyser module.
 
 **Request**
 `POST /createExperimentTrial`
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperimentTrial`
+
 ```
-{
-    "settings": {
+[
+    {
+      "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+      "resource": {
+        "namespace": "default",
+        "deployment_name": "tfb-qrh-sample"
+      },
+      "datasource_info": {
+        "prometheus1": {
+          "url": "http://10.101.144.137:9090",
+          "provider": "prometheus"
+        }
+      },
+      "settings": {
+        "do_experiment": true,
+        "do_monitoring": true,
+        "wait_for_load": true,
         "trial_settings": {
-            "measurement_cycles": "3",
-            "warmup_duration": "1min",
-            "warmup_cycles": "3",
-            "measurement_duration": "1min",
-            "iterations": "3"
+          "measurement_cycles": "3",
+          "warmup_duration": "1min",
+          "warmup_cycles": "3",
+          "measurement_duration": "1min",
+          "iterations": "3"
         },
         "deployment_settings": {
-            "deployment_tracking": {
-                "trackers": [
-                    "training"
-                ]
-            },
-            "deployment_policy": {
-                "type": "rollingUpdate"
-            }
+          "deployment_policy": {
+            "type": "rollingUpdate"
+          }
         }
-    },
-    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-    "deployments": {
-        "training": {
-            "pod_metrics": {
-                "request_sum": {
-                    "datasource": "prometheus",
-                    "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
-                    "name": "request_sum"
-                },
-                "request_count": {
-                    "datasource": "prometheus",
-                    "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
-                    "name": "request_count"
-                }
-            },
-            "deployment_name": "tfb-qrh-sample",
-            "namespace": "default",
-            "containers": {
-                "kruize/tfb-qrh:1.13.2.F_mm.v1": {
-                    "image_name": "kruize/tfb-qrh:1.13.2.F_mm.v1",
-                    "container_name": "tfb-server",
-                    "container_metrics": {
-                        "MaxInlineLevel": {
-                            "datasource": "prometheus",
-                            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-                            "name": "MaxInlineLevel"
-                        },
-                        "memoryRequest": {
-                            "datasource": "prometheus",
-                            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
-                            "name": "memoryRequest"
-                        },
-                        "cpuRequest": {
-                            "datasource": "prometheus",
-                            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
-                            "name": "cpuRequest"
-                        }
-                    },
-                    "config": {
-                        "0": {
-                            "requests": {
-                                "cpu": {
-                                    "amount": "2.11",
-                                    "format": "",
-                                    "additionalProperties": {}
-                                },
-                                "memory": {
-                                    "amount": "160.0",
-                                    "format": "",
-                                    "additionalProperties": {}
-                                }
-                            },
-                            "env": [
-                                {
-                                    "name": "JAVA_OPTIONS",
-                                    "additionalProperties": {},
-                                    "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-                                },
-                                {
-                                    "name": "JDK_JAVA_OPTIONS",
-                                    "additionalProperties": {},
-                                    "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-                                }
-                            ],
-                            "limits": {
-                                "cpu": {
-                                    "amount": "2.11",
-                                    "format": "",
-                                    "additionalProperties": {}
-                                },
-                                "memory": {
-                                    "amount": "160.0",
-                                    "format": "",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "type": "training"
+      },
+      "pod_metrics": {
+        "request_sum": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_sum"
+        },
+        "request_count": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_count"
         }
+      },
+      "container_metrics": {
+        "container_name": {
+          "memoryRequest": {
+            "name": "memoryRequest",
+            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "double"
+          },
+          "gc": {
+            "name": "gc",
+            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "categorical"
+          },
+          "cpuRequest": {
+            "name": "cpuRequest",
+            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+            "datasource": "prometheus",
+            "valueType": "double"
+          }
+        }
+      },
+      "trials": {
+        "0": {
+          "config": {
+            "image": "kruize/tfb-qrh:2.9.0.F_mm",
+            "container_name": "tfb-server",
+            "requests": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "limits": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "env": [
+              {
+                "name": "JDK_JAVA_OPTIONS",
+                "additionalProperties": {},
+                "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+              }
+            ]
+          }
+        }
+      },
+      "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+    }
+]
+```
+
+**Response**
+
+```
+201
+```
+
+### List Trial Status
+
+**Request**
+`GET /listTrialStatus` Gives the status of the Trial(s)
+
+`GET /listTrialStatus` Gives the list of experiments with their last trial updated status
+
+```
+{
+    "quarkus-resteasy-autotune-min-http-response-time-db": {
+        "Status": "COMPLETED"
     },
-    "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
-    "datasource_info": {
-        "name": "prometheus",
-        "url": "http://10.101.144.137:9090"
+    "quarkus-resteasy-autotune-max-throughput-api": {
+        "Status": "WAITING_FOR_LOAD"
     },
-    "trial_info": {
-        "trial_id": "",
-        "trial_num": 0,
-        "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
-    },
-    "namespace": "default"
 }
 
 ```
 
+`GET /listTrialStatus?experiment_name=<experiment name>` Gives the Trial status of the trials in a particular experiment
+
+Example for `experiment_name` set to `quarkus-resteasy-autotune-min-http-response-time-db`
 **Response**
+
 ```
-201
+{
+    "0": {
+        "Status": "COMPLETED",
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "request_sum"
+                },
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "request_count"
+                }
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "datasource": "prometheus",
+                        "summary_results": {
+                            "percentile_info": {
+                                "99p": 82.59,
+                                "97p": 64.75,
+                                "95p": 8.94,
+                                "50p": 0.63,
+                                "99.9p": 93.48,
+                                "100p": 30000,
+                                "99.99p": 111.5,
+                                "99.999p": 198.52
+                            },
+                            "general_info": {
+                                "min": 2.15,
+                                "max": 2107.212121,
+                                "mean": 31.91
+                            }
+                        },
+                        "name": "memoryRequest"
+                    },
+                    {
+                        "datasource": "prometheus",
+                        "summary_results": {
+                            "percentile_info": {
+                                "99p": 82.59,
+                                "97p": 64.75,
+                                "95p": 8.94,
+                                "50p": 0.63,
+                                "99.9p": 93.48,
+                                "100p": 30000,
+                                "99.99p": 111.5,
+                                "99.999p": 198.52
+                            },
+                            "general_info": {
+                                "min": 2.15,
+                                "max": 2107.212121,
+                                "mean": 31.91
+                            }
+                        },
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "deployment_name": "tfb-qrh-sample",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 0,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }}
+    },
+    "1": {
+        "Status": "COMPLETED",
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+        "deployments": [{
+            "pod_metrics": [
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "request_sum"
+                },
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "request_count"
+                }
+            ],
+            "deployment_name": "tfb-qrh-sample",
+            "namespace": "default",
+            "containers": [{
+                "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server",
+                "container_metrics": [
+                    {
+                        "datasource": "prometheus",
+                        "summary_results": {
+                            "percentile_info": {
+                                "99p": 82.59,
+                                "97p": 64.75,
+                                "95p": 8.94,
+                                "50p": 0.63,
+                                "99.9p": 93.48,
+                                "100p": 30000,
+                                "99.99p": 111.5,
+                                "99.999p": 198.52
+                            },
+                            "general_info": {
+                                "min": 2.15,
+                                "max": 2107.212121,
+                                "mean": 31.91
+                            }
+                        },
+                        "name": "memoryRequest"
+                    },
+                    {
+                        "datasource": "prometheus",
+                        "summary_results": {
+                            "percentile_info": {
+                                "99p": 82.59,
+                                "97p": 64.75,
+                                "95p": 8.94,
+                                "50p": 0.63,
+                                "99.9p": 93.48,
+                                "100p": 30000,
+                                "99.99p": 111.5,
+                                "99.999p": 198.52
+                            },
+                            "general_info": {
+                                "min": 2.15,
+                                "max": 2107.212121,
+                                "mean": 31.91
+                            }
+                        },
+                        "name": "cpuRequest"
+                    }
+                ]
+            }],
+            "type": "training"
+        }],
+        "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+        "deployment_name": "tfb-qrh-sample",
+        "info": {"trial_info": {
+            "trial_id": "",
+            "trial_num": 1,
+            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+        }}
+    },
+}
+```
+
+`GET /listTrialStatus?experiment_name=<experiment name>&trial_num=<trial number>` Gives the Trial status of the
+particular trial number in an experiment
+
+Example for `trial_num=1`
+
+**Response**
+
+```
+{"1": {
+    "Status": "COMPLETED",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+    "deployments": [{
+        "pod_metrics": [
+            {
+                "datasource": "prometheus",
+                "summary_results": {
+                    "percentile_info": {
+                        "99p": 82.59,
+                        "97p": 64.75,
+                        "95p": 8.94,
+                        "50p": 0.63,
+                        "99.9p": 93.48,
+                        "100p": 30000,
+                        "99.99p": 111.5,
+                        "99.999p": 198.52
+                    },
+                    "general_info": {
+                        "min": 2.15,
+                        "max": 2107.212121,
+                        "mean": 31.91
+                    }
+                },
+                "name": "request_sum"
+            },
+            {
+                "datasource": "prometheus",
+                "summary_results": {
+                    "percentile_info": {
+                        "99p": 82.59,
+                        "97p": 64.75,
+                        "95p": 8.94,
+                        "50p": 0.63,
+                        "99.9p": 93.48,
+                        "100p": 30000,
+                        "99.99p": 111.5,
+                        "99.999p": 198.52
+                    },
+                    "general_info": {
+                        "min": 2.15,
+                        "max": 2107.212121,
+                        "mean": 31.91
+                    }
+                },
+                "name": "request_count"
+            }
+        ],
+        "deployment_name": "tfb-qrh-sample",
+        "namespace": "default",
+        "containers": [{
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": [
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "memoryRequest"
+                },
+                {
+                    "datasource": "prometheus",
+                    "summary_results": {
+                        "percentile_info": {
+                            "99p": 82.59,
+                            "97p": 64.75,
+                            "95p": 8.94,
+                            "50p": 0.63,
+                            "99.9p": 93.48,
+                            "100p": 30000,
+                            "99.99p": 111.5,
+                            "99.999p": 198.52
+                        },
+                        "general_info": {
+                            "min": 2.15,
+                            "max": 2107.212121,
+                            "mean": 31.91
+                        }
+                    },
+                    "name": "cpuRequest"
+                }
+            ]
+        }],
+        "type": "training"
+    }],
+    "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
+    "deployment_name": "tfb-qrh-sample",
+    "info": {"trial_info": {
+        "trial_id": "",
+        "trial_num": 1,
+        "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+    }}
+}}
+```
+
+`GET /listTrialStatus?debug=true` Gives the granular details like status and timestamp of each main step and sub steps
+for a given workflow.
+
+Example for `debug=true`
+
+**Response**
+
+```
+{
+    "Compare performance objective of A/B software releases": {
+        "status": "IN_PROGRESS",
+        "creationDate": "Oct 12, 2022, 2:10:25 PM",
+        "beginTimeStamp": "Oct 12, 2022, 2:10:25 PM",
+        "trialDetails": {
+            "A": {
+                "creationDate": "Oct 12, 2022, 2:10:25 PM",
+                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                "iterations": {
+                    "1": {
+                        "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                        "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                        "status": "COMPLETED",
+                        "iterationNumber": 1,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            }
+                        }
+                    },
+                    "2": {
+                        "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                        "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                        "status": "COMPLETED",
+                        "iterationNumber": 2,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            }
+                        }
+                    },
+                    "3": {
+                        "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                        "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                        "status": "COMPLETED",
+                        "iterationNumber": 3,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:25 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "status": "COMPLETED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "status": "COMPLETED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "status": "COMPLETED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "status": "COMPLETED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                                "status": "COMPLETED"
+                            }
+                        }
+                    }
+                },
+                "status": "COMPLETED",
+                "trialWorkflow": {
+                    "Summarizer": {
+                        "stepName": "Summarizer",
+                        "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                        "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                        "status": "COMPLETED"
+                    },
+                    "PostResults": {
+                        "stepName": "PostResults",
+                        "beginTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                        "endTimestamp": "Oct 12, 2022, 2:10:26 PM",
+                        "status": "COMPLETED"
+                    }
+                }
+            },
+            "B": {
+                "creationDate": "Oct 12, 2022, 2:10:25 PM",
+                "iterations": {
+                    "1": {
+                        "status": "QUEUED",
+                        "iterationNumber": 1,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "status": "QUEUED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "status": "QUEUED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "status": "QUEUED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "status": "QUEUED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "status": "QUEUED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "status": "QUEUED"
+                            }
+                        }
+                    },
+                    "2": {
+                        "status": "QUEUED",
+                        "iterationNumber": 2,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "status": "QUEUED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "status": "QUEUED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "status": "QUEUED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "status": "QUEUED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "status": "QUEUED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "status": "QUEUED"
+                            }
+                        }
+                    },
+                    "3": {
+                        "status": "QUEUED",
+                        "iterationNumber": 3,
+                        "workFlow": {
+                            "PreValidation": {
+                                "stepName": "PreValidation",
+                                "status": "QUEUED"
+                            },
+                            "Deployment": {
+                                "stepName": "Deployment",
+                                "status": "QUEUED"
+                            },
+                            "PostValidation": {
+                                "stepName": "PostValidation",
+                                "status": "QUEUED"
+                            },
+                            "LoadValidation": {
+                                "stepName": "LoadValidation",
+                                "status": "QUEUED"
+                            },
+                            "MetricCollection": {
+                                "stepName": "MetricCollection",
+                                "status": "QUEUED"
+                            },
+                            "Summarizer": {
+                                "stepName": "Summarizer",
+                                "status": "QUEUED"
+                            }
+                        }
+                    }
+                },
+                "status": "QUEUED",
+                "trialWorkflow": {
+                    "Summarizer": {
+                        "stepName": "Summarizer",
+                        "status": "QUEUED"
+                    },
+                    "PostResults": {
+                        "stepName": "PostResults",
+                        "status": "QUEUED"
+                    }
+                }
+            }
+        }
+    }
+}
 ```
