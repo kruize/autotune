@@ -127,7 +127,7 @@ public class ListTrialStatus extends HttpServlet {
                     trailDetailJsonObj.put("experiment_name", dummyJson.get("experiment_name"));
                     trailDetailJsonObj.put("deployment_name", dummyJson.get("deployment_name"));
                     responseJson.put(finalTrial_num, trailDetailJsonObj);
-
+                    return;
                 });
             } else if (null != experiment_name) {
                 this.existingExperiments.forEach((expName, experimentTObj) -> {
