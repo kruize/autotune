@@ -463,8 +463,25 @@ Create experiment trials using input JSON provided by Analyser module.
 
 **Response**
 
+On Success
+
 ```
-201
+{
+    "httpcode": 201,
+    "documentationLink": "",
+    "status": "SUCCESS"
+}
+```
+
+On Failure
+
+```
+{
+    "message": "Following trials : [A, B] Already exist for Experiment :  Compare performance objective of A/B software releases",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
 ```
 
 ### List Trial Status
@@ -594,12 +611,7 @@ Example for `experiment_name` set to `quarkus-resteasy-autotune-min-http-respons
             "type": "training"
         }],
         "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
-        "deployment_name": "tfb-qrh-sample",
-        "info": {"trial_info": {
-            "trial_id": "",
-            "trial_num": 0,
-            "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
-        }}
+        "deployment_name": "tfb-qrh-sample"
     },
     "1": {
         "Status": "COMPLETED",
@@ -712,10 +724,10 @@ Example for `experiment_name` set to `quarkus-resteasy-autotune-min-http-respons
 }
 ```
 
-`GET /listTrialStatus?experiment_name=<experiment name>&trial_num=<trial number>` Gives the Trial status of the
+`GET /listTrialStatus?experiment_name=<experiment name>&trial_number=<trial number>` Gives the Trial status of the
 particular trial number in an experiment
 
-Example for `trial_num=1`
+Example for `trial_number=1`
 
 **Response**
 
@@ -821,12 +833,7 @@ Example for `trial_num=1`
         "type": "training"
     }],
     "experiment_id": "04c99daec35563782c29f17ebe568ea96065a7b20b93eb47c225a2f2ad769445",
-    "deployment_name": "tfb-qrh-sample",
-    "info": {"trial_info": {
-        "trial_id": "",
-        "trial_num": 1,
-        "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
-    }}
+    "deployment_name": "tfb-qrh-sample"
 }}
 ```
 

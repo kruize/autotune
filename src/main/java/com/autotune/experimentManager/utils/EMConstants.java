@@ -23,6 +23,7 @@ public class EMConstants {
         public static final String CREATE_RESULT_DATA = "com.autotune.experimentManager.transitions.TransitionToCreateResultData";
         public static final String SEND_RESULT_DATA = "com.autotune.experimentManager.transitions.TransitionToSendResultData";
         public static final String CLEAN_OR_ROLLBACK_DEPLOYMENT = "com.autotune.experimentManager.transitions.TransitionToCleanDeployment";
+
         private TransitionClasses() {
         }
     }
@@ -30,6 +31,7 @@ public class EMConstants {
     public static final class DeploymentStrategies {
         public static final String ROLLING_UPDATE = "rollingUpdate";
         public static final String NEW_DEPLOYMENT = "newDeployment";
+
         private DeploymentStrategies() {
         }
     }
@@ -48,6 +50,7 @@ public class EMConstants {
         public static final class ExperimentManager {
             public static final String INITIALIZE_EM = "Initializing EM";
             public static final String ADD_EM_SERVLETS = "Adding EM Servlets";
+
             private ExperimentManager() {
             }
         }
@@ -56,6 +59,7 @@ public class EMConstants {
             public static final String START_TRANSITION_FOR_RUNID = "Starting transition {} for RUN ID - {}";
             public static final String END_TRANSITION_FOR_RUNID = "Ending transition {} for RUN ID - {}";
             public static final String RUNNING_TRANSITION_ON_THREAD_ID = "Running Transition on Thread ID - {}";
+
             private RunExperiment() {
             }
         }
@@ -66,6 +70,7 @@ public class EMConstants {
             public static final String START_EXECUTE_TRIAL = "Starting to execute a trial";
             public static final String START_SCHEDULED_EXECUTE_TRIAL = "Starting to execute a scheduled trial";
             public static final String START_STAGE_PROCESSORS = "Starting stage processors";
+
             private EMExecutorService() {
             }
         }
@@ -82,9 +87,10 @@ public class EMConstants {
             public static final String SUMMARY = "summary";
             public static final String COMPLETE_STATUS = "completeStatus";
             public static final String EXPERIMENT_NAME = "experiment_name";
-            public static final String TRIAL_NUM = "trial_num";
+            public static final String TRIAL_NUM = "trial_number";
             public static final String VERBOSE = "verbose";
             public static final String DEBUG = "debug";
+
             private ListTrialStatusKeys() {
             }
         }
@@ -92,6 +98,7 @@ public class EMConstants {
         public static final class DeploymentKeys {
             public static final String PARENT_DEPLOYMENT_NAME = "parent_deployment_name";
             public static final String TRAINING_DEPLOYMENT_NAME = "training_deployment_name";
+
             private DeploymentKeys() {
             }
         }
@@ -104,6 +111,7 @@ public class EMConstants {
         public static final class DeploymentTypes {
             public static final String TRAINING = "training";
             public static final String PRODUCTION = "production";
+
             private DeploymentTypes() {
             }
         }
@@ -124,6 +132,7 @@ public class EMConstants {
         public static final int EXECUTORS_MULTIPLIER = 1;
         // Maximum number of executors per CPU core
         public static final int MAX_EXECUTORS_MULTIPLIER = 4;
+
         private EMSettings() {
         }
     }
@@ -146,6 +155,7 @@ public class EMConstants {
         public static final int NO_OF_HOURS_PER_DAY = 12;
         public static final int DEPLOYMENT_IS_READY_WITHIN_MINUTE = 2;
         public static final int DEPLOYMENT_CHECK_INTERVAL_IF_READY_MILLIS = 1000;
+
         private TimeConv() {
         }
     }
@@ -156,6 +166,7 @@ public class EMConstants {
         public static final String TRIAL_RESULT_URL_DEFAULT = "";
         public static final String DEFAULT_NULL = null;
         public static final String DEPLOYMENT_TYPE_DEFAULT = "rollingUpdate";
+
         private EMJSONValueDefaults() {
         }
     }
@@ -166,6 +177,7 @@ public class EMConstants {
         public static final String MEM_QUERY_NAME = "memRequest";
         public static final String THROUGHPUT = "throughput";
         public static final String RESPONSE_TIME = "response_time";
+
         private StandardDefaults() {
         }
 
@@ -174,6 +186,7 @@ public class EMConstants {
             public static final int DEPLOYMENT_READINESS_THRESHOLD = 10;
             public static final int[] EXPONENTIAL_BACKOFF_INTERVALS = {1, 3, 4, 7, 11};
             public static final int DEFAULT_LINEAR_BACKOFF_INTERVAL = 1;
+
             private BackOffThresholds() {
             }
         }
@@ -182,6 +195,7 @@ public class EMConstants {
             public static boolean DEFAULT_NEEDS_DEPLOYMENT = false;
             public static boolean DEFAULT_CHECK_LOAD = false;
             public static boolean DEFAULT_COLLECT_METRICS = false;
+
             private EMFlowFlags() {
             }
         }
@@ -191,6 +205,7 @@ public class EMConstants {
         public static final String EM_STORAGE_CONTEXT_KEY = "experimentDetailsMap";
         public static final String EM_REGISTERED_DEPLOYMENTS = "registeredDeployments";
         public static final String EM_KUBERNETES_SERVICE = "kubernetesService";
+
         private EMKeys() {
         }
     }
@@ -217,6 +232,7 @@ public class EMConstants {
          */
         public static int EM_DELAY_IN_SECS = 2;
         public static String EM_EXECUTOR = "EM_EXECUTOR";
+
         private ParallelEngineConfigs() {
         }
 
