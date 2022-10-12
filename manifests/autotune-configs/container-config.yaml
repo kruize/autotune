@@ -16,7 +16,7 @@ tunables:
   step: 1
   queries:
   - datasource: 'prometheus'
-    query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+    query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="$CONTAINER$", $POD_LABEL$="$POD$"}'
   slo_class:
   - response_time
   - throughput
@@ -29,7 +29,7 @@ tunables:
   step: 0.01
   queries:
   - datasource: 'prometheus'
-    query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
+    query: 'rate(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[5m])'
   slo_class:
   - response_time
   - throughput
