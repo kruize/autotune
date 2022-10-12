@@ -38,7 +38,7 @@ tunables:
     - 'ZGC'
   queries:
   - datasource: 'prometheus'
-    query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+    query: 'sum(jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="$CONTAINER$", $POD_LABEL$="$POD$"})'
   slo_class:
     - response_time
     - throughput
