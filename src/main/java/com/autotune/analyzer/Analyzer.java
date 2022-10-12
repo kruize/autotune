@@ -55,5 +55,6 @@ public class Analyzer {
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperimentAPI.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(updateResultsAPI.class, ServerContext.UPDATE_RESULTS);
+        context.addServlet(RecommendationAPI.class,ServerContext.RECOMMEND_RESULTS);
     }
 }
