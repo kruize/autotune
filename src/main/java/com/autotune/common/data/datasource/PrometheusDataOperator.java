@@ -54,6 +54,7 @@ public class PrometheusDataOperator implements AutotuneDatasourceOperator{
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     AutotuneConstants.HttpConstants.MethodType.GET,
                     query);
+            System.out.println(jsonObject.toString(2));
             if (!jsonObject.has("status"))
                 return null;
             if (!jsonObject.getString("status").equalsIgnoreCase("success"))

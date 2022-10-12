@@ -300,6 +300,7 @@ public class EMUtil {
         try {
             kubernetesServices = new KubernetesServicesImpl();
             // Need to call the platform specific client to get the pod name
+            return kubernetesServices.getPodsBy("default", "app", "tfb-qrh-deployment").get(0).getMetadata().getName();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

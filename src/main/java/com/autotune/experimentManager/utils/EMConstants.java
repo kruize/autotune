@@ -245,8 +245,8 @@ public class EMConstants {
 
 		public static class QueryVar {
 			private QueryVar() { }
-			public static String POD_NAME = "$POD_NAME$";
-			public static String CONTAINER_NAME = "$CONTAINER_NAME$";
+			public static String POD_NAME = "$POD$";
+			public static String CONTAINER_NAME = "$CONTAINER$";
 		}
 	}
 }

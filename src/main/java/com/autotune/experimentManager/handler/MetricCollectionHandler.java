@@ -90,13 +90,14 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     if (null == ado) {
                         // TODO: Return an error saying unsupported datasource
                     }
-                    JSONObject resultJSON = (JSONObject) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                    String resultJSON = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
                                                                                     .get(podMetric.getDatasource())
                                                                                     .getUrl().toString(), updatedPodQuery);
                 }
                 HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
                 for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
                     String containerName = containerMapEntry.getKey();
+                    System.out.println("Container name - " + containerName);
                     for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                         Metric containerMetric = containerMetricEntry.getValue();
                         String updatedContainerQuery = EMUtil.replaceQueryVars(containerMetric.getQuery(), queryVarList);
