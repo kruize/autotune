@@ -62,36 +62,32 @@ public class RecommendationAPI extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
-        String temp = "[\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|quarkus|quarkus.hibernate-orm.jdbc.statement-fetch-size\",\n" +
-                "        \"tunable_value\": 17\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|container|memoryRequest\",\n" +
-                "        \"tunable_value\": 194.0\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|quarkus|quarkus.thread-pool.core-threads\",\n" +
-                "        \"tunable_value\": 2\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|container|cpuRequest\",\n" +
-                "        \"tunable_value\": 1.08\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|quarkus|quarkus.datasource.jdbc.min-size\",\n" +
-                "        \"tunable_value\": 7\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|quarkus|quarkus.datasource.jdbc.max-size\",\n" +
-                "        \"tunable_value\": 63\n" +
-                "    },\n" +
-                "    {\n" +
-                "        \"tunable_name\": \"docker.io/kruize/tfb-qrh:1.13.2.F_et17|quarkus|quarkus.thread-pool.queue-size\",\n" +
-                "        \"tunable_value\": 55\n" +
-                "    }\n" +
-                "]";
+        String temp = "{\"config\": {\n" +
+                "        \"container_name\": \"tfb-server\",\n" +
+                "        \"requests\": {\n" +
+                "          \"memory\": {\n" +
+                "            \"amount\": \"210.0\",\n" +
+                "            \"format\": \"Mi\",\n" +
+                "            \"additionalProperties\": {}\n" +
+                "          },\n" +
+                "          \"cpu\": {\n" +
+                "            \"amount\": \"2.26\",\n" +
+                "            \"format\": \"\",\n" +
+                "            \"additionalProperties\": {}\n" +
+                "          }\n" +
+                "        },\n" +
+                "        \"limits\": {\n" +
+                "          \"memory\": {\n" +
+                "            \"amount\": \"210.0\",\n" +
+                "            \"format\": \"Mi\",\n" +
+                "            \"additionalProperties\": {}\n" +
+                "          },\n" +
+                "          \"cpu\": {\n" +
+                "            \"amount\": \"2.26\",\n" +
+                "            \"format\": \"\",\n" +
+                "            \"additionalProperties\": {}\n" +
+                "          }\n" +
+                "        }}";
         out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":"+temp+"}");       //TODO add dummy results
         out.flush();
     }
