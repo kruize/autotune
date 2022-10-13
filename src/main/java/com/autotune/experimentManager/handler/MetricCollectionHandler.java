@@ -77,6 +77,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 // TODO: Move the constants to common constants or Autotune Constants
                 Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+
                 // Get pod name of the current trial
                 String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
                 // Listing all pod metrics

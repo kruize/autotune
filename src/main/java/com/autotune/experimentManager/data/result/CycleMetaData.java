@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.data.result;
 
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.experimentManager.utils.EMUtil;
 
 import java.util.Date;
@@ -27,6 +28,7 @@ public class CycleMetaData {
     private Date beginTimestamp;
     private Date endTimestamp;
     private EMUtil.EMExpStatus status;
+    private EMMetricResult emMetricResult;
 
 
     public Date getBeginTimestamp() {
@@ -59,5 +61,13 @@ public class CycleMetaData {
 
     public void setCycleName(String cycleName) {
         this.cycleName = cycleName;
+    }
+
+    public EMMetricResult getEmMetricResult() {
+        return emMetricResult;
+    }
+
+    public void setEmMetricResult(EMMetricResult emMetricResult) {
+        this.emMetricResult = emMetricResult;
     }
 }
