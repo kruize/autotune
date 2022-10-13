@@ -29,7 +29,7 @@ tunables:
   step: 0.01
   queries:
   - datasource: 'prometheus'
-    query: 'rate(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[5m])'
+    query: 'rate(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
   slo_class:
   - response_time
   - throughput
