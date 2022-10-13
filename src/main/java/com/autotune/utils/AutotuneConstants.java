@@ -191,35 +191,34 @@ public class AutotuneConstants {
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 12;
+        public static final int NO_OF_MSECS_IN_SEC = 1000;
         private TimeConv() {
         }
     }
 
     public static class Patterns {
-        public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
-        public static String WHITESPACE_PATTERN = "\\s";
-        public static String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
-        private Patterns() {
-        }
+        private Patterns() { }
+        public static final String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
+        public static final String WHITESPACE_PATTERN = "\\s";
+        public static final String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
     }
 
     public static class SupportedDatasources {
         private SupportedDatasources() { }
-        public static String PROMETHEUS = "prometheus";
+        public static final String PROMETHEUS = "prometheus";
     }
-<<<<<<< HEAD
-=======
 
     public static class HttpConstants {
         private HttpConstants() { }
         public static class MethodType {
             private MethodType() { }
-            public static String GET = "GET";
+            public static final String GET = "GET";
         }
     }
 
-    public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
-    public static final String MINIKUBE = "minikube";
-    public static final String OPENSHIFT = "openshift";
->>>>>>> Adds query extraction
+    public static class CycleTypes {
+        private CycleTypes() { }
+        public static final String WARMUP = "WarmUpCycle";
+        public static final String MEASUREMENT = "MeasurementCycle";
+    }
 }

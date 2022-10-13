@@ -27,6 +27,7 @@ import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
@@ -34,6 +35,7 @@ import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -77,49 +79,83 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 // TODO: Move the constants to common constants or Autotune Constants
                 Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
-
-                // Get pod name of the current trial
-                String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
-                // Listing all pod metrics
-                HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
-                for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
-                    Metric podMetric = podMetricEntry.getValue();
-                    String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
-                    updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
-                    // Need to run the updated query by calling the datasource
-                    AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
-                    if (null == ado) {
-                        // TODO: Return an error saying unsupported datasource
-                    }
-                    String resultJSON = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
-                                                                                    .get(podMetric.getDatasource())
-                                                                                    .getUrl().toString(), updatedPodQuery);
-                }
-                HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
-                for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
-                    String containerName = containerMapEntry.getKey();
-                    System.out.println("Container name - " + containerName);
-                    for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
-                        Metric containerMetric = containerMetricEntry.getValue();
-                        String updatedContainerQuery = EMUtil.replaceQueryVars(containerMetric.getQuery(), queryVarList);
-                        updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
-                        updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
-                        // Need to run the updated query by calling the datasource
-                        AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
-                        if (null == ado) {
-                            // TODO: Return an error saying unsupported datasource
+                LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
+                LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();
+                String warmupCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles();
+                String measurementCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementCycles();
+                int warmupCyclesCount = (warmupCycles != null) ? Integer.parseInt(warmupCycles) : -1;
+                int measurementCyclesCount = (measurementCycles != null) ? Integer.parseInt(measurementCycles) : -1;
+                if (warmupCyclesCount > 0) cycles.put(AutotuneConstants.CycleTypes.WARMUP, warmupCyclesCount);
+                if (measurementCyclesCount > 0) cycles.put(AutotuneConstants.CycleTypes.MEASUREMENT, measurementCyclesCount);
+                cycles.forEach((cycleName, count) -> {
+                    LinkedHashMap<Integer, CycleMetaData> iterationCycle = new LinkedHashMap<>();
+                    IntStream.rangeClosed(1, count).forEach((iteration) -> {
+                        String durationTime = null;
+                        if (cycleName == AutotuneConstants.CycleTypes.WARMUP) {
+                            durationTime = experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupDuration();
+                        } else if (cycleName == AutotuneConstants.CycleTypes.MEASUREMENT) {
+                            durationTime = experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementDuration();
                         }
-                        if (null != updatedContainerQuery) {
-                            System.out.println("Updated Query - " + updatedContainerQuery);
-                            String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
-                                    .get(containerMetric.getDatasource())
-                                    .getUrl().toString(), updatedContainerQuery);
-                            if (null != queryResult) {
-                                System.out.println("Query Result - " + queryResult);
+                        int timeToSleep = CommonUtils.getTimeToSleepMillis(CommonUtils.getTimeValue(durationTime), CommonUtils.getTimeUnit(durationTime));
+                        try {
+                            Thread.sleep(timeToSleep);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        CycleMetaData cycleMetaData = new CycleMetaData();
+                        cycleMetaData.setCycleName(cycleName);
+                        cycleMetaData.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
+                        // Get pod name of the current trial
+                        String podName = EMUtil.getCurrentPodNameOfTrial(experimentTrial);
+                        // Listing all pod metrics
+                        HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+                        for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+                            Metric podMetric = podMetricEntry.getValue();
+                            String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
+                            updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
+                            // Need to run the updated query by calling the datasource
+                            AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
+                            if (null == ado) {
+                                // TODO: Return an error saying unsupported datasource
+                            }
+                            String resultJSON = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                    .get(podMetric.getDatasource())
+                                    .getUrl().toString(), updatedPodQuery);
+                        }
+                        HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+                        for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+                            String containerName = containerMapEntry.getKey();
+                            System.out.println("Container name - " + containerName);
+                            for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                                Metric containerMetric = containerMetricEntry.getValue();
+                                String updatedContainerQuery = EMUtil.replaceQueryVars(containerMetric.getQuery(), queryVarList);
+                                updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
+                                updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
+                                // Need to run the updated query by calling the datasource
+                                AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
+                                if (null == ado) {
+                                    // TODO: Return an error saying unsupported datasource
+                                }
+                                if (null != updatedContainerQuery) {
+                                    System.out.println("Updated Query - " + updatedContainerQuery);
+                                    String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                            .get(containerMetric.getDatasource())
+                                            .getUrl().toString(), updatedContainerQuery);
+                                    if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
+                                        try {
+                                            cycleMetaData.getEmMetricResult().getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                            System.out.println("Query Result - " + queryResult);
+                                        } catch (Exception e) {
+                                            LOGGER.error("The Query result - {} cannot be parsed as float", queryResult);
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                }
+                        iterationCycle.put(iteration, cycleMetaData);
+                    });
+                    cycleMetaDataMap.put(cycleName, iterationCycle);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -127,24 +163,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     kubernetesServices.shutdownClient();
                 }
             }
-            LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
-            LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();
-            String warmupCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles();
-            String measurementCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementCycles();
-            int warmupCyclesCount = (warmupCycles != null) ? Integer.parseInt(warmupCycles) : -1;
-            int measurementCyclesCount = (measurementCycles != null) ? Integer.parseInt(measurementCycles) : -1;
-            if (warmupCyclesCount > 0) cycles.put("WarmupCycles", warmupCyclesCount);
-            if (measurementCyclesCount > 0) cycles.put("MeasurementCycles", measurementCyclesCount);
-            cycles.forEach((cycleName, count) -> {
-                LinkedHashMap<Integer, CycleMetaData> iterationCycle = new LinkedHashMap<>();
-                IntStream.rangeClosed(1, count).forEach((iteration) -> {
-                    CycleMetaData cycleMetaData = new CycleMetaData();
-                    cycleMetaData.setCycleName(cycleName);
-                    cycleMetaData.setStatus(EMUtil.EMExpStatus.QUEUED);
-                    iterationCycle.put(iteration, cycleMetaData);
-                });
-                cycleMetaDataMap.put(cycleName, iterationCycle);
-            });
+
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
             EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
