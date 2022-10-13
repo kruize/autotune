@@ -33,7 +33,6 @@ public class AutotuneConstants {
     public static final class StartUpMode {
         public static final String AUTOTUNE_MODE = "AUTOTUNE_MODE";
         public static final String EM_ONLY_MODE = "EM_ONLY";
-
         private StartUpMode() {
         }
     }
@@ -46,7 +45,6 @@ public class AutotuneConstants {
         public static final String URL = "url";
         public static final String OPERATION = "operation";
         public static final String SEARCHSPACE = "search_space";
-
         private HpoOperations() {
         }
     }
@@ -150,8 +148,58 @@ public class AutotuneConstants {
         public static final String CYCLES = "cycles";
         public static final String DURATION = "duration";
         public static final String PERCENTILE_INFO = "percentile_info";
-
         private JSONKeys() {
+        }
+    }
+
+    public static final class TimeUnitsExt {
+        public static final String SECOND_LC_SINGULAR = "second";
+        public static final String SECOND_LC_PLURAL = SECOND_LC_SINGULAR + "s";
+        public static final String SECOND_UC_PLURAL = SECOND_LC_PLURAL.toUpperCase();
+        public static final String SECOND_UC_SINGULAR = SECOND_LC_SINGULAR.toUpperCase();
+        public static final String SECOND_SHORT_LC_SINGULAR = "sec";
+        public static final String SECOND_SHORT_LC_PLURAL = SECOND_SHORT_LC_SINGULAR + "s";
+        public static final String SECOND_SHORT_UC_PLURAL = SECOND_SHORT_LC_PLURAL.toUpperCase();
+        public static final String SECOND_SHORT_UC_SINGULAR = SECOND_SHORT_LC_SINGULAR.toUpperCase();
+        public static final String SECOND_SINGLE_LC = "s";
+        public static final String SECOND_SINGLE_UC = SECOND_SINGLE_LC.toUpperCase();
+        public static final String MINUTE_LC_SINGULAR = "minute";
+        public static final String MINUTE_LC_PLURAL = MINUTE_LC_SINGULAR + "s";
+        public static final String MINUTE_UC_PLURAL = MINUTE_LC_PLURAL.toUpperCase();
+        public static final String MINUTE_UC_SINGULAR = MINUTE_LC_SINGULAR.toUpperCase();
+        public static final String MINUTE_SHORT_LC_SINGULAR = "min";
+        public static final String MINUTE_SHORT_LC_PLURAL = MINUTE_SHORT_LC_SINGULAR + "s";
+        public static final String MINUTE_SHORT_UC_PLURAL = MINUTE_SHORT_LC_PLURAL.toUpperCase();
+        public static final String MINUTE_SHORT_UC_SINGULAR = MINUTE_SHORT_LC_SINGULAR.toUpperCase();
+        public static final String MINUTE_SINGLE_LC = "m";
+        public static final String MINUTE_SINGLE_UC = MINUTE_SINGLE_LC.toUpperCase();
+        public static final String HOUR_LC_SINGULAR = "hour";
+        public static final String HOUR_LC_PLURAL = HOUR_LC_SINGULAR + "s";
+        public static final String HOUR_UC_PLURAL = HOUR_LC_PLURAL.toUpperCase();
+        public static final String HOUR_UC_SINGULAR = HOUR_LC_SINGULAR.toUpperCase();
+        public static final String HOUR_SHORT_LC_SINGULAR = "hr";
+        public static final String HOUR_SHORT_LC_PLURAL = HOUR_SHORT_LC_SINGULAR + "s";
+        public static final String HOUR_SHORT_UC_PLURAL = HOUR_SHORT_LC_PLURAL.toUpperCase();
+        public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
+        public static final String HOUR_SINGLE_LC = "h";
+        public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
+        private TimeUnitsExt() {
+        }
+    }
+
+    public static class TimeConv {
+        public static int NO_OF_SECONDS_PER_MINUTE = 60;
+        public static int NO_OF_MINUTES_PER_HOUR = 60;
+        public static int NO_OF_HOURS_PER_DAY = 12;
+        private TimeConv() {
+        }
+    }
+
+    public static class Patterns {
+        public static String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
+        public static String WHITESPACE_PATTERN = "\\s";
+        public static String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+        private Patterns() {
         }
     }
 }

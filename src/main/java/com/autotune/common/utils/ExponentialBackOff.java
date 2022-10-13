@@ -55,6 +55,7 @@ public final class ExponentialBackOff {
 
 
     public ExponentialBackOff(Builder builder) {
+        if (null == builder) builder = new Builder();
         this.numberOfRetries = builder.numberOfRetries;
         this.numberOfTriesLeft = builder.numberOfRetries;
         this.initialIntervalMillis = (builder.initialIntervalMillis > 0) ? builder.initialIntervalMillis : defaultInitialIntervalMillis;
