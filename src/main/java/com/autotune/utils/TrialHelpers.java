@@ -126,9 +126,9 @@ public class TrialHelpers {
 
         TrialSettings trialSettings = new TrialSettings("1",
                 "1min",
-                "1",
+                "2",
                 "1min",
-                "1"
+                "2"
         );
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy(ROLLING_UPDATE);
 

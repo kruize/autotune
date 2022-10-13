@@ -21,15 +21,13 @@ import com.autotune.experimentManager.utils.EMUtil;
 import java.util.Date;
 
 /**
- * Warmup and MeasurementCycle details like status and timestamp
+ * Warmup and Measurement Cycle details like status and timestamp
  */
 public class CycleMetaData {
     private String cycleName;
     private Date beginTimestamp;
     private Date endTimestamp;
     private EMUtil.EMExpStatus status;
-    private EMMetricResult emMetricResult;
-
 
     public Date getBeginTimestamp() {
         return beginTimestamp;
@@ -61,13 +59,5 @@ public class CycleMetaData {
 
     public void setCycleName(String cycleName) {
         this.cycleName = cycleName;
-    }
-
-    public EMMetricResult getEmMetricResult() {
-        return emMetricResult;
-    }
-
-    public void setEmMetricResult(EMMetricResult emMetricResult) {
-        this.emMetricResult = emMetricResult;
     }
 }

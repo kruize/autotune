@@ -18,6 +18,7 @@ package com.autotune.experimentManager.handler;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.common.data.datasource.AutotuneDatasourceOperator;
 import com.autotune.common.data.datasource.DatasourceOperator;
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.KubernetesContexts;
@@ -37,7 +38,6 @@ import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +98,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         }
                         int timeToSleep = CommonUtils.getTimeToSleepMillis(CommonUtils.getTimeValue(durationTime), CommonUtils.getTimeUnit(durationTime));
                         try {
+                            LOGGER.info("Waiting for {} milli seconds to collect metrics", timeToSleep);
                             Thread.sleep(timeToSleep);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -118,9 +119,24 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
-                            String resultJSON = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                            String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
                                     .get(podMetric.getDatasource())
                                     .getUrl().toString(), updatedPodQuery);
+                            if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
+                                try {
+                                    queryResult = queryResult.trim();
+                                    LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = podMetric.getCycleDataMap();
+                                    if (!metricCycleDataMap.containsKey(cycleName)) {
+                                        metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
+                                    }
+                                    EMMetricResult emMetricResult = new EMMetricResult();
+                                    emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                    metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
+                                    System.out.println("Query Result - " + queryResult);
+                                } catch (Exception e) {
+                                    LOGGER.error("The Query result - {} cannot be parsed as float", queryResult);
+                                }
+                            }
                         }
                         HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
                         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
@@ -143,7 +159,14 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                             .getUrl().toString(), updatedContainerQuery);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
-                                            cycleMetaData.getEmMetricResult().getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                            queryResult = queryResult.trim();
+                                            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = containerMetric.getCycleDataMap();
+                                            if (!metricCycleDataMap.containsKey(cycleName)) {
+                                                metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
+                                            }
+                                            EMMetricResult emMetricResult = new EMMetricResult();
+                                            emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                            metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
                                             System.out.println("Query Result - " + queryResult);
                                         } catch (Exception e) {
                                             LOGGER.error("The Query result - {} cannot be parsed as float", queryResult);
@@ -156,6 +179,21 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     });
                     cycleMetaDataMap.put(cycleName, iterationCycle);
                 });
+                // Summarisation of metrics collected
+                HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+                for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+                    Metric podMetric = podMetricEntry.getValue();
+
+                }
+                HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+                for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+                    String containerName = containerMapEntry.getKey();
+                    System.out.println("Container name - " + containerName);
+                    for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                        Metric containerMetric = containerMetricEntry.getValue();
+
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
