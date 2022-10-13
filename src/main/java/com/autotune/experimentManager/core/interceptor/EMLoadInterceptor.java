@@ -1,7 +1,6 @@
 package com.autotune.experimentManager.core.interceptor;
 
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import org.slf4j.Logger;
@@ -9,9 +8,11 @@ import org.slf4j.LoggerFactory;
 
 public class EMLoadInterceptor implements LoadInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMLoadInterceptor.class);
+
     /**
      * Load detection module which returns DETECTED if the load can be detected
      * with attributes provided in experiment trial object
+     *
      * @param experimentTrial
      * @return
      */
@@ -24,6 +25,7 @@ public class EMLoadInterceptor implements LoadInterceptor {
     /**
      * Load availability based on the datasource result.
      * Returns AVAILABLE if the load variation is found
+     *
      * @param experimentTrial
      * @return
      */
@@ -44,7 +46,7 @@ public class EMLoadInterceptor implements LoadInterceptor {
                 // Proceed to check if load is available (minimal variation)
                 if (EMUtil.InterceptorAvailabilityStatus.AVAILABLE == currentAvailability) {
                     // Will proceed for metric cycles if the load is detected
-                    return  EMUtil.LoadAvailabilityStatus.LOAD_AVAILABLE;
+                    return EMUtil.LoadAvailabilityStatus.LOAD_AVAILABLE;
                 }
                 try {
                     LOGGER.debug("The Load is not yet available, will be checking it again");

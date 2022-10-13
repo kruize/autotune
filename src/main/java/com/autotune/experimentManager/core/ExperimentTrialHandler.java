@@ -17,29 +17,15 @@ package com.autotune.experimentManager.core;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.PodContainer;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.experimentManager.core.interceptor.EMLoadInterceptor;
-import com.autotune.experimentManager.data.EMMapper;
-
-import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.experimentManager.utils.EMUtil;
-import com.autotune.utils.HttpUtils;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Service class helper used to control and execute Lifecycle of Experiments using trial numbers.
@@ -48,25 +34,6 @@ public class ExperimentTrialHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentTrialHandler.class);
     private ExperimentTrial experimentTrial;
 
-    public ExperimentTrialHandler(ExperimentTrial experimentTrial) {
-        this.experimentTrial = experimentTrial;
-        EMUtil.setFlowFlagsBasedOnTrial(experimentTrial);
-        String experimentName = experimentTrial.getExperimentName();
-        if (null != experimentTrial.getTrialInfo() && experimentTrial.getTrialInfo().getTrialNum() != -1) {
-            String trialNum = String.valueOf(experimentTrial.getTrialInfo().getTrialNum());
-            ConcurrentHashMap<String, HashMap<String, ExperimentTrial>> expTrialMap = EMMapper.getInstance().getExpTrialMap();
-            if (expTrialMap.containsKey(experimentName)) {
-                HashMap<String, ExperimentTrial> expMap = expTrialMap.get(experimentName);
-                if (!expMap.containsKey(trialNum)) {
-                    expMap.put(trialNum, experimentTrial);
-                }
-            } else {
-                HashMap<String, ExperimentTrial> trialMap = new HashMap<String, ExperimentTrial>();
-                trialMap.put(trialNum, experimentTrial);
-                expTrialMap.put(experimentName, trialMap);
-            }
-        }
-    }
 
     public static JSONObject getDummyMetricJson(ExperimentTrial experimentTrial) {
         JSONObject percentile_info = new JSONObject().
@@ -93,7 +60,7 @@ public class ExperimentTrialHandler {
         String imageName = "";
         String containerName = "";
         HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
-        Map.Entry<String,TrialDetails> entry = trialDetailsHashMap.entrySet().iterator().next();
+        Map.Entry<String, TrialDetails> entry = trialDetailsHashMap.entrySet().iterator().next();
         imageName = entry.getValue().getConfigData().getStackName();
         containerName = entry.getValue().getConfigData().getContainerName();
         containers.put(new JSONObject().put(
@@ -109,7 +76,7 @@ public class ExperimentTrialHandler {
                                         "general_info", general_info
                                 )
                         ).put(
-                                "datasource" ,"prometheus"
+                                "datasource", "prometheus"
                         )
                 )
         ));
@@ -140,126 +107,4 @@ public class ExperimentTrialHandler {
         return retJson;
     }
 
-    public ExperimentTrial getExperimentTrial() {
-        return experimentTrial;
-    }
-
-    public void setExperimentTrial(ExperimentTrial experimentTrial) {
-        this.experimentTrial = experimentTrial;
-    }
-
-    public void startExperimentTrials() {
-        LOGGER.debug("Start Exp Trial");
-        int numberOFIterations = Integer.parseInt(this.experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
-        EMLoadInterceptor emLoadInterceptor = new EMLoadInterceptor();
-        // Check for any conflicting on going trial and set the status as IN_PROGRESS, QUEUED
-        // Currently setting it to IN_PROGRESS
-        this.experimentTrial.setStatus(EMUtil.EMExpStatus.IN_PROGRESS);
-        String imageName = "";
-        String containerName = "";
-        this.experimentTrial.getTrialDetails().forEach((tracker, trialDetails) -> {
-            KubernetesServices kubernetesServices = null;
-            try {
-                kubernetesServices = new KubernetesServicesImpl();
-                DeploymentHandler deploymentHandler = new DeploymentHandler(
-                        this.experimentTrial.getResourceDetails().getNamespace(),
-                        this.experimentTrial.getResourceDetails().getDeploymentName(),
-                        trialDetails.getConfigData(),
-                        kubernetesServices
-                );
-                IntStream.rangeClosed(1, numberOFIterations).forEach(
-                    i -> {
-                        // Check for deployment needed and proceed
-                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.NEEDS_DEPLOYMENT)) {
-                            this.experimentTrial.setStatus(EMUtil.EMExpStatus.CREATED);
-                            deploymentHandler.initiateDeploy();
-                            // Check if deployment is ready
-                            EMUtil.DeploymentReadinessStatus deploymentReadinessStatus = deploymentHandler.isDeploymentReady(this.experimentTrial);
-                            switch (deploymentReadinessStatus) {
-                                case READY:
-                                    this.experimentTrial.setStatus(EMUtil.EMExpStatus.DEPLOYMENT_SUCCESSFUL);
-                                    break;
-                                case NOT_READY:
-                                    // Gracefuly exit for this iteration
-                                    this.experimentTrial.setStatus(EMUtil.EMExpStatus.DEPLOYMENT_FAILED);
-                                    LOGGER.debug("Giving up for ExpName {} trail No {} for {} attempt", this.experimentTrial.getExperimentName(), this.experimentTrial.getTrialInfo().getTrialNum(), i);
-                                    break;
-                            }
-                        } else {
-                            LOGGER.debug("Deployment not required for Experiment - \"{}\" with trial number - \"{}\"",
-                                    this.experimentTrial.getExperimentName(),
-                                    this.experimentTrial.getTrialInfo().getTrialNum());
-                        }
-
-
-                        // Check for load check needed and proceed
-                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.CHECK_LOAD)) {
-                            this.experimentTrial.setStatus(EMUtil.EMExpStatus.WAITING_FOR_LOAD);
-                            // Proceeding to load check as deployment is successful
-                            EMUtil.LoadAvailabilityStatus loadAvailabilityStatus = emLoadInterceptor.isLoadAvailable(this.experimentTrial);
-                            switch (loadAvailabilityStatus) {
-                                case LOAD_AVAILABLE:
-                                    // Proceed to collect metrics as load is available
-                                    this.experimentTrial.setStatus(EMUtil.EMExpStatus.LOAD_CHECK_SUCCESSFUL);
-                                    break;
-                                case LOAD_NOT_AVAILABLE:
-                                    // Proceed to exit gracefully as load is not available
-                                    this.experimentTrial.setStatus(EMUtil.EMExpStatus.LOAD_CHECK_FAILED);
-                                    break;
-                            }
-                        } else {
-                            LOGGER.debug("Load Check not required for Experiment - \"{}\" with trial number - \"{}\"",
-                                    this.experimentTrial.getExperimentName(),
-                                    this.experimentTrial.getTrialInfo().getTrialNum());
-                        }
-
-                        // Check for metrics collection needed and proceed
-                        if (this.experimentTrial.getFlagsMap().get(EMUtil.EMFlowFlags.COLLECT_METRICS)) {
-                            this.experimentTrial.setStatus(EMUtil.EMExpStatus.COLLECTING_METRICS);
-                            // Collect metrics
-                            /*
-                            TODO:
-                                Need to check if the metrics collection is successful
-
-                                Currently setting it as METRIC_COLLECTION_SUCCESSFUL
-                                if metric collection fails update it as
-                                this.experimentTrial.setStatus(EMUtil.EMExpStatus.METRIC_COLLECTION_FAILED);
-                             */
-
-                            this.experimentTrial.setStatus(EMUtil.EMExpStatus.METRIC_COLLECTION_SUCCESSFUL);
-                        } else {
-                            LOGGER.debug("Metrics collection not required for Experiment - \"{}\" with trial number - \"{}\"",
-                                    this.experimentTrial.getExperimentName(),
-                                    this.experimentTrial.getTrialInfo().getTrialNum());
-                        }
-                    }
-                );
-                // Setting the status to `COMPLETED` as the trial is Completed
-                this.experimentTrial.setStatus(EMUtil.EMExpStatus.TRIAL_COMPLETED);
-                // Set the status to success or fail after checking the successful completion of returning trail data
-                // Currently setting as TRIAL_RESULT_SENT_SUCCESSFULLY
-                // on failure we need to set it as TRIAL_RESULT_SEND_FAILED
-                this.experimentTrial.setStatus(EMUtil.EMExpStatus.TRIAL_RESULT_SENT_SUCCESSFULLY);
-            } catch (Exception e) {
-                LOGGER.error(e.toString());
-                e.printStackTrace();
-            } finally {
-                if (kubernetesServices != null)
-                    kubernetesServices.shutdownClient();
-            }
-        });
-        //Accumulate and send metrics
-        JSONObject retJson = getDummyMetricJson(this.experimentTrial);
-        URL trial_result_url = null;
-        if (null != this.experimentTrial.getTrialInfo() && null!= this.experimentTrial.getTrialInfo().getTrialResultURL()) {
-            try {
-                trial_result_url = new URL(this.experimentTrial.getTrialInfo().getTrialResultURL());
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-            LOGGER.debug("POST to URL. {}", trial_result_url);
-            HttpUtils.postRequest(trial_result_url, retJson.toString());
-        }
-        LOGGER.debug(retJson.toString());
-    }
 }

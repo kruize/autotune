@@ -74,11 +74,11 @@ public class TrialHelpers {
     /**
      * Update the results obtained from EM to the corresponding AutotuneExperiment object for further processing
      */
-    public static void updateExperimentTrial(int trialNumber,
+    public static void updateExperimentTrial(String trialNumber,
                                              AutotuneExperiment autotuneExperiment,
                                              JSONObject trialResultsJson) throws InvalidValueException, IncompatibleInputJSONException {
         String tracker = TRAINING;
-        ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNumber);
+        ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(Integer.parseInt(trialNumber));
         if (null == experimentTrial) {
             LOGGER.error("Invalid results JSON: Invalid trialNumber: " + trialNumber);
             throw new InvalidValueException("Invalid results JSON: Invalid trialNumber: " + trialNumber);

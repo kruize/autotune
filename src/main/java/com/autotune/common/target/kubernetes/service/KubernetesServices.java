@@ -17,6 +17,7 @@
 package com.autotune.common.target.kubernetes.service;
 
 import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.utils.ExponentialBackOff;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -86,5 +87,15 @@ public interface KubernetesServices {
     //Watch endpoints. Used to trigger events based on some action to kubernetes resources.
     void watchEndpoints(CustomResourceDefinitionContext crd);
 
+    //Check if deployment is ready
     public boolean isDeploymentReady(String namespace, String deploymentName);
+
+    //Check if deployment is ready using Exponential backoff
+    public boolean isDeploymentReady(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff);
+
+    //Check if pods are running
+    public boolean arePodsRunning(String namespace, String deploymentName);
+
+    //Check if pods are running using Exponential backoff
+    public boolean arePodsRunning(String namespace, String deploymentName, ExponentialBackOff exponentialBackOff);
 }
