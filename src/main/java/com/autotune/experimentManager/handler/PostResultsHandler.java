@@ -15,14 +15,17 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
+import com.autotune.utils.AutotuneConstants;
 import com.autotune.utils.HttpUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -32,6 +35,9 @@ import javax.servlet.ServletContext;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static com.autotune.experimentManager.core.ExperimentTrialHandler.getDummyMetricJson;
 
@@ -55,8 +61,24 @@ public class PostResultsHandler implements EMHandlerInterface {
             /**
              * Implement PostResultsHandler Logic
              */
-            JSONObject retJson = getDummyMetricJson(experimentTrial);
-            retJson.put("trialNumber", trialDetails.getTrialNumber());
+            HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+            for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+                Metric podMetric = podMetricEntry.getValue();
+                if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                    LOGGER.info("Mean result for {} is {} ", podMetric.getName(), podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                }
+            }
+            HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+            for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+                for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                    Metric containerMetric = containerMetricEntry.getValue();
+                    if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                        LOGGER.info("Mean result for {} is {} ", containerMetric.getName(), containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    }
+                }
+            }
+            JSONObject retJson = EMUtil.getRealMetricsJSON(experimentTrial, false);
+            LOGGER.info("JSON Getting posted to analyser : \n {} ", retJson.toString(2));
             URL trial_result_url = null;
             if (null != experimentTrial.getExperimentSettings() && null != experimentTrial.getTrialResultURL()) {
                 try {

@@ -179,11 +179,27 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     });
                     cycleMetaDataMap.put(cycleName, iterationCycle);
                 });
-                // Summarisation of metrics collected
+                // Summarization of metrics collected
                 HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
                 for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
                     Metric podMetric = podMetricEntry.getValue();
-
+                    LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = podMetric.getCycleDataMap();
+                    if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
+                        LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                        float sumVal = 0;
+                        int removableEntries = 0;
+                        for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
+                            EMMetricResult emMetricResult = measurementMapEntry.getValue();
+                            if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
+                                removableEntries = removableEntries + 1;
+                            else
+                                sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                        }
+                        float avgVal = sumVal / (measurementMap.size() - removableEntries);
+                        EMMetricResult emMetricResult = new EMMetricResult();
+                        emMetricResult.getEmMetricGenericResults().setMean(avgVal);
+                        podMetric.setEmMetricResult(emMetricResult);
+                    }
                 }
                 HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
                 for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
@@ -191,7 +207,23 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     System.out.println("Container name - " + containerName);
                     for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                         Metric containerMetric = containerMetricEntry.getValue();
-
+                        LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = containerMetric.getCycleDataMap();
+                        if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
+                            LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                            float sumVal = 0;
+                            int removableEntries = 0;
+                            for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
+                                EMMetricResult emMetricResult = measurementMapEntry.getValue();
+                                if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
+                                    removableEntries = removableEntries + 1;
+                                else
+                                    sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                            }
+                            float avgVal = sumVal / (measurementMap.size() - removableEntries);
+                            EMMetricResult emMetricResult = new EMMetricResult();
+                            emMetricResult.getEmMetricGenericResults().setMean(avgVal);
+                            containerMetric.setEmMetricResult(emMetricResult);
+                        }
                     }
                 }
             } catch (Exception e) {

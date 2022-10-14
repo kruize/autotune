@@ -15,14 +15,20 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.google.gson.GsonBuilder;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -310,5 +316,76 @@ public class EMUtil {
             }
         }
         return null;
+    }
+
+    public static JSONObject getRealMetricsJSON(ExperimentTrial experimentTrial, boolean verbose) {
+        JSONArray podMetrics = new JSONArray();
+        JSONArray containers = new JSONArray();
+        HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+        for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+            Metric podMetric = podMetricEntry.getValue();
+            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                JSONObject summary_results = new JSONObject();
+                JSONObject general_info = new JSONObject();
+                general_info.put("mean", podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                summary_results.put("general_info", general_info);
+                JSONObject podMetricJSON = new JSONObject();
+                podMetricJSON.put("name", podMetric.getName());
+                podMetricJSON.put("datasource", podMetric.getDatasource());
+                podMetricJSON.put("summary_results", summary_results);
+                podMetrics.put(podMetricJSON);
+            }
+        }
+        HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+        for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+            String containerName = containerMapEntry.getKey();
+            JSONArray containerMetrics = new JSONArray();
+            for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                Metric containerMetric = containerMetricEntry.getValue();
+                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                    JSONObject summary_results = new JSONObject();
+                    JSONObject general_info = new JSONObject();
+                    general_info.put("mean", containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    summary_results.put("general_info", general_info);
+                    JSONObject containerMetricJSON = new JSONObject();
+                    containerMetricJSON.put("name", containerMetric.getName());
+                    containerMetricJSON.put("datasource", containerMetric.getDatasource());
+                    containerMetricJSON.put("summary_results", summary_results);
+                    containerMetrics.put(containerMetricJSON);
+                }
+            }
+            containers.put(new JSONObject().put(
+                            "container_name", containerName
+                    ).put(
+                            "container_metrics", containerMetrics
+                    )
+            );
+        }
+        HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
+        JSONArray deployments = new JSONArray();
+        deployments.put(
+                new JSONObject().
+                        put("pod_metrics", podMetrics).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
+                        put("type", "training").
+                        put("containers", containers)
+        );
+        JSONObject retJson = new JSONObject();
+        retJson.put("experiment_name", experimentTrial.getExperimentName());
+        retJson.put("experiment_id", experimentTrial.getExperimentId());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
+        if (null != experimentTrial.getTrialInfo()) {
+            retJson.put("info", new JSONObject().put("trial_info",
+                    new JSONObject(
+                            new GsonBuilder()
+                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .create()
+                                    .toJson(experimentTrial.getTrialInfo())
+                    )
+            ));
+        }
+        retJson.put("deployments", deployments);
+        return retJson;
     }
 }
