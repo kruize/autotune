@@ -33,8 +33,9 @@ public final class Metric {
     private final String query;
     private final String datasource;
     private final String valueType;
+    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<String, EMMetricResult>();
     private EMMetricResult emMetricResult;
-    private final LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>();
+    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>>();
 
     public Metric(String name,
                   String query,
@@ -70,8 +71,12 @@ public final class Metric {
         this.emMetricResult = emMetricResult;
     }
 
-    public LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> getCycleDataMap() {
+    public LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> getCycleDataMap() {
         return cycleDataMap;
+    }
+
+    public LinkedHashMap<String, EMMetricResult> getTrialSummaryResult() {
+        return trialSummaryResult;
     }
 
     @Override

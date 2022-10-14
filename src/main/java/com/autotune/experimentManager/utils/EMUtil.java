@@ -16,6 +16,7 @@
 package com.autotune.experimentManager.utils;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.Metric;
@@ -23,14 +24,12 @@ import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class EMUtil {
@@ -353,6 +352,69 @@ public class EMUtil {
                     containerMetricJSON.put("summary_results", summary_results);
                     containerMetrics.put(containerMetricJSON);
                 }
+            }
+            containers.put(new JSONObject().put(
+                            "container_name", containerName
+                    ).put(
+                            "container_metrics", containerMetrics
+                    )
+            );
+        }
+        HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
+        JSONArray deployments = new JSONArray();
+        deployments.put(
+                new JSONObject().
+                        put("pod_metrics", podMetrics).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
+                        put("type", "training").
+                        put("containers", containers)
+        );
+        JSONObject retJson = new JSONObject();
+        retJson.put("experiment_name", experimentTrial.getExperimentName());
+        retJson.put("experiment_id", experimentTrial.getExperimentId());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
+        if (null != experimentTrial.getTrialInfo()) {
+            retJson.put("info", new JSONObject().put("trial_info",
+                    new JSONObject(
+                            new GsonBuilder()
+                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .create()
+                                    .toJson(experimentTrial.getTrialInfo())
+                    )
+            ));
+        }
+        retJson.put("deployments", deployments);
+        return retJson;
+    }
+
+    public static JSONObject getLiveMetricData(ExperimentTrial experimentTrial, String trialNum) {
+        JSONArray podMetrics = new JSONArray();
+        JSONArray containers = new JSONArray();
+        HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+        for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+            Metric podMetric = podMetricEntry.getValue();
+            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
+            JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+            JSONObject podMetricJSON = new JSONObject();
+            podMetricJSON.put("name", podMetric.getName());
+            podMetricJSON.put("datasource", podMetric.getDatasource());
+            podMetricJSON.put("iteration_results", iteration_results);
+            podMetrics.put(podMetricJSON);
+        }
+        HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+        for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+            String containerName = containerMapEntry.getKey();
+            JSONArray containerMetrics = new JSONArray();
+            for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                Metric containerMetric = containerMetricEntry.getValue();
+                LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
+                JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                JSONObject containerMetricJSON = new JSONObject();
+                containerMetricJSON.put("name", containerMetric.getName());
+                containerMetricJSON.put("datasource", containerMetric.getDatasource());
+                containerMetricJSON.put("iteration_results", iteration_results);
+                podMetrics.put(containerMetricJSON);
             }
             containers.put(new JSONObject().put(
                             "container_name", containerName

@@ -23,6 +23,7 @@ import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
+import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.Gson;
 import org.json.JSONObject;
 
@@ -118,17 +119,23 @@ public class ListTrialStatus extends HttpServlet {
                 });
             } else if (null != experiment_name && null != trial_num) {
                 String finalTrial_num = trial_num;
-                this.existingExperiments.forEach((expName, experimentTObj) -> {
-                    ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
-                    TrialDetails trialDetails = eobj.getTrialDetails().get(finalTrial_num);
-                    JSONObject trailDetailJsonObj = new JSONObject(new Gson().toJson(trialDetails));
-                    JSONObject dummyJson = ExperimentTrialHandler.getDummyMetricJson(eobj);
-                    trailDetailJsonObj.put("deployments", dummyJson.get("deployments"));
-                    trailDetailJsonObj.put("experiment_name", dummyJson.get("experiment_name"));
-                    trailDetailJsonObj.put("deployment_name", dummyJson.get("deployment_name"));
-                    responseJson.put(finalTrial_num, trailDetailJsonObj);
-                    return;
-                });
+                if (verbose) {
+                    if (this.existingExperiments.containsKey(experiment_name)) {
+                        ExperimentTrial experimentTrial = (ExperimentTrial) this.existingExperiments.get(experiment_name);
+                        responseJson.put(finalTrial_num, EMUtil.getLiveMetricData(experimentTrial, trial_num));
+                    }
+                } else {
+                    this.existingExperiments.forEach((expName, experimentTObj) -> {
+                        ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
+                        TrialDetails trialDetails = eobj.getTrialDetails().get(finalTrial_num);
+                        JSONObject trailDetailJsonObj = new JSONObject(new Gson().toJson(trialDetails));
+                        JSONObject dummyJson = ExperimentTrialHandler.getDummyMetricJson(eobj);
+                        trailDetailJsonObj.put("deployments", dummyJson.get("deployments"));
+                        trailDetailJsonObj.put("experiment_name", dummyJson.get("experiment_name"));
+                        trailDetailJsonObj.put("deployment_name", dummyJson.get("deployment_name"));
+                        responseJson.put(finalTrial_num, trailDetailJsonObj);
+                    });
+                }
             } else if (null != experiment_name) {
                 this.existingExperiments.forEach((expName, experimentTObj) -> {
                     ExperimentTrial eobj = (ExperimentTrial) experimentTObj;
