@@ -120,9 +120,13 @@ public class ListTrialStatus extends HttpServlet {
             } else if (null != experiment_name && null != trial_num) {
                 String finalTrial_num = trial_num;
                 if (verbose) {
+                    System.out.println("In verbose");
                     if (this.existingExperiments.containsKey(experiment_name)) {
+                        System.out.println("Experiment name found - " + experiment_name);
                         ExperimentTrial experimentTrial = (ExperimentTrial) this.existingExperiments.get(experiment_name);
+                        System.out.println("Response JSON before - " + responseJson.toString(2));
                         responseJson.put(finalTrial_num, EMUtil.getLiveMetricData(experimentTrial, trial_num));
+                        System.out.println("Response JSON after - " + responseJson.toString(2));
                     }
                 } else {
                     this.existingExperiments.forEach((expName, experimentTObj) -> {

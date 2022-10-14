@@ -317,7 +317,7 @@ public class EMUtil {
         return null;
     }
 
-    public static JSONObject getRealMetricsJSON(ExperimentTrial experimentTrial, boolean verbose) {
+    public static JSONObject getRealMetricsJSON(ExperimentTrial experimentTrial, boolean verbose, String triaLNumber) {
         JSONArray podMetrics = new JSONArray();
         JSONArray containers = new JSONArray();
         HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
@@ -374,6 +374,7 @@ public class EMUtil {
         retJson.put("experiment_name", experimentTrial.getExperimentName());
         retJson.put("experiment_id", experimentTrial.getExperimentId());
         retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
+        retJson.put("trialNumber", triaLNumber);
         if (null != experimentTrial.getTrialInfo()) {
             retJson.put("info", new JSONObject().put("trial_info",
                     new JSONObject(
@@ -395,12 +396,18 @@ public class EMUtil {
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
             LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
-            JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
-            JSONObject podMetricJSON = new JSONObject();
-            podMetricJSON.put("name", podMetric.getName());
-            podMetricJSON.put("datasource", podMetric.getDatasource());
-            podMetricJSON.put("iteration_results", iteration_results);
-            podMetrics.put(podMetricJSON);
+            try {
+                System.out.println(iterationDataMap.toString());
+                JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                System.out.println("Iteration result - " + iteration_results.toString(2));
+                JSONObject podMetricJSON = new JSONObject();
+                podMetricJSON.put("name", podMetric.getName());
+                podMetricJSON.put("datasource", podMetric.getDatasource());
+                podMetricJSON.put("iteration_results", iteration_results);
+                podMetrics.put(podMetricJSON);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
@@ -414,7 +421,7 @@ public class EMUtil {
                 containerMetricJSON.put("name", containerMetric.getName());
                 containerMetricJSON.put("datasource", containerMetric.getDatasource());
                 containerMetricJSON.put("iteration_results", iteration_results);
-                podMetrics.put(containerMetricJSON);
+                containerMetrics.put(containerMetricJSON);
             }
             containers.put(new JSONObject().put(
                             "container_name", containerName

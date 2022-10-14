@@ -100,16 +100,16 @@ tunables:
 
 # ConcGCThreads dependent on ParallelGCThreads. JVM exits if ParallelGCThreads < ConcGCThreads.
 # Upper bound is based on cpus and ParallelGCThreads.
-- name: ConcGCThreads
-  description: 'Number of threads concurrent gc will use. Default is 0'
-  value_type: integer
-  upper_bound: '8'
-  lower_bound: '0'
-  step: 1
-  slo_class:
-  - response_time
-  - throughput
-  - resource_usage
+#- name: ConcGCThreads
+#  description: 'Number of threads concurrent gc will use. Default is 0'
+#  value_type: integer
+#  upper_bound: '8'
+#  lower_bound: '0'
+#  step: 1
+#  slo_class:
+#  - response_time
+#  - throughput
+#  - resource_usage
 
 - name: InlineSmallCode
   description: 'Only inline already compiled methods if their code size is less than this. Default is 1000'

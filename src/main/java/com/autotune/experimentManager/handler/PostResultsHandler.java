@@ -77,7 +77,7 @@ public class PostResultsHandler implements EMHandlerInterface {
                     }
                 }
             }
-            JSONObject retJson = EMUtil.getRealMetricsJSON(experimentTrial, false);
+            JSONObject retJson = EMUtil.getRealMetricsJSON(experimentTrial, false, trialDetails.getTrialNumber());
             LOGGER.info("JSON Getting posted to analyser : \n {} ", retJson.toString(2));
             URL trial_result_url = null;
             if (null != experimentTrial.getExperimentSettings() && null != experimentTrial.getTrialResultURL()) {
