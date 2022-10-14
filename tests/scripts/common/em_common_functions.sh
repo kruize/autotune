@@ -516,6 +516,7 @@ function validate_deployment() {
 		container=$(echo ${containers} | jq '.['${c}']')
 
 		# Validate container details
+
 		container_name=$(echo ${container} | jq '.container_name')
 		image_name=$(echo ${container} | jq '.image')
 
@@ -527,8 +528,8 @@ function validate_deployment() {
 		if [[ "${expected_container_name}" != "${container_name}" || "${expected_image_name}" != "${image_name}" ]]; then
 			failed=1
 			echo "Failed - Container name or image name in the new deployment doesn't match the experiment input trial"
-			echo "Expected container name - ${expected_container_name} Actual container name - ${actual_container_name}"
-			echo "Expected image name - ${expected_image_name} Actual image name - ${actual_image_name}"
+			echo "Expected container name - ${expected_container_name} Actual container name - ${container_name}"
+			echo "Expected image name - ${expected_image_name} Actual image name - ${image_name}"
 		fi
 
 		container_metrics=$(echo ${container} | jq '.container_metrics')
