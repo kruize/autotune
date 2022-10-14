@@ -100,7 +100,7 @@ function list_trial_status() {
 
 	exp_status_json=$(${cmd})
 
-	exp_status=$(echo ${exp_status_json} | jq '.'${experiment_name}'.'${trial_num}'.status')
+	exp_status=$(echo ${exp_status_json} | jq '.'${experiment_name}'.Status')
 
 	echo "Status of ${experiment_name} is ${exp_status}"
 }
@@ -133,7 +133,6 @@ function post_experiment_json() {
 	echo "Forming the curl command to post the experiment..."
 	form_em_curl_cmd "createExperimentTrial"
 
-	echo "em_curl_cmd = ${em_curl_cmd}"
 	em_curl_cmd="${em_curl_cmd} -d @${exp_json}"
 
 	echo "em_curl_cmd = ${em_curl_cmd}"
@@ -152,7 +151,8 @@ function post_experiment_json() {
 	echo "Command used to post the experiment result= ${em_curl_cmd}" | tee -a "${LOG}"
 	echo "" | tee -a "${LOG}"
 
-	# Add validation to check the status of the post experiment
+	# To do: Add validation to check the status of the post experiment
+	exp_status=$(echo ${exp_status_json} | jq '.status')
 
 }
 
@@ -205,18 +205,15 @@ function validate_env() {
 		failed=0
 		display_result "${expected_behaviour}" "${test_name_}" "${failed}"
 		for (( i=0; i<"${expected_tunable_no}"; i++ ))
-		#for env in "${expected_env[@]}"
 		do
 			echo "----------------------------Validate Env tunables ----------------------------"
 
 			# Get the name of the tunable
-			#e_name=$(echo ${env} | awk '{print $1}' | tr -d ':')
 			e_name=$(echo ${expected_env} | jq '.['${i}'].name')
 
 			echo "e_name = $e_name"
 			
 			# Get the value of the tunable. Start from front, grep everything after ":"
-			#e_value="${env#*:}"
 			e_value=$(echo ${expected_env} | jq '.['${i}'].value')
 			echo "e_value = $e_value"
 			
@@ -245,7 +242,6 @@ function validate_tunable_values() {
 	deployment_name=$4
 
 	echo "Validate tunable values..."
-	echo "test_name = ${test_name_}"
 	get_expected_tunable_values "${input_json}" "${trial_num}"
 	get_actual_tunable_values "${deployment_name}"
 	validate_resources
@@ -258,7 +254,7 @@ function get_expected_tunable_values() {
 	trial_num=$2
 
 	echo "Fetching expected tunable values from the input json..."
-        config=".[0].trials.${trial_num}.config"
+        config=".[0].trials.\"${trial_num}\".config"
 	echo "config = $config"
 
 	requests=$(cat ${input_json} | jq ''${config}'.requests')
@@ -274,8 +270,6 @@ function get_expected_tunable_values() {
 		expected_tunable_values[cpu_request]=$(bc <<< "${const} * ${expected_tunable_values[cpu_request]}")
 		expected_tunable_values[cpu_request]=\""${expected_tunable_values[cpu_request]%.*}m"\"
 
-	        echo "Memory request = ${expected_tunable_values[mem_request]}"
-        	echo "CPU request = ${expected_tunable_values[cpu_request]}"
 	fi
 
 	limits=$(cat ${input_json} | jq ''${config}'.limits')
@@ -285,15 +279,12 @@ function get_expected_tunable_values() {
         	expected_tunable_values[cpu_limit]=$(cat ${input_json} | jq ''${config}'.limits.cpu.amount')
 
 		expected_tunable_values[cpu_limit]=$(echo ${expected_tunable_values[cpu_limit]} | sed 's/"//g')
-        	echo "CPU limit = ${expected_tunable_values[cpu_limit]}"
 		# Convert the expected cpu values to millicores and in the format as in the new deployment
 		const="1000"
 		expected_tunable_values[cpu_request]=$(bc <<< "${const} * ${expected_tunable_values[cpu_request]}")
 		expected_tunable_values[cpu_limit]=$(bc <<< "${const} * ${expected_tunable_values[cpu_limit]}")
 		expected_tunable_values[cpu_limit]=\""${expected_tunable_values[cpu_limit]%.*}m"\"
 
-        	echo "Memory limit = ${expected_tunable_values[mem_limit]}"
-        	echo "CPU limit = ${expected_tunable_values[cpu_limit]}"
 	fi
 
 
@@ -302,8 +293,6 @@ function get_expected_tunable_values() {
 	if [ "${expected_env}" != null ]; then
 		expected_tunable_no=$(cat ${input_json} | jq ${config}.env | jq '. | length')
 
-	        echo "expected env tunables count = ${expected_tunable_no}"
-        	echo "expected envs = ${expected_env[@]}"
 	fi
 
 	echo "Fetching expected tunable values from the input json...done"
@@ -321,8 +310,6 @@ function get_actual_tunable_values() {
 	if [ "${requests}" != null ]; then
 		actual_tunable_values[mem_request]=$(cat ${app_deploy_config} | jq ${resources_}.requests.memory)
 		actual_tunable_values[cpu_request]=$(cat ${app_deploy_config} | jq ${resources_}.requests.cpu)
-		echo "Memory request = ${actual_tunable_values[mem_request]}"
-		echo "CPU request = ${actual_tunable_values[cpu_request]}"
 	fi
 
 
@@ -331,8 +318,6 @@ function get_actual_tunable_values() {
 	if [ "${limits}" != null ]; then
 		actual_tunable_values[mem_limit]=$(cat ${app_deploy_config} | jq ${resources_}.limits.memory)
 		actual_tunable_values[cpu_limit]=$(cat ${app_deploy_config} | jq ${resources_}.limits.cpu)
-		echo "Memory limit = ${actual_tunable_values[mem_limit]}"
-		echo "CPU limit = ${actual_tunable_values[cpu_limit]}"
 	fi
 
 	actual_env=$(cat ${app_deploy_config} | jq .spec.template.spec.containers[].env )
@@ -341,8 +326,6 @@ function get_actual_tunable_values() {
 
 		actual_tunable_no=$(cat ${app_deploy_config} | jq .spec.template.spec.containers[].env | jq '. | length')
 
-		echo "actual env tunables count = ${actual_tunable_no}"
-		echo "actual env tunables = ${actual_env[@]}"
 	fi
 
 	echo "Fetching actual tunable values from the new deployment...done"
@@ -408,21 +391,14 @@ function get_exp_result() {
 	trial_num=$2
 	result=$3
 
-	echo "SERVER_IP = ${SERVER_IP}"
-	echo "AUTOTUNE_PORT = ${AUTOTUNE_PORT}"
-
 	curl="curl -s -H 'Accept: application/json'"
 
-	echo "exp_name=$exp_name trial_num = $trial_num"
 	exp_name=$(echo ${exp_name} | sed 's/\"//g')
-	echo "exp_name=$exp_name trial_num = $trial_num"
 	echo "curl cmd - ${curl} 'http://${SERVER_IP}:${AUTOTUNE_PORT}/listTrialStatus?experiment_name=${exp_name}&trial_number=${trial_num}'"
 	get_result=$(${curl} 'http://'${SERVER_IP}':'${AUTOTUNE_PORT}'/listTrialStatus?experiment_name='${exp_name}'&trial_number='${trial_num}'')
 	
 	echo "" 
-	echo "get_result - ${get_result}" 
 	echo "${get_result}" > ${result}
-	
 }
 
 function validate_percentile_values() {
@@ -432,11 +408,11 @@ function validate_percentile_values() {
         percentile=('"95p"' '"97p"' '"99p"' '"99.9p"' '"99.99p"' '"99.999p"' '"100p"')
         p_count=0
 
+	echo ""
 	echo "Validating percentile values..."
         # Store the percentile values in an array in the given order
         for p in "${percentile[@]}"
         do
-		echo "trial metrics value[$p] - ${trial_metrics_value[${p}]}"
                 percentile_values[$p_count]="${trial_metrics_value[${p}]}"
                 ((p_count++))
         done
@@ -444,10 +420,8 @@ function validate_percentile_values() {
         # Check if the percentile values are in ascending order
         for ((i=0; i<${p_count}; i++))
         do
-                echo "values ${percentile_values[$i]}"
                 for ((j=i+1; j<${p_count}; j++))
                 do
-                        echo "values ${percentile_values[$i]} compare_values ${percentile_values[$j]}"
                         if [[ ${percentile_values[${i}]} > ${percentile_values[${j}]} ]]; then
                                 failed=1
                                 break
@@ -463,54 +437,51 @@ function validate_percentile_values() {
 
 function validate_mean() {
         test_name=$1
+	echo ""
 	echo "Validating mean values..."
 
-	echo "trial_metrics_value["mean"] = ${trial_metrics_value['"mean"']}"
-	
 	if [ 1 -eq "$(echo "${trial_metrics_value['"mean"']} > 0 " | bc)" ]; then
                 failed=0
         else
                 failed=1
-        	expected_behaviour="Mean has to be greater than 0"
+        	expected_behaviour="Mean has to be greater than 0, but mean was ${trial_metrics_value['"mean"']}"
 	        display_result "${expected_behaviour}" ${test_name} ${failed}
         fi
 }
 
 function validate_pod_metrics() {
 	pod_metric=$1
+	echo ""
 	echo "Validating pod metrics"
 
 	pod_metric_name=$(echo ${pod_metric} | jq '.name')
-	echo "pod metric name = ${pod_metric_name}"
 
 	pod_metric_datasource=$(echo ${pod_metric} | jq '.datasource')
-	echo "pod metric datasource = ${pod_metric_datasource}"
 
-	validate_metrics "${pod_metric}"
+	metric_type="pod_metrics"
+	validate_metrics "${pod_metric}" "${metric_type}"
 }
 
 
 function validate_metrics() {
 	trial_metric=$1
+	metric_type=$2
 
-	# For each metric store its corresponding values and validate the metrics
-	for metric in $(echo ${trial_metric} | jq '.summary_results.percentile_info | keys | .[]')
-	do
-		value=$(echo ${trial_metric} | jq '.summary_results.percentile_info['${metric}']')
-		echo "value = $value metric = $metric"
-		trial_metrics_value[${metric}]="${value}"
-		echo "trial_metrics_value = ${trial_metrics_value[$metric]}"
-	done
+	if [ "${metric_type}" == "pod_metrics" ]; then 
+		# For each metric store its corresponding values and validate the metrics
+		for metric in $(echo ${trial_metric} | jq '.summary_results.percentile_info | keys | .[]')
+		do
+			value=$(echo ${trial_metric} | jq '.summary_results.percentile_info['${metric}']')
+			trial_metrics_value[${metric}]="${value}"
+		done
+	fi
 
 	for metric in $(echo ${trial_metric} | jq '.summary_results.general_info | keys | .[]')
 	do
 		value=$(echo ${trial_metric} | jq '.summary_results.general_info['${metric}']')
 		trial_metrics_value[${metric}]="${value}"
-		echo "trial_metrics_value = ${trial_metrics_value[$metric]}"
 	done
 	
-#	validate_metric_details ${FUNCNAME}
-
 	# Validate summary results - percentile info
 	validate_percentile_values ${FUNCNAME}
 
@@ -525,27 +496,20 @@ function validate_deployment() {
 	echo "Validating deployment"
 	name=$(echo ${deployment} | jq '.deployment_name')
 
-	echo "deployment name = $name"
-
 	# Validate pod metrics
 	pod_metrics=$(echo ${deployment} | jq '.pod_metrics')
 	pod_metrics_count=$(echo ${deployment} | jq '.pod_metrics | length')
 
-#	echo "pod_metrics = ${pod_metrics}"
-	echo "pod_metrics_count = ${pod_metrics_count}"
 
 	for (( l=0; l<${pod_metrics_count}; l++ ))
 	do
 		pod_metric=$(echo ${pod_metrics} | jq '.['${l}']')
-		echo "pod_metric = $pod_metric"
 		validate_pod_metrics "${pod_metric}"
 	done
 
 	# Validate container metrics
 	containers=$(echo ${deployment} | jq '.containers')
 	containers_count=$(echo ${deployment} | jq '.containers | length')
-	echo "containers = ${containers}"
-	echo "containers_count = ${containers_count}"
 	
 	for (( c=0; c<${containers_count}; c++ ))
 	do
@@ -555,41 +519,35 @@ function validate_deployment() {
 		container_name=$(echo ${container} | jq '.container_name')
 		image_name=$(echo ${container} | jq '.image')
 
-		echo "container_name = ${container_name}"
-		echo "image_name = ${image_name}"
-
 		# Get the container name & image name from the input json		
 		trial_num="\"${trial_num}\""
 		expected_container_name=$(cat ${input_json} | jq '.[].trials.'"${trial_num}"'.config.container_name')
 		expected_image_name=$(cat ${input_json} | jq '.[].trials.'"${trial_num}"'.config.image')
 
-		echo "expected_container_name = ${expected_container_name}"
-		echo "expected_image_name = ${expected_image_name}"
-
 		if [[ "${expected_container_name}" != "${container_name}" || "${expected_image_name}" != "${image_name}" ]]; then
 			failed=1
 			echo "Failed - Container name or image name in the new deployment doesn't match the experiment input trial"
+			echo "Expected container name - ${expected_container_name} Actual container name - ${actual_container_name}"
+			echo "Expected image name - ${expected_image_name} Actual image name - ${actual_image_name}"
 		fi
 
 		container_metrics=$(echo ${container} | jq '.container_metrics')
 		container_metrics_count=$(echo ${container} | jq '.container_metrics | length')
 
-		echo "container_metrics = ${container_metrics}"
-		echo "container_metrics_count = ${container_metrics_count}"
+		echo ""
+		echo "Validating container metrics"
 
 		for (( l=0; l<${container_metrics_count}; l++ ))
 		do
 			container_metric=$(echo ${container_metrics} | jq '.['${l}']')
-			echo "container_metric = $container_metric"
 
 			# Validate datasource, name
 			container_metric_name=$(echo ${container_metric} | jq '.name')
-			echo "container metric name = ${container_metric_name}"
 	
 			container_metric_datasource=$(echo ${container_metric} | jq '.datasource')
-			echo "container metric datasource = ${container_metric_datasource}"
 
-			validate_metrics "${container_metric}"
+			metric_type="container_metrics"
+			validate_metrics "${container_metric}" "${metric_type}"
 		done
 	done
 }
@@ -602,19 +560,18 @@ function validate_exp_trial_result() {
 	result="${TEST_DIR}/trial_result.json"
 	get_exp_result "${experiment_name}" "${trial_num}" "${result}"
 
-#       validate_trial_details
-
         # Needs to be updated for all deployments
-        deployments=$(cat ${result} | jq '.'${experiment_name}'.'${trial_num}'.deployments')
-        deployments_count=$(cat ${result} | jq '.'${experiment_name}'.'${trial_num}'.deployments | length')
+        deployments=$(cat ${result} | jq '.'${trial_num}'.deployments')
+        deployments_count=$(cat ${result} | jq '.'${trial_num}'.deployments | length')
 
-#        echo "deployments = $deployments"
-        echo "deployments_count = $deployments_count"
+	if [ "${deployments_count}" -eq "0" ]; then
+		failed=1
+		echo "Failed - Deployments not found!"
+	fi
 
 	for (( i=0; i < ${deployments_count}; i++ ))
 	do
 		deployment=$(echo ${deployments} | jq '.['${i}']')
-#		echo "deployment= $deployment"
 		validate_deployment "${deployment}" "${trial_num}"
 	done
 }

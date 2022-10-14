@@ -296,7 +296,7 @@ function testsuitesummary() {
 	echo "Number of tests passed ${TESTS_PASSED}"
 	echo "Number of tests failed ${TESTS_FAILED}"
 	echo ""
-	if [ "${TESTS_FAILED}" -ne "0" ]; then
+	if [[ "${TESTS_FAILED}" -ne "0" || "${TESTS_PASSED}" -eq "0" ]]; then
 		echo "~~~~~~~~~~~~~~~~~~~~~~~ ${TEST_SUITE_NAME} failed ~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		echo "Failed cases are :"
 		for fails in "${FAILED_CASES[@]}"
