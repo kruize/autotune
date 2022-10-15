@@ -24,6 +24,7 @@ import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.utils.AutotuneConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -345,6 +346,7 @@ public class EMUtil {
                     JSONObject summary_results = new JSONObject();
                     JSONObject general_info = new JSONObject();
                     general_info.put("mean", containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    general_info.put("units", containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
                     summary_results.put("general_info", general_info);
                     JSONObject containerMetricJSON = new JSONObject();
                     containerMetricJSON.put("name", containerMetric.getName());
@@ -456,5 +458,48 @@ public class EMUtil {
         }
         retJson.put("deployments", deployments);
         return retJson;
+    }
+
+    public enum MemoryUnits {
+        BYTES,
+        KILOBYTES,
+        KIBIBYTES,
+        MEGABYTES,
+        MEBIBYTES,
+        GIGABYTES,
+        GIBIBYTES,
+        TERABYTES,
+        TEBIBYTES
+    }
+
+    public static double convertToMiB(double value, MemoryUnits memoryUnits) {
+        if (value <= 0)
+            return 0;
+        if (memoryUnits == MemoryUnits.BYTES) {
+            System.out.println("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
+            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+        } else if (memoryUnits == MemoryUnits.KIBIBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+        } else if (memoryUnits == MemoryUnits.MEBIBYTES) {
+            return value;
+        } else if (memoryUnits == MemoryUnits.GIBIBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
+        }
+        return 0.0;
+    }
+
+    public static double convertToMB(double value, MemoryUnits memoryUnits) {
+        if (value <= 0)
+            return 0;
+        if (memoryUnits == MemoryUnits.BYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * AutotuneConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
+        } else if (memoryUnits == MemoryUnits.KILOBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
+        } else if (memoryUnits == MemoryUnits.MEGABYTES) {
+            return value;
+        } else if (memoryUnits == MemoryUnits.GIGABYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
+        }
+        return 0.0;
     }
 }

@@ -34,6 +34,7 @@ import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -172,8 +174,23 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                             if (!metricCycleDataMap.containsKey(cycleName)) {
                                                 metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
                                             }
+                                            DecimalFormat df = new DecimalFormat("0.00");
+                                            df.setMaximumFractionDigits(2);
                                             EMMetricResult emMetricResult = new EMMetricResult();
-                                            emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                            Float resultFloat = Float.parseFloat(queryResult);
+                                            if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
+                                                emMetricResult.getEmMetricGenericResults().setUnits("cores");
+
+                                            } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
+                                            || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
+                                                resultFloat = (float) EMUtil.convertToMiB(resultFloat, EMUtil.MemoryUnits.BYTES);
+                                                System.out.println("Result float from util - " + resultFloat);
+                                                emMetricResult.getEmMetricGenericResults().setUnits("MiB");
+                                            }
+                                            System.out.println("Result float before- " + resultFloat);
+                                            resultFloat = Float.parseFloat(df.format(resultFloat));
+                                            System.out.println("Result float after - " + resultFloat);
+                                            emMetricResult.getEmMetricGenericResults().setMean(resultFloat);
                                             metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
                                             System.out.println("Query Result - " + queryResult);
                                         } catch (Exception e) {
@@ -238,6 +255,13 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             }
                             float avgVal = sumVal / (measurementMap.size() - removableEntries);
                             EMMetricResult emMetricResult = new EMMetricResult();
+                            if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
+                                emMetricResult.getEmMetricGenericResults().setUnits("cores");
+
+                            } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
+                                    || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
+                                emMetricResult.getEmMetricGenericResults().setUnits("MiB");
+                            }
                             emMetricResult.getEmMetricGenericResults().setMean(avgVal);
                             containerMetric.getTrialSummaryResult().put(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()), emMetricResult);
                             containerMetric.setEmMetricResult(emMetricResult);
