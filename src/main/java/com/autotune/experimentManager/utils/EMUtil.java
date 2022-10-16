@@ -394,19 +394,22 @@ public class EMUtil {
     public static JSONObject getLiveMetricData(ExperimentTrial experimentTrial, String trialNum) {
         JSONArray podMetrics = new JSONArray();
         JSONArray containers = new JSONArray();
+        JSONObject retJson = new JSONObject();
         HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
             LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
             try {
-                System.out.println(iterationDataMap.toString());
-                JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
-                System.out.println("Iteration result - " + iteration_results.toString(2));
-                JSONObject podMetricJSON = new JSONObject();
-                podMetricJSON.put("name", podMetric.getName());
-                podMetricJSON.put("datasource", podMetric.getDatasource());
-                podMetricJSON.put("iteration_results", iteration_results);
-                podMetrics.put(podMetricJSON);
+                if (null != iterationDataMap) {
+                    System.out.println(iterationDataMap.toString());
+                    JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                    System.out.println("Iteration result - " + iteration_results.toString(2));
+                    JSONObject podMetricJSON = new JSONObject();
+                    podMetricJSON.put("name", podMetric.getName());
+                    podMetricJSON.put("datasource", podMetric.getDatasource());
+                    podMetricJSON.put("iteration_results", iteration_results);
+                    podMetrics.put(podMetricJSON);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -418,12 +421,14 @@ public class EMUtil {
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
                 LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
-                JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
-                JSONObject containerMetricJSON = new JSONObject();
-                containerMetricJSON.put("name", containerMetric.getName());
-                containerMetricJSON.put("datasource", containerMetric.getDatasource());
-                containerMetricJSON.put("iteration_results", iteration_results);
-                containerMetrics.put(containerMetricJSON);
+                if (null != iterationDataMap) {
+                    JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                    JSONObject containerMetricJSON = new JSONObject();
+                    containerMetricJSON.put("name", containerMetric.getName());
+                    containerMetricJSON.put("datasource", containerMetric.getDatasource());
+                    containerMetricJSON.put("iteration_results", iteration_results);
+                    containerMetrics.put(containerMetricJSON);
+                }
             }
             containers.put(new JSONObject().put(
                             "container_name", containerName
@@ -442,7 +447,6 @@ public class EMUtil {
                         put("type", "training").
                         put("containers", containers)
         );
-        JSONObject retJson = new JSONObject();
         retJson.put("experiment_name", experimentTrial.getExperimentName());
         retJson.put("experiment_id", experimentTrial.getExperimentId());
         retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());

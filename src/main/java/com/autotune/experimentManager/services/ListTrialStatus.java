@@ -124,9 +124,13 @@ public class ListTrialStatus extends HttpServlet {
                     if (this.existingExperiments.containsKey(experiment_name)) {
                         System.out.println("Experiment name found - " + experiment_name);
                         ExperimentTrial experimentTrial = (ExperimentTrial) this.existingExperiments.get(experiment_name);
-                        System.out.println("Response JSON before - " + responseJson.toString(2));
-                        responseJson.put(finalTrial_num, EMUtil.getLiveMetricData(experimentTrial, trial_num));
-                        System.out.println("Response JSON after - " + responseJson.toString(2));
+                        if (experimentTrial.getTrialDetails().containsKey(trial_num)) {
+                            System.out.println("Response JSON before - " + responseJson.toString(2));
+                            responseJson.put(finalTrial_num, EMUtil.getLiveMetricData(experimentTrial, trial_num));
+                            System.out.println("Response JSON after - " + responseJson.toString(2));
+                        } else {
+                            responseJson.put("ERROR", "Trial Number " + trial_num + " doesn't exist");
+                        }
                     }
                 } else {
                     this.existingExperiments.forEach((expName, experimentTObj) -> {

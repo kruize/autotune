@@ -129,7 +129,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                     queryResult = queryResult.trim();
                                     LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = podMetric.getCycleDataMap();
                                     if (!trialDataMap.containsKey(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()))) {
-                                        trialDataMap.put(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
                                     }
                                     LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()));
                                     if (!metricCycleDataMap.containsKey(cycleName)) {
@@ -168,7 +168,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                             queryResult = queryResult.trim();
                                             LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = containerMetric.getCycleDataMap();
                                             if (!trialDataMap.containsKey(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()))) {
-                                                trialDataMap.put(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                                                trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
                                             }
                                             LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(experimentTrial.getTrialInfo().getTrialNum()));
                                             if (!metricCycleDataMap.containsKey(cycleName)) {
