@@ -15,16 +15,30 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.analyzer.services.ListExperiments;
+import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.utils.AutotuneConstants;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class EMUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMUtil.class);
+
     /**
     * EMExpStages is a collection of all stages that an experiment trial goes through to complete its lifecycle.
     *
@@ -255,5 +269,246 @@ public class EMUtil {
         for (Map.Entry<EMUtil.EMFlowFlags, Boolean> flagEntry : experimentTrial.getFlagsMap().entrySet()) {
             flagEntry.setValue(true);
         }
+    }
+
+    public static String replaceQueryVars(String query, ArrayList<Map<String, String>> queryVariablesList) {
+        if (null != query) {
+            if (null != queryVariablesList) {
+                for (Map<String, String> variableMap : queryVariablesList) {
+                    String key = variableMap.get(EMConstants.QueryMapConstants.NAME);
+                    String value = variableMap.get(EMConstants.QueryMapConstants.VALUE);
+                    query = query.replace(key, value);
+                }
+            }
+        }
+        return query;
+    }
+
+    public static String formatQueryByPodName(String rawQuery, String podName) {
+        if (null == rawQuery || null == podName) {
+            return rawQuery;
+        }
+
+        if (null != rawQuery && null != podName) {
+            rawQuery = rawQuery.replace(EMConstants.QueryMapConstants.QueryVar.POD_NAME, podName);
+        }
+        return rawQuery;
+    }
+
+    public static String formatQueryByContainerName(String rawQuery, String containerName) {
+        if (null == rawQuery || null == containerName) {
+            return rawQuery;
+        }
+
+        if (null != rawQuery && null != containerName) {
+            rawQuery = rawQuery.replace(EMConstants.QueryMapConstants.QueryVar.CONTAINER_NAME, containerName);
+        }
+        return rawQuery;
+    }
+
+    public static String getCurrentPodNameOfTrial(ExperimentTrial experimentTrial) {
+        // Needs to be implemented
+        KubernetesServices kubernetesServices = null;
+        try {
+            kubernetesServices = new KubernetesServicesImpl();
+            // Need to call the platform specific client to get the pod name
+            return kubernetesServices.getPodsBy("default", "app", "tfb-qrh-deployment").get(0).getMetadata().getName();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (null != kubernetesServices) {
+                kubernetesServices.shutdownClient();
+            }
+        }
+        return null;
+    }
+
+    public static JSONObject getRealMetricsJSON(ExperimentTrial experimentTrial, boolean verbose, String triaLNumber) {
+        JSONArray podMetrics = new JSONArray();
+        JSONArray containers = new JSONArray();
+        HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+        for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+            Metric podMetric = podMetricEntry.getValue();
+            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                JSONObject summary_results = new JSONObject();
+                JSONObject general_info = new JSONObject();
+                general_info.put("mean", podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                summary_results.put("general_info", general_info);
+                JSONObject podMetricJSON = new JSONObject();
+                podMetricJSON.put("name", podMetric.getName());
+                podMetricJSON.put("datasource", podMetric.getDatasource());
+                podMetricJSON.put("summary_results", summary_results);
+                podMetrics.put(podMetricJSON);
+            }
+        }
+        HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+        for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+            String containerName = containerMapEntry.getKey();
+            JSONArray containerMetrics = new JSONArray();
+            for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                Metric containerMetric = containerMetricEntry.getValue();
+                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                    JSONObject summary_results = new JSONObject();
+                    JSONObject general_info = new JSONObject();
+                    general_info.put("mean", containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    general_info.put("units", containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
+                    summary_results.put("general_info", general_info);
+                    JSONObject containerMetricJSON = new JSONObject();
+                    containerMetricJSON.put("name", containerMetric.getName());
+                    containerMetricJSON.put("datasource", containerMetric.getDatasource());
+                    containerMetricJSON.put("summary_results", summary_results);
+                    containerMetrics.put(containerMetricJSON);
+                }
+            }
+            containers.put(new JSONObject().put(
+                            "container_name", containerName
+                    ).put(
+                            "container_metrics", containerMetrics
+                    )
+            );
+        }
+        HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
+        JSONArray deployments = new JSONArray();
+        deployments.put(
+                new JSONObject().
+                        put("pod_metrics", podMetrics).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
+                        put("type", "training").
+                        put("containers", containers)
+        );
+        JSONObject retJson = new JSONObject();
+        retJson.put("experiment_name", experimentTrial.getExperimentName());
+        retJson.put("experiment_id", experimentTrial.getExperimentId());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
+        retJson.put("trialNumber", triaLNumber);
+        if (null != experimentTrial.getTrialInfo()) {
+            retJson.put("info", new JSONObject().put("trial_info",
+                    new JSONObject(
+                            new GsonBuilder()
+                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .create()
+                                    .toJson(experimentTrial.getTrialInfo())
+                    )
+            ));
+        }
+        retJson.put("deployments", deployments);
+        return retJson;
+    }
+
+    public static JSONObject getLiveMetricData(ExperimentTrial experimentTrial, String trialNum) {
+        JSONArray podMetrics = new JSONArray();
+        JSONArray containers = new JSONArray();
+        JSONObject retJson = new JSONObject();
+        HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
+        for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
+            Metric podMetric = podMetricEntry.getValue();
+            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
+            try {
+                if (null != iterationDataMap) {
+                    LOGGER.debug(iterationDataMap.toString());
+                    JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                    LOGGER.debug("Iteration result - " + iteration_results.toString(2));
+                    JSONObject podMetricJSON = new JSONObject();
+                    podMetricJSON.put("name", podMetric.getName());
+                    podMetricJSON.put("datasource", podMetric.getDatasource());
+                    podMetricJSON.put("iteration_results", iteration_results);
+                    podMetrics.put(podMetricJSON);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
+        for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
+            String containerName = containerMapEntry.getKey();
+            JSONArray containerMetrics = new JSONArray();
+            for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                Metric containerMetric = containerMetricEntry.getValue();
+                LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
+                if (null != iterationDataMap) {
+                    JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
+                    JSONObject containerMetricJSON = new JSONObject();
+                    containerMetricJSON.put("name", containerMetric.getName());
+                    containerMetricJSON.put("datasource", containerMetric.getDatasource());
+                    containerMetricJSON.put("iteration_results", iteration_results);
+                    containerMetrics.put(containerMetricJSON);
+                }
+            }
+            containers.put(new JSONObject().put(
+                            "container_name", containerName
+                    ).put(
+                            "container_metrics", containerMetrics
+                    )
+            );
+        }
+        HashMap<String, TrialDetails> trialDetailsHashMap = experimentTrial.getTrialDetails();
+        JSONArray deployments = new JSONArray();
+        deployments.put(
+                new JSONObject().
+                        put("pod_metrics", podMetrics).
+                        put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName()).
+                        put("namespace", experimentTrial.getResourceDetails().getNamespace()).
+                        put("type", "training").
+                        put("containers", containers)
+        );
+        retJson.put("experiment_name", experimentTrial.getExperimentName());
+        retJson.put("experiment_id", experimentTrial.getExperimentId());
+        retJson.put("deployment_name", experimentTrial.getResourceDetails().getDeploymentName());
+        if (null != experimentTrial.getTrialInfo()) {
+            retJson.put("info", new JSONObject().put("trial_info",
+                    new JSONObject(
+                            new GsonBuilder()
+                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .create()
+                                    .toJson(experimentTrial.getTrialInfo())
+                    )
+            ));
+        }
+        retJson.put("deployments", deployments);
+        return retJson;
+    }
+
+    public enum MemoryUnits {
+        BYTES,
+        KILOBYTES,
+        KIBIBYTES,
+        MEGABYTES,
+        MEBIBYTES,
+        GIGABYTES,
+        GIBIBYTES,
+        TERABYTES,
+        TEBIBYTES
+    }
+
+    public static double convertToMiB(double value, MemoryUnits memoryUnits) {
+        if (value <= 0)
+            return 0;
+        if (memoryUnits == MemoryUnits.BYTES) {
+            LOGGER.debug("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
+            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+        } else if (memoryUnits == MemoryUnits.KIBIBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+        } else if (memoryUnits == MemoryUnits.MEBIBYTES) {
+            return value;
+        } else if (memoryUnits == MemoryUnits.GIBIBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
+        }
+        return 0.0;
+    }
+
+    public static double convertToMB(double value, MemoryUnits memoryUnits) {
+        if (value <= 0)
+            return 0;
+        if (memoryUnits == MemoryUnits.BYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * AutotuneConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
+        } else if (memoryUnits == MemoryUnits.KILOBYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
+        } else if (memoryUnits == MemoryUnits.MEGABYTES) {
+            return value;
+        } else if (memoryUnits == MemoryUnits.GIGABYTES) {
+            return value * AutotuneConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
+        }
+        return 0.0;
     }
 }

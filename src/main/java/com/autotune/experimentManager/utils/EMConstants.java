@@ -1,8 +1,7 @@
 package com.autotune.experimentManager.utils;
 
 public class EMConstants {
-
-    private EMConstants() {
+	private EMConstants() {
     }
 
     public static final class DeploymentConstants {
@@ -237,6 +236,28 @@ public class EMConstants {
         }
 
 
+    }
+
+	public static class QueryMapConstants {
+		private QueryMapConstants() { }
+		public static final String NAME = "name";
+		public static final String VALUE = "value";
+
+		public static class QueryVar {
+			private QueryVar() { }
+			public static final String POD_NAME = "$POD$";
+			public static final String CONTAINER_NAME = "$CONTAINER$";
+		}
+	}
+
+	public static class QueryNames {
+	    private QueryNames() { }
+        public static class Container {
+	        private Container () { }
+            public static final String CPU_REQUEST = "cpuRequest";
+            public static final String MEMORY_REQUEST = "memoryRequest";
+            public static final String GC = "gc";
+        }
     }
 }
 

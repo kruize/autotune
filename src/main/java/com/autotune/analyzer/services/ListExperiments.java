@@ -53,40 +53,45 @@ public class ListExperiments extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
         LOGGER.info("Processing trial result...");
+        try {
+            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+            // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
 
-        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-        // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
+            String trialResultsData = request.getReader().lines().collect(Collectors.joining());
+            JSONObject trialResultsJson = new JSONObject(trialResultsData);
 
-        String trialResultsData = request.getReader().lines().collect(Collectors.joining());
-        JSONObject trialResultsJson = new JSONObject(trialResultsData);
+            // Read in the experiment name and the deployment name in the received JSON from EM
+            String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
+            String trialNumber = trialResultsJson.getString("trialNumber");
 
-        // Read in the experiment name and the deployment name in the received JSON from EM
-        String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
-        String trialNumber = trialResultsJson.getString("trialNumber");
+            JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
+            for (Object deploymentObject : deploymentsJsonArray) {
+                JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
+                String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
+                AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
 
-        JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
-        for (Object deploymentObject : deploymentsJsonArray) {
-            JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
-            String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
-            AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
+                // Check if the passed in JSON has the same info as in the URL
+                if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
+                    LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    break;
+                }
 
-            // Check if the passed in JSON has the same info as in the URL
-            if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
-                LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                break;
+                try {
+                    LOGGER.debug("going into of updateExperiment");
+                    updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
+                    LOGGER.debug("Came out of updateExperiment");
+                } catch (InvalidValueException | IncompatibleInputJSONException e) {
+                    e.printStackTrace();
+                }
+                RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
+                // Received a metrics JSON from EM after a trial, let the waiting thread know
+                LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
+                runExperiment.send();
             }
-
-            try {
-                updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
-            } catch (InvalidValueException | IncompatibleInputJSONException e) {
-                e.printStackTrace();
-            }
-            RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
-            // Received a metrics JSON from EM after a trial, let the waiting thread know
-            LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
-            runExperiment.send();
+            response.getWriter().close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        response.getWriter().close();
     }
 }

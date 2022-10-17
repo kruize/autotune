@@ -3,10 +3,13 @@ package com.autotune.common.data.metrics;
 import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AutotuneConstants;
+import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
 public class EMMetricResult implements ConvertToJSON {
+    @SerializedName("general_info")
     private EMMetricGenericResults emMetricGenericResults;
+    @SerializedName("percentile_info")
     private EMMetricPercentileResults emMetricPercentileResults;
     private boolean isPercentileResultsAvailable;
 

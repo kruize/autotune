@@ -11,8 +11,8 @@ layer_presence:
 tunables:
 - name: memoryRequest
   value_type: double
-  upper_bound: '300 Mi'
-  lower_bound: '150 Mi'
+  upper_bound: '2048 Mi'
+  lower_bound: '512 Mi'
   step: 1
   queries:
   - datasource: 'prometheus'

@@ -125,9 +125,9 @@ public class TrialHelpers {
         AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
 
         TrialSettings trialSettings = new TrialSettings("1",
-                "5sec",
+                "1min",
                 "1",
-                "10sec",
+                "1min",
                 "1"
         );
         DeploymentPolicy deploymentPolicy = new DeploymentPolicy(ROLLING_UPDATE);

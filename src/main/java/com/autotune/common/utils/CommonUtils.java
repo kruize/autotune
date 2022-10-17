@@ -240,4 +240,33 @@ public class CommonUtils {
         }
         return false;
     }
+
+    /**
+     * Get the base datasource URL for running query
+     * @param url
+     * @param datasource
+     * @return
+     */
+    public static String getBaseDataSourceUrl(String url, String datasource) {
+        if (datasource.equalsIgnoreCase(AutotuneConstants.SupportedDatasources.PROMETHEUS)) {
+            return (new StringBuilder())
+                    .append(url)
+                    .append("/api/v1/query?query=")
+                    .toString();
+        }
+        return null;
+    }
+
+    public static int getTimeToSleepMillis(int timeValue, TimeUnit timeUnit) {
+        if (null == timeUnit)
+            return 0;
+        if (timeValue < 0)
+            timeValue = -1 * timeValue;
+        if (timeValue == 0)
+            return 0;
+        int secsInUnit = getTimeUnitInSeconds(timeUnit);
+        if (secsInUnit == Integer.MIN_VALUE)
+            return 0;
+        return timeValue * secsInUnit * AutotuneConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+    }
 }

@@ -12,6 +12,7 @@ public class EMMetricGenericResults implements ConvertToJSON {
     private float spike;
     private float min;
     private float max;
+    private String units;
 
     public EMMetricGenericResults() {
         score = Float.MIN_VALUE;
@@ -21,6 +22,7 @@ public class EMMetricGenericResults implements ConvertToJSON {
         spike = Float.MIN_VALUE;
         min = Float.MIN_VALUE;
         max = Float.MIN_VALUE;
+        units = "";
     }
 
     public EMMetricGenericResults(JSONObject jsonObject) {
@@ -31,6 +33,7 @@ public class EMMetricGenericResults implements ConvertToJSON {
         this.spike = (jsonObject.has(AutotuneConstants.JSONKeys.SPIKE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SPIKE) : Float.MIN_VALUE;
         this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MAX) : Float.MIN_VALUE;
         this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MIN) : Float.MIN_VALUE;
+        this.units = (jsonObject.has(AutotuneConstants.JSONKeys.UNITS)) ? jsonObject.getString(AutotuneConstants.JSONKeys.UNITS) : "";
     }
 
     public float getMin() {
@@ -89,6 +92,14 @@ public class EMMetricGenericResults implements ConvertToJSON {
         this.spike = spike;
     }
 
+    public String getUnits() {
+        return units;
+    }
+
+    public void setUnits(String units) {
+        this.units = units;
+    }
+
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
@@ -106,6 +117,8 @@ public class EMMetricGenericResults implements ConvertToJSON {
             jsonObject.put(AutotuneConstants.JSONKeys.MAX, max);
         if (this.min != Float.MIN_VALUE)
             jsonObject.put(AutotuneConstants.JSONKeys.MIN, min);
+        if (null != this.units && !this.units.isEmpty() && !this.units.isBlank())
+            jsonObject.put(AutotuneConstants.JSONKeys.UNITS, this.units);
         return jsonObject;
     }
 }
