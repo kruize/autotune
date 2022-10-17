@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.analyzer.services.ListExperiments;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.ExperimentTrial;
@@ -29,11 +30,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class EMUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMUtil.class);
+
     /**
     * EMExpStages is a collection of all stages that an experiment trial goes through to complete its lifecycle.
     *
@@ -401,9 +406,9 @@ public class EMUtil {
             LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
             try {
                 if (null != iterationDataMap) {
-                    System.out.println(iterationDataMap.toString());
+                    LOGGER.debug(iterationDataMap.toString());
                     JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
-                    System.out.println("Iteration result - " + iteration_results.toString(2));
+                    LOGGER.debug("Iteration result - " + iteration_results.toString(2));
                     JSONObject podMetricJSON = new JSONObject();
                     podMetricJSON.put("name", podMetric.getName());
                     podMetricJSON.put("datasource", podMetric.getDatasource());
@@ -480,7 +485,7 @@ public class EMUtil {
         if (value <= 0)
             return 0;
         if (memoryUnits == MemoryUnits.BYTES) {
-            System.out.println("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
+            LOGGER.debug("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
             return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
         } else if (memoryUnits == MemoryUnits.KIBIBYTES) {
             return value * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
