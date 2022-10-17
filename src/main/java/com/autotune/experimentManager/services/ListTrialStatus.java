@@ -22,10 +22,13 @@ import com.autotune.common.experiments.TrialDetails;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.result.TrialMetaData;
+import com.autotune.experimentManager.handler.MetricCollectionHandler;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.Gson;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -48,6 +51,7 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
  */
 public class ListTrialStatus extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListTrialStatus.class);
     ExperimentDetailsMap<String, ExperimentTrial> existingExperiments;
 
     @Override
@@ -120,14 +124,14 @@ public class ListTrialStatus extends HttpServlet {
             } else if (null != experiment_name && null != trial_num) {
                 String finalTrial_num = trial_num;
                 if (verbose) {
-                    System.out.println("In verbose");
+                    LOGGER.debug("In verbose");
                     if (this.existingExperiments.containsKey(experiment_name)) {
-                        System.out.println("Experiment name found - " + experiment_name);
+                        LOGGER.debug("Experiment name found - " + experiment_name);
                         ExperimentTrial experimentTrial = (ExperimentTrial) this.existingExperiments.get(experiment_name);
                         if (experimentTrial.getTrialDetails().containsKey(trial_num)) {
-                            System.out.println("Response JSON before - " + responseJson.toString(2));
+                            LOGGER.debug("Response JSON before - " + responseJson.toString(2));
                             responseJson.put(finalTrial_num, EMUtil.getLiveMetricData(experimentTrial, trial_num));
-                            System.out.println("Response JSON after - " + responseJson.toString(2));
+                            LOGGER.debug("Response JSON after - " + responseJson.toString(2));
                         } else {
                             responseJson.put("ERROR", "Trial Number " + trial_num + " doesn't exist");
                         }

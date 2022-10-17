@@ -78,9 +78,9 @@ public class ListExperiments extends HttpServlet {
                 }
 
                 try {
-                    LOGGER.info("going into of updateExperiment");
+                    LOGGER.debug("going into of updateExperiment");
                     updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
-                    LOGGER.info("Came out of updateExperiment");
+                    LOGGER.debug("Came out of updateExperiment");
                 } catch (InvalidValueException | IncompatibleInputJSONException e) {
                     e.printStackTrace();
                 }
