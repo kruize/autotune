@@ -59,8 +59,6 @@ function validate_em_genperfexp_test() {
 	list_trial_status "${experiment_name}" "${trial_num}"
 	expected_exp_status="\"WAITING_FOR_LOAD\""
 
-#	timeout 120s bash -c 'while [ ${exp_status} != ${expected_exp_status} ]; do sleep 5;  list_trial_status "${experiment_name}";  done'
-
 	counter=1
 	while [ "${exp_status}" != "${expected_exp_status}" ]
 	do
@@ -84,7 +82,7 @@ function validate_em_genperfexp_test() {
        	do
 		sleep 60
 		list_trial_status "${experiment_name}" "${trial_num}"
-		$(( counter++ ))
+		((counter++))
 
 		if [ ${counter} == "20" ]; then
 			echo "Status of the experiment is not as expected (COMPLETED)!"
@@ -102,7 +100,7 @@ function validate_em_genperfexp_test() {
 	validate_exp_trial_result "${experiment_name}" "${trial_num}"
 
 	# Cleanup the deployed application
-#	app_cleanup ${app}
+	app_cleanup ${app}
 	echo "----------------------------------------------------------------------------------------------"
 }
 

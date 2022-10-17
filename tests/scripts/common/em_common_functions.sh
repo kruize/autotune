@@ -561,16 +561,20 @@ function validate_exp_trial_result() {
 	result="${TEST_DIR}/trial_result.json"
 	get_exp_result "${experiment_name}" "${trial_num}" "${result}"
 
-        # Needs to be updated for all deployments
-        deployments=$(cat ${result} | jq '.'${trial_num}'.deployments')
-        deployments_count=$(cat ${result} | jq '.'${trial_num}'.deployments | length')
+	if [ "${experiment_name}" == \""GeneralPerfExp"\" ]; then
+		deployments=$(cat ${result} | jq '.'\"${trial_num}\"'.deployments')
+	        deployments_count=$(cat ${result} | jq '.'\"${trial_num}\"'.deployments | length')
+	else
+		deployments=$(cat ${result} | jq '.'${trial_num}'.deployments')
+	        deployments_count=$(cat ${result} | jq '.'${trial_num}'.deployments | length')
+	fi
 
-	if [ "${deployments_count}" -eq "0" ]; then
+	if [[ "${deployments_count}" -eq "0" ]]; then
 		failed=1
 		echo "Failed - Deployments not found!"
 	fi
 
-	for (( i=0; i < ${deployments_count}; i++ ))
+	for (( i=0; i<${deployments_count}; i++ ))
 	do
 		deployment=$(echo ${deployments} | jq '.['${i}']')
 		validate_deployment "${deployment}" "${trial_num}"
