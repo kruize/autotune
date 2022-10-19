@@ -56,6 +56,9 @@ do
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;
+			skipsetup)
+				skip_setup=1
+				;;
 		esac
 		;;
 	i)
@@ -76,12 +79,8 @@ fi
 mkdir -p ${RESULTS_ROOT_DIR}
 
 # create the result directory with a time stamp
-RESULTS_DIR="${RESULTS_ROOT_DIR}/autotune_$(date +%Y%m%d:%T)"
-mkdir -p "${RESULTS_DIR}"
-
-# create the result directory for functional tests
-RESULTS="${RESULTS_DIR}/${tctype}"
-mkdir ${RESULTS}
+RESULTS="${RESULTS_ROOT_DIR}/autotune_$(date +%Y%m%d:%T)"
+mkdir -p "${RESULTS}"
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 

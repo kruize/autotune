@@ -28,10 +28,14 @@ function validate_em_genperfexp_test() {
 
 	test_name_=${FUNCNAME}
 	input_json="${TEST_DIR_}/resources/em_input_json/GeneralPerfExp.json"
-	echo  "************** input json = ${input_json}"
+	echo  "input json = ${input_json}"
 
 	# Deploy the application with the specified number of instances	
-	deploy_app ${APP_REPO} ${app} ${instances}
+	if [ ${skip_setup} -eq 0 ]; then
+		deploy_app ${APP_REPO} ${app} ${instances}
+	else
+		echo "Skipping application deployment..."
+	fi
 	
 	# Sleep for sometime for application pods to be up
 	sleep 5
@@ -100,7 +104,9 @@ function validate_em_genperfexp_test() {
 	validate_exp_trial_result "${experiment_name}" "${trial_num}"
 
 	# Cleanup the deployed application
-	app_cleanup ${app}
+	if [ ${skip_setup} -eq 0 ]; then
+		app_cleanup ${app}
+	fi
 	echo "----------------------------------------------------------------------------------------------"
 }
 

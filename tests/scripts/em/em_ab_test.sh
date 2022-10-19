@@ -32,7 +32,11 @@ function validate_em_ab_workflow() {
 	echo  "EM input json = ${input_json}"
 
 	# Deploy the application with the specified number of instances	
-	deploy_app ${APP_REPO} ${app} ${instances}
+	if [ ${skip_setup} -eq 0 ]; then
+		deploy_app ${APP_REPO} ${app} ${instances}
+	else
+		echo "Skipping application deployment..."
+	fi
 
 	kubectl get pods
 	
@@ -63,7 +67,9 @@ function validate_em_ab_workflow() {
 	validate_exp_trial_result "${experiment_name}" "${trial_num}"
 
 	# Cleanup the deployed application
-	app_cleanup ${app}
+	if [ ${skip_setup} -eq 0 ]; then
+		app_cleanup ${app}
+	fi
 	echo "----------------------------------------------------------------------------------------------"
 }
 

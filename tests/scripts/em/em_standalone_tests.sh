@@ -57,10 +57,13 @@ function em_standalone_tests() {
 	mkdir -p ${TEST_SUITE_DIR}
 
 	# create the autotune setup
-        echo "Setting up autotune..." | tee -a ${LOG}
-        setup "${AUTOTUNE_POD_LOG}" >> ${AUTOTUNE_SETUP_LOG} 2>&1
-        echo "Setting up autotune...Done" | tee -a ${LOG}
-
+	if [ ${skip_setup} -eq 0 ]; then
+	        echo "Setting up autotune..." | tee -a ${LOG}
+		setup "${AUTOTUNE_POD_LOG}" >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	        echo "Setting up autotune...Done" | tee -a ${LOG}
+	else
+		echo "Skipping Autotune setup..." | tee -a ${LOG}
+	fi
 
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
@@ -71,7 +74,6 @@ function em_standalone_tests() {
 	
 	# create the result directory for given testsuite
 	echo ""
-	TEST_SUITE_DIR="${RESULTS}/em_standalone_tests"
 	mkdir -p ${TEST_SUITE_DIR}
 
 	echo ""

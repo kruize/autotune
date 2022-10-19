@@ -58,6 +58,8 @@ total_time=0
 matched=0
 sanity=0
 setup=1
+skip_setup=0
+
 # Path to the directory containing yaml files
 MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
@@ -225,7 +227,7 @@ function autotune_cleanup() {
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
 		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-		echo "*********** ${RESULTS_LOG} ${AUTOTUNE_REPO}"
+		echo "${RESULTS_LOG} ${AUTOTUNE_REPO}"
 		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
 	else 
 		pushd ${AUTOTUNE_REPO} > /dev/null
@@ -358,7 +360,11 @@ function run_jmeter_load() {
 	echo
 	echo "Starting ${app_name} jmeter workload..."
 	# Invoke the jmeter load script
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP}
+	fi
 }
 
 # Remove the application setup
@@ -369,7 +375,11 @@ function app_cleanup() {
 	set_app_folder "${app_name}"
 	echo
 	echo -n "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	fi
 	echo "done"
 }
 

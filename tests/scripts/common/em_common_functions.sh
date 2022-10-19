@@ -140,20 +140,17 @@ function post_experiment_json() {
 	exp_status_json=$(${em_curl_cmd})
 	echo "Post experiment status = $exp_status_json"
 
-	if [ -z ${exp_status_json} ]; then
-		echo "Posting experiment failed"!
-		echo "Check the autotune pod log for details"
-		echo "RESULTSDIR - ${TEST_DIR}"
-		exit 1
-	fi
-
 	echo "" | tee -a "${LOG}"
 	echo "Command used to post the experiment result= ${em_curl_cmd}" | tee -a "${LOG}"
 	echo "" | tee -a "${LOG}"
 
 	# To do: Add validation to check the status of the post experiment
 	exp_status=$(echo ${exp_status_json} | jq '.status')
-
+	echo "exp_status = ${exp_status}"
+	if [ "${exp_status}" != \"SUCCESS\" ]; then
+		echo "Failed! Create experiment failed. Status - ${exp_status}"
+		exit 1
+	fi	
 }
 
 function validate_exp_status() {
