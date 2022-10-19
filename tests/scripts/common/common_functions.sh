@@ -44,7 +44,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "configmap_yaml_tests"
 "autotune_id_tests"
 "autotune_layer_config_id_tests"
-"hpo_api_tests")
+"hpo_api_tests"
+"em_standalone_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -57,6 +58,8 @@ total_time=0
 matched=0
 sanity=0
 setup=1
+skip_setup=0
+
 # Path to the directory containing yaml files
 MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
@@ -112,8 +115,9 @@ function update_yaml() {
 # Set up the autotune 
 # input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
 function setup() {
-	CONFIGMAP_DIR=$1
-	ignore_deployment_status_check=$2
+	AUTOTUNE_POD_LOG=$1
+	CONFIGMAP_DIR=$2
+	ignore_deployment_status_check=$3
 	
 	# remove the existing autotune objects
 	autotune_cleanup 
@@ -126,7 +130,7 @@ function setup() {
 	
 	# Deploy autotune 
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -134,7 +138,7 @@ function setup() {
 			NAMESPACE="monitoring"
 			;;
 		openshift)
-			NAMESPACE="openshift-monitoring"
+			NAMESPACE="openshift-tuning"
 			;;
 	esac
 }
@@ -155,6 +159,7 @@ function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
 	CONFIGMAP_DIR=$3
+	AUTOTUNE_POD_LOG=$4
 	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
@@ -165,7 +170,7 @@ function deploy_autotune() {
 	fi
 	
 	echo "Deploying autotune"
-	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
+	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
 	# if both autotune image and configmap  is passed
@@ -186,6 +191,19 @@ function deploy_autotune() {
 		echo "Error deploying autotune" >>/dev/stderr
 		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
+	fi
+
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
+		sleep 2
+		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
+		namespace="openshift-tuning"
+		if [ ${cluster_type} == "minikube" ]; then
+			namespace="monitoring"
+		fi
+		echo "Namespace = $namespace"
+		autotune_pod=$(kubectl get pod -n ${namespace} | grep autotune | cut -d " " -f1)
+		echo "autotune_pod = $autotune_pod"
+		kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
 	fi
 
 	popd > /dev/null
@@ -209,7 +227,7 @@ function autotune_cleanup() {
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
 		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-		echo "*********** ${RESULTS_LOG} ${AUTOTUNE_REPO}"
+		echo "${RESULTS_LOG} ${AUTOTUNE_REPO}"
 		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
 	else 
 		pushd ${AUTOTUNE_REPO} > /dev/null
@@ -280,7 +298,7 @@ function testsuitesummary() {
 	echo "Number of tests passed ${TESTS_PASSED}"
 	echo "Number of tests failed ${TESTS_FAILED}"
 	echo ""
-	if [ "${TESTS_FAILED}" -ne "0" ]; then
+	if [[ "${TESTS_FAILED}" -ne "0" || "${TESTS_PASSED}" -eq "0" ]]; then
 		echo "~~~~~~~~~~~~~~~~~~~~~~~ ${TEST_SUITE_NAME} failed ~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		echo "Failed cases are :"
 		for fails in "${FAILED_CASES[@]}"
@@ -324,6 +342,8 @@ function set_app_folder() {
 	app_name=$1
 	if [ "${app_name}" == "petclinic" ]; then
 		APP_FOLDER="spring-petclinic"
+	elif [ "${app_name}" == "tfb-qrh" ]; then
+                APP_FOLDER="techempower"
 	else
 		APP_FOLDER="${app_name}"
 	fi
@@ -340,7 +360,11 @@ function run_jmeter_load() {
 	echo
 	echo "Starting ${app_name} jmeter workload..."
 	# Invoke the jmeter load script
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP}
+	fi
 }
 
 # Remove the application setup
@@ -351,7 +375,11 @@ function app_cleanup() {
 	set_app_folder "${app_name}"
 	echo
 	echo -n "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	fi
 	echo "done"
 }
 
@@ -374,9 +402,17 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+                else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s "localhost" -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	fi
 	echo "done"
 }

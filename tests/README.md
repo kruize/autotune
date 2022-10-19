@@ -9,7 +9,6 @@ Autotune functional tests validate individual modules of Autotune. Autotune has 
 - Analyzer module
 	- Dependency Analyzer
 	- Recommendation Manager
-- Hyperparameter Optimization module
 - Experiment manager module
 
 Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/autotune_modules.md) for details.
@@ -102,25 +101,27 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   	3. Update and apply the layer config yaml and compare the ids
   	4. Apply new layer config and validate the id
 
-### Hyperparameter Optimization module tests
+### Experiment manager module tests
 
-- ** Hyper Parameter Optimization (HPO) API tests**
+- **ABTesting workflow test**
+   
+  Here the ABTesting workflow in the Experiment manager is validated.
 
-  Here we validate the HPO API - /experiment_trials
-  
   The test does the following:
+  - Deploys autotune and its dependencies using the deploy script from the autotune repo
+  - Deploys the benchmark application
+  - Posts an experiment using the input json (<AUTOTUNE_REPO>/tests/resources/em_input_json/ABTesting.json) and createExperiment API to the Experiment Manager
+  - Validates the trial result summary obtained from the listTrialStatus API once the experiment is completed.
+	
+- **General Performance Experiment workflow test**
+   
+  Here the General Performance Experiment workflow in the Experiment manager is validated.
 
-  - Start HPO service using mock [script](/tests/scripts/start_hpo_servers.sh)
-  - Validate HPO result for following scenarios:
-  	1. Post invalid and valid experiments to HPO /experiment_trials API and validate the results
-  	2. Post the same experiment again to HPO /experiment_trials API with operation set to "EXP_TRIAL_GENERATE_NEW" and validate the result
-  	3. Post the same experiment again to HPO /experiment_trials API with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial, and check if subsequent trial number is generated
-  	4. Query the HPO /experiment_trials API with different invalid combination of experiment id and trial number
-  	5. Query the HPO /experiment_trials API for valid experiment id and trial number and validate the result
-  	6. Post the same experiment again to HPO /experiment_trials API with the operation set to "EXP_TRIAL_GENERATE_SUBSEQUENT" after we post the result for the previous trial. Now query the API using that trial number and validate the result
-  	7. Post invalid and valid experiment results to HPO /experiment_trials API and validate the result
-  	8. Post duplicate experiment results to HPO /experiment_trials API and validate the result
-  	9. Post different experiment results to HPO /experiment_trials API for the same experiment id and validate the result
+  The test does the following:
+  - Deploys autotune and its dependencies using the deploy script from the autotune repo
+  - Deploys the benchmark application
+  - Posts an experiment using the input json (<AUTOTUNE_REPO>/tests/resources/em_input_json/GeneralPerfExp.json) and createExperiment API to the Experiment Manager
+  - Validates the trial result summary obtained from the listTrialStatus API once the experiment is completed.
 
 ## Supported Clusters
 - Minikube
@@ -148,7 +149,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory]
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup]
 ```
 
 Where values for test_autotune.sh are:
@@ -163,6 +164,7 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
+			[ --skipsetup ] : optional. Specifying this option skips the autotune setup & application deployment
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 

@@ -1,6 +1,8 @@
 [
   {
-    "experiment_name": "Compare performance objective of A/B software releases",
+    "experiment_name": "ABTestingExperiment",
+    "mode": "Apply/MetricCollectionOnly",
+    "environment": "QA",
     "resource": {
       "namespace": "default",
       "deployment_name": "tfb-qrh-sample-0"
@@ -72,17 +74,9 @@
       "B": {
         "config": {
           "image": "kruize/tfb-qrh:2.9.0.F_mm",
-          "container_name": "tfb-server",
-          "env": [
-            {
-              "name": "JDK_JAVA_OPTIONS",
-              "additionalProperties": {},
-              "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-            }
-          ]
+          "container_name": "tfb-server"
         }
       }
-    },
-    "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+    }
   }
 ]
