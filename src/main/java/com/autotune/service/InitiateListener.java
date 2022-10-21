@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyserHelper;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.queue.AutotuneQueue;
@@ -23,14 +23,12 @@ import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.autotune.experimentManager.workerimpl.IterationManager;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +40,9 @@ public class InitiateListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+
         ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
+
         if (experimentDetailsMap == null) {
             experimentDetailsMap = new ExperimentDetailsMap<>();
             /**
@@ -66,11 +66,9 @@ public class InitiateListener implements ServletContextListener {
         sce.getServletContext().setAttribute(ParallelEngineConfigs.EM_EXECUTOR, EMExecutor);
 
         /**
-         * Experiments storage created for monitoring.
+         * Load Experiments either from Local or DB for monitoring.
          */
-        ConcurrentHashMap<String, JsonObject> autotuneOperatorMap = new ConcurrentHashMap<>();
-        sce.getServletContext().setAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY, experimentDetailsMap);
-
+        new AnalyserHelper(sce.getServletContext()).loadExperiments();
 
     }
 

@@ -22,12 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Local storage implementation for Submitted experiments in session Objects.
+ * Database interaction implementations.
  */
-public class ExperimentInterfaceImpl implements ExperimentInterface {
-
+public class ExperimentInterfaceDBImpl implements ExperimentInterface {
     private String errorMessage;
     private int httpResponseCode;
+
+    public ExperimentInterfaceDBImpl() {
+    }
 
 
     @Override
@@ -42,12 +44,12 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
 
     @Override
     public boolean saveExperiments(List<JsonObject> experimentList) {
-        return true;
+        return false;
     }
 
     @Override
     public boolean updateResults(List<JsonObject> resultsList) {
-        return true;
+        return false;
     }
 
     @Override

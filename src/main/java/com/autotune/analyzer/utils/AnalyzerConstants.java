@@ -16,10 +16,31 @@
 
 package com.autotune.analyzer.utils;
 
+/**
+ * Constants used accross Analyser Modules
+ */
 public class AnalyzerConstants {
 
+    /**
+     * Main status of experiments created for monitoring.
+     */
+    public enum AnalyserExpStatus {
+        NEW,
+        IN_PROGRESS,
+        COMPLETED,
+        FAILED
+    }
+
+    /**
+     * These settings decide if experiments and updated results need to store
+     * at DB or in Local session object.
+     */
+    public static class RunConfig {
+        public static final String STORAGE_MODE = "local";  //"db"
+    }
+
     public static class AnalyserKeys {
-        public static final String ANALYSER_STORAGE_CONTEXT_KEY = "MainExperimentsMAP";
+        public static final String ANALYSER_EXPERIMENTS_STORAGE_KEY = "MainExperimentsMAP";
 
         private AnalyserKeys() {
         }

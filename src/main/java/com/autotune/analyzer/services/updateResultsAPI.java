@@ -17,11 +17,8 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.analyzer.utils.AnalyserHelper;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +33,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -49,34 +45,22 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class updateResultsAPI extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(updateResultsAPI.class);
-    ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
-        this.kubernetesServices = new KubernetesServicesImpl();
     }
-
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String inputData = request.getReader().lines().collect(Collectors.joining());
-        List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
-        for (JsonObject jsonObject : autoTuneOperatorDataList) {
-            JsonObject exp = this.mainAutoTuneOperatorMap.get(jsonObject.get("name").toString());
-            if (exp.get("results") == null) {
-                JsonArray jsonArray = new JsonArray();
-                jsonArray.add(jsonObject);
-                exp.add("results", jsonArray);
-            } else {
-                JsonArray jsonArray = exp.getAsJsonArray("results");
-                jsonArray.add(jsonObject);
-                exp.add("results", jsonArray);
-            }
-        }
-        sendSuccessResponse(response);
+        List<JsonObject> resultLists = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
+        AnalyserHelper analyserHelper = new AnalyserHelper(getServletContext());
+        boolean success = analyserHelper.updateResults(resultLists);
+        if (success)
+            sendSuccessResponse(response);
+        else
+            sendErrorResponse(response, null, analyserHelper.getHttpResponseCode(), analyserHelper.getErrorMessage());
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {
