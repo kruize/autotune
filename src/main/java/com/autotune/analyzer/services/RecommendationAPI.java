@@ -17,11 +17,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -45,16 +40,11 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class RecommendationAPI extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationAPI.class);
-    ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
-        this.kubernetesServices = new KubernetesServicesImpl();
     }
-
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -88,7 +78,7 @@ public class RecommendationAPI extends HttpServlet {
                 "            \"additionalProperties\": {}\n" +
                 "          }\n" +
                 "        }}";
-        out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":"+temp+"}");       //TODO add dummy results
+        out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":" + temp + "}");       //TODO add dummy results
         out.flush();
     }
 

@@ -56,7 +56,7 @@ public class ListExperiments extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JSONObject>) getServletContext().getAttribute(com.autotune.analyzer.utils.AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
+        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JSONObject>) getServletContext().getAttribute(com.autotune.analyzer.utils.AnalyzerConstants.AnalyserKeys.ANALYSER_EXPERIMENTS_STORAGE_KEY);
     }
 
     @Override
