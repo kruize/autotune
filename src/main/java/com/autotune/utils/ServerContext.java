@@ -56,4 +56,9 @@ public class ServerContext {
     public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
+
+	// UI support EndPoints
+	public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
+	public static final String LIST_NAMESPACES = QUERY_CONTEXT + "listNamespaces";
+	public static final String LIST_DEPLOYMENTS = QUERY_CONTEXT + "listDeployments";
 }
