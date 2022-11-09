@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: autotune
+  name: autotune
+  namespace: monitoring     #this may change
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autotune
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: autotune
+        name: autotune
+    spec:
+      containers:
+        - name: autotune
+          image: docker.io/msvinaykumar/autotune_operator:mo2    #this will change
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CLUSTER_TYPE
+              value: kubernetes
+            - name: ROOT_LOGGING_LEVEL
+              value: error
+            - name: LOGGING_LEVEL
+              value: debug
+            - name: AUTOTUNE_MODE
+              value: MONITORING
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autotune
+  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: autotune
+spec:
+  type: NodePort
+  selector:
+    app: autotune
+  ports:
+    - name: autotune-port
+      port: 8080
+      targetPort: 8080
+
+# Fix this warning in Openshift
+#  Warning: would violate PodSecurity
+#"restricted:v1.24": allowPrivilegeEscalation != false
+#  (container "autotune" must set securityContext.allowPrivilegeEscalation=false),
+#  unrestricted capabilities
+#  (container "autotune"
+#  must set securityContext.capabilities.drop=["ALL"]),
+#  runAsNonRoot != true (pod or container "autotune" must set securityContext.runAsNonRoot=true),
+#  seccompProfile (pod or container "autotune" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")

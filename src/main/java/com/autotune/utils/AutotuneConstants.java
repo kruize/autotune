@@ -35,6 +35,7 @@ public class AutotuneConstants {
     public static final class StartUpMode {
         public static final String AUTOTUNE_MODE = "AUTOTUNE_MODE";
         public static final String EM_ONLY_MODE = "EM_ONLY";
+        public static final String MONITORING_MODE = "MONITORING";
         private StartUpMode() {
         }
     }

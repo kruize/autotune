@@ -16,6 +16,7 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
+import com.autotune.analyzer.Monitoring;
 import com.autotune.analyzer.exceptions.AutotuneErrorHandler;
 import com.autotune.service.InitiateListener;
 import com.autotune.utils.ServerContext;
@@ -62,7 +63,10 @@ public class Autotune
 		if (null != autotuneMode) {
 			if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
 				startAutotuneEMOnly(context);
-			} else {
+			} else if(autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.MONITORING_MODE)){
+				startMonitoringOnly(context);
+			}
+			else {
 				startAutotuneNormalMode(context);
 			}
 		} else {
@@ -75,6 +79,10 @@ public class Autotune
 			LOGGER.error("Could not start the server!");
 			e.printStackTrace();
 		}
+	}
+
+	private static void startMonitoringOnly(ServletContextHandler contextHandler) {
+		Monitoring.start(contextHandler);
 	}
 
 	private static void addAutotuneServlets(ServletContextHandler context) {
