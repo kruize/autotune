@@ -42,9 +42,9 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
  * Rest API used to recommend right configuration.
  */
 @WebServlet(asyncSupported = true)
-public class RecommendationAPI extends HttpServlet {
+public class Recommendation extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationAPI.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Recommendation.class);
     ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
     KubernetesServices kubernetesServices = null;
 
