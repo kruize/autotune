@@ -64,9 +64,6 @@ public class Recommendation extends HttpServlet {
         PrintWriter out = response.getWriter();
         String temp = "{\"config\": {\n" +
                 "        \"container_name\": \"tfb-server\",\n" +
-                "        \"deployment_name\": \"tfb-qrh-deployment\",\n" +
-                "        \"namespace\": \"default\",\n" +
-                "        \"confident_index\": \"0.88\",\n" +
                 "        \"requests\": {\n" +
                 "          \"memory\": {\n" +
                 "            \"amount\": \"210.0\",\n" +
@@ -77,12 +74,7 @@ public class Recommendation extends HttpServlet {
                 "            \"amount\": \"2.26\",\n" +
                 "            \"format\": \"\",\n" +
                 "            \"additionalProperties\": {}\n" +
-                "          },\n" +
-                "          \"env\": [{\n" +
-                "            \"name\": \"JDK_JAVA_OPTIONS\",\n" +
-                "            \"value\": \"-XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9\",\n" +
-                "            \"additionalProperties\": {}\n" +
-                "          }]\n" +
+                "          }\n" +
                 "        },\n" +
                 "        \"limits\": {\n" +
                 "          \"memory\": {\n" +
@@ -96,7 +88,7 @@ public class Recommendation extends HttpServlet {
                 "            \"additionalProperties\": {}\n" +
                 "          }\n" +
                 "        }}";
-        out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":" + temp + "}");       //TODO add dummy results
+        out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":"+temp+"}");       //TODO add dummy results
         out.flush();
     }
 
