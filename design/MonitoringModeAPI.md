@@ -1,18 +1,13 @@
-# Remote Monitoring Mode
+# Monitoring mode REST API
+The Monitoring mode REST API design is proposed as follows:
 
-This article describes how to quickly get started with the Remote Monitoring Mode use case REST API using curl command.
-Documentation still in progress stay tuned.
-
-## CreateExperiment
-
-This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
-see [Create Experiment](/design/CreateExperiment.md)
+##  CreateExperiment
+Create experiments  using input JSON as follows.
 
 **Request**
 `POST /createExperiment`
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperiment`
-
 ```
 [{
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
@@ -37,7 +32,6 @@ see [Create Experiment](/design/CreateExperiment.md)
 ```
 
 **Response**
-
 ```
 {
     "message": "Experiment registered successfully with Autotune. View registered experiments at /listExperiments",
@@ -47,16 +41,13 @@ see [Create Experiment](/design/CreateExperiment.md)
 }
 ```
 
-## Update Metric Results
-
-Update metric results using input JSON as follows. For a more detailed guide,
-see [Update results](/design/UpdateResults.md)
+##  Update Metric Results
+Update metric results using input JSON as follows.
 
 **Request**
 `POST /updateResults`
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updateResults`
-
 ```
 [{
  "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
@@ -150,9 +141,7 @@ see [Update results](/design/UpdateResults.md)
 }]
 
 ```
-
 **Response**
-
 ```
 {
     "message": "Updated metrics results successfully with Autotune. View update results at /listExperiments",
@@ -162,8 +151,7 @@ see [Update results](/design/UpdateResults.md)
 }
 ```
 
-## Recommendations
-
+##  ListRecommendations
 List recommendations output JSON as follows.
 
 **Request**
@@ -172,35 +160,26 @@ List recommendations output JSON as follows.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listRecommendations`
 
 **Response**
-
 ```
 {
   "quarkus-resteasy-autotune-min-http-response-time-db": {
     "config": {
       "container_name": "tfb-server",
-      "deployment_name": "tfb-qrh-deployment",
-      "namespace": "default",
-      "confident_index": 0.88,
       "requests": {
         "memory": {
           "amount": "210.0",
           "format": "Mi",
           "additionalProperties": {
+
           }
         },
         "cpu": {
           "amount": "2.26",
           "format": "",
           "additionalProperties": {
+
           }
-        },
-        "env": [
-            {
-              "name": "JDK_JAVA_OPTIONS",
-              "additionalProperties": {},
-              "value": " -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
-            }
-        ]
+        }
       },
       "limits": {
         "memory": {
