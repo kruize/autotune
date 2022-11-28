@@ -1,5 +1,5 @@
-# Experiment Monitoring Mode
-This article describes how to quickly get started with the Local cluster Experimental Mode use case REST API using curl command.
+# Experiment mode REST API
+The Experiment mode REST API design is proposed as follows:
 
 ##  listStacks
 Get the list of application stacks monitored by autotune.
