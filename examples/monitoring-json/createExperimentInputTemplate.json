@@ -1,0 +1,20 @@
+[{
+  "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+  "namespace": "default",
+  "deployment_name": "tfb-qrh-sample",
+  "performanceProfile": "resource_optimization",
+  "mode": "monitor",
+  "targetCluster": "remote",
+  "containers": [
+    {
+      "image": "kruize/tfb-qrh:1.13.2.F_et17",
+      "container_name": "tfb-server"
+    }
+  ],
+  "trial_settings": {
+    "measurement_duration": "15min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}]
