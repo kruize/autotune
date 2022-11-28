@@ -18,7 +18,10 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,29 +43,46 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_EN
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
- * REST API to create experiments to Analyser for monitoring metrics.
+ * REST API used to update metric results to a given experiments.
  */
 @WebServlet(asyncSupported = true)
-public class CreateExperimentAPI extends HttpServlet {
+public class updateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentAPI.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(updateResults.class);
     ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
+    KubernetesServices kubernetesServices = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
+        this.kubernetesServices = new KubernetesServicesImpl();
     }
 
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String inputData = request.getReader().lines().collect(Collectors.joining());
-        List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
-        for (JsonObject jsonObject : autoTuneOperatorDataList) {
-            this.mainAutoTuneOperatorMap.put(jsonObject.get("name").toString(), jsonObject);
+        try {
+            String inputData = request.getReader().lines().collect(Collectors.joining());
+            List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
+            for (JsonObject jsonObject : autoTuneOperatorDataList) {
+                JsonObject exp = this.mainAutoTuneOperatorMap.get(jsonObject.get("experiment_name").toString());
+                if (exp.get("results") == null) {
+                    JsonArray jsonArray = new JsonArray();
+                    jsonArray.add(jsonObject);
+                    exp.add("results", jsonArray);
+                } else {
+                    JsonArray jsonArray = exp.getAsJsonArray("results");
+                    jsonArray.add(jsonObject);
+                    exp.add("results", jsonArray);
+                }
+            }
+            sendSuccessResponse(response);
+        }catch(Exception e){
+            LOGGER.error("Exception due to :"+ e.getMessage());
+            sendErrorResponse(response,e,HttpServletResponse.SC_BAD_REQUEST,e.getMessage());
+            e.printStackTrace();
         }
-        sendSuccessResponse(response);
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {
@@ -72,7 +92,7 @@ public class CreateExperimentAPI extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Experiment registered successfully with Autotune. View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new AutotuneResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();
