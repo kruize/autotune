@@ -78,9 +78,9 @@ public class updateResults extends HttpServlet {
                 }
             }
             sendSuccessResponse(response);
-        } catch (Exception e) {
-            LOGGER.error("Exception due to :" + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        }catch(Exception e){
+            LOGGER.error("Exception due to :"+ e.getMessage());
+            sendErrorResponse(response,e,HttpServletResponse.SC_BAD_REQUEST,e.getMessage());
             e.printStackTrace();
         }
     }
@@ -107,4 +107,5 @@ public class updateResults extends HttpServlet {
         }
         response.sendError(httpStatusCode, errorMsg);
     }
+
 }
