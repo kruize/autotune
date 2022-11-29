@@ -64,9 +64,9 @@ public class CreateExperiment extends HttpServlet {
                 this.mainAutoTuneOperatorMap.put(jsonObject.get("experiment_name").toString(), jsonObject);
             }
             sendSuccessResponse(response);
-        }catch(Exception e){
-            LOGGER.error("Exception due to :"+ e.getMessage());
-            sendErrorResponse(response,e,HttpServletResponse.SC_BAD_REQUEST,e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Exception due to :" + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
         }
     }
@@ -93,5 +93,4 @@ public class CreateExperiment extends HttpServlet {
         }
         response.sendError(httpStatusCode, errorMsg);
     }
-
 }
