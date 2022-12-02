@@ -16,7 +16,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -31,7 +31,7 @@ jobs:
           echo Build autotune
           ./build.sh -i autotune_operator:test
           docker images | grep autotune     
-      - name: Start minikube
+      - name: Check cluster info on minikube
         run: |
           kubectl cluster-info
           kubectl get pods -n kube-system

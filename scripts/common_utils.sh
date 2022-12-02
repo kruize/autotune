@@ -25,6 +25,7 @@ function check_running() {
 
 	echo "Info: Waiting for ${check_pod} to come up....."
 	err_wait=0
+	counter=0
 	while true;
 	do
 		sleep 2
@@ -47,6 +48,12 @@ function check_running() {
 				;;
 			*)
 				sleep 2
+				if [ $counter == 200 ]; then
+					${kubectl_cmd} describe pod ${scheck_pod}
+					echo "ERROR: Prometheus Pods failed to come up!"
+					exit -1
+				fi
+				((counter++))
 				;;
 		esac
 	done
