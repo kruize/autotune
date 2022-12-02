@@ -164,7 +164,7 @@ see [Update results](/design/UpdateResults.md)
 
 ## Recommendations
 
-List recommendations output JSON as follows.
+List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
 **Request**
 `GET /listRecommendations`
@@ -180,7 +180,7 @@ List recommendations output JSON as follows.
       "container_name": "tfb-server",
       "deployment_name": "tfb-qrh-deployment",
       "namespace": "default",
-      "confident_index": 0.88,
+      "confidence_level": 0.88,
       "requests": {
         "memory": {
           "amount": "210.0",
@@ -193,15 +193,15 @@ List recommendations output JSON as follows.
           "format": "",
           "additionalProperties": {
           }
-        },
-        "env": [
+        }
+      },
+      "env": [
             {
               "name": "JDK_JAVA_OPTIONS",
               "additionalProperties": {},
               "value": " -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
             }
-        ]
-      },
+      ],
       "limits": {
         "memory": {
           "amount": "210.0",
@@ -214,7 +214,6 @@ List recommendations output JSON as follows.
           "amount": "2.26",
           "format": "",
           "additionalProperties": {
-
           }
         }
       }
