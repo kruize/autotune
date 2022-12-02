@@ -1,22 +1,20 @@
 # Kruize REST API
 
-This article describes how to quickly get started with the Kruize REST API using The "curl" command. Kruize API is
-organized around REST. Our API has predictable resource-oriented URLs, accepts form-encoded request bodies, returns
-JSON-encoded responses, and uses standard HTTP response codes, authentication, and verbs.
+This article describes how to get started with the Kruize REST API. There are two experiment "modes" in Kruize, the
+Monitoring Experiment and the Trial Experiment. The REST APIs are specified for each as below.
 
-## Components
+* ### Monitor Experiment (mode=monitor)
 
-Kurize APIs are designed to work for one or more use cases based on cluster location and mode.
+In this experiment mode, Kruize provides container sizing recommendations (CPU and Memory "request" and "limit") based
+on long term monitoring of containers. The containers can either be in a "local" or "remote" cluster. API's
+for [mode=monitor]/design/MonitoringModeAPI.md).
 
-* ### Remote Monitoring Mode
+* ### Trial Experiment (mode=experiment)
 
-Find a set of [APIs](/design/MonitoringModeAPI.md) that can be used if the cluster is "remote" and the mode is "
-monitoring".
-
-* ### Experiment Trial Mode
-
-Find a set of [APIs](/design/ExperimentModeAPI.md) that can be used if the cluster is "local" and the mode is "
-experiment".
+In this experiment mode, Kruize provides container sizing (CPU and Memory "request" and "limit") and optionally,
+language runtime configuration (Provided runtime metrics are exposed to Prometheus and are supported by Kruize)
+recommendations based on running "trials". The containers can only be in a "local" cluster (as in accessible to Kruize).
+API's for [mode=experiment](/design/ExperimentModeAPI.md).
 
 ## Health
 
