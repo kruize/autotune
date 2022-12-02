@@ -49,11 +49,6 @@ function check_running() {
 			*)
 				sleep 2
 				if [ $counter == 200 ]; then
-					echo "*****************************************************************************************"
-					echo ""
-					${kubectl_cmd} get pods | grep ${check_pod}
-					echo "*****************************************************************************************"
-					echo ""
 					${kubectl_cmd} describe pod ${scheck_pod}
 					echo "ERROR: Prometheus Pods failed to come up!"
 					exit -1

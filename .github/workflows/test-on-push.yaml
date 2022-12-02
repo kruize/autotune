@@ -18,7 +18,7 @@ jobs:
   # This workflow contains a single job called "deploy"
   deploy:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -28,7 +28,7 @@ jobs:
         with:
           minikube version: 'v1.16.0'
           kubernetes version: 'v1.19.2'
-      - name: Start minikube
+      - name: Display cluster info
         run: |
           kubectl cluster-info
           kubectl get pods -n kube-system      
