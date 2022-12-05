@@ -21,7 +21,7 @@ import static com.autotune.utils.ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL_E
  *
  */
 public class EMInterface {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HPOInterface.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EMInterface.class);
 
     /**
      * @param autotuneExperiment
@@ -68,8 +68,10 @@ public class EMInterface {
             experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(String.valueOf(rspTime));
         } catch (Exception e) {
             LOGGER.error("Error calculating response time due to {}", e.getMessage());
-            experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(null);
+            experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(null);   // ToDO handle Null values at receiver end
         }
+
+
         experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResultError("None");
     }
 }
