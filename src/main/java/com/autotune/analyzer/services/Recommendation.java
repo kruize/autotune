@@ -62,7 +62,8 @@ public class Recommendation extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
-        String temp = "{\"config\": {\n" +
+        String temp = "{" + "\"timestamp\": \"2022-01-23T18:25:43.511Z\", \n" +
+                "        \"config\": {\n" +
                 "        \"container_name\": \"tfb-server\",\n" +
                 "        \"deployment_name\": \"tfb-qrh-deployment\",\n" +
                 "        \"namespace\": \"default\",\n" +
