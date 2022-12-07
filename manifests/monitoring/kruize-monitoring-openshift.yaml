@@ -1,0 +1,694 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autotune
+  namespace: openshift-tuning
+  labels:
+    app: autotune
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: autotune
+  template:
+    metadata:
+      labels:
+        app: autotune
+        name: autotune
+        operatorframework.io/os.linux: supported
+    spec:
+      containers:
+      - name: autotune
+        image: "quay.io/khansaad/autotune_operator:0.0.8_mvp_demo"  # will be updated later
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            value: "kubernetes"
+          - name: K8S_TYPE
+            value: "openshift"
+          - name: AUTH_TYPE
+            value: ""
+          - name: AUTH_TOKEN
+            value: ""
+          - name: MONITORING_AGENT
+            value: "prometheus"
+          - name: MONITORING_SERVICE
+            value: "prometheus-k8s"
+          - name: MONITORING_AGENT_ENDPOINT
+            value: ""
+          - name: LOGGING_LEVEL
+            value: "info"
+          - name: ROOT_LOGGING_LEVEL
+            value: "info"
+        ports:
+         - name: autotune-port
+           containerPort: 8080
+        volumeMounts:
+          - mountPath: /var/run/secrets/kubernetes.io/namespace
+            name: kube-api-access
+            readOnly: true
+      volumes:
+        - name: kube-api-access
+          projected:
+            defaultMode: 420
+            sources:
+            - configMap:
+                items:
+                - key: ca.crt
+                  path: ca.crt
+                name: kube-root-ca.crt
+            - downwardAPI:
+                items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace
+---
+apiVersion: "recommender.com/v1"
+kind: "AutotuneQueryVariable"
+metadata:
+  name: "openshift"
+  namespace: "openshift-tuning"
+query_variables:
+  - name: '$POD_LABEL$'
+    value: 'pod'
+  - name: '$CONTAINER_LABEL$'
+    value: 'container'
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: autotune
+  labels:
+    team: autotune-frontend
+spec:
+  selector:
+    matchLabels:
+      app: autotune
+  endpoints:
+    - port: autotune-port
+      path: '/metrics'
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      team: autotune-frontend
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autotune-config
+data:
+  cluster_type: "kubernetes"
+  k8s_type: "openshift"
+  auth_type: ""
+  auth_token: ""
+  monitoring_agent: "prometheus"
+  monitoring_service: "prometheus-k8s"
+  monitoring_agent_endpoint: ""
+  root_logging_level: "info"
+  logging_level: "info"
+---
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "container"
+layer_name: container
+layer_level: 0
+details: generic container tunables
+layer_presence:
+  # This layer is assumed to be available by default for all applications.
+  presence: always
+tunables:
+  - name: memoryRequest
+    value_type: double
+    upper_bound: '2048 Mi'
+    lower_bound: '512 Mi'
+    step: 1
+    queries:
+      - datasource: 'prometheus'
+        query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="$CONTAINER$", $POD_LABEL$="$POD$"}'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: cpuRequest
+    value_type: double
+    upper_bound: '3.0'
+    lower_bound: '1.0'
+    step: 0.01
+    queries:
+      - datasource: 'prometheus'
+        query: 'rate(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+---
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "hotspot"
+layer_name: hotspot
+layer_level: 1
+details: hotspot tunables
+layer_presence:
+  queries:
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~".+Eden.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~".+Tenured.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~".+Old.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"Eden.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"Tenured.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"Old.+"}'
+      key: pod
+tunables:
+  # Enable zGC if Java >=17
+  - name: gc
+    description: 'Garbage collection policy'
+    value_type: categorical
+    choices:
+      - 'G1GC'
+      - 'ParallelGC'
+      - 'SerialGC'
+      - 'ShenandoahGC'
+      - 'ZGC'
+    queries:
+      - datasource: 'prometheus'
+        query: 'sum(jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="$CONTAINER$", $POD_LABEL$="$POD$"})'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: MaxInlineLevel
+    description: 'maximum number of nested calls that are inlined. Default is 9'
+    value_type: integer
+    upper_bound: '50'
+    lower_bound: '9'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: FreqInlineSize
+    description: 'The maximum bytecode size of a frequent method to be inlined. Default is 325'
+    value_type: integer
+    upper_bound: '500'
+    lower_bound: '325'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: MinInliningThreshold
+    description: 'The minimum invocation count a method needs to have to be inlined. Default is 250'
+    value_type: integer
+    upper_bound: '200'
+    lower_bound: '0'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: CompileThreshold
+    description: 'number of interpreted method invocations before (re-)compiling. Default is 1500'
+    value_type: integer
+    upper_bound: '10000'
+    lower_bound: '1000'
+    step: 10
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: CompileThresholdScaling
+    description: 'Factor to control when first compilation happens. Default is 1.0'
+    value_type: double
+    upper_bound: '15'
+    lower_bound: '1'
+    step: 0.1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # Commenting it as it's dependent on ParallelGCThreads
+  # ConcGCThreads dependent on ParallelGCThreads. JVM exits if ParallelGCThreads < ConcGCThreads.
+  # Upper bound is based on cpus and ParallelGCThreads.
+  #- name: ConcGCThreads
+  #  description: 'Number of threads concurrent gc will use. Default is 0'
+  #  value_type: integer
+  #  upper_bound: '8'
+  #  lower_bound: '0'
+  #  step: 1
+  #  slo_class:
+  #  - response_time
+  #  - throughput
+  #  - resource_usage
+
+  - name: InlineSmallCode
+    description: 'Only inline already compiled methods if their code size is less than this. Default is 1000'
+    value_type: integer
+    upper_bound: '5000'
+    lower_bound: '500'
+    step: 5
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: LoopUnrollLimit
+    description: 'Unroll loop bodies with node count less than this. Default is 50'
+    value_type: integer
+    upper_bound: '250'
+    lower_bound: '20'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: LoopUnrollMin
+    description: 'Minimum number of unroll loop bodies before checking progress of rounds of unroll,optimize,..Default is 4'
+    value_type: integer
+    upper_bound: '20'
+    lower_bound: '0'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: MinSurvivorRatio
+    description: 'Minimum ratio of young generation/survivor space size. Default is 3'
+    value_type: integer
+    upper_bound: '48'
+    lower_bound: '3'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: NewRatio
+    description: 'Ratio of old/new generation sizes. Default is 2'
+    value_type: integer
+    upper_bound: '10'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: TieredStopAtLevel
+    description: 'Stop at given compilation level. Default is 4'
+    value_type: integer
+    upper_bound: '4'
+    lower_bound: '0'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+
+  # Commenting it as it's dependent on MaxHeapFreeRatio
+  #- name: MinHeapFreeRatio
+  #  description: 'minimum percentage of heap free after GC to avoid expansion. Default is 40'
+  #  value_type: integer
+  #  upper_bound: '70'
+  #  lower_bound: '5'
+  #  step: 1
+  #  slo_class:
+  #  - response_time
+  #  - throughput
+  #  - resource_usage
+
+  # Commenting it as it's dependent on MinHeapFreeRatio
+  # lowerbound should be >= upperbound of MinHeapFreeRatio
+  #- name: MaxHeapFreeRatio
+  #  description: 'The maximum percentage of heap free after GC to avoid shrinking. Default is 70'
+  #  value_type: integer
+  #  upper_bound: '100'
+  #  lower_bound: '20'
+  #  step: 1
+  #  slo_class:
+  #  - response_time
+  #  - throughput
+  #  - resource_usage
+
+  # Recommended value for OpenJDK containers is 4.
+  - name: GCTimeRatio
+    description: 'Adaptive size policy application time to GC time ratio. Default is 99'
+    value_type: integer
+    upper_bound: '100'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # Recommended value for OpenJDK containers is 90.
+  - name: AdaptiveSizePolicyWeight
+    description: 'Weight given to exponential resizing, between 0 and 100. Default is 10'
+    value_type: integer
+    upper_bound: '100'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: TieredCompilation
+    description: 'Enable tiered compilation. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: AllowParallelDefineClass
+    description: 'Allow parallel defineClass requests for class loaders registering as parallel capable. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: AllowVectorizeOnDemand
+    description: 'Globally supress vectorization set in VectorizeMethod. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: AlwaysCompileLoopMethods
+    description: 'When using recompilation, never interpret methods containing loops. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: AlwaysPreTouch
+    description: 'Force all freshly committed pages to be pre-touched. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: AlwaysTenure
+    description: 'Always tenure objects in eden (ParallelGC only). Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: BackgroundCompilation
+    description: 'A thread requesting compilation is not blocked during compilation. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: DoEscapeAnalysis
+    description: 'Perform escape analysis. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: UseInlineCaches
+    description: 'Use Inline Caches for virtual calls. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: UseLoopPredicate
+    description: 'Generate a predicate to select fast/slow loop versions. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: UseStringDeduplication
+    description: 'Use string deduplication. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: UseSuperWord
+    description: 'Transform scalar operations into superword operations. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: UseTypeSpeculation
+    description: 'Speculatively propagate types from profiles. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: StackTraceInThrowable
+    description: 'Collect backtrace in throwable when exception happens. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # Set as -Dio.netty.buffer.checkBounds=<> -Dio.netty.buffer.checkAccessible=<>
+  - name: nettyBufferCheck
+    description: 'Collect backtrace in throwable when exception happens. Default is true'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+---
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "openj9"
+layer_name: openj9
+layer_level: 1
+details: openj9 tunables
+layer_presence:
+  queries:
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"nursery-.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"tenured-.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"tenured"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"balanced.+"}'
+      key: pod
+    - datasource: 'prometheus'
+      query: 'jvm_memory_used_bytes{area="heap",id=~"JavaHeap"}'
+      key: pod
+
+tunables:
+  - name: gc
+    description: 'Garbage collection policy'
+    value_type: categorical
+    choices:
+      - 'gencon'
+      - 'balanced'
+      - 'optavgpause'
+      - 'optthruput'
+      - 'metronome'
+    queries:
+      - datasource: 'prometheus'
+        query: 'jvm_memory_used_bytes{area="heap", $CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # Upper bound depends on cpu limits. Defaults to n-1 where n is no.of cpus
+  - name: gcthreads
+    description: 'No.of threads gc uses for parallel operations'
+    value_type: integer
+    upper_bound: '4'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: AlwaysPreTouch
+    description: 'Force all freshly committed pages to be pre-touched. Default is false'
+    value_type: categorical
+    choices:
+      - 'true'
+      - 'false'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+---
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "quarkus"
+layer_name: quarkus
+layer_level: 2
+details: quarkus tunables
+layer_presence:
+  label:
+    - name: app.kubernetes.io/layer
+      value: quarkus
+tunables:
+  # upper_bound is set to 8 times of cpu.
+  - name: quarkus.thread-pool.core-threads
+    description: 'The core thread pool size. This number of threads will always be kept alive.'
+    value_type: integer
+    upper_bound: '10'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+
+  - name: quarkus.thread-pool.queue-size
+    description: 'The queue size'
+    value_type: integer
+    upper_bound: '100'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: quarkus.hibernate-orm.jdbc.statement-fetch-size
+    description: 'How many rows are fetched at a time by the JDBC driver.'
+    value_type: integer
+    upper_bound: '50'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # Set -Dquarkus.datasource.jdbc.min-size=<> -Dquarkus.datasource.jdbc.initial-size=<> to avoid initial-size > min-size.
+  - name: quarkus.datasource.jdbc.min-size
+    description: 'minimum size of jdbc datasource.'
+    value_type: integer
+    upper_bound: '12'
+    lower_bound: '1'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  # lowerbound should be >= upperbound of quarkus.datasource.jdbc.min-size
+  - name: quarkus.datasource.jdbc.max-size
+    description: 'maximum size of jdbc datasource. Default is 20'
+    value_type: integer
+    upper_bound: '90'
+    lower_bound: '12'
+    step: 1
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autotune
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: autotune
+spec:
+  type: NodePort
+  selector:
+    app: autotune
+  ports:
+  - name: autotune-port
+    port: 8080
+    targetPort: 8080
