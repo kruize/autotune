@@ -43,10 +43,10 @@ jobs:
       - name: Deploy autotune
         run: |
           echo Deploy autotune
-          cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
-          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
+          cp ./manifests/autotune/autotune-operator-deployment.yaml_template ./manifests/autotune/autotune-operator-deployment.yaml_template.old
+          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          cat ./manifests/autotune-operator-deployment.yaml_template
+          cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
 
