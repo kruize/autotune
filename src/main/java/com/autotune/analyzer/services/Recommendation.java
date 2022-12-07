@@ -96,7 +96,7 @@ public class Recommendation extends HttpServlet {
                 "            \"format\": \"\",\n" +
                 "            \"additionalProperties\": {}\n" +
                 "          }\n" +
-                "        }}";
+                "        }}}";
         out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":" + temp + "}");       //TODO add dummy results
         out.flush();
     }
