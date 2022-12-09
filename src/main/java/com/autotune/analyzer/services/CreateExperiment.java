@@ -16,10 +16,16 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.data.ExperimentInterface;
+import com.autotune.analyzer.data.ExperimentInterfaceImpl;
+import com.autotune.analyzer.data.ExperimentValidation;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +39,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -46,25 +56,66 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
-    ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
+    Map<String, AutotuneObject> mainKruizeExperimentMap;
+    AutotuneExecutor analyserExecutor;
+
 
     @Override
     public void init(ServletConfig config) throws ServletException {
+        LOGGER.info("*********************************************************************************START");
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
-    }
+        try {
+            this.mainKruizeExperimentMap = (ConcurrentHashMap<String, AutotuneObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
+            this.analyserExecutor = (AutotuneExecutor) getServletContext().getAttribute(AnalyzerConstants.AnalyserParallelEngineConfigs.EXECUTOR);
 
+            ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
+            Runnable checkForNewExperiment = () -> {
+                this.mainKruizeExperimentMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
+                        (name, ao) -> {
+                            if (ao.getStatus().equals(AnalyzerConstants.ExpStatus.QUEUED)) {
+                                this.analyserExecutor.submit(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                AutotuneWorker theWorker = new CallableFactory().create(analyserExecutor.getWorker());
+                                                theWorker.execute(ao, analyserExecutor, getServletContext());
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                );
+            };
+            ses.schedule(checkForNewExperiment, 5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error("Not able to initiate createExperiment api due to {}", e.getMessage());
+        }
+        LOGGER.info("*********************************************************************************END");
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
-            for (JsonObject jsonObject : autoTuneOperatorDataList) {
-                this.mainAutoTuneOperatorMap.put(jsonObject.get("experiment_name").toString(), jsonObject);
+            try {
+                List<AutotuneObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, AutotuneObject[].class));
+                ExperimentValidation validationObject = new ExperimentValidation(this.mainKruizeExperimentMap);
+                validationObject.validate(kruizeExpList);
+                if (validationObject.isSuccess()) {
+                    ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+                    experimentInterface.addExperiments(mainKruizeExperimentMap, validationObject.getValidKruizeExpList());
+                    sendSuccessResponse(response);
+                } else {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + validationObject.getErrorMessage());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
             }
-            sendSuccessResponse(response);
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
             LOGGER.error("Exception due to :" + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();

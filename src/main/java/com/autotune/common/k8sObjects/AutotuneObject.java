@@ -18,98 +18,195 @@ package com.autotune.common.k8sObjects;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
- *
+ * <p>
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class AutotuneObject
-{
-	private final String experimentId;
-	private final String experimentName;
-	private final String namespace;
-	private final String mode;
-	private final String targetCluster;
-	private final SloInfo sloInfo;
-	private final SelectorInfo selectorInfo;
-	private final ObjectReference objectReference;
+public final class AutotuneObject {
+    private String experimentId;
+    @SerializedName("experiment_name")
+    private String experimentName;
+    private String namespace;
+    private String mode;                    //Todo convert into Enum
+    private String targetCluster;           //Todo convert into Enum
+    @SerializedName("slo")
+    private SloInfo sloInfo;
+    @SerializedName("selector")
+    private SelectorInfo selectorInfo;
+    private ObjectReference objectReference;
+    private AnalyzerConstants.ExpStatus status;
+    private String performanceProfile;
+    private String deployment_name;
+    private TrialSettings trial_settings;
+    private RecommendationSettings recommendation_settings;
+    private List<ContainerObject> containers;
 
-	public AutotuneObject(String experimentName,
-						  String namespace,
-						  String mode,
-						  String targetCluster,
-						  SloInfo sloInfo,
-						  SelectorInfo selectorInfo,
-						  ObjectReference objectReference) throws InvalidValueException {
+    public AutotuneObject(String experimentName,
+                          String namespace,
+                          String mode,
+                          String targetCluster,
+                          SloInfo sloInfo,
+                          SelectorInfo selectorInfo,
+                          ObjectReference objectReference) throws InvalidValueException {
 
-		HashMap<String, Object> map = new HashMap<>();
-		map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
-		map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
-		map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
-		map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
-		map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
-		map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
 
-		StringBuilder error = ValidateAutotuneObject.validate(map);
-		if (error.toString().isEmpty()) {
-			this.experimentName = experimentName;
-			this.namespace = namespace;
-			this.mode = mode;
-			this.targetCluster = targetCluster;
-			this.sloInfo = sloInfo;
-			this.selectorInfo = selectorInfo;
-			this.experimentId = Utils.generateID(toString());
-			this.objectReference = objectReference;
-		} else {
-			throw new InvalidValueException(error.toString());
-		}
-	}
+        StringBuilder error = ValidateAutotuneObject.validate(map);
+        if (error.toString().isEmpty()) {
+            this.experimentName = experimentName;
+            this.namespace = namespace;
+            this.mode = mode;
+            this.targetCluster = targetCluster;
+            this.sloInfo = sloInfo;
+            this.selectorInfo = selectorInfo;
+            this.experimentId = Utils.generateID(toString());
+            this.objectReference = objectReference;
+        } else {
+            throw new InvalidValueException(error.toString());
+        }
+    }
 
-	public String getExperimentName() {
-		return experimentName;
-	}
+    public String getExperimentName() {
+        return experimentName;
+    }
 
-	public SloInfo getSloInfo() {
-		return new SloInfo(sloInfo);
-	}
+    public void setExperimentName(String experimentName) {
+        this.experimentName = experimentName;
+    }
 
-	public SelectorInfo getSelectorInfo() {
-		return new SelectorInfo(selectorInfo);
-	}
+    public SloInfo getSloInfo() {
+        return new SloInfo(sloInfo);
+    }
 
-	public String getMode() {
-		return mode;
-	}
+    public void setSloInfo(SloInfo sloInfo) {
+        this.sloInfo = sloInfo;
+    }
 
-	public String getTargetCluster() {
-		return targetCluster;
-	}
+    public SelectorInfo getSelectorInfo() {
+        return new SelectorInfo(selectorInfo);
+    }
 
-	public String getNamespace() {
-		return namespace;
-	}
+    public void setSelectorInfo(SelectorInfo selectorInfo) {
+        this.selectorInfo = selectorInfo;
+    }
 
-	public String getExperimentId() {
-		return experimentId;
-	}
+    public String getMode() {
+        return mode;
+    }
 
-	public ObjectReference getObjectReference() {
-		return objectReference;
-	}
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
 
-	@Override
-	public String toString() {
-		return "AutotuneObject{" +
-				"name='" + experimentName + '\'' +
-				", namespace='" + namespace + '\'' +
-				", mode='" + mode + '\'' +
-				", targetCluster='" + targetCluster + '\'' +
-				", sloInfo=" + sloInfo + '\'' +
-				", selectorInfo=" + selectorInfo +
-				'}';
-	}
+    public String getTargetCluster() {
+        return targetCluster;
+    }
+
+    public void setTargetCluster(String targetCluster) {
+        this.targetCluster = targetCluster;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getExperimentId() {
+        return experimentId;
+    }
+
+    public void setExperimentId(String experimentId) {
+        this.experimentId = experimentId;
+    }
+
+    public ObjectReference getObjectReference() {
+        return objectReference;
+    }
+
+    public void setObjectReference(ObjectReference objectReference) {
+        this.objectReference = objectReference;
+    }
+
+    public AnalyzerConstants.ExpStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AnalyzerConstants.ExpStatus status) {
+        this.status = status;
+    }
+
+    public String getPerformanceProfile() {
+        return performanceProfile;
+    }
+
+    public void setPerformanceProfile(String performanceProfile) {
+        this.performanceProfile = performanceProfile;
+    }
+
+    public String getDeployment_name() {
+        return deployment_name;
+    }
+
+    public void setDeployment_name(String deployment_name) {
+        this.deployment_name = deployment_name;
+    }
+
+    public TrialSettings getTrial_settings() {
+        return trial_settings;
+    }
+
+    public void setTrial_settings(TrialSettings trial_settings) {
+        this.trial_settings = trial_settings;
+    }
+
+    public RecommendationSettings getRecommendation_settings() {
+        return recommendation_settings;
+    }
+
+    public void setRecommendation_settings(RecommendationSettings recommendation_settings) {
+        this.recommendation_settings = recommendation_settings;
+    }
+
+    public List<ContainerObject> getContainers() {
+        return containers;
+    }
+
+    public void setContainers(List<ContainerObject> containers) {
+        this.containers = containers;
+    }
+
+    @Override
+    public String toString() {
+        return "AutotuneObject{" +
+                "experimentId='" + experimentId + '\'' +
+                ", experimentName='" + experimentName + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", mode='" + mode + '\'' +
+                ", targetCluster='" + targetCluster + '\'' +
+                ", sloInfo=" + sloInfo +
+                ", selectorInfo=" + selectorInfo +
+                ", objectReference=" + objectReference +
+                ", status=" + status +
+                ", performanceProfile='" + performanceProfile + '\'' +
+                ", deployment_name='" + deployment_name + '\'' +
+                ", trial_settings=" + trial_settings +
+                ", recommendation_settings=" + recommendation_settings +
+                '}';
+    }
 }

@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.common.k8sObjects;
 
-package com.autotune.analyzer.utils;
+public class RecommendationSettings {
+    private double threshold;
 
-public class AnalyzerConstants {
+    public double getThreshold() {
+        return threshold;
+    }
 
-    public static class AnalyserKeys {
-        public static final String ANALYSER_STORAGE_CONTEXT_KEY = "MainExperimentsMAP";
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
+    }
 
-        private AnalyserKeys() {
-        }
+    @Override
+    public String toString() {
+        return "RecommendationSettings{" +
+                "threshold=" + threshold +
+                '}';
     }
 }

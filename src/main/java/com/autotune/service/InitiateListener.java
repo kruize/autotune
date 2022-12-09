@@ -15,7 +15,8 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.deployment.AutotuneDeployment;
+import com.autotune.analyzer.workerimpl.AnalyserManager;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.queue.AutotuneQueue;
@@ -23,14 +24,13 @@ import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.autotune.experimentManager.workerimpl.IterationManager;
-import com.google.gson.JsonObject;
+import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -66,11 +66,18 @@ public class InitiateListener implements ServletContextListener {
         sce.getServletContext().setAttribute(ParallelEngineConfigs.EM_EXECUTOR, EMExecutor);
 
         /**
-         * Experiments storage created for monitoring.
+         * Kruize Experiment Main Mapping
          */
-        ConcurrentHashMap<String, JsonObject> autotuneOperatorMap = new ConcurrentHashMap<>();
-        sce.getServletContext().setAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY, experimentDetailsMap);
-
+        sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, AutotuneDeployment.autotuneObjectMap);
+        AutotuneExecutor analyserExecutor = new AutotuneExecutor(AnalyzerConstants.AnalyserParallelEngineConfigs.CORE_POOL_SIZE,
+                AnalyzerConstants.AnalyserParallelEngineConfigs.MAX_POOL_SIZE,
+                AnalyzerConstants.AnalyserParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
+                TimeUnit.SECONDS,
+                new AutotuneQueue<>(20000),
+                new ThreadPoolExecutor.AbortPolicy(),
+                AnalyserManager.class
+        );
+        sce.getServletContext().setAttribute(AnalyzerConstants.AnalyserParallelEngineConfigs.EXECUTOR, analyserExecutor);
 
     }
 
