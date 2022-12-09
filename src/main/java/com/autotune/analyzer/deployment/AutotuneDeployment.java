@@ -186,12 +186,8 @@ public class AutotuneDeployment
 		};
 
 		KubernetesServices kubernetesServices = new KubernetesServicesImpl();
-		try {
-			kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
-			kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
-		}catch (Exception e){
-			LOGGER.error("Watcher not added!");
-		}
+		kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
+		kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
 	}
 
 	/**
