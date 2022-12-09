@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.Experimentator.startExperiment;
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
@@ -65,7 +66,7 @@ public class AutotuneDeployment {
      * Key: Name of autotuneObject
      * Value: AutotuneObject instance matching the name
      */
-    public static Map<String, AutotuneObject> autotuneObjectMap = new HashMap<>();
+    public static Map<String, AutotuneObject> autotuneObjectMap = new ConcurrentHashMap<>();
     public static Map<String, AutotuneConfig> autotuneConfigMap = new HashMap<>();
     /**
      * Outer map:

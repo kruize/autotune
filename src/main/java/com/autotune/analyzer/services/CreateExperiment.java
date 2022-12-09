@@ -41,8 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,7 +67,7 @@ public class CreateExperiment extends HttpServlet {
             this.mainKruizeExperimentMap = (ConcurrentHashMap<String, AutotuneObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
             this.analyserExecutor = (AutotuneExecutor) getServletContext().getAttribute(AnalyzerConstants.AnalyserParallelEngineConfigs.EXECUTOR);
 
-            ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
+            ScheduledThreadPoolExecutor ses = new ScheduledThreadPoolExecutor(1);
             Runnable checkForNewExperiment = () -> {
                 this.mainKruizeExperimentMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
                         (name, ao) -> {
@@ -86,7 +85,7 @@ public class CreateExperiment extends HttpServlet {
                         }
                 );
             };
-            ses.schedule(checkForNewExperiment, 5, TimeUnit.SECONDS);
+            ses.scheduleAtFixedRate(checkForNewExperiment, 5, 5, TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Not able to initiate createExperiment api due to {}", e.getMessage());
