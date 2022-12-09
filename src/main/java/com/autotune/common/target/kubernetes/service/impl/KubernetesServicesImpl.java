@@ -420,7 +420,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             event = kubernetesClient.events().inNamespace(namespace).withName(eventName).get();
         } catch (Exception e) {
-            new TargetHandlerException(e, "getEvent failed!");
+            LOGGER.error("Watcher not added! Only Monitoring APIs are exposed.");
         }
         return event;
     }

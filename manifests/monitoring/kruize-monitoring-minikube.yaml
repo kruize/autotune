@@ -4,7 +4,7 @@ metadata:
   name: autotune
   labels:
     app: autotune
-  namespace: openshift-tuning
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
@@ -25,7 +25,7 @@ spec:
           - name: CLUSTER_TYPE
             value: "kubernetes"
           - name: K8S_TYPE
-            value: "openshift"
+            value: "minikube"
           - name: AUTH_TYPE
             value: ""
           - name: AUTH_TOKEN
@@ -39,7 +39,7 @@ spec:
           - name: LOGGING_LEVEL
             value: "info"
           - name: ROOT_LOGGING_LEVEL
-            value: "error"
+            value: "info"
         ports:
          - name: autotune-port
            containerPort: 8080
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: autotune
-  namespace: openshift-tuning
+  namespace: monitoring
   annotations:
     prometheus.io/scrape: 'true'
     prometheus.io/path: '/metrics'
