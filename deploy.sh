@@ -18,24 +18,28 @@
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
-AUTOTUNE_OPERATOR_CRD="manifests/autotune/autotune-operator-crd.yaml"
-AUTOTUNE_CONFIG_CRD="manifests/autotune/autotune-config-crd.yaml"
-AUTOTUNE_QUERY_VARIABLE_CRD="manifests/autotune/autotune-query-variable-crd.yaml"
-AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="manifests/autotune/autotune-operator-deployment.yaml_template"
-AUTOTUNE_DEPLOY_OPENSHIFT_MANIFEST_TEMPLATE="manifests/autotune/autotune-operator-openshift-deployment.yaml_template"
-AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune/autotune-operator-deployment.yaml"
-KRUIZE_DEPLOY_MANIFEST="manifests/monitoring/kruize-monitoring-openshift.yaml"
-AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune/autotune-operator-rolebinding.yaml_template"
-AUTOTUNE_RB_MANIFEST="manifests/autotune/autotune-operator-rolebinding.yaml"
-AUTOTUNE_ROLE_MANIFEST="manifests/autotune/autotune-operator-role.yaml"
-AUTOTUNE_SA_MANIFEST="manifests/autotune/autotune-operator-sa.yaml"
-SERVICE_MONITOR_MANIFEST="manifests/autotune/servicemonitor/autotune-service-monitor.yaml"
+AUTOTUNE_DIR="./manifests/autotune"
+MONITORING_DIR="./manifests/monitoring"
+
+AUTOTUNE_OPERATOR_CRD="${AUTOTUNE_DIR}/autotune-operator-crd.yaml"
+AUTOTUNE_CONFIG_CRD="${AUTOTUNE_DIR}/autotune-config-crd.yaml"
+AUTOTUNE_QUERY_VARIABLE_CRD="${AUTOTUNE_DIR}/autotune-query-variable-crd.yaml"
+AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml_template"
+AUTOTUNE_DEPLOY_OPENSHIFT_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-openshift-deployment.yaml_template"
+AUTOTUNE_DEPLOY_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml"
+AUTOTUNE_RB_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-rolebinding.yaml_template"
+AUTOTUNE_RB_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-rolebinding.yaml"
+AUTOTUNE_ROLE_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-role.yaml"
+AUTOTUNE_SA_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-sa.yaml"
+SERVICE_MONITOR_MANIFEST="${AUTOTUNE_DIR}/servicemonitor/autotune-service-monitor.yaml"
 AUTOTUNE_OPENSHIFT_NAMESPACE="openshift-tuning"
 AUTOTUNE_SA_NAME="autotune-sa"
-AUTOTUNE_CONFIGMAPS="manifests/autotune/configmaps"
-AUTOTUNE_CONFIGS="manifests/autotune/autotune-configs"
-AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="manifests/autotune/autotune-query-variables/query-variable.yaml_template"
-AUTOTUNE_QUERY_VARIABLES_MANIFEST="manifests/autotune/autotune-query-variables/query-variable.yaml"
+AUTOTUNE_CONFIGMAPS="${AUTOTUNE_DIR}/configmaps"
+AUTOTUNE_CONFIGS="${AUTOTUNE_DIR}/autotune-configs"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml_template"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml"
+KRUIZE_DEPLOY_MANIFEST_OPENSHIFT="${MONITORING_DIR}/kruize-monitoring-openshift.yaml"
+KRUIZE_DEPLOY_MANIFEST_MINIKUBE="${MONITORING_DIR}/kruize-monitoring-minikube.yaml"
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
@@ -60,6 +64,7 @@ setup=1
 # Default mode is interactive
 non_interactive=0
 autotune_ns=""
+mode="autotune"
 # docker: loop timeout is turned off by default
 timeout=-1
 
@@ -87,6 +92,7 @@ function usage() {
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
+	echo " -m: Mode selection [autotune | monitoring]"
 	exit -1
 }
 
@@ -102,7 +108,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:n:o:p:stu:-: gopts
+while getopts ac:d:i:k:m:n:o:p:stu:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -137,6 +143,9 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
+  m)
+		mode="${OPTARG}"
+		;;
 	n)
 		autotune_ns="${OPTARG}"
 		;;
@@ -156,7 +165,16 @@ done
 
 # Call the proper setup function based on the cluster_type
 if [ ${setup} == 1 ]; then
-	${cluster_type}_start
+	if [ ${mode} == "monitoring" ]; then
+		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
+			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
+			kubectl apply -f ${!MANIFEST_FILE}
+		else
+			echo "Unsupported cluster for monitoring"
+		fi
+	else
+		${cluster_type}_start
+	fi
 else
 	${cluster_type}_terminate
 fi
