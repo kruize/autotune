@@ -49,4 +49,8 @@ jobs:
           cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
-
+      - name: Deploy autotune monitoring
+        run: |
+          echo Deploy autotune for monitoring
+          echo "***************************************************************"
+          ./deploy.sh -c minikube -m monitoring

@@ -55,3 +55,7 @@ jobs:
         run: |
           echo Deploy autotune  
           ./deploy.sh -c minikube -i kruize/autotune_operator:test
+      - name: Deploy monitoring
+        run: |
+          echo Deploy autotune monitoring
+          ./deploy.sh -c minikube -m monitoring
