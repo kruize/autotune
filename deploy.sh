@@ -38,8 +38,8 @@ AUTOTUNE_CONFIGMAPS="${AUTOTUNE_DIR}/configmaps"
 AUTOTUNE_CONFIGS="${AUTOTUNE_DIR}/autotune-configs"
 AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml_template"
 AUTOTUNE_QUERY_VARIABLES_MANIFEST="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml"
-KRUIZE_DEPLOY_MANIFEST_OPENSHIFT="${MONITORING_DIR}/kruize-monitoring-openshift.yaml"
-KRUIZE_DEPLOY_MANIFEST_MINIKUBE="${MONITORING_DIR}/kruize-monitoring-minikube.yaml"
+KRUIZE_DEPLOY_MANIFEST_OPENSHIFT="${MONITORING_DIR}/kruize-crc-openshift.yaml"
+KRUIZE_DEPLOY_MANIFEST_MINIKUBE="${MONITORING_DIR}/kruize-crc-minikube.yaml"
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
@@ -92,7 +92,7 @@ function usage() {
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
-	echo " -m: Mode selection [autotune | monitoring]"
+	echo " -t: Target selection [autotune | crc]"
 	exit -1
 }
 
@@ -143,8 +143,8 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
-  m)
-		mode="${OPTARG}"
+  t)
+		target="${OPTARG}"
 		;;
 	n)
 		autotune_ns="${OPTARG}"
@@ -165,12 +165,12 @@ done
 
 # Call the proper setup function based on the cluster_type
 if [ ${setup} == 1 ]; then
-	if [ ${mode} == "monitoring" ]; then
+	if [ ${target} == "crc" ]; then
 		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
 			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
 			kubectl apply -f ${!MANIFEST_FILE}
 		else
-			echo "Unsupported cluster for monitoring"
+			echo "Unsupported cluster!"
 		fi
 	else
 		${cluster_type}_start
