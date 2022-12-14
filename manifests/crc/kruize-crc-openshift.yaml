@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: monitoring
+  name: openshift-tuning
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -9,7 +9,7 @@ metadata:
   name: kruize
   labels:
     app: kruize
-  namespace: monitoring
+  namespace: openshift-tuning
 spec:
   replicas: 1
   selector:
@@ -23,13 +23,13 @@ spec:
     spec:
       containers:
       - name: kruize
-        image: "quay.io/khansaad/autotune_operator:0.0.8_mvp"  # will be updated later
+        image: "kruize/autotune_operator:test"
         imagePullPolicy: Always
         env:
           - name: CLUSTER_TYPE
             value: "kubernetes"
           - name: K8S_TYPE
-            value: "minikube"
+            value: "openshift"
           - name: AUTH_TYPE
             value: ""
           - name: AUTH_TOKEN
@@ -52,7 +52,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kruize
-  namespace: monitoring
+  namespace: openshift-tuning
   annotations:
     prometheus.io/scrape: 'true'
     prometheus.io/path: '/metrics'

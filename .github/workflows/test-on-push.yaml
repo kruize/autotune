@@ -15,9 +15,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  # This workflow contains a single job called "deploy"
-  deploy:
+  # This workflow contains three jobs called "build job" , "deploy autotune" and "deploy crc"
+  build_job:
     # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Build monitoring
+        run: |
+          echo Build monitoring
+          ./build.sh -i autotune_operator:test -o autotune_optuna:test
+          docker images | grep autotune
+      - name: docker login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Docker Push
+        run: |
+          docker tag autotune_operator:test kruize/autotune_operator:test
+          docker push kruize/autotune_operator:test
+
+  deploy_autotune:
+    # The type of runner that the job will run on
+    needs: build_job
     runs-on: ubuntu-20.04
 
     steps:
@@ -31,21 +54,7 @@ jobs:
       - name: Display cluster info
         run: |
           kubectl cluster-info
-          kubectl get pods -n kube-system      
-      - name: Build autotune
-        run: |
-          echo Build autotune
-          ./build.sh -i autotune_operator:test -o autotune_optuna:test
-          docker images | grep autotune     
-      - name: docker login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Docker Push
-        run: |
-          docker tag autotune_operator:test kruize/autotune_operator:test
-          docker push kruize/autotune_operator:test
+          kubectl get pods -n kube-system
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube  
@@ -54,8 +63,31 @@ jobs:
       - name: Deploy autotune
         run: |
           echo Deploy autotune  
-          ./deploy.sh -c minikube -i kruize/autotune_operator:test
-      - name: Deploy monitoring
+          ./deploy.sh -c minikube -i kruize/autotune_operator:test      
+
+  deploy_crc:
+    # The type of runner that the job will run on
+    needs: build_job
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Display cluster info
         run: |
-          echo Deploy autotune monitoring
-          ./deploy.sh -c minikube -m monitoring
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube  
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+      - name: Deploy crc
+        run: |
+          echo Deploy crc
+          kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml

@@ -13,8 +13,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  # This workflow contains two jobs called "build autotune" and "build crc"
+  build_autotune:
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
 
@@ -49,8 +49,39 @@ jobs:
           cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
-      - name: Deploy autotune monitoring
+
+  build_crc:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Build crc
         run: |
-          echo Deploy autotune for monitoring
+          echo Build crc
+          ./build.sh -i autotune_operator:test
+          docker images | grep autotune
+      - name: Check cluster info on minikube
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+      - name: Deploy crc
+        run: |
+          echo Deploy crc
           echo "***************************************************************"
-          ./deploy.sh -c minikube -m monitoring
+          cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
+          sed -e "s/image: \"kruize\/autotune_operator:test\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
+          sed -i "s/imagePullPolicy: Always/image: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
+          cat ./manifests/crc/kruize-crc-minikube.yaml
+          kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
