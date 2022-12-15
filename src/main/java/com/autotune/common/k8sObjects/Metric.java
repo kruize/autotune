@@ -14,8 +14,8 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
-import com.autotune.common.annotations.json.Exclude;
 import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.performanceProfiles.AggregationFunctions;
 
 import java.util.LinkedHashMap;
 
@@ -33,9 +33,11 @@ public final class Metric {
     private final String query;
     private final String datasource;
     private final String valueType;
+    private String kubernetesObject;
     private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<String, EMMetricResult>();
     private EMMetricResult emMetricResult;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>>();
+    private AggregationFunctions aggregationFunctions;
 
     public Metric(String name,
                   String query,
@@ -79,6 +81,18 @@ public final class Metric {
         return trialSummaryResult;
     }
 
+    public String getKubernetesObject() {
+        return kubernetesObject;
+    }
+
+    public AggregationFunctions getAggregateFunctions() {
+        return aggregationFunctions;
+    }
+
+    public void setAggregateFunctions(AggregationFunctions aggregationFunctions) {
+        this.aggregationFunctions = aggregationFunctions;
+    }
+
     @Override
     public String toString() {
         return "Metric{" +
@@ -86,7 +100,9 @@ public final class Metric {
                 ", query='" + query + '\'' +
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
+                ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", emMetricResult=" + emMetricResult +
+                ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }
 }
