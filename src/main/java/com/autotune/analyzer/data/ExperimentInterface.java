@@ -15,13 +15,16 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.utils.AnalyzerConstants;
 
 import java.util.List;
 import java.util.Map;
 
 public interface ExperimentInterface {
     public boolean addExperiments(
-            Map<String, AutotuneObject> mainKruizeExperimentMap,
-            List<AutotuneObject> kruizeExperimentList);
+            Map<String, KruizeObject> mainKruizeExperimentMap,
+            List<KruizeObject> kruizeExperimentList);
+
+    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExpStatus status);
 }

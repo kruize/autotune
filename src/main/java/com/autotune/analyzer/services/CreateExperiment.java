@@ -16,14 +16,11 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.data.ExperimentInterface;
-import com.autotune.analyzer.data.ExperimentInterfaceImpl;
-import com.autotune.analyzer.data.ExperimentValidation;
+import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.common.k8sObjects.AutotuneObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
-import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.analyzer.utils.ExperimentInitiator;
+import com.autotune.common.data.GeneralDataHolder;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -41,8 +38,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -55,80 +50,73 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
-    Map<String, AutotuneObject> mainKruizeExperimentMap;
-    AutotuneExecutor analyserExecutor;
+    Map<String, KruizeObject> mainKruizeExperimentMap;
 
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        LOGGER.info("*********************************************************************************START");
         super.init(config);
-        try {
-            this.mainKruizeExperimentMap = (ConcurrentHashMap<String, AutotuneObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
-            this.analyserExecutor = (AutotuneExecutor) getServletContext().getAttribute(AnalyzerConstants.AnalyserParallelEngineConfigs.EXECUTOR);
-
-            ScheduledThreadPoolExecutor ses = new ScheduledThreadPoolExecutor(1);
-            Runnable checkForNewExperiment = () -> {
-                this.mainKruizeExperimentMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
-                        (name, ao) -> {
-                            if (ao.getStatus().equals(AnalyzerConstants.ExpStatus.QUEUED)) {
-                                this.analyserExecutor.submit(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                AutotuneWorker theWorker = new CallableFactory().create(analyserExecutor.getWorker());
-                                                theWorker.execute(ao, analyserExecutor, getServletContext());
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-            };
-            ses.scheduleAtFixedRate(checkForNewExperiment, 5, 5, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error("Not able to initiate createExperiment api due to {}", e.getMessage());
-        }
-        LOGGER.info("*********************************************************************************END");
+        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
+
+    /**
+     * Validate and create new Experiments.
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            try {
-                List<AutotuneObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, AutotuneObject[].class));
-                ExperimentValidation validationObject = new ExperimentValidation(this.mainKruizeExperimentMap);
-                validationObject.validate(kruizeExpList);
-                if (validationObject.isSuccess()) {
-                    ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-                    experimentInterface.addExperiments(mainKruizeExperimentMap, validationObject.getValidKruizeExpList());
-                    sendSuccessResponse(response);
-                } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + validationObject.getErrorMessage());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
+            GeneralDataHolder experimentInitiator = new ExperimentInitiator().validateAndAdd(mainKruizeExperimentMap, kruizeExpList);
+            if (experimentInitiator.isSuccess()) {
+                sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+            } else {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, experimentInitiator.getErrorMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(e.getMessage());
-            LOGGER.error("Exception due to :" + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response) throws IOException {
+    /**
+     * TODO temp solution to delete experiments, Need to evaluate use cases
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            String inputData = request.getReader().lines().collect(Collectors.joining());
+            List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
+            for (KruizeObject ko : kruizeExpList) {
+                mainKruizeExperimentMap.remove(ko.getExperimentName());
+                KruizeDeployment.deploymentMap.remove(ko.getExperimentName());
+            }
+            sendSuccessResponse(response, "Experiment deleted successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+        }
+    }
+
+    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Experiment registered successfully with Autotune. View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new AutotuneResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

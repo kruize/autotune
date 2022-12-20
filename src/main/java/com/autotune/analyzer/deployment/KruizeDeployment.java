@@ -22,7 +22,9 @@ import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.analyzer.variables.Variables;
+import com.autotune.common.data.GeneralDataHolder;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
 import com.autotune.common.k8sObjects.*;
@@ -31,6 +33,8 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.utils.EventLogger;
+import com.autotune.utils.KubeEventLogger;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -48,25 +52,25 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.autotune.analyzer.Experimentator.startExperiment;
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster
  */
-public class AutotuneDeployment {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeployment.class);
+public class KruizeDeployment {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeDeployment.class);
     /**
      * Key: Name of autotuneObject
      * Value: AutotuneObject instance matching the name
      */
-    public static Map<String, AutotuneObject> autotuneObjectMap = new ConcurrentHashMap<>();
+    public static Map<String, KruizeObject> autotuneObjectMap = new ConcurrentHashMap<>();
     public static Map<String, AutotuneConfig> autotuneConfigMap = new HashMap<>();
     /**
      * Outer map:
@@ -82,59 +86,21 @@ public class AutotuneDeployment {
      * Get Autotune objects from kubernetes, and watch for any additions, modifications or deletions.
      * Add obtained autotune objects to map and match autotune object with pods.
      *
-     * @param autotuneDeployment
+     * @param kruizeDeployment
      * @throws IOException if unable to get Kubernetes config
      */
-    public static void getAutotuneObjects(final AutotuneDeployment autotuneDeployment) throws IOException {
+    public static void getAutotuneObjects(final KruizeDeployment kruizeDeployment) throws IOException {
         /* Watch for events (additions, modifications or deletions) of autotune objects */
         Watcher<String> autotuneObjectWatcher = new Watcher<>() {
             @Override
             public void eventReceived(Action action, String resource) {
-                AutotuneObject autotuneObject = null;
+                KruizeObject kruizeObject = null;
 
                 switch (action.toString().toUpperCase()) {
-                    case "ADDED":
-                        autotuneObject = getAutotuneObject(resource);
-                        if (autotuneObject != null) {
-                            addAutotuneObject(autotuneObject);
-                            String autotuneObjectStr = autotuneObject.getExperimentName();
-                            // Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
-                            // For each of these applicationServiceStacks, we need to start the experiments
-                            if (!deploymentMap.isEmpty() &&
-                                    deploymentMap.get(autotuneObjectStr) != null) {
-                                Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectStr);
-                                for (String deploymentName : depMap.keySet()) {
-                                    startExperiment(autotuneObject, depMap.get(deploymentName));
-                                }
-                                LOGGER.info("Added autotune object " + autotuneObject.getExperimentName());
-                            } else {
-                                LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
-                            }
-                        }
-                        break;
                     case "MODIFIED":
-                        autotuneObject = getAutotuneObject(resource);
-                        if (autotuneObject != null) {
-                            // Check if any of the values have changed from the existing object in the map
-                            if (autotuneObjectMap.get(autotuneObject.getExperimentName()).getExperimentId() != autotuneObject.getExperimentId()) {
-                                deleteExistingAutotuneObject(resource);
-                                addAutotuneObject(autotuneObject);
-
-                                String autotuneObjectStr = autotuneObject.getExperimentName();
-                                // Each AutotuneObject can affect multiple applicationServiceStacks (micro services)
-                                // For each of these applicationServiceStacks, we need to restart the experiments
-                                if (!deploymentMap.isEmpty() &&
-                                        deploymentMap.get(autotuneObjectStr) != null) {
-                                    Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectStr);
-                                    for (String deploymentName : depMap.keySet()) {
-                                        startExperiment(autotuneObject, depMap.get(deploymentName));
-                                    }
-                                    LOGGER.info("Updated autotune object " + autotuneObject.getExperimentName());
-                                } else {
-                                    LOGGER.info("autotune object " + autotuneObject.getExperimentName() + " not updated!");
-                                }
-                            }
-                        }
+                    case "ADDED":        //TO DO consider MODIFIED after discussing PATCH request on already created experiments.
+                        kruizeObject = getAutotuneObject(resource);
+                        processKruizeObject(kruizeObject);
                         break;
                     case "DELETED":
                         deleteExistingAutotuneObject(resource);
@@ -189,19 +155,37 @@ public class AutotuneDeployment {
         kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
     }
 
+    public static void processKruizeObject(KruizeObject kruizeObject) {
+        try {
+            if (null != kruizeObject) {
+                List<KruizeObject> kruizeObjectList = new ArrayList<>();
+                kruizeObjectList.add(kruizeObject);
+                ExperimentInitiator experimentInitiator = new ExperimentInitiator();
+                GeneralDataHolder generalDataHolder = experimentInitiator.validateAndAdd(autotuneObjectMap, kruizeObjectList);
+                if (!generalDataHolder.isSuccess()) {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", generalDataHolder.getErrorMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+                }
+            } else {
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Not able to process KruizeObject ", EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+            }
+        } catch (Exception e) {
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+        }
+    }
+
     /**
      * Add autotuneobject to monitoring map and match pods and autotuneconfigs
      *
-     * @param autotuneObject
+     * @param kruizeObject
      */
-    private static void addAutotuneObject(AutotuneObject autotuneObject) {
-        autotuneObjectMap.put(autotuneObject.getExperimentName(), autotuneObject);
-        System.out.println("Autotune Object: " + autotuneObject.getExperimentName() + ": Finding Layers");
+    private static void addAutotuneObject(KruizeObject kruizeObject) {
+        autotuneObjectMap.put(kruizeObject.getExperimentName(), kruizeObject);
+        System.out.println("Autotune Object: " + kruizeObject.getExperimentName() + ": Finding Layers");
 
-        matchPodsToAutotuneObject(autotuneObject);
+        matchPodsToAutotuneObject(kruizeObject);
 
         for (String autotuneConfig : autotuneConfigMap.keySet()) {
-            addLayerInfo(autotuneConfigMap.get(autotuneConfig), autotuneObject);
+            addLayerInfo(autotuneConfigMap.get(autotuneConfig), kruizeObject);
         }
     }
 
@@ -249,19 +233,19 @@ public class AutotuneDeployment {
     /**
      * Get map of pods matching the autotune object using the labels.
      *
-     * @param autotuneObject
+     * @param kruizeObject
      */
-    public static void matchPodsToAutotuneObject(AutotuneObject autotuneObject) {
+    public static void matchPodsToAutotuneObject(KruizeObject kruizeObject) {
         KubernetesServices kubernetesServices = null;
         try {
-            String userLabelKey = autotuneObject.getSelectorInfo().getMatchLabel();
-            String userLabelValue = autotuneObject.getSelectorInfo().getMatchLabelValue();
+            String userLabelKey = kruizeObject.getSelectorInfo().getMatchLabel();
+            String userLabelValue = kruizeObject.getSelectorInfo().getMatchLabelValue();
             kubernetesServices = new KubernetesServicesImpl();
-            String namespace = autotuneObject.getNamespace();
-            String experimentName = autotuneObject.getExperimentName();
+            String namespace = kruizeObject.getNamespace();
+            String experimentName = kruizeObject.getExperimentName();
             List<Pod> podList = new KubernetesServicesImpl().getPodsBy(namespace, userLabelKey, userLabelValue);
             if (podList.isEmpty()) {
-                LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
+                LOGGER.error("autotune object " + kruizeObject.getExperimentName() + " not added as no related deployments found!");
                 // TODO: No matching pods with the userLabelKey found, need to warn the user.
                 return;
             }
@@ -278,7 +262,7 @@ public class AutotuneDeployment {
                 // So to get the deployment name we remove the '-podTemplateHash' from the Replicaset name
                 List<ReplicaSet> replicaSetList = kubernetesServices.getReplicasBy(namespace, POD_TEMPLATE_HASH, podTemplateHash);
                 if (replicaSetList.isEmpty()) {
-                    LOGGER.error("autotune object " + autotuneObject.getExperimentName() + " not added as no related deployments found!");
+                    LOGGER.error("autotune object " + kruizeObject.getExperimentName() + " not added as no related deployments found!");
                     // TODO: No matching pods with the userLabelKey found, need to warn the user.
                     return;
                 }
@@ -332,7 +316,7 @@ public class AutotuneDeployment {
      *
      * @param autotuneObjectJsonStr JSON string of the autotune object
      */
-    private static AutotuneObject getAutotuneObject(String autotuneObjectJsonStr) {
+    private static KruizeObject getAutotuneObject(String autotuneObjectJsonStr) {
         try {
             JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
             JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
@@ -425,7 +409,7 @@ public class AutotuneDeployment {
                     resourceVersion,
                     uid);
 
-            return new AutotuneObject(name,
+            return new KruizeObject(name,
                     namespace,
                     mode,
                     targetCluster,
@@ -607,13 +591,13 @@ public class AutotuneDeployment {
      * If the autotuneObject is not null, then it adds the default layer only to stacks associated with that object.
      *
      * @param layer
-     * @param autotuneObject
+     * @param kruizeObject
      */
-    private static void addDefaultLayer(AutotuneConfig layer, AutotuneObject autotuneObject) {
+    private static void addDefaultLayer(AutotuneConfig layer, KruizeObject kruizeObject) {
         String presence = layer.getPresence();
         // Add to all monitored applications in the cluster
         if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
-            if (autotuneObject == null) {
+            if (kruizeObject == null) {
                 for (String autotuneObjectKey : deploymentMap.keySet()) {
                     Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
                     for (String deploymentName : depMap.keySet()) {
@@ -624,7 +608,7 @@ public class AutotuneDeployment {
                     }
                 }
             } else {
-                Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+                Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
                 for (String deploymentName : depMap.keySet()) {
                     for (String containerImageName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
                         ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName);
@@ -639,16 +623,16 @@ public class AutotuneDeployment {
      * Check if a layer has a datasource query that validates its presence
      *
      * @param layer
-     * @param autotuneObject
+     * @param kruizeObject
      */
-    private static void addQueryLayer(AutotuneConfig layer, AutotuneObject autotuneObject) {
+    private static void addQueryLayer(AutotuneConfig layer, KruizeObject kruizeObject) {
         KubernetesServices kubernetesServices = null;
         try {
             // TODO: This query needs to be optimized to only check for pods in the right namespace
             kubernetesServices = new KubernetesServicesImpl();
             List<Pod> podList = null;
-            if (autotuneObject != null) {
-                podList = kubernetesServices.getPodsBy(autotuneObject.getNamespace());
+            if (kruizeObject != null) {
+                podList = kubernetesServices.getPodsBy(kruizeObject.getNamespace());
             } else {
                 podList = kubernetesServices.getPodsBy(null);
             }
@@ -696,8 +680,8 @@ public class AutotuneDeployment {
                         for (Container container : containers) {
                             String containerImageName = container.getImage();
                             // Check if the container image is already present in the applicationServiceStackMap, if not, add it
-                            if (autotuneObject != null) {
-                                Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+                            if (kruizeObject != null) {
+                                Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
                                 for (String deploymentName : depMap.keySet()) {
                                     if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
                                         addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
@@ -736,14 +720,14 @@ public class AutotuneDeployment {
      * under observation currently and add the new layer.
      *
      * @param layer
-     * @param autotuneObject
+     * @param kruizeObject
      */
-    public static void addLayerInfo(AutotuneConfig layer, AutotuneObject autotuneObject) {
+    public static void addLayerInfo(AutotuneConfig layer, KruizeObject kruizeObject) {
         // Add the default layer for all monitored pods
-        addDefaultLayer(layer, autotuneObject);
+        addDefaultLayer(layer, kruizeObject);
 
         // Match layer presence queries if any
-        addQueryLayer(layer, autotuneObject);
+        addQueryLayer(layer, kruizeObject);
         KubernetesServices kubernetesServices = null;
         try {
             kubernetesServices = new KubernetesServicesImpl();
@@ -751,8 +735,8 @@ public class AutotuneDeployment {
             String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
             if (layerPresenceLabel != null) {
                 List<Pod> podList = null;
-                if (autotuneObject != null) {
-                    podList = kubernetesServices.getPodsBy(autotuneObject.getNamespace(), layerPresenceLabel, layerPresenceLabelValue);
+                if (kruizeObject != null) {
+                    podList = kubernetesServices.getPodsBy(kruizeObject.getNamespace(), layerPresenceLabel, layerPresenceLabelValue);
                 } else {
                     podList = kubernetesServices.getPodsBy(null, layerPresenceLabel, layerPresenceLabelValue);
                 }
@@ -764,8 +748,8 @@ public class AutotuneDeployment {
                 for (Pod pod : podList) {
                     for (Container container : pod.getSpec().getContainers()) {
                         String containerImageName = container.getImage();
-                        if (autotuneObject != null) {
-                            Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObject.getExperimentName());
+                        if (kruizeObject != null) {
+                            Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
                             for (String deploymentName : depMap.keySet()) {
                                 if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
                                     addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);

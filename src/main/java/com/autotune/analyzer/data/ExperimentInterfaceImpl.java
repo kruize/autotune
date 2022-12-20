@@ -15,17 +15,21 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class ExperimentInterfaceImpl implements ExperimentInterface {
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentInterfaceImpl.class);
 
     @Override
-    public boolean addExperiments(Map<String, AutotuneObject> mainKruizeExperimentMap, List<AutotuneObject> kruizeExperimentList) {
+    public boolean addExperiments(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (ao) -> {
                     ao.setStatus(AnalyzerConstants.ExpStatus.QUEUED);
@@ -34,8 +38,17 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             ao.getExperimentName(),
                             ao
                     );
+                    LOGGER.debug("Added Experiment name : {} into main map.", ao.getExperimentName());
                 }
         );
+        // TODO   Insert into database
+        return true;
+    }
+
+    @Override
+    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExpStatus status) {
+        kruizeObject.setStatus(status);
+        // TODO   update into database
         return true;
     }
 

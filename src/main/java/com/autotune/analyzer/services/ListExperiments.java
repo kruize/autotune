@@ -21,7 +21,7 @@ import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AnalyzerConstants;
@@ -51,13 +51,13 @@ import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
  */
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
-    ConcurrentHashMap<String, AutotuneObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
     KubernetesServices kubernetesServices = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, AutotuneObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
+        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
 
     @Override

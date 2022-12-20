@@ -2,7 +2,7 @@ package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.experiments.ExperimentSummary;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
@@ -19,7 +19,7 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.TRAINING;
 public class AutotuneExperiment {
     private final String deploymentName;
     private final String experimentName;
-    private final AutotuneObject autotuneObject;
+    private final KruizeObject kruizeObject;
     private String experimentStatus;
     private final ApplicationDeployment applicationDeployment;
     private ApplicationSearchSpace applicationSearchSpace;
@@ -32,14 +32,14 @@ public class AutotuneExperiment {
 
     public AutotuneExperiment(String deploymentName,
                               String experimentName,
-                              AutotuneObject autotuneObject,
+                              KruizeObject kruizeObject,
                               String experimentStatus,
                               ExperimentSummary experimentSummary,
                               ApplicationDeployment applicationDeployment,
                               TreeMap<Integer, ExperimentTrial> experimentTrials) {
         this.deploymentName = deploymentName;
         this.experimentName = experimentName;
-        this.autotuneObject = autotuneObject;
+        this.kruizeObject = kruizeObject;
         this.experimentStatus = experimentStatus;
         this.experimentSummary = experimentSummary;
         this.applicationDeployment = applicationDeployment;
@@ -54,15 +54,17 @@ public class AutotuneExperiment {
         return experimentName;
     }
 
-    public AutotuneObject getAutotuneObject() {
-        return autotuneObject;
+    public KruizeObject getAutotuneObject() {
+        return kruizeObject;
     }
 
     public String getExperimentStatus() {
         return experimentStatus;
     }
 
-    public ExperimentSummary getExperimentSummary() { return experimentSummary; }
+    public ExperimentSummary getExperimentSummary() {
+        return experimentSummary;
+    }
 
     public void setExperimentStatus(String experimentStatus) {
         this.experimentStatus = experimentStatus;
@@ -136,7 +138,7 @@ public class AutotuneExperiment {
             ExperimentTrial bestExperimentTrial = getExperimentTrials().get(bestTrial);
             TrialDetails bestTrialDetails = bestExperimentTrial.getTrialDetails().get(TRAINING);
             double bestResult = Double.parseDouble(bestTrialDetails.getResult());
-            String direction = autotuneObject.getSloInfo().getDirection();
+            String direction = kruizeObject.getSloInfo().getDirection();
             if ((direction.equals(MINIMIZE) && currentResult < bestResult) ||
                     (direction.equals(MAXIMIZE) && currentResult > bestResult)) {
                 experimentSummary.setBestTrial(currentTrial);

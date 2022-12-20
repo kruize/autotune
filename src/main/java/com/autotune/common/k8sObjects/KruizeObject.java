@@ -16,6 +16,7 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.utils.ExperimentUseCaseType;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
@@ -29,7 +30,7 @@ import java.util.List;
  * <p>
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class AutotuneObject {
+public final class KruizeObject {
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
@@ -47,14 +48,15 @@ public final class AutotuneObject {
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private List<ContainerObject> containers;
+    private ExperimentUseCaseType experimentUseCaseType;
 
-    public AutotuneObject(String experimentName,
-                          String namespace,
-                          String mode,
-                          String targetCluster,
-                          SloInfo sloInfo,
-                          SelectorInfo selectorInfo,
-                          ObjectReference objectReference) throws InvalidValueException {
+    public KruizeObject(String experimentName,
+                        String namespace,
+                        String mode,
+                        String targetCluster,
+                        SloInfo sloInfo,
+                        SelectorInfo selectorInfo,
+                        ObjectReference objectReference) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
@@ -191,6 +193,14 @@ public final class AutotuneObject {
         this.containers = containers;
     }
 
+    public ExperimentUseCaseType getExperimentUseCaseType() {
+        return experimentUseCaseType;
+    }
+
+    public void setExperimentUseCaseType(ExperimentUseCaseType experimentUseCaseType) {
+        this.experimentUseCaseType = experimentUseCaseType;
+    }
+
     @Override
     public String toString() {
         return "AutotuneObject{" +
@@ -207,6 +217,8 @@ public final class AutotuneObject {
                 ", deployment_name='" + deployment_name + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
+                ", containers=" + containers +
+                ", experimentUseCaseType=" + experimentUseCaseType +
                 '}';
     }
 }

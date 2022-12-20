@@ -15,11 +15,13 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.deployment.AutotuneDeployment;
-import com.autotune.analyzer.workerimpl.AnalyserManager;
+import com.autotune.analyzer.deployment.KruizeDeployment;
+import com.autotune.analyzer.workerimpl.AnalyzerManager;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.queue.AutotuneQueue;
+import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -68,17 +71,36 @@ public class InitiateListener implements ServletContextListener {
         /**
          * Kruize Experiment Main Mapping
          */
-        sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, AutotuneDeployment.autotuneObjectMap);
+        sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, KruizeDeployment.autotuneObjectMap);
         AutotuneExecutor analyserExecutor = new AutotuneExecutor(AnalyzerConstants.AnalyserParallelEngineConfigs.CORE_POOL_SIZE,
                 AnalyzerConstants.AnalyserParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.AnalyserParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
                 new AutotuneQueue<>(20000),
                 new ThreadPoolExecutor.AbortPolicy(),
-                AnalyserManager.class
+                AnalyzerManager.class
         );
         sce.getServletContext().setAttribute(AnalyzerConstants.AnalyserParallelEngineConfigs.EXECUTOR, analyserExecutor);
 
+        ScheduledThreadPoolExecutor ses = new ScheduledThreadPoolExecutor(1);
+        Runnable checkForNewExperiment = () -> {
+            KruizeDeployment.autotuneObjectMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
+                    (name, ao) -> {
+                        if (ao.getStatus().equals(AnalyzerConstants.ExpStatus.QUEUED)) {
+                            analyserExecutor.submit(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            AutotuneWorker theWorker = new CallableFactory().create(analyserExecutor.getWorker());
+                                            theWorker.execute(ao, analyserExecutor, null);
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+        };
+        ses.scheduleAtFixedRate(checkForNewExperiment, 5, 5, TimeUnit.SECONDS);
 
     }
 
