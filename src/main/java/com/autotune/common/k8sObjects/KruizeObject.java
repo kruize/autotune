@@ -203,7 +203,7 @@ public final class KruizeObject {
 
     @Override
     public String toString() {
-        return "AutotuneObject{" +
+        return "KruizeObject{" +
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
                 ", namespace='" + namespace + '\'' +
