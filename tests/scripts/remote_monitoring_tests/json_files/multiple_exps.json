@@ -1,0 +1,74 @@
+[
+{
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
+        "deployment_name": "tfb-qrh-sample-1",
+        "namespace": "default",
+        "mode": "monitor",
+	"performanceProfile": "resource-optimization-openshift",
+        "targetCluster": "remote",
+        "containers": [
+            {
+                "image": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server"
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "selector": {
+            "matchLabel": "app.kubernetes.io/name",
+            "matchLabelValue": "tfb-qrh-deployment",
+            "matchRoute": "",
+            "matchURI": "",
+            "matchService": ""
+        }
+},
+{
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
+        "deployment_name": "tfb-qrh-sample-2",
+        "namespace": "default",
+	"performanceProfile": "resource-optimization-openshift",
+        "mode": "monitor",
+        "targetCluster": "remote",
+        "containers": [
+            {
+                "image": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server"
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "5min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.2"
+        }
+},
+{
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
+        "deployment_name": "tfb-qrh-sample-3",
+        "namespace": "default-3",
+	"performanceProfile": "resource-optimization-openshift",
+        "mode": "monitor",
+        "targetCluster": "remote",
+        "containers": [
+            {
+                "image": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server-1"
+            },
+            {
+                "image": "kruize/tfb-qrh:1.13.2.F_et19",
+                "container_name": "tfb-server-2"
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        }
+}
+]
+

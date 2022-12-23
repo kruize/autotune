@@ -34,7 +34,7 @@ TESTS=0
 # By default do not start HPO service as it is started in the autotune docker image
 HPO_SERVICE=0
 
-TEST_MODULE_ARRAY=("da" "hpo")
+TEST_MODULE_ARRAY=("da" "em")
 
 TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "autotune_config_yaml_tests"
@@ -44,8 +44,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "configmap_yaml_tests"
 "autotune_id_tests"
 "autotune_layer_config_id_tests"
-"hpo_api_tests"
-"em_standalone_tests")
+"em_standalone_tests"
+"remote_monitoring_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -59,6 +59,8 @@ matched=0
 sanity=0
 setup=1
 skip_setup=0
+
+target="autotune"
 
 # Path to the directory containing yaml files
 MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
@@ -169,18 +171,32 @@ function deploy_autotune() {
 		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 	
-	echo "Deploying autotune"
+	echo "Deploying autotune $target"
 	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -m ${target}"
+		fi
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+		fi
+		
 	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+		fi
+
 	fi	
-	echo "CMD= ${cmd}"
+	echo "Kruize deploy command - ${cmd}"
 	${cmd}
 	
 	status="$?"
@@ -223,10 +239,10 @@ function prometheus_cleanup() {
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
 	RESULTS_LOG=$1
+	AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
 	
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
-		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
 		echo "${RESULTS_LOG} ${AUTOTUNE_REPO}"
 		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
 	else 
@@ -234,8 +250,8 @@ function autotune_cleanup() {
 	fi
 
 	echo  "Removing Autotune dependencies..."
-	cmd="./deploy.sh -c ${cluster_type} -t"
-	echo "CMD= ${cmd}"
+	cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
+	echo "CMD = ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
 	prometheus_cleanup
@@ -631,22 +647,38 @@ function run_test() {
 # Form the curl command based on the cluster type
 function form_curl_cmd() {
 	# Form the curl command based on the cluster type
+	service="autotune"
+	if [ ${target} == "crc" ]; then
+		service="kruize"
+	fi
 	case $cluster_type in
-	   openshift) ;;
+	   openshift)
+		NAMESPACE="openshift-tuning"
+
+        	AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+
+        	echo "PORT = $AUTOTUNE_PORT"
+
+		SERVER_IP=$(kubectl get pods -l=app=${service} -o wide -n openshift-tuning -o=custom-columns=NODE:.spec.nodeName --no-headers)
+	        echo "IP = $SERVER_IP"
+
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		echo "\nKRUIZE AUTOTUNE URL = URL"
+		;;
 	   minikube)
-		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+		NAMESPACE="monitoring"
+		
+		echo "service = $service namespace = $NAMESPACE"
+		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 		SERVER_IP=$(minikube ip)
-		AUTOTUNE_URL="http://${SERVER_IP}";;
+		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		;;
 	   docker) ;;
 	   *);;
 	esac
 
-	if [ $cluster_type == "openshift" ]; then
-		curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
-	else
-		curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}:${AUTOTUNE_PORT}"
-	fi
-
+	curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
 	echo "curl_cmd = ${curl_cmd}"
 }
 
@@ -1737,3 +1769,29 @@ function compare_result() {
 
 	display_result "${expected_behaviour}" "${__test__}" "${failed}"
 }
+
+function create_performance_profile() {
+        perf_profile_json=$1
+
+        echo "Forming the curl command to create the performance profile ..."
+        form_curl_cmd
+
+        curl_cmd="${curl_cmd}/createPerformanceProfile -d @${perf_profile_json}"
+
+        echo "curl_cmd = ${curl_cmd}"
+
+        status_json=$(${curl_cmd})
+        echo "create performance profile status = $status_json"
+
+        echo "" | tee -a "${LOG}"
+        echo "Command used to post the experiment result= ${curl_cmd}" | tee -a "${LOG}"
+        echo "" | tee -a "${LOG}"
+
+        perf_profile_status=$(echo ${status_json} | jq '.status')
+        echo "create performance profile status = ${perf_profile_status}"
+        if [ "${perf_profile_status}" != \"SUCCESS\" ]; then
+                echo "Failed! Create performance profile failed. Status - ${perf_profile_status}"
+                exit 1
+        fi
+}
+

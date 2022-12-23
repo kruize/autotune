@@ -1,0 +1,299 @@
+[
+  {
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "deployments": [
+      {
+        "deployment_name": "tfb-qrh-sample-1",
+        "namespace": "default",
+        "pod_metrics": [],
+        "containers": [
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 2,
+                    "avg": 0.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 2.84,
+                    "max": 0.84,
+                    "min": 0.4,
+                    "avg": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "general_info": {
+                    "sum": 1.09,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 298.5,
+                    "max": 198.5,
+                    "min": 18.5,
+                    "avg": 40.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "general_info": {
+                    "sum": 223.6,
+                    "max": 123.6,
+                    "min": 13.6,
+                    "avg": 31.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "deployments": [
+      {
+        "deployment_name": "tfb-qrh-sample-2",
+        "namespace": "default",
+        "pod_metrics": [],
+        "containers": [
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 2,
+                    "avg": 0.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 2.84,
+                    "max": 0.84,
+                    "min": 0.4,
+                    "avg": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "general_info": {
+                    "sum": 2.09,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 298.5,
+                    "max": 198.5,
+                    "min": 19.5,
+                    "avg": 40.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "general_info": {
+                    "sum": 223.6,
+                    "max": 123.6,
+                    "min": 20.4,
+                    "avg": 31.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "deployments": [
+      {
+        "deployment_name": "tfb-qrh-sample-3",
+        "namespace": "default",
+        "pod_metrics": [],
+        "containers": [
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 2,
+                    "avg": 0.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 1.84,
+                    "max": 0.84,
+                    "min": 0.04,
+                    "avg": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "general_info": {
+                    "sum": 1.09,
+                    "max": 0.093,
+                    "avg": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "general_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "general_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "general_info": {
+                    "sum": 298.5,
+                    "max": 198.5,
+                    "min": 18.5,
+                    "avg": 40.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "general_info": {
+                    "sum": 223.6,
+                    "max": 123.6,
+                    "min": 13.6,
+                    "avg": 31.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -31,6 +31,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/da/autotune_id_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_layer_config_id_tests.sh
 . ${SCRIPTS_DIR}/em/em_standalone_tests.sh
+. ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 
 # Iterate through the commandline options
 while getopts i:o:r:-: gopts
@@ -72,29 +73,31 @@ done
 
 # Set the root for result directory 
 if [ -z "${resultsdir}" ]; then
-	RESULTS_ROOT_DIR="${PWD}/autotune_test_results"
+	RESULTS_ROOT_DIR="${PWD}/kruize_test_results"
 else
-	RESULTS_ROOT_DIR="${resultsdir}/autotune_test_results"
+	RESULTS_ROOT_DIR="${resultsdir}/kruize_test_results"
 fi
 mkdir -p ${RESULTS_ROOT_DIR}
 
 # create the result directory with a time stamp
-RESULTS="${RESULTS_ROOT_DIR}/autotune_$(date +%Y%m%d:%T)"
+RESULTS="${RESULTS_ROOT_DIR}/kruize_$(date +%Y%m%d:%T)"
 mkdir -p "${RESULTS}"
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 
-CONFIGMAP="${RESULTS}/test_configmap"
-mkdir ${CONFIGMAP}
+if [ ! $testsuite == "remote_monitoring_tests" ]; then
+	CONFIGMAP="${RESULTS}/test_configmap"
+	mkdir ${CONFIGMAP}
 
-# Replace configmap logging level to debug for testing purpose
-find="info"
-replace="debug"
-config_yaml="${CONFIGMAP}/${cluster_type}-config.yaml"
-cp "${configmap}/${cluster_type}-config.yaml" "${config_yaml}"
+	# Replace configmap logging level to debug for testing purpose
+	find="info"
+	replace="debug"
+	config_yaml="${CONFIGMAP}/${cluster_type}-config.yaml"
+	cp "${configmap}/${cluster_type}-config.yaml" "${config_yaml}"
 
-# Update the config map yaml with specified field
-update_yaml ${find} ${replace} ${config_yaml}
+	# Update the config map yaml with specified field
+	update_yaml ${find} ${replace} ${config_yaml}
+fi
 
 # Set of functional tests to be performed 
 # input: Result directory to store the functional test results
@@ -147,6 +150,13 @@ function execute_em_testsuites() {
         em_standalone_tests > >(tee "${RESULTS}/em_standalone_tests.log") 2>&1
 }
 
+# Execute all tests for Remote monitoring
+function execute_remote_monitoring_testsuites() {
+        testcase=""
+        # perform the Remote monitoring tests
+        remote_monitoring_tests > >(tee "${RESULTS}/remote_monitoring_tests.log") 2>&1
+}
+
 # Perform the specific testsuite if specified 
 if [ ! -z "${testmodule}" ]; then
 	case "${testmodule}" in
@@ -154,7 +164,7 @@ if [ ! -z "${testmodule}" ]; then
 		# Execute tests for Dependency Analyzer Module 
 		execute_da_testsuites
 		;;
-	   em)
+	em)
 		# Execute tests for Experiment Manager (EM) Module
 		execute_em_testsuites
 		;;

@@ -1,0 +1,96 @@
+[{
+ "experiment_name": "{{experiment_name}}",
+ "start_timestamp": "{{start_timestamp}}",
+ "end_timestamp": "{{end_timestamp}}",
+ "deployments": [{
+   "deployment_name": "{{deployment_name}}",
+   "namespace": "{{namespace}}",
+   "pod_metrics": [],
+   "containers": [{
+     "image_name": "{{image}}",
+     "container_name": "{{container_name}}",
+     "container_metrics": {
+       "cpuRequest" : {
+         "results": {
+           "general_info": {
+             "sum": "{{cpuRequest_sum}}",
+             "avg": "{{cpuRequest_avg}}",
+             "units": "{{cpuRequest_units}}"
+           }
+         }
+       },
+       "cpuLimit": {
+         "results": {
+           "general_info": {
+             "sum": "{{cpuLimit_sum}}",
+             "avg": "{{cpuLimit_avg}}",
+             "units": "{{cpuLimit_units}}"
+           }
+         }
+       },
+       "cpuUsage": {
+         "results": {
+           "general_info": {
+             "sum": "{{cpuUsage_sum}}",
+             "max": "{{cpuUsage_max}}",
+             "avg": "{{cpuUsage_avg}}",
+             "min": "{{cpuUsage_min}}",
+             "units": "{{cpuUsage_units}}"
+           }
+         }
+       },
+       "cpuThrottle": {
+         "results": {
+           "general_info": {
+             "sum": "{{cpuThrottle_sum}}",
+             "max": "{{cpuThrottle_max}}",
+             "avg": "{{cpuThrottle_avg}}",
+             "units": "{{cpuThrottle_units}}"
+           }
+         }
+       },
+       "memoryRequest": {
+         "results": {
+           "general_info": {
+             "sum": "{{memoryRequest_sum}}",
+             "avg": "{{memoryRequest_avg}}",
+             "units": "{{memoryRequest_units}}"
+           }
+         }
+       },
+       "memoryLimit": {
+         "results": {
+           "general_info": {
+             "sum": "{{memoryLimit_sum}}",
+             "avg": "{{memoryLimit_avg}}",
+             "units": "{{memoryLimit_units}}"
+           }
+         }
+       },
+       "memoryUsage": {
+         "results": {
+           "general_info": {
+             "sum": "{{memoryUsage_sum}}",
+             "max": "{{memoryUsage_max}}",
+             "avg": "{{memoryUsage_avg}}",
+             "min": "{{memoryUsage_min}}",
+             "units": "{{memoryUsage_units}}"
+           }
+         }
+       },
+       "memoryRSS": {
+         "results": {
+           "general_info": {
+             "sum": "{{memoryRSS_sum}}",
+             "max": "{{memoryRSS_max}}",
+             "avg": "{{memoryRSS_avg}}",
+             "min": "{{memoryRSS_min}}",
+             "units": "{{memoryRSS_units}}"
+           }
+         }
+       }
+     }
+   }]
+ }]
+}]
+
