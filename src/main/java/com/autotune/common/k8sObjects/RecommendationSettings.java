@@ -16,13 +16,13 @@
 package com.autotune.common.k8sObjects;
 
 public class RecommendationSettings {
-    private String threshold;
+    private double threshold;
 
-    public String getThreshold() {
+    public double getThreshold() {
         return threshold;
     }
 
-    public void setThreshold(String threshold) {
+    public void setThreshold(double threshold) {
         this.threshold = threshold;
     }
 

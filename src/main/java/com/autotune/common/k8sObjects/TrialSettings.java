@@ -19,14 +19,14 @@ import com.google.gson.annotations.SerializedName;
 
 public class TrialSettings {
     @SerializedName("measurement_duration")
-    private double measurement_durationMinutes;
+    private String measurement_durationMinutes;
     private String format;
 
-    public double getMeasurement_durationMinutes() {
+    public String getMeasurement_durationMinutes() {
         return measurement_durationMinutes;
     }
 
-    public void setMeasurement_durationMinutes(double measurement_durationMinutes) {
+    public void setMeasurement_durationMinutes(String measurement_durationMinutes) {
         this.measurement_durationMinutes = measurement_durationMinutes;
     }
 
