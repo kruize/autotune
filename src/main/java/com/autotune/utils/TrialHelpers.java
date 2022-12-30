@@ -243,7 +243,7 @@ public class TrialHelpers {
                 experimentSettings,
                 trialsMap
         );
-        experimentTrial.setTrialResultURL(trialInfo.getTrialResultURL());
+        experimentTrial.setTrialResultURL(ServerContext.UPDATE_RESULTS_END_POINT);
         return experimentTrial;
     }
 }

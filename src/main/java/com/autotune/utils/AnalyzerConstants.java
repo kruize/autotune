@@ -295,7 +295,7 @@ public class AnalyzerConstants {
         }
     }
 
-    public static class AnalyserParallelEngineConfigs {
+    public static class createExperimentParallelEngineConfigs {
         /**
          * MAX Queue size to stack experiments
          */
@@ -318,7 +318,34 @@ public class AnalyzerConstants {
         public static int DELAY_IN_SECS = 2;
         public static String EXECUTOR = "KRUIZE_EXECUTOR";
 
-        private AnalyserParallelEngineConfigs() {
+        private createExperimentParallelEngineConfigs() {
+        }
+    }
+
+    public static class updateResultsParallelEngineConfigs {
+        /**
+         * MAX Queue size to stack experiments
+         */
+        public static int QUEUE_SIZE = 20000;
+        /**
+         * Core pool size is the minimum number of workers to keep alive
+         */
+        public static int CORE_POOL_SIZE = 100;
+        /**
+         * Maximum number of workers limit
+         */
+        public static int MAX_POOL_SIZE = 1000;
+        /**
+         * Timeout for idle threads waiting for work. Threads use this timeout when there are more than corePoolSize present or if allowCoreThreadTimeOut. Otherwise they wait forever for new work.
+         */
+        public static int CORE_POOL_KEEPALIVETIME_IN_SECS = 5;
+        /**
+         * the time between successive executions
+         */
+        public static int DELAY_IN_SECS = 2;
+        public static String EXECUTOR = "KRUIZE_EXECUTOR";
+
+        private updateResultsParallelEngineConfigs() {
         }
     }
 }

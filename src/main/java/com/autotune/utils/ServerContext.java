@@ -40,6 +40,7 @@ public class ServerContext {
     public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
     public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
     public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
+    public static final String UPDATE_RESULTS_END_POINT = AUTOTUNE_SERVER_PORT + UPDATE_RESULTS;
 
     // HPO End Points
     public static final String HPO_SERVER_PORT = "http://localhost:" + HPO_PORT;

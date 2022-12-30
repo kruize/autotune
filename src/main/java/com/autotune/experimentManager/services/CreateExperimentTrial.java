@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -78,7 +77,7 @@ public class CreateExperimentTrial extends HttpServlet {
         this.emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
         this.EMExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
-        getServletContext().setAttribute(EMConstants.EMKeys.EM_KUBERNETES_SERVICE,kubernetesServices);
+        getServletContext().setAttribute(EMConstants.EMKeys.EM_KUBERNETES_SERVICE, kubernetesServices);
     }
 
     /**
@@ -139,19 +138,19 @@ public class CreateExperimentTrial extends HttpServlet {
     }
 
     public void submitTask() {
-        for ( Object obj : EMExperimentTrialMap.values()) {
+        for (Object obj : EMExperimentTrialMap.values()) {
             try {
                 /**
                  * Asynchronous task gets initiated, and it will spawn iteration manger for each experiment.
                  */
                 //ToDo  Make sure new Experiments having identical deployments not get executed in parallel.
-                ExperimentTrial experimentTrial = (ExperimentTrial) obj ;
+                ExperimentTrial experimentTrial = (ExperimentTrial) obj;
                 this.emExecutor.submit(
                         new Runnable() {
                             @Override
                             public void run() {
                                 AutotuneWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
-                                theWorker.execute(experimentTrial,emExecutor,getServletContext());
+                                theWorker.execute(null, experimentTrial, emExecutor, getServletContext());
                             }
                         }
                 );

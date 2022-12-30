@@ -13,16 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.parallelengine.worker;
+package com.autotune.common.k8sObjects;
 
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+public class GeneralInfoResult {
+    private double sum;
+    private double mean;
+    private String units;
 
-import javax.servlet.ServletContext;
+    public double getSum() {
+        return sum;
+    }
 
-/**
- * Execute methode should be implemented by Workers like IterationManger etc.
- */
-public interface AutotuneWorker {
-    void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context);
+    public void setSum(double sum) {
+        this.sum = sum;
+    }
+
+    public double getMean() {
+        return mean;
+    }
+
+    public void setMean(double mean) {
+        this.mean = mean;
+    }
+
+    public String getUnits() {
+        return units;
+    }
+
+    public void setUnits(String units) {
+        this.units = units;
+    }
+
+    @Override
+    public String toString() {
+        return "GeneralInfoResult{" +
+                "sum=" + sum +
+                ", mean=" + mean +
+                ", units='" + units + '\'' +
+                '}';
+    }
 }
