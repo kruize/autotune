@@ -40,6 +40,7 @@ public class Analyzer {
         try {
             addServlets(contextHandler);
             AutotuneDeployment.getAutotuneObjects(autotuneDeployment);
+            AutotuneDeployment.getPerformanceProfiles();
         } catch (Exception e) {
             e.printStackTrace();
         }

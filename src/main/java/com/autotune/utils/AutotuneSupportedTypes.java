@@ -73,4 +73,7 @@ public class AutotuneSupportedTypes
 					"request_sum/request_count",
 					"(1.25 * request_count) - (1.5 * (request_sum / request_count)) - (0.25 * request_max)",
 					"((request_count / (request_sum / request_count)) / request_max) * 100"));
+
+	public static final Set<String> KUBERNETES_OBJECTS_SUPPORTED =
+			new HashSet<>(Arrays.asList("deployment", "pod", "container"));
 }

@@ -16,6 +16,11 @@
 package com.autotune.common.performanceProfiles;
 
 import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.common.k8sObjects.ValidatePerformanceProfileObject;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.exceptions.InvalidValueException;
+
+import java.util.HashMap;
 
 /**
  * Container class for the PerformanceProfile kubernetes kind, which is used to define
@@ -31,10 +36,20 @@ public class PerformanceProfile {
 
     private final SloInfo sloInfo;
 
-    public PerformanceProfile(double profile_version, String k8s_type, SloInfo sloInfo) {
-        this.profile_version = profile_version;
-        this.k8s_type = k8s_type;
-        this.sloInfo = sloInfo;
+    public PerformanceProfile(double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put(AnalyzerConstants.PROFILE_VERSION, profile_version);
+        map.put(AnalyzerConstants.K8S_TYPE, k8s_type);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
+
+        StringBuilder error = ValidatePerformanceProfileObject.validate(map);
+        if (error.toString().isEmpty()) {
+            this.profile_version = profile_version;
+            this.k8s_type = k8s_type;
+            this.sloInfo = sloInfo;
+        } else {
+            throw new InvalidValueException(error.toString());
+        }
     }
 
     public double getProfile_version() {

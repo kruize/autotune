@@ -17,6 +17,7 @@ package com.autotune.common.k8sObjects;
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.performanceProfiles.AggregationFunctions;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
@@ -37,7 +38,7 @@ public final class Metric {
     private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<String, EMMetricResult>();
     private EMMetricResult emMetricResult;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>>();
-    private AggregationFunctions aggregationFunctions;
+    private HashMap<String,AggregationFunctions> aggregationFunctionsMap;
 
     public Metric(String name,
                   String query,
@@ -47,6 +48,14 @@ public final class Metric {
         this.query = query;
         this.datasource = datasource;
         this.valueType = valueType;
+    }
+
+    public Metric(String variableName, String query, String datasource, String valueType, HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
+        this.name = variableName;
+        this.query = query;
+        this.datasource = datasource;
+        this.valueType = valueType;
+        this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 
     public String getName() {
@@ -85,12 +94,12 @@ public final class Metric {
         return kubernetesObject;
     }
 
-    public AggregationFunctions getAggregateFunctions() {
-        return aggregationFunctions;
+    public HashMap<String, AggregationFunctions> getAggregationFunctions() {
+        return aggregationFunctionsMap;
     }
 
-    public void setAggregateFunctions(AggregationFunctions aggregationFunctions) {
-        this.aggregationFunctions = aggregationFunctions;
+    public void setAggregationFunctions(HashMap<String, AggregationFunctions> aggregationFunctions) {
+        this.aggregationFunctionsMap = aggregationFunctions;
     }
 
     @Override
@@ -102,7 +111,7 @@ public final class Metric {
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", emMetricResult=" + emMetricResult +
-                ", aggregationFunctions=" + aggregationFunctions +
+                ", aggregationFunctions=" + aggregationFunctionsMap +
                 '}';
     }
 }
