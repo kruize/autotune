@@ -78,15 +78,9 @@ public class ValidatePerformanceProfileObject
 			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase()))
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
 
-			// Check if function_variable is part of objective_function
-			String objectiveFunction = sloInfo.getObjectiveFunction();
-			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName())) {
-				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
-			}
-
 			// Check if kubernetes_object type is supported
-			String kubernetes_object = (String) map.get(AnalyzerConstants.KUBERNETES_OBJECTS);
-			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object)) {
+			String kubernetes_object = functionVariable.getKubernetesObject().toLowerCase();
+			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(functionVariable.getKubernetesObject().toLowerCase())) {
 				errorString.append("kubernetes_object "+kubernetes_object+" is not supported");
 			}
 			// Check if one of query or aggregation_functions is present

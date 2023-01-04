@@ -55,7 +55,7 @@ public final class SloInfo
 		if (AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloClass))
 			this.sloClass = sloClass;
 		else
-			throw new InvalidValueException("sla_class: " + sloClass + " not supported");
+			throw new InvalidValueException("slo_class: " + sloClass + " not supported");
 		this.objectiveFunction = objectiveFunction;
 
 		if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))

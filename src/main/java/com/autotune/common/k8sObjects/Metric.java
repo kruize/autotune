@@ -50,11 +50,12 @@ public final class Metric {
         this.valueType = valueType;
     }
 
-    public Metric(String variableName, String query, String datasource, String valueType, HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
+    public Metric(String variableName, String query, String datasource, String valueType, String kubernetesObject, HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
         this.name = variableName;
         this.query = query;
         this.datasource = datasource;
         this.valueType = valueType;
+        this.kubernetesObject = kubernetesObject;
         this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 

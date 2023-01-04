@@ -866,7 +866,7 @@ public class AutotuneDeployment
 		Watcher<String> performanceProfileObjectWatcher = new Watcher<>() {
 			@Override
 			public void eventReceived(Action action, String resource) {
-				PerformanceProfile performanceProfileObject = null;
+				PerformanceProfile performanceProfileObject;
 
 				switch (action.toString().toUpperCase()) {
 					case "ADDED":
@@ -903,38 +903,44 @@ public class AutotuneDeployment
 
 	private static PerformanceProfile getPerformanceProfile(String performanceProfileObjectJsonStr) {
 		try {
-			JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObjectJsonStr);			String k8s_type;
+			JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObjectJsonStr);
+			String k8s_type;
 			Double profile_version;
 			SloInfo sloInfo;
-			JSONObject specJson = performanceProfileObjectJson.optJSONObject(AnalyzerConstants.
-					AutotuneObjectConstants.SPEC);
 
-			JSONObject sloJson = null;
+			JSONObject sloJson;
 			String slo_class = null;
 			String direction = null;
 			String objectiveFunction = null;
 
-			if (specJson != null) {
-				sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
+			profile_version = Double.valueOf(performanceProfileObjectJson.optString(AnalyzerConstants.PROFILE_VERSION,
+					String.valueOf(AnalyzerConstants.DEFAULT_PROFILE_VERSION)));
+			k8s_type = performanceProfileObjectJson.optString(AnalyzerConstants.K8S_TYPE,AnalyzerConstants.DEFAULT_K8S_TYPE);
+			sloJson = performanceProfileObjectJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
+
+			if (sloJson != null) {
 				slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
 				direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
 				objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
 			}
 
 			JSONArray functionVariables = new JSONArray();
-			JSONArray aggregationFunctionsArr = new JSONArray();
+			JSONArray aggregationFunctionsArr;
 			if (sloJson != null) {
 				functionVariables = sloJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-				aggregationFunctionsArr = sloJson.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
 			}
 			ArrayList<Metric> metricArrayList = new ArrayList<>();
 
 			for (Object functionVariableObj : functionVariables) {
 				JSONObject functionVariableJson = (JSONObject) functionVariableObj;
+
 				String variableName = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 				String query = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.QUERY);
 				String datasource = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
 				String valueType = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
+				String kubernetes_object = functionVariableJson.optString(AnalyzerConstants.KUBERNETES_OBJECTS);
+
+				aggregationFunctionsArr = ((JSONObject) functionVariableObj).getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
 
 				HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
 				for (Object aggregationFunctionsObj : aggregationFunctionsArr) {
@@ -953,6 +959,7 @@ public class AutotuneDeployment
 						query,
 						datasource,
 						valueType,
+						kubernetes_object,
 						aggregationFunctionsMap);
 
 				metricArrayList.add(metric);
@@ -963,11 +970,6 @@ public class AutotuneDeployment
 					direction,
 					AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL,
 					metricArrayList);
-
-			k8s_type = specJson.optString(AnalyzerConstants.K8S_TYPE,AnalyzerConstants.DEFAULT_K8S_TYPE);
-			profile_version = Double.valueOf(specJson.optString(AnalyzerConstants.PROFILE_VERSION,
-					String.valueOf(AnalyzerConstants.DEFAULT_PROFILE_VERSION)));
-
 			return new PerformanceProfile(profile_version,
 					k8s_type,
 					sloInfo
@@ -994,7 +996,7 @@ public class AutotuneDeployment
 
 	private static void addPerformanceProfileObject(PerformanceProfile performanceProfile) {
 		performanceProfileMap.put(performanceProfile.getProfile_version(), performanceProfile);
-		System.out.println("PerformanceProfile Version: " + performanceProfile.getProfile_version());
+		LOGGER.info("PerformanceProfile Version: ",performanceProfile.getProfile_version());
 	}
 
 }

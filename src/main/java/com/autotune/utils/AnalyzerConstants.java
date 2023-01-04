@@ -50,7 +50,7 @@ public class AnalyzerConstants {
 	public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
 	public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
 	public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
-	public static final String DEFAULT_K8S_TYPE = "minikube";
+	public static final String DEFAULT_K8S_TYPE = "openshift";
 	public static final String PROFILE_VERSION = "profile_version";
 	public static final Double DEFAULT_PROFILE_VERSION = 1.0;
 	public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
