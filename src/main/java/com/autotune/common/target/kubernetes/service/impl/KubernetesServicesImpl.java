@@ -403,7 +403,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             kubernetesClient.customResource(crd).watch(watcher);
         } catch (Exception e) {
-            new TargetHandlerException(e, "addWatcher failed!");
+            LOGGER.warn("Watcher not added! Only REST API access is enabled.");
         }
     }
 
@@ -420,7 +420,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             event = kubernetesClient.events().inNamespace(namespace).withName(eventName).get();
         } catch (Exception e) {
-            LOGGER.warn("Watcher not added! Only REST API access is enabled.");
+            new TargetHandlerException(e, "getEvent failed!");
         }
         return event;
     }
