@@ -958,9 +958,9 @@ public class AutotuneDeployment
 				Metric metric = new Metric(variableName,
 						query,
 						datasource,
-						valueType,
-						kubernetes_object,
-						aggregationFunctionsMap);
+						valueType);
+				metric.setAggregationFunctions(aggregationFunctionsMap);
+				metric.setKubernetesObject(kubernetes_object);
 
 				metricArrayList.add(metric);
 			}

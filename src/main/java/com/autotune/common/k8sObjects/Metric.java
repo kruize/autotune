@@ -49,16 +49,6 @@ public final class Metric {
         this.datasource = datasource;
         this.valueType = valueType;
     }
-
-    public Metric(String variableName, String query, String datasource, String valueType, String kubernetesObject, HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
-        this.name = variableName;
-        this.query = query;
-        this.datasource = datasource;
-        this.valueType = valueType;
-        this.kubernetesObject = kubernetesObject;
-        this.aggregationFunctionsMap = aggregationFunctionsMap;
-    }
-
     public String getName() {
         return name;
     }
@@ -93,6 +83,10 @@ public final class Metric {
 
     public String getKubernetesObject() {
         return kubernetesObject;
+    }
+
+    public void setKubernetesObject(String kubernetesObject) {
+        this.kubernetesObject = kubernetesObject;
     }
 
     public HashMap<String, AggregationFunctions> getAggregationFunctions() {
