@@ -95,7 +95,7 @@ function usage() {
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
-	echo " -t: Target selection [autotune | crc]"
+	echo " -m: Target selection [autotune | crc]"
 	exit -1
 }
 
@@ -111,7 +111,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:t:n:o:p:stu:-: gopts
+while getopts ac:d:i:k:m:n:o:p:stu:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -146,7 +146,7 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
-  t)
+  m)
 		target="${OPTARG}"
 		;;
 	n)
