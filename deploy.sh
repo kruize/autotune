@@ -95,7 +95,7 @@ function usage() {
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
-	echo " -m: Target selection [autotune | crc]"
+	echo " -m: Target mode selection [autotune | crc]"
 	exit -1
 }
 
