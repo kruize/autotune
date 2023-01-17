@@ -31,14 +31,14 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     @Override
     public boolean addExperiments(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
-                (ao) -> {
-                    ao.setStatus(AnalyzerConstants.ExpStatus.QUEUED);
-                    ao.setExperimentId(Utils.generateID(toString()));
+                (kruizeObject) -> {
+                    kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
+                    kruizeObject.setExperimentId(Utils.generateID(toString()));
                     mainKruizeExperimentMap.put(
-                            ao.getExperimentName(),
-                            ao
+                            kruizeObject.getExperimentName(),
+                            kruizeObject
                     );
-                    LOGGER.debug("Added Experiment name : {} into main map.", ao.getExperimentName());
+                    LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
         // TODO   Insert into database
@@ -46,7 +46,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     }
 
     @Override
-    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExpStatus status) {
+    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);
         // TODO   update into database
         return true;

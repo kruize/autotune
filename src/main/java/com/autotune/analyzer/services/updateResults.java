@@ -17,7 +17,6 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
@@ -51,16 +50,6 @@ public class updateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(updateResults.class);
     Map<String, KruizeObject> mainKruizeExperimentMap;
-
-
-    public static void main(String[] args) throws InvalidValueException {
-        Map<String, KruizeObject> testMap = new ConcurrentHashMap<>();
-        testMap.put("abc", new KruizeObject());
-
-        KruizeObject tmp = testMap.get(new String("abc1"));
-        System.out.println(tmp);
-
-    }
 
     @Override
     public void init(ServletConfig config) throws ServletException {

@@ -26,5 +26,5 @@ public interface ExperimentInterface {
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<KruizeObject> kruizeExperimentList);
 
-    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExpStatus status);
+    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
 }

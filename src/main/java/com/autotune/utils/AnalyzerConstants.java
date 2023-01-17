@@ -86,7 +86,7 @@ public class AnalyzerConstants {
         REMOTE
     }
 
-    public enum ExpStatus {
+    public enum ExperimentStatus {
         QUEUED,
         IN_PROGRESS,
         STALE,

@@ -48,7 +48,7 @@ public class AnalyzerManager implements AutotuneWorker {
     public void execute(Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
         KruizeObject kruizeExperiment = (KruizeObject) o;
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-        experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExpStatus.IN_PROGRESS);
+        experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
 
         if (kruizeExperiment.getExperimentUseCaseType().isLocalExperiment() || kruizeExperiment.getExperimentUseCaseType().isLocalMonitoring()) {
             matchPodsToAutotuneObject(kruizeExperiment);

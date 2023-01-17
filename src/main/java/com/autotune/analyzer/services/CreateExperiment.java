@@ -19,7 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.ExperimentInitiator;
-import com.autotune.common.data.GeneralDataHolder;
+import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
@@ -73,7 +73,7 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
-            GeneralDataHolder experimentInitiator = new ExperimentInitiator().validateAndAdd(mainKruizeExperimentMap, kruizeExpList);
+            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndAdd(mainKruizeExperimentMap, kruizeExpList);
             if (experimentInitiator.isSuccess()) {
                 sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
             } else {

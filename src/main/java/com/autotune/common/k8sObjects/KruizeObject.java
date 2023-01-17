@@ -43,7 +43,7 @@ public final class KruizeObject {
     @SerializedName("selector")
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
-    private AnalyzerConstants.ExpStatus status;
+    private AnalyzerConstants.ExperimentStatus status;
     private String performanceProfile;
     private String deployment_name;
     private TrialSettings trial_settings;
@@ -151,11 +151,11 @@ public final class KruizeObject {
         this.objectReference = objectReference;
     }
 
-    public AnalyzerConstants.ExpStatus getStatus() {
+    public AnalyzerConstants.ExperimentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(AnalyzerConstants.ExpStatus status) {
+    public void setStatus(AnalyzerConstants.ExperimentStatus status) {
         this.status = status;
     }
 

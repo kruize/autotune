@@ -32,20 +32,20 @@ public class ExperimentUseCaseType {
     boolean localMonitoring;
     boolean localExperiment;
 
-    public ExperimentUseCaseType(KruizeObject ao) throws Exception {
-        if (ao.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
-            if (ao.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+    public ExperimentUseCaseType(KruizeObject kruizeObject) throws Exception {
+        if (kruizeObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 setRemoteMonitoring(true);
             } else {
-                throw new Exception("Invalid Mode " + ao.getMode() + " for target cluster as Remote.");
+                throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Remote.");
             }
-        } else if (ao.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
-            if (ao.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+        } else if (kruizeObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 setLocalMonitoring(true);
-            } else if (ao.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {
                 setLocalExperiment(true);
             } else {
-                throw new Exception("Invalid Mode " + ao.getMode() + " for target cluster as Local.");
+                throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Local.");
             }
         } else {
             throw new Exception("Invalid Target cluster type");

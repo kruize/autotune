@@ -18,7 +18,7 @@ package com.autotune.common.data;
 /**
  * General data carrier between functions.
  */
-public class GeneralDataHolder {
+public class ActivityResultData {
     private boolean success = false;
     private String errorMessage = null;
 

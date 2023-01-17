@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.common.data.GeneralDataHolder;
+import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
@@ -74,8 +74,8 @@ public class ExperimentValidation {
      */
     public void validate(List<KruizeObject> kruizeExptList) {
         for (KruizeObject ao : kruizeExptList) {
-            GeneralDataHolder generalDataHolder = validateMandatoryFields(ao);
-            if (generalDataHolder.isSuccess()) {
+            ActivityResultData activityResultData = validateMandatoryFields(ao);
+            if (activityResultData.isSuccess()) {
                 String expName = ao.getExperimentName();
                 String mode = ao.getMode();
                 String target_cluster = ao.getTargetCluster();
@@ -87,8 +87,10 @@ public class ExperimentValidation {
                         String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
                         if (!namespaceDeploymentNameList.contains(nsDepName))
                             proceed = true;
-                        else
+                        else if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
+                        else
+                            proceed = true;
                     } else {
                         proceed = true;
                     }
@@ -101,7 +103,7 @@ public class ExperimentValidation {
                 } else
                     setSuccess(true);
             } else {
-                markFailed(generalDataHolder.getErrorMessage());
+                markFailed(activityResultData.getErrorMessage());
                 break;
             }
         }
@@ -134,9 +136,9 @@ public class ExperimentValidation {
      * @param expObj
      * @return
      */
-    public GeneralDataHolder validateMandatoryFields(KruizeObject expObj) {
+    public ActivityResultData validateMandatoryFields(KruizeObject expObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
-        GeneralDataHolder generalDataHolder = new GeneralDataHolder();
+        ActivityResultData activityResultData = new ActivityResultData();
         boolean missingSLOPerf = true;
         boolean missingDeploySelector = true;
         String errorMsg = "";
@@ -208,25 +210,25 @@ public class ExperimentValidation {
                     if (missingDeploySelector) {
                         errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s \n", mandatoryDeploymentSelector));
                     }
-                    generalDataHolder.setSuccess(false);
-                    generalDataHolder.setErrorMessage(errorMsg);
+                    activityResultData.setSuccess(false);
+                    activityResultData.setErrorMessage(errorMsg);
                     LOGGER.debug("Validation error message :{}", errorMsg);
                 } else {
-                    generalDataHolder.setSuccess(true);
+                    activityResultData.setSuccess(true);
                 }
             } catch (Exception e) {
-                generalDataHolder.setSuccess(false);
+                activityResultData.setSuccess(false);
                 errorMsg = errorMsg.concat(e.getMessage());
-                generalDataHolder.setErrorMessage(errorMsg);
+                activityResultData.setErrorMessage(errorMsg);
             }
         } else {
             errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s \n ", missingMandatoryFields.toString()));
-            generalDataHolder.setSuccess(false);
-            generalDataHolder.setErrorMessage(errorMsg);
+            activityResultData.setSuccess(false);
+            activityResultData.setErrorMessage(errorMsg);
             LOGGER.debug("Validation error message :{}", errorMsg);
         }
-        LOGGER.debug("{}", generalDataHolder);
-        return generalDataHolder;
+        LOGGER.debug("{}", activityResultData);
+        return activityResultData;
     }
 
     @Override

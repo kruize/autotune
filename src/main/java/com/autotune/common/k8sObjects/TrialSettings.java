@@ -17,10 +17,29 @@ package com.autotune.common.k8sObjects;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * ToDO TrialSettings in common.experiments and this class should be merged
+ */
 public class TrialSettings {
     @SerializedName("measurement_duration")
     private String measurement_durationMinutes;
-    private String format;
+    /**
+     * Indicates number of times that same tails should get executed to collect accurate metrics.
+     */
+    @SerializedName("iterations")
+    private String trialIterations;
+    /**
+     * Total time took by cluster/Node to spin up newly created deployments pods .
+     */
+    @SerializedName("warmup_duration")
+    private String trialWarmupDuration;
+    /**
+     * Indicates number of times that same tails should get executed to collect accurate metrics after warmup_durations.
+     */
+    @SerializedName("warmup_cycles")
+    private String trialWarmupCycles;
+    @SerializedName("measurement_cycles")
+    private String trialMeasurementCycles;
 
     public String getMeasurement_durationMinutes() {
         return measurement_durationMinutes;

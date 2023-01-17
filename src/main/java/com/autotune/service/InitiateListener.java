@@ -86,7 +86,7 @@ public class InitiateListener implements ServletContextListener {
         Runnable checkForNewExperiment = () -> {
             KruizeDeployment.autotuneObjectMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
                     (name, ao) -> {
-                        if (ao.getStatus().equals(AnalyzerConstants.ExpStatus.QUEUED)) {
+                        if (ao.getStatus().equals(AnalyzerConstants.ExperimentStatus.QUEUED)) {
                             analyserExecutor.submit(
                                     new Runnable() {
                                         @Override

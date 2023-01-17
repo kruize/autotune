@@ -17,7 +17,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.data.ExperimentInterface;
 import com.autotune.analyzer.data.ExperimentInterfaceImpl;
-import com.autotune.common.data.GeneralDataHolder;
+import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class ExperimentInitiator {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentInitiator.class);
-    private GeneralDataHolder generalDataHolder;
+    private ActivityResultData activityResultData;
 
 
     /**
@@ -42,11 +42,11 @@ public class ExperimentInitiator {
      * @param kruizeExpList
      * @return
      */
-    public GeneralDataHolder validateAndAdd(
+    public ActivityResultData validateAndAdd(
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<KruizeObject> kruizeExpList
     ) {
-        this.generalDataHolder = new GeneralDataHolder();
+        this.activityResultData = new ActivityResultData();
         try {
             ExperimentValidation validationObject = new ExperimentValidation(mainKruizeExperimentMap);
             validationObject.validate(kruizeExpList);
@@ -54,16 +54,16 @@ public class ExperimentInitiator {
             if (validationObject.isSuccess()) {
                 ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
                 experimentInterface.addExperiments(mainKruizeExperimentMap, kruizeExpList);
-                this.generalDataHolder.setSuccess(true);
+                this.activityResultData.setSuccess(true);
             } else {
-                this.generalDataHolder.setSuccess(false);
-                this.generalDataHolder.setErrorMessage("Validation failed due to " + validationObject.getErrorMessage());
+                this.activityResultData.setSuccess(false);
+                this.activityResultData.setErrorMessage("Validation failed due to " + validationObject.getErrorMessage());
             }
         } catch (Exception e) {
             LOGGER.error("Validate and push experiment falied due to : " + e.getMessage());
-            this.generalDataHolder.setSuccess(false);
-            this.generalDataHolder.setErrorMessage("Validation failed due to " + e.getMessage());
+            this.activityResultData.setSuccess(false);
+            this.activityResultData.setErrorMessage("Validation failed due to " + e.getMessage());
         }
-        return this.generalDataHolder;
+        return this.activityResultData;
     }
 }
