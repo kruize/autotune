@@ -19,7 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.common.data.ActivityResultData;
-import com.autotune.common.k8sObjects.ExperimentResultData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;

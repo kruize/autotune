@@ -18,8 +18,8 @@ package com.autotune.service;
 import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.workerimpl.CreateExperimentManager;
 import com.autotune.analyzer.workerimpl.UpdateResultManager;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.k8sObjects.ExperimentResultData;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.queue.AutotuneQueue;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
@@ -62,7 +62,6 @@ public class InitiateListener implements ServletContextListener {
             sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
             sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS, new ArrayList<String>());
         }
-        AutotuneQueue<ExperimentTrial> emQueue = new AutotuneQueue<>(20000);
         /**
          * Thread pool executor declaration for Experiment Manager
          */
@@ -70,7 +69,7 @@ public class InitiateListener implements ServletContextListener {
                 ParallelEngineConfigs.EM_MAX_POOL_SIZE,
                 ParallelEngineConfigs.EM_CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(20000),
+                new AutotuneQueue<>(ParallelEngineConfigs.EM_QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 IterationManager.class
         );
@@ -84,7 +83,7 @@ public class InitiateListener implements ServletContextListener {
                 AnalyzerConstants.createExperimentParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(20000),
+                new AutotuneQueue<>(AnalyzerConstants.createExperimentParallelEngineConfigs.QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 CreateExperimentManager.class
         );
@@ -119,7 +118,7 @@ public class InitiateListener implements ServletContextListener {
                 AnalyzerConstants.updateResultsParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(20000),
+                new AutotuneQueue<>(AnalyzerConstants.updateResultsParallelEngineConfigs.QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 UpdateResultManager.class
         );

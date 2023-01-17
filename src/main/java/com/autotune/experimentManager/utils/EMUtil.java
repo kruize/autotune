@@ -17,9 +17,10 @@ package com.autotune.experimentManager.utils;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.result.*;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.*;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;

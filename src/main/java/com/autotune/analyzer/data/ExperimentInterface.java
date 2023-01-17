@@ -15,13 +15,17 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
-import com.autotune.common.k8sObjects.ExperimentResultData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This interface methods are implemented when kruize start using DB to store Experiment meta data with results.
+ * This Interface also helps when we migrate ORM framework.
+ */
 public interface ExperimentInterface {
     //Add New experiments into local storage and set status to Queue
     public boolean addExperimentToLocalStorage(

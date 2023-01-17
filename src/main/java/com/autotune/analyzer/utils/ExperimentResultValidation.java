@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.common.k8sObjects.ExperimentResultData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

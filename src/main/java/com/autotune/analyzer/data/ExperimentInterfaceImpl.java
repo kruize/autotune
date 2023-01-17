@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
-import com.autotune.common.k8sObjects.ExperimentResultData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;

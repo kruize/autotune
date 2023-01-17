@@ -17,6 +17,7 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.ExperimentUseCaseType;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
