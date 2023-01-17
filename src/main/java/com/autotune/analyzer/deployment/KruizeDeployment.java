@@ -161,7 +161,7 @@ public class KruizeDeployment {
                 List<KruizeObject> kruizeObjectList = new ArrayList<>();
                 kruizeObjectList.add(kruizeObject);
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
-                ActivityResultData activityResultData = experimentInitiator.validateAndAdd(autotuneObjectMap, kruizeObjectList);
+                ActivityResultData activityResultData = experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
                 if (!activityResultData.isSuccess()) {
                     new KubeEventLogger(Clock.systemUTC()).log("Failed", activityResultData.getErrorMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
                 }

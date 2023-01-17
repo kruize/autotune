@@ -45,8 +45,8 @@ public class ExperimentResultValidation {
                     if (mainKruizeExperimentMAP.keySet().contains(resultData.getExperiment_name())) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         boolean isExist = false;
-                        if (null != kruizeObject.getExperimentResultDataSet())
-                            isExist = kruizeObject.getExperimentResultDataSet().contains(resultData);
+                        if (null != kruizeObject.getResultData())
+                            isExist = kruizeObject.getResultData().contains(resultData);
                         if (isExist) {
                             proceed = false;
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getTrial_timestamp()));

@@ -50,7 +50,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     @Override
     public boolean addExperimentToDB(KruizeObject kruizeObject) {
         //TODO insert in to db
-        updateExperimentStatus(kruizeObject, AnalyzerConstants.ExpStatus.IN_PROGRESS);
+        updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
         return true;
     }
 
@@ -65,15 +65,15 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addResultsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<ExperimentResultData> experimentResultDataList) {
         experimentResultDataList.forEach(
                 (resultData) -> {
-                    resultData.setStatus(AnalyzerConstants.ExpStatus.QUEUED);
+                    resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
                     Set<ExperimentResultData> results = null;
-                    if (ko.getExperimentResultDataSet() == null)
+                    if (ko.getResultData() == null)
                         results = new HashSet<>();
                     else
-                        results = ko.getExperimentResultDataSet();
+                        results = ko.getResultData();
                     results.add(resultData);
-                    ko.setExperimentResultDataSet(results);
+                    ko.setResultData(results);
                 }
         );
         // TODO   Insert into database
@@ -83,7 +83,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     @Override
     public boolean addResultsToDB(KruizeObject kruizeObject, ExperimentResultData resultData) {
         // TODO   Insert into database
-        resultData.setStatus(AnalyzerConstants.ExpStatus.IN_PROGRESS);
+        resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
         return false;
     }
 

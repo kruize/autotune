@@ -19,12 +19,12 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.ExperimentUseCaseType;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -50,7 +50,7 @@ public final class KruizeObject {
     private RecommendationSettings recommendation_settings;
     private List<ContainerObject> containers;
     private ExperimentUseCaseType experimentUseCaseType;
-    private List<JsonObject> results;
+    private Set<ExperimentResultData> resultData;
 
     public KruizeObject(String experimentName,
                         String namespace,
@@ -207,12 +207,12 @@ public final class KruizeObject {
         this.experimentUseCaseType = experimentUseCaseType;
     }
 
-    public List<JsonObject> getResults() {
-        return results;
+    public Set<ExperimentResultData> getResultData() {
+        return resultData;
     }
 
-    public void setResults(List<JsonObject> results) {
-        this.results = results;
+    public void setResultData(Set<ExperimentResultData> resultData) {
+        this.resultData = resultData;
     }
 
     @Override

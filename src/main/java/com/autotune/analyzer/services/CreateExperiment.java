@@ -73,7 +73,7 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
-            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndAdd(mainKruizeExperimentMap, kruizeExpList);
+            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
             if (experimentInitiator.isSuccess()) {
                 sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
             } else {

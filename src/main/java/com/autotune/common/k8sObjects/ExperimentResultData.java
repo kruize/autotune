@@ -28,7 +28,7 @@ public class ExperimentResultData {
     private String trialNumber;
     private String trial_timestamp;
     private List<DeploymentResultData> deployments;
-    private AnalyzerConstants.ExpStatus status;
+    private AnalyzerConstants.ExperimentStatus status;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -62,11 +62,11 @@ public class ExperimentResultData {
         this.deployments = deployments;
     }
 
-    public AnalyzerConstants.ExpStatus getStatus() {
+    public AnalyzerConstants.ExperimentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(AnalyzerConstants.ExpStatus status) {
+    public void setStatus(AnalyzerConstants.ExperimentStatus status) {
         this.status = status;
     }
 
