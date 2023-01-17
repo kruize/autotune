@@ -18,7 +18,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
 
@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import static com.autotune.analyzer.Experimentator.experimentsMap;
-import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
-import static com.autotune.analyzer.deployment.AutotuneDeployment.deploymentMap;
+import static com.autotune.analyzer.deployment.KruizeDeployment.autotuneObjectMap;
+import static com.autotune.analyzer.deployment.KruizeDeployment.deploymentMap;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
@@ -38,69 +38,68 @@ import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchS
 
 /**
  * Generates the search space used for the analysis.
- *
+ * <p>
  * Request:
  * `GET /searchSpace` gives the search space for all applications monitored.
- *
+ * <p>
  * `GET /searchSpace?experiment_name=<EXP_NAME>` gives the search space for a specific application.
- *
+ * <p>
  * Example JSON:
  * [
- *    {
- *         "experiment_name": "galaxies-autotune-min-http-response-time",
- *         "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
- *         "objective_function": "request_sum/request_count",
- *         "hpo_algo_impl": "optuna_tpe",
- *         "tunables": [
- *             {
- *                 "value_type": "double",
- *                 "lower_bound": "150.0Mi",
- *                 "name": "memoryRequest",
- *                 "step": 1,
- *                 "upper_bound": "300.0Mi"
- *             },
- *             {
- *                 "value_type": "double",
- *                 "lower_bound": "1.0",
- *                 "name": "cpuRequest",
- *                 "step": 0.01,
- *                 "upper_bound": "3.0"
- *             },
- *             {
- *                 "value_type": "integer",
- *                 "lower_bound": "9",
- *                 "name": "MaxInlineLevel",
- *                 "step": 1,
- *                 "upper_bound": "50"
- *             },
- *             {
- *                 "value_type": "integer",
- *                 "lower_bound": "1",
- *                 "name": "quarkus.thread-pool.core-threads",
- *                 "step": 1,
- *                 "upper_bound": "10"
- *             },
- *             {
- *                 "value_type": "integer",
- *                 "lower_bound": "1",
- *                 "name": "quarkus.thread-pool.queue-size",
- *                 "step": 1,
- *                 "upper_bound": "100"
- *             },
- *             {
- *                 "value_type": "integer",
- *                 "lower_bound": "1",
- *                 "name": "quarkus.hibernate-orm.jdbc.statement-fetch-size",
- *                 "step": 1,
- *                 "upper_bound": "50"
- *             }
- *         ],
- *         "direction": "minimize"
- *     }
+ * {
+ * "experiment_name": "galaxies-autotune-min-http-response-time",
+ * "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
+ * "objective_function": "request_sum/request_count",
+ * "hpo_algo_impl": "optuna_tpe",
+ * "tunables": [
+ * {
+ * "value_type": "double",
+ * "lower_bound": "150.0Mi",
+ * "name": "memoryRequest",
+ * "step": 1,
+ * "upper_bound": "300.0Mi"
+ * },
+ * {
+ * "value_type": "double",
+ * "lower_bound": "1.0",
+ * "name": "cpuRequest",
+ * "step": 0.01,
+ * "upper_bound": "3.0"
+ * },
+ * {
+ * "value_type": "integer",
+ * "lower_bound": "9",
+ * "name": "MaxInlineLevel",
+ * "step": 1,
+ * "upper_bound": "50"
+ * },
+ * {
+ * "value_type": "integer",
+ * "lower_bound": "1",
+ * "name": "quarkus.thread-pool.core-threads",
+ * "step": 1,
+ * "upper_bound": "10"
+ * },
+ * {
+ * "value_type": "integer",
+ * "lower_bound": "1",
+ * "name": "quarkus.thread-pool.queue-size",
+ * "step": 1,
+ * "upper_bound": "100"
+ * },
+ * {
+ * "value_type": "integer",
+ * "lower_bound": "1",
+ * "name": "quarkus.hibernate-orm.jdbc.statement-fetch-size",
+ * "step": 1,
+ * "upper_bound": "50"
+ * }
+ * ],
+ * "direction": "minimize"
+ * }
  * ]
  */
-public class SearchSpace extends HttpServlet
-{
+public class SearchSpace extends HttpServlet {
     /**
      * Generates the search space used for the analysis.
      *
@@ -123,8 +122,8 @@ public class SearchSpace extends HttpServlet
         AutotuneExperiment autotuneExperiment = null;
         ApplicationSearchSpace applicationSearchSpace = null;
         if (null != experimentName) {
-            AutotuneObject autotuneObject = autotuneObjectMap.get(experimentName);
-            if (null != autotuneObject) {
+            KruizeObject kruizeObject = autotuneObjectMap.get(experimentName);
+            if (null != kruizeObject) {
                 Map<String, ApplicationDeployment> depMap = deploymentMap.get(experimentName);
                 if (!depMap.isEmpty()) {
                     if (null != deploymentName) {

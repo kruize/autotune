@@ -19,6 +19,7 @@ import com.autotune.common.performanceProfiles.AggregationFunctions;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Holds the variables used in the objective_function for the autotune object
@@ -35,10 +36,10 @@ public final class Metric {
     private final String datasource;
     private final String valueType;
     private String kubernetesObject;
-    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<String, EMMetricResult>();
+    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<>();
     private EMMetricResult emMetricResult;
-    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>>();
-    private HashMap<String,AggregationFunctions> aggregationFunctionsMap;
+    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<>();
+    private HashMap<String, List<AggregationFunctions>> aggregationFunctionsMap;
 
     public Metric(String name,
                   String query,
@@ -89,12 +90,12 @@ public final class Metric {
         this.kubernetesObject = kubernetesObject;
     }
 
-    public HashMap<String, AggregationFunctions> getAggregationFunctions() {
+    public HashMap<String, List<AggregationFunctions>>  getAggregationFunctionsMap() {
         return aggregationFunctionsMap;
     }
 
-    public void setAggregationFunctions(HashMap<String, AggregationFunctions> aggregationFunctions) {
-        this.aggregationFunctionsMap = aggregationFunctions;
+    public void setAggregationFunctionsMap(HashMap<String, List<AggregationFunctions>>  aggregationFunctionsMap) {
+        this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 
     @Override

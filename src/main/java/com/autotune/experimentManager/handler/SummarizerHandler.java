@@ -54,7 +54,8 @@ public class SummarizerHandler implements EMHandlerInterface {
 
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);
-            if (null != iterationMetaData) EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
+            if (null != iterationMetaData)
+                EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
             autotuneExecutor.submit(
@@ -62,7 +63,7 @@ public class SummarizerHandler implements EMHandlerInterface {
                         @Override
                         public void run() {
                             AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(experimentTrial, autotuneExecutor, context);
+                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
                         }
                     }
             );

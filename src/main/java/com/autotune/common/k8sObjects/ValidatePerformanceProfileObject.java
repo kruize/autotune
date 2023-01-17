@@ -21,6 +21,7 @@ import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Check if the Performance Profile object in the kubernetes cluster is valid
@@ -31,17 +32,16 @@ public class ValidatePerformanceProfileObject
 
 	/**
 	 * Check if the PerformanceProfileObject is valid
-	 * @param map
-	 * @return
+	 * @param map - contains the parameters and their values to be validated
+	 * @return - returns the concatenated error msg, if any.
 	 */
 	public static StringBuilder validate(HashMap<String, Object> map) {
 		StringBuilder errorString = new StringBuilder();
 
 		// Check if k8s type is supported
 		String k8sType = (String) map.get(AnalyzerConstants.K8S_TYPE);
-		if (!AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
-			errorString.append("k8s type "+k8sType+" is not suppported");
-		}
+		if (!AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType))
+			errorString.append("k8s type ").append(k8sType).append(" is not supported");
 
 		// Check if slo_class is supported
 		SloInfo sloInfo = (SloInfo) map.get(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -80,12 +80,11 @@ public class ValidatePerformanceProfileObject
 
 			// Check if kubernetes_object type is supported
 			String kubernetes_object = functionVariable.getKubernetesObject().toLowerCase();
-			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(functionVariable.getKubernetesObject().toLowerCase())) {
-				errorString.append("kubernetes_object "+kubernetes_object+" is not supported");
-			}
+			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(functionVariable.getKubernetesObject().toLowerCase()))
+				errorString.append("kubernetes_object ").append(kubernetes_object).append(" is not supported");
 			// Check if one of query or aggregation_functions is present
 			String query = (String) map.get(AnalyzerConstants.AutotuneObjectConstants.QUERY);
-			HashMap<String, AggregationFunctions> aggregationFunctionsMap = functionVariable.getAggregationFunctions();
+			HashMap<String, List<AggregationFunctions>> aggregationFunctionsMap = functionVariable.getAggregationFunctionsMap();
 
 			if (query == null && aggregationFunctionsMap.isEmpty()) {
 				errorString.append("One of query or aggregation_functions is mandatory. Both cannot be null!");

@@ -17,12 +17,12 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.analyzer.utils.ExperimentInitiator;
+import com.autotune.common.data.ActivityResultData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -43,41 +44,31 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_EN
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
- * REST API used to update metric results to a given experiments.
+ * REST API used to receive Experiment metric results .
  */
 @WebServlet(asyncSupported = true)
-public class updateResults extends HttpServlet {
+public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(updateResults.class);
-    ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
+    Map<String, KruizeObject> mainKruizeExperimentMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
-        this.kubernetesServices = new KubernetesServicesImpl();
+        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
-
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
-            for (JsonObject jsonObject : autoTuneOperatorDataList) {
-                JsonObject exp = this.mainAutoTuneOperatorMap.get(jsonObject.get("experiment_name").toString());
-                if (exp.get("results") == null) {
-                    JsonArray jsonArray = new JsonArray();
-                    jsonArray.add(jsonObject);
-                    exp.add("results", jsonArray);
-                } else {
-                    JsonArray jsonArray = exp.getAsJsonArray("results");
-                    jsonArray.add(jsonObject);
-                    exp.add("results", jsonArray);
-                }
+            List<ExperimentResultData> experimentResultDataList = Arrays.asList(new Gson().fromJson(inputData, ExperimentResultData[].class));
+            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList);
+            if (experimentInitiator.isSuccess()) {
+                sendSuccessResponse(response, "Results added successfully");
+            } else {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, experimentInitiator.getErrorMessage());
             }
-            sendSuccessResponse(response);
         } catch (Exception e) {
             LOGGER.error("Exception due to :" + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
@@ -85,14 +76,14 @@ public class updateResults extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new AutotuneResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

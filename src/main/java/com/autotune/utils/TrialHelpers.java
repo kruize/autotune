@@ -25,7 +25,7 @@ import com.autotune.analyzer.layer.Layer;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.experiments.*;
-import com.autotune.common.k8sObjects.AutotuneObject;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -44,7 +44,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 
-import static com.autotune.analyzer.deployment.AutotuneDeployment.autotuneObjectMap;
+import static com.autotune.analyzer.deployment.KruizeDeployment.autotuneObjectMap;
 import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
@@ -122,7 +122,7 @@ public class TrialHelpers {
                                                                AutotuneExperiment autotuneExperiment,
                                                                String trialConfigJson) throws MalformedURLException {
         ApplicationSearchSpace appSearchSpace = autotuneExperiment.getApplicationSearchSpace();
-        AutotuneObject autotuneObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
+        KruizeObject kruizeObject = autotuneObjectMap.get(autotuneExperiment.getExperimentName());
 
         TrialSettings trialSettings = new TrialSettings("1",
                 "1min",
@@ -151,11 +151,11 @@ public class TrialHelpers {
                 deploymentTracking);
 
         boolean do_experiments = true;
-        if (autotuneObject.getMode().equals("monitor")) {
+        if (kruizeObject.getMode().equals("monitor")) {
             do_experiments = false;
         }
         boolean do_monitoring = true;
-        if (autotuneObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getTargetCluster().equals("remote")) {
             do_monitoring = false;
         }
         /**
@@ -163,7 +163,7 @@ public class TrialHelpers {
          * TODO: In the future this might need its own flag
          */
         boolean wait_for_load = true;
-        if (autotuneObject.getMode().equals("monitor") && autotuneObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getMode().equals("monitor") && kruizeObject.getTargetCluster().equals("remote")) {
             wait_for_load = false;
         }
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,
@@ -178,13 +178,13 @@ public class TrialHelpers {
         LOGGER.info(trialConfigJson);
 
         String experimentName = appSearchSpace.getExperimentName();
-        ResourceDetails resourceDetails = new ResourceDetails(autotuneObject.getNamespace(), autotuneExperiment.getDeploymentName());
+        ResourceDetails resourceDetails = new ResourceDetails(kruizeObject.getNamespace(), autotuneExperiment.getDeploymentName());
         String experimentID = appSearchSpace.getExperimentId();
         HashMap<String, TrialDetails> trialsMap = new HashMap<>();
         ContainerConfigData configData = new ContainerConfigData();
         HashMap<String, Metric> podMetricsHashMap = new HashMap<>();
         HashMap<String, HashMap<String, Metric>> containerMetricsHashMap = new HashMap<>();
-        SloInfo sloInfo = autotuneObject.getSloInfo();
+        SloInfo sloInfo = kruizeObject.getSloInfo();
         for (Metric metric : sloInfo.getFunctionVariables()) {
             podMetricsHashMap.put(metric.getName(), metric);
         }
@@ -243,7 +243,7 @@ public class TrialHelpers {
                 experimentSettings,
                 trialsMap
         );
-        experimentTrial.setTrialResultURL(trialInfo.getTrialResultURL());
+        experimentTrial.setTrialResultURL(ServerContext.UPDATE_RESULTS_END_POINT);
         return experimentTrial;
     }
 }

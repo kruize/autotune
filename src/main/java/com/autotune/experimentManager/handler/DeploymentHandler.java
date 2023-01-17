@@ -98,7 +98,7 @@ public class DeploymentHandler implements EMHandlerInterface {
                         @Override
                         public void run() {
                             AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(experimentTrial, autotuneExecutor, context);
+                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
                         }
                     }
             );

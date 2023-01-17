@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.parallelengine.worker;
+package com.autotune.common.k8sObjects;
 
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+public class ContainerObject {
+    private String image;
+    private String container_name;
 
-import javax.servlet.ServletContext;
+    public String getImage() {
+        return image;
+    }
 
-/**
- * Execute methode should be implemented by Workers like IterationManger etc.
- */
-public interface AutotuneWorker {
-    void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context);
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getContainer_name() {
+        return container_name;
+    }
+
+    public void setContainer_name(String container_name) {
+        this.container_name = container_name;
+    }
 }

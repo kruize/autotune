@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.Metric;
@@ -25,9 +25,8 @@ import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMUtil;
-import com.autotune.utils.AutotuneConstants;
 import com.autotune.utils.HttpUtils;
-import org.json.JSONObject;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +35,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import static com.autotune.experimentManager.core.ExperimentTrialHandler.getDummyMetricJson;
 
 /**
  * Post results back to Analyser or specified trialResult URL.
@@ -77,8 +73,9 @@ public class PostResultsHandler implements EMHandlerInterface {
                     }
                 }
             }
-            JSONObject retJson = EMUtil.getRealMetricsJSON(experimentTrial, false, trialDetails.getTrialNumber());
-            LOGGER.info("JSON Getting posted to analyser : \n {} ", retJson.toString(2));
+            ExperimentResultData experimentResultData = EMUtil.getRealMetricsJSON(experimentTrial, false, trialDetails.getTrialNumber());
+            String retJson = new Gson().toJson(experimentResultData);
+            LOGGER.info("JSON Getting posted to analyser : \n {} ", retJson);
             URL trial_result_url = null;
             if (null != experimentTrial.getExperimentSettings() && null != experimentTrial.getTrialResultURL()) {
                 try {
@@ -88,7 +85,7 @@ public class PostResultsHandler implements EMHandlerInterface {
                 }
                 LOGGER.debug("POST to URL. {}", trial_result_url);
                 LOGGER.debug(retJson.toString());
-                HttpUtils.postRequest(trial_result_url, retJson.toString());
+                HttpUtils.postRequest(trial_result_url, "[" + retJson.toString() + "]");
             }
             stepsMeatData.setEndTimestamp(new Timestamp(System.currentTimeMillis()));
             stepsMeatData.setStatus(EMUtil.EMExpStatus.COMPLETED);

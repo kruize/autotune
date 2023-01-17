@@ -30,26 +30,34 @@ import java.util.HashMap;
 
 public class PerformanceProfile {
 
+    private final  String name;
+
     private final double profile_version;
 
     private final String k8s_type;
 
     private final SloInfo sloInfo;
 
-    public PerformanceProfile(double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
+    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
         HashMap<String, Object> map = new HashMap<>();
+        map.put(AnalyzerConstants.PERF_PROFILE_NAME, name);
         map.put(AnalyzerConstants.PROFILE_VERSION, profile_version);
         map.put(AnalyzerConstants.K8S_TYPE, k8s_type);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
 
         StringBuilder error = ValidatePerformanceProfileObject.validate(map);
         if (error.toString().isEmpty()) {
+            this.name = name;
             this.profile_version = profile_version;
             this.k8s_type = k8s_type;
             this.sloInfo = sloInfo;
         } else {
             throw new InvalidValueException(error.toString());
         }
+    }
+
+    public String getName() {
+        return name;
     }
 
     public double getProfile_version() {
@@ -67,9 +75,10 @@ public class PerformanceProfile {
     @Override
     public String toString() {
         return "PerformanceProfile{" +
+                "name='" + name + '\'' +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +
-                ", sloInfoArrayList=" + sloInfo +
+                ", sloInfo=" + sloInfo +
                 '}';
     }
 }

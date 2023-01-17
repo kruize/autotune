@@ -17,6 +17,7 @@ package com.autotune.experimentManager.workerimpl;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
@@ -44,7 +45,7 @@ public class IterationManager implements AutotuneWorker {
     }
 
     @Override
-    public void execute(Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
         ExperimentTrial experimentTrial = (ExperimentTrial) o;
         if (experimentTrial.getStatus().equals(EMUtil.EMExpStatus.QUEUED)) {
             LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
@@ -54,7 +55,7 @@ public class IterationManager implements AutotuneWorker {
                         @Override
                         public void run() {
                             AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(experimentTrial, autotuneExecutor, context);
+                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
                         }
                     }
             );

@@ -16,7 +16,7 @@ slo:
   function_variables:
   # CPU Request
   # Show cpu requests in cores for a container in a deployment
-  - name: cpu_request_container
+  - name: cpuRequest
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -32,7 +32,7 @@ slo:
 
   # CPU Limit
   # Show cpu limits in bytes for a container in a deployment
-  - name: cpu_limit_container
+  - name: cpuLimit
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -57,7 +57,7 @@ slo:
   # openshift version.
 
   # Average CPU per container in a deployment
-  - name: cpu_usage_container
+  - name: cpuUsage
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -97,7 +97,7 @@ slo:
 
 
   # CPU Throttling
-  - name: cpu_throttle_container
+  - name: cpuThrottle
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -112,7 +112,7 @@ slo:
 
   # Memory Request
   # Show memory requests in bytes for a container in a deployment
-  - name: mem_request_container
+  - name: memoryRequest
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -128,7 +128,7 @@ slo:
 
   # Memory Limit
   # Show memory limits in bytes for a container in a deployment
-  - name: mem_limit_container
+  - name: memoryLimit
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -144,7 +144,7 @@ slo:
 
   # Memory Usage
   # Average memory per container in a deployment
-  - name: mem_usage_container
+  - name: memoryUsage
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -163,7 +163,7 @@ slo:
 
 
   # 2.4 Memory RSS
-  - name: mem-rss_usage_container
+  - name: memoryRSS
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"

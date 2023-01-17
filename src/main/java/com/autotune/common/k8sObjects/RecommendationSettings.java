@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.parallelengine.worker;
+package com.autotune.common.k8sObjects;
 
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+public class RecommendationSettings {
+    private double threshold;
 
-import javax.servlet.ServletContext;
+    public double getThreshold() {
+        return threshold;
+    }
 
-/**
- * Execute methode should be implemented by Workers like IterationManger etc.
- */
-public interface AutotuneWorker {
-    void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context);
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
+    }
+
+    @Override
+    public String toString() {
+        return "RecommendationSettings{" +
+                "threshold=" + threshold +
+                '}';
+    }
 }

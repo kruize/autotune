@@ -17,13 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Maintains information about the Performance Profile objects deployed in the cluster
  */
 public class PerformanceProfilesDeployment {
-    public static Map<Double, PerformanceProfile> performanceProfileMap = new HashMap<>();
+    public static Map<String, PerformanceProfile> performanceProfileMap = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfile.class);
 
     /**
@@ -48,8 +49,8 @@ public class PerformanceProfilesDeployment {
                         performanceProfileObject = getPerformanceProfile(resource);
                         if (performanceProfileObject != null) {
                             // Check if any of the values have changed from the existing object in the map
-                            if (!performanceProfileMap.get(performanceProfileObject.getProfile_version())
-                                    .equals(performanceProfileObject.getProfile_version())) {
+                            if (!performanceProfileMap.get(performanceProfileObject.getName())
+                                    .equals(performanceProfileObject)) {
                                 deleteExistingPerformanceProfileObject(resource);
                                 addPerformanceProfileObject(performanceProfileObject);
                             }
@@ -73,6 +74,10 @@ public class PerformanceProfilesDeployment {
     private static PerformanceProfile getPerformanceProfile(String performanceProfileObjectJsonStr) {
         try {
             JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObjectJsonStr);
+            JSONObject metadataJson = performanceProfileObjectJson
+                    .getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+
+            String name;
             String k8s_type;
             double profile_version;
             SloInfo sloInfo;
@@ -82,6 +87,7 @@ public class PerformanceProfilesDeployment {
             String direction = null;
             String objectiveFunction = null;
 
+            name = metadataJson.optString(AnalyzerConstants.PERF_PROFILE_NAME);
             profile_version = Double.parseDouble(performanceProfileObjectJson.optString(AnalyzerConstants.PROFILE_VERSION,
                     String.valueOf(AnalyzerConstants.DEFAULT_PROFILE_VERSION)));
             k8s_type = performanceProfileObjectJson.optString(AnalyzerConstants.K8S_TYPE,AnalyzerConstants.DEFAULT_K8S_TYPE);
@@ -111,7 +117,8 @@ public class PerformanceProfilesDeployment {
 
                 aggregationFunctionsArr = ((JSONObject) functionVariableObj).getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
 
-                HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+                HashMap<String, List<AggregationFunctions>>  aggregationFunctionsMap = new HashMap<>();
+                List<AggregationFunctions> aggregationFunctionsList = new ArrayList<>();
                 for (Object aggregationFunctionsObj : aggregationFunctionsArr) {
                     JSONObject aggregationFunctionsJson = (JSONObject) aggregationFunctionsObj;
                     String function = aggregationFunctionsJson.optString(AnalyzerConstants.FUNCTION);
@@ -121,14 +128,15 @@ public class PerformanceProfilesDeployment {
 
                     AggregationFunctions aggregationFunctions = new AggregationFunctions(function,
                             aggregationFunctionSQuery, versions);
-                    aggregationFunctionsMap.put(variableName, aggregationFunctions);
+                    aggregationFunctionsList.add(aggregationFunctions);
                 }
+                aggregationFunctionsMap.put(variableName, aggregationFunctionsList);
 
                 Metric metric = new Metric(variableName,
                         query,
                         datasource,
                         valueType);
-                metric.setAggregationFunctions(aggregationFunctionsMap);
+                metric.setAggregationFunctionsMap(aggregationFunctionsMap);
                 metric.setKubernetesObject(kubernetes_object);
 
                 metricArrayList.add(metric);
@@ -139,10 +147,7 @@ public class PerformanceProfilesDeployment {
                     direction,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL,
                     metricArrayList);
-            return new PerformanceProfile(profile_version,
-                    k8s_type,
-                    sloInfo
-            );
+            return new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {
             e.printStackTrace();
@@ -152,7 +157,7 @@ public class PerformanceProfilesDeployment {
 
     /**
      * Delete the performance Profile object corresponding to the passed parameter
-     * @param performanceProfileObject - object which needs to be deleted
+     * @param performanceProfileObject - removes the Performance Profile object from the map
      */
     private static void deleteExistingPerformanceProfileObject(String performanceProfileObject) {
         JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObject);
@@ -164,8 +169,8 @@ public class PerformanceProfilesDeployment {
     }
 
     private static void addPerformanceProfileObject(PerformanceProfile performanceProfile) {
-        performanceProfileMap.put(performanceProfile.getProfile_version(), performanceProfile);
-        LOGGER.info("Performance Profile Version: ", performanceProfile.getProfile_version());
+        performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
+        LOGGER.info("PerformanceProfile: ",performanceProfile);
     }
 
 }
