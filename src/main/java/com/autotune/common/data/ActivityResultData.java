@@ -13,15 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.common.data;
 
-package com.autotune.analyzer.utils;
+/**
+ * General data carrier between functions.
+ */
+public class ActivityResultData {
+    private boolean success = false;
+    private String errorMessage = null;
 
-public class AnalyzerConstants {
+    public boolean isSuccess() {
+        return success;
+    }
 
-    public static class AnalyserKeys {
-        public static final String ANALYSER_STORAGE_CONTEXT_KEY = "MainExperimentsMAP";
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
 
-        private AnalyserKeys() {
-        }
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    @Override
+    public String toString() {
+        return "GeneralDataHolder{" +
+                "success=" + success +
+                ", errorMessage='" + errorMessage + '\'' +
+                '}';
     }
 }

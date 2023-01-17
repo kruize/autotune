@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.deployment.AutotuneDeployment;
+import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.deployment.InitializeDeployment;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
@@ -35,11 +35,11 @@ public class Analyzer {
             System.exit(1);
         }
         Experimentator.start();
-        AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
+        KruizeDeployment kruizeDeployment = new KruizeDeployment();
 
         try {
             addServlets(contextHandler);
-            AutotuneDeployment.getAutotuneObjects(autotuneDeployment);
+            KruizeDeployment.getAutotuneObjects(kruizeDeployment);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -55,6 +55,6 @@ public class Analyzer {
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(updateResults.class, ServerContext.UPDATE_RESULTS);
-        context.addServlet(Recommendation.class,ServerContext.RECOMMEND_RESULTS);
+        context.addServlet(Recommendation.class, ServerContext.RECOMMEND_RESULTS);
     }
 }
