@@ -36,6 +36,8 @@ public class ServerContext {
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
     public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
+    public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
+
 
     public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
     public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
