@@ -15,7 +15,9 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.utils.AnalyzerConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,9 +28,13 @@ import java.util.Objects;
 public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
-    private String trial_timestamp;
+    @SerializedName("start_timestamp")
+    private String starttimestamp;
+    @SerializedName("end_timestamp")
+    private String endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
+    private ValidationResultData validationResultData;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -46,13 +52,6 @@ public class ExperimentResultData {
         this.trialNumber = trialNumber;
     }
 
-    public String getTrial_timestamp() {
-        return trial_timestamp;
-    }
-
-    public void setTrial_timestamp(String trial_timestamp) {
-        this.trial_timestamp = trial_timestamp;
-    }
 
     public List<DeploymentResultData> getDeployments() {
         return deployments;
@@ -70,14 +69,40 @@ public class ExperimentResultData {
         this.status = status;
     }
 
+    public ValidationResultData getValidationResultData() {
+        return validationResultData;
+    }
+
+    public void setValidationResultData(ValidationResultData validationResultData) {
+        this.validationResultData = validationResultData;
+    }
+
+    public String getStarttimestamp() {
+        return starttimestamp;
+    }
+
+    public void setStarttimestamp(String starttimestamp) {
+        this.starttimestamp = starttimestamp;
+    }
+
+    public String getEndtimestamp() {
+        return endtimestamp;
+    }
+
+    public void setEndtimestamp(String endtimestamp) {
+        this.endtimestamp = endtimestamp;
+    }
+
     @Override
     public String toString() {
         return "ExperimentResultData{" +
                 "experiment_name='" + experiment_name + '\'' +
                 ", trialNumber='" + trialNumber + '\'' +
-                ", trial_timestamp='" + trial_timestamp + '\'' +
+                ", startTimestamp='" + starttimestamp + '\'' +
+                ", endTimestamp='" + endtimestamp + '\'' +
                 ", deployments=" + deployments +
                 ", status=" + status +
+                ", validationResultData=" + validationResultData +
                 '}';
     }
 
@@ -86,11 +111,11 @@ public class ExperimentResultData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ExperimentResultData that = (ExperimentResultData) o;
-        return experiment_name.equals(that.experiment_name) && trial_timestamp.equals(that.trial_timestamp);
+        return experiment_name.equals(that.experiment_name) && endtimestamp.equals(that.endtimestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(experiment_name, trial_timestamp);
+        return Objects.hash(experiment_name, endtimestamp);
     }
 }

@@ -15,8 +15,11 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.ResourceOptimizationOpenShift;
+import com.autotune.common.performanceProfiles.perfProfileInterface.PerfProfileInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +44,7 @@ public class ExperimentResultValidation {
             boolean proceed = false;
             String errorMsg = "";
             for (ExperimentResultData resultData : experimentResultDataList) {
-                if (null != resultData.getExperiment_name() || null != resultData.getTrial_timestamp()) {
+                if (null != resultData.getExperiment_name() && null != resultData.getEndtimestamp() && null != resultData.getStarttimestamp()) {
                     if (mainKruizeExperimentMAP.keySet().contains(resultData.getExperiment_name())) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         boolean isExist = false;
@@ -49,18 +52,30 @@ public class ExperimentResultValidation {
                             isExist = kruizeObject.getResultData().contains(resultData);
                         if (isExist) {
                             proceed = false;
-                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getTrial_timestamp()));
+                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
+                            resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
                         }
-                        proceed = true;
+                        // Validate Performance Profile data
+                        PerfProfileInterface perfProfileInterface = new ResourceOptimizationOpenShift();
+                        errorMsg = perfProfileInterface.validate(kruizeObject,resultData);
+                        if (errorMsg.isEmpty() || errorMsg.isBlank()) {
+                            proceed = true;
+                        } else {
+                            proceed = false;
+                            break;
+                        }
                     } else {
                         proceed = false;
                         errorMsg = errorMsg.concat(String.format("Experiment name : %s not found", resultData.getExperiment_name()));
+                        resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                         break;
                     }
+                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments ."));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;
+                    resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                     break;
                 }
             }

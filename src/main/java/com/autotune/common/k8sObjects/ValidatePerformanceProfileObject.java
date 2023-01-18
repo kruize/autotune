@@ -84,14 +84,12 @@ public class ValidatePerformanceProfileObject
 				errorString.append("kubernetes_object ").append(kubernetes_object).append(" is not supported");
 			// Check if one of query or aggregation_functions is present
 			String query = (String) map.get(AnalyzerConstants.AutotuneObjectConstants.QUERY);
-			HashMap<String, List<AggregationFunctions>> aggregationFunctionsMap = functionVariable.getAggregationFunctionsMap();
+			List<AggregationFunctions>  aggregationFunctionsList = functionVariable.getAggregationFunctions();
 
-			if (query == null && aggregationFunctionsMap.isEmpty()) {
+			if (query == null && aggregationFunctionsList.isEmpty()) {
 				errorString.append("One of query or aggregation_functions is mandatory. Both cannot be null!");
 			}
-
 		}
-
 		return errorString;
 	}
 }

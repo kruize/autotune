@@ -17,7 +17,9 @@ package com.autotune.common.data.result;
 
 public class GeneralInfoResult {
     private double sum;
-    private double mean;
+    private double avg;
+    private double min;
+    private double max;
     private String units;
 
     public double getSum() {
@@ -28,12 +30,12 @@ public class GeneralInfoResult {
         this.sum = sum;
     }
 
-    public double getMean() {
-        return mean;
+    public double getAvg() {
+        return avg;
     }
 
-    public void setMean(double mean) {
-        this.mean = mean;
+    public void setAvg(double avg) {
+        this.avg = avg;
     }
 
     public String getUnits() {
@@ -44,11 +46,29 @@ public class GeneralInfoResult {
         this.units = units;
     }
 
+    public double getMin() {
+        return min;
+    }
+
+    public void setMin(double min) {
+        this.min = min;
+    }
+
+    public double getMax() {
+        return max;
+    }
+
+    public void setMax(double max) {
+        this.max = max;
+    }
+
     @Override
     public String toString() {
         return "GeneralInfoResult{" +
                 "sum=" + sum +
-                ", mean=" + mean +
+                ", avg=" + avg +
+                ", min=" + min +
+                ", max=" + max +
                 ", units='" + units + '\'' +
                 '}';
     }

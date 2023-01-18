@@ -24,7 +24,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.analyzer.variables.Variables;
-import com.autotune.common.data.ActivityResultData;
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
 import com.autotune.common.k8sObjects.*;
@@ -161,9 +161,9 @@ public class KruizeDeployment {
                 List<KruizeObject> kruizeObjectList = new ArrayList<>();
                 kruizeObjectList.add(kruizeObject);
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
-                ActivityResultData activityResultData = experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
-                if (!activityResultData.isSuccess()) {
-                    new KubeEventLogger(Clock.systemUTC()).log("Failed", activityResultData.getErrorMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+                ValidationResultData validationResultData = experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
+                if (!validationResultData.isSuccess()) {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationResultData.getMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
                 }
             } else {
                 new KubeEventLogger(Clock.systemUTC()).log("Failed", "Not able to process KruizeObject ", EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
@@ -325,6 +325,7 @@ public class KruizeDeployment {
             String mode;
             String targetCluster;
             SloInfo sloInfo;
+            ObjectiveFunction objectiveFunction;
             String namespace;
             SelectorInfo selectorInfo;
 
@@ -333,7 +334,9 @@ public class KruizeDeployment {
             JSONObject sloJson = null;
             String slo_class = null;
             String direction = null;
-            String objectiveFunction = null;
+            JSONObject objectiveFunctionJson = null;
+            String objFuncType = null;
+            String expression = null;
             String hpoAlgoImpl = null;
             if (specJson != null) {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -341,7 +344,10 @@ public class KruizeDeployment {
                 direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
                 hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
                         AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
-                objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objFuncType = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE);
+                if (objFuncType.equals("expression"))
+                    expression = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION);
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -364,7 +370,7 @@ public class KruizeDeployment {
 
                 metricArrayList.add(metric);
             }
-
+            objectiveFunction = new ObjectiveFunction(objFuncType, expression);
             sloInfo = new SloInfo(slo_class,
                     objectiveFunction,
                     direction,

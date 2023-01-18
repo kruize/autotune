@@ -147,7 +147,7 @@ public class EMUtil {
             Metric podMetric = podMetricEntry.getValue();
             if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
                 GeneralInfoResult generalInfoResult = new GeneralInfoResult();
-                generalInfoResult.setMean(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                generalInfoResult.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
                 HashMap<String, GeneralInfoResult> generalInfoResultHashMap = new HashMap<>();
                 generalInfoResultHashMap.put("general_info", generalInfoResult);
                 PodResultData podResultData = new PodResultData();
@@ -168,7 +168,7 @@ public class EMUtil {
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
                     HashMap<String, HashMap<String, GeneralInfoResult>> resultMap = new HashMap<>();
                     GeneralInfoResult generalInfoResult = new GeneralInfoResult();
-                    generalInfoResult.setMean(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    generalInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
                     generalInfoResult.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
                     HashMap<String, GeneralInfoResult> generalInfoResultHashMap = new HashMap<>();
                     generalInfoResultHashMap.put("general_info", generalInfoResult);
@@ -183,7 +183,8 @@ public class EMUtil {
         deploymentResultData.setContainers(containerResultDataList);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
-        experimentResultData.setTrial_timestamp(new Timestamp(System.currentTimeMillis()).toString());
+        experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()).toString());
+        experimentResultData.setStarttimestamp(new Timestamp(System.currentTimeMillis()).toString());
         experimentResultData.setTrialNumber(triaLNumber);
         List<DeploymentResultData> deploymentResultDataList = new ArrayList<>();
         deploymentResultDataList.add(deploymentResultData);

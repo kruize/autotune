@@ -19,6 +19,7 @@ import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.k8sObjects.ValidatePerformanceProfileObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
@@ -34,15 +35,17 @@ public class PerformanceProfile {
 
     private final double profile_version;
 
+    @SerializedName("k8s_type")
     private final String k8s_type;
 
+    @SerializedName("slo")
     private final SloInfo sloInfo;
 
     public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
         HashMap<String, Object> map = new HashMap<>();
-        map.put(AnalyzerConstants.PERF_PROFILE_NAME, name);
+        map.put(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME, name);
         map.put(AnalyzerConstants.PROFILE_VERSION, profile_version);
-        map.put(AnalyzerConstants.K8S_TYPE, k8s_type);
+        map.put(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE, k8s_type);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
 
         StringBuilder error = ValidatePerformanceProfileObject.validate(map);
@@ -64,7 +67,7 @@ public class PerformanceProfile {
         return profile_version;
     }
 
-    public String getK8s_type() {
+    public String getK8S_TYPE() {
         return k8s_type;
     }
 

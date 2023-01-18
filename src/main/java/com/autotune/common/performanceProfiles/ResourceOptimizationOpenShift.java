@@ -6,74 +6,125 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.GeneralInfoResult;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.performanceProfiles.perfProfileInterface.PerfProfileInterface;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 public class ResourceOptimizationOpenShift implements PerfProfileInterface {
 
-    private PerformanceProfile performanceProfile;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceOptimizationOpenShift.class);
 
     @Override
-    public boolean validate(KruizeObject kruizeObject) {
+    public String validate(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
 
-        //TODO: Need to update the below code
-        boolean proceed = false;
         String errorMsg = "";
         // Get the metrics data from the Performance Profile
-        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfileMap
+        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
                 .get(kruizeObject.getPerformanceProfile());
-        String query;
         List<String> aggrFunctionsObjects = new ArrayList<>();
         List<String> perfProfileFunctionVariablesList = new ArrayList<>();
         for (Metric metric:performanceProfile.getSloInfo().getFunctionVariables()) {
-            query = metric.getQuery();
-            metric.getAggregationFunctionsMap().forEach((funcVariable, aggregationFunctionsList) -> {
-                perfProfileFunctionVariablesList.add(funcVariable);
-                aggregationFunctionsList.forEach(aggregationFunctions -> {
-                    aggrFunctionsObjects.add(aggregationFunctions.getFunction());
-                });
-            });
+            perfProfileFunctionVariablesList.add(metric.getName());
+            metric.getAggregationFunctions().forEach(aggregationFunctions ->
+                    aggrFunctionsObjects.add(aggregationFunctions.getFunction()));
         }
-        System.out.println("\nList of functionVariables: "+perfProfileFunctionVariablesList);
-        System.out.println("\nList of agg func objects: "+aggrFunctionsObjects);
+        LOGGER.debug(String.format("List of functionVariables: %s", perfProfileFunctionVariablesList));
+        LOGGER.debug(String.format("List of agg func objects: %s", aggrFunctionsObjects));
 
         // Get the metrics data from the Kruize Object
-        for ( ExperimentResultData experimentResultData : kruizeObject.getResultData()) {
-            for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-                for (ContainerResultData containerResultData : deploymentResultData.getContainers()) {
-                    HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> containerMetricsMap =
-                            containerResultData.getContainer_metrics();
-                    List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList();
-                    if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
-                        perfProfileFunctionVariablesList.containsAll(kruizeFunctionVariablesList) &&
-                        kruizeFunctionVariablesList.containsAll(perfProfileFunctionVariablesList))) {
-
-                        errorMsg = errorMsg.concat(String.format("Performance Profile parameters missing for experiment : %s", kruizeObject.getExperimentName()));
-                        break;
+        for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
+            for (ContainerResultData containerResultData : deploymentResultData.getContainers()) {
+                HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> containerMetricsMap =
+                        containerResultData.getContainer_metrics();
+                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList();
+                if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
+                    new HashSet<>(perfProfileFunctionVariablesList).containsAll(kruizeFunctionVariablesList) &&
+                    new HashSet<>(kruizeFunctionVariablesList).containsAll(perfProfileFunctionVariablesList))) {
+                    errorMsg = errorMsg.concat(String.format("Performance Profile parameters missing for experiment : %s", experimentResultData.getExperiment_name()));
+                    break;
+                } else  {
+                    for(HashMap<String, HashMap<String, GeneralInfoResult>> funcVar:containerMetricsMap.values()){
+                        for(HashMap<String, GeneralInfoResult> genInfo:funcVar.values()){
+                          Map<String, Object> genInfoClassAsMap;
+                          for(GeneralInfoResult genInfoObj:genInfo.values()){
+                              try {
+                                genInfoClassAsMap = ResourceOptimizationOpenShift.convertObjectToMap(genInfoObj);
+                                errorMsg = validateAggFunction(genInfoClassAsMap.keySet(), aggrFunctionsObjects);
+                                if (!errorMsg.isBlank()) {
+                                    errorMsg = errorMsg.concat(String.format("for the experiment : %s"
+                                            ,experimentResultData.getExperiment_name()));
+                                    return errorMsg;
+                                }
+                              } catch (IllegalAccessException | InvocationTargetException e) {
+                                  throw new RuntimeException(e);
+                              }
+                          }
+                      }
                     }
-
-
                 }
             }
         }
 
-        return false;
+        return errorMsg;
     }
 
+    /**
+     * Validates the aggregation function objects against the generalInfo metrics
+     * @param keySet
+     * @param aggrFunctionsObjects
+     * @return
+     */
+    private String validateAggFunction(Set<String> keySet, List<String> aggrFunctionsObjects) {
+
+        List<String> genInfoObjects = keySet.stream().toList();
+        List<String> missingAggFunction = new ArrayList<>();
+        String errorMsg = "";
+        // check if none of the aggrfunctions are present in the genInfo List
+        if (genInfoObjects.stream().noneMatch(aggrFunctionsObjects::contains)) {
+            LOGGER.error("At least one aggregation function value needs to be present!");
+            errorMsg = errorMsg.concat("At least one aggregation function value needs to be present ");
+        } else {
+            // check if some or all the values are present or not and respond accordingly
+            for (String aggFuncObj : aggrFunctionsObjects) {
+                if (!genInfoObjects.contains(aggFuncObj)) {
+                    missingAggFunction.add(aggFuncObj);
+                }
+            }
+            if (!missingAggFunction.isEmpty()) {
+                LOGGER.warn("Missing Aggregation Functions: {}", missingAggFunction);
+            }
+        }
+        return errorMsg;
+    }
     @Override
     public void recommend() {
 
-    //TODO: Will be updated once Kusuma's algo is completed
+    //TODO: Will be updated once algo is completed
 
     }
 
-    public PerformanceProfile getPerformanceProfile() {
-        return performanceProfile;
-    }
-
-    public void setPerformanceProfile(PerformanceProfile performanceProfile) {
-        this.performanceProfile = performanceProfile;
+    /**
+     *  Converts the generalInfo class into Map to extract values for validation
+     * @param obj
+     * @return
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     */
+    public static Map<String, Object> convertObjectToMap(Object obj) throws IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException {
+        Method[] methods = obj.getClass().getMethods();
+        Map<String, Object> map = new HashMap<>();
+        for (Method m : methods) {
+            if (m.getName().startsWith("get") && !m.getName().startsWith("getClass")) {
+                Object value = m.invoke(obj);
+                if ( value instanceof Double && Double.valueOf(value.toString()) != 0.0 )
+                    map.put(m.getName().substring(3).toLowerCase(), value);
+            }
+        }
+        return map;
     }
 }

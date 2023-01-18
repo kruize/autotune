@@ -1,12 +1,14 @@
 package com.autotune.common.performanceProfiles;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.common.k8sObjects.KubernetesContexts;
-import com.autotune.common.k8sObjects.Metric;
-import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.analyzer.utils.PerformanceProfileValidation;
+import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.k8sObjects.*;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.EventLogger;
+import com.autotune.utils.KubeEventLogger;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import org.json.JSONArray;
@@ -15,6 +17,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +27,7 @@ import java.util.Map;
  * Maintains information about the Performance Profile objects deployed in the cluster
  */
 public class PerformanceProfilesDeployment {
-    public static Map<String, PerformanceProfile> performanceProfileMap = new HashMap<>();
+    public static Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfile.class);
 
     /**
@@ -36,28 +39,29 @@ public class PerformanceProfilesDeployment {
         Watcher<String> performanceProfileObjectWatcher = new Watcher<>() {
             @Override
             public void eventReceived(Action action, String resource) {
-                PerformanceProfile performanceProfileObject;
+                PerformanceProfile performanceProfile;
 
                 switch (action.toString().toUpperCase()) {
                     case "ADDED":
-                        performanceProfileObject = getPerformanceProfile(resource);
-                        if (performanceProfileObject != null) {
-                            addPerformanceProfileObject(performanceProfileObject);
-                        }
+                        performanceProfile = getPerformanceProfile(resource);
+                        if ( validatePerformanceProfile(performanceProfile))
+                            PerformanceProfileValidation.addPerformanceProfile(performanceProfilesMap, performanceProfile);
                         break;
                     case "MODIFIED":
-                        performanceProfileObject = getPerformanceProfile(resource);
-                        if (performanceProfileObject != null) {
+                        performanceProfile = getPerformanceProfile(resource);
+                        if (performanceProfile != null) {
                             // Check if any of the values have changed from the existing object in the map
-                            if (!performanceProfileMap.get(performanceProfileObject.getName())
-                                    .equals(performanceProfileObject)) {
-                                deleteExistingPerformanceProfileObject(resource);
-                                addPerformanceProfileObject(performanceProfileObject);
+                            if (!performanceProfilesMap.get(performanceProfile.getName())
+                                    .equals(performanceProfile)) {
+                                if (validatePerformanceProfile(performanceProfile)) {
+                                    deleteExistingPerformanceProfile(resource);
+                                    PerformanceProfileValidation.addPerformanceProfile(performanceProfilesMap, performanceProfile);
+                                }
                             }
                         }
                         break;
                     case "DELETED":
-                        deleteExistingPerformanceProfileObject(resource);
+                        deleteExistingPerformanceProfile(resource);
                     default:
                         break;
                 }
@@ -71,7 +75,24 @@ public class PerformanceProfilesDeployment {
         kubernetesServices.addWatcher(KubernetesContexts.getPerformanceProfileCrdContext(), performanceProfileObjectWatcher);
     }
 
-    private static PerformanceProfile getPerformanceProfile(String performanceProfileObjectJsonStr) {
+    private static boolean validatePerformanceProfile(PerformanceProfile performanceProfile) {
+        boolean validationStatus = false;
+        try {
+            if (null != performanceProfile) {
+                ValidationResultData validationResultData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfilesMap, performanceProfile);
+                if (validationResultData.isSuccess())
+                    validationStatus = true;
+                else
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationResultData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+            } else
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", "Validation of performance profile failed! ", EventLogger.Type.Warning, null, null, null, null);
+        } catch (Exception e) {
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+        }
+        return validationStatus;
+    }
+
+    public static PerformanceProfile getPerformanceProfile(String performanceProfileObjectJsonStr) {
         try {
             JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObjectJsonStr);
             JSONObject metadataJson = performanceProfileObjectJson
@@ -81,13 +102,16 @@ public class PerformanceProfilesDeployment {
             String k8s_type;
             double profile_version;
             SloInfo sloInfo;
+            ObjectiveFunction objectiveFunction;
 
             JSONObject sloJson;
             String slo_class = null;
             String direction = null;
-            String objectiveFunction = null;
+            JSONObject objectiveFunctionJson;
+            String objFuncType = null;
+            String expression = null;
 
-            name = metadataJson.optString(AnalyzerConstants.PERF_PROFILE_NAME);
+            name = metadataJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME);
             profile_version = Double.parseDouble(performanceProfileObjectJson.optString(AnalyzerConstants.PROFILE_VERSION,
                     String.valueOf(AnalyzerConstants.DEFAULT_PROFILE_VERSION)));
             k8s_type = performanceProfileObjectJson.optString(AnalyzerConstants.K8S_TYPE,AnalyzerConstants.DEFAULT_K8S_TYPE);
@@ -96,7 +120,10 @@ public class PerformanceProfilesDeployment {
             if (sloJson != null) {
                 slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
                 direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
-                objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objFuncType = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE);
+                if (objFuncType.equals("expression"))
+                    expression = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION);
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -117,8 +144,7 @@ public class PerformanceProfilesDeployment {
 
                 aggregationFunctionsArr = ((JSONObject) functionVariableObj).getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
 
-                HashMap<String, List<AggregationFunctions>>  aggregationFunctionsMap = new HashMap<>();
-                List<AggregationFunctions> aggregationFunctionsList = new ArrayList<>();
+                List<AggregationFunctions>  aggregationFunctionsList = new ArrayList<>();
                 for (Object aggregationFunctionsObj : aggregationFunctionsArr) {
                     JSONObject aggregationFunctionsJson = (JSONObject) aggregationFunctionsObj;
                     String function = aggregationFunctionsJson.optString(AnalyzerConstants.FUNCTION);
@@ -130,18 +156,17 @@ public class PerformanceProfilesDeployment {
                             aggregationFunctionSQuery, versions);
                     aggregationFunctionsList.add(aggregationFunctions);
                 }
-                aggregationFunctionsMap.put(variableName, aggregationFunctionsList);
 
                 Metric metric = new Metric(variableName,
                         query,
                         datasource,
                         valueType);
-                metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                metric.setAggregationFunctions(aggregationFunctionsList);
                 metric.setKubernetesObject(kubernetes_object);
 
                 metricArrayList.add(metric);
             }
-
+            objectiveFunction = new ObjectiveFunction(objFuncType, expression);
             sloInfo = new SloInfo(slo_class,
                     objectiveFunction,
                     direction,
@@ -150,27 +175,22 @@ public class PerformanceProfilesDeployment {
             return new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {
-            e.printStackTrace();
+            LOGGER.error("Exception occurred while parsing the data: ",e.getMessage());
             return null;
         }
     }
 
     /**
      * Delete the performance Profile object corresponding to the passed parameter
+     *
      * @param performanceProfileObject - removes the Performance Profile object from the map
      */
-    private static void deleteExistingPerformanceProfileObject(String performanceProfileObject) {
+    private static void deleteExistingPerformanceProfile(String performanceProfileObject) {
         JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObject);
         String name = performanceProfileObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA)
                 .optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 
-        performanceProfileMap.remove(name);
+        performanceProfilesMap.remove(name);
         LOGGER.info("Deleted performance profile object {}", name);
     }
-
-    private static void addPerformanceProfileObject(PerformanceProfile performanceProfile) {
-        performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
-        LOGGER.info("PerformanceProfile: ",performanceProfile);
-    }
-
 }

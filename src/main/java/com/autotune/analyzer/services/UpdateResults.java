@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.ExperimentInitiator;
-import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
@@ -63,16 +62,19 @@ public class UpdateResults extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = Arrays.asList(new Gson().fromJson(inputData, ExperimentResultData[].class));
-            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList);
-            if (experimentInitiator.isSuccess()) {
-                sendSuccessResponse(response, "Results added successfully");
+            new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList);
+            ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
+            if (null == invalidKExperimentResultData) {
+                sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
             } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, experimentInitiator.getErrorMessage());
+                LOGGER.error("Unable to save results due to :" + invalidKExperimentResultData.getValidationResultData().getMessage());
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
             }
         } catch (Exception e) {
             LOGGER.error("Exception due to :" + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

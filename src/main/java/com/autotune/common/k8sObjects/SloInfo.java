@@ -43,21 +43,21 @@ import java.util.ArrayList;
 public final class SloInfo {
     private final String sloClass;
     @SerializedName("objective_function")
-    private final String objectiveFunction;
+    private final ObjectiveFunction objectiveFunction;
     private final String direction;
     private final String hpoAlgoImpl;
     @SerializedName("function_variables")
     private final ArrayList<Metric> metrics;
 
     public SloInfo(String sloClass,
-                   String objectiveFunction,
+                   ObjectiveFunction objectiveFunction,
                    String direction,
                    String hpoAlgoImpl,
                    ArrayList<Metric> metrics) throws InvalidValueException {
         if (AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloClass))
             this.sloClass = sloClass;
         else
-            throw new InvalidValueException("sla_class: " + sloClass + " not supported");
+            throw new InvalidValueException("slo_class: " + sloClass + " not supported");
         this.objectiveFunction = objectiveFunction;
 
         if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
@@ -91,7 +91,7 @@ public final class SloInfo {
         return direction;
     }
 
-    public String getObjectiveFunction() {
+    public ObjectiveFunction getObjectiveFunction() {
         return objectiveFunction;
     }
 

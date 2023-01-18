@@ -91,8 +91,8 @@ public class ValidateAutotuneObject
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.HPO_ALGO_NOT_SUPPORTED);
 		}
 
-		// Check if objective_function exists
-		if (sloInfo.getObjectiveFunction() == null || sloInfo.getObjectiveFunction().isEmpty()) {
+		// Check if objective_function and it's type exists
+		if (sloInfo.getObjectiveFunction() == null || sloInfo.getObjectiveFunction().getType().isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
 		}
 
@@ -100,7 +100,8 @@ public class ValidateAutotuneObject
 		if (sloInfo.getFunctionVariables().isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
-
+		// Get the objective_function type
+		String objFunctionType = sloInfo.getObjectiveFunction().getType();
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
@@ -111,14 +112,17 @@ public class ValidateAutotuneObject
 				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
 
 			// Check if function_variable is part of objective_function
-			String objectiveFunction = sloInfo.getObjectiveFunction();
-			if (objectiveFunction != null && !objectiveFunction.contains(functionVariable.getName()))
-				errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
+			if (objFunctionType.equals("expression")) {
+				if ( sloInfo.getObjectiveFunction().getExpression() != null && !sloInfo.getObjectiveFunction().getExpression().contains(functionVariable.getName()))
+					errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
+			}
 		}
 
 		// Check if objective_function is correctly formatted
-		if (!new EvalExParser().validate(sloInfo.getObjectiveFunction(), sloInfo.getFunctionVariables())) {
-			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+		if (objFunctionType.equals("expression")) {
+			if (!new EvalExParser().validate(sloInfo.getObjectiveFunction().getExpression(), sloInfo.getFunctionVariables())) {
+				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+			}
 		}
 
 		return errorString;

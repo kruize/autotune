@@ -16,6 +16,7 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.common.performanceProfiles.AggregationFunctions;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,12 +35,15 @@ public final class Metric {
     private final String name;
     private final String query;
     private final String datasource;
+    @SerializedName("value_type")
     private final String valueType;
+    @SerializedName("kubernetes_object")
     private String kubernetesObject;
     private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<>();
     private EMMetricResult emMetricResult;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<>();
-    private HashMap<String, List<AggregationFunctions>> aggregationFunctionsMap;
+    @SerializedName("aggregation_functions")
+    private List<AggregationFunctions> aggregationFunctions;
 
     public Metric(String name,
                   String query,
@@ -90,12 +94,12 @@ public final class Metric {
         this.kubernetesObject = kubernetesObject;
     }
 
-    public HashMap<String, List<AggregationFunctions>>  getAggregationFunctionsMap() {
-        return aggregationFunctionsMap;
+    public List<AggregationFunctions> getAggregationFunctions() {
+        return aggregationFunctions;
     }
 
-    public void setAggregationFunctionsMap(HashMap<String, List<AggregationFunctions>>  aggregationFunctionsMap) {
-        this.aggregationFunctionsMap = aggregationFunctionsMap;
+    public void setAggregationFunctions(List<AggregationFunctions> aggregationFunctions) {
+        this.aggregationFunctions = aggregationFunctions;
     }
 
     @Override
@@ -107,7 +111,7 @@ public final class Metric {
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", emMetricResult=" + emMetricResult +
-                ", aggregationFunctions=" + aggregationFunctionsMap +
+                ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }
 }
