@@ -91,68 +91,73 @@ public class KruizeDeployment {
      */
     public static void getAutotuneObjects(final KruizeDeployment kruizeDeployment) throws IOException {
         /* Watch for events (additions, modifications or deletions) of autotune objects */
-        Watcher<String> autotuneObjectWatcher = new Watcher<>() {
-            @Override
-            public void eventReceived(Action action, String resource) {
-                KruizeObject kruizeObject = null;
+        try {
+            Watcher<String> autotuneObjectWatcher = new Watcher<>() {
+                @Override
+                public void eventReceived(Action action, String resource) {
+                    KruizeObject kruizeObject = null;
 
-                switch (action.toString().toUpperCase()) {
-                    case "MODIFIED":
-                    case "ADDED":        //TO DO consider MODIFIED after discussing PATCH request on already created experiments.
-                        kruizeObject = getAutotuneObject(resource);
-                        processKruizeObject(kruizeObject);
-                        break;
-                    case "DELETED":
-                        deleteExistingAutotuneObject(resource);
-                    default:
-                        break;
+                    switch (action.toString().toUpperCase()) {
+                        case "MODIFIED":
+                        case "ADDED":        //TO DO consider MODIFIED after discussing PATCH request on already created experiments.
+                            kruizeObject = getAutotuneObject(resource);
+                            processKruizeObject(kruizeObject);
+                            break;
+                        case "DELETED":
+                            deleteExistingAutotuneObject(resource);
+                        default:
+                            break;
+                    }
                 }
-            }
 
 
-            @Override
-            public void onClose(KubernetesClientException e) {
-            }
-        };
+                @Override
+                public void onClose(KubernetesClientException e) {
+                }
+            };
 
-        Watcher<String> autotuneConfigWatcher = new Watcher<>() {
-            @Override
-            public void eventReceived(Action action, String resource) {
-                AutotuneConfig autotuneConfig = null;
+            Watcher<String> autotuneConfigWatcher = new Watcher<>() {
+                @Override
+                public void eventReceived(Action action, String resource) {
+                    AutotuneConfig autotuneConfig = null;
 
-                switch (action.toString().toUpperCase()) {
-                    case "ADDED":
-                        autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
-                        if (autotuneConfig != null) {
-                            autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
-                            LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
-                            addLayerInfo(autotuneConfig, null);
-                        }
-                        break;
-                    case "MODIFIED":
-                        autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
-                        if (autotuneConfig != null) {
+                    switch (action.toString().toUpperCase()) {
+                        case "ADDED":
+                            autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
+                            if (autotuneConfig != null) {
+                                autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
+                                LOGGER.info("Added autotuneconfig " + autotuneConfig.getName());
+                                addLayerInfo(autotuneConfig, null);
+                            }
+                            break;
+                        case "MODIFIED":
+                            autotuneConfig = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
+                            if (autotuneConfig != null) {
+                                deleteExistingConfig(resource);
+                                autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
+                                LOGGER.info("Added modified autotuneconfig " + autotuneConfig.getName());
+                                addLayerInfo(autotuneConfig, null);
+                            }
+                            break;
+                        case "DELETED":
                             deleteExistingConfig(resource);
-                            autotuneConfigMap.put(autotuneConfig.getName(), autotuneConfig);
-                            LOGGER.info("Added modified autotuneconfig " + autotuneConfig.getName());
-                            addLayerInfo(autotuneConfig, null);
-                        }
-                        break;
-                    case "DELETED":
-                        deleteExistingConfig(resource);
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
-            }
 
-            @Override
-            public void onClose(KubernetesClientException e) {
-            }
-        };
+                @Override
+                public void onClose(KubernetesClientException e) {
+                }
+            };
 
-        KubernetesServices kubernetesServices = new KubernetesServicesImpl();
-        kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
-        kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
+
+            KubernetesServices kubernetesServices = new KubernetesServicesImpl();
+            kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
+            kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
+        }catch ( Exception e){
+            LOGGER.warn("Failed to add watcher due to " + e.getMessage());
+        }
     }
 
     public static void processKruizeObject(KruizeObject kruizeObject) {

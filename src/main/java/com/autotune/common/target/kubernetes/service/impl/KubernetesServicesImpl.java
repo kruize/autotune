@@ -60,7 +60,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             this.kubernetesClient = new DefaultKubernetesClient();
         } catch (Exception e) {
-            new TargetHandlerConnectException(e, "Default connection to kubernetes failed!");
+            LOGGER.warn(e.getMessage());
         }
     }
 
@@ -403,7 +403,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             kubernetesClient.customResource(crd).watch(watcher);
         } catch (Exception e) {
-            new TargetHandlerException(e, "addWatcher failed!");
+            LOGGER.warn("Failed to add watcher and presuming kruize running for Remote monitoring use case. ");
         }
     }
 

@@ -150,8 +150,7 @@ public class AutotuneDeploymentInfo {
         if (AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoringAgent)) {
             AutotuneDeploymentInfo.monitoringAgent = monitoringAgent;
         } else {
-            LOGGER.error("Monitoring agent {}  is not supported", monitoringAgent);
-            throw new MonitoringAgentNotSupportedException();
+            LOGGER.warn("Monitoring agent is mandatory for Local Monitoring/Experiment mode.");
         }
     }
 

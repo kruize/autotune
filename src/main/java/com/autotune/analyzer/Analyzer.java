@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
+import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.deployment.InitializeDeployment;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
@@ -23,27 +24,33 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.services.*;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Analyzer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutotuneDeploymentInfo.class);
     public static void start(ServletContextHandler contextHandler) {
         try {
             InitializeDeployment.setup_deployment_info();
-
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
-            e.printStackTrace();
-            // Current deployment not supported. Exit
-            System.exit(1);
+          LOGGER.warn("Getting the deployment information failed.");
         }
-        Experimentator.start();
+        try {
+            Experimentator.start();
+        }catch (Exception e){
+            LOGGER.warn("Failed to start Experiment.");
+        }
         KruizeDeployment kruizeDeployment = new KruizeDeployment();
-
         try {
             addServlets(contextHandler);
+        }catch(Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        try{
             KruizeDeployment.getAutotuneObjects(kruizeDeployment);
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            LOGGER.warn("Getting kruize objects failed.");
+        }    }
 
     public static void addServlets(ServletContextHandler context) {
         context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
