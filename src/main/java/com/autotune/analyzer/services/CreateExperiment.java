@@ -19,7 +19,6 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.ExperimentInitiator;
-import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
@@ -60,7 +59,11 @@ public class CreateExperiment extends HttpServlet {
     }
 
     /**
-     * Validate and create new Experiments.
+     * It reads the input data from the request, converts it into a List of "KruizeObject" objects using the GSON library.
+     * It then calls the validateAndAddNewExperiments method of the "ExperimentInitiator" class, passing in the mainKruizeExperimentMap and kruizeExpList as arguments.
+     * If the validateAndAddNewExperiments method returns an ActivityResultData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
+     * Otherwise, it sends an error response to the client with the appropriate error message.
+     * If an exception is thrown, it prints the stack trace and sends an error response to the client with the appropriate error message.
      *
      * @param request
      * @param response
@@ -73,12 +76,12 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
-            ActivityResultData experimentInitiator = new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
-            if (experimentInitiator.isSuccess()) {
+            new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
+            KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+            if (null == invalidKruizeObject)
                 sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-            } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, experimentInitiator.getErrorMessage());
-            }
+            else
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());

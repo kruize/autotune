@@ -24,7 +24,6 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.analyzer.variables.Variables;
-import com.autotune.common.data.ActivityResultData;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
 import com.autotune.common.k8sObjects.*;
@@ -161,9 +160,12 @@ public class KruizeDeployment {
                 List<KruizeObject> kruizeObjectList = new ArrayList<>();
                 kruizeObjectList.add(kruizeObject);
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
-                ActivityResultData activityResultData = experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
-                if (!activityResultData.isSuccess()) {
-                    new KubeEventLogger(Clock.systemUTC()).log("Failed", activityResultData.getErrorMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+                experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
+                KruizeObject invalidKruizeObject = kruizeObjectList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+                if (invalidKruizeObject != null) {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", invalidKruizeObject.getValidationData().getMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+                } else {
+                    LOGGER.debug(kruizeObject.getExperimentName() + " " + kruizeObject.getValidationData().getMessage());
                 }
             } else {
                 new KubeEventLogger(Clock.systemUTC()).log("Failed", "Not able to process KruizeObject ", EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);

@@ -18,9 +18,14 @@ package com.autotune.common.data;
 /**
  * General data carrier between functions.
  */
-public class ActivityResultData {
+public class ValidationResultData {
     private boolean success = false;
-    private String errorMessage = null;
+    private String message = null;
+
+    public ValidationResultData(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
 
     public boolean isSuccess() {
         return success;
@@ -30,19 +35,19 @@ public class ActivityResultData {
         this.success = success;
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getMessage() {
+        return message;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override
     public String toString() {
         return "GeneralDataHolder{" +
                 "success=" + success +
-                ", errorMessage='" + errorMessage + '\'' +
+                ", message='" + message + '\'' +
                 '}';
     }
 }

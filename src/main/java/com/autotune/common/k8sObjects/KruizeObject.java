@@ -17,6 +17,7 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.ExperimentUseCaseType;
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
@@ -52,6 +53,7 @@ public final class KruizeObject {
     private List<ContainerObject> containers;
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
+    private ValidationResultData validationData;
 
     public KruizeObject(String experimentName,
                         String namespace,
@@ -216,6 +218,14 @@ public final class KruizeObject {
         this.resultData = resultData;
     }
 
+    public ValidationResultData getValidationData() {
+        return validationData;
+    }
+
+    public void setValidationData(ValidationResultData validationData) {
+        this.validationData = validationData;
+    }
+
     @Override
     public String toString() {
         return "KruizeObject{" +
@@ -234,6 +244,8 @@ public final class KruizeObject {
                 ", recommendation_settings=" + recommendation_settings +
                 ", containers=" + containers +
                 ", experimentUseCaseType=" + experimentUseCaseType +
+                ", resultData=" + resultData +
+                ", validationData=" + validationData +
                 '}';
     }
 }

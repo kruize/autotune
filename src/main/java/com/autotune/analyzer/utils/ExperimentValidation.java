@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.common.data.ActivityResultData;
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
@@ -74,8 +74,8 @@ public class ExperimentValidation {
      */
     public void validate(List<KruizeObject> kruizeExptList) {
         for (KruizeObject ao : kruizeExptList) {
-            ActivityResultData activityResultData = validateMandatoryFields(ao);
-            if (activityResultData.isSuccess()) {
+            ValidationResultData validationResultData = validateMandatoryFields(ao);
+            if (validationResultData.isSuccess()) {
                 String expName = ao.getExperimentName();
                 String mode = ao.getMode();
                 String target_cluster = ao.getTargetCluster();
@@ -85,12 +85,16 @@ public class ExperimentValidation {
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
                     if (null != ao.getDeployment_name()) {
                         String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
+                        LOGGER.debug(nsDepName);
+                        LOGGER.debug(namespaceDeploymentNameList.toString());
                         if (!namespaceDeploymentNameList.contains(nsDepName))
                             proceed = true;
-                        else if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
-                            errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
-                        else
-                            proceed = true;
+                        else {
+                            if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
+                                errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
+                            else
+                                proceed = true;
+                        }
                     } else {
                         proceed = true;
                     }
@@ -98,12 +102,16 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Experiment name : %s is duplicate", expName));
                 }
                 if (!proceed) {
+                    ao.setValidationData(new ValidationResultData(false, errorMsg));
                     markFailed(errorMsg);
                     break;
-                } else
+                } else {
                     setSuccess(true);
+                    ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize."));
+                }
             } else {
-                markFailed(activityResultData.getErrorMessage());
+                ao.setValidationData(validationResultData);
+                markFailed(validationResultData.getMessage());
                 break;
             }
         }
@@ -136,14 +144,14 @@ public class ExperimentValidation {
      * @param expObj
      * @return
      */
-    public ActivityResultData validateMandatoryFields(KruizeObject expObj) {
+    public ValidationResultData validateMandatoryFields(KruizeObject expObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
-        ActivityResultData activityResultData = new ActivityResultData();
+        ValidationResultData validationResultData = new ValidationResultData(false, null);
         boolean missingSLOPerf = true;
         boolean missingDeploySelector = true;
         String errorMsg = "";
         String expName = expObj.getExperimentName();
-        errorMsg = String.format("Experiment Name : %s \n", expName);
+        errorMsg = String.format("Experiment Name : %s ", expName);
         mandatoryFields.forEach(
                 mField -> {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
@@ -205,30 +213,30 @@ public class ExperimentValidation {
                 LOGGER.debug("missingSLOPerf:{} , missingDeploySelector:{}", missingSLOPerf, missingDeploySelector);
                 if (missingSLOPerf || missingDeploySelector) {
                     if (missingSLOPerf) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s \n", mandatorySLOPerf));
+                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatorySLOPerf));
                     }
                     if (missingDeploySelector) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s \n", mandatoryDeploymentSelector));
+                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
                     }
-                    activityResultData.setSuccess(false);
-                    activityResultData.setErrorMessage(errorMsg);
+                    validationResultData.setSuccess(false);
+                    validationResultData.setMessage(errorMsg);
                     LOGGER.debug("Validation error message :{}", errorMsg);
                 } else {
-                    activityResultData.setSuccess(true);
+                    validationResultData.setSuccess(true);
                 }
             } catch (Exception e) {
-                activityResultData.setSuccess(false);
+                validationResultData.setSuccess(false);
                 errorMsg = errorMsg.concat(e.getMessage());
-                activityResultData.setErrorMessage(errorMsg);
+                validationResultData.setMessage(errorMsg);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s \n ", missingMandatoryFields.toString()));
-            activityResultData.setSuccess(false);
-            activityResultData.setErrorMessage(errorMsg);
+            errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s ", missingMandatoryFields.toString()));
+            validationResultData.setSuccess(false);
+            validationResultData.setMessage(errorMsg);
             LOGGER.debug("Validation error message :{}", errorMsg);
         }
-        LOGGER.debug("{}", activityResultData);
-        return activityResultData;
+        LOGGER.debug("{}", validationResultData);
+        return validationResultData;
     }
 
     @Override

@@ -74,6 +74,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
+                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
         );
         // TODO   Insert into database
