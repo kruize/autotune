@@ -17,6 +17,7 @@ package com.autotune.common.data.result;
 
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.utils.AnalyzerConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +28,9 @@ import java.util.Objects;
 public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
+    @SerializedName("start_timestamp")
     private String starttimestamp;
+    @SerializedName("end_timestamp")
     private String endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
