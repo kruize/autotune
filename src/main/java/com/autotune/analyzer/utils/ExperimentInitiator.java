@@ -51,7 +51,6 @@ public class ExperimentInitiator {
         try {
             ExperimentValidation validationObject = new ExperimentValidation(mainKruizeExperimentMap);
             validationObject.validate(kruizeExpList);
-            LOGGER.debug(validationObject.toString());
             if (validationObject.isSuccess()) {
                 ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
                 experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);

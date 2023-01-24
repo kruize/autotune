@@ -65,14 +65,15 @@ public class UpdateResults extends HttpServlet {
             new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList);
             ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
             if (null == invalidKExperimentResultData) {
-                sendSuccessResponse(response, "Results added successfully");
+                sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
             } else {
+                LOGGER.error("Unable to save results due to :" + invalidKExperimentResultData.getValidationResultData().getMessage());
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
             }
         } catch (Exception e) {
             LOGGER.error("Exception due to :" + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

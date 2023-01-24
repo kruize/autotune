@@ -79,14 +79,11 @@ public class ExperimentValidation {
                 String expName = ao.getExperimentName();
                 String mode = ao.getMode();
                 String target_cluster = ao.getTargetCluster();
-                LOGGER.debug("expName:{} , mode: {} , target_cluster: {}", expName, mode, target_cluster);
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
                     if (null != ao.getDeployment_name()) {
                         String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
-                        LOGGER.debug(nsDepName);
-                        LOGGER.debug(namespaceDeploymentNameList.toString());
                         if (!namespaceDeploymentNameList.contains(nsDepName))
                             proceed = true;
                         else {
@@ -107,7 +104,7 @@ public class ExperimentValidation {
                     break;
                 } else {
                     setSuccess(true);
-                    ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize."));
+                    ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
                 }
             } else {
                 ao.setValidationData(validationResultData);
@@ -157,7 +154,6 @@ public class ExperimentValidation {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
                         Method getNameMethod = expObj.getClass().getMethod(methodName);
-                        LOGGER.debug(getNameMethod.getName());
                         if (getNameMethod.invoke(expObj) == null) {
                             missingMandatoryFields.add(mField);
                         }
@@ -175,7 +171,6 @@ public class ExperimentValidation {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                                 try {
                                     Method getNameMethod = expObj.getClass().getMethod(methodName);
-                                    LOGGER.debug(getNameMethod.getName());
                                     if (getNameMethod.invoke(expObj) == null) {
                                         missingMandatoryFields.add(mField);
                                     }
@@ -189,28 +184,24 @@ public class ExperimentValidation {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
                         Method getNameMethod = KruizeObject.class.getMethod(methodName);
-                        LOGGER.debug(getNameMethod.getName());
                         if (getNameMethod.invoke(expObj) != null) {
                             missingSLOPerf = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Methode name for {} not exsist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Methode name for {} not exsist and error is {}", mField, e.getMessage());
                     }
                 }
                 for (String mField : mandatoryDeploymentSelector) {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
                         Method getNameMethod = KruizeObject.class.getMethod(methodName);
-                        LOGGER.debug(getNameMethod.getName());
                         if (getNameMethod.invoke(expObj) != null) {
                             missingDeploySelector = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Methode name for {} not exist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
                     }
                 }
-                LOGGER.debug("Following mandatory fields missing {}", missingMandatoryFields.toString());
-                LOGGER.debug("missingSLOPerf:{} , missingDeploySelector:{}", missingSLOPerf, missingDeploySelector);
                 if (missingSLOPerf || missingDeploySelector) {
                     if (missingSLOPerf) {
                         errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatorySLOPerf));
@@ -220,7 +211,6 @@ public class ExperimentValidation {
                     }
                     validationResultData.setSuccess(false);
                     validationResultData.setMessage(errorMsg);
-                    LOGGER.debug("Validation error message :{}", errorMsg);
                 } else {
                     validationResultData.setSuccess(true);
                 }
@@ -233,9 +223,7 @@ public class ExperimentValidation {
             errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s ", missingMandatoryFields.toString()));
             validationResultData.setSuccess(false);
             validationResultData.setMessage(errorMsg);
-            LOGGER.debug("Validation error message :{}", errorMsg);
         }
-        LOGGER.debug("{}", validationResultData);
         return validationResultData;
     }
 

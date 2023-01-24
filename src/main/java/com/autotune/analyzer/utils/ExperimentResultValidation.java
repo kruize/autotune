@@ -61,7 +61,7 @@ public class ExperimentResultValidation {
                         resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                         break;
                     }
-                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully."));
+                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments ."));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;

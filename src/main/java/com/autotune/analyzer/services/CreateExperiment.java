@@ -78,13 +78,17 @@ public class CreateExperiment extends HttpServlet {
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
             new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
             KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
-            if (null == invalidKruizeObject)
+            if (null == invalidKruizeObject) {
                 sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-            else
+            } else {
+                LOGGER.error("Failed to create experiment due to {}", invalidKruizeObject.getValidationData().getMessage());
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            LOGGER.error("Unknown exception caught due to : " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+
         }
     }
 
