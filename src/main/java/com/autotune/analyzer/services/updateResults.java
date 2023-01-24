@@ -17,11 +17,9 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -49,32 +49,35 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class updateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(updateResults.class);
-    ConcurrentHashMap<String, JsonObject> mainAutoTuneOperatorMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
+    Map<String, KruizeObject> mainKruizeExperimentMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainAutoTuneOperatorMap = (ConcurrentHashMap<String, JsonObject>) getServletContext().getAttribute(AnalyzerConstants.AnalyserKeys.ANALYSER_STORAGE_CONTEXT_KEY);
-        this.kubernetesServices = new KubernetesServicesImpl();
+        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
-
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<JsonObject> autoTuneOperatorDataList = Arrays.asList(new Gson().fromJson(inputData, JsonObject[].class));
+            LOGGER.debug(mainKruizeExperimentMap.toString());
+            LOGGER.debug(mainKruizeExperimentMap.keySet().toString());
+
             for (JsonObject jsonObject : autoTuneOperatorDataList) {
-                JsonObject exp = this.mainAutoTuneOperatorMap.get(jsonObject.get("experiment_name").toString());
-                if (exp.get("results") == null) {
-                    JsonArray jsonArray = new JsonArray();
-                    jsonArray.add(jsonObject);
-                    exp.add("results", jsonArray);
+                String exp_name = jsonObject.get("experiment_name").getAsString();
+                KruizeObject exp = (KruizeObject) mainKruizeExperimentMap.get(exp_name);
+                if (null == exp) {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Experiment name not found");
                 } else {
-                    JsonArray jsonArray = exp.getAsJsonArray("results");
-                    jsonArray.add(jsonObject);
-                    exp.add("results", jsonArray);
+                    List<JsonObject> results = null;
+                    if (exp.getResults() == null)
+                        results = new ArrayList<>();
+                    else
+                        results = exp.getResults();
+                    results.add(jsonObject);
+                    exp.setResults(results);
                 }
             }
             sendSuccessResponse(response);
