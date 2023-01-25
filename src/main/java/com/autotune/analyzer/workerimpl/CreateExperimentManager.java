@@ -22,7 +22,6 @@ import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
-import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,30 +40,30 @@ import static com.autotune.analyzer.deployment.KruizeDeployment.matchPodsToAutot
  * mode : Experiment or Monitoring
  */
 
-public class AnalyzerManager implements AutotuneWorker {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AnalyzerManager.class);
+public class CreateExperimentManager implements AutotuneWorker {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentManager.class);
 
     @Override
-    public void execute(Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
-        KruizeObject kruizeExperiment = (KruizeObject) o;
+    public void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-        experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+        experimentInterface.addExperimentToDB(kruizeObject);
+        //experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExpStatus.IN_PROGRESS);
 
-        if (kruizeExperiment.getExperimentUseCaseType().isLocalExperiment() || kruizeExperiment.getExperimentUseCaseType().isLocalMonitoring()) {
-            matchPodsToAutotuneObject(kruizeExperiment);
+        if (kruizeObject.getExperimentUseCaseType().isLocalExperiment() || kruizeObject.getExperimentUseCaseType().isLocalMonitoring()) {
+            matchPodsToAutotuneObject(kruizeObject);
             for (String kruizeConfig : KruizeDeployment.autotuneConfigMap.keySet()) {
-                addLayerInfo(KruizeDeployment.autotuneConfigMap.get(kruizeConfig), kruizeExperiment);
+                addLayerInfo(KruizeDeployment.autotuneConfigMap.get(kruizeConfig), kruizeObject);
             }
-            if (kruizeExperiment.getExperimentUseCaseType().isLocalExperiment()) {
+            if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
                 if (!KruizeDeployment.deploymentMap.isEmpty() &&
-                        KruizeDeployment.deploymentMap.get(kruizeExperiment.getExperimentName()) != null) {
-                    Map<String, ApplicationDeployment> depMap = KruizeDeployment.deploymentMap.get(kruizeExperiment.getExperimentName());
+                        KruizeDeployment.deploymentMap.get(kruizeObject.getExperimentName()) != null) {
+                    Map<String, ApplicationDeployment> depMap = KruizeDeployment.deploymentMap.get(kruizeObject.getExperimentName());
                     for (String deploymentName : depMap.keySet()) {
-                        startExperiment(kruizeExperiment, depMap.get(deploymentName));
+                        startExperiment(kruizeObject, depMap.get(deploymentName));
                     }
-                    LOGGER.info("Added Kruize object " + kruizeExperiment.getExperimentName());
+                    LOGGER.info("Added Kruize object " + kruizeObject.getExperimentName());
                 } else {
-                    LOGGER.error("Kruize object " + kruizeExperiment.getExperimentName() + " not added as no related deployments found!");
+                    LOGGER.error("Kruize object " + kruizeObject.getExperimentName() + " not added as no related deployments found!");
                 }
             }
         }

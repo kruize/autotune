@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.parallelengine.worker;
 
+import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 
 import javax.servlet.ServletContext;
@@ -23,5 +24,5 @@ import javax.servlet.ServletContext;
  * Execute methode should be implemented by Workers like IterationManger etc.
  */
 public interface AutotuneWorker {
-    void execute(Object o , AutotuneExecutor autotuneExecutor , ServletContext context);
+    void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context);
 }

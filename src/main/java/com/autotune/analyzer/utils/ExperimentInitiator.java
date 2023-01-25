@@ -17,7 +17,8 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.data.ExperimentInterface;
 import com.autotune.analyzer.data.ExperimentInterfaceImpl;
-import com.autotune.common.data.ActivityResultData;
+import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,38 +33,66 @@ import java.util.Map;
 public class ExperimentInitiator {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentInitiator.class);
-    private ActivityResultData activityResultData;
+    private ValidationResultData validationResultData;
 
 
     /**
-     * Initiates experiment validation
+     * Initiate Experiment validation
      *
      * @param mainKruizeExperimentMap
      * @param kruizeExpList
      * @return
      */
-    public ActivityResultData validateAndAdd(
+    public ValidationResultData validateAndAddNewExperiments(
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<KruizeObject> kruizeExpList
     ) {
-        this.activityResultData = new ActivityResultData();
+        ValidationResultData validationResultData = new ValidationResultData(false, null);
         try {
             ExperimentValidation validationObject = new ExperimentValidation(mainKruizeExperimentMap);
             validationObject.validate(kruizeExpList);
-            LOGGER.debug(validationObject.toString());
             if (validationObject.isSuccess()) {
                 ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-                experimentInterface.addExperiments(mainKruizeExperimentMap, kruizeExpList);
-                this.activityResultData.setSuccess(true);
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+                validationResultData.setSuccess(true);
             } else {
-                this.activityResultData.setSuccess(false);
-                this.activityResultData.setErrorMessage("Validation failed due to " + validationObject.getErrorMessage());
+                validationResultData.setSuccess(false);
+                validationResultData.setMessage("Validation failed due to " + validationObject.getErrorMessage());
             }
         } catch (Exception e) {
             LOGGER.error("Validate and push experiment falied due to : " + e.getMessage());
-            this.activityResultData.setSuccess(false);
-            this.activityResultData.setErrorMessage("Validation failed due to " + e.getMessage());
+            validationResultData.setSuccess(false);
+            validationResultData.setMessage("Validation failed due to " + e.getMessage());
         }
-        return this.activityResultData;
+        return validationResultData;
+    }
+
+    /**
+     * @param mainKruizeExperimentMap
+     * @param experimentResultDataList
+     * @return
+     */
+    public ValidationResultData validateAndUpdateResults(
+            Map<String, KruizeObject> mainKruizeExperimentMap,
+            List<ExperimentResultData> experimentResultDataList
+    ) {
+        ValidationResultData validationResultData = new ValidationResultData(false, null);
+        try {
+            ExperimentResultValidation experimentResultValidation = new ExperimentResultValidation(mainKruizeExperimentMap);
+            experimentResultValidation.validate(experimentResultDataList);
+            if (experimentResultValidation.isSuccess()) {
+                ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+                experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, experimentResultDataList);
+                validationResultData.setSuccess(true);
+            } else {
+                validationResultData.setSuccess(false);
+                validationResultData.setMessage("Validation failed due to " + experimentResultValidation.getErrorMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Validate and push experiment falied due to : " + e.getMessage());
+            validationResultData.setSuccess(false);
+            validationResultData.setMessage("Validation failed due to " + e.getMessage());
+        }
+        return validationResultData;
     }
 }

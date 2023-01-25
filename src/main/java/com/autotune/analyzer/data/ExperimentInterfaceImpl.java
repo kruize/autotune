@@ -15,21 +15,24 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ExperimentInterfaceImpl implements ExperimentInterface {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentInterfaceImpl.class);
 
     @Override
-    public boolean addExperiments(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
+    public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
                     kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
@@ -41,7 +44,13 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
-        // TODO   Insert into database
+        return true;
+    }
+
+    @Override
+    public boolean addExperimentToDB(KruizeObject kruizeObject) {
+        //TODO insert in to db
+        updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
         return true;
     }
 
@@ -50,6 +59,40 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
         kruizeObject.setStatus(status);
         // TODO   update into database
         return true;
+    }
+
+    @Override
+    public boolean addResultsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<ExperimentResultData> experimentResultDataList) {
+        experimentResultDataList.forEach(
+                (resultData) -> {
+                    resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
+                    KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
+                    Set<ExperimentResultData> results = null;
+                    if (ko.getResultData() == null)
+                        results = new HashSet<>();
+                    else
+                        results = ko.getResultData();
+                    results.add(resultData);
+                    ko.setResultData(results);
+                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
+                }
+        );
+        // TODO   Insert into database
+        return true;
+    }
+
+    @Override
+    public boolean addResultsToDB(KruizeObject kruizeObject, ExperimentResultData resultData) {
+        // TODO   Insert into database
+        resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+        return false;
+    }
+
+
+    @Override
+    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) {
+        //TOdo load all experiments from DB
+        return false;
     }
 
 }

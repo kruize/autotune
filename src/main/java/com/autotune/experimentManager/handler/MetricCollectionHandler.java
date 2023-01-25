@@ -88,7 +88,8 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 int warmupCyclesCount = (warmupCycles != null) ? Integer.parseInt(warmupCycles) : -1;
                 int measurementCyclesCount = (measurementCycles != null) ? Integer.parseInt(measurementCycles) : -1;
                 if (warmupCyclesCount > 0) cycles.put(AutotuneConstants.CycleTypes.WARMUP, warmupCyclesCount);
-                if (measurementCyclesCount > 0) cycles.put(AutotuneConstants.CycleTypes.MEASUREMENT, measurementCyclesCount);
+                if (measurementCyclesCount > 0)
+                    cycles.put(AutotuneConstants.CycleTypes.MEASUREMENT, measurementCyclesCount);
                 cycles.forEach((cycleName, count) -> {
                     LinkedHashMap<Integer, CycleMetaData> iterationCycle = new LinkedHashMap<>();
                     IntStream.rangeClosed(1, count).forEach((iteration) -> {
@@ -182,7 +183,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                                 emMetricResult.getEmMetricGenericResults().setUnits("cores");
 
                                             } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
-                                            || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
+                                                    || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
                                                 resultFloat = (float) EMUtil.convertToMiB(resultFloat, EMUtil.MemoryUnits.BYTES);
                                                 LOGGER.debug("Result float from util - " + resultFloat);
                                                 emMetricResult.getEmMetricGenericResults().setUnits("MiB");
@@ -286,7 +287,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         @Override
                         public void run() {
                             AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(experimentTrial, autotuneExecutor, context);
+                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
                         }
                     }
             );

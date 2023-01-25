@@ -13,36 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data;
+package com.autotune.common.data.result;
 
-/**
- * General data carrier between functions.
- */
-public class ActivityResultData {
-    private boolean success = false;
-    private String errorMessage = null;
+public class GeneralInfoResult {
+    private double sum;
+    private double mean;
+    private String units;
 
-    public boolean isSuccess() {
-        return success;
+    public double getSum() {
+        return sum;
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
+    public void setSum(double sum) {
+        this.sum = sum;
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public double getMean() {
+        return mean;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public void setMean(double mean) {
+        this.mean = mean;
+    }
+
+    public String getUnits() {
+        return units;
+    }
+
+    public void setUnits(String units) {
+        this.units = units;
     }
 
     @Override
     public String toString() {
-        return "GeneralDataHolder{" +
-                "success=" + success +
-                ", errorMessage='" + errorMessage + '\'' +
+        return "GeneralInfoResult{" +
+                "sum=" + sum +
+                ", mean=" + mean +
+                ", units='" + units + '\'' +
                 '}';
     }
 }

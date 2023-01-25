@@ -13,23 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.common.data;
 
-public class RecommendationSettings {
-    private String threshold;
+/**
+ * General data carrier between functions.
+ */
+public class ValidationResultData {
+    private boolean success = false;
+    private String message = null;
 
-    public String getThreshold() {
-        return threshold;
+    public ValidationResultData(boolean success, String message) {
+        this.success = success;
+        this.message = message;
     }
 
-    public void setThreshold(String threshold) {
-        this.threshold = threshold;
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override
     public String toString() {
-        return "RecommendationSettings{" +
-                "threshold=" + threshold +
+        return "GeneralDataHolder{" +
+                "success=" + success +
+                ", message='" + message + '\'' +
                 '}';
     }
 }

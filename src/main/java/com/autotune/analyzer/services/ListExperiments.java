@@ -89,6 +89,7 @@ public class ListExperiments extends HttpServlet {
         response.getWriter().close();
     }
 
+    //TODO this function no more used.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setStatus(HttpServletResponse.SC_OK);
@@ -121,9 +122,7 @@ public class ListExperiments extends HttpServlet {
                 }
 
                 try {
-                    LOGGER.debug("going into of updateExperiment");
                     updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
-                    LOGGER.debug("Came out of updateExperiment");
                 } catch (InvalidValueException | IncompatibleInputJSONException e) {
                     e.printStackTrace();
                 }
