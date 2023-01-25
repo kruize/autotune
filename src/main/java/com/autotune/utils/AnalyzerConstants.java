@@ -72,6 +72,15 @@ public class AnalyzerConstants {
     public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
     public static final String DEPLOYMENT_NAME = "deployment_name";
     public static final String SELECTOR = "selectorInfo";
+	public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
+	public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
+	public static final String DEFAULT_K8S_TYPE = "openshift";
+	public static final String PROFILE_VERSION = "profile_version";
+	public static final Double DEFAULT_PROFILE_VERSION = 1.0;
+	public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
+	public static final String FUNCTION = "function";
+	public static final String VERSIONS = "versions";
+	public static final String KUBERNETES_OBJECTS = "kubernetes_object";
 
     private AnalyzerConstants() {
     }
@@ -96,7 +105,7 @@ public class AnalyzerConstants {
         COMPLETED,
         FAILED;
     }
-
+	
     /**
      * Used to parse the Autotune kind resource
      */
@@ -133,7 +142,6 @@ public class AnalyzerConstants {
 
         private AutotuneObjectConstants() {
         }
-
 
     }
 
@@ -223,10 +231,7 @@ public class AnalyzerConstants {
         public static final String NA = "NA";
         public static final String SECONDS = " seconds";
 
-        private ServiceConstants() {
-        }
-
-    }
+	}
 
     /**
      * Contains Strings used in the HOTSPOT Layer

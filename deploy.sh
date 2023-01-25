@@ -19,11 +19,14 @@ ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
 AUTOTUNE_DIR="./manifests/autotune"
+PERF_PROFILE_CRD="${AUTOTUNE_DIR}/performance-profiles"
 CRC_DIR="./manifests/crc"
 
 AUTOTUNE_OPERATOR_CRD="${AUTOTUNE_DIR}/autotune-operator-crd.yaml"
 AUTOTUNE_CONFIG_CRD="${AUTOTUNE_DIR}/autotune-config-crd.yaml"
 AUTOTUNE_QUERY_VARIABLE_CRD="${AUTOTUNE_DIR}/autotune-query-variable-crd.yaml"
+AUTOTUNE_PERF_PROFILE_CRD="${PERF_PROFILE_CRD}/kruize-performance-profile-crd.yaml"
+AUTOTUNE_PERF_PROFILE_ROS="${PERF_PROFILE_CRD}/resource_optimization_openshift.yaml"
 AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml_template"
 AUTOTUNE_DEPLOY_OPENSHIFT_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-openshift-deployment.yaml_template"
 AUTOTUNE_DEPLOY_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml"
@@ -64,7 +67,7 @@ setup=1
 # Default mode is interactive
 non_interactive=0
 autotune_ns=""
-mode="autotune"
+target="autotune"
 # docker: loop timeout is turned off by default
 timeout=-1
 
@@ -92,7 +95,7 @@ function usage() {
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
-	echo " -t: Target selection [autotune | crc]"
+	echo " -m: Target mode selection [autotune | crc]"
 	exit -1
 }
 
@@ -143,7 +146,7 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
-  t)
+  m)
 		target="${OPTARG}"
 		;;
 	n)

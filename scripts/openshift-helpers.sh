@@ -47,6 +47,9 @@ function openshift_first() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIG_CRD}
 	check_err "Error: Failed to create autotuneconfig CRD"
 
+	${kubectl_cmd} apply -f ${AUTOTUNE_PERF_PROFILE_CRD}
+	check_err "Error: Failed to create autotunePerformanceProfile CRD"
+
 	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLE_CRD}
 	check_err "Error: Failed to create autotunequeryvariable CRD"
 
@@ -74,6 +77,10 @@ function openshift_deploy() {
 	echo
 	echo "Deploying AutotuneConfig objects"
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGS}
+
+	echo
+	echo "Deploying Performance Profile objects"
+	${kubectl_cmd} apply -f ${AUTOTUNE_PERF_PROFILE_ROS}
 
 	echo "Info: Deploying autotune yaml to openshift cluster"
 

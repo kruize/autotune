@@ -52,6 +52,15 @@ public class KubernetesContexts
 			.withName(AnalyzerConstants.AUTOTUNE_VARIABLE_RESOURCE_NAME)
 			.build();
 
+	private static final CustomResourceDefinitionContext performanceProfileCrdContext = new CustomResourceDefinitionContext
+			.Builder()
+			.withGroup(AnalyzerConstants.GROUP)
+			.withScope(AnalyzerConstants.SCOPE)
+			.withPlural(AnalyzerConstants.PERFORMANCE_PROFILE_PLURALS)
+			.withVersion(AnalyzerConstants.API_VERSION_V1)
+			.withName(AnalyzerConstants.PERFORMANCE_PROFILE_RESOURCE_NAME)
+			.build();
+
 	public static CustomResourceDefinitionContext getAutotuneCrdContext() {
 		return autotuneCrdContext;
 	}
@@ -62,5 +71,9 @@ public class KubernetesContexts
 
 	public static CustomResourceDefinitionContext getAutotuneVariableContext() {
 		return autotuneVariableContext;
+	}
+
+	public static CustomResourceDefinitionContext getPerformanceProfileCrdContext() {
+		return performanceProfileCrdContext;
 	}
 }

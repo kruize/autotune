@@ -9,6 +9,7 @@ rules:
   - autotunes
   - autotuneconfigs
   - autotunequeryvariables
+  - kruizeperformanceprofiles
   verbs:
   - '*'
 - apiGroups:
