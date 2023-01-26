@@ -60,10 +60,8 @@ see [Update results](/design/UpdateResults.md)
 ```
 [{
  "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
- "info": {"trial_info": {
-   "trial_number": 98,
-   "trial_timestamp": "yyyymmddhhmmss"
- }},
+ "start_timestamp": "2022-01-23T18:25:43.511Z",
+ "end_timestamp": "2022-01-23T18:25:43.511Z",
  "deployments": [{
    "deployment_name": "tfb-qrh-sample",
    "namespace": "default",
@@ -175,46 +173,164 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
 
 ```
 {
-  "quarkus-resteasy-autotune-min-http-response-time-db": {
-    "timestamp": "2022-01-23T18:25:43.511Z",
-    "config": {
-      "container_name": "tfb-server",
-      "deployment_name": "tfb-qrh-deployment",
-      "namespace": "default",
-      "confidence_level": 0.88,
-      "requests": {
-        "memory": {
-          "amount": "210.0",
-          "format": "Mi",
-          "additionalProperties": {
-          }
-        },
-        "cpu": {
-          "amount": "2.26",
-          "format": "",
-          "additionalProperties": {
+  "experimentName": "quarkus-resteasy-autotune-min-http-response-time-db4",
+  "namespace": "default",
+  "deploymentName": "tfb-qrh-sample",
+  "containers": {
+    "tfb-server-1": {
+      "name": "tfb-server-1",
+      "recommendation": {
+        "2023-01-15 17:53:40.498": {
+          "Short Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "Jan 02, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
+            }
+          },
+          "Medium Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "jan 07, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
+            }
+          },
+          "Long Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "jan 15, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
+            }
           }
         }
-      },
-      "env": [
-            {
-              "name": "JDK_JAVA_OPTIONS",
-              "additionalProperties": {},
-              "value": " -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+      }
+    },
+    "tfb-server-0": {
+      "name": "tfb-server-0",
+      "recommendation": {
+        "2029-10-26 17:53:40.498": {
+          "Short Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "jan 01, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
             }
-      ],
-      "limits": {
-        "memory": {
-          "amount": "210.0",
-          "format": "Mi",
-          "additionalProperties": {
-
-          }
-        },
-        "cpu": {
-          "amount": "2.26",
-          "format": "",
-          "additionalProperties": {
+          },
+          "Mid Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "jan 07, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
+            }
+          },
+          "Long Term": {
+            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
+            "monitoringEndTime": "jan 30, 2023, 12:24:04 AM",
+            "podsCount": 0,
+            "confidence_level": 0.0,
+            "config": {
+              "max": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              },
+              "capacity": {
+                "memory": {
+                  "amount": 0.0
+                },
+                "cpu": {
+                  "amount": 0.0
+                }
+              }
+            }
           }
         }
       }

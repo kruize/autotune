@@ -142,9 +142,6 @@ public class AnalyzerConstants {
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         private AutotuneObjectConstants() {
         }
-
-
-
     }
     /**
      * Used to parse the AutotuneConfig resource
@@ -234,8 +231,6 @@ public class AnalyzerConstants {
         public static final String SECONDS = " seconds";
         private ServiceConstants() {
         }
-
-
     }
     /**
      * Contains Strings used in the HOTSPOT Layer
@@ -280,7 +275,6 @@ public class AnalyzerConstants {
         private HotspotConstants() {
         }
 
-
     }
     /**
      * Contains Strings used in the QUARKUS Layer
@@ -305,7 +299,6 @@ public class AnalyzerConstants {
 
     }
     public static class createExperimentParallelEngineConfigs {
-
         /**
          * MAX Queue size to stack experiments
          */
@@ -327,12 +320,12 @@ public class AnalyzerConstants {
          */
         public static int DELAY_IN_SECS = 2;
         public static String EXECUTOR = "KRUIZE_EXECUTOR";
+
         private createExperimentParallelEngineConfigs() {
         }
-
     }
-    public static class updateResultsParallelEngineConfigs {
 
+    public static class updateResultsParallelEngineConfigs {
         /**
          * MAX Queue size to stack experiments
          */
@@ -354,10 +347,9 @@ public class AnalyzerConstants {
          */
         public static int DELAY_IN_SECS = 2;
         public static String EXECUTOR = "KRUIZE_EXECUTOR";
-        private updateResultsParallelEngineConfigs() {
-        }
 
     }
+
     public static final class PerformanceProfileConstants {
 
 

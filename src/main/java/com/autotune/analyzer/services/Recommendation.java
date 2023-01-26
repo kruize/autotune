@@ -62,41 +62,171 @@ public class Recommendation extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
-        String temp = "{" + "\"timestamp\": \"2022-01-23T18:25:43.511Z\", \n" +
-                "        \"config\": {\n" +
-                "        \"container_name\": \"tfb-server\",\n" +
-                "        \"deployment_name\": \"tfb-qrh-deployment\",\n" +
-                "        \"namespace\": \"default\",\n" +
-                "        \"confidence_level\": \"0.88\",\n" +
-                "        \"requests\": {\n" +
-                "          \"memory\": {\n" +
-                "            \"amount\": \"210.0\",\n" +
-                "            \"format\": \"Mi\",\n" +
-                "            \"additionalProperties\": {}\n" +
+        String temp = "{\n" +
+                "  \"experimentName\": \"quarkus-resteasy-autotune-min-http-response-time-db4\",\n" +
+                "  \"namespace\": \"default\",\n" +
+                "  \"deploymentName\": \"tfb-qrh-sample\",\n" +
+                "  \"containers\": {\n" +
+                "    \"tfb-server-1\": {\n" +
+                "      \"name\": \"tfb-server-1\",\n" +
+                "      \"recommendation\": {\n" +
+                "        \"2023-01-15 17:53:40.498\": {\n" +
+                "          \"Short Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"Jan 02, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
                 "          },\n" +
-                "          \"cpu\": {\n" +
-                "            \"amount\": \"2.26\",\n" +
-                "            \"format\": \"\",\n" +
-                "            \"additionalProperties\": {}\n" +
-                "          }\n" +
-                "        },\n" +
-                "          \"env\": [{\n" +
-                "            \"name\": \"JDK_JAVA_OPTIONS\",\n" +
-                "            \"value\": \"-XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9\",\n" +
-                "            \"additionalProperties\": {}\n" +
-                "          }],\n" +
-                "        \"limits\": {\n" +
-                "          \"memory\": {\n" +
-                "            \"amount\": \"210.0\",\n" +
-                "            \"format\": \"Mi\",\n" +
-                "            \"additionalProperties\": {}\n" +
+                "          \"Medium Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"jan 07, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
                 "          },\n" +
-                "          \"cpu\": {\n" +
-                "            \"amount\": \"2.26\",\n" +
-                "            \"format\": \"\",\n" +
-                "            \"additionalProperties\": {}\n" +
+                "          \"Long Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"jan 15, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
                 "          }\n" +
-                "        }}}";
+                "        }\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"tfb-server-0\": {\n" +
+                "      \"name\": \"tfb-server-0\",\n" +
+                "      \"recommendation\": {\n" +
+                "        \"2029-10-26 17:53:40.498\": {\n" +
+                "          \"Short Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"jan 01, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
+                "          },\n" +
+                "          \"Mid Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"jan 07, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
+                "          },\n" +
+                "          \"Long Term\": {\n" +
+                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
+                "            \"monitoringEndTime\": \"jan 30, 2023, 12:24:04 AM\",\n" +
+                "            \"podsCount\": 0,\n" +
+                "            \"confidence_level\": 0.0,\n" +
+                "            \"config\": {\n" +
+                "              \"max\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              },\n" +
+                "              \"capacity\": {\n" +
+                "                \"memory\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                },\n" +
+                "                \"cpu\": {\n" +
+                "                  \"amount\": 0.0\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
         out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":" + temp + "}");       //TODO add dummy results
         out.flush();
     }

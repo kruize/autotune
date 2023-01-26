@@ -113,6 +113,7 @@ public class ExperimentValidation {
                     ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
                 }
             } else {
+                ao.setValidationData(validationResultData);
                 markFailed(validationResultData.getMessage());
                 break;
             }
@@ -193,7 +194,7 @@ public class ExperimentValidation {
                             missingSLOPerf = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Methode name for {} not exsist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Methode name for {} not exsist and error is {}", mField, e.getMessage());
                     }
                 }
                 for (String mField : mandatoryDeploymentSelector) {
@@ -204,7 +205,7 @@ public class ExperimentValidation {
                             missingDeploySelector = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Methode name for {} not exist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
                     }
                 }
                 if (missingSLOPerf || missingDeploySelector) {

@@ -72,7 +72,6 @@ public class UpdateResults extends HttpServlet {
             }
         } catch (Exception e) {
             LOGGER.error("Exception due to :" + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
