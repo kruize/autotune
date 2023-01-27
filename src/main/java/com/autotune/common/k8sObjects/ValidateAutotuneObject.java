@@ -16,6 +16,7 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.utils.EvalExParser;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -76,12 +77,12 @@ public class ValidateAutotuneObject
 		}
 
 		//check if slo_class is 'response_time' and direction is minimize
-		if (sloInfo.getSloClass().equalsIgnoreCase("response_time") && !sloInfo.getDirection().equalsIgnoreCase("minimize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.RESPONSE_TIME) && !sloInfo.getDirection().equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MINIMIZE)) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
 		//check if slo_class is 'throughput' and direction is maximize
-		if (sloInfo.getSloClass().equalsIgnoreCase("throughput") && !sloInfo.getDirection().equalsIgnoreCase("maximize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.THROUGHPUT) && !sloInfo.getDirection().equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE)) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
@@ -105,21 +106,24 @@ public class ValidateAutotuneObject
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
-				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");
+				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE).append(functionVariable.getName())
+						.append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
 
 			// Check if value_type is supported
 			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase()))
-				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
+				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE).append(functionVariable.getName())
+						.append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
 
 			// Check if function_variable is part of objective_function
-			if (objFunctionType.equals("expression")) {
+			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
 				if ( sloInfo.getObjectiveFunction().getExpression() != null && !sloInfo.getObjectiveFunction().getExpression().contains(functionVariable.getName()))
-					errorString.append("function_variable ").append(functionVariable.getName()).append(" missing in objective_function\n");
+					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES).append(functionVariable.getName())
+							.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLE_ERROR);
 			}
 		}
 
 		// Check if objective_function is correctly formatted
-		if (objFunctionType.equals("expression")) {
+		if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
 			if (!new EvalExParser().validate(sloInfo.getObjectiveFunction().getExpression(), sloInfo.getFunctionVariables())) {
 				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
 			}

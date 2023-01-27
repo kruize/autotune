@@ -30,7 +30,7 @@ public class AnalyzerConstants {
 
 
     // Used to parse autotune configmaps
-    public static final String K8S_TYPE = "K8S_TYPE";
+    public static final String K8S_TYPE = "k8s type";
     public static final String AUTH_TYPE = "AUTH_TYPE";
     public static final String AUTH_TOKEN = "AUTH_TOKEN";
     public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
@@ -140,6 +140,8 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_ID = "experiment_id";
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
+        public static final String FUNCTION_VARIABLE = "function_variable: ";
+
         private AutotuneObjectConstants() {
         }
     }
