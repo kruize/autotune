@@ -43,20 +43,26 @@ public class AnalyzerErrorConstants {
 		private AutotuneObjectErrors() {
 		}
 
+		public static final String UNSUPPORTED = " is not supported\n";
 		public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
 		public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";
 		public static final String INVALID_MATCHLABEL_VALUE = "Invalid or blank MatchLabelValue in selector\n";
-		public static final String SLO_CLASS_NOT_SUPPORTED = "slo_class not supported\n";
-		public static final String DIRECTION_NOT_SUPPORTED = "direction not supported\n";
+		public static final String SLO_CLASS_NOT_SUPPORTED = "slo_class " + UNSUPPORTED;
+		public static final String DIRECTION_NOT_SUPPORTED = "direction " + UNSUPPORTED;
 		public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
 		public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
-		public static final String MODE_NOT_SUPPORTED = "Autotune object mode not supported\n";
-		public static final String TARGET_CLUSTER_NOT_SUPPORTED = "Autotune object targetCluster not supported\n";
-		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm not supported\n";
+		public static final String MODE_NOT_SUPPORTED = "Autotune object mode " + UNSUPPORTED;
+		public static final String TARGET_CLUSTER_NOT_SUPPORTED = "Autotune object targetCluster " + UNSUPPORTED;
+		public static final String HPO_ALGO_NOT_SUPPORTED = "HPO algorithm " + UNSUPPORTED;
 		public static final String INVALID_OBJECTIVE_FUNCTION = "objective_function improperly formatted\n";
 		public static final String OBJECTIVE_FUNCTION_MAP_MISSING = "objective_function_map is missing or empty\n";
 		public static final String NO_DEPLOYMENTS_FOUND = "No deployments related to the Autotune object found\n";
 		public static final String INVALID_DIRECTION_FOR_SLO_CLASS = "Invalid direction for slo_class\n";
+		public static final String DATASOURCE_NOT_SUPPORTED = " datasource " + UNSUPPORTED;
+		public static final String VALUE_TYPE_NOT_SUPPORTED = " value_type " + UNSUPPORTED;
+		public static final String AGG_FUNCTION_ERROR = "One of query or aggregation_functions is mandatory. Both cannot be null!";
+		public static final String FUNCTION_VARIABLE_ERROR = "missing in objective_function\n";
+
 	}
 
 	public static final class AutotuneServiceMessages {
