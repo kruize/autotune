@@ -351,6 +351,10 @@ public class KruizeDeployment {
                 objFuncType = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE);
                 if (objFuncType.equals("expression"))
                     expression = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION);
+                else {
+                    if (!objFuncType.equals("source"))
+                        throw new InvalidValueException("Objective function type can only be either 'expression' or 'source' ");
+                }
             }
 
             JSONArray functionVariables = new JSONArray();

@@ -1,11 +1,12 @@
-package com.autotune.common.performanceProfiles;
+package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.common.data.result.ContainerResultData;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.GeneralInfoResult;
 import com.autotune.common.k8sObjects.*;
-import com.autotune.common.performanceProfiles.perfProfileInterface.PerfProfileInterface;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

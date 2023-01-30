@@ -25,7 +25,8 @@ import java.util.List;
 /**
  * Holds the variables used in the objective_function for the autotune object
  * objective_function:
- * - type: source
+ * - type: expression
+ * - expression: "transaction_response_time"
  * function_variables:
  * - name: "transaction_response_time"
  * query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
