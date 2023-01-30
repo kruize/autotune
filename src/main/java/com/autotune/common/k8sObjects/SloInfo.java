@@ -26,7 +26,8 @@ import java.util.ArrayList;
  * <p>
  * Example:
  * slo:
- * objective_function: "transaction_response_time"
+ * objective_function:
+ * - type: source
  * slo_class: "response_time"
  * direction: "minimize"
  * hpo_algo_impl: "optuna_tpe"

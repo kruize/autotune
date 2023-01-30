@@ -51,7 +51,10 @@ public class ListStackTunables extends HttpServlet {
      * {
      * "experiment_name": "galaxies-autotune-min-http-response-time",
      * "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
-     * "objective_function": "request_sum/request_count",
+     * "objective_function":
+     *  {
+     *  "type": "source"
+     *  },
      * "hpo_algo_impl": "optuna_tpe",
      * "stacks": [{
      * "layers": [

@@ -147,7 +147,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                         .inNamespace(namespace)
                         .withName(name).get();
             } else {
-                throw new Exception("Namespace is mandatory to getpobby using name.");
+                throw new Exception("Namespace is mandatory to getPodsBy using name.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "getPodsBy failed!");
@@ -291,7 +291,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .createOrReplace(newDeployment);
             deployed = true;
         } catch (Exception e) {
-            new TargetHandlerException(e, "replaceDeployment failed!");
+            new TargetHandlerException(e, "replaceDeployment with the deployment name: " + deploymentName + " under namespace: " + namespace + "  failed!");
         }
         return deployed;
     }
@@ -316,7 +316,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     .restart();
             restarted = true;
         } catch (Exception e) {
-            new TargetHandlerException(e, "restartDeployment failed!");
+            new TargetHandlerException(e, "restartDeployment with the deployment name: " + deploymentName + " under namespace: " + namespace + "  failed!");
         }
         return restarted;
     }
@@ -341,7 +341,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deployed = true;
                 }
             } else {
-                throw new Exception("Deployment does not exist.");
+                throw new Exception("Deployment with name: " + deploymentName + " under namespace: " + namespace +" does not exist.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "deployDeployment failed!");
@@ -385,7 +385,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                                 }
                             }
                     );
-            if (foundErrorInConfig.get()) throw new Exception("Container Name not found in config");
+            if (foundErrorInConfig.get()) throw new Exception("Container Name: " + containerConfigData.getContainerName() + " not found in config");
         } catch (Exception e) {
             new TargetHandlerException(e, "getAmendedDeployment failed!");
         }
@@ -420,7 +420,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
         try {
             event = kubernetesClient.events().inNamespace(namespace).withName(eventName).get();
         } catch (Exception e) {
-            new TargetHandlerException(e, "getEvent failed!");
+            new TargetHandlerException(e, "getEvent failed! Event : " + event + " not found!");
         }
         return event;
     }
@@ -440,7 +440,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
             kubernetesClient.events().inNamespace(namespace).withName(eventName).replace(newEvent);
             replaced = true;
         } catch (Exception e) {
-            new TargetHandlerException(e, "replaceEvent failed!");
+            new TargetHandlerException(e, "replaceEvent for the eventName " + eventName + " failed!");
         }
         return replaced;
     }
@@ -460,7 +460,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
             kubernetesClient.events().inNamespace(namespace).withName(eventName).create(newEvent);
             created = true;
         } catch (Exception e) {
-            new TargetHandlerException(e, "createEvent failed!");
+            new TargetHandlerException(e, "createEvent for the eventName " + eventName + " failed!");
         }
         return created;
     }
@@ -507,7 +507,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                             spec.getReplicas().intValue() <= status.getAvailableReplicas();
                 }
             } else {
-                throw new Exception("Deployment does not exist.");
+                throw new Exception("Deployment: " + existingDeployment + " does not exist.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "getDeploymentStatus failed!");

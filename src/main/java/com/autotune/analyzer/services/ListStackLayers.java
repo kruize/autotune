@@ -50,7 +50,10 @@ public class ListStackLayers extends HttpServlet {
      * {
      * "experiment_name": "autotune-max-http-throughput",
      * "experiment_id": "94f76772f43339f860e0d5aad8bebc1abf50f461712d4c5d14ea7aada280e8f3",
-     * "objective_function": "request_count",
+     * "objective_function":
+     *  {
+     *  "type": "source"
+     *  },
      * "hpo_algo_impl": "optuna_tpe",
      * "deployments": [
      * {
@@ -84,7 +87,10 @@ public class ListStackLayers extends HttpServlet {
      * {
      * "experiment_name": "galaxies-autotune-min-http-response-time",
      * "experiment_id": "3bc579e7b1c29eb547809348c2a452e96cfd9ed9d3489d644f5fa4d3aeaa3c9f",
-     * "objective_function": "request_sum/request_count",
+     * "objective_function":
+     *  {
+     *  "type": "source"
+     *  },
      * "hpo_algo_impl": "optuna_tpe",
      * "deployments": [
      * {
