@@ -93,6 +93,7 @@ see [Update results](/design/UpdateResults.md)
            "general_info": {
              "min": 0.14,
              "max": 0.84,
+             "sum": 0.84,
              "avg": 0.12,
              "units": "cores"
            }
@@ -120,7 +121,6 @@ see [Update results](/design/UpdateResults.md)
        "memoryLimit": {
          "results": {
            "general_info": {
-             "min": 50.6,
              "sum": 500,
              "avg": 100,
              "units": "MiB"

@@ -146,10 +146,10 @@ public class EMUtil {
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
             if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                GeneralInfoResult generalInfoResult = new GeneralInfoResult();
-                generalInfoResult.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                HashMap<String, GeneralInfoResult> generalInfoResultHashMap = new HashMap<>();
-                generalInfoResultHashMap.put("general_info", generalInfoResult);
+                Aggregator aggregator = new Aggregator();
+                aggregator.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                HashMap<String, Aggregator> generalInfoResultHashMap = new HashMap<>();
+                generalInfoResultHashMap.put("general_info", aggregator);
                 PodResultData podResultData = new PodResultData();
                 podResultData.setName(podMetric.getName());
                 podResultData.setDatasource(podMetric.getDatasource());
@@ -162,16 +162,16 @@ public class EMUtil {
             ContainerResultData containerResultData = new ContainerResultData();
             containerResultData.setContainer_name(containerMapEntry.getKey());
             containerResultData.setImage_name(null);
-            HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> containerMetrics = new HashMap<>();
+            HashMap<String, HashMap<String, HashMap<String, Aggregator>>> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                    HashMap<String, HashMap<String, GeneralInfoResult>> resultMap = new HashMap<>();
-                    GeneralInfoResult generalInfoResult = new GeneralInfoResult();
-                    generalInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                    generalInfoResult.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
-                    HashMap<String, GeneralInfoResult> generalInfoResultHashMap = new HashMap<>();
-                    generalInfoResultHashMap.put("general_info", generalInfoResult);
+                    HashMap<String, HashMap<String, Aggregator>> resultMap = new HashMap<>();
+                    Aggregator aggregator = new Aggregator();
+                    aggregator.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    aggregator.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
+                    HashMap<String, Aggregator> generalInfoResultHashMap = new HashMap<>();
+                    generalInfoResultHashMap.put("general_info", aggregator);
                     resultMap.put("results", generalInfoResultHashMap);
                     containerMetrics.put(containerMetric.getName(), resultMap);
                 }

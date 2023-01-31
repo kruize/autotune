@@ -23,7 +23,7 @@ import java.util.HashMap;
 public class ContainerResultData {
     private String image_name;
     private String container_name;
-    private HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> container_metrics;
+    private HashMap<String, HashMap<String, HashMap<String, Aggregator>>> container_metrics;
 
     public String getImage_name() {
         return image_name;
@@ -41,11 +41,11 @@ public class ContainerResultData {
         this.container_name = container_name;
     }
 
-    public HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> getContainer_metrics() {
+    public HashMap<String, HashMap<String, HashMap<String, Aggregator>>> getContainer_metrics() {
         return container_metrics;
     }
 
-    public void setContainer_metrics(HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> container_metrics) {
+    public void setContainer_metrics(HashMap<String, HashMap<String, HashMap<String, Aggregator>>> container_metrics) {
         this.container_metrics = container_metrics;
     }
 

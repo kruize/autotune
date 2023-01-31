@@ -21,7 +21,7 @@ public class PodResultData {
 
     private String name;
     private String datasource;
-    private HashMap<String, GeneralInfoResult> summary_results;
+    private HashMap<String, Aggregator> summary_results;
 
     public String getName() {
         return name;
@@ -39,11 +39,11 @@ public class PodResultData {
         this.datasource = datasource;
     }
 
-    public HashMap<String, GeneralInfoResult> getSummary_results() {
+    public HashMap<String, Aggregator> getSummary_results() {
         return summary_results;
     }
 
-    public void setSummary_results(HashMap<String, GeneralInfoResult> summary_results) {
+    public void setSummary_results(HashMap<String, Aggregator> summary_results) {
         this.summary_results = summary_results;
     }
 

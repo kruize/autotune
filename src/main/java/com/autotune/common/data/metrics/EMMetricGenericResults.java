@@ -7,7 +7,7 @@ import org.json.JSONObject;
 public class EMMetricGenericResults implements ConvertToJSON {
     private float score;
     private float error;
-    private float mean;
+    private Double mean;
     private float mode;
     private float spike;
     private float min;
@@ -17,7 +17,7 @@ public class EMMetricGenericResults implements ConvertToJSON {
     public EMMetricGenericResults() {
         score = Float.MIN_VALUE;
         error = Float.MIN_VALUE;
-        mean = Float.MIN_VALUE;
+        mean = Double.MIN_VALUE;
         mode = Float.MIN_VALUE;
         spike = Float.MIN_VALUE;
         min = Float.MIN_VALUE;
@@ -28,7 +28,7 @@ public class EMMetricGenericResults implements ConvertToJSON {
     public EMMetricGenericResults(JSONObject jsonObject) {
         this.score = (jsonObject.has(AutotuneConstants.JSONKeys.SCORE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SCORE) : Float.MIN_VALUE;
         this.error = (jsonObject.has(AutotuneConstants.JSONKeys.ERROR)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.ERROR) : Float.MIN_VALUE;
-        this.mean = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN) : Float.MIN_VALUE;
+        this.mean = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
         this.mode = (jsonObject.has(AutotuneConstants.JSONKeys.MODE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MODE) : Float.MIN_VALUE;
         this.spike = (jsonObject.has(AutotuneConstants.JSONKeys.SPIKE)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SPIKE) : Float.MIN_VALUE;
         this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MAX) : Float.MIN_VALUE;
@@ -68,11 +68,11 @@ public class EMMetricGenericResults implements ConvertToJSON {
         this.error = error;
     }
 
-    public float getMean() {
-        return mean;
+    public Double getMean() {
+        return (double)mean;
     }
 
-    public void setMean(float mean) {
+    public void setMean(Double mean) {
         this.mean = mean;
     }
 
