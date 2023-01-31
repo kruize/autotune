@@ -4,7 +4,9 @@ metadata:
  name: "null-sloclass"
 spec:
   slo:
-    objective_function: "transaction_response_time"
+    objective_function:
+    - type: expression
+      expression: "transaction_response_time"
     slo_class: NULL
     direction: "minimize"
     function_variables:

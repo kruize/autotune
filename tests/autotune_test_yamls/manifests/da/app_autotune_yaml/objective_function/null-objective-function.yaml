@@ -4,7 +4,9 @@ metadata:
  name: "null-objective-function"
 spec:
   slo:
-    objective_function: NULL
+    objective_function:
+    - type: expression
+      expression: NULL
     slo_class: "response_time"
     direction: "minimize"
     function_variables:

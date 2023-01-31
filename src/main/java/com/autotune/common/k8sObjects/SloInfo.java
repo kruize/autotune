@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * slo:
  * objective_function:
  * - type: expression
- * - expression: "transaction_response_time"
+ *   expression: "transaction_response_time"
  * slo_class: "response_time"
  * direction: "minimize"
  * hpo_algo_impl: "optuna_tpe"

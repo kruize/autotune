@@ -30,7 +30,7 @@ public class AnalyzerConstants {
 
 
     // Used to parse autotune configmaps
-    public static final String K8S_TYPE = "k8s type";
+    public static final String K8S_TYPE = "K8S_TYPE";
     public static final String AUTH_TYPE = "AUTH_TYPE";
     public static final String AUTH_TOKEN = "AUTH_TOKEN";
     public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
@@ -111,7 +111,7 @@ public class AnalyzerConstants {
 
         public static final String SPEC = "spec";
         public static final String SLO = "slo";
-        public static final String SLO_CLASS = "sloClass";
+        public static final String SLO_CLASS = "slo_class";
         public static final String DIRECTION = "direction";
         public static final String OBJECTIVE_FUNCTION = "objective_function";
         public static final String OBJ_FUNCTION_TYPE = "type";

@@ -27,6 +27,7 @@ import com.autotune.analyzer.variables.Variables;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -35,6 +36,7 @@ import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.google.gson.Gson;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -53,10 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
@@ -328,7 +327,7 @@ public class KruizeDeployment {
             String mode;
             String targetCluster;
             SloInfo sloInfo;
-            ObjectiveFunction objectiveFunction;
+            ObjectiveFunction objectiveFunction = null;
             String namespace;
             SelectorInfo selectorInfo;
 
@@ -348,13 +347,9 @@ public class KruizeDeployment {
                 hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
                         AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
                 objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
-                objFuncType = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE);
-                if (objFuncType.equals("expression"))
-                    expression = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION);
-                else {
-                    if (!objFuncType.equals("source"))
-                        throw new InvalidValueException("Objective function type can only be either 'expression' or 'source' ");
-                }
+                LOGGER.info("Objective_Function JSON = {}",objectiveFunctionJson.toString());
+                objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
+                LOGGER.info("Objective_Function = {}",objectiveFunction.toString());
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -377,7 +372,6 @@ public class KruizeDeployment {
 
                 metricArrayList.add(metric);
             }
-            objectiveFunction = new ObjectiveFunction(objFuncType, expression);
             sloInfo = new SloInfo(slo_class,
                     objectiveFunction,
                     direction,
