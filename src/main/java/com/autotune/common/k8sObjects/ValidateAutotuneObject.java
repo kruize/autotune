@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
@@ -103,6 +104,7 @@ public class ValidateAutotuneObject
 		}
 		// Get the objective_function type
 		String objFunctionType = sloInfo.getObjectiveFunction().getType();
+		String expression = null;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
@@ -114,9 +116,27 @@ public class ValidateAutotuneObject
 				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE).append(functionVariable.getName())
 						.append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
 
+			// Validate Objective Function
+			if (objFunctionType.equals("expression")) {
+				try {
+					expression = sloInfo.getObjectiveFunction().getExpression();
+				} catch (NullPointerException npe) {
+					errorString.append("expression data cannot be null!");
+					break;
+				}
+			} else if (objFunctionType.equals("source")) {
+				if (null != sloInfo.getObjectiveFunction().getExpression()) {
+					errorString.append("Expression is not allowed when the type is 'source' ");
+					break;
+				}
+			} else {
+				errorString.append("Objective function type can only be either 'expression' or 'source' ");
+				break;
+			}
+
 			// Check if function_variable is part of objective_function
 			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
-				if ( sloInfo.getObjectiveFunction().getExpression() != null && !sloInfo.getObjectiveFunction().getExpression().contains(functionVariable.getName()))
+				if ( expression != null && !expression.contains(functionVariable.getName()))
 					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES).append(functionVariable.getName())
 							.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLE_ERROR);
 			}

@@ -32,8 +32,19 @@ spec:
                 description: 'slo allow an user to provide any one option out of response_time, right-size, throughput'
                 properties:
                   objective_function:
-                    description: 'function take simple and complex expression'
-                    type: string
+                    description: 'Key to search for in the query response'
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          description: 'can be expression or source'
+                          type: string
+                        expression:
+                          description: 'needs to be an algebraic expression'
+                          type: string
+                      required:
+                        - type
                   direction:
                     description: 'it will take the value like up or down'
                     type: string

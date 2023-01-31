@@ -9,7 +9,7 @@ slo:
   slo_class: "resource_usage"
   direction: "minimize"
 
-  # Refer to src/.../performanceProfiles/resourceOptimizationOpenShift.java
+  # Refer to src/.../performanceProfiles/PerfProfileImpl.java
   objective_function:
   - type: source
 

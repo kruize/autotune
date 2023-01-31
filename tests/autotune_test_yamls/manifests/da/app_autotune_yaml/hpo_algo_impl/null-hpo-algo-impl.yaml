@@ -5,7 +5,9 @@ metadata:
   namespace: "default"
 spec:
   slo:
-    objective_function: "transaction_response_time"
+    objective_function:
+    - type: expression
+      expression: "transaction_response_time"
     slo_class: "response_time"
     direction: "minimize"
     hpo_algo_impl: NULL

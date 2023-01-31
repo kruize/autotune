@@ -4,7 +4,9 @@ metadata:
  name: "invalid-objective-function"
 spec:
   slo:
-    objective_function: "tranme"
+    objective_function:
+    - type: expression
+      expression: "tranme"
     slo_class: "response_time"
     direction: "minimize"
     function_variables:
