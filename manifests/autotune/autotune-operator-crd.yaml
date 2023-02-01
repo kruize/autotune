@@ -33,18 +33,16 @@ spec:
                 properties:
                   objective_function:
                     description: 'Key to search for in the query response'
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type:
-                          description: 'can be expression or source'
-                          type: string
-                        expression:
-                          description: 'needs to be an algebraic expression'
-                          type: string
-                      required:
-                        - type
+                    properties:
+                      type:
+                        description: 'can be expression or source'
+                        type: string
+                      expression:
+                        description: 'needs to be an algebraic expression'
+                        type: string
+                    required:
+                      - type
+                    type: object
                   direction:
                     description: 'it will take the value like up or down'
                     type: string

@@ -94,7 +94,7 @@ public class ValidateAutotuneObject
 		}
 
 		// Check if objective_function and it's type exists
-		if (sloInfo.getObjectiveFunction() == null || sloInfo.getObjectiveFunction().getType().isEmpty()) {
+		if (sloInfo.getObjectiveFunction() == null) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
 		}
 
@@ -117,27 +117,30 @@ public class ValidateAutotuneObject
 						.append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
 
 			// Validate Objective Function
-			if (objFunctionType.equals("expression")) {
+			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
 				try {
 					expression = sloInfo.getObjectiveFunction().getExpression();
+					if (null == expression || expression.equals(AnalyzerConstants.NULL))
+						throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
 				} catch (NullPointerException npe) {
-					errorString.append("expression data cannot be null!");
+					errorString.append(npe.getMessage());
 					break;
 				}
-			} else if (objFunctionType.equals("source")) {
+			} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
 				if (null != sloInfo.getObjectiveFunction().getExpression()) {
-					errorString.append("Expression is not allowed when the type is 'source' ");
+					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
 					break;
 				}
 			} else {
-				errorString.append("Objective function type can only be either 'expression' or 'source' ");
+				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
 				break;
 			}
 
 			// Check if function_variable is part of objective_function
 			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
-				if ( expression != null && !expression.contains(functionVariable.getName()))
-					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES).append(functionVariable.getName())
+				if (!expression.contains(functionVariable.getName()))
+					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES).append(" ")
+							.append(functionVariable.getName()).append(" ")
 							.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLE_ERROR);
 			}
 		}

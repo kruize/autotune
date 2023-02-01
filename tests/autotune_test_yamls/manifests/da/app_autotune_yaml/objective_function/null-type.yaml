@@ -1,18 +1,17 @@
 apiVersion: "recommender.com/v1"
 kind: "Autotune"
 metadata:
- name: "no-datasource-url-value"
+ name: "null-type"
 spec:
   slo:
     objective_function:
-      type: expression
-      expression: "transaction_response_time"
+      type: NULL
     slo_class: "response_time"
     direction: "minimize"
     function_variables:
     - name: "transaction_response_time"
       query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
-      datasource: "prometheus-test"
+      datasource: "prometheus"
       value_type: "double"
   mode: "experiment"
   selector:
@@ -21,6 +20,3 @@ spec:
     matchRoute: ""
     matchURI: ""
     matchService: "https"
-  datasource:
-    name: "prometheus-test"
-    value: 

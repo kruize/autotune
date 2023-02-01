@@ -50,18 +50,16 @@ spec:
                 type: string
               objective_function:
                 description: 'Key to search for in the query response'
-                type: array
-                items:
-                  type: object
-                  properties:
-                    type:
-                      description: 'can be expression or source'
-                      type: string
-                    expression:
-                      description: 'needs to be an algebraic expression'
-                      type: string
-                  required:
+                properties:
+                  type:
+                    description: 'can be expression or source'
+                    type: string
+                  expression:
+                    description: 'needs to be an algebraic expression'
+                    type: string
+                required:
                   - type
+                type: object
               function_variables:
                 description: 'Variables to be used in the objective_function'
                 type: array

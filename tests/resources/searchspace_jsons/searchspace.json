@@ -4,7 +4,10 @@
         "id": "a123",
         "value_type": "double",
         "hpo_algo_impl": "optuna_tpe",
-        "objective_function": "transaction_response_time",
+        "objective_function": {
+            "type": "expression",
+            "expression": "transaction_response_time"
+        },
         "tunables": [
             {
                 "value_type": "double",
