@@ -44,9 +44,9 @@ public class ListStacks extends HttpServlet {
      * {
      * "experiment_name": "autotune-max-http-throughput",
      * "experiment_id": "94f76772f43339f860e0d5aad8bebc1abf50f461712d4c5d14ea7aada280e8f3",
-     * "objective_function":
-     *  {
-     *  "type": "source"
+     * "objective_function": {
+     * "type": "expression",
+     * "expression": "request_sum/request_count"
      *  },
      * "slo_class": "throughput",
      * "direction": "maximize",

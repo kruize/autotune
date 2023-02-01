@@ -65,6 +65,7 @@ public class ExperimentResultValidation {
                             proceed = true;
                         } else {
                             proceed = false;
+                            resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
                         }
                     } else {

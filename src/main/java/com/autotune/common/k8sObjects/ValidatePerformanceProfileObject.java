@@ -74,7 +74,7 @@ public class ValidatePerformanceProfileObject
 
 		// Get the objective_function type
 		String objFunctionType = sloInfo.getObjectiveFunction().getType();
-		String expression = null;
+		String expression;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
@@ -92,20 +92,22 @@ public class ValidatePerformanceProfileObject
 				errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object).append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
 
 			// Validate Objective Function
-			if (objFunctionType.equals("expression")) {
+			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
 				try {
 					expression = sloInfo.getObjectiveFunction().getExpression();
+					if (null == expression)
+						throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
 				} catch (NullPointerException npe) {
-					errorString.append("expression data cannot be null!");
+					errorString.append(npe.getMessage());
 					break;
 				}
-			} else if (objFunctionType.equals("source")) {
+			} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
 				if (null != sloInfo.getObjectiveFunction().getExpression()) {
-					errorString.append("Expression is not allowed when the type is 'source' ");
+					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
 					break;
 				}
 			} else {
-				errorString.append("Objective function type can only be either 'expression' or 'source' ");
+				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
 				break;
 			}
 			// Check if one of query or aggregation_functions is present

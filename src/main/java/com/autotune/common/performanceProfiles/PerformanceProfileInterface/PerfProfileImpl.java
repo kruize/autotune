@@ -7,6 +7,7 @@ import com.autotune.common.data.result.GeneralInfoResult;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,8 @@ public class PerfProfileImpl implements PerfProfileInterface {
                 if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
                     new HashSet<>(perfProfileFunctionVariablesList).containsAll(kruizeFunctionVariablesList) &&
                     new HashSet<>(kruizeFunctionVariablesList).containsAll(perfProfileFunctionVariablesList))) {
-                    errorMsg = errorMsg.concat(String.format("Performance Profile parameters missing for experiment : %s", experimentResultData.getExperiment_name()));
+                    perfProfileFunctionVariablesList.removeAll(kruizeFunctionVariablesList);
+                    errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : \n %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
                     break;
                 } else  {
                     for(HashMap<String, HashMap<String, GeneralInfoResult>> funcVar:containerMetricsMap.values()){
@@ -85,8 +87,8 @@ public class PerfProfileImpl implements PerfProfileInterface {
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the genInfo List
         if (genInfoObjects.stream().noneMatch(aggrFunctionsObjects::contains)) {
-            LOGGER.error("At least one aggregation function value needs to be present!");
-            errorMsg = errorMsg.concat("At least one aggregation function value needs to be present ");
+            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_AGG_FUNCTION);
+            errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_AGG_FUNCTION);
         } else {
             // check if some or all the values are present or not and respond accordingly
             for (String aggFuncObj : aggrFunctionsObjects) {

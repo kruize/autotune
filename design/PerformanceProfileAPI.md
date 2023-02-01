@@ -23,11 +23,10 @@ see [Create Experiment](/design/CreatePerformanceProfile.md)
   "profile_version": 1,
   "slo": {
     "direction": "minimize",
-    "objective_function": [
-      {
-        "type": "source"
-      }
-    ],
+    "objective_function": {
+        "type": "expression",
+        "expression": "request_sum/request_count"
+    },
     "function_variables": [
       {
         "name": "cpuRequest",
@@ -79,11 +78,10 @@ Update Performance Profile data using input JSON as follows.
   "slo": {
     "slo_class": "resource_usage",
     "direction": "minimize",
-    "objective_function": [
-      {
-        "type": "source"
-      }
-    ],
+    "objective_function": {
+        "type": "expression",
+        "expression": "request_sum/request_count"
+    },
     "function_variables": [
       {
         "name": "cpuRequest",

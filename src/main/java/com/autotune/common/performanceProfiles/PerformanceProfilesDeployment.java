@@ -9,6 +9,7 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.google.gson.Gson;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import org.json.JSONArray;
@@ -102,14 +103,12 @@ public class PerformanceProfilesDeployment {
             String k8s_type;
             double profile_version;
             SloInfo sloInfo;
-            ObjectiveFunction objectiveFunction;
+            ObjectiveFunction objectiveFunction = null;
 
             JSONObject sloJson;
             String slo_class = null;
             String direction = null;
             JSONObject objectiveFunctionJson;
-            String objFuncType = null;
-            String expression = null;
 
             name = metadataJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME);
             profile_version = Double.parseDouble(performanceProfileObjectJson.optString(AnalyzerConstants.PROFILE_VERSION,
@@ -121,13 +120,8 @@ public class PerformanceProfilesDeployment {
                 slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
                 direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
                 objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
-                objFuncType = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE);
-                if (objFuncType.equals("expression"))
-                    expression = objectiveFunctionJson.optString(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION);
-                else {
-                    if (!objFuncType.equals("source"))
-                        throw new InvalidValueException("Objective function type can only be either 'expression' or 'source' ");
-                }
+                objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
+                LOGGER.debug("Objective_Function = {}",objectiveFunction.toString());
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -170,7 +164,6 @@ public class PerformanceProfilesDeployment {
 
                 metricArrayList.add(metric);
             }
-            objectiveFunction = new ObjectiveFunction(objFuncType, expression);
             sloInfo = new SloInfo(slo_class,
                     objectiveFunction,
                     direction,
@@ -179,7 +172,7 @@ public class PerformanceProfilesDeployment {
             return new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {
-            LOGGER.error("Exception occurred while parsing the data: ",e.getMessage());
+            LOGGER.error("Exception occurred while parsing the data: {}",e.getMessage());
             return null;
         }
     }

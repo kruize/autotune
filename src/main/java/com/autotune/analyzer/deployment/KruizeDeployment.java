@@ -337,8 +337,6 @@ public class KruizeDeployment {
             String slo_class = null;
             String direction = null;
             JSONObject objectiveFunctionJson = null;
-            String objFuncType = null;
-            String expression = null;
             String hpoAlgoImpl = null;
             if (specJson != null) {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -347,9 +345,8 @@ public class KruizeDeployment {
                 hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
                         AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
                 objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
-                LOGGER.info("Objective_Function JSON = {}",objectiveFunctionJson.toString());
                 objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
-                LOGGER.info("Objective_Function = {}",objectiveFunction.toString());
+                LOGGER.debug("Objective_Function = {}",objectiveFunction.toString());
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -426,7 +423,8 @@ public class KruizeDeployment {
             );
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null,null, null);
             return null;
         }
     }

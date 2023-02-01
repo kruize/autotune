@@ -27,7 +27,7 @@ import java.util.ArrayList;
  * Example:
  * slo:
  * objective_function:
- * - type: expression
+ *   type: expression
  *   expression: "transaction_response_time"
  * slo_class: "response_time"
  * direction: "minimize"

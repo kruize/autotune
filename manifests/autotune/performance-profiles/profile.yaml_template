@@ -35,7 +35,7 @@ slo:
   # calculation using function variables
   # "source" means that the calculation is backed by a java source file.
   # MANDATORY
-  - type: expression
+    type: expression
     # algebraic expression
     # Only valid if the "type" is "expression"
     # OPTIONAL

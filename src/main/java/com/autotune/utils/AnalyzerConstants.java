@@ -79,6 +79,7 @@ public class AnalyzerConstants {
     public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
     public static final String DEPLOYMENT_NAME = "deployment_name";
     public static final String SELECTOR = "selectorInfo";
+    public static final String NULL = "null";
     private AnalyzerConstants() {
     }
 
@@ -354,7 +355,6 @@ public class AnalyzerConstants {
 
     public static final class PerformanceProfileConstants {
 
-
         public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
         public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
         public static final String K8S_TYPE = "K8S_TYPE";
@@ -364,5 +364,6 @@ public class AnalyzerConstants {
         public static final String OBJECTIVE_FUNCTION = "objectiveFunction";
         public static final String FUNCTION_VARIABLES = "functionVariables";
         public static final String VALUE_TYPE = "valueType";
+        public static final String SOURCE = "source";
     }
 }

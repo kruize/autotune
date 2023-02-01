@@ -5,7 +5,7 @@ metadata:
 spec:
   slo:
     objective_function:
-    - type: expression
+      type: expression
       expression: "transaction_response_time"
     slo_class: "response_time"
     direction: "minimize"
@@ -14,7 +14,7 @@ spec:
       query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
       datasource: "prometheus"
       value_type: "double"
-  mode: "show"
+  mode: "experiment"
   selector:
     matchLabel: "app.kubernetes.io/name"
     matchLabelValue: 

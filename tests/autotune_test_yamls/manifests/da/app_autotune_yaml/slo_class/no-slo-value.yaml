@@ -4,7 +4,7 @@ metadata:
  name: "no-slo-value"
 spec:
   slo:
-  mode: "show"
+  mode: "experiment"
   selector:
     matchLabel: "app.kubernetes.io/name"
     matchLabelValue: "petclinic-deployment"

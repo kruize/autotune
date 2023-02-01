@@ -67,7 +67,7 @@ module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # Path to the directory containing yaml files
-configmap="${AUTOTUNE_REPO}/manifests/configmaps"
+configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
