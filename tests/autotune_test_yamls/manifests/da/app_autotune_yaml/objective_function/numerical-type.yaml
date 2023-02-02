@@ -5,7 +5,7 @@ metadata:
 spec:
   slo:
     objective_function:
-      type: 123
+      function_type: 123
     slo_class: "response_time"
     direction: "minimize"
     function_variables:

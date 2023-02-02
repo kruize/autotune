@@ -117,37 +117,41 @@ public class ValidateAutotuneObject
 						.append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
 
 			// Validate Objective Function
-			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
-				try {
-					expression = sloInfo.getObjectiveFunction().getExpression();
-					if (null == expression || expression.equals(AnalyzerConstants.NULL))
-						throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
-				} catch (NullPointerException npe) {
-					errorString.append(npe.getMessage());
-					break;
+			try {
+				if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+
+						expression = sloInfo.getObjectiveFunction().getExpression();
+						System.out.println("****** Exprssion = "+expression);
+						if (null == expression || expression.equals(AnalyzerConstants.NULL))
+							throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
+
+				} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
+					if (null != sloInfo.getObjectiveFunction().getExpression()) {
+						errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
+						throw new InvalidValueException(errorString.toString());
+					}
+				} else {
+					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
+					throw new InvalidValueException(errorString.toString());
 				}
-			} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
-				if (null != sloInfo.getObjectiveFunction().getExpression()) {
-					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
-					break;
-				}
-			} else {
-				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
-				break;
+			} catch (NullPointerException | InvalidValueException npe) {
+				errorString.append(npe.getMessage());
+				return errorString;
 			}
 
 			// Check if function_variable is part of objective_function
 			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
 				if (!expression.contains(functionVariable.getName()))
-					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES).append(" ")
+					errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
 							.append(functionVariable.getName()).append(" ")
 							.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLE_ERROR);
+				return errorString;
 			}
 		}
 
 		// Check if objective_function is correctly formatted
 		if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
-			if (!new EvalExParser().validate(sloInfo.getObjectiveFunction().getExpression(), sloInfo.getFunctionVariables())) {
+			if (expression.equals(AnalyzerConstants.NULL) || !new EvalExParser().validate(sloInfo.getObjectiveFunction().getExpression(), sloInfo.getFunctionVariables())) {
 				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
 			}
 		}
