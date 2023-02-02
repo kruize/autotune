@@ -11,7 +11,7 @@ slo:
 
   # Refer to src/.../performanceProfiles/PerfProfileImpl.java
   objective_function:
-    type: source
+    function_type: source
 
   function_variables:
   # CPU Request

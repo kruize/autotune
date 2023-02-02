@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
-import com.autotune.common.performanceProfiles.AggregationFunctions;
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -92,23 +92,26 @@ public class ValidatePerformanceProfileObject
 				errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object).append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
 
 			// Validate Objective Function
-			if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
-				try {
+			try {
+				if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+
 					expression = sloInfo.getObjectiveFunction().getExpression();
-					if (null == expression)
+					System.out.println("****** Exprssion = "+expression);
+					if (null == expression || expression.equals(AnalyzerConstants.NULL))
 						throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
-				} catch (NullPointerException npe) {
-					errorString.append(npe.getMessage());
-					break;
+
+				} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
+					if (null != sloInfo.getObjectiveFunction().getExpression()) {
+						errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
+						throw new InvalidValueException(errorString.toString());
+					}
+				} else {
+					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
+					throw new InvalidValueException(errorString.toString());
 				}
-			} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
-				if (null != sloInfo.getObjectiveFunction().getExpression()) {
-					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
-					break;
-				}
-			} else {
-				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
-				break;
+			} catch (NullPointerException | InvalidValueException npe) {
+				errorString.append(npe.getMessage());
+				return errorString;
 			}
 			// Check if one of query or aggregation_functions is present
 			String query = (String) map.get(AnalyzerConstants.AutotuneObjectConstants.QUERY);

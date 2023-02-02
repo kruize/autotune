@@ -18,8 +18,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.RemoteMonitoringOpenShiftImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +56,11 @@ public class ExperimentResultValidation {
                             break;
                         }
                         // Validate Performance Profile data
-                        PerfProfileImpl perfProfileImpl = new PerfProfileImpl();
-                        errorMsg = perfProfileImpl.validate(kruizeObject,resultData);
+                        RemoteMonitoringOpenShiftImpl remoteMonitoringOpenShiftImpl = new RemoteMonitoringOpenShiftImpl();
+                        errorMsg = remoteMonitoringOpenShiftImpl.validate(kruizeObject,resultData);
                         if (errorMsg.isEmpty() || errorMsg.isBlank()) {
                         // call recommend() method here
-                            perfProfileImpl.recommend();
+                            remoteMonitoringOpenShiftImpl.recommend();
                             proceed = true;
                         } else {
                             proceed = false;

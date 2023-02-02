@@ -51,14 +51,14 @@ spec:
               objective_function:
                 description: 'Key to search for in the query response'
                 properties:
-                  type:
+                  function_type:
                     description: 'can be expression or source'
                     type: string
                   expression:
                     description: 'needs to be an algebraic expression'
                     type: string
                 required:
-                  - type
+                  - function_type
                 type: object
               function_variables:
                 description: 'Variables to be used in the objective_function'

@@ -6,7 +6,7 @@ Documentation still in progress stay tuned.
 ## CreatePerformanceProfile
 
 This is quick guide instructions to create performance profile using input JSON as follows. For a more detailed guide,
-see [Create Experiment](/design/CreatePerformanceProfile.md)
+see [Create Performance Profile](/design/CreatePerformanceProfile.md)
 
 **Request**
 `POST /createPerformanceProfile`

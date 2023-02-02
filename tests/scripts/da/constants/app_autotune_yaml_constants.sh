@@ -57,11 +57,13 @@ objective_function_testcases=(
 "blank-expression"
 "null-expression"
 "no-expression-value"
+"numerical-type"
 "invalid-type"
 "no-type"
 "blank-type"
 "null-type"
-"no-type-value")
+"no-type-value"
+)
 
 # tests for slo class
 slo_class_testcases=("blank-sloclass"
@@ -209,15 +211,15 @@ objective_function_expected_log_msgs=([blank-objective-function]=''${autotune_ex
 [no-objective-function-value]='error: error validating "'${yaml_test_path}/no-objective-function-value.yaml'"'${obj_fun_kubectl_error}''
 [null-objective-function]='error: error validating "'${yaml_test_path}/null-objective-function.yaml'"'${obj_fun_kubectl_error}''
 [valid-objective-function]=''${autotune_object_create_msg}' valid-objective-function'
-[invalid-expression]=''${autotune_exception}' function_variable transaction_response_time missing in objective_function'
-[no-expression]=''${autotune_exception}' expression value is missing or null!'
-[blank-expression]=''${autotune_exception}' function_variable transaction_response_time missing in objective_function'
+[invalid-expression]='function_variable: transaction_response_time missing in objective_function'
+[no-expression]='Expression value is missing or null!'
+[blank-expression]='function_variable: transaction_response_time missing in objective_function'
 [numerical-expression]='The Autotune "numerical-expression" is invalid: spec.slo.objective_function: Invalid value: "integer": spec.slo.objective_function in body must be of type string: "integer"'
-[null-expression]=''${autotune_exception}' expression value is missing or null!'
+[null-expression]='Expression value is missing or null!'
 [no-expression-value]='error: error validating "'${yaml_test_path}/no-expression-value.yaml'"'${no_value_kubectl_error}''
-[invalid-type]=''${autotune_exception}' Objective function type can only be either expression or source'
+[invalid-type]='Objective function type can only be either expression or source'
 [no-type]='error: error validating "'${yaml_test_path}/no-type.yaml'"'${obj_fun_kubectl_error}''
-[blank-type]=''${autotune_exception}' Objective function type can only be either expression or source'
+[blank-type]='Objective function type can only be either expression or source'
 [numerical-type]='The Autotune "numerical-type" is invalid: spec.slo.objective_function.type: Invalid value: "integer": spec.slo.objective_function.type in body must be of type string: "integer"'
 [null-type]='error: error validating "'${yaml_test_path}/null-type.yaml'"'${obj_fun_type_kubectl_error}''
 [no-type-value]='error: error validating "'${yaml_test_path}/no-type-value.yaml'"'${no_value_kubectl_error}'')

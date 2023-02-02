@@ -28,6 +28,6 @@ public class TargetHandlerException extends Throwable {
     public TargetHandlerException(Exception e, final String errorMsg) {
         super(errorMsg);
         LOGGER.error(errorMsg);
-        LOGGER.debug("Kubernetes error info", e);
+        LOGGER.debug("Kubernetes error info: {}", e.getMessage());
     }
 }

@@ -15,9 +15,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class PerfProfileImpl implements PerfProfileInterface {
+public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PerfProfileImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteMonitoringOpenShiftImpl.class);
 
     @Override
     public String validate(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
@@ -54,7 +54,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
                           Map<String, Object> genInfoClassAsMap;
                           for(GeneralInfoResult genInfoObj:genInfo.values()){
                               try {
-                                genInfoClassAsMap = PerfProfileImpl.convertObjectToMap(genInfoObj);
+                                genInfoClassAsMap = RemoteMonitoringOpenShiftImpl.convertObjectToMap(genInfoObj);
                                 errorMsg = validateAggFunction(genInfoClassAsMap.keySet(), aggrFunctionsObjects);
                                 if (!errorMsg.isBlank()) {
                                     errorMsg = errorMsg.concat(String.format("for the experiment : %s"
