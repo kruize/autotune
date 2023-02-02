@@ -180,3 +180,10 @@ function openshift_terminate() {
 	echo "Removing Autotune namespace"
 	kubectl delete ns ${autotune_ns}
 }
+
+function openshift_crc_terminate() {
+	echo -n "###   Removing Kruize for openshift"
+	echo
+	kubectl -n openshift-tuning delete svc kruize
+	kubectl -n openshift-tuning delete deployment kruize
+}

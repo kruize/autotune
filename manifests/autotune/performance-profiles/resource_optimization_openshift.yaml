@@ -9,7 +9,7 @@ slo:
   slo_class: "resource_usage"
   direction: "minimize"
 
-  # Refer to src/.../performanceProfiles/PerfProfileImpl.java
+  # Refer to src/.../performanceProfiles/PerformanceProfileInterface/RemoteMonitoringOpenShiftImpl.java
   objective_function:
     function_type: source
 

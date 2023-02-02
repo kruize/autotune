@@ -1,21 +1,21 @@
 package com.autotune.common.k8sObjects;
 
 public class ObjectiveFunction {
-    private String type;
+    private String function_type;
     private String expression;
 
 
-    public ObjectiveFunction(String type, String expression) {
-        this.type = type;
+    public ObjectiveFunction(String function_type, String expression) {
+        this.function_type = function_type;
         this.expression = expression;
     }
 
-    public String getType() {
-        return type;
+    public String getFunction_type() {
+        return function_type;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setFunction_type(String function_type) {
+        this.function_type = function_type;
     }
 
     public String getExpression() {
@@ -29,7 +29,7 @@ public class ObjectiveFunction {
     @Override
     public String toString() {
         return "ObjectiveFunction{" +
-                "type='" + type + '\'' +
+                "function_type='" + function_type + '\'' +
                 ", expression='" + expression + '\'' +
                 '}';
     }

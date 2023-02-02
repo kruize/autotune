@@ -57,12 +57,12 @@ objective_function_testcases=(
 "blank-expression"
 "null-expression"
 "no-expression-value"
-"numerical-type"
-"invalid-type"
-"no-type"
-"blank-type"
-"null-type"
-"no-type-value"
+"numerical-function-type"
+"invalid-function-type"
+"no-function-type"
+"blank-function-type"
+"null-function-type"
+"no-function-type-value"
 )
 
 # tests for slo class
@@ -191,12 +191,12 @@ objective_function_autotune_objects=([blank-objective-function]='true'
 [numerical-expression]='false'
 [null-expression]='false'
 [no-expression-value]='false'
-[invalid-type]='false'
-[no-type]='false'
-[blank-type]='false'
-[numerical-type]='false'
-[null-type]='false'
-[no-type-value]='false'
+[invalid-function-type]='false'
+[no-function-type]='false'
+[blank-function-type]='false'
+[numerical-function-type]='false'
+[null-function-type]='false'
+[no-function-type-value]='false'
 [valid-objective-function]='true'
 )
 
@@ -204,7 +204,7 @@ objective_function_autotune_objects=([blank-objective-function]='true'
 declare -A objective_function_expected_log_msgs
 yaml_test_path="${path}/${app_autotune_tests[0]}"
 obj_fun_kubectl_error=': error validating data: ValidationError(Autotune.spec.slo): missing required field "objective_function" in com.recommender.v1.Autotune.spec.slo; if you choose to ignore these errors, turn validation off with --validate=false'
-obj_fun_type_kubectl_error=': error validating data: ValidationError(Autotune.spec.slo.objective_function): missing required field "type" in com.recommender.v1.Autotune.spec.slo.objective_function; if you choose to ignore these errors, turn validation off with --validate=false'
+obj_fun_type_kubectl_error=': error validating data: ValidationError(Autotune.spec.slo.objective_function): missing required field "function-type" in com.recommender.v1.Autotune.spec.slo.objective_function; if you choose to ignore these errors, turn validation off with --validate=false'
 no_value_kubectl_error=': error validating data: ValidationError(Autotune.spec.slo.objective_function): invalid type for com.recommender.v1.Autotune.spec.slo.objective_function: got "array", expected "map"; if you choose to ignore these errors, turn validation off with --validate=false'
 objective_function_expected_log_msgs=([blank-objective-function]=''${autotune_exception}' function_variable transaction_response_time missing in objective_function'
 [no-objective-function]='error: error validating "'${yaml_test_path}/no-objective-function.yaml'"'${obj_fun_kubectl_error}''
@@ -217,12 +217,12 @@ objective_function_expected_log_msgs=([blank-objective-function]=''${autotune_ex
 [numerical-expression]='The Autotune "numerical-expression" is invalid: spec.slo.objective_function: Invalid value: "integer": spec.slo.objective_function in body must be of type string: "integer"'
 [null-expression]='Expression value is missing or null!'
 [no-expression-value]='error: error validating "'${yaml_test_path}/no-expression-value.yaml'"'${no_value_kubectl_error}''
-[invalid-type]='Objective function type can only be either expression or source'
-[no-type]='error: error validating "'${yaml_test_path}/no-type.yaml'"'${obj_fun_kubectl_error}''
-[blank-type]='Objective function type can only be either expression or source'
-[numerical-type]='The Autotune "numerical-type" is invalid: spec.slo.objective_function.type: Invalid value: "integer": spec.slo.objective_function.type in body must be of type string: "integer"'
-[null-type]='error: error validating "'${yaml_test_path}/null-type.yaml'"'${obj_fun_type_kubectl_error}''
-[no-type-value]='error: error validating "'${yaml_test_path}/no-type-value.yaml'"'${no_value_kubectl_error}'')
+[invalid-function-type]='Objective function type can only be either expression or source'
+[no-function-type]='error: error validating "'${yaml_test_path}/no-function-type.yaml'"'${obj_fun_kubectl_error}''
+[blank-function-type]='Objective function type can only be either expression or source'
+[numerical-function-type]='The Autotune "numerical-function-type" is invalid: spec.slo.objective_function.type: Invalid value: "integer": spec.slo.objective_function.type in body must be of type string: "integer"'
+[null-function-type]='error: error validating "'${yaml_test_path}/null-function-type.yaml'"'${obj_fun_type_kubectl_error}''
+[no-function-type-value]='error: error validating "'${yaml_test_path}/no-function-type-value.yaml'"'${no_value_kubectl_error}'')
 
 # Expected autotune object for slo class
 declare -A slo_class_autotune_objects
