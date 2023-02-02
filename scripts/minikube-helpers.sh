@@ -178,3 +178,10 @@ function minikube_terminate() {
 	rm ${AUTOTUNE_RB_MANIFEST}
 	rm ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
 }
+
+function minikube_crc_terminate() {
+	echo -n "###   Removing Kruize for minikube"
+	echo
+	kubectl -n monitoring delete svc kruize
+	kubectl -n monitoring delete deployment kruize
+}

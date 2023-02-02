@@ -15,16 +15,12 @@ see [Create Performance Profile](/design/CreatePerformanceProfile.md)
 
 ```
 {
-  "apiVersion": "recommender.com/v1",
-  "kind": "KruizePerformanceProfile",
-  "metadata": {
-    "name": "resource-optimization-openshift"
-  },
+  "name": "resource-optimization-openshift",
   "profile_version": 1,
   "slo": {
     "direction": "minimize",
     "objective_function": {
-        "type": "expression",
+        "function_type": "expression",
         "expression": "request_sum/request_count"
     },
     "function_variables": [
@@ -68,18 +64,14 @@ Update Performance Profile data using input JSON as follows.
 
 ```
 {
-  "apiVersion": "recommender.com/v1",
-  "kind": "KruizePerformanceProfile",
-  "metadata": {
-    "name": "resource-optimization-openshift"
-  },
+  "name": "resource-optimization-openshift",
   "profile_version": 1,
   "k8s_type": "openshift",
   "slo": {
     "slo_class": "resource_usage",
     "direction": "minimize",
     "objective_function": {
-        "type": "expression",
+        "function_type": "expression",
         "expression": "request_sum/request_count"
     },
     "function_variables": [

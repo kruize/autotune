@@ -73,7 +73,7 @@ public class ValidatePerformanceProfileObject
 		}
 
 		// Get the objective_function type
-		String objFunctionType = sloInfo.getObjectiveFunction().getType();
+		String objFunctionType = sloInfo.getObjectiveFunction().getFunction_type();
 		String expression;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported

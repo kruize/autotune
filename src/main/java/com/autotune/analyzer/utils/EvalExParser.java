@@ -84,6 +84,8 @@ public class EvalExParser implements AlgebraicParser {
          */
         String objFunctionOperators = "";
         objFunctionOperators = objFunction.replaceAll("[a-zA-Z _]", "");
+        if (objFunctionOperators.isEmpty())
+            return true;
 
         LOGGER.info("Objective Func Operators: {}", objFunctionOperators);
 

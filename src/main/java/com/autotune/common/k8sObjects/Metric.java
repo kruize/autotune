@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Holds the variables used in the objective_function for the autotune object
  * objective_function:
- *   type: expression
+ *   function_type: expression
  *   expression: "transaction_response_time"
  * function_variables:
  * - name: "transaction_response_time"

@@ -115,7 +115,7 @@ public class AnalyzerConstants {
         public static final String SLO_CLASS = "slo_class";
         public static final String DIRECTION = "direction";
         public static final String OBJECTIVE_FUNCTION = "objective_function";
-        public static final String OBJ_FUNCTION_TYPE = "type";
+        public static final String OBJ_FUNCTION_TYPE = "function_type";
         public static final String EXPRESSION = "expression";
         public static final String FUNCTION_VARIABLES = "function_variables";
         public static final String NAME = "name";

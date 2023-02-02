@@ -179,5 +179,9 @@ if [ ${setup} == 1 ]; then
 		${cluster_type}_start
 	fi
 else
-	${cluster_type}_terminate
+	if [ ${target} == "crc" ]; then
+		${cluster_type}_crc_terminate
+	else
+		${cluster_type}_terminate
+	fi
 fi

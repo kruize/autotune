@@ -121,7 +121,6 @@ public class PerformanceProfilesDeployment {
                 direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
                 objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
                 objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
-                LOGGER.debug("Objective_Function = {}",objectiveFunction.toString());
             }
 
             JSONArray functionVariables = new JSONArray();

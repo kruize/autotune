@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright (c) 2022 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.common.data.result.ContainerResultData;
@@ -15,6 +30,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+/**
+ * Util class to validate the performance profile metrics with the experiment results metrics.
+ */
 public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteMonitoringOpenShiftImpl.class);
@@ -45,8 +63,10 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
                 if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
                     new HashSet<>(perfProfileFunctionVariablesList).containsAll(kruizeFunctionVariablesList) &&
                     new HashSet<>(kruizeFunctionVariablesList).containsAll(perfProfileFunctionVariablesList))) {
+                    LOGGER.debug("perfProfileFunctionVariablesList: {}",perfProfileFunctionVariablesList);
+                    LOGGER.debug("kruizeFunctionVariablesList: {}",kruizeFunctionVariablesList);
                     perfProfileFunctionVariablesList.removeAll(kruizeFunctionVariablesList);
-                    errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : \n %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
+                    errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
                     break;
                 } else  {
                     for(HashMap<String, HashMap<String, GeneralInfoResult>> funcVar:containerMetricsMap.values()){
@@ -124,7 +144,7 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
         for (Method m : methods) {
             if (m.getName().startsWith("get") && !m.getName().startsWith("getClass")) {
                 Object value = m.invoke(obj);
-                if ( value instanceof Double && Double.valueOf(value.toString()) != 0.0 )
+                if (value instanceof Double)
                     map.put(m.getName().substring(3).toLowerCase(), value);
             }
         }

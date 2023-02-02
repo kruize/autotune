@@ -103,7 +103,7 @@ public class ValidateAutotuneObject
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
 		// Get the objective_function type
-		String objFunctionType = sloInfo.getObjectiveFunction().getType();
+		String objFunctionType = sloInfo.getObjectiveFunction().getFunction_type();
 		String expression = null;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported

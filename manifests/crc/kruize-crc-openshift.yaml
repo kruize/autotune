@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: kruize
-        image: "kruize/autotune_operator:test"
+        image: "kruize/autotune_operator:0.0.8_mvp"
         imagePullPolicy: Always
         env:
           - name: CLUSTER_TYPE
