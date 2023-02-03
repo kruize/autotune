@@ -137,7 +137,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                         metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
                                     }
                                     EMMetricResult emMetricResult = new EMMetricResult();
-                                    emMetricResult.getEmMetricGenericResults().setMean(Float.parseFloat(queryResult));
+                                    emMetricResult.getEmMetricGenericResults().setMean(Double.parseDouble(queryResult));
                                     metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
                                     LOGGER.debug("Query Result - {}", queryResult);
                                 } catch (Exception e) {
@@ -178,18 +178,18 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                             DecimalFormat df = new DecimalFormat("0.00");
                                             df.setMaximumFractionDigits(2);
                                             EMMetricResult emMetricResult = new EMMetricResult();
-                                            Float resultFloat = Float.parseFloat(queryResult);
+                                            Double resultFloat = Double.parseDouble(queryResult);
                                             if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
                                                 emMetricResult.getEmMetricGenericResults().setUnits("cores");
 
                                             } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
                                                     || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
-                                                resultFloat = (float) EMUtil.convertToMiB(resultFloat, EMUtil.MemoryUnits.BYTES);
+                                                resultFloat = (Double) EMUtil.convertToMiB(resultFloat, EMUtil.MemoryUnits.BYTES);
                                                 LOGGER.debug("Result float from util - " + resultFloat);
                                                 emMetricResult.getEmMetricGenericResults().setUnits("MiB");
                                             }
                                             LOGGER.debug("Result float before- " + resultFloat);
-                                            resultFloat = Float.parseFloat(df.format(resultFloat));
+                                            resultFloat = Double.parseDouble(df.format(resultFloat));
                                             LOGGER.debug("Result float after - " + resultFloat);
                                             emMetricResult.getEmMetricGenericResults().setMean(resultFloat);
                                             metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
@@ -216,7 +216,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                     if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
                         LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
-                        float sumVal = 0;
+                        double sumVal = 0;
                         int removableEntries = 0;
                         for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
                             EMMetricResult emMetricResult = measurementMapEntry.getValue();
@@ -225,7 +225,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             else
                                 sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
                         }
-                        float avgVal = sumVal / (measurementMap.size() - removableEntries);
+                        double avgVal = sumVal / (measurementMap.size() - removableEntries);
                         EMMetricResult emMetricResult = new EMMetricResult();
                         emMetricResult.getEmMetricGenericResults().setMean(avgVal);
                         podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), emMetricResult);
@@ -245,7 +245,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                         if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
                             LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
-                            float sumVal = 0;
+                            double sumVal = 0;
                             int removableEntries = 0;
                             for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
                                 EMMetricResult emMetricResult = measurementMapEntry.getValue();
@@ -254,7 +254,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 else
                                     sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
                             }
-                            float avgVal = sumVal / (measurementMap.size() - removableEntries);
+                            double avgVal = sumVal / (measurementMap.size() - removableEntries);
                             EMMetricResult emMetricResult = new EMMetricResult();
                             if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
                                 emMetricResult.getEmMetricGenericResults().setUnits("cores");
