@@ -18,8 +18,8 @@ package com.autotune.common.data.result;
 public class GeneralInfoResult {
     private double sum;
     private double avg;
-    private double max;
     private double min;
+    private double max;
     private String units;
 
     public double getSum() {
@@ -46,14 +46,6 @@ public class GeneralInfoResult {
         this.units = units;
     }
 
-    public double getMax() {
-        return max;
-    }
-
-    public void setMax(double max) {
-        this.max = max;
-    }
-
     public double getMin() {
         return min;
     }
@@ -62,13 +54,21 @@ public class GeneralInfoResult {
         this.min = min;
     }
 
+    public double getMax() {
+        return max;
+    }
+
+    public void setMax(double max) {
+        this.max = max;
+    }
+
     @Override
     public String toString() {
         return "GeneralInfoResult{" +
                 "sum=" + sum +
                 ", avg=" + avg +
-                ", max=" + max +
                 ", min=" + min +
+                ", max=" + max +
                 ", units='" + units + '\'' +
                 '}';
     }

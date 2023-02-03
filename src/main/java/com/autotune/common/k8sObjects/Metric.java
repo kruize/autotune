@@ -15,14 +15,16 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.common.data.metrics.EMMetricResult;
-import com.autotune.common.performanceProfiles.AggregationFunctions;
+import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Holds the variables used in the objective_function for the autotune object
- * objective_function: "transaction_response_time"
+ * objective_function:
+ *   function_type: expression
+ *   expression: "transaction_response_time"
  * function_variables:
  * - name: "transaction_response_time"
  * query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
@@ -33,12 +35,15 @@ public final class Metric {
     private final String name;
     private final String query;
     private final String datasource;
+    @SerializedName("value_type")
     private final String valueType;
+    @SerializedName("kubernetes_object")
     private String kubernetesObject;
-    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<String, EMMetricResult>();
+    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<>();
     private EMMetricResult emMetricResult;
-    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>>();
-    private HashMap<String,AggregationFunctions> aggregationFunctionsMap;
+    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<>();
+    @SerializedName("aggregation_functions")
+    private List<AggregationFunctions> aggregationFunctions;
 
     public Metric(String name,
                   String query,
@@ -89,12 +94,12 @@ public final class Metric {
         this.kubernetesObject = kubernetesObject;
     }
 
-    public HashMap<String, AggregationFunctions> getAggregationFunctions() {
-        return aggregationFunctionsMap;
+    public List<AggregationFunctions> getAggregationFunctions() {
+        return aggregationFunctions;
     }
 
-    public void setAggregationFunctions(HashMap<String, AggregationFunctions> aggregationFunctions) {
-        this.aggregationFunctionsMap = aggregationFunctions;
+    public void setAggregationFunctions(List<AggregationFunctions> aggregationFunctions) {
+        this.aggregationFunctions = aggregationFunctions;
     }
 
     @Override
@@ -106,7 +111,7 @@ public final class Metric {
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", emMetricResult=" + emMetricResult +
-                ", aggregationFunctions=" + aggregationFunctionsMap +
+                ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }
 }

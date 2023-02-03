@@ -24,8 +24,10 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.analyzer.variables.Variables;
+import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -34,6 +36,7 @@ import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.google.gson.Gson;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -52,10 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
@@ -327,6 +327,7 @@ public class KruizeDeployment {
             String mode;
             String targetCluster;
             SloInfo sloInfo;
+            ObjectiveFunction objectiveFunction = null;
             String namespace;
             SelectorInfo selectorInfo;
 
@@ -335,7 +336,7 @@ public class KruizeDeployment {
             JSONObject sloJson = null;
             String slo_class = null;
             String direction = null;
-            String objectiveFunction = null;
+            JSONObject objectiveFunctionJson = null;
             String hpoAlgoImpl = null;
             if (specJson != null) {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -343,7 +344,9 @@ public class KruizeDeployment {
                 direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
                 hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
                         AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
-                objectiveFunction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
+                LOGGER.debug("Objective_Function = {}",objectiveFunction.toString());
             }
 
             JSONArray functionVariables = new JSONArray();
@@ -366,7 +369,6 @@ public class KruizeDeployment {
 
                 metricArrayList.add(metric);
             }
-
             sloInfo = new SloInfo(slo_class,
                     objectiveFunction,
                     direction,
@@ -421,7 +423,8 @@ public class KruizeDeployment {
             );
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null,null, null);
             return null;
         }
     }

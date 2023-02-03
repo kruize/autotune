@@ -24,6 +24,7 @@ import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.queue.AutotuneQueue;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
@@ -50,20 +51,20 @@ public class InitiateListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
 
-        /**
-         * Kruize Experiment Manager thread configuration
+        /*
+          Kruize Experiment Manager thread configuration
          */
         ExperimentDetailsMap<String, ExperimentTrial> experimentDetailsMap = (ExperimentDetailsMap<String, ExperimentTrial>) sce.getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
         if (experimentDetailsMap == null) {
             experimentDetailsMap = new ExperimentDetailsMap<>();
-            /**
-             * LocalStorage declaration for experiments.
+            /*
+              LocalStorage declaration for experiments.
              */
             sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY, experimentDetailsMap);
             sce.getServletContext().setAttribute(EMConstants.EMKeys.EM_REGISTERED_DEPLOYMENTS, new ArrayList<String>());
         }
-        /**
-         * Thread pool executor declaration for Experiment Manager
+        /*
+          Thread pool executor declaration for Experiment Manager
          */
         AutotuneExecutor EMExecutor = new AutotuneExecutor(ParallelEngineConfigs.EM_CORE_POOL_SIZE,
                 ParallelEngineConfigs.EM_MAX_POOL_SIZE,
@@ -75,8 +76,8 @@ public class InitiateListener implements ServletContextListener {
         );
         sce.getServletContext().setAttribute(ParallelEngineConfigs.EM_EXECUTOR, EMExecutor);
 
-        /**
-         * Kruize Create Experiment thread configuration
+        /*
+          Kruize Create Experiment thread configuration
          */
         sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, KruizeDeployment.autotuneObjectMap);
         AutotuneExecutor analyserExecutor = new AutotuneExecutor(AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_SIZE,
@@ -109,9 +110,8 @@ public class InitiateListener implements ServletContextListener {
         };
         createExperimentExecutorScheduled.scheduleAtFixedRate(checkForNewExperiment, 5, 5, TimeUnit.SECONDS);
 
-        /**
-         *  Kruize Update results thread Configuration
-         *
+        /*
+           Kruize Update results thread Configuration
          */
 
         AutotuneExecutor updateResultExecutor = new AutotuneExecutor(AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_SIZE,
@@ -150,7 +150,10 @@ public class InitiateListener implements ServletContextListener {
         };
         updateResultsExecutorScheduled.scheduleAtFixedRate(checkForNewResults, 5, 5, TimeUnit.SECONDS);
 
-
+        /*
+          Kruize Performance Profile configuration
+         */
+        sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, PerformanceProfilesDeployment.performanceProfilesMap);
     }
 
     @Override

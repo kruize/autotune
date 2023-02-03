@@ -19,6 +19,7 @@ import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.k8sObjects.ValidatePerformanceProfileObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
@@ -30,20 +31,26 @@ import java.util.HashMap;
 
 public class PerformanceProfile {
 
+    private final  String name;
+
     private final double profile_version;
 
+    @SerializedName("k8s_type")
     private final String k8s_type;
 
+    @SerializedName("slo")
     private final SloInfo sloInfo;
 
-    public PerformanceProfile(double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
+    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
         HashMap<String, Object> map = new HashMap<>();
+        map.put(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME, name);
         map.put(AnalyzerConstants.PROFILE_VERSION, profile_version);
-        map.put(AnalyzerConstants.K8S_TYPE, k8s_type);
+        map.put(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE, k8s_type);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
 
         StringBuilder error = ValidatePerformanceProfileObject.validate(map);
         if (error.toString().isEmpty()) {
+            this.name = name;
             this.profile_version = profile_version;
             this.k8s_type = k8s_type;
             this.sloInfo = sloInfo;
@@ -52,11 +59,15 @@ public class PerformanceProfile {
         }
     }
 
+    public String getName() {
+        return name;
+    }
+
     public double getProfile_version() {
         return profile_version;
     }
 
-    public String getK8s_type() {
+    public String getK8S_TYPE() {
         return k8s_type;
     }
 
@@ -67,9 +78,10 @@ public class PerformanceProfile {
     @Override
     public String toString() {
         return "PerformanceProfile{" +
+                "name='" + name + '\'' +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +
-                ", sloInfoArrayList=" + sloInfo +
+                ", sloInfo=" + sloInfo +
                 '}';
     }
 }

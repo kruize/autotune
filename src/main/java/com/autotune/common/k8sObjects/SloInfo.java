@@ -26,7 +26,9 @@ import java.util.ArrayList;
  * <p>
  * Example:
  * slo:
- * objective_function: "transaction_response_time"
+ * objective_function:
+ *   function_type: expression
+ *   expression: "transaction_response_time"
  * slo_class: "response_time"
  * direction: "minimize"
  * hpo_algo_impl: "optuna_tpe"
@@ -43,14 +45,14 @@ import java.util.ArrayList;
 public final class SloInfo {
     private final String sloClass;
     @SerializedName("objective_function")
-    private final String objectiveFunction;
+    private final ObjectiveFunction objectiveFunction;
     private final String direction;
     private final String hpoAlgoImpl;
     @SerializedName("function_variables")
     private final ArrayList<Metric> metrics;
 
     public SloInfo(String sloClass,
-                   String objectiveFunction,
+                   ObjectiveFunction objectiveFunction,
                    String direction,
                    String hpoAlgoImpl,
                    ArrayList<Metric> metrics) throws InvalidValueException {
@@ -91,7 +93,7 @@ public final class SloInfo {
         return direction;
     }
 
-    public String getObjectiveFunction() {
+    public ObjectiveFunction getObjectiveFunction() {
         return objectiveFunction;
     }
 

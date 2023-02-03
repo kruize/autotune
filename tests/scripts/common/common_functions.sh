@@ -67,7 +67,7 @@ module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # Path to the directory containing yaml files
-configmap="${AUTOTUNE_REPO}/manifests/configmaps"
+configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -128,7 +128,7 @@ function setup() {
 	# Check if jq is installed
 	check_prereq
 	
-	# Deploy autotune 
+	# Deploy autotune
 	echo "Deploying autotune..."
 	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
@@ -477,7 +477,7 @@ function validate_yaml () {
 			error_message "${failed}"  
 		else	
 			echo "${object} object ${testcase} did not get created" | tee -a ${LOG}
-			if grep -q "${expected_log_msg}" "kubectl.log" ; then
+			if grep -q "${expected_log_msg}" "${LOG_DIR}/kubectl.log" ; then
 				failed=0
 				error_message "${failed}"  
 			else
@@ -531,7 +531,7 @@ function run_test_case() {
 	# Apply the yaml
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
 	err_exit "Error: Issue in deploying ${object} object" 
-	echo "${kubectl_log_msg}" > kubectl.log
+	echo "${kubectl_log_msg}" > ${LOG_DIR}/kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
 	
 	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
@@ -561,7 +561,7 @@ function run_test_case() {
 	# check if the expected message is matching with the actual message
 	validate_yaml
 	
-	rm kubectl.log
+#	rm kubectl.log
 	echo ""
 	echo "--------------------------------------------------------------------------------"| tee -a ${LOG}
 }
@@ -1706,6 +1706,7 @@ function get_autotune_pod_log() {
 	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
 	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
 	echo "${pod_log_msg}" > "${log}"
+#	echo "*** POD LOG MSG = ${pod_log_msg}"
 }
 
 # Expose prometheus as nodeport and get the url

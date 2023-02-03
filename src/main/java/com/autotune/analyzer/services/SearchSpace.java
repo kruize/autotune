@@ -49,7 +49,11 @@ import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchS
  * {
  * "experiment_name": "galaxies-autotune-min-http-response-time",
  * "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
- * "objective_function": "request_sum/request_count",
+ * "objective_function":
+ *  {
+ *  "function_type": "expression",
+ *  "expression": "request_sum/request_count"
+ *  },
  * "hpo_algo_impl": "optuna_tpe",
  * "tunables": [
  * {

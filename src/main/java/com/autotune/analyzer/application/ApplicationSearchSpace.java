@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
+import com.autotune.common.k8sObjects.ObjectiveFunction;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +27,7 @@ public class ApplicationSearchSpace
 {
 	private final String experimentName;
 	private final String experimentId;
-	private final String objectiveFunction;
+	private final ObjectiveFunction objectiveFunction;
 	private final String hpoAlgoImpl;
 	private final String direction;
 	private final String valueType;
@@ -36,7 +38,7 @@ public class ApplicationSearchSpace
 
 	public ApplicationSearchSpace(String experimentName,
 								  String experimentId,
-								  String objectiveFunction,
+								  ObjectiveFunction objectiveFunction,
 								  String hpoAlgoImpl,
 								  String direction,
 								  String valueType,
@@ -60,7 +62,7 @@ public class ApplicationSearchSpace
 		return experimentId;
 	}
 
-	public String getObjectiveFunction() {
+	public ObjectiveFunction getObjectiveFunction() {
 		return objectiveFunction;
 	}
 

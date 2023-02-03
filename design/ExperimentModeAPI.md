@@ -17,7 +17,10 @@ Get the list of application stacks monitored by autotune.
     {
         "experiment_name": "galaxies-autotune-min-http-response-time",
         "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
-        "objective_function": "request_sum/request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_sum/request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "stacks": ["dinogun/galaxies:1.2-jdk-11.0.10_9"],
         "slo_class": "response_time",
@@ -26,7 +29,10 @@ Get the list of application stacks monitored by autotune.
     {
         "experiment_name": "petclinic-autotune-max-http-throughput",
         "experiment_id": "629ad1c575dd81576c98142aa6de9ddc241de0a9f008586923f200b3a6bc83c6",
-        "objective_function": "request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "stacks": ["kruize/spring_petclinic:2.2.0-jdk-11.0.8-openj9-0.21.0"],
         "slo_class": "throughput",
@@ -51,7 +57,10 @@ Returns the list of application stacks monitored by autotune along with layers d
     {
         "experiment_name": "galaxies-autotune-min-http-response-time",
         "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
-        "objective_function": "request_sum/request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_sum/request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "stacks": [{
             "layers": [
@@ -82,7 +91,10 @@ Returns the list of application stacks monitored by autotune along with layers d
     {
         "experiment_name": "petclinic-autotune-max-http-throughput",
         "experiment_id": "629ad1c575dd81576c98142aa6de9ddc241de0a9f008586923f200b3a6bc83c6",
-        "objective_function": "request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_sum/request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "stacks": [{
             "layers": [
@@ -118,7 +130,10 @@ Returns the list of application stacks monitored by autotune along with their tu
     {
         "experiment_name": "petclinic-autotune-max-http-throughput",
         "experiment_id": "629ad1c575dd81576c98142aa6de9ddc241de0a9f008586923f200b3a6bc83c6",
-        "objective_function": "request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_sum/request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "stacks": [{
             "layers": [
@@ -263,7 +278,10 @@ Generates the search space used for the analysis.
     {
         "experiment_name": "galaxies-autotune-min-http-response-time",
         "experiment_id": "7c07cf4db16adcf76bad79394c9e7df2f3b8d8e6942cfa3f7b254b5aec1299b0",
-        "objective_function": "request_sum/request_count",
+        "objective_function": {
+            "type": "expression",
+            "expression": "request_sum/request_count"
+        },
         "hpo_algo_impl": "optuna_tpe",
         "tunables": [
             {

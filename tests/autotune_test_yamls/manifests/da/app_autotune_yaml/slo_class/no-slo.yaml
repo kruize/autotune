@@ -3,7 +3,7 @@ kind: "Autotune"
 metadata:
  name: "no-slo"
 spec:
-  mode: "show"
+  mode: "experiment"
   selector:
     matchLabel: "app.kubernetes.io/name"
     matchLabelValue: "petclinic-deployment"

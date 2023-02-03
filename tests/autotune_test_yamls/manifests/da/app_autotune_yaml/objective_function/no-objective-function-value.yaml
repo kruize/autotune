@@ -4,7 +4,7 @@ metadata:
  name: "no-objective-function-value"
 spec:
   slo:
-    objective_function: 
+    objective_function:
     slo_class: "response_time"
     direction: "minimize"
     function_variables:
@@ -12,7 +12,7 @@ spec:
       query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
       datasource: "prometheus"
       value_type: "double"
-  mode: "show"
+  mode: "experiment"
   selector:
     matchLabel: "app.kubernetes.io/name"
     matchLabelValue: "petclinic-deployment"

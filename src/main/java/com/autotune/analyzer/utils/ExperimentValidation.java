@@ -17,6 +17,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class ExperimentValidation {
     ));
     private List<String> mandatorySLOPerf = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.SLO,
-            AnalyzerConstants.PERFPROFILE
+            AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.DEPLOYMENT_NAME,
@@ -84,8 +85,13 @@ public class ExperimentValidation {
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
                     if (null != ao.getDeployment_name()) {
                         String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
-                        if (!namespaceDeploymentNameList.contains(nsDepName))
-                            proceed = true;
+                        if (!namespaceDeploymentNameList.contains(nsDepName)) {
+                            if (null != PerformanceProfilesDeployment.performanceProfilesMap.get(ao.getPerformanceProfile()))
+                                proceed = true;
+                            else {
+                                errorMsg = errorMsg.concat(String.format("Performance Profile : %s does not exist!", ao.getPerformanceProfile()));
+                            }
+                        }
                         else {
                             if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
                                 errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));

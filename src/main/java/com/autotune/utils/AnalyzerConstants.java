@@ -49,7 +49,15 @@ public class AnalyzerConstants {
     public static final String API_VERSION_V1 = "v1";
     public static final String POD_TEMPLATE_HASH = "pod-template-hash";
     public static final String AUTOTUNE_PLURALS = "autotunes";
+
     public static final String AUTOTUNE_RESOURCE_NAME = AUTOTUNE_PLURALS + GROUP;
+    public static final String DEFAULT_K8S_TYPE = "openshift";
+    public static final String PROFILE_VERSION = "profile_version";
+    public static final Double DEFAULT_PROFILE_VERSION = 1.0;
+    public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
+    public static final String FUNCTION = "function";
+    public static final String VERSIONS = "versions";
+    public static final String KUBERNETES_OBJECTS = "kubernetes_object";
     public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
     public static final String AUTOTUNE_CONFIG_RESOURCE_NAME = AUTOTUNE_CONFIG_PLURALS + GROUP;
     public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
@@ -67,34 +75,25 @@ public class AnalyzerConstants {
     public static final String EXPERIMENT_MAP = "MainExperimentsMAP";
     public static final String NAME = "experimentName";
     public static final String SLO = "sloInfo";
-    public static final String PERFPROFILE = "performanceProfile";
     public static final String NAMESPACE = "namespace";
     public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
     public static final String DEPLOYMENT_NAME = "deployment_name";
     public static final String SELECTOR = "selectorInfo";
-	public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
-	public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
-	public static final String DEFAULT_K8S_TYPE = "openshift";
-	public static final String PROFILE_VERSION = "profile_version";
-	public static final Double DEFAULT_PROFILE_VERSION = 1.0;
-	public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
-	public static final String FUNCTION = "function";
-	public static final String VERSIONS = "versions";
-	public static final String KUBERNETES_OBJECTS = "kubernetes_object";
-
+    public static final String NULL = "null";
     private AnalyzerConstants() {
     }
 
     public enum MODEType {
         MONITORING,
-        EXPERIMENT
+        EXPERIMENT;
+
     }
 
     public enum TargetType {
         LOCAL,
-        REMOTE
-    }
+        REMOTE;
 
+    }
     public enum ExperimentStatus {
         QUEUED,
         IN_PROGRESS,
@@ -104,17 +103,20 @@ public class AnalyzerConstants {
         DELETE,
         COMPLETED,
         FAILED;
+
     }
-	
     /**
      * Used to parse the Autotune kind resource
      */
     public static final class AutotuneObjectConstants {
+
         public static final String SPEC = "spec";
         public static final String SLO = "slo";
         public static final String SLO_CLASS = "slo_class";
         public static final String DIRECTION = "direction";
         public static final String OBJECTIVE_FUNCTION = "objective_function";
+        public static final String OBJ_FUNCTION_TYPE = "function_type";
+        public static final String EXPRESSION = "expression";
         public static final String FUNCTION_VARIABLES = "function_variables";
         public static final String NAME = "name";
         public static final String QUERY = "query";
@@ -139,16 +141,16 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_ID = "experiment_id";
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
+        public static final String FUNCTION_VARIABLE = "function_variable: ";
 
         private AutotuneObjectConstants() {
         }
-
     }
-
     /**
      * Used to parse the AutotuneConfig resource
      */
     public static final class AutotuneConfigConstants {
+
         public static final String METADATA = "metadata";
         public static final String NAMESPACE = "namespace";
         public static final String DATASOURCE = "datasource";
@@ -192,15 +194,15 @@ public class AnalyzerConstants {
         public static final String LAYER_QUARKUS = "quarkus";
         public static final String LAYER_OPENJ9 = "openj9";
         public static final String LAYER_NODEJS = "nodejs";
-
         private AutotuneConfigConstants() {
         }
-    }
 
+    }
     /**
      * Contains Strings used in REST services
      */
     public static final class ServiceConstants {
+
         public static final String JSON_CONTENT_TYPE = "application/json";
         public static final String CHARACTER_ENCODING = "UTF-8";
         public static final String EXPERIMENT_NAME = "experiment_name";
@@ -230,13 +232,14 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_TRIALS = "experiment_trials";
         public static final String NA = "NA";
         public static final String SECONDS = " seconds";
-
-	}
-
+        private ServiceConstants() {
+        }
+    }
     /**
      * Contains Strings used in the HOTSPOT Layer
      */
     public static final class HotspotConstants {
+
         public static final String XXOPTION = " -XX:";
         public static final String USE = "+Use";
         public static final String SERVER = " -server";
@@ -272,34 +275,32 @@ public class AnalyzerConstants {
         public static final String USE_STRING_DEDUPLICATION = "UseStringDeduplication";
         public static final String USE_SUPER_WORD = "UseSuperWord";
         public static final String USE_TYPE_SPECULATION = "UseTypeSpeculation";
-
         private HotspotConstants() {
         }
 
     }
-
     /**
      * Contains Strings used in the QUARKUS Layer
      */
     public static final class QuarkusConstants {
+
         public static final String QUARKUS = "quarkus";
         public static final String DOPTION = " -D";
-
         private QuarkusConstants() {
         }
-    }
 
+    }
     /**
      * Contains Strings used in the Container Layer
      */
     public static final class ContainerConstants {
+
         public static final String CPU_REQUEST = "cpuRequest";
         public static final String MEM_REQUEST = "memoryRequest";
-
         private ContainerConstants() {
         }
-    }
 
+    }
     public static class createExperimentParallelEngineConfigs {
         /**
          * MAX Queue size to stack experiments
@@ -350,7 +351,19 @@ public class AnalyzerConstants {
         public static int DELAY_IN_SECS = 2;
         public static String EXECUTOR = "KRUIZE_EXECUTOR";
 
-        private updateResultsParallelEngineConfigs() {
-        }
+    }
+
+    public static final class PerformanceProfileConstants {
+
+        public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
+        public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
+        public static final String K8S_TYPE = "K8S_TYPE";
+        public static final String PERF_PROFILE = "performanceProfile";
+        public static final String PERF_PROFILE_MAP = "performanceProfileMap";
+        public static final String PERF_PROFILE_NAME = "name";
+        public static final String OBJECTIVE_FUNCTION = "objectiveFunction";
+        public static final String FUNCTION_VARIABLES = "functionVariables";
+        public static final String VALUE_TYPE = "valueType";
+        public static final String SOURCE = "source";
     }
 }

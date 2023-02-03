@@ -8,6 +8,7 @@ import com.autotune.common.experiments.ExperimentSummary;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.AutotuneConfig;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.k8sObjects.ObjectiveFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +103,7 @@ public class Experimentator implements Runnable {
             KruizeObject kruizeObject = autotuneExperiment.getAutotuneObject();
             String experimentName = autotuneExperiment.getExperimentName();
             String experimentId = kruizeObject.getExperimentId();
-            String objectiveFunction = kruizeObject.getSloInfo().getObjectiveFunction();
+            ObjectiveFunction objectiveFunction = kruizeObject.getSloInfo().getObjectiveFunction();
             String hpoAlgoImpl = kruizeObject.getSloInfo().getHpoAlgoImpl();
             String direction = kruizeObject.getSloInfo().getDirection();
             // TODO: Need to add valueType to the ObjectiveFunction!

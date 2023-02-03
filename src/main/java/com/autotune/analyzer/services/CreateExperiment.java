@@ -61,7 +61,7 @@ public class CreateExperiment extends HttpServlet {
     /**
      * It reads the input data from the request, converts it into a List of "KruizeObject" objects using the GSON library.
      * It then calls the validateAndAddNewExperiments method of the "ExperimentInitiator" class, passing in the mainKruizeExperimentMap and kruizeExpList as arguments.
-     * If the validateAndAddNewExperiments method returns an ActivityResultData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
+     * If the validateAndAddNewExperiments method returns an ValidationResultData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
      * Otherwise, it sends an error response to the client with the appropriate error message.
      * If an exception is thrown, it prints the stack trace and sends an error response to the client with the appropriate error message.
      *
@@ -88,7 +88,6 @@ public class CreateExperiment extends HttpServlet {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught due to : " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
-
         }
     }
 

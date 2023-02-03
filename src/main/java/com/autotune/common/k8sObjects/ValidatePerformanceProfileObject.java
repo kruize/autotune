@@ -15,12 +15,14 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
-import com.autotune.common.performanceProfiles.AggregationFunctions;
+import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Check if the Performance Profile object in the kubernetes cluster is valid
@@ -31,17 +33,16 @@ public class ValidatePerformanceProfileObject
 
 	/**
 	 * Check if the PerformanceProfileObject is valid
-	 * @param map
-	 * @return
+	 * @param map - contains the parameters and their values to be validated
+	 * @return - returns the concatenated error msg, if any.
 	 */
 	public static StringBuilder validate(HashMap<String, Object> map) {
 		StringBuilder errorString = new StringBuilder();
 
 		// Check if k8s type is supported
 		String k8sType = (String) map.get(AnalyzerConstants.K8S_TYPE);
-		if (!AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
-			errorString.append("k8s type "+k8sType+" is not suppported");
-		}
+		if (!AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType))
+			errorString.append(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE).append(k8sType).append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
 
 		// Check if slo_class is supported
 		SloInfo sloInfo = (SloInfo) map.get(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -55,12 +56,14 @@ public class ValidatePerformanceProfileObject
 		}
 
 		//check if slo_class is 'response_time' and direction is minimize
-		if (sloInfo.getSloClass().equalsIgnoreCase("response_time") && !sloInfo.getDirection().equalsIgnoreCase("minimize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.RESPONSE_TIME) && !sloInfo.getDirection()
+				.equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MINIMIZE)) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
 		//check if slo_class is 'throughput' and direction is maximize
-		if (sloInfo.getSloClass().equalsIgnoreCase("throughput") && !sloInfo.getDirection().equalsIgnoreCase("maximize")) {
+		if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.THROUGHPUT) && !sloInfo.getDirection()
+				.equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE)) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
 		}
 
@@ -69,30 +72,55 @@ public class ValidatePerformanceProfileObject
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
 		}
 
+		// Get the objective_function type
+		String objFunctionType = sloInfo.getObjectiveFunction().getFunction_type();
+		String expression;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
 			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase()))
-				errorString.append("function_variable: ").append(functionVariable.getName()).append(" datasource not supported\n");
+				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
+						.append(functionVariable.getName()).append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
 
 			// Check if value_type is supported
 			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase()))
-				errorString.append("function_variable: ").append(functionVariable.getName()).append(" value_type not supported\n");
+				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
+						.append(functionVariable.getName()).append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
 
 			// Check if kubernetes_object type is supported
 			String kubernetes_object = functionVariable.getKubernetesObject().toLowerCase();
-			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(functionVariable.getKubernetesObject().toLowerCase())) {
-				errorString.append("kubernetes_object "+kubernetes_object+" is not supported");
+			if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(functionVariable.getKubernetesObject().toLowerCase()))
+				errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object).append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
+
+			// Validate Objective Function
+			try {
+				if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+
+					expression = sloInfo.getObjectiveFunction().getExpression();
+					System.out.println("****** Exprssion = "+expression);
+					if (null == expression || expression.equals(AnalyzerConstants.NULL))
+						throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
+
+				} else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
+					if (null != sloInfo.getObjectiveFunction().getExpression()) {
+						errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
+						throw new InvalidValueException(errorString.toString());
+					}
+				} else {
+					errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
+					throw new InvalidValueException(errorString.toString());
+				}
+			} catch (NullPointerException | InvalidValueException npe) {
+				errorString.append(npe.getMessage());
+				return errorString;
 			}
 			// Check if one of query or aggregation_functions is present
 			String query = (String) map.get(AnalyzerConstants.AutotuneObjectConstants.QUERY);
-			HashMap<String, AggregationFunctions> aggregationFunctionsMap = functionVariable.getAggregationFunctions();
+			List<AggregationFunctions>  aggregationFunctionsList = functionVariable.getAggregationFunctions();
 
-			if (query == null && aggregationFunctionsMap.isEmpty()) {
-				errorString.append("One of query or aggregation_functions is mandatory. Both cannot be null!");
+			if (query == null && aggregationFunctionsList.isEmpty()) {
+				errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_ERROR);
 			}
-
 		}
-
 		return errorString;
 	}
 }

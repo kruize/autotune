@@ -18,6 +18,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.RemoteMonitoringOpenShiftImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,18 @@ public class ExperimentResultValidation {
                             resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
                         }
-                        proceed = true;
+                        // Validate Performance Profile data
+                        RemoteMonitoringOpenShiftImpl remoteMonitoringOpenShiftImpl = new RemoteMonitoringOpenShiftImpl();
+                        errorMsg = remoteMonitoringOpenShiftImpl.validate(kruizeObject,resultData);
+                        if (errorMsg.isEmpty() || errorMsg.isBlank()) {
+                        // call recommend() method here
+                            remoteMonitoringOpenShiftImpl.recommend();
+                            proceed = true;
+                        } else {
+                            proceed = false;
+                            resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
+                            break;
+                        }
                     } else {
                         proceed = false;
                         errorMsg = errorMsg.concat(String.format("Experiment name : %s not found", resultData.getExperiment_name()));
