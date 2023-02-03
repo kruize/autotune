@@ -18,7 +18,7 @@ package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.common.data.result.ContainerResultData;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.data.result.GeneralInfoResult;
+import com.autotune.common.data.result.AggregationInfoResult;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
@@ -57,7 +57,7 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
             for (ContainerResultData containerResultData : deploymentResultData.getContainers()) {
-                HashMap<String, HashMap<String, HashMap<String, GeneralInfoResult>>> containerMetricsMap =
+                HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> containerMetricsMap =
                         containerResultData.getContainer_metrics();
                 List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList();
                 if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
@@ -69,10 +69,10 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
                     errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
                     break;
                 } else  {
-                    for(HashMap<String, HashMap<String, GeneralInfoResult>> funcVar:containerMetricsMap.values()){
-                        for(HashMap<String, GeneralInfoResult> genInfo:funcVar.values()){
+                    for(HashMap<String, HashMap<String, AggregationInfoResult>> funcVar:containerMetricsMap.values()){
+                        for(HashMap<String, AggregationInfoResult> genInfo:funcVar.values()){
                           Map<String, Object> genInfoClassAsMap;
-                          for(GeneralInfoResult genInfoObj:genInfo.values()){
+                          for(AggregationInfoResult genInfoObj:genInfo.values()){
                               try {
                                 genInfoClassAsMap = RemoteMonitoringOpenShiftImpl.convertObjectToMap(genInfoObj);
                                 errorMsg = validateAggFunction(genInfoClassAsMap.keySet(), aggrFunctionsObjects);

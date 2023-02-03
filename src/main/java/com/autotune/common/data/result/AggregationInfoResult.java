@@ -15,26 +15,26 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-public class GeneralInfoResult {
-    private double sum;
-    private double avg;
-    private double min;
-    private double max;
+public class AggregationInfoResult {
+    private Double sum;
+    private Double avg;
+    private Double min;
+    private Double max;
     private String units;
 
-    public double getSum() {
+    public Double getSum() {
         return sum;
     }
 
-    public void setSum(double sum) {
+    public void setSum(Double sum) {
         this.sum = sum;
     }
 
-    public double getAvg() {
+    public Double getAvg() {
         return avg;
     }
 
-    public void setAvg(double avg) {
+    public void setAvg(Double avg) {
         this.avg = avg;
     }
 
@@ -46,19 +46,19 @@ public class GeneralInfoResult {
         this.units = units;
     }
 
-    public double getMin() {
+    public Double getMin() {
         return min;
     }
 
-    public void setMin(double min) {
+    public void setMin(Double min) {
         this.min = min;
     }
 
-    public double getMax() {
+    public Double getMax() {
         return max;
     }
 
-    public void setMax(double max) {
+    public void setMax(Double max) {
         this.max = max;
     }
 

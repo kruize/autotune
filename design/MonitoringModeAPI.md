@@ -74,7 +74,7 @@ see [Update results](/design/UpdateResults.md)
          "results": {
            "general_info": {
              "sum": 4.4,
-             "mean": 1.1,
+             "avg": 1.1,
              "units": "cores"
            }
          }
@@ -83,7 +83,7 @@ see [Update results](/design/UpdateResults.md)
          "results": {
            "general_info": {
              "sum": 2.0,
-             "mean": 0.5,
+             "avg": 0.5,
              "units": "cores"
            }
          }
@@ -91,8 +91,10 @@ see [Update results](/design/UpdateResults.md)
        "cpuUsage": {
          "results": {
            "general_info": {
+             "min": 0.14,
              "max": 0.84,
-             "mean": 0.12,
+             "sum": 0.84,
+             "avg": 0.12,
              "units": "cores"
            }
          }
@@ -100,8 +102,9 @@ see [Update results](/design/UpdateResults.md)
        "cpuThrottle": {
          "results": {
            "general_info": {
+             "sum": 0.19,
              "max": 0.09,
-             "mean": 0.045,
+             "avg": 0.045,
              "units": "cores"
            }
          }
@@ -110,7 +113,7 @@ see [Update results](/design/UpdateResults.md)
          "results": {
            "general_info": {
              "sum": 250.85,
-             "mean": 50.21,
+             "avg": 50.21,
              "units": "MiB"
            }
          }
@@ -119,7 +122,7 @@ see [Update results](/design/UpdateResults.md)
          "results": {
            "general_info": {
              "sum": 500,
-             "mean": 100,
+             "avg": 100,
              "units": "MiB"
            }
          }
@@ -127,8 +130,10 @@ see [Update results](/design/UpdateResults.md)
        "memoryUsage": {
          "results": {
            "general_info": {
+             "min": 50.6,
              "max": 198.50,
-             "mean": 40.1,
+             "sum": 198.50,
+             "avg": 40.1,
              "units": "MiB"
            }
          }
@@ -136,8 +141,10 @@ see [Update results](/design/UpdateResults.md)
        "memoryRSS": {
          "results": {
            "general_info": {
+             "min": 50.6,
              "max": 123.6,
-             "mean": 31.91,
+             "sum": 123.6,
+             "avg": 31.91,
              "units": "MiB"
            }
          }
