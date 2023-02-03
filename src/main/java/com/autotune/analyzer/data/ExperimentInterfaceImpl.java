@@ -15,17 +15,17 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
-import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.*;
+import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.*;
 
 public class ExperimentInterfaceImpl implements ExperimentInterface {
     private static final long serialVersionUID = 1L;
@@ -74,6 +74,53 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
+                    HashMap<String, DeploymentObject> deploymentsMap = ko.getDeployments();
+                    if (null == deploymentsMap) {
+                        deploymentsMap = new HashMap<>();
+                    }
+                    List<DeploymentResultData> resultDeploymentList = resultData.getDeployments();
+                    for (DeploymentResultData deploymentResultData : resultDeploymentList) {
+                        String dName = deploymentResultData.getDeployment_name();
+                        DeploymentObject deploymentObject;
+                        HashMap<String, ContainerObject> containersMap;
+                        if (null == deploymentsMap.get(dName)) {
+                            deploymentObject = new DeploymentObject(dName);
+                            containersMap = new HashMap<>();
+                        } else {
+                            deploymentObject = deploymentsMap.get(dName);
+                            containersMap = deploymentObject.getContainers();
+                        }
+                        List<ContainerResultData> resultContainerList = deploymentResultData.getContainers();
+                        for (ContainerResultData containerResultData : resultContainerList) {
+                            String cName = containerResultData.getContainer_name();
+                            String imgName = containerResultData.getImage_name();
+                            ContainerObject containerObject;
+                            if (null == containersMap.get(cName)) {
+                                containerObject = new ContainerObject(cName, imgName);
+                            } else {
+                                containerObject = containersMap.get(cName);
+                            }
+                            HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> aggregatorHashMap = new HashMap<>();
+                            for (String aggreName : containerResultData.getContainer_metrics().keySet()) {
+                                AggregationInfoResult aggregatorResult = containerResultData.getContainer_metrics().get(aggreName).get("results").get("aggregation_info");
+                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggreName), aggregatorResult);
+                            }
+                            HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
+
+                            if (null == resultsAggregatorStartEndTimeStampMap) {
+                                resultsAggregatorStartEndTimeStampMap = new HashMap<>();
+                            }
+                            StartEndTimeStampResults startEndTimeStampResults = new StartEndTimeStampResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                            startEndTimeStampResults.setMetrics(aggregatorHashMap);
+                            resultsAggregatorStartEndTimeStampMap.put(resultData.getEndtimestamp(), startEndTimeStampResults);
+
+                            containerObject.setResults(resultsAggregatorStartEndTimeStampMap);
+                            containersMap.put(cName, containerObject);
+                        }
+                        deploymentObject.setContainers(containersMap);
+                        deploymentsMap.put(dName, deploymentObject);
+                    }
+                    ko.setDeployments(deploymentsMap);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
         );

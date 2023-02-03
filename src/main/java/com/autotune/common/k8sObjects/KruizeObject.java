@@ -54,6 +54,8 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
+    private HashMap<String, DeploymentObject> deployments;
+
 
     public KruizeObject(String experimentName,
                         String namespace,
@@ -224,6 +226,14 @@ public final class KruizeObject {
 
     public void setValidationData(ValidationResultData validationData) {
         this.validationData = validationData;
+    }
+
+    public HashMap<String, DeploymentObject> getDeployments() {
+        return deployments;
+    }
+
+    public void setDeployments(HashMap<String, DeploymentObject> deployments) {
+        this.deployments = deployments;
     }
 
     @Override

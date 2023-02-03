@@ -1,90 +1,98 @@
-[{
-  "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-  "info": {"trial_info": {
-    "trial_number": 98,
-    "trial_timestamp": "yyyymmddhhmmss"
-  }},
-  "deployments": [{
-    "deployment_name": "tfb-qrh-sample",
-    "namespace": "default",
-    "pod_metrics": [],
-    "containers": [{
-      "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-      "container_name": "tfb-server",
-      "container_metrics": {
-        "cpuRequest" : {
-          "results": {
-            "general_info": {
-              "sum": 4.4,
-              "mean": 1.1,
-              "units": "cores"
-            }
-          }
-        },
-        "cpuLimit": {
-          "results": {
-            "general_info": {
-              "sum": 2.0,
-              "mean": 0.5,
-              "units": "cores"
-            }
-          }
-        },
-        "cpuUsage": {
-          "results": {
-            "general_info": {
-              "max": 0.84,
-              "mean": 0.12,
-              "units": "cores"
-            }
-          }
-        },
-        "cpuThrottle": {
-          "results": {
-            "general_info": {
-              "max": 0.09,
-              "mean": 0.045,
-              "units": "cores"
-            }
-          }
-        },
-        "memoryRequest": {
-          "results": {
-            "general_info": {
-              "sum": 250.85,
-              "mean": 50.21,
-              "units": "MiB"
-            }
-          }
-        },
-        "memoryLimit": {
-          "results": {
-            "general_info": {
-              "sum": 500,
-              "mean": 100,
-              "units": "MiB"
-            }
-          }
-        },
-        "memoryUsage": {
-          "results": {
-            "general_info": {
-              "max": 198.50,
-              "mean": 40.1,
-              "units": "MiB"
-            }
-          }
-        },
-        "memoryRSS": {
-          "results": {
-            "general_info": {
-              "max": 123.6,
-              "mean": 31.91,
-              "units": "MiB"
-            }
-          }
-        }
+[
+  {
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+    "info": {
+      "trial_info": {
+        "trial_number": 98,
+        "trial_timestamp": "yyyymmddhhmmss"
       }
-    }]
-  }]
-}]
+    },
+    "deployments": [
+      {
+        "deployment_name": "tfb-qrh-sample",
+        "namespace": "default",
+        "pod_metrics": [],
+        "containers": [
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 4.4,
+                    "mean": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 2.0,
+                    "mean": 0.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "max": 0.84,
+                    "mean": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "aggregation_info": {
+                    "max": 0.09,
+                    "mean": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 250.85,
+                    "mean": 50.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 500,
+                    "mean": 100,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "max": 198.50,
+                    "mean": 40.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "aggregation_info": {
+                    "max": 123.6,
+                    "mean": 31.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

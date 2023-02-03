@@ -72,7 +72,7 @@ see [Update results](/design/UpdateResults.md)
      "container_metrics": {
        "cpuRequest" : {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 4.4,
              "avg": 1.1,
              "units": "cores"
@@ -81,7 +81,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 2.0,
              "avg": 0.5,
              "units": "cores"
@@ -90,7 +90,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 0.14,
              "max": 0.84,
              "sum": 0.84,
@@ -101,7 +101,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuThrottle": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 0.19,
              "max": 0.09,
              "avg": 0.045,
@@ -111,7 +111,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryRequest": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 250.85,
              "avg": 50.21,
              "units": "MiB"
@@ -120,7 +120,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 500,
              "avg": 100,
              "units": "MiB"
@@ -129,7 +129,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 50.6,
              "max": 198.50,
              "sum": 198.50,
@@ -140,7 +140,7 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryRSS": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 50.6,
              "max": 123.6,
              "sum": 123.6,

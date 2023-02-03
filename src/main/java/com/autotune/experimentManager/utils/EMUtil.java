@@ -183,8 +183,8 @@ public class EMUtil {
         deploymentResultData.setContainers(containerResultDataList);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
-        experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()).toString());
-        experimentResultData.setStarttimestamp(new Timestamp(System.currentTimeMillis()).toString());
+        experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));
+        experimentResultData.setStarttimestamp(new Timestamp(System.currentTimeMillis()));
         experimentResultData.setTrialNumber(triaLNumber);
         List<DeploymentResultData> deploymentResultDataList = new ArrayList<>();
         deploymentResultDataList.add(deploymentResultData);

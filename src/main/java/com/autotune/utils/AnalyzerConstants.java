@@ -103,8 +103,30 @@ public class AnalyzerConstants {
         DELETE,
         COMPLETED,
         FAILED;
-
     }
+
+    public enum AggregatorType {
+        cpuRequest,
+        cpuLimit,
+        cpuUsage,
+        cpuThrottle,
+        memoryRequest,
+        memoryLimit,
+        memoryUsage,
+        memoryRSS
+    }
+
+    public enum RecommendationItem {
+        cpu,
+        memory
+    }
+
+    public enum CapacityMax {
+        capacity,
+        max
+    }
+
+
     /**
      * Used to parse the Autotune kind resource
      */
