@@ -48,8 +48,7 @@ public class ListDeploymentsInNamespace extends HttpServlet {
                         namespace = inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE);
                     }
                 }
-            }
-            if (null != namespace) {
+            } else {
                 // Initialising the kubernetes service
                 kubernetesServices = new KubernetesServicesImpl();
                 // Set response headers
