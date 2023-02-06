@@ -18,7 +18,7 @@ see [Create Experiment](/design/CreateExperiment.md)
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "namespace": "default",
     "deployment_name": "tfb-qrh-sample",
-    "performanceProfile": "resource_optimization",
+    "performanceProfile": "resource-optimization-openshift",
     "mode": "monitor",
     "targetCluster": "remote",
     "containers": [
@@ -72,7 +72,9 @@ see [Update results](/design/UpdateResults.md)
      "container_metrics": {
        "cpuRequest" : {
          "results": {
-           "general_info": {
+            "value" : 1.1,
+            "units": "cores",
+           "aggregation_info": {
              "sum": 4.4,
              "avg": 1.1,
              "units": "cores"
@@ -81,7 +83,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuLimit": {
          "results": {
-           "general_info": {
+            "value" : 0.5,
+            "units": "cores",
+           "aggregation_info": {
              "sum": 2.0,
              "avg": 0.5,
              "units": "cores"
@@ -90,7 +94,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuUsage": {
          "results": {
-           "general_info": {
+            "value" : 0.12,
+            "units": "cores",
+           "aggregation_info": {
              "min": 0.14,
              "max": 0.84,
              "sum": 0.84,
@@ -101,7 +107,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuThrottle": {
          "results": {
-           "general_info": {
+            "value" : 0.045,
+            "units": "cores",
+           "aggregation_info": {
              "sum": 0.19,
              "max": 0.09,
              "avg": 0.045,
@@ -111,7 +119,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryRequest": {
          "results": {
-           "general_info": {
+            "value" : 50.12,
+            "units": "MiB",
+           "aggregation_info": {
              "sum": 250.85,
              "avg": 50.21,
              "units": "MiB"
@@ -120,7 +130,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryLimit": {
          "results": {
-           "general_info": {
+            "value" : 100,
+            "units": "MiB",
+           "aggregation_info": {
              "sum": 500,
              "avg": 100,
              "units": "MiB"
@@ -129,7 +141,9 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryUsage": {
          "results": {
-           "general_info": {
+           "value" : 40.1,
+           "units": "MiB",
+           "aggregation_info": {
              "min": 50.6,
              "max": 198.50,
              "sum": 198.50,
@@ -139,8 +153,10 @@ see [Update results](/design/UpdateResults.md)
          }
        },
        "memoryRSS": {
+         "value" : 31.91,
+         "units": "MiB",
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 50.6,
              "max": 123.6,
              "sum": 123.6,
@@ -187,75 +203,87 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
     "tfb-server-1": {
       "name": "tfb-server-1",
       "recommendation": {
-        "2023-01-15 17:53:40.498": {
-          "Short Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "Jan 02, 2023, 12:24:04 AM",
-            "podsCount": 0,
+        "2022-01-23T18:25:43.511Z": {
+          "Cost": {
+            "monitoringStartTime": "2022-01-22T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
+            "podsCount": 4,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 128.8,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.0,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 100.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 4.0,
+                  "units": "cores"
                 }
               }
             }
           },
-          "Medium Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "jan 07, 2023, 12:24:04 AM",
+          "Balanced": {
+            "monitoringStartTime": "2022-01-16T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
             "podsCount": 0,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 128.8,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.8,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.8,
+                  "units": "cores"
                 }
               }
             }
           },
-          "Long Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "jan 15, 2023, 12:24:04 AM",
+          "Performance": {
+            "monitoringStartTime": "2022-01-08T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
             "podsCount": 0,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 128.8,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.0,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.0,
+                  "units": "cores"
                 }
               }
             }
@@ -266,75 +294,87 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
     "tfb-server-0": {
       "name": "tfb-server-0",
       "recommendation": {
-        "2029-10-26 17:53:40.498": {
-          "Short Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "jan 01, 2023, 12:24:04 AM",
+        "2022-01-23T18:25:43.511Z": {
+          "Cost": {
+            "monitoringStartTime": "2022-01-22T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
             "podsCount": 0,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 128.8,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.8,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 8.0,
+                  "units": "cores"
                 }
               }
             }
           },
-          "Mid Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "jan 07, 2023, 12:24:04 AM",
+          "Balanced": {
+            "monitoringStartTime": "2022-01-16T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
             "podsCount": 0,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 6.0,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 6.0,
+                  "units": "cores"
                 }
               }
             }
           },
-          "Long Term": {
-            "monitoringStartTime": "jan 01, 2023, 5:53:40 PM",
-            "monitoringEndTime": "jan 30, 2023, 12:24:04 AM",
+          "Performance": {
+            "monitoringStartTime": "2022-01-08T18:25:43.511Z",
+            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
             "podsCount": 0,
             "confidence_level": 0.0,
             "config": {
               "max": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 4.0,
+                  "units": "cores"
                 }
               },
               "capacity": {
                 "memory": {
-                  "amount": 0.0
+                  "amount": 1000.0,
+                  "units": "MiB"
                 },
                 "cpu": {
-                  "amount": 0.0
+                  "amount": 4.0,
+                  "units": "cores"
                 }
               }
             }
