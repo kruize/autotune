@@ -87,7 +87,7 @@ public class ListDeploymentsInNamespace extends HttpServlet {
                 });
                 dataJson.put(AutotuneConstants.JSONKeys.DEPLOYMENTS, deploymentsList);
                 returnJson.put(AutotuneConstants.JSONKeys.DATA, dataJson);
-                // Set content type
+                // Return OK
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().println(returnJson.toString(4));
             }
