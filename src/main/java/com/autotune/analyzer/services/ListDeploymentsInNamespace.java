@@ -78,7 +78,7 @@ public class ListDeploymentsInNamespace extends HttpServlet {
             } else {
                 // Initialising the kubernetes service
                 kubernetesServices = new KubernetesServicesImpl();
-                // Set response headers
+                // Create a return object
                 JSONObject returnJson = new JSONObject();
                 JSONObject dataJson = new JSONObject();
                 JSONArray deploymentsList = new JSONArray();
