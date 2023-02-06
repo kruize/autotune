@@ -19,6 +19,7 @@ import com.autotune.common.data.ValidationResultData;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.annotations.SerializedName;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,9 +30,9 @@ public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
     @SerializedName("start_timestamp")
-    private String starttimestamp;
+    private Timestamp starttimestamp;
     @SerializedName("end_timestamp")
-    private String endtimestamp;
+    private Timestamp endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
     private ValidationResultData validationResultData;
@@ -77,19 +78,19 @@ public class ExperimentResultData {
         this.validationResultData = validationResultData;
     }
 
-    public String getStarttimestamp() {
+    public Timestamp getStarttimestamp() {
         return starttimestamp;
     }
 
-    public void setStarttimestamp(String starttimestamp) {
+    public void setStarttimestamp(Timestamp starttimestamp) {
         this.starttimestamp = starttimestamp;
     }
 
-    public String getEndtimestamp() {
+    public Timestamp getEndtimestamp() {
         return endtimestamp;
     }
 
-    public void setEndtimestamp(String endtimestamp) {
+    public void setEndtimestamp(Timestamp endtimestamp) {
         this.endtimestamp = endtimestamp;
     }
 
