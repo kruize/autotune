@@ -31,17 +31,34 @@ public class ListDeploymentsInNamespace extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         KubernetesServices kubernetesServices = null;
         try {
+            // Add headers to avoid CORS
+            response.addHeader("Access-Control-Allow-Origin", "*");
+            response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+            response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+            response.addHeader("Access-Control-Max-Age", "1728000");
+            // Set content type
+            response.setContentType("application/json");
+            // Set encoding
+            response.setCharacterEncoding("UTF-8");
+            // Check if the namespace is passed as a URL param
             String namespace = request.getParameter(AutotuneConstants.JSONKeys.NAMESPACE);
+            String error = null;
             if (null == namespace) {
+                // Check if the request has a JSON body in which namespace is passed
                 String inputData = request.getReader().lines().collect(Collectors.joining());
                 JSONObject inputJson = new JSONObject(inputData);
                 if (!inputJson.has(AutotuneConstants.JSONKeys.NAMESPACE)) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
                     namespace = null;
                 } else {
-                    if (null == inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE)
-                            || inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE).isBlank()
+                    if (null == inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE)) {
+                        error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        namespace = null;
+                    } else if( inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE).isBlank()
                             || inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE).isEmpty()) {
+                        error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.EMPTY_NAMESPACE;
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         namespace = null;
                     } else {
@@ -49,14 +66,19 @@ public class ListDeploymentsInNamespace extends HttpServlet {
                     }
                 }
             }
-            if (null != namespace) {
+            // If namespace is not found return error
+            if (null == namespace) {
+                // if error is not set, set it to invalid namespace
+                if (null == error) {
+                    error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.INVALID_NAMESPACE;
+                }
+                JSONObject returnJson = new JSONObject();
+                returnJson.put(AutotuneConstants.JSONKeys.ERROR, error);
+                response.getWriter().println(returnJson.toString(4));
+            } else {
                 // Initialising the kubernetes service
                 kubernetesServices = new KubernetesServicesImpl();
                 // Set response headers
-                response.addHeader("Access-Control-Allow-Origin", "*");
-                response.addHeader("Access-Control-Allow-Methods", "POST, GET");
-                response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-                response.addHeader("Access-Control-Max-Age", "1728000");
                 JSONObject returnJson = new JSONObject();
                 JSONObject dataJson = new JSONObject();
                 JSONArray deploymentsList = new JSONArray();
@@ -66,8 +88,6 @@ public class ListDeploymentsInNamespace extends HttpServlet {
                 dataJson.put(AutotuneConstants.JSONKeys.DEPLOYMENTS, deploymentsList);
                 returnJson.put(AutotuneConstants.JSONKeys.DATA, dataJson);
                 // Set content type
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().println(returnJson.toString(4));
             }

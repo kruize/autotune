@@ -254,4 +254,17 @@ public class AutotuneConstants {
             public static final double MEBIBYTES_TO_GIBIBYTES = INVERSE_BINARY_STANDARD;
         }
     }
+
+    public static class ErrorMsgs {
+        private ErrorMsgs() { }
+        public static class APIErrorMsgs {
+            private APIErrorMsgs() { }
+            public static class ListDeploymentsInNamespace {
+                private ListDeploymentsInNamespace() { }
+                public static final String INVALID_NAMESPACE = "Given Namespace is invalid";
+                public static final String NO_NAMESPACE_SENT = "Please pass a namespace to get the deployments";
+                public static final String EMPTY_NAMESPACE = "Namespace cannot be empty";
+            }
+        }
+    }
 }
