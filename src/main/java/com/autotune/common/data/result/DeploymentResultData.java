@@ -24,7 +24,7 @@ import java.util.List;
 public class DeploymentResultData {
     private String deployment_name;
     private String namespace;
-    private List<ContainerResultData> containers;
+    private List<Containers> containers;
     private List<PodResultData> pod_metrics;
 
     public String getDeployment_name() {
@@ -43,11 +43,11 @@ public class DeploymentResultData {
         this.namespace = namespace;
     }
 
-    public List<ContainerResultData> getContainers() {
+    public List<Containers> getContainers() {
         return containers;
     }
 
-    public void setContainers(List<ContainerResultData> containers) {
+    public void setContainers(List<Containers> containers) {
         this.containers = containers;
     }
 
