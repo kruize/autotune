@@ -273,6 +273,20 @@ public class KubernetesServicesImpl implements KubernetesServices {
     }
 
     /**
+     * Get list of deployments in the namespace
+     * @param namespace
+     * @return
+     */
+    @Override
+    public List<Deployment> getDeploymentsBy(String namespace) {
+        List<Deployment> deploymentList = null;
+        if (null != namespace && !namespace.isBlank() && !namespace.isEmpty()) {
+            deploymentList = kubernetesClient.apps().deployments().inNamespace(namespace).list().getItems();
+        }
+        return deploymentList;
+    }
+
+    /**
      * Replace with new deployment.
      *
      * @param namespace
