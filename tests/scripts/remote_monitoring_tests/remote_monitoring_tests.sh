@@ -39,11 +39,10 @@ function remote_monitoring_tests() {
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
 	remote_monitoring_tests=("test_create_experiment" "test_update_results")
-	#remote_monitoring_tests=("test_create_experiment")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
-		check_test_case "remote_monitoring_tests"
+		check_test_case "remote_monitoring"
 	fi
 	
 	# create the result directory for given testsuite
@@ -99,12 +98,11 @@ function remote_monitoring_tests() {
 	
 		echo "pytest -s -m sanity ${REMOTE_MONITORING_TEST_DIR}/rest_apis/${test}.py --cluster_type ${cluster_type}" | tee -a ${LOG}
 		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
-			pytest -s -m sanity --html=${TEST_DIR}/report.html ${test}.py --cluster_type ${cluster_type} | tee -a ${LOG}
+			pytest -m sanity,extended,negative --html=${TEST_DIR}/report.html ${test}.py --cluster_type ${cluster_type} | tee -a ${LOG}
 		popd > /dev/null
 		if  grep -q "AssertionError" "${LOG}" ; then
 			failed=1
-			failed_count=$(cat ${LOG} | grep AssertionError | wc -l)
-			TESTS_FAILED=$(($TESTS_FAILED + $failed_count))
+			((TESTS_FAILED++))
 			((TOTAL_TESTS_FAILED++))
 			FAILED_CASES+=(${test})
 		else

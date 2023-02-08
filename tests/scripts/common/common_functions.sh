@@ -122,7 +122,7 @@ function setup() {
 	ignore_deployment_status_check=$3
 	
 	# remove the existing autotune objects
-	autotune_cleanup 
+	autotune_cleanup ${TEST_SUITE_DIR}
 	
 	# Wait for 5 seconds to terminate the autotune pod
 	sleep 5
@@ -209,6 +209,8 @@ function deploy_autotune() {
 		exit -1
 	fi
 
+	sleep 30
+
 	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
 		sleep 2
 		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
@@ -217,9 +219,19 @@ function deploy_autotune() {
 			namespace="monitoring"
 		fi
 		echo "Namespace = $namespace"
-		autotune_pod=$(kubectl get pod -n ${namespace} | grep autotune | cut -d " " -f1)
+		service="autotune"
+		if [ ${target} == "crc" ]; then
+			service="kruize"
+		fi
+		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
 		echo "autotune_pod = $autotune_pod"
-		kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		if [ ${target} == "crc" ]; then
+			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
+			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		else
+			echo "kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &"
+			kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		fi
 	fi
 
 	popd > /dev/null
@@ -239,14 +251,14 @@ function prometheus_cleanup() {
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
 	RESULTS_LOG=$1
-	AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-	
+
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
-		echo "${RESULTS_LOG} ${AUTOTUNE_REPO}"
-		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
-	else 
+		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
 		pushd ${AUTOTUNE_REPO} > /dev/null
+	else
+		AUTOTUNE_SETUP_LOG="autotune_setup.log"
+		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
 	fi
 
 	echo  "Removing Autotune dependencies..."
@@ -1735,10 +1747,15 @@ function get_autotune_pod_log() {
 	# Fetch the autotune container log
 	container="autotune"
 
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
+	echo "target = $target"
+	if [ ${target} == "crc" ]; then
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	else
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
+	fi
 	echo "${pod_log_msg}" > "${log}"
-#	echo "*** POD LOG MSG = ${pod_log_msg}"
 }
 
 # Expose prometheus as nodeport and get the url
@@ -1783,9 +1800,9 @@ function create_performance_profile() {
         status_json=$(${curl_cmd})
         echo "create performance profile status = $status_json"
 
-        echo "" | tee -a "${LOG}"
-        echo "Command used to post the experiment result= ${curl_cmd}" | tee -a "${LOG}"
-        echo "" | tee -a "${LOG}"
+        echo ""
+        echo "Command used to post the experiment result= ${curl_cmd}"
+        echo ""
 
         perf_profile_status=$(echo ${status_json} | jq '.status')
         echo "create performance profile status = ${perf_profile_status}"

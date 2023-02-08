@@ -33,7 +33,7 @@ create_exp_test_data = {
         "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
         "deployment_name": "\"tfb-qrh-sample\"",
         "namespace": "\"default\"",
-        "performanceProfile": "\"resource_optimization\"",
+        "performanceProfile": "\"resource-optimization-openshift\"",
         "slo_class": "\"resource_usage\"",
         "direction": "\"minimize\"",
         "mode": "\"monitor\"",
@@ -82,7 +82,7 @@ update_results_test_data = {
         "memoryRSS_units": "\"MiB\""
     }
 
-test_type = {"blank": "\"\"", "null": "None", "invalid": "\"xyz\""}
+test_type = {"blank": "\"\"", "null": "NULL", "invalid": "\"xyz\""}
 
 def generate_test_data(csvfile, test_data):
     if os.path.isfile(csvfile):

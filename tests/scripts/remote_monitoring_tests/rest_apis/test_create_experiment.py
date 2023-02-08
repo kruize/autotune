@@ -31,7 +31,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, experiment_na
     print("****************************************************\n")
     tmp_json_file="/tmp/create_exp_" + test_name + ".json"
 
-    #print("Input_json_file = ", tmp_json_file)
+    print("tmp_json_file = ", tmp_json_file)
 
     form_kruize_url(cluster_type)
 
@@ -67,7 +67,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, experiment_na
     print(data['message'])
 
     assert response.status_code == int(expected_status_code)
-    response = delete_experiment(input_json_file)
+    response = delete_experiment(tmp_json_file)
     print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
@@ -333,7 +333,9 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
         json_data[0].pop("selector", None)
         json_data[0].pop(field, None)
 
-    print(json_data[0])
+    print("\n*****************************************")
+    print(json_data)
+    print("*****************************************\n")
     data = json.dumps(json_data)
     with open(json_file, 'w') as file:
         file.write(data)
