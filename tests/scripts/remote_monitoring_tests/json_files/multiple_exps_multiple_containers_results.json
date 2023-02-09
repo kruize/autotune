@@ -7,7 +7,9 @@
       {
         "deployment_name": "tfb-qrh-sample-1",
         "namespace": "default",
-        "pod_metrics": [],
+        "pod_metrics": [
+
+        ],
         "containers": [
           {
             "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
@@ -93,6 +95,176 @@
                 }
               }
             }
+          },
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et15",
+            "container_name": "tfb-server-1",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 4.3,
+                    "avg": 1.2,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 5,
+                    "avg": 0.9,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 2.84,
+                    "max": 0.84,
+                    "min": 0.4,
+                    "avg": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 1.09,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 251.85,
+                    "avg": 55.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 600,
+                    "avg": 200,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 398.5,
+                    "max": 298.5,
+                    "min": 28.5,
+                    "avg": 50.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 323.6,
+                    "max": 223.6,
+                    "min": 23.6,
+                    "avg": 41.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et19",
+            "container_name": "tfb-server-2",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 3.4,
+                    "avg": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 4,
+                    "avg": 1.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 2.75,
+                    "max": 1.94,
+                    "min": 0.6,
+                    "avg": 0.21,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 1.09,
+                    "max": 0.09,
+                    "avg": 0.054,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 350.5,
+                    "avg": 60.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 450,
+                    "avg": 150,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 295.5,
+                    "max": 195.5,
+                    "min": 38.5,
+                    "avg": 20.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "results": {
+                  "aggregation_info": {
+                    "sum": 243.6,
+                    "max": 139.1,
+                    "min": 14.6,
+                    "avg": 32.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
           }
         ]
       }
@@ -106,7 +278,9 @@
       {
         "deployment_name": "tfb-qrh-sample-2",
         "namespace": "default",
-        "pod_metrics": [],
+        "pod_metrics": [
+
+        ],
         "containers": [
           {
             "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
@@ -205,7 +379,9 @@
       {
         "deployment_name": "tfb-qrh-sample-3",
         "namespace": "default",
-        "pod_metrics": [],
+        "pod_metrics": [
+
+        ],
         "containers": [
           {
             "image_name": "kruize/tfb-qrh:1.13.2.F_et17",

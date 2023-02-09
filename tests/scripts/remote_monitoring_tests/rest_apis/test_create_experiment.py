@@ -144,7 +144,7 @@ def test_create_multiple_exps_from_same_json_file(cluster_type):
     multiple experiments in the same json file. This test also validates the behaviour with multiple 
     containers with different container images & container names
     """
-    input_json_file="../json_files/multiple_exps.json"
+    input_json_file="../json_files/create_multiple_exps.json"
 
     form_kruize_url(cluster_type)
 

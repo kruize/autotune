@@ -12,7 +12,7 @@
      "container_metrics": {
        "cpuRequest" : {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 4.4,
              "avg": 1.1,
              "units": "cores"
@@ -21,7 +21,7 @@
        },
        "cpuLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 2.0,
              "avg": 0.5,
              "units": "cores"
@@ -30,7 +30,7 @@
        },
        "cpuUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 2.14,
              "min": 0.14,
              "max": 0.84,
@@ -41,7 +41,7 @@
        },
        "cpuThrottle": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 0.19,
              "max": 0.09,
              "avg": 0.045,
@@ -51,7 +51,7 @@
        },
        "memoryRequest": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 250.85,
              "avg": 50.21,
              "units": "MiB"
@@ -60,7 +60,7 @@
        },
        "memoryLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": 500,
              "avg": 100,
              "units": "MiB"
@@ -69,7 +69,7 @@
        },
        "memoryUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 50.6,
              "max": 198.50,
              "sum": 198.50,
@@ -80,7 +80,7 @@
        },
        "memoryRSS": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "min": 50.6,
              "max": 123.6,
              "sum": 123.6,

@@ -7,12 +7,12 @@
    "namespace": "{{namespace}}",
    "pod_metrics": [],
    "containers": [{
-     "image_name": "{{image}}",
+     "image_name": "{{image_name}}",
      "container_name": "{{container_name}}",
      "container_metrics": {
        "cpuRequest" : {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{cpuRequest_sum}}",
              "avg": "{{cpuRequest_avg}}",
              "units": "{{cpuRequest_units}}"
@@ -21,7 +21,7 @@
        },
        "cpuLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{cpuLimit_sum}}",
              "avg": "{{cpuLimit_avg}}",
              "units": "{{cpuLimit_units}}"
@@ -30,7 +30,7 @@
        },
        "cpuUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{cpuUsage_sum}}",
              "max": "{{cpuUsage_max}}",
              "avg": "{{cpuUsage_avg}}",
@@ -41,7 +41,7 @@
        },
        "cpuThrottle": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{cpuThrottle_sum}}",
              "max": "{{cpuThrottle_max}}",
              "avg": "{{cpuThrottle_avg}}",
@@ -51,7 +51,7 @@
        },
        "memoryRequest": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{memoryRequest_sum}}",
              "avg": "{{memoryRequest_avg}}",
              "units": "{{memoryRequest_units}}"
@@ -60,7 +60,7 @@
        },
        "memoryLimit": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{memoryLimit_sum}}",
              "avg": "{{memoryLimit_avg}}",
              "units": "{{memoryLimit_units}}"
@@ -69,7 +69,7 @@
        },
        "memoryUsage": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{memoryUsage_sum}}",
              "max": "{{memoryUsage_max}}",
              "avg": "{{memoryUsage_avg}}",
@@ -80,7 +80,7 @@
        },
        "memoryRSS": {
          "results": {
-           "general_info": {
+           "aggregation_info": {
              "sum": "{{memoryRSS_sum}}",
              "max": "{{memoryRSS_max}}",
              "avg": "{{memoryRSS_avg}}",
