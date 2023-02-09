@@ -3,6 +3,9 @@
 This article describes how to quickly get started with the Remote Monitoring Mode use case REST API using curl command.
 Documentation still in progress stay tuned.
 
+**Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
+2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
+
 ## CreateExperiment
 
 This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
