@@ -67,6 +67,7 @@ public class UpdateResults extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = Arrays.asList(new Gson().fromJson(inputData, ExperimentResultData[].class));
+            LOGGER.debug(experimentResultDataList.toString());
             new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
             ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
             if (null == invalidKExperimentResultData) {

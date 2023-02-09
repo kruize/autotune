@@ -129,7 +129,7 @@ public class AutotuneConstants {
         public static final String MEASUREMENT_RESULTS = "measurement_results";
         public static final String SUMMARY_RESULTS = "summary_results";
         public static final String ITERATION_RESULT = "iteration_result";
-        public static final String GENERAL_INFO = "general_info";
+        public static final String AGGREGATION_INFO = "aggregation_info";
         public static final String RESULTS = "results";
         public static final String SCORE = "score";
         public static final String ERROR = "error";

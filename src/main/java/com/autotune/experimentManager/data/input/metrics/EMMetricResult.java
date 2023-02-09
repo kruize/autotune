@@ -11,21 +11,21 @@ public class EMMetricResult implements ConvertToJSON {
     private EMMetricPercentileResults emMetricPercentileResults;
     private boolean isPercentileResultsAvailable;
 
-    public EMMetricResult () {
+    public EMMetricResult() {
         emMetricGenericResults = new EMMetricGenericResults();
         emMetricPercentileResults = new EMMetricPercentileResults();
     }
 
     public EMMetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!(jsonObject.has(AutotuneConstants.JSONKeys.GENERAL_INFO) ||
-            jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO))) {
+        if (!(jsonObject.has(AutotuneConstants.JSONKeys.AGGREGATION_INFO) ||
+                jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO))) {
             throw new IncompatibleInputJSONException();
         }
         if (jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             isPercentileResultsAvailable = true;
         }
-        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.GENERAL_INFO));
-        if (isPercentileResultsAvailable){
+        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.AGGREGATION_INFO));
+        if (isPercentileResultsAvailable) {
             emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
@@ -34,21 +34,18 @@ public class EMMetricResult implements ConvertToJSON {
         return emMetricGenericResults;
     }
 
+
     public EMMetricPercentileResults getEmMetricPercentileResults() {
         return emMetricPercentileResults;
     }
+
+
 
     public boolean isPercentileResultsAvailable() {
         return isPercentileResultsAvailable;
     }
 
-    public void setEmMetricGenericResults(EMMetricGenericResults emMetricGenericResults) {
-        this.emMetricGenericResults = emMetricGenericResults;
-    }
 
-    public void setEmMetricPercentileResults(EMMetricPercentileResults emMetricPercentileResults) {
-        this.emMetricPercentileResults = emMetricPercentileResults;
-    }
 
     public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
         isPercentileResultsAvailable = percentileResultsAvailable;
@@ -57,7 +54,7 @@ public class EMMetricResult implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AutotuneConstants.JSONKeys.GENERAL_INFO, emMetricGenericResults.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.AGGREGATION_INFO, emMetricGenericResults.toJSON());
         if (isPercentileResultsAvailable) {
             jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
         }

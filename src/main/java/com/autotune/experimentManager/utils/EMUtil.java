@@ -25,6 +25,7 @@ import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
+import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -157,34 +158,35 @@ public class EMUtil {
                 podResultDataList.add(podResultData);
             }
         }
-        List<ContainerResultData> containerResultDataList = new ArrayList<>();
+        List<Containers> containersList = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
-            ContainerResultData containerResultData = new ContainerResultData();
-            containerResultData.setContainer_name(containerMapEntry.getKey());
-            containerResultData.setImage_name(null);
-            HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> containerMetrics = new HashMap<>();
+            Containers containers = new Containers();
+            containers.setContainer_name(containerMapEntry.getKey());
+            containers.setImage_name(null);
+
+            HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                    HashMap<String, HashMap<String, AggregationInfoResult>> resultMap = new HashMap<>();
+                    Results results = new Results();
                     AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
                     aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
                     aggregationInfoResult.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
-                    HashMap<String, AggregationInfoResult> generalInfoResultHashMap = new HashMap<>();
-                    generalInfoResultHashMap.put("general_info", aggregationInfoResult);
-                    resultMap.put("results", generalInfoResultHashMap);
-                    containerMetrics.put(containerMetric.getName(), resultMap);
+                    results.setAggregation_info(aggregationInfoResult);
+                    HashMap<String, Results> resultsHashMap = new HashMap<>();
+                    resultsHashMap.put("results", results);
+                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);
                 }
             }
-            containerResultData.setContainer_metrics(containerMetrics);
-            containerResultDataList.add(containerResultData);
+            containers.setContainer_metrics(containerMetrics);
+            containersList.add(containers);
         }
         deploymentResultData.setPod_metrics(podResultDataList);
-        deploymentResultData.setContainers(containerResultDataList);
+        deploymentResultData.setContainers(containersList);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
-        experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()).toString());
-        experimentResultData.setStarttimestamp(new Timestamp(System.currentTimeMillis()).toString());
+        experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));
+        experimentResultData.setStarttimestamp(new Timestamp(System.currentTimeMillis()));
         experimentResultData.setTrialNumber(triaLNumber);
         List<DeploymentResultData> deploymentResultDataList = new ArrayList<>();
         deploymentResultDataList.add(deploymentResultData);

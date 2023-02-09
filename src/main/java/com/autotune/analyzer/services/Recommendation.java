@@ -70,75 +70,87 @@ public class Recommendation extends HttpServlet {
                 "    \"tfb-server-1\": {\n" +
                 "      \"name\": \"tfb-server-1\",\n" +
                 "      \"recommendation\": {\n" +
-                "        \"2023-01-15 17:53:40.498\": {\n" +
-                "          \"Short Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"Jan 02, 2023, 12:24:04 AM\",\n" +
-                "            \"podsCount\": 0,\n" +
+                "        \"2022-01-23T18:25:43.511Z\": {\n" +
+                "          \"Cost\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-22T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
+                "            \"podsCount\": 4,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 128.8,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 100.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 4.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
                 "          },\n" +
-                "          \"Medium Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"jan 07, 2023, 12:24:04 AM\",\n" +
+                "          \"Balanced\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-16T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
                 "            \"podsCount\": 0,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 128.8,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.8,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.8,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
                 "          },\n" +
-                "          \"Long Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"jan 15, 2023, 12:24:04 AM\",\n" +
+                "          \"Performance\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-08T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
                 "            \"podsCount\": 0,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 128.8,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
@@ -149,75 +161,87 @@ public class Recommendation extends HttpServlet {
                 "    \"tfb-server-0\": {\n" +
                 "      \"name\": \"tfb-server-0\",\n" +
                 "      \"recommendation\": {\n" +
-                "        \"2029-10-26 17:53:40.498\": {\n" +
-                "          \"Short Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"jan 01, 2023, 12:24:04 AM\",\n" +
+                "        \"2022-01-23T18:25:43.511Z\": {\n" +
+                "          \"Cost\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-22T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
                 "            \"podsCount\": 0,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 128.8,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.8,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 8.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
                 "          },\n" +
-                "          \"Mid Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"jan 07, 2023, 12:24:04 AM\",\n" +
+                "          \"Balanced\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-16T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
                 "            \"podsCount\": 0,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 6.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 6.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
                 "          },\n" +
-                "          \"Long Term\": {\n" +
-                "            \"monitoringStartTime\": \"jan 01, 2023, 5:53:40 PM\",\n" +
-                "            \"monitoringEndTime\": \"jan 30, 2023, 12:24:04 AM\",\n" +
+                "          \"Performance\": {\n" +
+                "            \"monitoringStartTime\": \"2022-01-08T18:25:43.511Z\",\n" +
+                "            \"monitoringEndTime\": \"2022-01-23T18:25:43.511Z\",\n" +
                 "            \"podsCount\": 0,\n" +
                 "            \"confidence_level\": 0.0,\n" +
                 "            \"config\": {\n" +
                 "              \"max\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 4.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              },\n" +
                 "              \"capacity\": {\n" +
                 "                \"memory\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 1000.0,\n" +
+                "                  \"units\": \"MiB\"\n" +
                 "                },\n" +
                 "                \"cpu\": {\n" +
-                "                  \"amount\": 0.0\n" +
+                "                  \"amount\": 4.0,\n" +
+                "                  \"units\": \"cores\"\n" +
                 "                }\n" +
                 "              }\n" +
                 "            }\n" +
@@ -226,7 +250,7 @@ public class Recommendation extends HttpServlet {
                 "      }\n" +
                 "    }\n" +
                 "  }\n" +
-                "}\n";
+                "}";
         out.append("{\"quarkus-resteasy-autotune-min-http-response-time-db\":" + temp + "}");       //TODO add dummy results
         out.flush();
     }

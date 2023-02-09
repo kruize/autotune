@@ -80,6 +80,7 @@ public class AnalyzerConstants {
     public static final String DEPLOYMENT_NAME = "deployment_name";
     public static final String SELECTOR = "selectorInfo";
     public static final String NULL = "null";
+
     private AnalyzerConstants() {
     }
 
@@ -94,6 +95,7 @@ public class AnalyzerConstants {
         REMOTE;
 
     }
+
     public enum ExperimentStatus {
         QUEUED,
         IN_PROGRESS,
@@ -105,6 +107,18 @@ public class AnalyzerConstants {
         FAILED;
 
     }
+
+    public enum MetricName {
+        cpuRequest,
+        cpuLimit,
+        cpuUsage,
+        cpuThrottle,
+        memoryRequest,
+        memoryLimit,
+        memoryUsage,
+        memoryRSS
+    }
+
     /**
      * Used to parse the Autotune kind resource
      */
@@ -146,6 +160,7 @@ public class AnalyzerConstants {
         private AutotuneObjectConstants() {
         }
     }
+
     /**
      * Used to parse the AutotuneConfig resource
      */
@@ -194,10 +209,12 @@ public class AnalyzerConstants {
         public static final String LAYER_QUARKUS = "quarkus";
         public static final String LAYER_OPENJ9 = "openj9";
         public static final String LAYER_NODEJS = "nodejs";
+
         private AutotuneConfigConstants() {
         }
 
     }
+
     /**
      * Contains Strings used in REST services
      */
@@ -232,9 +249,11 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_TRIALS = "experiment_trials";
         public static final String NA = "NA";
         public static final String SECONDS = " seconds";
+
         private ServiceConstants() {
         }
     }
+
     /**
      * Contains Strings used in the HOTSPOT Layer
      */
@@ -275,10 +294,12 @@ public class AnalyzerConstants {
         public static final String USE_STRING_DEDUPLICATION = "UseStringDeduplication";
         public static final String USE_SUPER_WORD = "UseSuperWord";
         public static final String USE_TYPE_SPECULATION = "UseTypeSpeculation";
+
         private HotspotConstants() {
         }
 
     }
+
     /**
      * Contains Strings used in the QUARKUS Layer
      */
@@ -286,10 +307,12 @@ public class AnalyzerConstants {
 
         public static final String QUARKUS = "quarkus";
         public static final String DOPTION = " -D";
+
         private QuarkusConstants() {
         }
 
     }
+
     /**
      * Contains Strings used in the Container Layer
      */
@@ -297,10 +320,12 @@ public class AnalyzerConstants {
 
         public static final String CPU_REQUEST = "cpuRequest";
         public static final String MEM_REQUEST = "memoryRequest";
+
         private ContainerConstants() {
         }
 
     }
+
     public static class createExperimentParallelEngineConfigs {
         /**
          * MAX Queue size to stack experiments
