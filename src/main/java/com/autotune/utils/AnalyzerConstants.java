@@ -366,5 +366,6 @@ public class AnalyzerConstants {
         public static final String VALUE_TYPE = "valueType";
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.common.performanceProfiles.PerformanceProfileInterface.";
+        public static final String DEFAULT_PROFILE = "default";
     }
 }

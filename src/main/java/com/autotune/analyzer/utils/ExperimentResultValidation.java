@@ -15,13 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.DefaultOpenshiftImpl;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,21 +69,34 @@ public class ExperimentResultValidation {
                         */
                         try {
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-                            // Get the corresponding class for validating the performance profile
-                            String validationClassName = AnalyzerConstants.PerformanceProfileConstants.PERFORMANCE_PROFILE_PKG
-                                    .concat(getValidationClass(performanceProfile.getName()));
-                            Class<?> validationClass = Class.forName(validationClassName);
+                            Class<?> validationClass = null;
+                            Class<?>[] parameterTypes = null;
+                            Method method = null;
+                            Object object = null;
+                            // check if performance profile is absent and then attach a default one
+                            if (null == performanceProfile) {
+                                SloInfo sloInfo = kruizeObject.getSloInfo();
+                                performanceProfile = new PerformanceProfile(AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE,AnalyzerConstants.DEFAULT_PROFILE_VERSION, AnalyzerConstants.DEFAULT_K8S_TYPE, sloInfo);
+                                kruizeObject.setPerformanceProfile(performanceProfile.getName());
+                                errorMsg = new DefaultOpenshiftImpl().validate(performanceProfile, resultData);
+                            } else {
+                                // Get the corresponding class for validating the performance profile
+                                String validationClassName = AnalyzerConstants.PerformanceProfileConstants.PERFORMANCE_PROFILE_PKG
+                                        .concat(getValidationClass(performanceProfile.getName()));
+                                validationClass = Class.forName(validationClassName);
 
-                            Object object = validationClass.getDeclaredConstructor().newInstance();
-                            Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
-                            Method method = validationClass.getMethod("validate",parameterTypes);
-
-                            errorMsg = (String) method.invoke(object, performanceProfile, resultData);
-
-                            if (errorMsg.isEmpty() || errorMsg.isBlank()) {
-                                // call recommend() method here
-                                method = validationClass.getMethod("recommend",parameterTypes);
+                                object = validationClass.getDeclaredConstructor().newInstance();
+                                parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
+                                method = validationClass.getMethod("validate",parameterTypes);
                                 errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+                            }
+                            if (errorMsg.isEmpty()) {
+                                // call recommend() method here
+                                if ( null != method) {
+                                    method = validationClass.getMethod("recommend",parameterTypes);
+                                    errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+                                } else
+                                    errorMsg = new DefaultOpenshiftImpl().recommend(performanceProfile, resultData);
 
                                 proceed = true;
                             } else {
@@ -91,7 +105,7 @@ public class ExperimentResultValidation {
                                 break;
                             }
                         } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
-                                 IllegalAccessException | InvocationTargetException e) {
+                                 IllegalAccessException | InvocationTargetException | InvalidValueException e) {
                             LOGGER.error("Caught Exception: {}",e);
                             errorMsg = "Validation failed due to : " + e.getMessage();
                             proceed = false;
