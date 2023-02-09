@@ -18,10 +18,15 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.RemoteMonitoringOpenShiftImpl;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
+import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
@@ -33,12 +38,14 @@ public class ExperimentResultValidation {
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
+    private Map<String, PerformanceProfile> performanceProfileMap;
 
-    public ExperimentResultValidation(Map<String, KruizeObject> mainKruizeExperimentMAP) {
+    public ExperimentResultValidation(Map<String, KruizeObject> mainKruizeExperimentMAP,Map<String, PerformanceProfile> performanceProfileMap) {
         this.mainKruizeExperimentMAP = mainKruizeExperimentMAP;
+        this.performanceProfileMap = performanceProfileMap;
     }
 
-    public void validate(List<ExperimentResultData> experimentResultDataList) {
+    public void validate(List<ExperimentResultData> experimentResultDataList, Map<String, PerformanceProfile> performanceProfilesMap) {
         try {
             boolean proceed = false;
             String errorMsg = "";
@@ -55,18 +62,43 @@ public class ExperimentResultValidation {
                             resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
                         }
-                        // Validate Performance Profile data
-                        RemoteMonitoringOpenShiftImpl remoteMonitoringOpenShiftImpl = new RemoteMonitoringOpenShiftImpl();
-                        errorMsg = remoteMonitoringOpenShiftImpl.validate(kruizeObject,resultData);
-                        if (errorMsg.isEmpty() || errorMsg.isBlank()) {
-                        // call recommend() method here
-                            remoteMonitoringOpenShiftImpl.recommend();
-                            proceed = true;
-                        } else {
+                        /*
+                         Fetch the performance profile from the Map corresponding to the name in the kruize object,
+                         and then validate the Performance Profile data
+                        */
+                        try {
+                            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+                            // Get the corresponding class for validating the performance profile
+                            String validationClassName = AnalyzerConstants.PerformanceProfileConstants.PERFORMANCE_PROFILE_PKG
+                                    .concat(getValidationClass(performanceProfile.getName()));
+                            Class<?> validationClass = Class.forName(validationClassName);
+
+                            Object object = validationClass.getDeclaredConstructor().newInstance();
+                            Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
+                            Method method = validationClass.getMethod("validate",parameterTypes);
+
+                            errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+
+                            if (errorMsg.isEmpty() || errorMsg.isBlank()) {
+                                // call recommend() method here
+                                method = validationClass.getMethod("recommend",parameterTypes);
+                                errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+
+                                proceed = true;
+                            } else {
+                                proceed = false;
+                                resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
+                                break;
+                            }
+                        } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
+                                 IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error("Caught Exception: {}",e);
+                            errorMsg = "Validation failed due to : " + e.getMessage();
                             proceed = false;
                             resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
                         }
+
                     } else {
                         proceed = false;
                         errorMsg = errorMsg.concat(String.format("Experiment name : %s not found", resultData.getExperiment_name()));
@@ -89,6 +121,18 @@ public class ExperimentResultValidation {
             e.printStackTrace();
             setErrorMessage("Validation failed due to : " + e.getMessage());
         }
+    }
+
+    private String getValidationClass(String name) {
+        String[] words = name.split("-");
+        StringBuilder output = new StringBuilder();
+        for (String word : words) {
+            output.append(word.substring(0,1).toUpperCase() + word.substring(1));
+        }
+        output.append("Impl");
+        LOGGER.debug("ClassName = {}",output);
+
+        return output.toString();
     }
 
     public void markFailed(String message) {

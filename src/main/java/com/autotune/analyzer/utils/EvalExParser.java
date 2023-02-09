@@ -42,14 +42,14 @@ public class EvalExParser implements AlgebraicParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvalExParser.class);
 
     /**
-     *  parse the objective function and return the result based on the valueType received
+     * parse the objective function and return the result based on the valueType received
+     *
      * @param objFunction
-     * @param valueType
      * @param objFunctionMap
      * @return
      */
     @Override
-    public String parse(String objFunction, String valueType, Map<String, String> objFunctionMap) {
+    public String parse(String objFunction, Map<String, String> objFunctionMap) {
 
         BigDecimal result;
 

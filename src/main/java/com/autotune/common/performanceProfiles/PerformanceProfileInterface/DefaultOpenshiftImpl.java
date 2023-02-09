@@ -15,13 +15,12 @@
  *******************************************************************************/
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.common.data.result.AggregationInfoResult;
 import com.autotune.common.data.result.ContainerResultData;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.data.result.AggregationInfoResult;
-import com.autotune.common.k8sObjects.*;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,19 +32,17 @@ import java.util.*;
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
  */
-public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
+public class DefaultOpenshiftImpl implements PerfProfileInterface {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteMonitoringOpenShiftImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOpenshiftImpl.class);
+    List<String> perfProfileFunctionVariablesList = new ArrayList<>();
 
     @Override
-    public String validate(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
+    public String validate(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
 
         String errorMsg = "";
         // Get the metrics data from the Performance Profile
-        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
-                .get(kruizeObject.getPerformanceProfile());
         List<String> aggrFunctionsObjects = new ArrayList<>();
-        List<String> perfProfileFunctionVariablesList = new ArrayList<>();
         for (Metric metric:performanceProfile.getSloInfo().getFunctionVariables()) {
             perfProfileFunctionVariablesList.add(metric.getName());
             metric.getAggregationFunctions().forEach(aggregationFunctions ->
@@ -74,7 +71,7 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
                           Map<String, Object> genInfoClassAsMap;
                           for(AggregationInfoResult genInfoObj:genInfo.values()){
                               try {
-                                genInfoClassAsMap = RemoteMonitoringOpenShiftImpl.convertObjectToMap(genInfoObj);
+                                genInfoClassAsMap = DefaultOpenshiftImpl.convertObjectToMap(genInfoObj);
                                 errorMsg = validateAggFunction(genInfoClassAsMap.keySet(), aggrFunctionsObjects);
                                 if (!errorMsg.isBlank()) {
                                     errorMsg = errorMsg.concat(String.format("for the experiment : %s"
@@ -94,6 +91,45 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
         return errorMsg;
     }
 
+    /**
+     * Calculates the objective function by calling the algebraic parser library. The result is then sent to HPO.
+     * @param performanceProfile
+     * @param experimentResultData
+     * @return
+     */
+    @Override
+    public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
+
+        String objectiveFunction = performanceProfile.getSloInfo().getObjectiveFunction().getExpression();
+        Map<String, String> objFunctionMap = new HashMap<>();
+        String errorMsg = "";
+
+        // Get the metrics data from the Kruize Object
+        for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
+            for (ContainerResultData containers : deploymentResultData.getContainers()) {
+                HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> containerMetricsMap =
+                        containers.getContainer_metrics();
+                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList();
+                for(HashMap<String, HashMap<String, AggregationInfoResult>> funcVar:containerMetricsMap.values()){
+                    for(HashMap<String, AggregationInfoResult> aggregationInfoResultMap:funcVar.values()){
+                        Map<String, Object> aggrInfoClassAsMap;
+                        for(AggregationInfoResult aggregationInfoResult:aggregationInfoResultMap.values()){
+                            try {
+                                // TODO: Need to update the below code
+                                aggrInfoClassAsMap = DefaultOpenshiftImpl.convertObjectToMap(aggregationInfoResult);
+                               LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return objectiveFunction;
+    }
     /**
      * Validates the aggregation function objects against the generalInfo metrics
      * @param keySet
@@ -121,12 +157,6 @@ public class RemoteMonitoringOpenShiftImpl implements PerfProfileInterface {
             }
         }
         return errorMsg;
-    }
-    @Override
-    public void recommend() {
-
-    //TODO: Will be updated once algo is completed
-
     }
 
     /**
