@@ -19,6 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.KruizeObject;
@@ -39,6 +40,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -70,6 +72,8 @@ public class ListExperiments extends HttpServlet {
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()
+                    .enableComplexMapKeySerialization()
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                     .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
                     .create();
             gsonStr = gsonObj.toJson(this.mainKruizeExperimentMap);
