@@ -19,7 +19,7 @@ package com.autotune.utils;
  * Holds the server context of the dependency analyzer.
  */
 public class ServerContext {
-    public static final int AUTOTUNE_PORT = 8080;
+    public static final int AUTOTUNE_PORT = Integer.parseInt(System.getenv().getOrDefault("AUTOTUNE_PORT", "8080"));
     public static final int HPO_PORT = 8085;
 
     // AnalyzerConstants end points
