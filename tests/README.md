@@ -188,6 +188,7 @@ To run remote monitoring tests,
 
 ```
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests -r /home/benchmarks --resultsdir=/home/results
+```
 
 ## How to test a specific autotune module?
 
