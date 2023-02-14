@@ -19,8 +19,8 @@ package com.autotune.utils;
  * Holds the server context of the dependency analyzer.
  */
 public class ServerContext {
-    public static final int AUTOTUNE_PORT = Integer.parseInt(System.getenv().getOrDefault("AUTOTUNE_PORT", "8080"));
-    public static final int HPO_PORT = 8085;
+    public static final int AUTOTUNE_SERVER_PORT = Integer.parseInt(System.getenv().getOrDefault("AUTOTUNE_SERVER_PORT", "8080"));
+    public static final int HPO_SERVER_PORT = 8085;
 
     // AnalyzerConstants end points
     public static final String ROOT_CONTEXT = "/";
@@ -41,23 +41,23 @@ public class ServerContext {
 
 
 
-    public static final String AUTOTUNE_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
-    public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_PORT + SEARCH_SPACE;
-    public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_PORT + LIST_EXPERIMENTS;
-    public static final String UPDATE_RESULTS_END_POINT = AUTOTUNE_SERVER_PORT + UPDATE_RESULTS;
+    public static final String AUTOTUNE_SERVER_URL = "http://localhost:" + AUTOTUNE_SERVER_PORT;
+    public static final String SEARCH_SPACE_END_POINT = AUTOTUNE_SERVER_URL + SEARCH_SPACE;
+    public static final String LIST_EXPERIMENTS_END_POINT = AUTOTUNE_SERVER_URL + LIST_EXPERIMENTS;
+    public static final String UPDATE_RESULTS_END_POINT = AUTOTUNE_SERVER_URL + UPDATE_RESULTS;
 
     // HPO End Points
-    public static final String HPO_SERVER_PORT = "http://localhost:" + HPO_PORT;
+    public static final String HPO_SERVER_URL = "http://localhost:" + HPO_SERVER_PORT;
     public static final String HPO_TRIALS = ROOT_CONTEXT + "experiment_trials";
-    public static final String HPO_TRIALS_END_POINT = HPO_SERVER_PORT + HPO_TRIALS;
+    public static final String HPO_TRIALS_END_POINT = HPO_SERVER_URL + HPO_TRIALS;
 
-    public static final String EXPERIMENT_MANAGER_SERVER_PORT = "http://localhost:" + AUTOTUNE_PORT;
+    public static final String EXPERIMENT_MANAGER_SERVER_URL = "http://localhost:" + AUTOTUNE_SERVER_PORT;
     public static final String EXPERIMENT_MANAGER_CREATE_TRIAL = ROOT_CONTEXT + "createExperimentTrial";
-    public static final String EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_CREATE_TRIAL;
+    public static final String EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_CREATE_TRIAL;
     public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL = ROOT_CONTEXT + "listExperimentTrial";
-    public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
+    public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
-    public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_PORT + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
+    public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
 
     // UI support EndPoints
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
