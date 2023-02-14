@@ -25,15 +25,12 @@ import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.autotune.utils.ServerContext.*;
-
-import javax.servlet.http.HttpServletResponse;
 
 public class Autotune
 {
@@ -45,7 +42,7 @@ public class Autotune
 
 		disableServerLogging();
 
-		Server server = new Server(AUTOTUNE_PORT);
+		Server server = new Server(AUTOTUNE_SERVER_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
 		context.setErrorHandler(new AutotuneErrorHandler());
