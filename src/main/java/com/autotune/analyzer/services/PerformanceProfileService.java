@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,6 +107,7 @@ public class PerformanceProfileService extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
         if (this.performanceProfilesMap.size() > 0) {
+            Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()
@@ -125,7 +127,7 @@ public class PerformanceProfileService extends HttpServlet {
                         }
                     })
                     .create();
-            gsonStr = gsonObj.toJson(this.performanceProfilesMap);
+            gsonStr = gsonObj.toJson(values);
         } else {
             LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
         }
