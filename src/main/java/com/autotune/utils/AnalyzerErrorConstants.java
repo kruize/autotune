@@ -66,6 +66,7 @@ public class AnalyzerErrorConstants {
 		public static final String MISSING_EXPRESSION = "Expression value is missing or null!\n";
 		public static final String MISPLACED_EXPRESSION = "Expression is not allowed when the type is source\n";
 		public static final String INVALID_TYPE = "Objective function type can only be either expression or source\n";
+		public static final String NO_PERF_PROFILE = "No performance profiles present!";
 
 	}
 
