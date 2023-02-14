@@ -65,8 +65,8 @@ List performance profiles output JSON as follows.
 **Response**
 
 ```
-{
-    "resource-optimization-openshift": {
+[
+    {
         "name": "resource-optimization-openshift",
         "profile_version": 1.0,
         "k8s_type": "openshift",
@@ -288,5 +288,5 @@ List performance profiles output JSON as follows.
             ]
         }
     }
-}
+]
 ```
