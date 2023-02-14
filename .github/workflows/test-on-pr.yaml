@@ -20,7 +20,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -49,6 +49,23 @@ jobs:
           cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
+          sleep 20
+          autotune_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
+          kubectl logs $autotune_pod -n monitoring -c autotune > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf autotune_results.tar kruize_pod_log.txt
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: autotune-results
+           path: ./autotune_results.tar
+           retention-days: 2
+
 
   build_crc:
     # The type of runner that the job will run on
@@ -56,7 +73,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -81,7 +98,24 @@ jobs:
           echo Deploy crc
           echo "***************************************************************"
           cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
-          sed -e "s/image: \"kruize\/autotune_operator:test\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
-          sed -i "s/imagePullPolicy: Always/image: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
+          sed -e "s/image: \"kruize\/autotune_operator:0.0.8_mvp\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
+          sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
           cat ./manifests/crc/kruize-crc-minikube.yaml
           kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
+          sleep 120
+          autotune_pod=$(kubectl get pod -n monitoring | grep kruize | cut -d " " -f1)
+          kubectl logs $autotune_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf crc_results.tar kruize_pod_log.txt
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: crc-results
+           path: ./crc_results.tar
+           retention-days: 2
+
