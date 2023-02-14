@@ -19,11 +19,13 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.PerformanceProfileValidation;
-import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -109,11 +111,23 @@ public class PerformanceProfileService extends HttpServlet {
                     .setPrettyPrinting()
                     .enableComplexMapKeySerialization()
                     .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                    .setExclusionStrategies(new ExclusionStrategy() {
+                        @Override
+                        public boolean shouldSkipField(FieldAttributes f) {
+                            return f.getDeclaringClass() == Metric.class && (
+                                    f.getName().equals("trialSummaryResult")
+                                    || f.getName().equals("cycleDataMap")
+                                    );
+                        }
+                        @Override
+                        public boolean shouldSkipClass(Class<?> aClass) {
+                            return false;
+                        }
+                    })
                     .create();
             gsonStr = gsonObj.toJson(this.performanceProfilesMap);
         } else {
-            gsonStr = AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE;
+            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
         }
         response.getWriter().println(gsonStr);
         response.getWriter().close();
