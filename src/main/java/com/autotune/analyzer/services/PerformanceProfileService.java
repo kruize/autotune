@@ -17,11 +17,17 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.PerformanceProfileValidation;
 import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +40,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -85,7 +93,7 @@ public class PerformanceProfileService extends HttpServlet {
         }
     }
 
-    /**TODO: Need to implement
+    /**
      * Get List of Performance Profiles
      * @param req
      * @param response
@@ -97,8 +105,34 @@ public class PerformanceProfileService extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
-        // TODO: Will be updated later
-
+        String gsonStr = "[]";
+        if (this.performanceProfilesMap.size() > 0) {
+            Collection<PerformanceProfile> values = performanceProfilesMap.values();
+            Gson gsonObj = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .setPrettyPrinting()
+                    .enableComplexMapKeySerialization()
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .setExclusionStrategies(new ExclusionStrategy() {
+                        @Override
+                        public boolean shouldSkipField(FieldAttributes f) {
+                            return f.getDeclaringClass() == Metric.class && (
+                                    f.getName().equals("trialSummaryResult")
+                                    || f.getName().equals("cycleDataMap")
+                                    );
+                        }
+                        @Override
+                        public boolean shouldSkipClass(Class<?> aClass) {
+                            return false;
+                        }
+                    })
+                    .create();
+            gsonStr = gsonObj.toJson(values);
+        } else {
+            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
+        }
+        response.getWriter().println(gsonStr);
+        response.getWriter().close();
     }
 
     /**TODO: Need to implement
