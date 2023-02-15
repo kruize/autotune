@@ -54,6 +54,7 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
+    @SerializedName("cluster_name")
     private String clusterName;
 
     public KruizeObject(String experimentName,
