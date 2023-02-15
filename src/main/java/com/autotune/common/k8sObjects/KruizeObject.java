@@ -87,7 +87,8 @@ public final class KruizeObject {
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
-            this.clusterName = clusterNameContent[0].trim();
+            if (clusterNameContent.length > 0)
+                this.clusterName = clusterNameContent[0].trim();
         } else {
             throw new InvalidValueException(error.toString());
         }
