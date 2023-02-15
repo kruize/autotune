@@ -25,7 +25,7 @@ KRUIZE_REPO="${CURRENT_DIR}/../../../"
 . ${CURRENT_DIR}/../common/common_functions.sh
 
 ITER=1
-TIMEOUT=10
+TIMEOUT=1200
 RESULTS_DIR=/tmp/kruize_scale_test_results
 BENCHMARK_SERVER=localhost
 APP_NAME=autotune
@@ -35,7 +35,7 @@ CONTAINER_NAME=autotune
 NAMESPACE=monitoring
 
 target="crc"
-KRUIZE_IMAGE="kruize/autotune_operator:0.0.8_mvp"
+KRUIZE_IMAGE="kruize/autotune_operator:test"
 
 jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
@@ -48,13 +48,16 @@ function usage() {
 function jmeter_setup() {
 	JMETER_VERSION="5.5"
 
-	echo "Downloading jmeter..." | tee -a ${LOG}
-	#wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz
-	#tar -xzf apache-jmeter-$JMETER_VERSION.tgz
-	#rm apache-jmeter-$JMETER_VERSION.tgz
+	if [ ! -d ${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION ]; then
+		echo "Downloading jmeter..." | tee -a ${LOG}
+		wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz
+		tar -xzf apache-jmeter-$JMETER_VERSION.tgz
+		rm apache-jmeter-$JMETER_VERSION.tgz
+	else 
+		echo "Skipping jmeter install as it is already present here - ${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION"
+	fi
 	export JMETER_HOME=${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION
 	export PATH=$JMETER_HOME/bin:$PATH 
-
 }
 
 while getopts c:a:rn:i:-: gopts
@@ -104,14 +107,30 @@ LOG="${LOG_DIR}/remote-monitoring-stress.log"
 METRICS_LOG_DIR="${LOG_DIR}/resource_usage"
 mkdir -p ${METRICS_LOG_DIR}
 
+prometheus_pod_running=$(kubectl get pods --all-namespaces | grep "prometheus-k8s-0")
+if [ "${prometheus_pod_running}" == "" ]; then
+	echo "Install prometheus required to fetch the resource usage metrics for kruize"
+	exit 1
+
+fi
+
 JMETER_LOG_DIR="${LOG_DIR}/jmeter_logs" 
 mkdir -p ${JMETER_LOG_DIR}
 
+echo "Invoking jmeter setup" | tee -a ${LOG}
+jmeter_setup
+echo "Invoking jmeter setup...done" | tee -a ${LOG}
+
 echo "Setting up kruize..." | tee -a ${LOG}
 pushd ${KRUIZE_REPO} > /dev/null
+	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log 2>&1
+
+	sleep 30
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${LOG_DIR}/kruize_setup.log 2>&1
 
 echo "Setting up kruize...Done" | tee -a ${LOG}
+
+sleep 120
 popd > /dev/null
 
 
@@ -127,7 +146,7 @@ case ${CLUSTER_TYPE} in
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			SERVER_IP_ADDR=$(minikube ip)
 			echo "Port forward prometheus..." | tee -a ${LOG}
-			#kubectl port-forward svc/prometheus-k8s 9090:9090 -n monitoring &
+			kubectl port-forward svc/prometheus-k8s 9090:9090 -n monitoring > /dev/null &
 			echo "Port forward prometheus...done" | tee -a ${LOG}
 		fi
 		;;
@@ -136,7 +155,7 @@ case ${CLUSTER_TYPE} in
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			oc expose svc/kruize -n ${NAMESPACE}
 			SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
-			echo "************ SERVER_IP_ADDR = $SERVER_IP_ADDR"
+			echo "SERVER_IP_ADDR = $SERVER_IP_ADDR"
 		fi
 		;;
 	*)
@@ -145,10 +164,14 @@ case ${CLUSTER_TYPE} in
 esac	
 
 
-echo "Invoking jmeter setup" | tee -a ${LOG}
-jmeter_setup
 
-echo "Invoking jmeter setup...done" | tee -a ${LOG}
+if [ "${target}" == "crc" ]; then
+	APP_NAME="kruize"
+	DEPLOYMENT_NAME="kruize"
+	CONTAINER_NAME="kruize"
+
+fi
+
 
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	DEPLOYMENT_NAME="kruize"
@@ -159,6 +182,10 @@ else
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} localhost ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
 fi
 
+port=$(kubectl -n monitoring get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
+echo "cmd = $cmd"
+curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
 
 for iter in `seq 1 ${MAX_LOOP}`
 do
@@ -183,7 +210,7 @@ do
 		echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log" | tee -a ${LOG}
 		exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=$host -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log
 	else
-		port=$(kubectl -n monitoring get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+		port=$(kubectl -n monitoring get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 		echo "port = $port" | tee -a ${LOG}
 		if [ "${port}" == "" ]; then
 			echo "Failed to get the Kruize port, Check if kruize is runnning!" | tee -a ${LOG}

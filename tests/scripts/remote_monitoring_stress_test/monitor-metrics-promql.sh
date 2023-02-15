@@ -39,14 +39,19 @@ function cpu_metrics()
         CONTAINER_NAME=$7
         NAMESPACE=$8
 	INTERVAL=$9
+	CLUSTER_TYPE=${10}
 
         while true
         do
+		if [[ ${CLUSTER_TYPE} == "openshift" ]]; then
+        		TOKEN=`oc whoami --show-token`
+		fi
+
 		start_timestamp=`date`
                 # Processing curl output "timestamp value" using jq tool.
 		# cpu_request_avg_container
                 cpu_request_avg_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=avg(kube_pod_container_resource_requests{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'", resource="cpu", unit="core"})' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
-
+		
 		# cpu_request_sum_container
 		cpu_request_sum_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=sum(kube_pod_container_resource_requests{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'", resource="cpu", unit="core"})' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
 
@@ -57,6 +62,9 @@ function cpu_metrics()
                 cpu_limit_sum_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=sum(kube_pod_container_resource_limits{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'", resource="cpu", unit="core"})' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
 
 		if [[ ${queryVersion} == "4.9" ]]; then
+			# cpu_usage_sum_container
+                        cpu_usage_sum_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
+
 			# cpu_usage_avg_container
                         cpu_usage_avg_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
 
@@ -102,11 +110,16 @@ function mem_metrics()
         CONTAINER_NAME=$7
         NAMESPACE=$8
 	INTERVAL=$9
+	CLUSTER_TYPE=${10}
 
         # Delete the old json file if any
         rm -rf ${RESULTS_DIR}/mem_request_avg_container-${ITER}.json
         while true
         do
+		if [[ ${CLUSTER_TYPE} == "openshift" ]]; then
+                        TOKEN=`oc whoami --show-token`
+                fi
+
 		start_timestamp=`date`
                 # Processing curl output "timestamp value" using jq tool.
 		# mem_request_avg_container
@@ -162,9 +175,14 @@ function load_metrics()
         CONTAINER_NAME=$7
         NAMESPACE=$8
 	INTERVAL=$9
+	CLUSTER_TYPE=${10}
 
         while true
         do
+		if [[ ${CLUSTER_TYPE} == "openshift" ]]; then
+                        TOKEN=`oc whoami --show-token`
+                fi
+
 		start_timestamp=`date`
 		# network_avg_pod
 		network_sum_pod=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=sum(rate(container_network_receive_bytes_total{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
@@ -207,7 +225,7 @@ if [[ ${CLUSTER_TYPE} == "openshift" ]]; then
 	TOKEN=`oc whoami --show-token`
 	VERSION=`oc version | grep "Server" | cut -d " " -f3`
 	if [[ $(getversion $VERSION) -ge $(getversion "4.9") ]]; then
-        	queryVersion="4.9"
+        	export queryVersion="4.9"
 	fi
 elif [[ ${CLUSTER_TYPE} == "minikube" ]]; then
 	#QUERY_IP=`minikibe ip`
@@ -224,9 +242,9 @@ echo ",network_sum_pod,network_avg_pod,network_max_pod,network_min_pod" > ${RESU
 
 echo "Collecting metric data" >> setup.log
 start_timestamp=`date`
-timeout ${TIMEOUT} bash -c  "cpu_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL}" &
-timeout ${TIMEOUT} bash -c  "mem_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL}" &
-timeout ${TIMEOUT} bash -c  "load_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL}" &
+timeout ${TIMEOUT} bash -c  "cpu_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL} ${CLUSTER_TYPE}" &
+timeout ${TIMEOUT} bash -c  "mem_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL} ${CLUSTER_TYPE}" &
+timeout ${TIMEOUT} bash -c  "load_metrics ${URL} ${TOKEN} ${RESULTS_DIR} ${ITER} ${APP_NAME} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} ${INTERVAL} ${CLUSTER_TYPE}" &
 sleep ${TIMEOUT}
 paste ${RESULTS_DIR}/cpu_metrics.csv ${RESULTS_DIR}/mem_metrics.csv ${RESULTS_DIR}/load_metrics.csv > ${RESULTS_DIR}/../monitoring_metrics.csv
 
