@@ -18,17 +18,16 @@ package com.autotune.analyzer.deployment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.exceptions.InvalidBoundsException;
-import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.analyzer.variables.Variables;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.datasource.DataSource;
 import com.autotune.common.data.datasource.DataSourceFactory;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.*;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
@@ -57,6 +56,7 @@ import java.net.MalformedURLException;
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 
@@ -88,7 +88,7 @@ public class KruizeDeployment {
      * @param kruizeDeployment
      * @throws IOException if unable to get Kubernetes config
      */
-    public static void getAutotuneObjects(final KruizeDeployment kruizeDeployment) throws IOException {
+    public static void getKruizeObjects(final KruizeDeployment kruizeDeployment) throws IOException {
         /* Watch for events (additions, modifications or deletions) of autotune objects */
         Watcher<String> autotuneObjectWatcher = new Watcher<>() {
             @Override
@@ -98,7 +98,7 @@ public class KruizeDeployment {
                 switch (action.toString().toUpperCase()) {
                     case "MODIFIED":
                     case "ADDED":        //TO DO consider MODIFIED after discussing PATCH request on already created experiments.
-                        kruizeObject = getAutotuneObject(resource);
+                        kruizeObject = getKruizeObject(resource);
                         processKruizeObject(kruizeObject);
                         break;
                     case "DELETED":
@@ -314,66 +314,48 @@ public class KruizeDeployment {
     }
 
     /**
-     * Add Autotune object to map of monitored objects.
+     * Add Kruize object to map of monitored objects.
      *
      * @param autotuneObjectJsonStr JSON string of the autotune object
      */
-    private static KruizeObject getAutotuneObject(String autotuneObjectJsonStr) {
+    private static KruizeObject getKruizeObject(String autotuneObjectJsonStr) {
         try {
             JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
             JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-
             String name;
+            String perfProfileName = null;
             String mode;
             String targetCluster;
-            SloInfo sloInfo;
-            ObjectiveFunction objectiveFunction = null;
             String namespace;
             SelectorInfo selectorInfo;
+            JSONObject sloJson = null;
+            String hpoAlgoImpl = null;
 
             JSONObject specJson = autotuneObjectJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SPEC);
 
-            JSONObject sloJson = null;
-            String slo_class = null;
-            String direction = null;
-            JSONObject objectiveFunctionJson = null;
-            String hpoAlgoImpl = null;
+            mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE,
+                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_MODE);
+            targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
+                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
+            name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+            namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
+            hpoAlgoImpl = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
+                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
+
             if (specJson != null) {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
-                slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-                direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
-                hpoAlgoImpl = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
-                        AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
-                objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
-                objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
-                LOGGER.debug("Objective_Function = {}",objectiveFunction.toString());
+                perfProfileName = specJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE);
+
+                if (Stream.of(sloJson, perfProfileName).allMatch(Objects::isNull)) {
+                    throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA);
+                }
+                if (Stream.of(sloJson, perfProfileName).noneMatch(Objects::isNull)) {
+                    throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
+                }
+
+                SloInfo sloInfo = new Gson().fromJson(String.valueOf(sloJson), SloInfo.class);
+                perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
             }
-
-            JSONArray functionVariables = new JSONArray();
-            if (sloJson != null) {
-                functionVariables = sloJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-            }
-            ArrayList<Metric> metricArrayList = new ArrayList<>();
-
-            for (Object functionVariableObj : functionVariables) {
-                JSONObject functionVariableJson = (JSONObject) functionVariableObj;
-                String variableName = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                String query = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.QUERY);
-                String datasource = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
-                String valueType = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
-
-                Metric metric = new Metric(variableName,
-                        query,
-                        datasource,
-                        valueType);
-
-                metricArrayList.add(metric);
-            }
-            sloInfo = new SloInfo(slo_class,
-                    objectiveFunction,
-                    direction,
-                    hpoAlgoImpl,
-                    metricArrayList);
 
             JSONObject selectorJson = null;
             if (specJson != null) {
@@ -393,13 +375,6 @@ public class KruizeDeployment {
                     matchURI,
                     matchService);
 
-            mode = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.MODE,
-                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_MODE);
-            targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
-                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
-            name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-            namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
-
             String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
             String uid = metadataJson.optString(AnalyzerConstants.UID);
             String apiVersion = autotuneObjectJson.optString(AnalyzerConstants.API_VERSION);
@@ -417,16 +392,43 @@ public class KruizeDeployment {
                     namespace,
                     mode,
                     targetCluster,
-                    sloInfo,
+                    hpoAlgoImpl,
                     selectorInfo,
+                    perfProfileName,
                     objectReference
             );
 
-        } catch (InvalidValueException | NullPointerException | JSONException e) {
+        } catch (InvalidValueException | NullPointerException | JSONException | SloClassNotSupportedException e) {
             LOGGER.error(e.getMessage());
             new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null,null, null);
             return null;
         }
+    }
+    public static String setDefaultPerformanceProfile(SloInfo sloInfo, String mode, String targetCluster) {
+        PerformanceProfile performanceProfile = null;
+        try {
+            String name = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE;
+            double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
+            String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
+            performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
+
+            if ( null != performanceProfile) {
+                ValidationResultData validationResultData = new PerfProfileImpl().validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
+                if (validationResultData.isSuccess()) {
+                    LOGGER.info("Added Performance Profile : {} into the map with version: {}",
+                            performanceProfile.getName(), performanceProfile.getProfile_version());
+                } else {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationResultData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+                }
+            } else {
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create performance profile ", EventLogger.Type.Warning, null, null, null, null);
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Exception while adding PP with message: {} ",e.getMessage());
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+            return null;
+        }
+        return performanceProfile.getName();
     }
 
     /**

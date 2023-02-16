@@ -4,6 +4,7 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.PerformanceProfileValidation;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.*;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,13 +42,13 @@ public class PerformanceProfilesDeployment {
         Watcher<String> performanceProfileObjectWatcher = new Watcher<>() {
             @Override
             public void eventReceived(Action action, String resource) {
-                PerformanceProfile performanceProfile;
+                PerformanceProfile performanceProfile = null;
 
                 switch (action.toString().toUpperCase()) {
                     case "ADDED":
                         performanceProfile = getPerformanceProfile(resource);
                         if ( validatePerformanceProfile(performanceProfile))
-                            PerformanceProfileValidation.addPerformanceProfile(performanceProfilesMap, performanceProfile);
+                            new PerfProfileImpl().addPerformanceProfile(performanceProfilesMap, performanceProfile);
                         break;
                     case "MODIFIED":
                         performanceProfile = getPerformanceProfile(resource);
@@ -56,7 +58,7 @@ public class PerformanceProfilesDeployment {
                                     .equals(performanceProfile)) {
                                 if (validatePerformanceProfile(performanceProfile)) {
                                     deleteExistingPerformanceProfile(resource);
-                                    PerformanceProfileValidation.addPerformanceProfile(performanceProfilesMap, performanceProfile);
+                                    new PerfProfileImpl().addPerformanceProfile(performanceProfilesMap, performanceProfile);
                                 }
                             }
                         }
@@ -80,7 +82,7 @@ public class PerformanceProfilesDeployment {
         boolean validationStatus = false;
         try {
             if (null != performanceProfile) {
-                ValidationResultData validationResultData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfilesMap, performanceProfile);
+                ValidationResultData validationResultData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile);
                 if (validationResultData.isSuccess())
                     validationStatus = true;
                 else
@@ -98,79 +100,16 @@ public class PerformanceProfilesDeployment {
             JSONObject performanceProfileObjectJson = new JSONObject(performanceProfileObjectJsonStr);
             JSONObject metadataJson = performanceProfileObjectJson
                     .getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+            performanceProfileObjectJson.remove("apiversion");
+            performanceProfileObjectJson.remove("kind");
+            performanceProfileObjectJson.remove("metadata");
 
-            String name;
-            String k8s_type;
-            double profile_version;
-            SloInfo sloInfo;
-            ObjectiveFunction objectiveFunction = null;
+            performanceProfileObjectJson.put("name",metadataJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME));
+            PerformanceProfile performanceProfile = new Gson().fromJson(performanceProfileObjectJson.toString(), PerformanceProfile.class);
 
-            JSONObject sloJson;
-            String slo_class = null;
-            String direction = null;
-            JSONObject objectiveFunctionJson;
+            return performanceProfile;
 
-            name = metadataJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME);
-            profile_version = Double.parseDouble(performanceProfileObjectJson.optString(AnalyzerConstants.PROFILE_VERSION,
-                    String.valueOf(AnalyzerConstants.DEFAULT_PROFILE_VERSION)));
-            k8s_type = performanceProfileObjectJson.optString(AnalyzerConstants.K8S_TYPE,AnalyzerConstants.DEFAULT_K8S_TYPE);
-            sloJson = performanceProfileObjectJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
-
-            if (sloJson != null) {
-                slo_class = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
-                direction = sloJson.optString(AnalyzerConstants.AutotuneObjectConstants.DIRECTION);
-                objectiveFunctionJson = sloJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
-                objectiveFunction = new Gson().fromJson(String.valueOf(objectiveFunctionJson), ObjectiveFunction.class);
-            }
-
-            JSONArray functionVariables = new JSONArray();
-            JSONArray aggregationFunctionsArr;
-            if (sloJson != null) {
-                functionVariables = sloJson.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-            }
-            ArrayList<Metric> metricArrayList = new ArrayList<>();
-
-            for (Object functionVariableObj : functionVariables) {
-                JSONObject functionVariableJson = (JSONObject) functionVariableObj;
-
-                String variableName = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                String query = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.QUERY);
-                String datasource = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
-                String valueType = functionVariableJson.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
-                String kubernetes_object = functionVariableJson.optString(AnalyzerConstants.KUBERNETES_OBJECTS);
-
-                aggregationFunctionsArr = ((JSONObject) functionVariableObj).getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
-
-                List<AggregationFunctions>  aggregationFunctionsList = new ArrayList<>();
-                for (Object aggregationFunctionsObj : aggregationFunctionsArr) {
-                    JSONObject aggregationFunctionsJson = (JSONObject) aggregationFunctionsObj;
-                    String function = aggregationFunctionsJson.optString(AnalyzerConstants.FUNCTION);
-                    String aggregationFunctionSQuery = aggregationFunctionsJson.optString(
-                            AnalyzerConstants.AutotuneObjectConstants.QUERY);
-                    String versions = aggregationFunctionsJson.optString(AnalyzerConstants.VERSIONS);
-
-                    AggregationFunctions aggregationFunctions = new AggregationFunctions(function,
-                            aggregationFunctionSQuery, versions);
-                    aggregationFunctionsList.add(aggregationFunctions);
-                }
-
-                Metric metric = new Metric(variableName,
-                        query,
-                        datasource,
-                        valueType);
-                metric.setAggregationFunctions(aggregationFunctionsList);
-                metric.setKubernetesObject(kubernetes_object);
-
-                metricArrayList.add(metric);
-            }
-            sloInfo = new SloInfo(slo_class,
-                    objectiveFunction,
-                    direction,
-                    AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL,
-                    metricArrayList);
-            return new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
-
-        } catch (InvalidValueException | NullPointerException | JSONException e) {
+        } catch (NullPointerException | JSONException e) {
             LOGGER.error("Exception occurred while parsing the data: {}",e.getMessage());
             return null;
         }

@@ -9,6 +9,8 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.AutotuneConfig;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.k8sObjects.ObjectiveFunction;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,9 +105,11 @@ public class Experimentator implements Runnable {
             KruizeObject kruizeObject = autotuneExperiment.getAutotuneObject();
             String experimentName = autotuneExperiment.getExperimentName();
             String experimentId = kruizeObject.getExperimentId();
-            ObjectiveFunction objectiveFunction = kruizeObject.getSloInfo().getObjectiveFunction();
-            String hpoAlgoImpl = kruizeObject.getSloInfo().getHpoAlgoImpl();
-            String direction = kruizeObject.getSloInfo().getDirection();
+            PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
+                    .get(kruizeObject.getPerformanceProfile());
+            ObjectiveFunction objectiveFunction = performanceProfile.getSloInfo().getObjectiveFunction();
+            String hpoAlgoImpl = kruizeObject.getHpoAlgoImpl();
+            String direction = performanceProfile.getSloInfo().getDirection();
             // TODO: Need to add valueType to the ObjectiveFunction!
             String valueType = "double";
 

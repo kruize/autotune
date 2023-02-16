@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
-import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
-
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Abstraction layer containing methods for the validation of the Performance Profiles with respect to the updated experiment.
- * and to parse the objective function data.
+ * Util class to validate the performance profile metrics with the experiment results metrics.
  */
-public interface PerfProfileInterface {
-// name, validateResults, validateProfile, recommend
-    String getName(PerformanceProfile profile);
-    ValidationResultData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile);
-    String validateResults(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
-    String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
+public class AdvancedClusterMgmtImpl extends PerfProfileImpl {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdvancedClusterMgmtImpl.class);
+
+    @Override
+    public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
+
+        //TODO: Will be updated once algo is completed
+
+        return null;
+    }
+
+
 }

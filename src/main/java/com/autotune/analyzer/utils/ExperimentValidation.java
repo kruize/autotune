@@ -15,19 +15,21 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.deployment.KruizeDeployment;
+import com.autotune.analyzer.exceptions.SloClassNotSupportedException;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * create Experiment input validation
@@ -46,10 +48,6 @@ public class ExperimentValidation {
     ));
     private List<String> mandatoryFieldsForLocalRemoteMonitoring = new ArrayList<>((
             Arrays.asList(AnalyzerConstants.RECOMMENDATION_SETTINGS)
-    ));
-    private List<String> mandatorySLOPerf = new ArrayList<>(Arrays.asList(
-            AnalyzerConstants.SLO,
-            AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.DEPLOYMENT_NAME,
@@ -86,13 +84,22 @@ public class ExperimentValidation {
                     if (null != ao.getDeployment_name()) {
                         String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
                         if (!namespaceDeploymentNameList.contains(nsDepName)) {
-                            if (null != PerformanceProfilesDeployment.performanceProfilesMap.get(ao.getPerformanceProfile()))
-                                proceed = true;
-                            else {
-                                errorMsg = errorMsg.concat(String.format("Performance Profile : %s does not exist!", ao.getPerformanceProfile()));
+                            if (null != ao.getPerformanceProfile()) {
+                                if (null != PerformanceProfilesDeployment.performanceProfilesMap.get(ao.getPerformanceProfile()))
+                                    proceed = true;
+                                else {
+                                    errorMsg = errorMsg.concat(String.format("Performance Profile : %s does not exist!", ao.getPerformanceProfile()));
+                                }
+                            } else {
+                                if (null == ao.getSloInfo())
+                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
+                                else {
+                                    String perfProfileName = KruizeDeployment.setDefaultPerformanceProfile(ao.getSloInfo(), mode, target_cluster);
+                                    ao.setPerformanceProfile(perfProfileName);
+                                    proceed = true;
+                                }
                             }
-                        }
-                        else {
+                        } else {
                             if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
                                 errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
                             else
@@ -186,17 +193,6 @@ public class ExperimentValidation {
                             }
                     );
                 }
-                for (String mField : mandatorySLOPerf) {
-                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                    try {
-                        Method getNameMethod = KruizeObject.class.getMethod(methodName);
-                        if (getNameMethod.invoke(expObj) != null) {
-                            missingSLOPerf = false;
-                        }
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        //LOGGER.warn("Methode name for {} not exsist and error is {}", mField, e.getMessage());
-                    }
-                }
                 for (String mField : mandatoryDeploymentSelector) {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
@@ -208,13 +204,10 @@ public class ExperimentValidation {
                         //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
                     }
                 }
-                if (missingSLOPerf || missingDeploySelector) {
-                    if (missingSLOPerf) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatorySLOPerf));
-                    }
-                    if (missingDeploySelector) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
-                    }
+
+                if (missingDeploySelector) {
+                    errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
+
                     validationResultData.setSuccess(false);
                     validationResultData.setMessage(errorMsg);
                 } else {

@@ -60,13 +60,17 @@ public class AnalyzerErrorConstants {
 		public static final String INVALID_DIRECTION_FOR_SLO_CLASS = "Invalid direction for slo_class\n";
 		public static final String DATASOURCE_NOT_SUPPORTED = " datasource " + UNSUPPORTED;
 		public static final String VALUE_TYPE_NOT_SUPPORTED = " value_type " + UNSUPPORTED;
-		public static final String AGG_FUNCTION_ERROR = "One of query or aggregation_functions is mandatory. Both cannot be null!";
+		public static final String QUERY_FUNCTION_MISSING = "One of query or aggregation_functions is mandatory. Both cannot be null!";
 		public static final String MISSING_AGG_FUNCTION = "At least one aggregation function value needs to be present ";
 		public static final String FUNCTION_VARIABLE_ERROR = "missing in objective_function\n";
 		public static final String MISSING_EXPRESSION = "Expression value is missing or null!\n";
 		public static final String MISPLACED_EXPRESSION = "Expression is not allowed when the type is source\n";
 		public static final String INVALID_TYPE = "Objective function type can only be either expression or source\n";
 		public static final String NO_PERF_PROFILE = "No performance profiles present!";
+		public static final String MISSING_VALUE = "Missing 'value' in the results ";
+		public static final String MISSING_SLO_DATA = "No Performance Profile or SLO data is Present!";
+		public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
+		public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists!";
 
 	}
 

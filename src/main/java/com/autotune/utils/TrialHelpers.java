@@ -28,6 +28,8 @@ import com.autotune.common.experiments.*;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.k8sObjects.Metric;
 import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -184,7 +186,9 @@ public class TrialHelpers {
         ContainerConfigData configData = new ContainerConfigData();
         HashMap<String, Metric> podMetricsHashMap = new HashMap<>();
         HashMap<String, HashMap<String, Metric>> containerMetricsHashMap = new HashMap<>();
-        SloInfo sloInfo = kruizeObject.getSloInfo();
+        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
+                .get(kruizeObject.getPerformanceProfile());
+        SloInfo sloInfo = performanceProfile.getSloInfo();
         for (Metric metric : sloInfo.getFunctionVariables()) {
             podMetricsHashMap.put(metric.getName(), metric);
         }
