@@ -419,7 +419,8 @@ public class KruizeDeployment {
                     targetCluster,
                     sloInfo,
                     selectorInfo,
-                    objectReference
+                    objectReference,
+                    null
             );
 
         } catch (InvalidValueException | NullPointerException | JSONException e) {

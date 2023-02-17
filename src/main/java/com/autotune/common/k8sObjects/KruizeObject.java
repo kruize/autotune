@@ -64,8 +64,7 @@ public final class KruizeObject {
                         SloInfo sloInfo,
                         SelectorInfo selectorInfo,
                         ObjectReference objectReference,
-                        String... clusterNameContent    // Adding an optional param to not break existing implementation
-                                                        // Please add any required param above/before the `clusterName` variable
+                        String clusterNameContent
                         ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
@@ -75,8 +74,7 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
-        if (clusterNameContent.length > 0)
-            map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterNameContent[0].trim());
+        map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterNameContent);
 
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
@@ -88,8 +86,7 @@ public final class KruizeObject {
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
-            if (clusterNameContent.length > 0)
-                this.clusterName = clusterNameContent[0].trim();
+            this.clusterName = clusterNameContent;
         } else {
             throw new InvalidValueException(error.toString());
         }
