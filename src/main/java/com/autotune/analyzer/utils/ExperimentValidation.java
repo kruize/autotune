@@ -16,10 +16,8 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.analyzer.exceptions.SloClassNotSupportedException;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * create Experiment input validation
@@ -72,35 +69,38 @@ public class ExperimentValidation {
      * @param kruizeExptList
      */
     public void validate(List<KruizeObject> kruizeExptList) {
-        for (KruizeObject ao : kruizeExptList) {
-            ValidationResultData validationResultData = validateMandatoryFields(ao);
+        for (KruizeObject kruizeObject : kruizeExptList) {
+            ValidationResultData validationResultData = validateMandatoryFields(kruizeObject);
             if (validationResultData.isSuccess()) {
-                String expName = ao.getExperimentName();
-                String mode = ao.getMode();
-                String target_cluster = ao.getTargetCluster();
+                String expName = kruizeObject.getExperimentName();
+                String mode = kruizeObject.getMode();
+                String target_cluster = kruizeObject.getTargetCluster();
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
-                    if (null != ao.getDeployment_name()) {
-                        String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
+                    if (null != kruizeObject.getDeployment_name()) {
+                        String nsDepName = kruizeObject.getNamespace().toLowerCase() + ":" + kruizeObject.getDeployment_name().toLowerCase();
                         if (!namespaceDeploymentNameList.contains(nsDepName)) {
-                            if (null != ao.getPerformanceProfile()) {
-                                if (null != PerformanceProfilesDeployment.performanceProfilesMap.get(ao.getPerformanceProfile()))
-                                    proceed = true;
+                            if (null != kruizeObject.getPerformanceProfile()) {
+                                if (null != kruizeObject.getSloInfo())
+                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                                 else {
-                                    errorMsg = errorMsg.concat(String.format("Performance Profile : %s does not exist!", ao.getPerformanceProfile()));
+                                    if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile()))
+                                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
+                                    else
+                                        proceed = true;
                                 }
                             } else {
-                                if (null == ao.getSloInfo())
+                                if (null == kruizeObject.getSloInfo())
                                     errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
                                 else {
-                                    String perfProfileName = KruizeDeployment.setDefaultPerformanceProfile(ao.getSloInfo(), mode, target_cluster);
-                                    ao.setPerformanceProfile(perfProfileName);
+                                    String perfProfileName = KruizeDeployment.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                                    kruizeObject.setPerformanceProfile(perfProfileName);
                                     proceed = true;
                                 }
                             }
                         } else {
-                            if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
+                            if (!kruizeObject.getExperimentUseCaseType().isRemoteMonitoring())
                                 errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
                             else
                                 proceed = true;
@@ -112,15 +112,15 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Experiment name : %s is duplicate", expName));
                 }
                 if (!proceed) {
-                    ao.setValidationData(new ValidationResultData(false, errorMsg));
+                    kruizeObject.setValidationData(new ValidationResultData(false, errorMsg));
                     markFailed(errorMsg);
                     break;
                 } else {
                     setSuccess(true);
-                    ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
+                    kruizeObject.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
                 }
             } else {
-                ao.setValidationData(validationResultData);
+                kruizeObject.setValidationData(validationResultData);
                 markFailed(validationResultData.getMessage());
                 break;
             }

@@ -56,15 +56,19 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
+    @SerializedName("cluster_name")
+    private String clusterName;
 
     public KruizeObject(String experimentName,
+                        String clusterName,
                         String namespace,
                         String mode,
                         String targetCluster,
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
                         String performanceProfile,
-                        ObjectReference objectReference) throws InvalidValueException {
+                        ObjectReference objectReference
+                        ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
@@ -72,6 +76,7 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
@@ -82,6 +87,7 @@ public final class KruizeObject {
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
+            this.clusterName = clusterName;
         } else {
             throw new InvalidValueException(error.toString());
         }
@@ -237,8 +243,17 @@ public final class KruizeObject {
         return hpoAlgoImpl;
     }
 
+    public String getClusterName() {
+        return clusterName;
+    }
+
     @Override
     public String toString() {
+        // Creating a temparory cluster name as we allow null for cluster name now
+        // Please change it to use `clusterName` variable itself if there is a null check already in place for that
+        String tmpClusterName = "";
+        if (clusterName != null)
+            tmpClusterName = clusterName;
         return "KruizeObject{" +
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
@@ -257,6 +272,7 @@ public final class KruizeObject {
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
+                ", clusterName=" + tmpClusterName +
                 '}';
     }
 }

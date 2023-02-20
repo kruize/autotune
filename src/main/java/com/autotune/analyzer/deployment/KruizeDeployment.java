@@ -320,12 +320,14 @@ public class KruizeDeployment {
      */
     private static KruizeObject getKruizeObject(String autotuneObjectJsonStr) {
         try {
+            //TODO: Make a common method to add data for both CRD and non-CRD
             JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
             JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
             String name;
             String perfProfileName = null;
             String mode;
             String targetCluster;
+            String clusterName;
             String namespace;
             SelectorInfo selectorInfo;
             JSONObject sloJson = null;
@@ -337,6 +339,7 @@ public class KruizeDeployment {
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_MODE);
             targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
+            clusterName = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME);
             name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
             namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
             hpoAlgoImpl = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
@@ -347,15 +350,26 @@ public class KruizeDeployment {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
                 perfProfileName = specJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE);
 
-                if (sloJson.isEmpty() && perfProfileName.isEmpty()) {
-                    throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA);
+                if (!perfProfileName.isEmpty()) {
+                    if (!sloJson.isEmpty()) {
+                        throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
+                    }
+                    else {
+                        // check if the Performance profile with the given name exist
+                        if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(perfProfileName)) {
+                            throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
+                        }
+                    }
+                } else {
+                    if (sloJson.isEmpty()) {
+                        throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA);
+                    }
+                    else {
+                        // Only SLO is available so create a default Performance profile with SLO data
+                        SloInfo sloInfo = new Gson().fromJson(String.valueOf(sloJson), SloInfo.class);
+                        perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
+                    }
                 }
-                if (!sloJson.isEmpty() && !perfProfileName.isEmpty()) {
-                    throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
-                }
-
-                SloInfo sloInfo = new Gson().fromJson(String.valueOf(sloJson), SloInfo.class);
-                perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
             }
             assert selectorJson != null;
@@ -385,6 +399,7 @@ public class KruizeDeployment {
                     uid);
 
             return new KruizeObject(name,
+                    clusterName,
                     namespace,
                     mode,
                     targetCluster,

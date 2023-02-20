@@ -157,6 +157,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
+        public static final String CLUSTER_NAME = "cluster_name";
 
         private AutotuneObjectConstants() {
         }

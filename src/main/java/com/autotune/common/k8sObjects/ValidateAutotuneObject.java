@@ -65,6 +65,15 @@ public class ValidateAutotuneObject
 		if (selectorInfo.getMatchLabelValue() == null || selectorInfo.getMatchLabelValue().trim().isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_MATCHLABEL_VALUE);
 		}
+
+		// Placeholder for cluster name validation
+		if (map.containsKey(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME)) {
+			// if you don't want cluster name to be `null` update the code block below
+			if (map.get(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME) == null || ((String)map.get(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME)).isEmpty()) {
+				// Add your logic of appending the error string
+			}
+		}
+
 		return errorString;
 	}
 }

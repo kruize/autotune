@@ -77,6 +77,7 @@ public class CreateExperiment extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
             new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
+            //TODO: UX needs to be modified - Handle response for the multiple objects
             KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
             if (null == invalidKruizeObject) {
                 sendSuccessResponse(response, "Experiment registered successfully with Kruize.");

@@ -71,6 +71,7 @@ public class AnalyzerErrorConstants {
 		public static final String MISSING_SLO_DATA = "No Performance Profile or SLO data is Present!";
 		public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
 		public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists!";
+		public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
 
 	}
 
