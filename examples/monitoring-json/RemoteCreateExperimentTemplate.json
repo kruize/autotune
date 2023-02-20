@@ -1,5 +1,6 @@
 [{
   "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+  "cluster_name": "local-cluster",
   "namespace": "default",
   "deployment_name": "tfb-qrh-sample",
   "performanceProfile": "resource_optimization",
