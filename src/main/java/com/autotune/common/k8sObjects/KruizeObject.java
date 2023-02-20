@@ -61,10 +61,10 @@ public final class KruizeObject {
                         String namespace,
                         String mode,
                         String targetCluster,
+                        String clusterName,
                         SloInfo sloInfo,
                         SelectorInfo selectorInfo,
-                        ObjectReference objectReference,
-                        String clusterNameContent
+                        ObjectReference objectReference
                         ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
@@ -74,7 +74,7 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
-        map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterNameContent);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
@@ -86,7 +86,7 @@ public final class KruizeObject {
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
-            this.clusterName = clusterNameContent;
+            this.clusterName = clusterName;
         } else {
             throw new InvalidValueException(error.toString());
         }
