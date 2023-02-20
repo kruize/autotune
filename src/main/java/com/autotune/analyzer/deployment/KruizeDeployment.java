@@ -326,6 +326,7 @@ public class KruizeDeployment {
             String name;
             String mode;
             String targetCluster;
+            String clusterName;
             SloInfo sloInfo;
             ObjectiveFunction objectiveFunction = null;
             String namespace;
@@ -397,6 +398,7 @@ public class KruizeDeployment {
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_MODE);
             targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
+            clusterName = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME);
             name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
             namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
 
@@ -414,6 +416,7 @@ public class KruizeDeployment {
                     uid);
 
             return new KruizeObject(name,
+                    clusterName,
                     namespace,
                     mode,
                     targetCluster,
