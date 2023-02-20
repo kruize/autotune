@@ -416,10 +416,10 @@ public class KruizeDeployment {
                     uid);
 
             return new KruizeObject(name,
+                    clusterName,
                     namespace,
                     mode,
                     targetCluster,
-                    clusterName,
                     sloInfo,
                     selectorInfo,
                     objectReference

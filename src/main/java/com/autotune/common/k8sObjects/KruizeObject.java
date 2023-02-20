@@ -58,10 +58,10 @@ public final class KruizeObject {
     private String clusterName;
 
     public KruizeObject(String experimentName,
+                        String clusterName,
                         String namespace,
                         String mode,
                         String targetCluster,
-                        String clusterName,
                         SloInfo sloInfo,
                         SelectorInfo selectorInfo,
                         ObjectReference objectReference
