@@ -342,26 +342,22 @@ public class KruizeDeployment {
             hpoAlgoImpl = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_HPO_ALGO_IMPL);
 
+            JSONObject selectorJson = null;
             if (specJson != null) {
                 sloJson = specJson.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
                 perfProfileName = specJson.optString(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE);
 
-                if (Stream.of(sloJson, perfProfileName).allMatch(Objects::isNull)) {
+                if (sloJson.isEmpty() && perfProfileName.isEmpty()) {
                     throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA);
                 }
-                if (Stream.of(sloJson, perfProfileName).noneMatch(Objects::isNull)) {
+                if (!sloJson.isEmpty() && !perfProfileName.isEmpty()) {
                     throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
                 }
 
                 SloInfo sloInfo = new Gson().fromJson(String.valueOf(sloJson), SloInfo.class);
                 perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
-            }
-
-            JSONObject selectorJson = null;
-            if (specJson != null) {
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
             }
-
             assert selectorJson != null;
             String matchLabel = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_LABEL);
             String matchLabelValue = selectorJson.optString(AnalyzerConstants.AutotuneObjectConstants.MATCH_LABEL_VALUE);
