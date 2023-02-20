@@ -158,6 +158,7 @@ def generate_json(find_arr, json_file, filename, i):
 def get_datetime():
     my_datetime = datetime.today()
     time_str = my_datetime.isoformat(timespec = 'milliseconds')
+    time_str = time_str + "Z"
     return time_str
 
 

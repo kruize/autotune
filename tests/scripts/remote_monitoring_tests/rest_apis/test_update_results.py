@@ -117,7 +117,34 @@ def test_update_valid_results_after_create_exp(cluster_type):
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     print("content type = ",response.headers["Content-Type"])
-    #assert response.headers["Content-Type"] == "application/json"
+
+@pytest.mark.sanity
+def test_update_multiple_valid_results_single_json_after_create_exp(cluster_type):
+    """
+    Test Description: This test validates update results for a valid experiment by posting multiple results
+    """
+    input_json_file="../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delet exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file="../json_files/multiple_results_single_exp.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
 @pytest.mark.sanity
 def test_update_multiple_valid_results_after_create_exp(cluster_type):
