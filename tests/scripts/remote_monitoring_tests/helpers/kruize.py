@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . json_validate import validate_exp_input_json
 import subprocess
 import requests
 import json
@@ -55,31 +54,22 @@ def create_experiment(input_json_file, invalid_header = False):
     print(input_json)
     print("\n************************************************************")
 
-    # Validate the json
-    # print("\nValidating the input json...")
-    #  isInvalid = validate_exp_input_json(input_json)
-    isInvalid = ""
-    if isInvalid:
-        print(isInvalid)
-        print("Input Json is invalid")
-        exit(1)
+    # read the json
+    print("\nCreating the experiment...")
+    
+    url = URL + "/createExperiment"
+    print("URL = ", url)
+    
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.post(url, json=input_json, headers=headers)
     else:
-        # read the json
-        print("\nCreating the experiment...")
-
-        url = URL + "/createExperiment"
-        print("URL = ", url)
-
-        headers = {'content-type': 'application/xml'}
-        if invalid_header:
-            print("Invalid header")
-            response = requests.post(url, json=input_json, headers=headers)
-        else:
-            response = requests.post(url, json=input_json)
-
-        print(response)
-        print("Response status code = ", response.status_code)
-        return response
+        response = requests.post(url, json=input_json)
+        
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
 
 # Description: This function validates the result json and posts the experiment results using updateResults API to Kruize Autotune
 # Input Parameters: experiment input json
