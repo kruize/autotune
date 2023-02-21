@@ -15,19 +15,18 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * create Experiment input validation
@@ -46,10 +45,6 @@ public class ExperimentValidation {
     ));
     private List<String> mandatoryFieldsForLocalRemoteMonitoring = new ArrayList<>((
             Arrays.asList(AnalyzerConstants.RECOMMENDATION_SETTINGS)
-    ));
-    private List<String> mandatorySLOPerf = new ArrayList<>(Arrays.asList(
-            AnalyzerConstants.SLO,
-            AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.DEPLOYMENT_NAME,
@@ -74,26 +69,38 @@ public class ExperimentValidation {
      * @param kruizeExptList
      */
     public void validate(List<KruizeObject> kruizeExptList) {
-        for (KruizeObject ao : kruizeExptList) {
-            ValidationResultData validationResultData = validateMandatoryFields(ao);
+        for (KruizeObject kruizeObject : kruizeExptList) {
+            ValidationResultData validationResultData = validateMandatoryFields(kruizeObject);
             if (validationResultData.isSuccess()) {
-                String expName = ao.getExperimentName();
-                String mode = ao.getMode();
-                String target_cluster = ao.getTargetCluster();
+                String expName = kruizeObject.getExperimentName();
+                String mode = kruizeObject.getMode();
+                String target_cluster = kruizeObject.getTargetCluster();
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
-                    if (null != ao.getDeployment_name()) {
-                        String nsDepName = ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase();
+                    if (null != kruizeObject.getDeployment_name()) {
+                        String nsDepName = kruizeObject.getNamespace().toLowerCase() + ":" + kruizeObject.getDeployment_name().toLowerCase();
                         if (!namespaceDeploymentNameList.contains(nsDepName)) {
-                            if (null != PerformanceProfilesDeployment.performanceProfilesMap.get(ao.getPerformanceProfile()))
-                                proceed = true;
-                            else {
-                                errorMsg = errorMsg.concat(String.format("Performance Profile : %s does not exist!", ao.getPerformanceProfile()));
+                            if (null != kruizeObject.getPerformanceProfile()) {
+                                if (null != kruizeObject.getSloInfo())
+                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
+                                else {
+                                    if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile()))
+                                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
+                                    else
+                                        proceed = true;
+                                }
+                            } else {
+                                if (null == kruizeObject.getSloInfo())
+                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
+                                else {
+                                    String perfProfileName = KruizeDeployment.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                                    kruizeObject.setPerformanceProfile(perfProfileName);
+                                    proceed = true;
+                                }
                             }
-                        }
-                        else {
-                            if (!ao.getExperimentUseCaseType().isRemoteMonitoring())
+                        } else {
+                            if (!kruizeObject.getExperimentUseCaseType().isRemoteMonitoring())
                                 errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
                             else
                                 proceed = true;
@@ -105,15 +112,15 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Experiment name : %s is duplicate", expName));
                 }
                 if (!proceed) {
-                    ao.setValidationData(new ValidationResultData(false, errorMsg));
+                    kruizeObject.setValidationData(new ValidationResultData(false, errorMsg));
                     markFailed(errorMsg);
                     break;
                 } else {
                     setSuccess(true);
-                    ao.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
+                    kruizeObject.setValidationData(new ValidationResultData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
                 }
             } else {
-                ao.setValidationData(validationResultData);
+                kruizeObject.setValidationData(validationResultData);
                 markFailed(validationResultData.getMessage());
                 break;
             }
@@ -186,17 +193,6 @@ public class ExperimentValidation {
                             }
                     );
                 }
-                for (String mField : mandatorySLOPerf) {
-                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                    try {
-                        Method getNameMethod = KruizeObject.class.getMethod(methodName);
-                        if (getNameMethod.invoke(expObj) != null) {
-                            missingSLOPerf = false;
-                        }
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        //LOGGER.warn("Methode name for {} not exsist and error is {}", mField, e.getMessage());
-                    }
-                }
                 for (String mField : mandatoryDeploymentSelector) {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
@@ -208,13 +204,10 @@ public class ExperimentValidation {
                         //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
                     }
                 }
-                if (missingSLOPerf || missingDeploySelector) {
-                    if (missingSLOPerf) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatorySLOPerf));
-                    }
-                    if (missingDeploySelector) {
-                        errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
-                    }
+
+                if (missingDeploySelector) {
+                    errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
+
                     validationResultData.setSuccess(false);
                     validationResultData.setMessage(errorMsg);
                 } else {

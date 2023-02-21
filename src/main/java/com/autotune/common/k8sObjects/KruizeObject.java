@@ -20,6 +20,7 @@ import com.autotune.analyzer.utils.ExperimentUseCaseType;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -37,11 +38,15 @@ public final class KruizeObject {
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
+    @SerializedName("cluster_name")
+    private String clusterName;
+
     private String namespace;
     private String mode;                    //Todo convert into Enum
     private String targetCluster;           //Todo convert into Enum
     @SerializedName("slo")
     private SloInfo sloInfo;
+    private String hpoAlgoImpl;
     @SerializedName("selector")
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
@@ -56,22 +61,24 @@ public final class KruizeObject {
     private ValidationResultData validationData;
     private HashMap<String, DeploymentObject> deployments;
 
-
     public KruizeObject(String experimentName,
+                        String clusterName,
                         String namespace,
                         String mode,
                         String targetCluster,
-                        SloInfo sloInfo,
+                        String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
-                        ObjectReference objectReference) throws InvalidValueException {
+                        String performanceProfile,
+                        ObjectReference objectReference
+                        ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
         map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
-        map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
@@ -79,13 +86,19 @@ public final class KruizeObject {
             this.namespace = namespace;
             this.mode = mode;
             this.targetCluster = targetCluster;
-            this.sloInfo = sloInfo;
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
+            this.clusterName = clusterName;
         } else {
             throw new InvalidValueException(error.toString());
         }
+        this.performanceProfile = performanceProfile;
+        if (AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
+            this.hpoAlgoImpl = hpoAlgoImpl;
+        else
+            throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
+
     }
 
     public KruizeObject() {
@@ -101,7 +114,7 @@ public final class KruizeObject {
     }
 
     public SloInfo getSloInfo() {
-        return new SloInfo(sloInfo);
+        return sloInfo;
     }
 
     public void setSloInfo(SloInfo sloInfo) {
@@ -236,15 +249,29 @@ public final class KruizeObject {
         this.deployments = deployments;
     }
 
+    public String getHpoAlgoImpl() {
+        return hpoAlgoImpl;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
     @Override
     public String toString() {
+        // Creating a temparory cluster name as we allow null for cluster name now
+        // Please change it to use `clusterName` variable itself if there is a null check already in place for that
+        String tmpClusterName = "";
+        if (clusterName != null)
+            tmpClusterName = clusterName;
         return "KruizeObject{" +
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
+                ", clusterName=" + tmpClusterName +
                 ", namespace='" + namespace + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", sloInfo=" + sloInfo +
+                ", hpoAlgoImpl=" + hpoAlgoImpl +
                 ", selectorInfo=" + selectorInfo +
                 ", objectReference=" + objectReference +
                 ", status=" + status +

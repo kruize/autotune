@@ -20,6 +20,7 @@ import com.autotune.analyzer.data.ExperimentInterfaceImpl;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,16 +71,17 @@ public class ExperimentInitiator {
     /**
      * @param mainKruizeExperimentMap
      * @param experimentResultDataList
+     * @param performanceProfilesMap
      * @return
      */
     public ValidationResultData validateAndUpdateResults(
             Map<String, KruizeObject> mainKruizeExperimentMap,
-            List<ExperimentResultData> experimentResultDataList
-    ) {
+            List<ExperimentResultData> experimentResultDataList,
+            Map<String, PerformanceProfile> performanceProfilesMap) {
         ValidationResultData validationResultData = new ValidationResultData(false, null);
         try {
-            ExperimentResultValidation experimentResultValidation = new ExperimentResultValidation(mainKruizeExperimentMap);
-            experimentResultValidation.validate(experimentResultDataList);
+            ExperimentResultValidation experimentResultValidation = new ExperimentResultValidation(mainKruizeExperimentMap, performanceProfilesMap);
+            experimentResultValidation.validate(experimentResultDataList, performanceProfilesMap);
             if (experimentResultValidation.isSuccess()) {
                 ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
                 experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, experimentResultDataList);

@@ -87,6 +87,10 @@ spec:
                 description: 'Target cluster where the experiments are performed. Supported targets: local (default), remote'
                 type: string
                 default: 'local'
+              cluster_name:
+                description: 'Name of the cluster in which the autotune instance is deployed'
+                type: string
+                default: 'local'
               selector:
                 description: 'test'
                 type: object

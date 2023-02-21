@@ -21,6 +21,7 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.services.*;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -40,8 +41,8 @@ public class Analyzer {
 
         try {
             addServlets(contextHandler);
-            KruizeDeployment.getAutotuneObjects(kruizeDeployment);
-            PerformanceProfilesDeployment.getPerformanceProfiles();
+            PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
+            KruizeDeployment.getKruizeObjects(kruizeDeployment);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -59,5 +60,10 @@ public class Analyzer {
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(ListRecommendation.class, ServerContext.RECOMMEND_RESULTS);
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
+        context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
+
+        // Adding UI support API's
+        context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
+        context.addServlet(ListDeploymentsInNamespace.class, ServerContext.LIST_DEPLOYMENTS);
     }
 }

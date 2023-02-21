@@ -1,7 +1,13 @@
 # Experiment Monitoring Mode
-This article describes how to quickly get started with the Local cluster Experimental Mode use case REST API using curl command.
 
-##  listStacks
+This article describes how to quickly get started with the Local cluster Experimental Mode use case REST API using curl
+command.
+
+**Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
+2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
+
+## listStacks
+
 Get the list of application stacks monitored by autotune.
 
 **Request**
@@ -12,6 +18,7 @@ Get the list of application stacks monitored by autotune.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStacks?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -42,6 +49,7 @@ Get the list of application stacks monitored by autotune.
 ```
 
 ## listStackLayers
+
 Returns the list of application stacks monitored by autotune along with layers detected in the stacks.
 
 **Request**
@@ -52,6 +60,7 @@ Returns the list of application stacks monitored by autotune along with layers d
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStackLayers?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -113,18 +122,22 @@ Returns the list of application stacks monitored by autotune along with layers d
 ]
 ```
 
-##  listStackTunables
+## listStackTunables
+
 Returns the list of application stacks monitored by autotune along with their tunables.
 **Request**
 `GET /listStackTunables` gives the tunables and layer information for all the application stacks monitored by autotune.
 
-`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>` for getting the tunables information of a specific application.
+`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>` for getting the tunables information of a specific
+application.
 
-`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>&layer_name=<LAYER>` for getting tunables of a specific layer for the application.
+`GET /listStackTunables?experiment_name=<EXPERIMENT_NAME>&layer_name=<LAYER>` for getting tunables of a specific layer
+for the application.
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listStackTunables?experiment_name=<EXPERIMENT_NAME>`
 
 **Response**
+
 ```
 [
     {
@@ -174,7 +187,9 @@ Returns the list of application stacks monitored by autotune along with their tu
     }
 ]
 ```
-##  listAutotuneTunables
+
+## listAutotuneTunables
+
 Get the tunables supported by autotune for the SLO.
 
 **Request**
@@ -187,6 +202,7 @@ Get the tunables supported by autotune for the SLO.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listAutotuneTunables?slo_class=<SLO_CLASS>`
 
 **Response**
+
 ```
 [
     {
@@ -261,7 +277,9 @@ Get the tunables supported by autotune for the SLO.
     }
 ]
 ```
-##  SearchSpace
+
+## SearchSpace
+
 Generates the search space used for the analysis.
 
 **Request**
@@ -331,13 +349,16 @@ Generates the search space used for the analysis.
     }
 ]
 ```
-##  CreateExperimentTrial
+
+## CreateExperimentTrial
+
 Create experiment trials using input JSON provided by Analyser module.
 
 **Request**
 `POST /createExperimentTrial`
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperimentTrial`
+
 ```
 [{
     "settings": {
@@ -458,6 +479,7 @@ Create experiment trials using input JSON provided by Analyser module.
 ```
 
 **Response**
+
 ```
 {
     "message": "Experiment trial registered successfully with Autotune. View registered experiments at /listExperiments",

@@ -15,15 +15,17 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.utils.AnalyzerConstants;
+
 import java.util.HashMap;
 
 /**
  * Experiments results storage object which is related to container metrics.
  */
-public class ContainerResultData {
+public class Containers {
     private String image_name;
     private String container_name;
-    private HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> container_metrics;
+    private HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> container_metrics;
 
     public String getImage_name() {
         return image_name;
@@ -41,11 +43,11 @@ public class ContainerResultData {
         this.container_name = container_name;
     }
 
-    public HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> getContainer_metrics() {
+    public HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> getContainer_metrics() {
         return container_metrics;
     }
 
-    public void setContainer_metrics(HashMap<String, HashMap<String, HashMap<String, AggregationInfoResult>>> container_metrics) {
+    public void setContainer_metrics(HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> container_metrics) {
         this.container_metrics = container_metrics;
     }
 

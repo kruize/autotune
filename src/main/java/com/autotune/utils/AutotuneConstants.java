@@ -151,6 +151,9 @@ public class AutotuneConstants {
         public static final String DURATION = "duration";
         public static final String PERCENTILE_INFO = "percentile_info";
         public static final String UNITS = "units";
+        // UI support JSON keys
+        public static final String DATA = "data";
+        public static final String NAMESPACES = "namespaces";
 
         private JSONKeys() {
         }
@@ -263,6 +266,19 @@ public class AutotuneConstants {
             public static final double MEBIBYTES_TO_GIBIBYTES = INVERSE_BINARY_STANDARD;
 
             private Memory() {
+            }
+        }
+    }
+
+    public static class ErrorMsgs {
+        private ErrorMsgs() { }
+        public static class APIErrorMsgs {
+            private APIErrorMsgs() { }
+            public static class ListDeploymentsInNamespace {
+                private ListDeploymentsInNamespace() { }
+                public static final String INVALID_NAMESPACE = "Given Namespace is invalid";
+                public static final String NO_NAMESPACE_SENT = "Please pass a namespace to get the deployments";
+                public static final String EMPTY_NAMESPACE = "Namespace cannot be empty";
             }
         }
     }

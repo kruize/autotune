@@ -90,10 +90,10 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             deploymentObject = deploymentsMap.get(dName);
                             containersMap = deploymentObject.getContainers();
                         }
-                        List<ContainerResultData> resultContainerList = deploymentResultData.getContainers();
-                        for (ContainerResultData containerResultData : resultContainerList) {
-                            String cName = containerResultData.getContainer_name();
-                            String imgName = containerResultData.getImage_name();
+                        List<Containers> resultContainerList = deploymentResultData.getContainers();
+                        for (Containers containers : resultContainerList) {
+                            String cName = containers.getContainer_name();
+                            String imgName = containers.getImage_name();
                             ContainerObject containerObject;
                             if (null == containersMap.get(cName)) {
                                 containerObject = new ContainerObject(cName, imgName);
@@ -101,9 +101,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                                 containerObject = containersMap.get(cName);
                             }
                             HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> aggregatorHashMap = new HashMap<>();
-                            for (String aggreName : containerResultData.getContainer_metrics().keySet()) {
-                                AggregationInfoResult aggregatorResult = containerResultData.getContainer_metrics().get(aggreName).get("results").get("aggregation_info");
-                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggreName), aggregatorResult);
+                            for (AnalyzerConstants.MetricName aggregationInfoName : containers.getContainer_metrics().keySet()) {
+                                AggregationInfoResult aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregation_info();
+                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggregationInfoName.toString()), aggregatorResult);
                             }
                             HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
 

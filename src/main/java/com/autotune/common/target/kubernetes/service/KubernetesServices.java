@@ -60,6 +60,9 @@ public interface KubernetesServices {
     //get list of Deployments object based on  labelKey, labelValue
     List<Deployment> getDeploymentsBy(String namespace, String deploymentName, String labelKey, String labelValue);
 
+    // get list of deployments in the namespace
+    List<Deployment> getDeploymentsBy(String namespace);
+
     //Restart deployment. Used by EM to restart deployment during warmup/measurements cycle.
     boolean restartDeployment(String namespace, String deploymentName);
 

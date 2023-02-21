@@ -41,22 +41,11 @@ public class PerformanceProfile {
     @SerializedName("slo")
     private final SloInfo sloInfo;
 
-    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) throws InvalidValueException {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME, name);
-        map.put(AnalyzerConstants.PROFILE_VERSION, profile_version);
-        map.put(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE, k8s_type);
-        map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
-
-        StringBuilder error = ValidatePerformanceProfileObject.validate(map);
-        if (error.toString().isEmpty()) {
-            this.name = name;
-            this.profile_version = profile_version;
-            this.k8s_type = k8s_type;
-            this.sloInfo = sloInfo;
-        } else {
-            throw new InvalidValueException(error.toString());
-        }
+    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
+        this.name = name;
+        this.profile_version = profile_version;
+        this.k8s_type = k8s_type;
+        this.sloInfo = sloInfo;
     }
 
     public String getName() {
