@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,11 +52,14 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     Map<String, KruizeObject> mainKruizeExperimentMap;
+    Map<String, PerformanceProfile> performanceProfilesMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
+        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
+                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     @Override
@@ -63,7 +68,7 @@ public class UpdateResults extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = Arrays.asList(new Gson().fromJson(inputData, ExperimentResultData[].class));
             LOGGER.debug(experimentResultDataList.toString());
-            new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList);
+            new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
             ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
             if (null == invalidKExperimentResultData) {
                 sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");

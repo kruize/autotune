@@ -131,6 +131,10 @@ function minikube_terminate() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 
 	echo
+	echo "Removing Performance Profile"
+	${kubectl_cmd} delete -f ${AUTOTUNE_PERF_PROFILE_CRD} 2>/dev/null
+
+	echo
 	echo "Removing autotune"
 	${kubectl_cmd} delete -f ${AUTOTUNE_DEPLOY_MANIFEST} 2>/dev/null
 

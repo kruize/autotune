@@ -16,7 +16,6 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.utils.AutotuneSupportedTypes;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
  *   expression: "transaction_response_time"
  * slo_class: "response_time"
  * direction: "minimize"
- * hpo_algo_impl: "optuna_tpe"
  * function_variables:
  * - name: "transaction_response_time"
  * query: "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds"
@@ -47,31 +45,16 @@ public final class SloInfo {
     @SerializedName("objective_function")
     private final ObjectiveFunction objectiveFunction;
     private final String direction;
-    private final String hpoAlgoImpl;
     @SerializedName("function_variables")
     private final ArrayList<Metric> metrics;
 
     public SloInfo(String sloClass,
                    ObjectiveFunction objectiveFunction,
                    String direction,
-                   String hpoAlgoImpl,
                    ArrayList<Metric> metrics) throws InvalidValueException {
-        if (AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloClass))
-            this.sloClass = sloClass;
-        else
-            throw new InvalidValueException("slo_class: " + sloClass + " not supported");
+        this.sloClass = sloClass;
         this.objectiveFunction = objectiveFunction;
-
-        if (AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(direction))
-            this.direction = direction;
-        else
-            throw new InvalidValueException("Invalid direction for autotune kind");
-
-        if (AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
-            this.hpoAlgoImpl = hpoAlgoImpl;
-        else
-            throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
-
+        this.direction = direction;
         this.metrics = new ArrayList<>(metrics);
     }
 
@@ -79,10 +62,7 @@ public final class SloInfo {
         this.sloClass = copy.getSloClass();
         this.objectiveFunction = copy.getObjectiveFunction();
         this.direction = copy.getDirection();
-        this.hpoAlgoImpl = copy.getHpoAlgoImpl();
-
         this.metrics = new ArrayList<>(copy.getFunctionVariables());
-
     }
 
     public String getSloClass() {
@@ -101,17 +81,12 @@ public final class SloInfo {
         return new ArrayList<>(metrics);
     }
 
-    public String getHpoAlgoImpl() {
-        return hpoAlgoImpl;
-    }
-
     @Override
     public String toString() {
         return "SloInfo{" +
                 "sloClass='" + sloClass + '\'' +
                 ", objectiveFunction='" + objectiveFunction + '\'' +
                 ", direction='" + direction + '\'' +
-                ", hpoAlgoImpl='" + this.hpoAlgoImpl + '\'' +
                 ", functionVariables=" + metrics +
                 '}';
     }

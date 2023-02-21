@@ -102,7 +102,7 @@ public class TestEvalExParser {
 
         for(String objFunction : objFunctionsList) {
             Map<String, String> objFunctionMap = new HashMap<>();
-            assertEquals(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING, new EvalExParser().parse(objFunction, "String", objFunctionMap));
+            assertEquals(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING, new EvalExParser().parse(objFunction, objFunctionMap));
         }
     }
 

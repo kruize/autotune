@@ -156,18 +156,18 @@ see [Update results](/design/UpdateResults.md)
          }
        },
        "memoryRSS": {
-         "value" : 31.91,
-         "units": "MiB",
-         "results": {
-           "aggregation_info": {
-             "min": 50.6,
-             "max": 123.6,
-             "sum": 123.6,
-             "avg": 31.91,
-             "units": "MiB"
-           }
-         }
-       }
+        "results": {
+            "value": 31.91,
+            "units": "MiB",
+            "aggregation_info": {
+                "min": 50.6,
+                "max": 123.6,
+                "sum": 123.6,
+                "avg": 31.91,
+                "units": "MiB"
+                }
+            }
+        }
      }
    }]
  }]

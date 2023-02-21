@@ -22,7 +22,7 @@ import java.util.Map;
 
 public interface AlgebraicParser {
 
-    String parse(String objFunction, String valueType, Map<String, String> objFunctionMap);
+    String parse(String objFunction, Map<String, String> objFunctionMap);
 
     Boolean validate(String objFunction, ArrayList<Metric> functionVariables);
 

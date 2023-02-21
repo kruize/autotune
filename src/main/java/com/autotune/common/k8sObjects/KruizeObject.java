@@ -20,6 +20,7 @@ import com.autotune.analyzer.utils.ExperimentUseCaseType;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -42,6 +43,7 @@ public final class KruizeObject {
     private String targetCluster;           //Todo convert into Enum
     @SerializedName("slo")
     private SloInfo sloInfo;
+    private String hpoAlgoImpl;
     @SerializedName("selector")
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
@@ -62,8 +64,9 @@ public final class KruizeObject {
                         String namespace,
                         String mode,
                         String targetCluster,
-                        SloInfo sloInfo,
+                        String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
+                        String performanceProfile,
                         ObjectReference objectReference
                         ) throws InvalidValueException {
 
@@ -72,7 +75,6 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
         map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
-        map.put(AnalyzerConstants.AutotuneObjectConstants.SLO, sloInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
@@ -82,7 +84,6 @@ public final class KruizeObject {
             this.namespace = namespace;
             this.mode = mode;
             this.targetCluster = targetCluster;
-            this.sloInfo = sloInfo;
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
@@ -90,6 +91,12 @@ public final class KruizeObject {
         } else {
             throw new InvalidValueException(error.toString());
         }
+        this.performanceProfile = performanceProfile;
+        if (AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
+            this.hpoAlgoImpl = hpoAlgoImpl;
+        else
+            throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
+
     }
 
     public KruizeObject() {
@@ -105,7 +112,7 @@ public final class KruizeObject {
     }
 
     public SloInfo getSloInfo() {
-        return new SloInfo(sloInfo);
+        return sloInfo;
     }
 
     public void setSloInfo(SloInfo sloInfo) {
@@ -232,6 +239,10 @@ public final class KruizeObject {
         this.validationData = validationData;
     }
 
+    public String getHpoAlgoImpl() {
+        return hpoAlgoImpl;
+    }
+
     public String getClusterName() {
         return clusterName;
     }
@@ -249,7 +260,7 @@ public final class KruizeObject {
                 ", namespace='" + namespace + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", sloInfo=" + sloInfo +
+                ", hpoAlgoImpl=" + hpoAlgoImpl +
                 ", selectorInfo=" + selectorInfo +
                 ", objectReference=" + objectReference +
                 ", status=" + status +
