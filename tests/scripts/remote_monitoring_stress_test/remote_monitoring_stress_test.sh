@@ -45,6 +45,23 @@ function usage() {
 	exit -1
 }
 
+function get_kruize_pod_log() {
+	log=$1
+	# Fetch the autotune container log
+	container="autotune"
+
+	echo "target = $target"
+
+	echo "Fetch the kruize pod logs and store in $log..."
+	if [ ${target} == "crc" ]; then
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+		kubectl logs -f ${autotune_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	else
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+		kubectl logs -f ${autotune_pod} -n ${NAMESPACE} -c ${autotune} > ${log} 2>&1 &
+	fi
+}
+
 function jmeter_setup() {
 	JMETER_VERSION="5.5"
 
@@ -135,14 +152,7 @@ popd > /dev/null
 
 
 case ${CLUSTER_TYPE} in
-	docker)
-		if [ -z "${SERVER_IP_ADDR}" ]; then
-			get_ip
-		fi
-		err_exit "Error: Unable to load the jmeter image" | tee -a ${LOG}
-	
-		;;
-	icp|minikube)
+	minikube)
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			SERVER_IP_ADDR=$(minikube ip)
 			echo "Port forward prometheus..." | tee -a ${LOG}
@@ -162,8 +172,6 @@ case ${CLUSTER_TYPE} in
 		err_exit "Error: Cluster type $CLUSTER_TYPE is not supported" | tee -a ${LOG}
 		;;
 esac	
-
-
 
 if [ "${target}" == "crc" ]; then
 	APP_NAME="kruize"
@@ -203,6 +211,8 @@ do
 	loop=1
 	host=${SERVER_IP_ADDR}
 
+	get_kruize_pod_log ${LOG_DIR}/kruize_pod.log
+
 	# Run the jmeter load
 	if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 		echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
@@ -216,9 +226,11 @@ do
 			echo "Failed to get the Kruize port, Check if kruize is runnning!" | tee -a ${LOG}
 			exit -1
 		fi
+		# sleep for 3 mins before starting the experiments
+		sleep 200
+
 		echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 		echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log" | tee -a ${LOG}
-		sleep 200
 		exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log
 	fi
 		
