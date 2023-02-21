@@ -420,4 +420,11 @@ public class AnalyzerConstants {
                 "advance-cluster-management", "AdvancedClusterMgmtImpl"
         );
     }
+
+    public enum K8S_OBJECT_TYPES {
+        DEPLOYMENT,
+        STATEFULSET,
+        REPLICASET,
+        POD
+    }
 }

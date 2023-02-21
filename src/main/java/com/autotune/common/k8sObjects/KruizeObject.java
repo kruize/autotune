@@ -35,6 +35,8 @@ import java.util.Set;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
+    @SerializedName("api_version")
+    private String apiVersion;
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
@@ -43,6 +45,7 @@ public final class KruizeObject {
 
     private String namespace;
     private String mode;                    //Todo convert into Enum
+    @SerializedName("target_cluster")
     private String targetCluster;           //Todo convert into Enum
     @SerializedName("slo")
     private SloInfo sloInfo;
@@ -51,6 +54,7 @@ public final class KruizeObject {
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
     private AnalyzerConstants.ExperimentStatus status;
+    @SerializedName("performance_profile")
     private String performanceProfile;
     private String deployment_name;
     private TrialSettings trial_settings;
@@ -255,6 +259,14 @@ public final class KruizeObject {
 
     public String getClusterName() {
         return clusterName;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
     }
 
     @Override
