@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-tuning
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: openshift-tuning
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: openshift-tuning
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: openshift-tuning
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      #securityContext:      #todo
+      #  runAsNonRoot: true
+      #  runAsUser: 1000
+      containers:
+        - name: postgres
+          image: postgres:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              value: admin
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_DB
+              value: kruizeDB
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: openshift-tuning
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres-port
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kruize
+  labels:
+    app: kruize
+  namespace: openshift-tuning
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: kruize
+  template:
+    metadata:
+      labels:
+        app: kruize
+        name: kruize
+    spec:
+      containers:
+      - name: kruize
+        image: "kruize/autotune_operator:0.0.8_mvp"
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            value: "kubernetes"
+          - name: K8S_TYPE
+            value: "openshift"
+          - name: AUTH_TYPE
+            value: ""
+          - name: AUTH_TOKEN
+            value: ""
+          - name: MONITORING_AGENT
+            value: "prometheus"
+          - name: MONITORING_SERVICE
+            value: "prometheus-k8s"
+          - name: MONITORING_AGENT_ENDPOINT
+            value: "prometheus-k8s"
+          - name: LOGGING_LEVEL
+            value: "info"
+          - name: ROOT_LOGGING_LEVEL
+            value: "info"
+          - name: DATABASE_URL
+            value: "postgres-service"
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_NAME
+            value: "kruizeDB"
+          - name: DATABASE_USER
+            value: "admin"
+        ports:
+         - name: kruize-port
+           containerPort: 8080
+        livenessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - pg_isready -h $DATABASE_URL -U $DATABASE_USER
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize
+  namespace: openshift-tuning
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: kruize
+spec:
+  type: NodePort
+  selector:
+    app: kruize
+  ports:
+  - name: kruize-port
+    port: 8080
+    targetPort: 8080
