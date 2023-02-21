@@ -35,6 +35,14 @@ function remote_monitoring_tests() {
 	failed=0
 	((TOTAL_TEST_SUITES++))
 
+	python3 --version >/dev/null 2>/dev/null
+	err=$?
+	if [ ${err} -ne 0 ]; then
+		echo "ERROR: python3 not installed"
+		exit 1
+	fi
+	python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" >/dev/null 2>&1
+
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 

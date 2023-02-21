@@ -82,8 +82,6 @@ def update_results(result_json_file):
     print(result_json)
     print("\n************************************************************")
 
-    # TO DO: Validate the result json
-
     print("\nUpdating the results...")
     url = URL + "/updateResults"
     print("URL = ", url)
@@ -104,7 +102,6 @@ def list_recommendations():
     response = requests.get(url)
     print("Response status code = ", response.status_code)
 
-
     print("\n************************************************************")
     print(response.text)
     print("\n************************************************************")
@@ -117,30 +114,34 @@ def delete_experiment(input_json_file, invalid_header = False):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
 
-    # Validate the json
-    print("\nValidating the input json...")
- #  isInvalid = validate_exp_input_json(input_json)
-    isInvalid = ""
-    if isInvalid:
-        print(isInvalid)
-        print("Input Json is invalid")
-        exit(1)
+    print("\nDeleting the experiment...")
+    url = URL + "/createExperiment"
+    print("URL = ", url)
+    
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, json=input_json, headers=headers)
     else:
-        # read the json
-        print("\nDeleting the experiment...")
+        response = requests.delete(url, json=input_json)
+        
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
 
-        url = URL + "/createExperiment"
-        print("URL = ", url)
+# Description: This function creates a performance profile using the Kruize createPerformanceProfile API
+# Input Parameters: performance profile json
+def create_performance_profile(perf_profile_json_file):
 
-        headers = {'content-type': 'application/xml'}
-        if invalid_header:
-            print("Invalid header")
-            response = requests.delete(url, json=input_json, headers=headers)
-        else:
-            response = requests.delete(url, json=input_json)
+    json_file = open(perf_profile_json_file, "r")
+    perf_profile_json = json.loads(json_file.read())
 
-        print(response)
-        print("Response status code = ", response.status_code)
-        return response
+    print("\nCreating performance profile...")
+    url = URL + "/createPerformanceProfile"
+    print("URL = ", url)
 
+    response = requests.post(url, json=perf_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
 
