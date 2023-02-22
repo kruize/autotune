@@ -45,7 +45,7 @@ public class ValidationResultData {
 
     @Override
     public String toString() {
-        return "GeneralDataHolder{" +
+        return "ValidationResultData{" +
                 "success=" + success +
                 ", message='" + message + '\'' +
                 '}';

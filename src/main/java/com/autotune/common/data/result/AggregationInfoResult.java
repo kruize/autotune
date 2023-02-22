@@ -64,7 +64,7 @@ public class AggregationInfoResult {
 
     @Override
     public String toString() {
-        return "GeneralInfoResult{" +
+        return "AggregationInfoResult{" +
                 "sum=" + sum +
                 ", avg=" + avg +
                 ", min=" + min +

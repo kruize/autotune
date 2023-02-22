@@ -110,6 +110,7 @@ public class AnalyzerConstants {
     }
 
     public enum MetricName {
+        gc,
         cpuRequest,
         cpuLimit,
         cpuUsage,

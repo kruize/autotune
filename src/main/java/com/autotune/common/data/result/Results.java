@@ -50,7 +50,7 @@ public class Results {
 
     @Override
     public String toString() {
-        return "ContainersResultData{" +
+        return "Results{" +
                 "aggregation_info=" + aggregation_info +
                 ", value=" + value +
                 ", units='" + units + '\'' +

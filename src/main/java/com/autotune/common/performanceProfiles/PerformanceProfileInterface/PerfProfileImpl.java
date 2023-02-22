@@ -113,8 +113,10 @@ public class PerfProfileImpl implements PerfProfileInterface {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                                 break;
                             } else if (null == funcVar.get("results").getValue()) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
-                                break;
+                                LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE);
+                                //TODO: Need to update the below code later
+//                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
+//                                break;
                             }
                         }
 
@@ -139,6 +141,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {
         performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
         LOGGER.info("Added PerformanceProfile: {} ",performanceProfile.getName());
+        LOGGER.info("PerformanceProfile Map: {} ",performanceProfileMap);
     }
 
     /**

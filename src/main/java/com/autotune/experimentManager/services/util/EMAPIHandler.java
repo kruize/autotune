@@ -154,21 +154,21 @@ public class EMAPIHandler {
         JSONObject percentile_info = new JSONObject().
                 put("99p", 82.59).put("97p", 64.75).put("95p", 8.94).put("50p", 0.63).
                 put("99.9p", 93.48).put("100p", 30000).put("99.99p", 111.5).put("99.999p", 198.52);
-        JSONObject general_info = new JSONObject().
+        JSONObject aggregation_info = new JSONObject().
                 put("min", 2.15).put("max", 2107.212121).put("mean", 31.91);
         JSONArray podMetrics = new JSONArray();
         for (int i = 0; i < 2; i++) {
             JSONObject resultJSON = new JSONObject();
             resultJSON.put("summary_results", new JSONObject().
                             put("percentile_info", percentile_info).
-                            put("general_info", general_info)
+                            put("aggregation_info", aggregation_info)
                     ).
                     put("datasource", "prometheus");
             if (verbose) {
                 JSONObject iterationResults = new JSONObject();
                 int iterations = Integer.parseInt(experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
                 JSONObject dummy_result = new JSONObject().put("percentile_info", percentile_info).
-                        put("general_info", general_info);
+                        put("aggregation_info", aggregation_info);
                 for (int j = 0; j < iterations; j++) {
                     JSONObject iterationObject = new JSONObject();
                     int warmUpCycles = Integer.parseInt(experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles());
@@ -207,7 +207,7 @@ public class EMAPIHandler {
             JSONObject resultJSON = new JSONObject();
             resultJSON.put("summary_results", new JSONObject().
                             put("percentile_info", percentile_info).
-                            put("general_info", general_info)
+                            put("aggregation_info", aggregation_info)
                     ).
                     put("datasource", "prometheus");
 
@@ -215,7 +215,7 @@ public class EMAPIHandler {
                 JSONObject iterationResults = new JSONObject();
                 int iterations = Integer.parseInt(experimentTrial.getExperimentSettings().getTrialSettings().getTrialIterations());
                 JSONObject dummy_result = new JSONObject().put("percentile_info", percentile_info).
-                        put("general_info", general_info);
+                        put("aggregation_info", aggregation_info);
                 for (int j = 0; j < iterations; j++) {
                     JSONObject iterationObject = new JSONObject();
                     int warmUpCycles = Integer.parseInt(experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupCycles());

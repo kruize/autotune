@@ -83,7 +83,8 @@ public class ExperimentResultValidation {
                                     Object object = validationClass.getDeclaredConstructor().newInstance();
                                     Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
                                     Method method = validationClass.getMethod("recommend",parameterTypes);
-                                    errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+                                    //TODO: Below method will be called once we have implemented the parsing code.
+                                    //errorMsg = (String) method.invoke(object, performanceProfile, resultData);
                                 }
                                 if (errorMsg.isEmpty())
                                     proceed = true;

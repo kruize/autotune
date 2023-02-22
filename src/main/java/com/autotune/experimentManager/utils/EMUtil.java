@@ -149,12 +149,12 @@ public class EMUtil {
             if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
                 AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
                 aggregationInfoResult.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                HashMap<String, AggregationInfoResult> generalInfoResultHashMap = new HashMap<>();
-                generalInfoResultHashMap.put("general_info", aggregationInfoResult);
+                HashMap<String, AggregationInfoResult> aggrInfoResultHashMap = new HashMap<>();
+                aggrInfoResultHashMap.put("aggregation_info", aggregationInfoResult);
                 PodResultData podResultData = new PodResultData();
                 podResultData.setName(podMetric.getName());
                 podResultData.setDatasource(podMetric.getDatasource());
-                podResultData.setSummary_results(generalInfoResultHashMap);
+                podResultData.setSummary_results(aggrInfoResultHashMap);
                 podResultDataList.add(podResultData);
             }
         }

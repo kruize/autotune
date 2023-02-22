@@ -110,7 +110,9 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
+                ", trialSummaryResult=" + trialSummaryResult +
                 ", emMetricResult=" + emMetricResult +
+                ", cycleDataMap=" + cycleDataMap +
                 ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }
