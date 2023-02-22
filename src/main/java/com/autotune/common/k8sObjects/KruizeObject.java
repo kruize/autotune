@@ -35,14 +35,14 @@ import java.util.Set;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
-    @SerializedName("api_version")
+    @SerializedName("version")
     private String apiVersion;
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
     @SerializedName("cluster_name")
     private String clusterName;
-    private String namespace;
+
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
     private String targetCluster;           //Todo convert into Enum
@@ -62,6 +62,7 @@ public final class KruizeObject {
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
     private HashMap<String, DeploymentObject> deployments;
+    private List<K8sObject> kubernetes_objects;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -85,7 +86,6 @@ public final class KruizeObject {
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
             this.experimentName = experimentName;
-            this.namespace = namespace;
             this.mode = mode;
             this.targetCluster = targetCluster;
             this.selectorInfo = selectorInfo;
@@ -145,14 +145,6 @@ public final class KruizeObject {
 
     public void setTargetCluster(String targetCluster) {
         this.targetCluster = targetCluster;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 
     public String getExperimentId() {
@@ -259,6 +251,14 @@ public final class KruizeObject {
         this.apiVersion = apiVersion;
     }
 
+    public List<K8sObject> getKubernetes_objects() {
+        return kubernetes_objects;
+    }
+
+    public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
+        this.kubernetes_objects = kubernetes_objects;
+    }
+
     @Override
     public String toString() {
         // Creating a temparory cluster name as we allow null for cluster name now
@@ -270,7 +270,6 @@ public final class KruizeObject {
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName +
-                ", namespace='" + namespace + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +
