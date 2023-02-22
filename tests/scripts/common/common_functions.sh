@@ -675,7 +675,6 @@ function form_curl_cmd() {
 	        echo "IP = $SERVER_IP"
 
 		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
-		echo "\nKRUIZE AUTOTUNE URL = URL"
 		;;
 	   minikube)
 		NAMESPACE="monitoring"
@@ -1798,10 +1797,10 @@ function create_performance_profile() {
         echo "curl_cmd = ${curl_cmd}"
 
         status_json=$(${curl_cmd})
-        echo "create performance profile status = $status_json"
+        echo "create performance profile status = ${status_json}"
 
         echo ""
-        echo "Command used to post the experiment result= ${curl_cmd}"
+        echo "Command used to create the performance profile = ${curl_cmd}"
         echo ""
 
         perf_profile_status=$(echo ${status_json} | jq '.status')

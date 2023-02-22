@@ -41,6 +41,7 @@ function remote_monitoring_tests() {
 		echo "ERROR: python3 not installed"
 		exit 1
 	fi
+	
 	python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" >/dev/null 2>&1
 
 	target="crc"
@@ -66,11 +67,15 @@ function remote_monitoring_tests() {
 		echo "Setting up kruize..." | tee -a ${LOG}
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
+	
+		sleep 60
+
+		# create performance profile
+		create_performance_profile ${perf_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
-	sleep 60
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
 		testtorun=("${remote_monitoring_tests[@]}")
@@ -82,8 +87,6 @@ function remote_monitoring_tests() {
 	echo ""
 	mkdir -p ${TEST_SUITE_DIR}
 
-	# create performance profile
-	create_performance_profile ${perf_profile_json}
 
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
@@ -104,9 +107,9 @@ function remote_monitoring_tests() {
 		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
-		echo "pytest -s -m sanity ${REMOTE_MONITORING_TEST_DIR}/rest_apis/${test}.py --cluster_type ${cluster_type}" | tee -a ${LOG}
+		echo "pytest ${REMOTE_MONITORING_TEST_DIR}/rest_apis/${test}.py --cluster_type ${cluster_type}" | tee -a ${LOG}
 		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
-			pytest -m sanity,extended,negative --html=${TEST_DIR}/report.html ${test}.py --cluster_type ${cluster_type} | tee -a ${LOG}
+			pytest --html=${TEST_DIR}/report.html ${test}.py --cluster_type ${cluster_type} | tee -a ${LOG}
 		popd > /dev/null
 		if  grep -q "AssertionError" "${LOG}" ; then
 			failed=1
