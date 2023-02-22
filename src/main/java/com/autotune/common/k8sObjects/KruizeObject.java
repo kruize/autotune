@@ -38,6 +38,9 @@ public final class KruizeObject {
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
+    @SerializedName("cluster_name")
+    private String clusterName;
+
     private String namespace;
     private String mode;                    //Todo convert into Enum
     private String targetCluster;           //Todo convert into Enum
@@ -56,8 +59,7 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
-    @SerializedName("cluster_name")
-    private String clusterName;
+    private HashMap<String, DeploymentObject> deployments;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -239,6 +241,14 @@ public final class KruizeObject {
         this.validationData = validationData;
     }
 
+    public HashMap<String, DeploymentObject> getDeployments() {
+        return deployments;
+    }
+
+    public void setDeployments(HashMap<String, DeploymentObject> deployments) {
+        this.deployments = deployments;
+    }
+
     public String getHpoAlgoImpl() {
         return hpoAlgoImpl;
     }
@@ -257,6 +267,7 @@ public final class KruizeObject {
         return "KruizeObject{" +
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
+                ", clusterName=" + tmpClusterName +
                 ", namespace='" + namespace + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
@@ -272,7 +283,6 @@ public final class KruizeObject {
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
-                ", clusterName=" + tmpClusterName +
                 '}';
     }
 }
