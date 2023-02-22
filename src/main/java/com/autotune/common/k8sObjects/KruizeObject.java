@@ -42,7 +42,6 @@ public final class KruizeObject {
     private String experimentName;
     @SerializedName("cluster_name")
     private String clusterName;
-
     private String namespace;
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -59,7 +58,6 @@ public final class KruizeObject {
     private String deployment_name;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
-    private List<ContainerObject> containers;
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
@@ -211,14 +209,6 @@ public final class KruizeObject {
 
     public void setRecommendation_settings(RecommendationSettings recommendation_settings) {
         this.recommendation_settings = recommendation_settings;
-    }
-
-    public List<ContainerObject> getContainers() {
-        return containers;
-    }
-
-    public void setContainers(List<ContainerObject> containers) {
-        this.containers = containers;
     }
 
     public ExperimentUseCaseType getExperimentUseCaseType() {
