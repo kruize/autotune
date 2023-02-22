@@ -281,7 +281,6 @@ public final class KruizeObject {
                 ", deployment_name='" + deployment_name + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
-                ", containers=" + containers +
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
