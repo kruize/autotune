@@ -422,9 +422,29 @@ public class AnalyzerConstants {
     }
 
     public enum K8S_OBJECT_TYPES {
-        DEPLOYMENT,
-        STATEFULSET,
-        REPLICASET,
-        POD
+        deployment,
+        deploymentConfig,
+        statefulset,
+        replicaset,
+        replicationController,
+        daemonset,
+    }
+
+    public static final class K8sObjectConstants {
+        private K8sObjectConstants() {
+
+        }
+        public static final class Types {
+            private Types() {
+
+            }
+
+            public static final String DEPLOYMENT = "deployment";
+            public static final String DEPLOYMENT_CONFIG = "deploymentConfig";
+            public static final String STATEFULSET = "statefulset";
+            public static final String REPLICASET = "replicaset";
+            public static final String REPLICATION_CONTROLLER = "replicationController";
+            public static final String DAEMONSET = "daemonset";
+        }
     }
 }

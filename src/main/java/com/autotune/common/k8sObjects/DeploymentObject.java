@@ -15,10 +15,14 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.utils.AnalyzerConstants;
+
 import java.util.HashMap;
 
 public class DeploymentObject {
     private String name;
+    private String namespace;
+    private AnalyzerConstants.K8S_OBJECT_TYPES type;
     private HashMap<String, ContainerObject> containers;
 
     public DeploymentObject(String name) {
@@ -39,6 +43,22 @@ public class DeploymentObject {
 
     public void setContainers(HashMap<String, ContainerObject> containers) {
         this.containers = containers;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public AnalyzerConstants.K8S_OBJECT_TYPES getType() {
+        return type;
+    }
+
+    public void setType(AnalyzerConstants.K8S_OBJECT_TYPES type) {
+        this.type = type;
     }
 
     @Override
