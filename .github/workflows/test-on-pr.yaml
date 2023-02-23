@@ -93,9 +93,9 @@ jobs:
           echo Install Prometheus on minikube
           cd scripts
           ./prometheus_on_minikube.sh -as
-      - name: Deploy crc
+      - name: Deploy Kruize in crc mode
         run: |
-          echo Deploy crc
+          echo Deploy kruize in crc mode
           echo "***************************************************************"
           cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
           sed -e "s/image: \"kruize\/autotune_operator:0.0.8_mvp\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml

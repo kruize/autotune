@@ -62,7 +62,7 @@ jobs:
           ./prometheus_on_minikube.sh -as    
       - name: Deploy autotune
         run: |
-          echo Deploy autotune  
+          echo Deploy Kruize
           ./deploy.sh -c minikube -i kruize/autotune_operator:test      
           sleep 20
           autotune_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
@@ -103,9 +103,9 @@ jobs:
           echo Install Prometheus on minikube  
           cd scripts
           ./prometheus_on_minikube.sh -as
-      - name: Deploy crc
+      - name: Deploy Kruize in crc mode
         run: |
-          echo Deploy crc
+          echo Deploy Kruize in crc mode
           echo "***************************************************************"
           cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
           sed -e "s/image: \"kruize\/autotune_operator:0.0.8_mvp\"/image: \"kruize\/autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
