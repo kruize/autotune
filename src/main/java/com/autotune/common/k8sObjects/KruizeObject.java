@@ -64,6 +64,7 @@ public final class KruizeObject {
     private HashMap<String, DeploymentObject> deployments;
     private List<K8sObject> kubernetes_objects;
 
+
     public KruizeObject(String experimentName,
                         String clusterName,
                         String namespace,
@@ -251,11 +252,11 @@ public final class KruizeObject {
         this.apiVersion = apiVersion;
     }
 
-    public List<K8sObject> getKubernetes_objects() {
+    public List<K8sObject> getKubernetesObjects() {
         return kubernetes_objects;
     }
 
-    public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
+    public void setKubernetesObjects(List<K8sObject> kubernetes_objects) {
         this.kubernetes_objects = kubernetes_objects;
     }
 

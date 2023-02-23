@@ -15,6 +15,9 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
+import com.autotune.common.k8sObjects.KruizeObject;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
@@ -41,6 +44,28 @@ public class Utils
 			return hexString.toString();
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
+		}
+	}
+
+	public static class Converters {
+		private Converters() {
+
+		}
+
+		public static class KruizeObjectConverters {
+			private KruizeObjectConverters() {
+
+			}
+
+			public static CreateExperimentSO convertKruizeObjectToCreateExperimentSO(KruizeObject kruizeObject) {
+				// Need to be implemented if needed
+				return null;
+			}
+
+			public static KruizeObject convertCreateExperimentSOToKruizeObject(CreateExperimentSO createExperimentSO) {
+				// To be implemented
+				return null;
+			}
 		}
 	}
 }

@@ -155,6 +155,13 @@ public class AutotuneConstants {
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
 
+        public static final String CLUSTER_NAME = "cluster_name";
+        public static final String PERFORMANCE_PROFILE = "performance_profile";
+        public static final String TARGET_CLUSTER = "target_cluster";
+        public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
+        public static final String VERSION = "version";
+        public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+        public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         private JSONKeys() {
         }
     }
