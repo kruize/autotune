@@ -28,38 +28,32 @@ ITER=1
 TIMEOUT=1200
 RESULTS_DIR=/tmp/kruize_scale_test_results
 BENCHMARK_SERVER=localhost
-APP_NAME=autotune
+APP_NAME=kruize
 CLUSTER_TYPE=minikube
-DEPLOYMENT_NAME=autotune
-CONTAINER_NAME=autotune
+DEPLOYMENT_NAME=kruize
+CONTAINER_NAME=kruize
 NAMESPACE=monitoring
 
 target="crc"
-KRUIZE_IMAGE="kruize/autotune_operator:test"
+KRUIZE_IMAGE="kruize/autotune_operator:0.0.8_mvp"
 
 jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c CLUSTER_TYPE[docker|minikube|openshift] [-i Kruize image] [--iter=MAX_LOOP] [-n NAMESPACE] [-a SERVER_IP_ADDR] [-r <Specify resultsdir path> ]"
+	echo "Usage: -c CLUSTER_TYPE[minikube|openshift] [-i Kruize image] [-r <Specify resultsdir path> ]"
 	exit -1
 }
 
 function get_kruize_pod_log() {
 	log=$1
-	# Fetch the autotune container log
-	container="autotune"
 
-	echo "target = $target"
+	# Fetch the kruize pod log
 
+	echo ""
 	echo "Fetch the kruize pod logs and store in $log..."
-	if [ ${target} == "crc" ]; then
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
-		kubectl logs -f ${autotune_pod} -n ${NAMESPACE} > ${log} 2>&1 &
-	else
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-		kubectl logs -f ${autotune_pod} -n ${NAMESPACE} -c ${autotune} > ${log} 2>&1 &
-	fi
+	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
 function jmeter_setup() {
@@ -77,24 +71,11 @@ function jmeter_setup() {
 	export PATH=$JMETER_HOME/bin:$PATH 
 }
 
-while getopts c:a:rn:i:-: gopts
+while getopts c:r:i: gopts
 do
 	case ${gopts} in
-	-)
-		case "${OPTARG}" in
-			iter=*)
-				MAX_LOOP=${OPTARG#*=}
-				;;
-		esac
-		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
-		;;
-	a)
-		SERVER_IP_ADDR="${OPTARG}"		
-		;;
-	n)
-		NAMESPACE="${OPTARG}"		
 		;;
 	r)
 		RESULTS_DIR="${OPTARG}"		
@@ -107,14 +88,6 @@ done
 
 if [ -z "${CLUSTER_TYPE}" ]; then
 	usage
-fi
-
-if [ -z "${MAX_LOOP}" ]; then
-	MAX_LOOP=1
-fi
-
-if [ -z "${NAMESPACE}" ]; then
-	NAMESPACE="${DEFAULT_NAMESPACE}"
 fi
 
 LOG_DIR="${RESULTS_DIR}/remote-monitoring-stress-$(date +%Y%m%d%H%M)"
@@ -142,13 +115,11 @@ echo "Setting up kruize..." | tee -a ${LOG}
 pushd ${KRUIZE_REPO} > /dev/null
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log 2>&1
 
-	sleep 30
+	sleep 5
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${LOG_DIR}/kruize_setup.log 2>&1
-
-echo "Setting up kruize...Done" | tee -a ${LOG}
-
-sleep 120
+	sleep 100
 popd > /dev/null
+echo "Setting up kruize...Done" | tee -a ${LOG}
 
 
 case ${CLUSTER_TYPE} in
@@ -156,82 +127,90 @@ case ${CLUSTER_TYPE} in
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			SERVER_IP_ADDR=$(minikube ip)
 			echo "Port forward prometheus..." | tee -a ${LOG}
-			kubectl port-forward svc/prometheus-k8s 9090:9090 -n monitoring > /dev/null &
+			kubectl port-forward svc/prometheus-k8s 9090:9090 -n ${NAMESPACE} > /dev/null &
 			echo "Port forward prometheus...done" | tee -a ${LOG}
+			port=$(kubectl -n ${NAMESPACE} get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+			if [ "${port}" == "" ]; then
+				echo "Failed to get the Kruize port, Check if kruize is runnning!" | tee -a ${LOG}
+				exit -1
+			fi
+			BENCHMARK_SERVER="localhost"
 		fi
 		;;
 	openshift)
 		NAMESPACE="openshift-tuning"
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			oc expose svc/kruize -n ${NAMESPACE}
+
 			SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
-			echo "SERVER_IP_ADDR = $SERVER_IP_ADDR"
+			port=""
+			BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f3-)
+
+			#SERVER_IP_ADDR=$(oc get pods -l=app=${APP_NAME} -o wide -n ${NAMESPACE} -o=custom-columns=NODE:.spec.nodeName --no-headers)
+			#port=$(oc -n ${NAMESPACE} get svc ${APP_NAME} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+			#BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f2-)
 		fi
 		;;
 	*)
 		err_exit "Error: Cluster type $CLUSTER_TYPE is not supported" | tee -a ${LOG}
 		;;
 esac	
+echo "SERVER_IP_ADDR = $SERVER_IP_ADDR BENCHMARK_SERVER = $BENCHMARK_SERVER port = $port"
 
-if [ "${target}" == "crc" ]; then
-	APP_NAME="kruize"
-	DEPLOYMENT_NAME="kruize"
-	CONTAINER_NAME="kruize"
-
-fi
-
-
+# Start monitoring metrics
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	DEPLOYMENT_NAME="kruize"
-	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${SERVER_IP_ADDR} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" 
-	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${SERVER_IP_ADDR} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
+	echo ""
+	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" 
+	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} > ${LOG_DIR}/monitor-metrics.log 2>&1 &
+
+	# Create the performance profile
+	#cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
+	#curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
+	
+	cmd="curl http://$SERVER_IP_ADDR/createPerformanceProfile -d @resource_optimization_openshift.json"
+	echo ""
+	echo "cmd = $cmd"
+	curl http://$SERVER_IP_ADDR/createPerformanceProfile -d @resource_optimization_openshift.json
 else
-	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} localhost ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
-	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} localhost ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
+	echo ""
+	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
+	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
+
+	# Create the performance profile
+	cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
+	echo ""
+	echo "cmd = $cmd"
+	curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
 fi
 
-port=$(kubectl -n monitoring get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
-echo "cmd = $cmd"
-curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
 
-for iter in `seq 1 ${MAX_LOOP}`
-do
-	echo | tee -a ${LOG}
-	echo "#########################################################################################" | tee -a ${LOG}
-	echo "                             Starting Iteration ${iter}                                  " | tee -a ${LOG}
-	echo "#########################################################################################" | tee -a ${LOG}
-	echo | tee -a ${LOG}
 
-	kruize_stats="${JMETER_LOG_DIR}/jmeter_kruize.stats"
-	kruize_log="${JMETER_LOG_DIR}/jmeter_kruize.log"
+echo | tee -a ${LOG}
+
+kruize_stats="${JMETER_LOG_DIR}/jmeter_kruize.stats"
+kruize_log="${JMETER_LOG_DIR}/jmeter_kruize.log"
 	
-	users=10000
-	rampup=120
-	loop=1
-	host=${SERVER_IP_ADDR}
+users=10000
+rampup=120
+loop=1
+host=${SERVER_IP_ADDR}
 
-	get_kruize_pod_log ${LOG_DIR}/kruize_pod.log
+get_kruize_pod_log ${LOG_DIR}/kruize_pod.log
 
-	# Run the jmeter load
-	if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-		echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
-		jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
-		echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log" | tee -a ${LOG}
-		exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=$host -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log
-	else
-		port=$(kubectl -n monitoring get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-		echo "port = $port" | tee -a ${LOG}
-		if [ "${port}" == "" ]; then
-			echo "Failed to get the Kruize port, Check if kruize is runnning!" | tee -a ${LOG}
-			exit -1
-		fi
-		# sleep for 3 mins before starting the experiments
-		sleep 200
+# sleep for sometime before starting the experiments to capture initial resource usage of kruize
+sleep 200
 
-		echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
-		echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log" | tee -a ${LOG}
-		exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter-${iter}.log
-	fi
+# Run the jmeter load
+if [ "${CLUSTER_TYPE}" == "openshift" ]; then
+	echo ""
+	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
+	jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log" | tee -a ${LOG}
+	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log
+else
+	echo ""
+	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log" | tee -a ${LOG}
+	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log
+fi
 		
-done	

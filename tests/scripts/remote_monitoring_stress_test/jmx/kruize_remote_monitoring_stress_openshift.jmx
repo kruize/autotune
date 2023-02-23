@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.4">
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Kruize Remote Monitoring Stress Test" enabled="true">
       <stringProp name="TestPlan.comments"></stringProp>
@@ -20,7 +20,7 @@
           </elementProp>
           <elementProp name="users" elementType="Argument">
             <stringProp name="Argument.name">users</stringProp>
-            <stringProp name="Argument.value">${__P(users,30000)}</stringProp>
+            <stringProp name="Argument.value">${__P(users,3)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="rampup" elementType="Argument">
@@ -35,7 +35,7 @@
           </elementProp>
           <elementProp name="logdir" elementType="Argument">
             <stringProp name="Argument.name">logdir</stringProp>
-	    <stringProp name="Argument.value">${__P(logdir, /tmp/results)}</stringProp>
+            <stringProp name="Argument.value">${__P(logdir, /tmp/results)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -147,8 +147,8 @@
               <connectTime>true</connectTime>
             </value>
           </objProp>
-	  <stringProp name="filename">${logdir}/create_exp.log</stringProp>
-  </ResultCollector>
+          <stringProp name="filename">${logdir}/create_exp.log</stringProp>
+        </ResultCollector>
         <hashTree/>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Update Results" enabled="true">
@@ -330,7 +330,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-	    <stringProp name="filename">${logdir}/update_results.log</stringProp>
+            <stringProp name="filename">${logdir}/update_results.log</stringProp>
           </ResultCollector>
           <hashTree/>
         </hashTree>
@@ -416,7 +416,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-	    <stringProp name="filename">${logdir}/list_reco.log</stringProp>
+            <stringProp name="filename">${logdir}/list_reco.log</stringProp>
           </ResultCollector>
           <hashTree/>
         </hashTree>
@@ -589,7 +589,7 @@
                 <connectTime>true</connectTime>
               </value>
             </objProp>
-	    <stringProp name="filename">${logdir}/update_results_again.log</stringProp>
+            <stringProp name="filename">${logdir}/update_results_again.log</stringProp>
           </ResultCollector>
           <hashTree/>
         </hashTree>
@@ -741,7 +741,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-	<stringProp name="filename">${logdir}/delete_exps.log</stringProp>
+        <stringProp name="filename">${logdir}/delete_exps.log</stringProp>
       </ResultCollector>
       <hashTree/>
       <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
@@ -749,7 +749,7 @@
           <collectionProp name="Arguments.arguments"/>
         </elementProp>
         <stringProp name="HTTPSampler.domain">${host}</stringProp>
-        <stringProp name="HTTPSampler.port"></stringProp>
+	<stringProp name="HTTPSampler.port"></stringProp>
         <stringProp name="HTTPSampler.protocol"></stringProp>
         <stringProp name="HTTPSampler.contentEncoding"></stringProp>
         <stringProp name="HTTPSampler.path"></stringProp>

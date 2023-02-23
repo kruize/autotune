@@ -141,6 +141,7 @@ function mem_metrics()
                 mem_usage_avg_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=avg(avg_over_time(container_memory_working_set_bytes{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
 
 		# mem_usage_min_container
+		echo "curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=min(min_over_time(container_memory_working_set_bytes{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'"
                 mem_usage_min_container=`curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=min(min_over_time(container_memory_working_set_bytes{pod=~"'"${DEPLOYMENT_NAME}-[^-]*-[^-]*$"'", container="'"${CONTAINER_NAME}"'", namespace="'"${NAMESPACE}"'"}['"${INTERVAL}"']))' ${URL} | jq -c '[ .data.result[] | .value[1]] | .[]'`
 
 		# mem_usage_max_container
@@ -222,6 +223,7 @@ mkdir -p ${RESULTS_DIR}
 if [[ ${CLUSTER_TYPE} == "openshift" ]]; then
 	QUERY_APP=thanos-querier-openshift-monitoring.apps
 	URL=https://${QUERY_APP}.${BENCHMARK_SERVER}/api/v1/query
+	echo "URL = $URL"
 	TOKEN=`oc whoami --show-token`
 	VERSION=`oc version | grep "Server" | cut -d " " -f3`
 	if [[ $(getversion $VERSION) -ge $(getversion "4.9") ]]; then
