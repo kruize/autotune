@@ -17,11 +17,14 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
+import com.autotune.utils.AutotuneConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class ContainerObject {
+    @SerializedName(AutotuneConstants.JSONKeys.CONTAINER_IMAGE_NAME)
     private String image;
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;

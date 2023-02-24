@@ -42,7 +42,7 @@ public final class KruizeObject {
     private String experimentName;
     @SerializedName("cluster_name")
     private String clusterName;
-
+    private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
     private String targetCluster;           //Todo convert into Enum
@@ -258,6 +258,14 @@ public final class KruizeObject {
 
     public void setKubernetesObjects(List<K8sObject> kubernetes_objects) {
         this.kubernetes_objects = kubernetes_objects;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     @Override

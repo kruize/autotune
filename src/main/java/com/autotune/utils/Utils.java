@@ -16,6 +16,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
+import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.KruizeObject;
@@ -105,11 +106,26 @@ public class Utils
 						AnalyzerConstants.K8S_OBJECT_TYPES objectType = getApproriateK8sObjectType(k8sObject.getType());
 						if (null != objectType)
 							deploymentObject.setType(objectType);
+						HashMap<String, ContainerObject> containerObjectHashMap = new HashMap<String, ContainerObject>();
+						for (ContainerObject containerObject: k8sObject.getContainers()) {
+							containerObjectHashMap.put(containerObject.getContainer_name(), containerObject);
+						}
+						deploymentObject.setContainers(containerObjectHashMap);
+						deploymentObject.setNamespace(k8sObject.getNamespace());
+						// TODO: Need to be changed as it should not be set at higher level
+						kruizeObject.setNamespace(k8sObject.getNamespace());
+						deploymentObjectHashMap.put(k8sObject.getName(), deploymentObject);
 					}
-
-
 				}
-				return null;
+				kruizeObject.setDeployments(deploymentObjectHashMap);
+				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
+				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
+				kruizeObject.setTargetCluster(createExperimentSO.getTargetCluster());
+				kruizeObject.setMode(createExperimentSO.getMode());
+				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());
+				kruizeObject.setTrial_settings(createExperimentSO.getTrialSettings());
+				kruizeObject.setRecommendation_settings(createExperimentSO.getRecommendationSettings());
+				return kruizeObject;
 			}
 		}
 	}
