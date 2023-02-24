@@ -422,12 +422,12 @@ public class AnalyzerConstants {
     }
 
     public enum K8S_OBJECT_TYPES {
-        deployment,
-        deploymentConfig,
-        statefulset,
-        replicaset,
-        replicationController,
-        daemonset,
+        DEPLOYMENT,
+        DEPLOYMENT_CONFIG,
+        STATEFULSET,
+        REPLICASET,
+        REPLICATION_CONTROLLER,
+        DAEMONSET,
     }
 
     public static final class K8sObjectConstants {
