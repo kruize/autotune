@@ -16,6 +16,8 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
+import com.autotune.common.data.result.ViewRecommendation;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -23,7 +25,9 @@ import com.autotune.common.k8sObjects.KruizeObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -81,6 +85,31 @@ public class Utils
 		return null;
 	}
 
+	public static String getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES objectType) {
+		if (null == objectType)
+			return null;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT)
+			return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG)
+			return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT_CONFIG;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.STATEFULSET)
+			return AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICASET)
+			return AnalyzerConstants.K8sObjectConstants.Types.REPLICASET;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICATION_CONTROLLER)
+			return AnalyzerConstants.K8sObjectConstants.Types.REPLICATION_CONTROLLER;
+
+		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET)
+			return AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET;
+
+		return null;
+	}
+
 	public static class Converters {
 		private Converters() {
 
@@ -126,6 +155,29 @@ public class Utils
 				kruizeObject.setTrial_settings(createExperimentSO.getTrialSettings());
 				kruizeObject.setRecommendation_settings(createExperimentSO.getRecommendationSettings());
 				return kruizeObject;
+			}
+
+			public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject) {
+				// Need to be implemented if needed
+				ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
+				listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
+				listRecommendationsSO.setExperimentName(kruizeObject.getExperimentName());
+				listRecommendationsSO.setClusterName(kruizeObject.getClusterName());
+				List<K8sObject> k8sObjectsList = new ArrayList<K8sObject>();
+				for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
+					K8sObject k8sObject = new K8sObject();
+					k8sObject.setName(deploymentObject.getName());
+					k8sObject.setType(getAppropriateK8sObjectTypeString(deploymentObject.getType()));
+					k8sObject.setNamespace(deploymentObject.getNamespace());
+					List<ContainerObject> containerObjects = new ArrayList<ContainerObject>();
+					for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
+						containerObjects.add(containerObject);
+					}
+					k8sObject.setContainers(containerObjects);
+					k8sObjectsList.add(k8sObject);
+				}
+				listRecommendationsSO.setKubernetesObjects(k8sObjectsList);
+				return listRecommendationsSO;
 			}
 		}
 	}
