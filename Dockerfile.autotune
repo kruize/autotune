@@ -23,7 +23,7 @@ ARG AUTOTUNE_HOME=/home/$USER
 
 # Install any additional packages that a typical developer in the team needs.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git vim postgresql \
+    && apt-get install -y --no-install-recommends git vim \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR $AUTOTUNE_HOME/src/autotune

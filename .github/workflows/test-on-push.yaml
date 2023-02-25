@@ -22,14 +22,14 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Build monitoring
         run: |
           echo Build monitoring
           ./build.sh -i autotune_operator:test -o autotune_optuna:test
           docker images | grep autotune
       - name: docker login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -45,7 +45,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -60,25 +60,10 @@ jobs:
           echo Install Prometheus on minikube  
           cd scripts
           ./prometheus_on_minikube.sh -as    
-      - name: Deploy kruize in experiment mode
+      - name: Deploy autotune
         run: |
-          echo Deploy Kruize in experiment mode
+          echo Deploy autotune  
           ./deploy.sh -c minikube -i kruize/autotune_operator:test      
-          sleep 20
-          ./scripts/ffdc.sh -d ${GITHUB_WORKSPACE}
-      - name: Archive results
-        if: always()
-        run: |
-          cd ${GITHUB_WORKSPACE}
-          tar cvf autotune_results.tar kruize_*log.txt
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-           name: autotune-results
-           path: ./autotune_results.tar
-           retention-days: 2
 
   deploy_crc:
     # The type of runner that the job will run on
@@ -87,7 +72,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -102,28 +87,7 @@ jobs:
           echo Install Prometheus on minikube  
           cd scripts
           ./prometheus_on_minikube.sh -as
-      - name: Deploy Kruize in crc mode
+      - name: Deploy crc
         run: |
-          echo Deploy Kruize in crc mode
-          echo "***************************************************************"
-          cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
-          KRUIZE_VERSION="$(grep -A 1 "autotune" pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
-          sed -e "s/image: \"kruize\/autotune_operator:KRUIZE_VERSION\"/image: \"kruize\/autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
-          sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
-          cat ./manifests/crc/kruize-crc-minikube.yaml
-          kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
-          sleep 20
-          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
-      - name: Archive results
-        if: always()
-        run: |
-          cd ${GITHUB_WORKSPACE}
-          tar cvf crc_results.tar kruize_*log.txt
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-           name: crc-results
-           path: ./crc_results.tar
-           retention-days: 2
+          echo Deploy crc
+          kubectl apply -f ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml

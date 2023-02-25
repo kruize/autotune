@@ -52,6 +52,7 @@ spec:
       containers:
         - name: postgres
           image: postgres:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
               value: admin
@@ -95,8 +96,8 @@ metadata:
 spec:
   replicas: 1
   selector:
-      matchLabels:
-        name: kruize
+    matchLabels:
+      name: kruize
   template:
     metadata:
       labels:
@@ -104,48 +105,50 @@ spec:
         name: kruize
     spec:
       containers:
-      - name: kruize
-        image: kruize/autotune_operator:0.0.8_mvp
-        imagePullPolicy: Always
-        env:
-          - name: CLUSTER_TYPE
-            value: "kubernetes"
-          - name: K8S_TYPE
-            value: "minikube"
-          - name: AUTH_TYPE
-            value: ""
-          - name: AUTH_TOKEN
-            value: ""
-          - name: MONITORING_AGENT
-            value: "prometheus"
-          - name: MONITORING_SERVICE
-            value: "prometheus-k8s"
-          - name: MONITORING_AGENT_ENDPOINT
-            value: "prometheus-k8s"
-          - name: LOGGING_LEVEL
-            value: "info"
-          - name: ROOT_LOGGING_LEVEL
-            value: "info"
-          - name: DATABASE_URL
-            value: "postgres-service"
-          - name: DB_PORT
-            value: "5432"
-          - name: DB_NAME
-            value: "kruizeDB"
-          - name: DATABASE_USER
-            value: "admin"
-        ports:
-         - name: kruize-port
-           containerPort: 8080
-        livenessProbe:
-          exec:
-            command:
-              - sh
-              - -c
-              - pg_isready -h $DATABASE_URL -U $DATABASE_USER
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 1
+        - name: kruize
+          image: kruize/autotune_operator:0.0.8_mvp
+          imagePullPolicy: Always
+          env:
+            - name: CLUSTER_TYPE
+              value: "kubernetes"
+            - name: K8S_TYPE
+              value: "minikube"
+            - name: AUTH_TYPE
+              value: ""
+            - name: AUTH_TOKEN
+              value: ""
+            - name: MONITORING_AGENT
+              value: "prometheus"
+            - name: MONITORING_SERVICE
+              value: "prometheus-k8s"
+            - name: MONITORING_AGENT_ENDPOINT
+              value: "prometheus-k8s"
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: ROOT_LOGGING_LEVEL
+              value: "info"
+            - name: DATABASE_URL
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "kruizeDB"
+            - name: DATABASE_USER
+              value: "admin"
+            - name: DATABASE_PASSWORD
+              value: "admin"
+          ports:
+            - name: kruize-port
+              containerPort: 8080
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 20
 ---
 apiVersion: v1
 kind: Service
@@ -162,6 +165,6 @@ spec:
   selector:
     app: kruize
   ports:
-  - name: kruize-port
-    port: 8080
-    targetPort: 8080
+    - name: kruize-port
+      port: 8080
+      targetPort: 8080
