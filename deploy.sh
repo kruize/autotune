@@ -170,8 +170,29 @@ done
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
 		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
-			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
-			kubectl apply -f ${!MANIFEST_FILE}
+			if [ ${cluster_type} == "minikube" ]; then
+				MANIFEST_FILE=$KRUIZE_DEPLOY_MANIFEST_MINIKUBE
+				autotune_ns="monitoring"
+			fi
+
+			if [ ${cluster_type} == "openshift" ]; then
+				MANIFEST_FILE=$KRUIZE_DEPLOY_MANIFEST_OPENSHIFT
+				autotune_ns="openshift-tuning"
+			fi
+
+			MANIFEST_FILE_OLD="/tmp/kruize.yaml"
+
+			cp $MANIFEST_FILE $MANIFEST_FILE_OLD
+			KRUIZE_VERSION="$(grep -A 1 "autotune" pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
+			sed -e "s/image: \"kruize\/autotune_operator:${KRUIZE_VERSION}\"/image: \"${AUTOTUNE_DOCKER_IMAGE//\//\\\/}\"/g" ${MANIFEST_FILE_OLD} > ${MANIFEST_FILE}
+
+			kubectl apply -f ${MANIFEST_FILE}
+			check_running kruize ${autotune_ns}
+			if [ "${err}" != "0" ]; then
+				# Indicate deploy failed on error
+				exit 1
+			fi
+			cp ${MANIFEST_FILE_OLD} ${MANIFEST_FILE}
 		else
 			echo "Unsupported cluster!"
 		fi
