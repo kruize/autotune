@@ -67,9 +67,16 @@ public class ListRecommendation extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        List<KruizeObject> kruizeObjectList =  new ArrayList<>();
+        if (null != experimentName && this.mainKruizeExperimentMap.contains(experimentName)) {
+            kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+        } else {
+            kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+        }
         //List<ViewRecommendation> recommendationList = new ArrayList<>();
         List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
-        for (KruizeObject ko : this.mainKruizeExperimentMap.values()) {
+        for (KruizeObject ko : kruizeObjectList) {
             try {
                 LOGGER.debug(ko.getDeployment_name());
                 LOGGER.debug(ko.getDeployments().toString());
