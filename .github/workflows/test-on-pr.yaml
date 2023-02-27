@@ -40,9 +40,9 @@ jobs:
           echo Install Prometheus on minikube
           cd scripts
           ./prometheus_on_minikube.sh -as
-      - name: Deploy autotune
+      - name: Deploy kruize in experiment mode
         run: |
-          echo Deploy autotune
+          echo Deploy kruize in experiment mode
           cp ./manifests/autotune/autotune-operator-deployment.yaml_template ./manifests/autotune/autotune-operator-deployment.yaml_template.old
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune/autotune-operator-deployment.yaml_template.old > ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
@@ -50,13 +50,14 @@ jobs:
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
           sleep 20
-          autotune_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
-          kubectl logs $autotune_pod -n monitoring -c autotune > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+          kruize_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
+          kubectl logs $kruize_pod -n monitoring -c autotune > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+          kubectl describe pod $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_describe_pod_log.txt 2>&1
       - name: Archive results
         if: always()
         run: |
           cd ${GITHUB_WORKSPACE}
-          tar cvf autotune_results.tar kruize_pod_log.txt
+          tar cvf autotune_results.tar kruize_*log.txt
 
       - name: Upload results
         if: always()
@@ -103,13 +104,14 @@ jobs:
           cat ./manifests/crc/kruize-crc-minikube.yaml
           kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
           sleep 120
-          autotune_pod=$(kubectl get pod -n monitoring | grep kruize | cut -d " " -f1)
-          kubectl logs $autotune_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+          kruize_pod=$(kubectl get pod -n monitoring | grep kruize | cut -d " " -f1)
+          kubectl logs $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
+          kubectl describe pod $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_describe_pod_log.txt 2>&1
       - name: Archive results
         if: always()
         run: |
           cd ${GITHUB_WORKSPACE}
-          tar cvf crc_results.tar kruize_pod_log.txt
+          tar cvf crc_results.tar kruize_*log.txt
 
       - name: Upload results
         if: always()
