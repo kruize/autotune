@@ -1,0 +1,44 @@
+[{
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+	"deployment_name": "tfb-qrh-sample",
+	"performanceProfile": "resource-optimization-openshift",
+	"slo": {
+	    "objective_function": {
+                "function_type": "expression",
+                "expression": "transaction_response_time"
+            },
+            "slo_class": "response_time",
+            "direction": "minimize",
+            "function_variables": [
+                {
+                    "name": "transaction_response_time",
+                    "query": "application_org_acme_microprofile_metrics_PrimeNumberChecker_checksTimer_mean_seconds",
+                    "datasource": "prometheus",
+                    "value_type": "double"
+                }
+            ]
+    	},
+        "namespace": "default",
+        "mode": "monitor",
+        "targetCluster": "remote",
+        "containers": [
+            {
+                "image": "kruize/tfb-qrh:1.13.2.F_et17",
+                "container_name": "tfb-server"
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "15min"
+	},
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "selector": {
+            "matchLabel": "app.kubernetes.io/name",
+            "matchLabelValue": "tfb-qrh-sample",
+            "matchRoute": "",
+            "matchURI": "",
+            "matchService": ""
+        }
+}]
+
