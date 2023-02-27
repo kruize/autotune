@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  */
 public class AnalyzerConstants {
     public static final String MODE = "mode";
-    public static final String TARGET_CLUSTER = "targetCluster";
+    public static final String TARGET_CLUSTER = "target_cluster";
     public static final String MONITOR = "monitor";
     public static final String EXPERIMENT = "experiment";
     public static final String LOCAL = "local";

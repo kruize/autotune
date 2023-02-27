@@ -40,8 +40,8 @@ public class ExperimentValidation {
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
             AnalyzerConstants.MODE,
-            AnalyzerConstants.TARGET_CLUSTER,
-            AnalyzerConstants.NAMESPACE
+            AnalyzerConstants.TARGET_CLUSTER
+//            AnalyzerConstants.NAMESPACE
     ));
     private List<String> mandatoryFieldsForLocalRemoteMonitoring = new ArrayList<>((
             Arrays.asList(AnalyzerConstants.RECOMMENDATION_SETTINGS)
