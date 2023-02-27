@@ -90,7 +90,7 @@ public class ListRecommendation extends HttpServlet {
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
-                if (field.getDeclaringClass() == ContainerObject.class && field.getName().equals("results")) {
+                if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
                     return true;
                 }
                 return false;

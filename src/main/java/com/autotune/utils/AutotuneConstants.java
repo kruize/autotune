@@ -162,6 +162,8 @@ public class AutotuneConstants {
         public static final String VERSION = "version";
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
+        public static final String START_TIMESTAMP = "start_timestamp";
+        public static final String END_TIMESTAMP = "end_timestamp";
         private JSONKeys() {
         }
     }

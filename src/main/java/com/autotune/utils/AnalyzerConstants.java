@@ -447,4 +447,20 @@ public class AnalyzerConstants {
             public static final String DAEMONSET = "daemonset";
         }
     }
+
+    public static final class MetricNameConstants {
+        private MetricNameConstants() {
+
+        }
+
+        public static final String CPU_REQUEST = "cpuRequest";
+        public static final String CPU_LIMIT = "cpuLimit";
+        public static final String CPU_USAGE = "cpuUsage";
+        public static final String CPU_THROTTLE = "cpuThrottle";
+        public static final String MEMORY_REQUEST = "memoryRequest";
+        public static final String MEMORY_LIMIT = "memoryLimit";
+        public static final String MEMORY_USAGE = "memoryUsage";
+        public static final String MEMORY_RSS = "memoryRSS";
+
+    }
 }

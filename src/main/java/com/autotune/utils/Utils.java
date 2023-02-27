@@ -15,9 +15,11 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
-import com.autotune.common.data.result.ViewRecommendation;
+import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
+import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -110,6 +112,37 @@ public class Utils
 		return null;
 	}
 
+	public static AnalyzerConstants.MetricName getAppropriateMetricName(String metricName) {
+		if (null == metricName)
+			return null;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_REQUEST))
+			return AnalyzerConstants.MetricName.cpuRequest;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_LIMIT))
+			return AnalyzerConstants.MetricName.cpuLimit;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_USAGE))
+			return AnalyzerConstants.MetricName.cpuUsage;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_THROTTLE))
+			return AnalyzerConstants.MetricName.cpuThrottle;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST))
+			return AnalyzerConstants.MetricName.memoryRequest;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT))
+			return AnalyzerConstants.MetricName.memoryLimit;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_USAGE))
+			return AnalyzerConstants.MetricName.memoryUsage;
+
+		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_RSS))
+			return AnalyzerConstants.MetricName.memoryRSS;
+
+		return null;
+	}
+
 	public static class Converters {
 		private Converters() {
 
@@ -178,6 +211,40 @@ public class Utils
 				}
 				listRecommendationsSO.setKubernetesObjects(k8sObjectsList);
 				return listRecommendationsSO;
+			}
+
+			public static ExperimentResultData convertUpdateResultsSOToExperimentResultData(UpdateResultsSO updateResultsSO) {
+				ExperimentResultData experimentResultData = new ExperimentResultData();
+				experimentResultData.setStarttimestamp(updateResultsSO.getStartTimestamp());
+				experimentResultData.setEndtimestamp(updateResultsSO.getEndTimestamp());
+				experimentResultData.setExperiment_name(updateResultsSO.getExperimentName());
+				List<DeploymentResultData> deploymentResultDataList = new ArrayList<DeploymentResultData>();
+				for (K8sObject k8sObject : updateResultsSO.getKubernetesObjects()) {
+					DeploymentResultData deploymentResultData = new DeploymentResultData();
+					deploymentResultData.setDeployment_name(k8sObject.getName());
+					deploymentResultData.setNamespace(k8sObject.getNamespace());
+					List<Containers> containersList =  new ArrayList<Containers>();
+					for (ContainerObject containerObject: k8sObject.getContainers()) {
+						Containers containers =  new Containers();
+						containers.setContainer_name(containerObject.getContainer_name());
+						containers.setImage_name(containerObject.getImage());
+						HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> metricsMap =  new HashMap<>();
+						for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
+							HashMap<String, Results> resultsHashMap =  new HashMap<>();
+							resultsHashMap.put("results", containerMetricsHelper.getResults());
+							AnalyzerConstants.MetricName metricName = getAppropriateMetricName(containerMetricsHelper.getName());
+							if (null != metricName) {
+								metricsMap.put(metricName, resultsHashMap);
+							}
+						}
+						containers.setContainer_metrics(metricsMap);
+						containersList.add(containers);
+					}
+					deploymentResultData.setContainers(containersList);
+					deploymentResultDataList.add(deploymentResultData);
+				}
+				experimentResultData.setDeployments(deploymentResultDataList);
+				return experimentResultData;
 			}
 		}
 	}
