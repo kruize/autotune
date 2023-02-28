@@ -14,6 +14,7 @@
         <slf4j-version>2.17.1</slf4j-version>
         <java-version>17</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
+        <gson-version>2.9.0</gson-version>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
