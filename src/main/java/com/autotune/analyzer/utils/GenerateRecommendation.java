@@ -22,6 +22,7 @@ import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,9 @@ public class GenerateRecommendation {
 
     public static void generateRecommendation(KruizeObject kruizeObject) {
         try {
-            recommendation_periods.put("Short Term", 1);
-            recommendation_periods.put("Middle Term", 7);
-            recommendation_periods.put("Long Term", 15);
+            recommendation_periods.put(AutotuneConstants.JSONKeys.SHORT_TERM, 1);
+            recommendation_periods.put(AutotuneConstants.JSONKeys.MEDIUM_TERM, 7);
+            recommendation_periods.put(AutotuneConstants.JSONKeys.LONG_TERM, 15);
 
             for (String dName : kruizeObject.getDeployments().keySet()) {
                 DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);

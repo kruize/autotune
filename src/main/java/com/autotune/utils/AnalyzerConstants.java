@@ -169,7 +169,7 @@ public class AnalyzerConstants {
         public static final String MATCH_SERVICE = "matchService";
         public static final String MODE = "mode";
         public static final String DEFAULT_MODE = "experiment";
-        public static final String TARGET_CLUSTER = "targetCluster";
+        public static final String TARGET_CLUSTER = "target_cluster";
         public static final String DEFAULT_TARGET_CLUSTER = "local";
         public static final String METADATA = "metadata";
         public static final String NAMESPACE = "namespace";

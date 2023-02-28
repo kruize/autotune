@@ -16,6 +16,8 @@
 package com.autotune.common.data.result;
 
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AutotuneConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -25,11 +27,15 @@ import java.util.HashMap;
  */
 
 public class Recommendation {
+    @SerializedName(AutotuneConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
+    @SerializedName(AutotuneConstants.JSONKeys.MONITORING_END_TIME)
     private Timestamp monitoringEndTime;
     private Double duration_in_hours;
+    @SerializedName(AutotuneConstants.JSONKeys.PODS_COUNT)
     private int podsCount;
     private double confidence_level;
+    @SerializedName(AutotuneConstants.JSONKeys.ERROR_MSG)
     private String errorMessage;
 
     private HashMap<AnalyzerConstants.CapacityMax, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;

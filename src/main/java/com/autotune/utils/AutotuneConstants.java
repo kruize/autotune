@@ -164,6 +164,13 @@ public class AutotuneConstants {
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String START_TIMESTAMP = "start_timestamp";
         public static final String END_TIMESTAMP = "end_timestamp";
+        public static final String MONITORING_START_TIME = "monitoring_start_time";
+        public static final String MONITORING_END_TIME = "monitoring_end_time";
+        public static final String PODS_COUNT = "pods_count";
+        public static final String ERROR_MSG = "error_msg";
+        public static final String SHORT_TERM = "short_term";
+        public static final String MEDIUM_TERM = "medium_term";
+        public static final String LONG_TERM = "long_term";
         private JSONKeys() {
         }
     }
