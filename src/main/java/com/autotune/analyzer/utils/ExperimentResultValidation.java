@@ -72,7 +72,7 @@ public class ExperimentResultValidation {
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
                             errorMsg = new PerfProfileImpl().validateResults(performanceProfile,resultData);
-                            if (null != errorMsg && errorMsg.isEmpty()) {
+                            if (null == errorMsg || errorMsg.isEmpty()) {
                                 if (performanceProfile.getName().equalsIgnoreCase(AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE)) {
                                     errorMsg = new DefaultImpl().recommend(performanceProfile, resultData);
                                 } else {
@@ -85,7 +85,7 @@ public class ExperimentResultValidation {
                                     Method method = validationClass.getMethod("recommend",parameterTypes);
                                     errorMsg = (String) method.invoke(object, performanceProfile, resultData);
                                 }
-                                if (null != errorMsg && errorMsg.isEmpty())
+                                if (null == errorMsg || errorMsg.isEmpty())
                                     proceed = true;
                             } else {
                                 proceed = false;
