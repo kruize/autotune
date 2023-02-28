@@ -170,8 +170,7 @@ done
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
 		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
-			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
-			kubectl apply -f ${!MANIFEST_FILE}
+			${cluster_type}_crc_start
 		else
 			echo "Unsupported cluster!"
 		fi

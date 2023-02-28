@@ -183,6 +183,17 @@ function minikube_terminate() {
 	rm ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
 }
 
+# Deploy kruize in remote monitoring mode
+function minikube_crc_start() {
+	echo
+	echo "###   Installing kruize for minikube"
+	echo
+
+	MANIFEST_FILE=$KRUIZE_DEPLOY_MANIFEST_MINIKUBE
+	autotune_ns="monitoring"
+	kruize_crc_start
+}
+
 function minikube_crc_terminate() {
 	echo -n "###   Removing Kruize for minikube"
 	echo
