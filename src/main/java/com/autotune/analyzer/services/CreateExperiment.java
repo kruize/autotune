@@ -18,9 +18,11 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +78,14 @@ public class CreateExperiment extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
+            List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
+            List<KruizeObject> kruizeExpList = new ArrayList<>();
+            for (CreateExperimentSO createExperimentSO: experimentSOList) {
+                KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
+                if (null != kruizeObject) {
+                    kruizeExpList.add(kruizeObject);
+                }
+            }
             new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
             //TODO: UX needs to be modified - Handle response for the multiple objects
             KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);

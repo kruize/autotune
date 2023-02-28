@@ -17,26 +17,39 @@ see [Create Experiment](/design/CreateExperiment.md)
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperiment`
 
 ```
-[{
+[
+  {
+    "version": "1.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-    "namespace": "default",
-    "deployment_name": "tfb-qrh-sample",
-    "performanceProfile": "resource-optimization-openshift",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
-    "targetCluster": "remote",
-    "containers": [
-        {
-            "image": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server"
-        }
+    "target_cluster": "remote",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          }
+        ]
+      }
     ],
     "trial_settings": {
-        "measurement_duration": "15min"
+      "measurement_duration": "15min"
     },
     "recommendation_settings": {
-        "threshold": "0.1"
+      "threshold": "0.1"
     }
-}]
+  }
+]
 ```
 
 **Response**
@@ -61,117 +74,237 @@ see [Update results](/design/UpdateResults.md)
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updateResults`
 
 ```
-[{
- "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
- "start_timestamp": "2022-01-23T18:25:43.511Z",
- "end_timestamp": "2022-01-23T18:25:43.511Z",
- "deployments": [{
-   "deployment_name": "tfb-qrh-sample",
-   "namespace": "default",
-   "pod_metrics": [],
-   "containers": [{
-     "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-     "container_name": "tfb-server",
-     "container_metrics": {
-       "cpuRequest" : {
-         "results": {
-            "value" : 1.1,
-            "units": "cores",
-            "aggregation_info": {
-               "sum": 4.4,
-               "avg": 1.1,
-               "units": "cores"
-            }
-         }
-       },
-       "cpuLimit": {
-         "results": {
-           "value" : 0.5,
-           "units": "cores",
-           "aggregation_info": {
-             "sum": 2.0,
-             "avg": 0.5,
-             "units": "cores"
-           }
-         }
-       },
-       "cpuUsage": {
-         "results": {
-           "value" : 0.12,
-           "units": "cores",
-           "aggregation_info": {
-             "min": 0.14,
-             "max": 0.84,
-             "sum": 0.84,
-             "avg": 0.12,
-             "units": "cores"
-           }
-         }
-       },
-       "cpuThrottle": {
-         "results": {
-           "value" : 0.045,
-           "units": "cores",
-           "aggregation_info": {
-             "sum": 0.19,
-             "max": 0.09,
-             "avg": 0.045,
-             "units": "cores"
-           }
-         }
-       },
-       "memoryRequest": {
-         "results": {
-           "value" : 50.12,
-           "units": "MiB",
-           "aggregation_info": {
-             "sum": 250.85,
-             "avg": 50.21,
-             "units": "MiB"
-           }
-         }
-       },
-       "memoryLimit": {
-         "results": {
-           "value" : 100,
-           "units": "MiB",
-           "aggregation_info": {
-             "sum": 500,
-             "avg": 100,
-             "units": "MiB"
-           }
-         }
-       },
-       "memoryUsage": {
-         "results": {
-           "value" : 40.1,
-           "units": "MiB",
-           "aggregation_info": {
-             "min": 50.6,
-             "max": 198.50,
-             "sum": 198.50,
-             "avg": 40.1,
-             "units": "MiB"
-           }
-         }
-       },
-       "memoryRSS": {
-         "results": {
-           "value": 31.91,
-           "units": "MiB",
-           "aggregation_info": {
-             "min": 50.6,
-             "max": 123.6,
-             "sum": 123.6,
-             "avg": 31.91,
-             "units": "MiB"
-           }
-         }
-       }
-     }
-   }]
- }]
-}]
+[
+  {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-0",
+            "metrics": [
+              {
+                "name": "cpuRequest",
+                "results": {
+                  "value": 1.1,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuLimit",
+                "results": {
+                  "value": 0.5,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 2.0,
+                    "avg": 0.5,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuUsage",
+                "results": {
+                  "value": 0.12,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "min": 0.14,
+                    "max": 0.84,
+                    "sum": 0.84,
+                    "avg": 0.12,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuThrottle",
+                "results": {
+                  "value": 0.045,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 0.19,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "memoryRequest",
+                "results": {
+                  "value": 50.12,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryLimit",
+                "results": {
+                  "value": 100,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryUsage",
+                "results": {
+                  "value": 40.1,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
+                    "avg": 40.1,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryRSS",
+                "results": {
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 123.6,
+                    "sum": 123.6,
+                    "avg": 31.91,
+                    "format": "MiB"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "metrics": [
+              {
+                "name": "cpuRequest",
+                "results": {
+                  "value": 1.1,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuLimit",
+                "results": {
+                  "value": 0.5,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 2.0,
+                    "avg": 0.5,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuUsage",
+                "results": {
+                  "value": 0.12,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "min": 0.14,
+                    "max": 0.84,
+                    "sum": 0.84,
+                    "avg": 0.12,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuThrottle",
+                "results": {
+                  "value": 0.045,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 0.19,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "memoryRequest",
+                "results": {
+                  "value": 50.12,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryLimit",
+                "results": {
+                  "value": 100,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryUsage",
+                "results": {
+                  "value": 40.1,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
+                    "avg": 40.1,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryRSS",
+                "results": {
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 123.6,
+                    "sum": 123.6,
+                    "avg": 31.91,
+                    "format": "MiB"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
 
 ```
 
@@ -198,193 +331,113 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
 **Response**
 
 ```
-{
-  "experimentName": "quarkus-resteasy-autotune-min-http-response-time-db4",
-  "namespace": "default",
-  "deploymentName": "tfb-qrh-sample",
-  "containers": {
-    "tfb-server-1": {
-      "name": "tfb-server-1",
-      "recommendation": {
-        "2022-01-23T18:25:43.511Z": {
-          "Cost": {
-            "monitoringStartTime": "2022-01-22T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 4,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 128.8,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.0,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 100.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 4.0,
-                  "units": "cores"
-                }
-              }
+[
+    {
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "recommendation": {
+                            "2022-01-23T18:25:43.511Z": {
+                                "short_term": {
+                                    "monitoring_start_time": "2022-01-22T18:25:43.511Z",
+                                    "monitoring_end_time": "2022-01-23T18:25:43.511Z",
+                                    "duration_in_hours": 0.0,
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "config": {
+                                        "limits": {
+                                            "memory": {
+                                                "amount": 982.5997506234414,
+                                                "format": ""
+                                            },
+                                            "cpu": {
+                                                "amount": 6.51,
+                                                "format": ""
+                                            }
+                                        },
+                                        "requests": {
+                                            "memory": {
+                                                "amount": 123.6,
+                                                "format": ""
+                                            },
+                                            "cpu": {
+                                                "amount": 1.03,
+                                                "format": ""
+                                            }
+                                        }
+                                    }
+                                },
+                                "medium_term": {
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "error_msg": "There is not enough data available to generate a recommendation."
+                                },
+                                "long_term": {
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "error_msg": "There is not enough data available to generate a recommendation."
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "recommendation": {
+                            "2022-01-23T18:25:43.511Z": {
+                                "short_term": {
+                                    "monitoring_start_time": "2022-01-22T18:25:43.511Z",
+                                    "monitoring_end_time": "2022-01-23T18:25:43.511Z",
+                                    "duration_in_hours": 0.0,
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "config": {
+                                        "limits": {
+                                            "memory": {
+                                                "amount": 982.5997506234414,
+                                                "format": ""
+                                            },
+                                            "cpu": {
+                                                "amount": 6.51,
+                                                "format": ""
+                                            }
+                                        },
+                                        "requests": {
+                                            "memory": {
+                                                "amount": 123.6,
+                                                "format": ""
+                                            },
+                                            "cpu": {
+                                                "amount": 1.03,
+                                                "format": ""
+                                            }
+                                        }
+                                    }
+                                },
+                                "medium_term": {
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "error_msg": "There is not enough data available to generate a recommendation."
+                                },
+                                "long_term": {
+                                    "pods_count": 0,
+                                    "confidence_level": 0.0,
+                                    "error_msg": "There is not enough data available to generate a recommendation."
+                                }
+                            }
+                        }
+                    }
+                ]
             }
-          },
-          "Balanced": {
-            "monitoringStartTime": "2022-01-16T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 0,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 128.8,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.8,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 1000,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.8,
-                  "units": "cores"
-                }
-              }
-            }
-          },
-          "Performance": {
-            "monitoringStartTime": "2022-01-08T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 0,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 128.8,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.0,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.0,
-                  "units": "cores"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "tfb-server-0": {
-      "name": "tfb-server-0",
-      "recommendation": {
-        "2022-01-23T18:25:43.511Z": {
-          "Cost": {
-            "monitoringStartTime": "2022-01-22T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 0,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 128.8,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.8,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 8.0,
-                  "units": "cores"
-                }
-              }
-            }
-          },
-          "Balanced": {
-            "monitoringStartTime": "2022-01-16T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 0,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 6.0,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 6.0,
-                  "units": "cores"
-                }
-              }
-            }
-          },
-          "Performance": {
-            "monitoringStartTime": "2022-01-08T18:25:43.511Z",
-            "monitoringEndTime": "2022-01-23T18:25:43.511Z",
-            "podsCount": 0,
-            "confidence_level": 0.0,
-            "config": {
-              "max": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 4.0,
-                  "units": "cores"
-                }
-              },
-              "capacity": {
-                "memory": {
-                  "amount": 1000.0,
-                  "units": "MiB"
-                },
-                "cpu": {
-                  "amount": 4.0,
-                  "units": "cores"
-                }
-              }
-            }
-          }
-        }
-      }
+        ],
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db"
     }
-  }
-}
+]
 ```

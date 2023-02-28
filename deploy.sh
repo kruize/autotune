@@ -55,9 +55,9 @@ HPO_VERSION=0.0.2
 HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}
 
 # source all the helpers scripts
-. ${SCRIPTS_DIR}/minikube-helpers.sh
-. ${SCRIPTS_DIR}/openshift-helpers.sh
-. ${SCRIPTS_DIR}/common_utils.sh
+. "${SCRIPTS_DIR}"/minikube-helpers.sh
+. "${SCRIPTS_DIR}"/openshift-helpers.sh
+. "${SCRIPTS_DIR}"/common_utils.sh
 
 # Defaults for the script
 # minikube is the default cluster type
@@ -170,8 +170,7 @@ done
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
 		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
-			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
-			kubectl apply -f ${!MANIFEST_FILE}
+			${cluster_type}_crc_start
 		else
 			echo "Unsupported cluster!"
 		fi

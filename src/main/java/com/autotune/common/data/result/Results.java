@@ -22,7 +22,7 @@ public class Results {
     @SerializedName("aggregation_info")
     private AggregationInfoResult aggregation_info;
     private Double value;
-    private String units;
+    private String format;
 
     public AggregationInfoResult getAggregation_info() {
         return aggregation_info;
@@ -40,12 +40,12 @@ public class Results {
         this.value = value;
     }
 
-    public String getUnits() {
-        return units;
+    public String getFormat() {
+        return format;
     }
 
-    public void setUnits(String units) {
-        this.units = units;
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class Results {
         return "Results{" +
                 "aggregation_info=" + aggregation_info +
                 ", value=" + value +
-                ", units='" + units + '\'' +
+                ", units='" + format + '\'' +
                 '}';
     }
 }

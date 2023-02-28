@@ -15,17 +15,23 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
+import com.autotune.utils.AutotuneConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 
 public class ContainerObject {
+    @SerializedName(AutotuneConstants.JSONKeys.CONTAINER_IMAGE_NAME)
     private String image;
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
     private HashMap<Timestamp, HashMap<String, Recommendation>> recommendation;
+    private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
         this.image = image;
@@ -62,6 +68,14 @@ public class ContainerObject {
 
     public void setRecommendation(HashMap<Timestamp, HashMap<String, Recommendation>> recommendation) {
         this.recommendation = recommendation;
+    }
+
+    public List<ContainerMetricsHelper> getMetrics() {
+        return metrics;
+    }
+
+    public void setMetrics(List<ContainerMetricsHelper> metrics) {
+        this.metrics = metrics;
     }
 
     @Override

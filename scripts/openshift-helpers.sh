@@ -181,6 +181,15 @@ function openshift_terminate() {
 	kubectl delete ns ${autotune_ns}
 }
 
+function openshift_crc_start() {
+	echo
+	echo "###   Installing kruize for openshift"
+	echo
+	MANIFEST_FILE=$KRUIZE_DEPLOY_MANIFEST_OPENSHIFT
+	autotune_ns="openshift-tuning"
+	kruize_crc_start
+}
+
 function openshift_crc_terminate() {
 	echo -n "###   Removing Kruize for openshift"
 	echo

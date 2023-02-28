@@ -17,11 +17,13 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ViewRecommendation;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -65,19 +67,28 @@ public class ListRecommendation extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
-        List<ViewRecommendation> recommendationList = new ArrayList<>();
-        for (KruizeObject ko : this.mainKruizeExperimentMap.values()) {
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        List<KruizeObject> kruizeObjectList =  new ArrayList<>();
+        if (null != experimentName && this.mainKruizeExperimentMap.contains(experimentName)) {
+            kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+        } else {
+            kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+        }
+        //List<ViewRecommendation> recommendationList = new ArrayList<>();
+        List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
+        for (KruizeObject ko : kruizeObjectList) {
             try {
                 LOGGER.debug(ko.getDeployment_name());
                 LOGGER.debug(ko.getDeployments().toString());
-                recommendationList.add(
-                        new ViewRecommendation(
-                                ko.getExperimentName(),
-                                ko.getNamespace(),
-                                ko.getDeployment_name(),
-                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
-                        )
-                );
+//                recommendationList.add(
+//                        new ViewRecommendation(
+//                                ko.getExperimentName(),
+//                                ko.getNamespace(),
+//                                ko.getDeployment_name(),
+//                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
+//                        )
+//                );
+                recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
             } catch (Exception e) {
                 LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
             }
@@ -86,7 +97,7 @@ public class ListRecommendation extends HttpServlet {
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
-                if (field.getDeclaringClass() == ContainerObject.class && field.getName().equals("results")) {
+                if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
                     return true;
                 }
                 return false;
