@@ -65,9 +65,7 @@ jobs:
           echo Deploy Kruize in experiment mode
           ./deploy.sh -c minikube -i kruize/autotune_operator:test      
           sleep 20
-          kruize_pod=$(kubectl get pod -n monitoring | grep autotune | cut -d " " -f1)
-          kubectl logs $kruize_pod -n monitoring -c autotune > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
-          kubectl describe pod $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_describe_pod_log.txt 2>&1
+          ./ffdc.sh -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
         run: |
@@ -115,9 +113,7 @@ jobs:
           cat ./manifests/crc/kruize-crc-minikube.yaml
           kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
           sleep 20
-          kruize_pod=$(kubectl get pod -n monitoring | grep kruize | cut -d " " -f1)
-          kubectl logs $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_pod_log.txt 2>&1
-          kubectl describe pod $kruize_pod -n monitoring > ${GITHUB_WORKSPACE}/kruize_describe_pod_log.txt 2>&1
+          ./ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
         run: |
