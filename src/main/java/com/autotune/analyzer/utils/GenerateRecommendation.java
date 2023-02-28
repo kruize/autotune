@@ -68,15 +68,15 @@ public class GenerateRecommendation {
                                     .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
                             System.out.println(filteredResultsMap);
                             Recommendation recommendation = new Recommendation(monitorStartDate, monitorEndDate);
-                            HashMap<AnalyzerConstants.CapacityMax, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
-                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> capacityMap = new HashMap<>();
-                            capacityMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUCapacityRecommendation(filteredResultsMap));
-                            capacityMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryCapacityRecommendation(filteredResultsMap));
-                            config.put(AnalyzerConstants.CapacityMax.capacity, capacityMap);
-                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> maxMap = new HashMap<>();
-                            maxMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUMaxRecommendation(filteredResultsMap));
-                            maxMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryMaxRecommendation(filteredResultsMap));
-                            config.put(AnalyzerConstants.CapacityMax.max, maxMap);
+                            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
+                            requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUCapacityRecommendation(filteredResultsMap));
+                            requestsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryCapacityRecommendation(filteredResultsMap));
+                            config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
+                            limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUMaxRecommendation(filteredResultsMap));
+                            limitsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryMaxRecommendation(filteredResultsMap));
+                            config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
                             Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
                                     .collect(Collectors.toList())
                                     .stream()

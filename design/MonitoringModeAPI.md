@@ -351,7 +351,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                                     "pods_count": 0,
                                     "confidence_level": 0.0,
                                     "config": {
-                                        "max": {
+                                        "limits": {
                                             "memory": {
                                                 "amount": 982.5997506234414,
                                                 "format": ""
@@ -361,7 +361,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                                                 "format": ""
                                             }
                                         },
-                                        "capacity": {
+                                        "requests": {
                                             "memory": {
                                                 "amount": 123.6,
                                                 "format": ""
@@ -398,7 +398,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                                     "pods_count": 0,
                                     "confidence_level": 0.0,
                                     "config": {
-                                        "max": {
+                                        "limits": {
                                             "memory": {
                                                 "amount": 982.5997506234414,
                                                 "format": ""
@@ -408,7 +408,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                                                 "format": ""
                                             }
                                         },
-                                        "capacity": {
+                                        "requests": {
                                             "memory": {
                                                 "amount": 123.6,
                                                 "format": ""

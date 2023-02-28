@@ -129,6 +129,11 @@ public class AnalyzerConstants {
         max
     }
 
+    public enum ResourceSetting {
+        requests,
+        limits
+    }
+
     public enum MetricName {
         cpuRequest,
         cpuLimit,
