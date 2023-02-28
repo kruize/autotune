@@ -21,6 +21,7 @@ import re
 from datetime import datetime
 
 SUCCESS_STATUS_CODE = 201
+SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 
 SUCCESS_STATUS = "SUCCESS"
@@ -28,64 +29,73 @@ ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
-# experiment_name,deployment_name,namespace,performanceProfile,slo_class,direction,mode,targetCluster,image,container_name,measurement_duration,threshold,matchLabel,matchLabelValue
+# version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
+        "version": "\"1.0\"",
         "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "deployment_name": "\"tfb-qrh-sample\"",
-        "namespace": "\"default\"",
-        "performanceProfile": "\"resource-optimization-openshift\"",
-        "slo_class": "\"resource_usage\"",
-        "direction": "\"minimize\"",
+        "cluster_name": "\"cluster-one-division-bell\"",
+        "performance_profile": "\"resource-optimization-openshift\"",
         "mode": "\"monitor\"",
-        "targetCluster": "\"remote\"",
-        "image": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
+        "target_cluster": "\"remote\"",
+        "type": "\"deployment\"",
+        "name": "\"tfb-qrh-sample\"",
+        "namespace": "\"default\"",
+        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
         "container_name": "\"tfb-server\"",
         "measurement_duration": "\"15min\"",
-        "threshold": "\"0.1\"",
-        "matchLabel": "\"app.kubernetes.io/name\"",
-        "matchLabelvalue": "\"tfb-qrh-deployment\""
+        "threshold": "\"0.1\""
 }
 
-# experiment_name,start_timestamp,end_timestamp,deployment_name,namespace,image_name,container_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_units,cpuLimit_sum,cpuLimit_avg,cpuLimit_units,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_units,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_units,memoryRequest_sum,memoryRequest_avg,memoryRequest_units,memoryLimit_sum,memoryLimit_avg,memoryLimit_units,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_units,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_units
+# version, experiment_name,start_timestamp,end_timestamp,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
+        "version": "\"1.0\"",
         "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
         "start_timestamp": "\"2022-01-23T18:25:43.511Z\"",
         "end_timestamp": "\"2022-01-23T18:40:43.511Z\"",
-        "deployment_name": "\"tfb-qrh-sample\"",
+        "type": "\"deployment\"",
+        "name": "\"tfb-qrh-sample\"",
         "namespace": "\"default\"",
-        "image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
+        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
         "container_name": "\"tfb-server\"",
+        "cpuRequest_name": "\"cpuRequest\"",
         "cpuRequest_sum": "4.4",
         "cpuRequest_avg": "1.1",
-        "cpuRequest_units": "\"cores\"",
+        "cpuRequest_format": "\"cores\"",
+        "cpuLimit_name": "\"cpuLimit\"",
         "cpuLimit_sum": "5.4",
         "cpuLimit_avg": "22.1",
-        "cpuLimit_units": "\"cores\"",
+        "cpuLimit_format": "\"cores\"",
+        "cpuUsage_name": "\"cpuUsage\"",
         "cpuUsage_sum": "3.4",
         "cpuUsage_max": "2.4",
         "cpuUsage_avg": "1.5",
         "cpuUsage_min": "0.5",
-        "cpuUsage_units": "\"cores\"",
+        "cpuUsage_format": "\"cores\"",
+        "cpuThrottle_name": "\"cpuThrottle\"",
         "cpuThrottle_sum": "1.09",
         "cpuThrottle_max": "0.09",
         "cpuThrottle_avg": "0.045",
-        "cpuThrottle_units": "\"cores\"",
+        "cpuThrottle_format": "\"cores\"",
+        "memoryRequest_name": "\"memoryRequest\"",
         "memoryRequest_sum": "250.85",
         "memoryRequest_avg": "51.1",
-        "memoryRequest_units": "\"MiB\"",
+        "memoryRequest_format": "\"MiB\"",
+        "memoryLimit_name": "\"memoryLimit\"",
         "memoryLimit_sum": "500",
         "memoryLimit_avg": "100",
-        "memoryLimit_units": "\"MiB\"",
+        "memoryLimit_format": "\"MiB\"",
+        "memoryUsage_name": "\"memoryUsage\"",
         "memoryUsage_sum": "298.5",
         "memoryUsage_max": "198.4",
         "memoryUsage_avg": "41.5",
         "memoryUsage_min": "21.5",
-        "memoryUsage_units": "\"MiB\"",
+        "memoryUsage_format": "\"MiB\"",
+        "memoryRSS_name": "\"memoryRSS\"",
         "memoryRSS_sum": "225.64",
         "memoryRSS_max": "125.54",
         "memoryRSS_avg": "46.5",
         "memoryRSS_min": "26.5",
-        "memoryRSS_units": "\"MiB\""
+        "memoryRSS_format": "\"MiB\""
     }
 
 test_type = {"blank": "\"\"", "null": "NULL", "invalid": "\"xyz\""}
