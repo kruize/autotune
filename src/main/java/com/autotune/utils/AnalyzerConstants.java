@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  */
 public class AnalyzerConstants {
     public static final String MODE = "mode";
-    public static final String TARGET_CLUSTER = "targetCluster";
+    public static final String TARGET_CLUSTER = "target_cluster";
     public static final String MONITOR = "monitor";
     public static final String EXPERIMENT = "experiment";
     public static final String LOCAL = "local";
@@ -169,7 +169,7 @@ public class AnalyzerConstants {
         public static final String MATCH_SERVICE = "matchService";
         public static final String MODE = "mode";
         public static final String DEFAULT_MODE = "experiment";
-        public static final String TARGET_CLUSTER = "targetCluster";
+        public static final String TARGET_CLUSTER = "target_cluster";
         public static final String DEFAULT_TARGET_CLUSTER = "local";
         public static final String METADATA = "metadata";
         public static final String NAMESPACE = "namespace";
@@ -419,5 +419,48 @@ public class AnalyzerConstants {
                 "resource-optimization-openshift", "ResourceOptimizationOpenshiftImpl",
                 "advance-cluster-management", "AdvancedClusterMgmtImpl"
         );
+    }
+
+    public enum K8S_OBJECT_TYPES {
+        DEPLOYMENT,
+        DEPLOYMENT_CONFIG,
+        STATEFULSET,
+        REPLICASET,
+        REPLICATION_CONTROLLER,
+        DAEMONSET,
+    }
+
+    public static final class K8sObjectConstants {
+        private K8sObjectConstants() {
+
+        }
+        public static final class Types {
+            private Types() {
+
+            }
+
+            public static final String DEPLOYMENT = "deployment";
+            public static final String DEPLOYMENT_CONFIG = "deploymentConfig";
+            public static final String STATEFULSET = "statefulset";
+            public static final String REPLICASET = "replicaset";
+            public static final String REPLICATION_CONTROLLER = "replicationController";
+            public static final String DAEMONSET = "daemonset";
+        }
+    }
+
+    public static final class MetricNameConstants {
+        private MetricNameConstants() {
+
+        }
+
+        public static final String CPU_REQUEST = "cpuRequest";
+        public static final String CPU_LIMIT = "cpuLimit";
+        public static final String CPU_USAGE = "cpuUsage";
+        public static final String CPU_THROTTLE = "cpuThrottle";
+        public static final String MEMORY_REQUEST = "memoryRequest";
+        public static final String MEMORY_LIMIT = "memoryLimit";
+        public static final String MEMORY_USAGE = "memoryUsage";
+        public static final String MEMORY_RSS = "memoryRSS";
+
     }
 }

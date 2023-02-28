@@ -40,16 +40,17 @@ public class ExperimentValidation {
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
             AnalyzerConstants.MODE,
-            AnalyzerConstants.TARGET_CLUSTER,
-            AnalyzerConstants.NAMESPACE
+            AnalyzerConstants.TARGET_CLUSTER
+//            AnalyzerConstants.NAMESPACE
     ));
     private List<String> mandatoryFieldsForLocalRemoteMonitoring = new ArrayList<>((
             Arrays.asList(AnalyzerConstants.RECOMMENDATION_SETTINGS)
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
-            AnalyzerConstants.DEPLOYMENT_NAME,
-            AnalyzerConstants.SELECTOR
+//            AnalyzerConstants.DEPLOYMENT_NAME,
+//            AnalyzerConstants.SELECTOR
     ));
+
     private List<String> namespaceDeploymentNameList = new ArrayList<>();
 
     public ExperimentValidation(Map<String, KruizeObject> mainKruizeExperimentMAP) {
@@ -204,7 +205,8 @@ public class ExperimentValidation {
                         //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
                     }
                 }
-
+                // Adding temporary validation skip
+                missingDeploySelector = false;
                 if (missingDeploySelector) {
                     errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
 

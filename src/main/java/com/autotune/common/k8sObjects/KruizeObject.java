@@ -35,14 +35,16 @@ import java.util.Set;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
+    @SerializedName("version")
+    private String apiVersion;
     private String experimentId;
     @SerializedName("experiment_name")
     private String experimentName;
     @SerializedName("cluster_name")
     private String clusterName;
-
-    private String namespace;
+    private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
+    @SerializedName("target_cluster")
     private String targetCluster;           //Todo convert into Enum
     @SerializedName("slo")
     private SloInfo sloInfo;
@@ -51,15 +53,17 @@ public final class KruizeObject {
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
     private AnalyzerConstants.ExperimentStatus status;
+    @SerializedName("performance_profile")
     private String performanceProfile;
     private String deployment_name;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
-    private List<ContainerObject> containers;
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
     private ValidationResultData validationData;
     private HashMap<String, DeploymentObject> deployments;
+    private List<K8sObject> kubernetes_objects;
+
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -83,7 +87,6 @@ public final class KruizeObject {
         StringBuilder error = ValidateAutotuneObject.validate(map);
         if (error.toString().isEmpty()) {
             this.experimentName = experimentName;
-            this.namespace = namespace;
             this.mode = mode;
             this.targetCluster = targetCluster;
             this.selectorInfo = selectorInfo;
@@ -145,14 +148,6 @@ public final class KruizeObject {
         this.targetCluster = targetCluster;
     }
 
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
     public String getExperimentId() {
         return experimentId;
     }
@@ -209,14 +204,6 @@ public final class KruizeObject {
         this.recommendation_settings = recommendation_settings;
     }
 
-    public List<ContainerObject> getContainers() {
-        return containers;
-    }
-
-    public void setContainers(List<ContainerObject> containers) {
-        this.containers = containers;
-    }
-
     public ExperimentUseCaseType getExperimentUseCaseType() {
         return experimentUseCaseType;
     }
@@ -257,6 +244,30 @@ public final class KruizeObject {
         return clusterName;
     }
 
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public List<K8sObject> getKubernetesObjects() {
+        return kubernetes_objects;
+    }
+
+    public void setKubernetesObjects(List<K8sObject> kubernetes_objects) {
+        this.kubernetes_objects = kubernetes_objects;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
     public String toString() {
         // Creating a temparory cluster name as we allow null for cluster name now
@@ -268,7 +279,6 @@ public final class KruizeObject {
                 "experimentId='" + experimentId + '\'' +
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName +
-                ", namespace='" + namespace + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +
@@ -279,7 +289,6 @@ public final class KruizeObject {
                 ", deployment_name='" + deployment_name + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
-                ", containers=" + containers +
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +

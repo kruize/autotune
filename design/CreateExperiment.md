@@ -26,7 +26,7 @@ tuned.
 ```
 
 * Failure
-    * Duplicate Experiment name.
+  * Duplicate Experiment name.
   ```
   {
   "message": "Experiment name already exsist with Kruize. View registered experiments at /listExperiments",
@@ -35,7 +35,7 @@ tuned.
   "status": "FAILED"
   }
   ```
-    * Mandatory attribute value are missing.
+  * Mandatory attribute value are missing.
   ```
   {
   "message": "Mandatory attributes value missing.",
