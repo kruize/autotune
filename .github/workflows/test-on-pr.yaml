@@ -50,7 +50,7 @@ jobs:
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
           sleep 20
-          ./ffdc.sh -d ${GITHUB_WORKSPACE}
+          ./scripts/ffdc.sh -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
         run: |
@@ -103,7 +103,7 @@ jobs:
           cat ./manifests/crc/kruize-crc-minikube.yaml
           kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
           sleep 120
-          ./ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
         run: |
