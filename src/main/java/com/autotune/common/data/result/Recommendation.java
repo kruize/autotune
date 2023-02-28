@@ -38,7 +38,7 @@ public class Recommendation {
     @SerializedName(AutotuneConstants.JSONKeys.ERROR_MSG)
     private String errorMessage;
 
-    private HashMap<AnalyzerConstants.CapacityMax, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
 
     public Recommendation(Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.monitoringStartTime = monitoringStartTime;
@@ -89,11 +89,11 @@ public class Recommendation {
         this.confidence_level = confidence_level;
     }
 
-    public HashMap<AnalyzerConstants.CapacityMax, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getConfig() {
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getConfig() {
         return config;
     }
 
-    public void setConfig(HashMap<AnalyzerConstants.CapacityMax, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
+    public void setConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
         this.config = config;
     }
 
