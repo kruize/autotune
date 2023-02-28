@@ -2,7 +2,6 @@ package com.autotune.experimentManager.data.input.metrics;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
@@ -34,18 +33,21 @@ public class EMMetricResult implements ConvertToJSON {
         return emMetricGenericResults;
     }
 
+    public void setEmMetricGenericResults(EMMetricGenericResults emMetricGenericResults) {
+        this.emMetricGenericResults = emMetricGenericResults;
+    }
 
     public EMMetricPercentileResults getEmMetricPercentileResults() {
         return emMetricPercentileResults;
     }
 
-
+    public void setEmMetricPercentileResults(EMMetricPercentileResults emMetricPercentileResults) {
+        this.emMetricPercentileResults = emMetricPercentileResults;
+    }
 
     public boolean isPercentileResultsAvailable() {
         return isPercentileResultsAvailable;
     }
-
-
 
     public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
         isPercentileResultsAvailable = percentileResultsAvailable;

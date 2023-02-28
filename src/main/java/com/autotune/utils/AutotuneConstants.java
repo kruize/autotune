@@ -16,8 +16,6 @@
 
 package com.autotune.utils;
 
-import com.autotune.experimentManager.utils.EMUtil;
-
 /**
  * Constants for Autotune module
  */
@@ -35,6 +33,7 @@ public class AutotuneConstants {
     public static final class StartUpMode {
         public static final String AUTOTUNE_MODE = "AUTOTUNE_MODE";
         public static final String EM_ONLY_MODE = "EM_ONLY";
+
         private StartUpMode() {
         }
     }
@@ -47,6 +46,7 @@ public class AutotuneConstants {
         public static final String URL = "url";
         public static final String OPERATION = "operation";
         public static final String SEARCHSPACE = "search_space";
+
         private HpoOperations() {
         }
     }
@@ -151,10 +151,10 @@ public class AutotuneConstants {
         public static final String DURATION = "duration";
         public static final String PERCENTILE_INFO = "percentile_info";
         public static final String UNITS = "units";
-
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
+
         private JSONKeys() {
         }
     }
@@ -190,68 +190,83 @@ public class AutotuneConstants {
         public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
+
         private TimeUnitsExt() {
         }
     }
 
     public static class TimeConv {
+        public static final int NO_OF_MSECS_IN_SEC = 1000;
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 12;
-        public static final int NO_OF_MSECS_IN_SEC = 1000;
+
         private TimeConv() {
         }
     }
 
     public static class Patterns {
-        private Patterns() { }
         public static final String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
         public static final String WHITESPACE_PATTERN = "\\s";
         public static final String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+
+        private Patterns() {
+        }
     }
 
     public static class SupportedDatasources {
-        private SupportedDatasources() { }
         public static final String PROMETHEUS = "prometheus";
+
+        private SupportedDatasources() {
+        }
     }
 
     public static class HttpConstants {
-        private HttpConstants() { }
+        private HttpConstants() {
+        }
+
         public static class MethodType {
-            private MethodType() { }
             public static final String GET = "GET";
+
+            private MethodType() {
+            }
         }
     }
 
     public static class CycleTypes {
-        private CycleTypes() { }
         public static final String WARMUP = "WarmUpCycle";
         public static final String MEASUREMENT = "MeasurementCycle";
+
+        private CycleTypes() {
+        }
     }
 
     public static class ConvUnits {
-        private ConvUnits() { }
-        public static class Memory {
-            private Memory() { }
-            private static final int PHYSICAL_STANDARD = 1000;
-            private static final int BINARY_STANDARD = 1024;
-            private static final double INVERSE_PHYSICAL_STANDARD = 0.001;
-            private static final double INVERSE_BINARY_STANDARD = 0.0009765625;
-            public static final int BITS_IN_BYTE = 8;
-            public static final int BYTES_IN_KILOBYTES = PHYSICAL_STANDARD;
-            public static final int BYTES_IN_KIBIBYTES = BINARY_STANDARD;
-            public static final int KILOBYTES_IN_MEGABYTES = PHYSICAL_STANDARD;
-            public static final int KIBIBYTES_IN_MEBIBYTES = BINARY_STANDARD;
-            public static final int MEGABYTES_IN_GIGABYTES = PHYSICAL_STANDARD;
-            public static final int MEBIBYTES_IN_GIBIBYTES = BINARY_STANDARD;
+        private ConvUnits() {
+        }
 
+        public static class Memory {
+            public static final int BITS_IN_BYTE = 8;
+            private static final int PHYSICAL_STANDARD = 1000;
+            public static final int BYTES_IN_KILOBYTES = PHYSICAL_STANDARD;
+            public static final int KILOBYTES_IN_MEGABYTES = PHYSICAL_STANDARD;
+            public static final int MEGABYTES_IN_GIGABYTES = PHYSICAL_STANDARD;
+            private static final int BINARY_STANDARD = 1024;
+            public static final int BYTES_IN_KIBIBYTES = BINARY_STANDARD;
+            public static final int KIBIBYTES_IN_MEBIBYTES = BINARY_STANDARD;
+            public static final int MEBIBYTES_IN_GIBIBYTES = BINARY_STANDARD;
+            private static final double INVERSE_PHYSICAL_STANDARD = 0.001;
             // Inverse
             public static final double BYTES_TO_KILOBYTES = INVERSE_PHYSICAL_STANDARD;
-            public static final double BYTES_TO_KIBIBYTES = INVERSE_BINARY_STANDARD;
             public static final double KILOBYTES_TO_MEGABYTES = INVERSE_PHYSICAL_STANDARD;
-            public static final double KIBIBYTES_TO_MEBIBYTES = INVERSE_BINARY_STANDARD;
             public static final double MEGABYTES_TO_GIGABYTES = INVERSE_PHYSICAL_STANDARD;
+            private static final double INVERSE_BINARY_STANDARD = 0.0009765625;
+            public static final double BYTES_TO_KIBIBYTES = INVERSE_BINARY_STANDARD;
+            public static final double KIBIBYTES_TO_MEBIBYTES = INVERSE_BINARY_STANDARD;
             public static final double MEBIBYTES_TO_GIBIBYTES = INVERSE_BINARY_STANDARD;
+
+            private Memory() {
+            }
         }
     }
 

@@ -1,0 +1,32 @@
+[{
+        "experiment_name": "{{experiment_name}}",
+        "deployment_name": "{{deployment_name}}",
+        "namespace": "{{namespace}}",
+        "performanceProfile": "{{performanceProfile}}",
+	"slo": {
+        	"slo_class": "{{slo_class}}",
+        	"direction": "{{direction}}"
+    	},
+        "mode": "{{mode}}",
+        "targetCluster": "{{targetCluster}}",
+        "containers": [
+            {
+                "image": "{{image}}",
+                "container_name": "{{container_name}}"
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "{{measurement_duration}}"
+        },
+        "recommendation_settings": {
+            "threshold": "{{threshold}}"
+        },
+        "selector": {
+            "matchLabel": "{{matchLabel}}",
+            "matchLabelValue": "{{matchLabelvalue}}",
+            "matchRoute": "",
+            "matchURI": "",
+            "matchService": ""
+        }
+}]
+

@@ -77,17 +77,17 @@ see [Update results](/design/UpdateResults.md)
          "results": {
             "value" : 1.1,
             "units": "cores",
-           "aggregation_info": {
-             "sum": 4.4,
-             "avg": 1.1,
-             "units": "cores"
-           }
+            "aggregation_info": {
+               "sum": 4.4,
+               "avg": 1.1,
+               "units": "cores"
+            }
          }
        },
        "cpuLimit": {
          "results": {
-            "value" : 0.5,
-            "units": "cores",
+           "value" : 0.5,
+           "units": "cores",
            "aggregation_info": {
              "sum": 2.0,
              "avg": 0.5,
@@ -97,8 +97,8 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuUsage": {
          "results": {
-            "value" : 0.12,
-            "units": "cores",
+           "value" : 0.12,
+           "units": "cores",
            "aggregation_info": {
              "min": 0.14,
              "max": 0.84,
@@ -110,8 +110,8 @@ see [Update results](/design/UpdateResults.md)
        },
        "cpuThrottle": {
          "results": {
-            "value" : 0.045,
-            "units": "cores",
+           "value" : 0.045,
+           "units": "cores",
            "aggregation_info": {
              "sum": 0.19,
              "max": 0.09,
@@ -122,8 +122,8 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryRequest": {
          "results": {
-            "value" : 50.12,
-            "units": "MiB",
+           "value" : 50.12,
+           "units": "MiB",
            "aggregation_info": {
              "sum": 250.85,
              "avg": 50.21,
@@ -133,8 +133,8 @@ see [Update results](/design/UpdateResults.md)
        },
        "memoryLimit": {
          "results": {
-            "value" : 100,
-            "units": "MiB",
+           "value" : 100,
+           "units": "MiB",
            "aggregation_info": {
              "sum": 500,
              "avg": 100,
@@ -156,18 +156,18 @@ see [Update results](/design/UpdateResults.md)
          }
        },
        "memoryRSS": {
-        "results": {
-            "value": 31.91,
-            "units": "MiB",
-            "aggregation_info": {
-                "min": 50.6,
-                "max": 123.6,
-                "sum": 123.6,
-                "avg": 31.91,
-                "units": "MiB"
-                }
-            }
-        }
+         "results": {
+           "value": 31.91,
+           "units": "MiB",
+           "aggregation_info": {
+             "min": 50.6,
+             "max": 123.6,
+             "sum": 123.6,
+             "avg": 31.91,
+             "units": "MiB"
+           }
+         }
+       }
      }
    }]
  }]

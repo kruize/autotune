@@ -15,9 +15,22 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.common.data.result.Recommendation;
+import com.autotune.common.data.result.StartEndTimeStampResults;
+
+import java.sql.Timestamp;
+import java.util.HashMap;
+
 public class ContainerObject {
     private String image;
     private String container_name;
+    private HashMap<Timestamp, StartEndTimeStampResults> results;
+    private HashMap<Timestamp, HashMap<String, Recommendation>> recommendation;
+
+    public ContainerObject(String container_name, String image) {
+        this.image = image;
+        this.container_name = container_name;
+    }
 
     public String getImage() {
         return image;
@@ -33,5 +46,30 @@ public class ContainerObject {
 
     public void setContainer_name(String container_name) {
         this.container_name = container_name;
+    }
+
+    public HashMap<Timestamp, StartEndTimeStampResults> getResults() {
+        return results;
+    }
+
+    public void setResults(HashMap<Timestamp, StartEndTimeStampResults> results) {
+        this.results = results;
+    }
+
+    public HashMap<Timestamp, HashMap<String, Recommendation>> getRecommendation() {
+        return recommendation;
+    }
+
+    public void setRecommendation(HashMap<Timestamp, HashMap<String, Recommendation>> recommendation) {
+        this.recommendation = recommendation;
+    }
+
+    @Override
+    public String toString() {
+        return "ContainerObject{" +
+                "image='" + image + '\'' +
+                ", container_name='" + container_name + '\'' +
+                ", results=" + results +
+                '}';
     }
 }

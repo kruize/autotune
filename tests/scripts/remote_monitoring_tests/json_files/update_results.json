@@ -1,0 +1,96 @@
+[{
+ "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+ "start_timestamp": "2022-01-23T18:25:43.511Z",
+ "end_timestamp": "2022-01-23T18:25:43.511Z",
+ "deployments": [{
+   "deployment_name": "tfb-qrh-sample",
+   "namespace": "default",
+   "pod_metrics": [],
+   "containers": [{
+     "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+     "container_name": "tfb-server",
+     "container_metrics": {
+       "cpuRequest" : {
+         "results": {
+           "aggregation_info": {
+             "sum": 4.4,
+             "avg": 1.1,
+             "units": "cores"
+           }
+         }
+       },
+       "cpuLimit": {
+         "results": {
+           "aggregation_info": {
+             "sum": 2.0,
+             "avg": 0.5,
+             "units": "cores"
+           }
+         }
+       },
+       "cpuUsage": {
+         "results": {
+           "aggregation_info": {
+             "sum": 2.14,
+             "min": 0.14,
+             "max": 0.84,
+             "avg": 0.12,
+             "units": "cores"
+           }
+         }
+       },
+       "cpuThrottle": {
+         "results": {
+           "aggregation_info": {
+             "sum": 0.19,
+             "max": 0.09,
+             "avg": 0.045,
+             "units": "cores"
+           }
+         }
+       },
+       "memoryRequest": {
+         "results": {
+           "aggregation_info": {
+             "sum": 250.85,
+             "avg": 50.21,
+             "units": "MiB"
+           }
+         }
+       },
+       "memoryLimit": {
+         "results": {
+           "aggregation_info": {
+             "sum": 500,
+             "avg": 100,
+             "units": "MiB"
+           }
+         }
+       },
+       "memoryUsage": {
+         "results": {
+           "aggregation_info": {
+             "min": 50.6,
+             "max": 198.50,
+             "sum": 198.50,
+             "avg": 40.1,
+             "units": "MiB"
+           }
+         }
+       },
+       "memoryRSS": {
+         "results": {
+           "aggregation_info": {
+             "min": 50.6,
+             "max": 123.6,
+             "sum": 123.6,
+             "avg": 31.91,
+             "units": "MiB"
+           }
+         }
+       }
+     }
+   }]
+ }]
+}]
+

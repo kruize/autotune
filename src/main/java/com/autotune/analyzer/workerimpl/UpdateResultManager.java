@@ -20,6 +20,7 @@ import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.data.ExperimentInterface;
 import com.autotune.analyzer.data.ExperimentInterfaceImpl;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.utils.GenerateRecommendation;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
@@ -68,6 +69,11 @@ public class UpdateResultManager implements AutotuneWorker {
                         runExperiment.send();
                     })
             );
+        }
+        try {
+            GenerateRecommendation.generateRecommendation(kruizeObject);
+        } catch (Exception e) {
+            LOGGER.error("Not able to generate recommendation for expName: {} ", kruizeObject.getExperimentName());
         }
     }
 }
