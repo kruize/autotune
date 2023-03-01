@@ -19,7 +19,6 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.result.ViewRecommendation;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
@@ -42,7 +41,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
