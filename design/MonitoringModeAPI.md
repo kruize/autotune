@@ -323,7 +323,18 @@ see [Update results](/design/UpdateResults.md)
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
-**Request**
+**Attributes:**
+
+`experiment_name` - Passing Experiment Name as the parameter to the API returns the recommendation of the particular experiment if it exists
+
+**Request with experiment name parameter**
+
+`GET /listRecommendations`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listRecommendations?experiment_name=<experiment_name>`
+
+**Request without Parameter**
+
 `GET /listRecommendations`
 
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listRecommendations`
