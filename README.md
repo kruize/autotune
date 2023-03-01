@@ -27,7 +27,7 @@ See the [Autotune Installation](/docs/autotune_install.md) for more details on t
 
 ## REST API
 
-See the [API README](/design/API.md) for more details on the Autotune REST API.
+See the [API README](/design/KruizeAPI.md) for more details on the Autotune REST API.
 
 ## Autotune Architecture
 

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.analyzer.k8sObjects.AutotuneConfig;
+import com.autotune.common.k8sObjects.AutotuneConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,18 +46,17 @@ import java.util.Map;
 public class ApplicationServiceStack
 {
 	private final String stackName;
-	private final String namespace;
+	private final String containerName;
 	private Map<String, AutotuneConfig> applicationServiceStackLayers;
 
-	public ApplicationServiceStack(String stackName, String namespace) {
+	public ApplicationServiceStack(String stackName, String containerName) {
 		this.stackName = stackName;
-		this.namespace = namespace;
-
+		this.containerName = containerName;
 		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
-	public String getNamespace() {
-		return namespace;
+	public String getContainerName() {
+		return containerName;
 	}
 
 	public String getStackName() {
@@ -68,15 +67,11 @@ public class ApplicationServiceStack
 		return applicationServiceStackLayers;
 	}
 
-	public void setApplicationServiceStackLayers(Map<String, AutotuneConfig> applicationServiceStackLayers) {
-		this.applicationServiceStackLayers = applicationServiceStackLayers;
-	}
-
 	@Override
 	public String toString() {
 		return "ApplicationServiceStack{" +
 				"stackName='" + stackName + '\'' +
-				", namespace='" + namespace + '\'' +
+				", containerName='" + containerName + '\'' +
 				", stackLayers=" + applicationServiceStackLayers +
 				'}';
 	}

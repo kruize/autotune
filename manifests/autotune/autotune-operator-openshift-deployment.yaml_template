@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autotune
+  labels:
+    app: autotune
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: autotune
+  template:
+    metadata:
+      labels:
+        app: autotune
+        name: autotune
+        operatorframework.io/os.linux: supported
+    spec:
+      serviceAccountName: autotune-sa
+      automountServiceAccountToken: false
+      containers:
+      - name: autotune-hpo
+        image: "{{ HPO_IMAGE }}"
+        imagePullPolicy: Always
+        env:
+          - name: LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: logging_level
+                optional: true
+          - name: ROOT_LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: root_logging_level
+                optional: true
+      - name: autotune
+        image: "{{ AUTOTUNE_IMAGE }}"
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: cluster_type
+          - name: K8S_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: k8s_type
+          - name: AUTH_TYPE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: auth_type
+                optional: true
+          - name: AUTH_TOKEN
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: auth_token
+                optional: true
+          - name: MONITORING_AGENT
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: monitoring_agent
+          - name: MONITORING_SERVICE
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: monitoring_service
+          - name: MONITORING_AGENT_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: monitoring_agent_endpoint
+          - name: LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: logging_level
+                optional: true
+          - name: ROOT_LOGGING_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: autotune-config
+                key: root_logging_level
+                optional: true
+        envFrom: 
+          - configMapRef:
+              name: autotune-config
+        ports:
+         - name: autotune-port
+           containerPort: 8080
+        volumeMounts:
+          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            name: kube-api-access
+            readOnly: true
+      volumes:
+        - name: kube-api-access
+          projected:
+            defaultMode: 420
+            sources:
+            - serviceAccountToken:
+                expirationSeconds: 3600
+                path: token
+            - configMap:
+                items:
+                - key: ca.crt
+                  path: ca.crt
+                name: kube-root-ca.crt
+            - downwardAPI:
+                items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autotune
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: autotune
+spec:
+  type: NodePort
+  selector:
+    app: autotune
+  ports:
+  - name: autotune-port
+    port: 8080
+    targetPort: 8080

@@ -1,0 +1,111 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  #name must match the spec fields below, and be in the form: <plural>.<group>
+  name: kruizeperformanceprofiles.recommender.com
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: "recommender.com"
+  names:
+    plural: kruizeperformanceprofiles
+    singular: kruizeperformanceprofile
+    #types can be identified with this tag
+    kind: KruizePerformanceProfile
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+          of an object. Servers should convert recognized schemas to the latest
+          internal value, and may reject unrecognized values. More info: https://git.k8s.io/
+          community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/
+            community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          profile_version:
+            description: 'Version of the profile'
+            type: number
+          k8s_type:
+            description: 'minikube or openshift'
+            type: string
+          slo:
+            description: 'Service Level Objective '
+            type: object
+            properties:
+              slo_class:
+                description: 'a standard slo "bucket" defined by Kruize'
+                type: string
+              direction:
+                description: 'can be maximize or minimize'
+                type: string
+              objective_function:
+                description: 'Key to search for in the query response'
+                properties:
+                  function_type:
+                    description: 'can be expression or source'
+                    type: string
+                  expression:
+                    description: 'needs to be an algebraic expression'
+                    type: string
+                required:
+                  - function_type
+                type: object
+              function_variables:
+                description: 'Variables to be used in the objective_function'
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: 'name of the variable'
+                      type: string
+                    datasource:
+                      description: 'datasource of the query'
+                      type: string
+                    value_type:
+                      description: 'can be double or integer'
+                      type: string
+                    kubernetes_object:
+                      description: 'k8s object that this query is tied to: "deployment", "pod" or "container"'
+                      type: string
+                    query:
+                      description: 'one of the query or aggregation_functions is mandatory'
+                      type: string
+                    aggregation_functions:
+                      description: 'one of the query or aggregation_functions is mandatory'
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          function:
+                            description: 'aggregate functions associated with this variable'
+                            type: string
+                          query:
+                            description: 'query'
+                            type: string
+                          versions:
+                            description: 'Any specific versions that this query is tied to'
+                            type: string
+                        required:
+                        - function
+                        - query
+                  required:
+                  - name
+                  - datasource
+                  - value_type
+            required:
+            - direction
+            - objective_function
+            - function_variables
+        required:
+        - slo

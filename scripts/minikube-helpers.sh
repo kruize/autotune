@@ -18,6 +18,9 @@
 ###############################  v MiniKube v #################################
 
 function minikube_first() {
+	#Create a namespace
+	echo "Create autotune namespace ${autotune_ns}"
+	kubectl create namespace ${autotune_ns}
 
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	echo "Info: One time setup - Create a service account to deploy autotune"
@@ -34,12 +37,19 @@ function minikube_first() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLE_CRD}
 	check_err "Error: Failed to create autotunequeryvariable CRD"
 
+	${kubectl_cmd} apply -f ${AUTOTUNE_PERF_PROFILE_CRD}
+	check_err "Error: Failed to create autotunePerformanceProfile CRD"
+
 	${kubectl_cmd} apply -f ${AUTOTUNE_ROLE_MANIFEST}
 	check_err "Error: Failed to create role"
 
 	sed -e "s|{{ AUTOTUNE_NAMESPACE }}|${autotune_ns}|" ${AUTOTUNE_RB_MANIFEST_TEMPLATE} > ${AUTOTUNE_RB_MANIFEST}
 	${kubectl_cmd} apply -f ${AUTOTUNE_RB_MANIFEST}
 	check_err "Error: Failed to create role binding"
+
+	sed -e "s|{{ AUTOTUNE_NAMESPACE }}|${autotune_ns}|" -e "s|{{ CLUSTER_TYPE }}|minikube|"  ${AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE} > ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
+	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
+	check_err "Error: Failed to create query variables"
 
 	${kubectl_cmd} apply -f ${SERVICE_MONITOR_MANIFEST}
 	check_err "Error: Failed to create service monitor for Prometheus"
@@ -56,18 +66,18 @@ function minikube_deploy() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGS}
 
 	echo
-	echo "Deploying AutotuneQueryVariable objects"
-	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLES}
-	
+	echo "Deploying Performance Profile objects"
+	${kubectl_cmd} apply -f ${AUTOTUNE_PERF_PROFILE_ROS}
+
 	echo "Info: Deploying autotune yaml to minikube cluster"
 
 	# Replace autotune docker image in deployment yaml
 	sed -e "s|{{ AUTOTUNE_IMAGE }}|${AUTOTUNE_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE} > ${AUTOTUNE_DEPLOY_MANIFEST}
-	sed -i "s|{{ OPTUNA_IMAGE }}|${OPTUNA_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST}
+	sed -i "s|{{ HPO_IMAGE }}|${HPO_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST}
 
 	${kubectl_cmd} apply -f ${AUTOTUNE_DEPLOY_MANIFEST}
 	sleep 2
-	check_running autotune
+	check_running autotune ${autotune_ns}
 	if [ "${err}" != "0" ]; then
 		# Indicate deploy failed on error
 		exit 1
@@ -98,11 +108,7 @@ function minikube_start() {
 function check_prometheus_installation() {
 	echo
 	echo "Info: Checking pre requisites for minikube..."
-	kubectl_tool=$(which kubectl)
-	check_err "Error: Please install the kubectl tool"
-	# Check to see if kubectl supports kustomize
-	kubectl --help | grep "kustomize" >/dev/null
-	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
+	check_kustomize
 
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
@@ -123,6 +129,10 @@ function minikube_terminate() {
 	echo -n "###   Removing autotune for minikube"
 
 	kubectl_cmd="kubectl -n ${autotune_ns}"
+
+	echo
+	echo "Removing Performance Profile"
+	${kubectl_cmd} delete -f ${AUTOTUNE_PERF_PROFILE_CRD} 2>/dev/null
 
 	echo
 	echo "Removing autotune"
@@ -170,4 +180,23 @@ function minikube_terminate() {
 
 	rm ${AUTOTUNE_DEPLOY_MANIFEST}
 	rm ${AUTOTUNE_RB_MANIFEST}
+	rm ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
+}
+
+# Deploy kruize in remote monitoring mode
+function minikube_crc_start() {
+	echo
+	echo "###   Installing kruize for minikube"
+	echo
+
+	MANIFEST_FILE=$KRUIZE_DEPLOY_MANIFEST_MINIKUBE
+	autotune_ns="monitoring"
+	kruize_crc_start
+}
+
+function minikube_crc_terminate() {
+	echo -n "###   Removing Kruize for minikube"
+	echo
+	kubectl -n monitoring delete svc kruize
+	kubectl -n monitoring delete deployment kruize
 }

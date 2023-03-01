@@ -15,40 +15,55 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.deployment.AutotuneDeployment;
+import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.analyzer.deployment.InitializeDeployment;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.services.*;
-import com.autotune.analyzer.utils.ServerContext;
+import com.autotune.common.performanceProfiles.PerformanceProfile;
+import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class Analyzer
-{
-	public static void start(ServletContextHandler contextHandler) {
-		try {
-			InitializeDeployment.setup_deployment_info();
-		} catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
-			e.printStackTrace();
-			// Current deployment not supported. Exit
-			System.exit(1);
-		}
-		AutotuneDeployment autotuneDeployment = new AutotuneDeployment();
+public class Analyzer {
+    public static void start(ServletContextHandler contextHandler) {
+        try {
+            InitializeDeployment.setup_deployment_info();
 
-		try {
-			addServlets(contextHandler);
-			AutotuneDeployment.getAutotuneObjects(autotuneDeployment);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
+            e.printStackTrace();
+            // Current deployment not supported. Exit
+            System.exit(1);
+        }
+        Experimentator.start();
+        KruizeDeployment kruizeDeployment = new KruizeDeployment();
 
-	public static void addServlets(ServletContextHandler context) {
-		context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
-		context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
-		context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
-		context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
-		context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
-	}
+        try {
+            addServlets(contextHandler);
+            PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
+            KruizeDeployment.getKruizeObjects(kruizeDeployment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addServlets(ServletContextHandler context) {
+        context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
+        context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
+        context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
+        context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
+        context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
+        context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
+        context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
+        context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
+        context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
+        context.addServlet(ListRecommendation.class, ServerContext.RECOMMEND_RESULTS);
+        context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
+        context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
+
+        // Adding UI support API's
+        context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
+        context.addServlet(ListDeploymentsInNamespace.class, ServerContext.LIST_DEPLOYMENTS);
+    }
 }

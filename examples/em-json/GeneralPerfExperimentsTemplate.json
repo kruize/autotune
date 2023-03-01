@@ -1,0 +1,212 @@
+[
+    {
+      "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+      "resource": {
+        "namespace": "default",
+        "deployment_name": "tfb-qrh-sample"
+      },
+      "datasource_info": {
+        "prometheus1": {
+          "url": "http://10.101.144.137:9090",
+          "provider": "prometheus"
+        }
+      },
+      "settings": {
+        "do_experiment": true,
+        "do_monitoring": true,
+        "wait_for_load": true,
+        "trial_settings": {
+          "measurement_cycles": "3",
+          "warmup_duration": "1min",
+          "warmup_cycles": "3",
+          "measurement_duration": "1min",
+          "iterations": "3"
+        },
+        "deployment_settings": {
+          "deployment_policy": {
+            "type": "rollingUpdate"
+          }
+        }
+      },
+      "pod_metrics": {
+        "request_sum": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_sum"
+        },
+        "request_count": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_count"
+        }
+      },
+      "container_metrics": {
+        "container_name": {
+          "memoryRequest": {
+            "name": "memoryRequest",
+            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "double"
+          },
+          "gc": {
+            "name": "gc",
+            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "categorical"
+          },
+          "cpuRequest": {
+            "name": "cpuRequest",
+            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+            "datasource": "prometheus",
+            "valueType": "double"
+          }
+        }
+      },
+      "trials": {
+        "0": {
+          "config": {
+            "image": "kruize/tfb-qrh:2.9.0.F_mm",
+            "container_name": "tfb-server",
+            "requests": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "limits": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "env": [
+              {
+                "name": "JDK_JAVA_OPTIONS",
+                "additionalProperties": {},
+                "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+              }
+            ]
+          }
+        }
+      },
+      "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+    },
+    {
+      "experiment_name": "pet-resteasy-autotune-max-throughput",
+      "resource": {
+        "namespace": "default",
+        "deployment_name": "petclinic-sample"
+      },
+      "datasource_info": {
+        "prometheus1": {
+          "url": "http://10.101.144.137:9090",
+          "provider": "prometheus"
+        }
+      },
+      "settings": {
+        "do_monitoring": true,
+        "do_experiment": true,
+        "wait_for_load": true,
+        "trial_settings": {
+          "measurement_cycles": "3",
+          "warmup_duration": "1min",
+          "warmup_cycles": "3",
+          "measurement_duration": "1min",
+          "iterations": "3"
+        },
+        "deployment_settings": {
+          "deployment_policy": {
+            "type": "rollingUpdate"
+          }
+        }
+      },
+      "pod_metrics": {
+        "request_sum": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_sum"
+        },
+        "request_count": {
+          "datasource": "prometheus1",
+          "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+          "name": "request_count"
+        }
+      },
+      "container_metrics": {
+        "container_name": {
+          "memoryRequest": {
+            "name": "memoryRequest",
+            "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "double"
+          },
+          "gc": {
+            "name": "gc",
+            "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+            "datasource": "prometheus",
+            "valueType": "categorical"
+          },
+          "cpuRequest": {
+            "name": "cpuRequest",
+            "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+            "datasource": "prometheus",
+            "valueType": "double"
+          }
+        }
+      },
+      "trials": {
+        "0": {
+          "config": {
+            "image": "kruize/spring_petclinic:2.2.0-jdk-11.0.8-openj9-0.21.0",
+            "container_name": "petclinic-tomcat",
+            "requests": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "limits": {
+              "cpu": {
+                "amount": "2.11",
+                "format": "",
+                "additionalProperties": {}
+              },
+              "memory": {
+                "amount": "160.0",
+                "format": "",
+                "additionalProperties": {}
+              }
+            },
+            "env": [
+              {
+                "name": "JDK_JAVA_OPTIONS",
+                "additionalProperties": {},
+                "value": " -server -XX:MaxRAMPercentage=70 -XX:+AllowParallelDefineClass -XX:MaxInlineLevel=21 -XX:+UseZGC -XX:+TieredCompilation -Dquarkus.thread-pool.queue-size=27 -Dquarkus.thread-pool.core-threads=9"
+              }
+            ]
+          }
+        }
+      },
+      "trial_result_url": "http://localhost:8080/listExperiments?experiment_name=quarkus-resteasy-autotune-min-http-response-time-db"
+    }
+]
+
+

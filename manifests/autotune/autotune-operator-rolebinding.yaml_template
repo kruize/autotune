@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: autotune-crb
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: autotune-cr
+subjects:
+- kind: ServiceAccount
+  name: autotune-sa
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: autotune-prometheus-crb
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: prometheus-operator
+subjects:
+- kind: ServiceAccount
+  name: autotune-sa
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: autotune-docker-crb
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: system:build-strategy-docker
+subjects:
+- kind: ServiceAccount
+  name: autotune-sa
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: autotune-scc-crb
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: system:openshift:scc:anyuid
+subjects:
+- kind: ServiceAccount
+  name: autotune-sa
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"

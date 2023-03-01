@@ -20,11 +20,12 @@
 function check_running() {
 	
 	check_pod=$1
-	prometheus_ns="monitoring"
-	kubectl_cmd="kubectl -n ${prometheus_ns}"
+	check_pod_ns=$2
+	kubectl_cmd="kubectl -n ${check_pod_ns}"
 
-	echo "Info: Waiting for ${check_pod} to come up..."
+	echo "Info: Waiting for ${check_pod} to come up....."
 	err_wait=0
+	counter=0
 	while true;
 	do
 		sleep 2
@@ -47,12 +48,26 @@ function check_running() {
 				;;
 			*)
 				sleep 2
+				if [ $counter == 200 ]; then
+					${kubectl_cmd} describe pod ${scheck_pod}
+					echo "ERROR: Prometheus Pods failed to come up!"
+					exit -1
+				fi
+				((counter++))
 				;;
 		esac
 	done
 
 	${kubectl_cmd} get pods | grep ${check_pod}
 	echo
+}
+
+function check_kustomize() {
+	kubectl_tool=$(which kubectl)
+	check_err "Error: Please install the kubectl tool"
+	# Check to see if kubectl supports kustomize
+	kubectl --help | grep "kustomize" >/dev/null
+	check_err "Error: Please install a newer version of kubectl tool that supports the kustomize option (>=v1.12)"
 }
 
 # Check error code from last command, exit on error
@@ -62,4 +77,20 @@ check_err() {
 		echo "$*"
 		exit -1
 	fi
+}
+
+# Deploy kruize in remote monitoring mode with the specified docker image
+kruize_crc_start() {
+	echo "$MANIFEST_FILE $autotune_ns"
+	MANIFEST_FILE_OLD="/tmp/kruize.yaml"
+
+	cp $MANIFEST_FILE $MANIFEST_FILE_OLD
+	sed -e "s/image: \"kruize\/autotune_operator:${AUTOTUNE_VERSION}\"/image: \"${AUTOTUNE_DOCKER_IMAGE//\//\\\/}\"/g" ${MANIFEST_FILE_OLD} > ${MANIFEST_FILE}
+	kubectl apply -f ${MANIFEST_FILE}
+	check_running kruize ${autotune_ns}
+	if [ "${err}" != "0" ]; then
+		# Indicate deploy failed on error
+		exit 1
+	fi
+	cp ${MANIFEST_FILE_OLD} ${MANIFEST_FILE}
 }

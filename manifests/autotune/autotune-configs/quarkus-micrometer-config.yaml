@@ -1,0 +1,68 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneConfig"
+metadata:
+  name: "quarkus"
+layer_name: quarkus
+layer_level: 2
+details: quarkus tunables
+layer_presence:
+  label:
+  - name: app.kubernetes.io/layer
+    value: quarkus
+tunables:
+# upper_bound is set to 8 times of cpu.
+- name: quarkus.thread-pool.core-threads
+  description: 'The core thread pool size. This number of threads will always be kept alive.'
+  value_type: integer
+  upper_bound: '10'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+
+- name: quarkus.thread-pool.queue-size
+  description: 'The queue size'
+  value_type: integer
+  upper_bound: '100'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
+- name: quarkus.hibernate-orm.jdbc.statement-fetch-size
+  description: 'How many rows are fetched at a time by the JDBC driver.'
+  value_type: integer
+  upper_bound: '50'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
+# Set -Dquarkus.datasource.jdbc.min-size=<> -Dquarkus.datasource.jdbc.initial-size=<> to avoid initial-size > min-size.
+- name: quarkus.datasource.jdbc.min-size
+  description: 'minimum size of jdbc datasource.'
+  value_type: integer
+  upper_bound: '12'
+  lower_bound: '1'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage
+
+# lowerbound should be >= upperbound of quarkus.datasource.jdbc.min-size
+- name: quarkus.datasource.jdbc.max-size
+  description: 'maximum size of jdbc datasource. Default is 20'
+  value_type: integer
+  upper_bound: '90'
+  lower_bound: '12'
+  step: 1
+  slo_class:
+  - response_time
+  - throughput
+  - resource_usage

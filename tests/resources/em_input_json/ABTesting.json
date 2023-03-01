@@ -1,0 +1,82 @@
+[
+  {
+    "experiment_name": "ABTestingExperiment",
+    "mode": "Apply/MetricCollectionOnly",
+    "environment": "QA",
+    "resource": {
+      "namespace": "default",
+      "deployment_name": "tfb-qrh-sample-0"
+    },
+    "datasource_info": {
+      "prometheus1": {
+        "url": "http://10.101.144.137:9090",
+        "provider": "prometheus"
+      }
+    },
+    "settings": {
+      "do_experiment": true,
+      "do_monitoring": true,
+      "wait_for_load": true,
+      "trial_settings": {
+        "measurement_cycles": "3",
+        "warmup_duration": "1min",
+        "warmup_cycles": "3",
+        "measurement_duration": "1min",
+        "iterations": "3"
+      },
+      "deployment_settings": {
+        "deployment_policy": {
+          "type": "rollingUpdate"
+        }
+      }
+    },
+    "pod_metrics": {
+      "request_sum": {
+        "datasource": "prometheus1",
+        "query": "rate(http_server_requests_seconds_sum{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+        "name": "request_sum"
+      },
+      "request_count": {
+        "datasource": "prometheus1",
+        "query": "rate(http_server_requests_seconds_count{method=\"GET\",outcome=\"SUCCESS\",status=\"200\",uri=\"/db\",}[1m])",
+        "name": "request_count"
+      }
+    },
+    "container_metrics": {
+      "container_name": {
+        "memoryRequest": {
+          "name": "memoryRequest",
+          "query": "container_memory_working_set_bytes{$CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+          "datasource": "prometheus",
+          "valueType": "double"
+        },
+        "gc": {
+          "name": "gc",
+          "query": "jvm_memory_used_bytes{area=\"heap\", $CONTAINER_LABEL$=\"\", $POD_LABEL$=\"$POD$\"}",
+          "datasource": "prometheus",
+          "valueType": "categorical"
+        },
+        "cpuRequest": {
+          "name": "cpuRequest",
+          "query": "(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!=\"POD\", $POD_LABEL$=\"$POD$\"}[1m])",
+          "datasource": "prometheus",
+          "valueType": "double"
+        }
+      }
+    },
+    "trials": {
+      "A": {
+        "config": {
+          "image": "kruize/tfb-qrh:1.13.2.F_mm.v1",
+          "container_name": "tfb-server"
+        }
+      },
+      "B": {
+        "config": {
+          "image": "kruize/tfb-qrh:2.9.0.F_mm",
+          "container_name": "tfb-server"
+        }
+      }
+    }
+  }
+]

@@ -30,7 +30,9 @@ configmap_minikube_testcases=("minikube-invalid-cluster-type"
 "minikube-invalid-k8s-type"
 "minikube-invalid-monitoring-agent"
 "minikube-invalid-monitoring-service"
-"minikube-debug-config")
+"minikube-debug-config"
+"minikube-root-debug-config"
+)
 
 # String to be searched in minikube configmap
 declare -A configmap_minikube_find
@@ -38,7 +40,8 @@ configmap_minikube_find=([minikube-invalid-cluster-type]='kubernetes'
 [minikube-invalid-k8s-type]='minikube'
 [minikube-invalid-monitoring-agent]='prometheus'
 [minikube-invalid-monitoring-service]='prometheus-k8s'
-[minikube-debug-config]='info')
+[minikube-debug-config]='info'
+[minikube-root-debug-config]='root_logging_level: "error"')
 
 # String to be replaced in minikube configmap
 declare -A configmap_minikube_replace
@@ -46,7 +49,8 @@ configmap_minikube_replace=([minikube-invalid-cluster-type]='kube8'
 [minikube-invalid-k8s-type]='docker'
 [minikube-invalid-monitoring-agent]='promo'
 [minikube-invalid-monitoring-service]='prom-k8s'
-[minikube-debug-config]='debug')
+[minikube-debug-config]='debug'
+[minikube-root-debug-config]='root_logging_level: "debug"')
 
 # Expected autotune object for minikube configmap
 declare -A configmap_minikube_autotune_objects
@@ -54,13 +58,15 @@ configmap_minikube_autotune_objects=([minikube-invalid-cluster-type]='true'
 [minikube-invalid-k8s-type]='true'  
 [minikube-invalid-monitoring-agent]='true'
 [minikube-invalid-monitoring-service]='true'
-[minikube-debug-config]='true' )
+[minikube-debug-config]='true'
+[minikube-root-debug-config]='true')
 
 # Expected log message for minikube configmap
 declare -A configmap_minikube_expected_log_msgs
-deployment_info='com.autotune.analyzer.deployment.DeploymentInfo'
-configmap_minikube_expected_log_msgs=([minikube-invalid-cluster-type]=''${deployment_info}' - Cluster type kube8 is not supported'
-[minikube-invalid-k8s-type]=''${deployment_info}' - k8s type docker is not suppported'
-[minikube-invalid-monitoring-agent]=''${deployment_info}' - Monitoring agent promo  is not supported'
-[minikube-invalid-monitoring-service]='com.autotune.analyzer.datasource.DataSourceFactory - Monitoring agent endpoint not found'
-[minikube-debug-config]='DEBUG' )
+deployment_info='[AutotuneDeploymentInfo.java([0-9]*)]'
+configmap_minikube_expected_log_msgs=([minikube-invalid-cluster-type]=''${deployment_info}'-Cluster type kube8 is not supported'
+[minikube-invalid-k8s-type]=''${deployment_info}'-k8s type docker is not suppported'
+[minikube-invalid-monitoring-agent]=''${deployment_info}'-Monitoring agent promo  is not supported'
+[minikube-invalid-monitoring-service]='[DataSourceFactory([0-9]*)]-Monitoring agent endpoint not found'
+[minikube-debug-config]='DEBUG'
+[minikube-root-debug-config]='DEBUG')

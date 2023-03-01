@@ -17,21 +17,17 @@
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 AUTOTUNE_DOCKERFILE="Dockerfile.autotune"
-OPTUNA_DOCKERFILE="Dockerfile.optuna"
 AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
-OPTUNA_DOCKER_REPO="kruize/autotune_optuna"
 # Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
-OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
 DEV_MODE=0
 BUILD_PARAMS="--pull --no-cache"
 
 function usage() {
-	echo "Usage: $0 [-d] [-v version_string] [-i autotune_docker_image] [-o optuna_docker_image]"
+	echo "Usage: $0 [-d] [-v version_string] [-i autotune_docker_image]"
 	echo " -d: build in dev friendly mode"
 	echo " -i: build with specific autotune operator docker image name"
-	echo " -o: build with specific optuna docker image name"
 	echo " -v: build as specific autotune version"
 	exit -1
 }
@@ -57,7 +53,6 @@ function cleanup() {
 
 function set_tags() {
 	AUTOTUNE_REPO=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
-	OPTUNA_REPO=$(echo ${OPTUNA_DOCKER_IMAGE} | awk -F":" '{ print $1 }')
 	DOCKER_TAG=$(echo ${AUTOTUNE_DOCKER_IMAGE} | awk -F":" '{ print $2 }')
 	if [ -z "${DOCKER_TAG}" ]; then
 		DOCKER_TAG="latest"
@@ -73,9 +68,6 @@ do
 		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
-		;;
-	o)
-		OPTUNA_DOCKER_IMAGE="${OPTARG}"
 		;;
 	v)
 		AUTOTUNE_VERSION="${OPTARG}"
@@ -94,8 +86,17 @@ else
 	unset BUILD_PARAMS
 fi
 echo ${BUILD_PARAMS}
-docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
-check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
-docker build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${OPTUNA_DOCKER_IMAGE} -f ${OPTUNA_DOCKERFILE} .
-check_err "Docker build of ${OPTUNA_DOCKER_IMAGE} failed."
-docker images | grep -e "TAG" -e "${AUTOTUNE_REPO}" -e "${OPTUNA_REPO}" | grep "${DOCKER_TAG}"
+
+BUILDTMPFILE=/tmp/docker_build_log.$$
+BUILDER="docker"
+
+${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
+build_error=$(grep 'Error:\|unknown flag:' ${BUILDTMPFILE})
+
+if [ -n "${build_error}" ]; then
+	echo '--format=docker not supported'
+	${BUILDER} build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
+	check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
+fi
+
+${BUILDER} images | grep -e "TAG" -e "${AUTOTUNE_REPO}" | grep "${DOCKER_TAG}"

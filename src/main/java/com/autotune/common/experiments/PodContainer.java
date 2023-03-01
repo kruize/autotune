@@ -29,7 +29,9 @@ import java.util.HashMap;
  *                     "image_name": "kruize/tfb-qrh:1.13.2.F_mm.v1",
  *                     "container_name": "tfb-server",
  *                     "container_metrics":....,
- *                     "config": { ......
+ *                     "config": {
+ *                         "0": {
+ *                             "update env": {.....
  */
 public class PodContainer {
     @SerializedName("image_name")
@@ -89,6 +91,12 @@ public class PodContainer {
         this.containerName = containerName;
     }
 
+    public PodContainer(String stackName, String containerName, HashMap<String, Metric> containerMetrics, HashMap<String, ContainerConfigData> trialConfigs) {
+        this.stackName = stackName;
+        this.containerName = containerName;
+        this.containerMetrics = containerMetrics;
+        this.trialConfigs = trialConfigs;
+    }
 
     public HashMap<String, ContainerConfigData> getTrialConfigs() {
         return trialConfigs;

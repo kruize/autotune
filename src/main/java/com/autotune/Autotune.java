@@ -16,8 +16,10 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
-import com.autotune.analyzer.utils.ServerContext;
-import com.autotune.experimentManager.ExperimentManager;
+import com.autotune.analyzer.exceptions.AutotuneErrorHandler;
+import com.autotune.service.InitiateListener;
+import com.autotune.utils.ServerContext;
+import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.service.HealthService;
 import com.autotune.utils.AutotuneConstants;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -28,23 +30,30 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.autotune.analyzer.utils.ServerContext.*;
+import static com.autotune.utils.ServerContext.*;
 
 public class Autotune
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
+
 
 	public static void main(String[] args) {
 		ServletContextHandler context = null;
 
 		disableServerLogging();
 
-		Server server = new Server(AUTOTUNE_PORT);
+		Server server = new Server(AUTOTUNE_SERVER_PORT);
 		context = new ServletContextHandler();
 		context.setContextPath(ServerContext.ROOT_CONTEXT);
+		context.setErrorHandler(new AutotuneErrorHandler());
+		/**
+		 *  Adding Listener to initiate variables during server start.
+		 */
+		InitiateListener contextListener = new InitiateListener();
+		context.addEventListener(contextListener);
 		server.setHandler(context);
+		server.addBean(new AutotuneErrorHandler());
 		addAutotuneServlets(context);
-
 		String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
 
 		if (null != autotuneMode) {
@@ -80,11 +89,13 @@ public class Autotune
 	}
 
 	private static void startAutotuneEMOnly(ServletContextHandler contextHandler) {
-		ExperimentManager.start(contextHandler);
+		ExperimentManager.launch(contextHandler);
 	}
 
 	private static void startAutotuneNormalMode(ServletContextHandler contextHandler) {
 		Analyzer.start(contextHandler);
-		ExperimentManager.start(contextHandler);
+		ExperimentManager.launch(contextHandler);
 	}
+
+
 }

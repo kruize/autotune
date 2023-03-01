@@ -18,15 +18,15 @@ package com.autotune.common.experiments;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This object holds information about trial run configurations.
+ * This object holds information about trail run configurations.
  * Example
- * "trial_settings": {
- *      "measurement_cycles": "3",
- *      "warmup_duration": "1min",
- *      "warmup_cycles": "3",
- *      "measurement_duration": "1min",
- *      "iterations": "3"
- * }
+ *        "trial_settings": {
+ *             "measurement_cycles": "3",
+ *             "warmup_duration": "1min",
+ *             "warmup_cycles": "3",
+ *             "measurement_duration": "1min",
+ *             "iterations": "3"
+ *         }
  */
 public class TrialSettings {
     /**
@@ -49,6 +49,8 @@ public class TrialSettings {
     @SerializedName("measurement_cycles")
     private final String trialMeasurementCycles;
 
+    private boolean forceCollectMetrics;
+
     public TrialSettings(String trialIterations,
                          String trialWarmupDuration,
                          String trialWarmupCycles,
@@ -59,6 +61,7 @@ public class TrialSettings {
         this.trialWarmupCycles = trialWarmupCycles;
         this.trialMeasurementDuration = trialMeasurementDuration;
         this.trialMeasurementCycles = trialMeasurementCycles;
+        this.forceCollectMetrics = false;
     }
 
     public String getTrialMeasurementDuration() {
@@ -79,6 +82,14 @@ public class TrialSettings {
 
     public String getTrialMeasurementCycles() {
         return trialMeasurementCycles;
+    }
+
+    public boolean isForceCollectMetrics() {
+        return forceCollectMetrics;
+    }
+
+    public void setForceCollectMetrics(boolean forceCollectMetrics) {
+        this.forceCollectMetrics = forceCollectMetrics;
     }
 
     @Override

@@ -13,14 +13,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  # This workflow contains two jobs called "build autotune" and "build crc"
+  build_autotune:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -29,9 +29,9 @@ jobs:
       - name: Build autotune
         run: |
           echo Build autotune
-          ./build.sh -i autotune_operator:test -o autotune_optuna:test
+          ./build.sh -i autotune_operator:test
           docker images | grep autotune     
-      - name: Start minikube
+      - name: Check cluster info on minikube
         run: |
           kubectl cluster-info
           kubectl get pods -n kube-system
@@ -40,13 +40,81 @@ jobs:
           echo Install Prometheus on minikube
           cd scripts
           ./prometheus_on_minikube.sh -as
-      - name: Deploy autotune
+      - name: Deploy kruize in experiment mode
         run: |
-          echo Deploy autotune
-          cp ./manifests/autotune-operator-deployment.yaml_template ./manifests/autotune-operator-deployment.yaml_template.old
-          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune-operator-deployment.yaml_template.old > ./manifests/autotune-operator-deployment.yaml_template
+          echo Deploy kruize in experiment mode
+          cp ./manifests/autotune/autotune-operator-deployment.yaml_template ./manifests/autotune/autotune-operator-deployment.yaml_template.old
+          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/autotune/autotune-operator-deployment.yaml_template.old > ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          cat ./manifests/autotune-operator-deployment.yaml_template
+          cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune_operator:test -o autotune_optuna:test
+          ./deploy.sh -c minikube -i autotune_operator:test
+          sleep 20
+          ./scripts/ffdc.sh -d ${GITHUB_WORKSPACE}
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf autotune_results.tar kruize_*log.txt
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: autotune-results
+           path: ./autotune_results.tar
+           retention-days: 2
+
+
+  build_crc:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Build crc
+        run: |
+          echo Build crc
+          ./build.sh -i autotune_operator:test
+          docker images | grep autotune
+      - name: Check cluster info on minikube
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+      - name: Deploy Kruize in crc mode
+        run: |
+          echo Deploy kruize in crc mode
+          echo "***************************************************************"
+          cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
+          KRUIZE_VERSION="$(grep -A 1 "autotune" pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
+          sed -e "s/image: \"kruize\/autotune_operator:$KRUIZE_VERSION\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
+          sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
+          cat ./manifests/crc/kruize-crc-minikube.yaml
+          kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
+          sleep 120
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf crc_results.tar kruize_*log.txt
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: crc-results
+           path: ./crc_results.tar
+           retention-days: 2
 

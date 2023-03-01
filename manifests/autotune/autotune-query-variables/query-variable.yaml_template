@@ -1,0 +1,11 @@
+apiVersion: "recommender.com/v1"
+kind: "AutotuneQueryVariable"
+metadata:
+  name: "{{ CLUSTER_TYPE }}"
+  namespace: "{{ AUTOTUNE_NAMESPACE }}"
+query_variables:
+  - name: '$POD_LABEL$'
+    value: 'pod'
+  - name: '$CONTAINER_LABEL$'
+    value: 'container'
+

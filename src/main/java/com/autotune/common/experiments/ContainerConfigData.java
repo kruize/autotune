@@ -29,17 +29,25 @@ import java.util.Map;
  */
 
 public class ContainerConfigData {
+    @SerializedName("image_name")
+    private String stackName;
+    @SerializedName("container_name")
+    private String containerName;
     // Hashmap of Container request for resource quantity like cpu memory
     // Key will be requests
     /** Example
-     *  "requests": {
-     *      "cpu": {
-     *          "amount": "2.11",
-     *      },
-     *      "memory": {
-     *          "amount": "160.0",
-     *      }
-     *  }
+	 *	"requests": {
+	 *	 	"cpu": {
+	 *		 	"amount": "2.11",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		},
+	 *		"memory": {
+	 *		 	"amount": "160.0",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		}
+     * }
      */
     @SerializedName("requests")
     private Map<String, Quantity> requestPropertiesMap = new HashMap<String, Quantity>();
@@ -48,14 +56,16 @@ public class ContainerConfigData {
     /**
      * Example
      * "limits": {
-     *      "cpu": {
-     *          "amount": "2.11",
-     *      },
-     *      "memory": {
-     *          "amount": "160.0",
-     *          "format": "",
-     *          "additionalProperties": {}
-     *      }
+	 *		 "cpu": {
+	 *		 	"amount": "2.11",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		 },
+	 *		 "memory": {
+	 *		 	"amount": "160.0",
+	 *		 	"format": "",
+	 *		 	"additionalProperties": {}
+	 *		 }
      * }
      */
     @SerializedName("limits")
@@ -106,10 +116,28 @@ public class ContainerConfigData {
         this.envList = envList;
     }
 
+    public String getStackName() {
+        return stackName;
+    }
+
+    public void setStackName(String stackName) {
+        this.stackName = stackName;
+    }
+
+    public String getContainerName() {
+        return containerName;
+    }
+
+    public void setContainerName(String containerName) {
+        this.containerName = containerName;
+    }
+
     @Override
     public String toString() {
         return "ContainerConfigData{" +
-                "requestPropertiesMap=" + requestPropertiesMap +
+                "stackName='" + stackName + '\'' +
+                ", containerName='" + containerName + '\'' +
+                ", requestPropertiesMap=" + requestPropertiesMap +
                 ", LimitPropertiesMap=" + LimitPropertiesMap +
                 ", envList=" + envList +
                 '}';

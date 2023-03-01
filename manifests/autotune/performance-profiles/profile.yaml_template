@@ -1,0 +1,88 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizePerformanceProfile"
+metadata:
+  name: "add_name_here"
+
+# Version of the profile.
+# This helps when queries change often
+profile_version: 1.1
+
+# Is this for a specific kubernetes type?
+# OPTIONAL.
+# If not present, assumed to be used universally.
+# If specified, it should have a corresponding config in
+# manifests/configmaps dir (i.e. supported target by Kruize)
+# Eg. manifests/configmaps/openshift-config.yaml
+k8s_type: openshift
+
+# Describe the Service Level Objective in more detail
+# MANDATORY
+slo:
+  # slo_class describes a standard slo "bucket" defined by Kruize
+  # One of "resource_usage", "throughput" or "response_time"
+  # OPTIONAL
+  slo_class: "resource_usage"
+  # Optimization direction, one of "maximize" or "minimize"
+  # MANDATORY
+  direction: "minimize"
+  # What is the performance objective.
+  # The performance objective can be specified as an algebraic expression.
+  # Complex objectives can be specified in a java source file
+  # MANDATORY
+  objective_function: 
+  # Type of objective function, one of "expression" or "source"
+  # "expression" refers to an algebraic expression that details the
+  # calculation using function variables
+  # "source" means that the calculation is backed by a java source file.
+  # MANDATORY
+    function_type: expression
+    # algebraic expression
+    # Only valid if the "type" is "expression"
+    # OPTIONAL
+    expression: (80*min(mem-rss_usage_container))/(85*avg(cpu_request_container))
+
+  # Define the variables used in the objective_function
+  # MANDATORY
+  function_variables:
+
+  # name of the variable
+  # MANDATORY
+  - name: cpu_request_container
+    # datasource of the query
+    # MANDATORY
+    datasource: prometheus
+    # value_type. Supported are "double" or "integer".
+    # MANDATORY
+    value_type: "double"
+
+    # Any k8s object that this query is tied to
+    # Eg. "deployment", "pod", "container"
+    # OPTIONAL
+    kubernetes_object: "container"
+
+    # One of query or aggregation_functions mandatory
+    # Both can be present together
+    query: 'kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="cpu", unit="core"}'
+
+    # aggregate functions associated with this variable
+    # Eg. "avg", "sum", "max", "min"
+    aggregation_functions:
+    # MANDATORY
+    - function: avg
+      # query
+      # MANDATORY
+      query: 'avg(kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="cpu", unit="core"})'
+
+      # Any specific versions that this query is tied to
+      # OPTIONAL
+      versions: "<=4.8"
+
+  # Memory RSS
+  - name: mem-rss_usage_container
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "container"
+    # Average memory RSS per container in a deployment
+    aggregation_functions:
+    - function: avg
+      query: 'avg(avg_over_time(container_memory_rss{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'

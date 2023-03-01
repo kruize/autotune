@@ -18,31 +18,45 @@
 ROOT_DIR="${PWD}"
 SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
-AUTOTUNE_OPERATOR_CRD="manifests/autotune-operator-crd.yaml"
-AUTOTUNE_CONFIG_CRD="manifests/autotune-config-crd.yaml"
-AUTOTUNE_QUERY_VARIABLE_CRD="manifests/autotune-query-variable-crd.yaml"
-AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="manifests/autotune-operator-deployment.yaml_template"
-AUTOTUNE_DEPLOY_MANIFEST="manifests/autotune-operator-deployment.yaml"
-AUTOTUNE_RB_MANIFEST_TEMPLATE="manifests/autotune-operator-rolebinding.yaml_template"
-AUTOTUNE_RB_MANIFEST="manifests/autotune-operator-rolebinding.yaml"
-AUTOTUNE_ROLE_MANIFEST="manifests/autotune-operator-role.yaml"
-AUTOTUNE_SA_MANIFEST="manifests/autotune-operator-sa.yaml"
-SERVICE_MONITOR_MANIFEST="manifests/servicemonitor/autotune-service-monitor.yaml"
+AUTOTUNE_DIR="./manifests/autotune"
+PERF_PROFILE_CRD="${AUTOTUNE_DIR}/performance-profiles"
+CRC_DIR="./manifests/crc"
+
+AUTOTUNE_OPERATOR_CRD="${AUTOTUNE_DIR}/autotune-operator-crd.yaml"
+AUTOTUNE_CONFIG_CRD="${AUTOTUNE_DIR}/autotune-config-crd.yaml"
+AUTOTUNE_QUERY_VARIABLE_CRD="${AUTOTUNE_DIR}/autotune-query-variable-crd.yaml"
+AUTOTUNE_PERF_PROFILE_CRD="${PERF_PROFILE_CRD}/kruize-performance-profile-crd.yaml"
+AUTOTUNE_PERF_PROFILE_ROS="${PERF_PROFILE_CRD}/resource_optimization_openshift.yaml"
+AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml_template"
+AUTOTUNE_DEPLOY_OPENSHIFT_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-openshift-deployment.yaml_template"
+AUTOTUNE_DEPLOY_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-deployment.yaml"
+AUTOTUNE_RB_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-operator-rolebinding.yaml_template"
+AUTOTUNE_RB_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-rolebinding.yaml"
+AUTOTUNE_ROLE_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-role.yaml"
+AUTOTUNE_SA_MANIFEST="${AUTOTUNE_DIR}/autotune-operator-sa.yaml"
+SERVICE_MONITOR_MANIFEST="${AUTOTUNE_DIR}/servicemonitor/autotune-service-monitor.yaml"
+AUTOTUNE_OPENSHIFT_NAMESPACE="openshift-tuning"
 AUTOTUNE_SA_NAME="autotune-sa"
-AUTOTUNE_CONFIGMAPS="manifests/configmaps"
-AUTOTUNE_CONFIGS="manifests/autotune-configs"
-AUTOTUNE_QUERY_VARIABLES="manifests/autotune-query-variables"
+AUTOTUNE_CONFIGMAPS="${AUTOTUNE_DIR}/configmaps"
+AUTOTUNE_CONFIGS="${AUTOTUNE_DIR}/autotune-configs"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml_template"
+AUTOTUNE_QUERY_VARIABLES_MANIFEST="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml"
+KRUIZE_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/kruize-crc-openshift.yaml"
+KRUIZE_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/kruize-crc-minikube.yaml"
 
 AUTOTUNE_PORT="8080"
-AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
-OPTUNA_DOCKER_REPO="kruize/autotune_optuna"
+AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
 #Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
-OPTUNA_DOCKER_IMAGE=${OPTUNA_DOCKER_REPO}:${AUTOTUNE_VERSION}
+HPO_DOCKER_REPO="docker.io/kruize/hpo"
+# From the kruize/hpo repo
+HPO_VERSION=0.0.2
+HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}
 
 # source all the helpers scripts
 . "${SCRIPTS_DIR}"/minikube-helpers.sh
+. "${SCRIPTS_DIR}"/openshift-helpers.sh
 . "${SCRIPTS_DIR}"/common_utils.sh
 
 # Defaults for the script
@@ -53,10 +67,11 @@ setup=1
 # Default mode is interactive
 non_interactive=0
 autotune_ns=""
+target="autotune"
 # docker: loop timeout is turned off by default
 timeout=-1
 
-function ctrlc_handler () {
+function ctrlc_handler() {
 	# Check if cluster type is docker
 	if [[ "$cluster_type" == "docker" ]]; then
 		# Terminate the containers [autotune && grafana && prometheus && cadvisor]
@@ -67,19 +82,20 @@ function ctrlc_handler () {
 }
 
 # Handle SIGHUP(1), SIGINT(2), SIGQUIT(3) for cleaning up containers in docker case
-trap "ctrlc_handler" 1 2 3 
+trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o optuna docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	echo " -s: Deploy autotune [Default]"
-        echo " -t: Terminate autotune deployment"
+	echo " -t: Terminate autotune deployment"
 	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
 	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
-	echo " -o: build with specific optuna docker image name [Default - kruize/autotune_optuna:<version from pom.xml>]"
+	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
+	echo " -m: Target mode selection [autotune | crc]"
 	exit -1
 }
 
@@ -95,7 +111,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:n:o:p:stu:-: gopts
+while getopts ac:d:i:k:m:n:o:p:stu:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -130,11 +146,14 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
+  m)
+		target="${OPTARG}"
+		;;
 	n)
 		autotune_ns="${OPTARG}"
 		;;
 	o)
-		OPTUNA_DOCKER_IMAGE="${OPTARG}"
+		HPO_DOCKER_IMAGE="${OPTARG}"
 		;;
 	s)
 		setup=1
@@ -149,7 +168,19 @@ done
 
 # Call the proper setup function based on the cluster_type
 if [ ${setup} == 1 ]; then
-	${cluster_type}_start
+	if [ ${target} == "crc" ]; then
+		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
+			${cluster_type}_crc_start
+		else
+			echo "Unsupported cluster!"
+		fi
+	else
+		${cluster_type}_start
+	fi
 else
-	${cluster_type}_terminate
+	if [ ${target} == "crc" ]; then
+		${cluster_type}_crc_terminate
+	else
+		${cluster_type}_terminate
+	fi
 fi

@@ -34,7 +34,7 @@ TESTS=0
 # By default do not start HPO service as it is started in the autotune docker image
 HPO_SERVICE=0
 
-TEST_MODULE_ARRAY=("da" "hpo")
+TEST_MODULE_ARRAY=("da" "em")
 
 TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "autotune_config_yaml_tests"
@@ -44,7 +44,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "configmap_yaml_tests"
 "autotune_id_tests"
 "autotune_layer_config_id_tests"
-"hpo_api_tests")
+"em_standalone_tests"
+"remote_monitoring_tests")
 
 modify_autotune_config_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -53,11 +54,14 @@ modify_autotune_config_tests=("add_new_tunable"
 "multiple_tunables")
 
 AUTOTUNE_IMAGE="kruize/autotune_operator:test"
-OPTUNA_IMAGE="kruize/autotune_optuna:test"
 total_time=0
 matched=0
 sanity=0
 setup=1
+skip_setup=0
+
+target="autotune"
+
 # Path to the directory containing yaml files
 MANIFESTS="${AUTOTUNE_REPO}/tests/autotune_test_yamls/manifests"
 api_yaml="api_test_yamls"
@@ -65,7 +69,7 @@ module="da"
 api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 
 # Path to the directory containing yaml files
-configmap="${AUTOTUNE_REPO}/manifests/configmaps"
+configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
@@ -107,17 +111,18 @@ function update_yaml() {
 	find=$1
 	replace=$2
 	config_yaml=$3
-	sed -i 's/'${find}'/'${replace}'/g' ${config_yaml}
+	sed -i "s/${find}/${replace}/g" ${config_yaml}
 }
 
 # Set up the autotune 
 # input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
 function setup() {
-	CONFIGMAP_DIR=$1
-	ignore_deployment_status_check=$2
+	AUTOTUNE_POD_LOG=$1
+	CONFIGMAP_DIR=$2
+	ignore_deployment_status_check=$3
 	
 	# remove the existing autotune objects
-	autotune_cleanup 
+	autotune_cleanup ${TEST_SUITE_DIR}
 	
 	# Wait for 5 seconds to terminate the autotune pod
 	sleep 5
@@ -125,9 +130,9 @@ function setup() {
 	# Check if jq is installed
 	check_prereq
 	
-	# Deploy autotune 
+	# Deploy autotune
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${OPTUNA_DOCKER_IMAGE}" "${CONFIGMAP_DIR}"
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
 	
 	case "${cluster_type}" in
@@ -135,7 +140,7 @@ function setup() {
 			NAMESPACE="monitoring"
 			;;
 		openshift)
-			NAMESPACE="openshift-monitoring"
+			NAMESPACE="openshift-tuning"
 			;;
 	esac
 }
@@ -155,8 +160,8 @@ function setup_prometheus() {
 function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
-	OPTUNA_IMAGE=$3
-	CONFIGMAP_DIR=$4
+	CONFIGMAP_DIR=$3
+	AUTOTUNE_POD_LOG=$4
 	
 	pushd ${AUTOTUNE_REPO} > /dev/null
 	
@@ -166,18 +171,32 @@ function deploy_autotune() {
 		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 	
-	echo "Deploying autotune"
-	# if both autotune image  and configmap is not passed then consider the test-configmap(which has logging level as debug)
+	echo "Deploying autotune $target"
+	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -m ${target}"
+		fi
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP_DIR}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+		fi
+		
 	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -o ${OPTUNA_IMAGE} -d ${CONFIGMAP}"
+		if [ ${target} == "autotune" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP} -m ${target}"
+		elif [ ${target} == "crc" ]; then
+			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+		fi
+
 	fi	
-	echo "CMD= ${cmd}"
+	echo "Kruize deploy command - ${cmd}"
 	${cmd}
 	
 	status="$?"
@@ -188,6 +207,31 @@ function deploy_autotune() {
 		echo "Error deploying autotune" >>/dev/stderr
 		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
+	fi
+
+	sleep 30
+
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
+		sleep 2
+		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
+		namespace="openshift-tuning"
+		if [ ${cluster_type} == "minikube" ]; then
+			namespace="monitoring"
+		fi
+		echo "Namespace = $namespace"
+		service="autotune"
+		if [ ${target} == "crc" ]; then
+			service="kruize"
+		fi
+		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
+		echo "autotune_pod = $autotune_pod"
+		if [ ${target} == "crc" ]; then
+			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
+			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		else
+			echo "kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &"
+			kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		fi
 	fi
 
 	popd > /dev/null
@@ -207,19 +251,19 @@ function prometheus_cleanup() {
 # output: Remove all the autotune dependencies
 function autotune_cleanup() {
 	RESULTS_LOG=$1
-	
+
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
 		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-		echo "*********** ${RESULTS_LOG} ${AUTOTUNE_REPO}"
-		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
-	else 
 		pushd ${AUTOTUNE_REPO} > /dev/null
+	else
+		AUTOTUNE_SETUP_LOG="autotune_setup.log"
+		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
 	fi
 
 	echo  "Removing Autotune dependencies..."
-	cmd="./deploy.sh -c ${cluster_type} -t"
-	echo "CMD= ${cmd}"
+	cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
+	echo "CMD = ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
 	prometheus_cleanup
@@ -282,7 +326,7 @@ function testsuitesummary() {
 	echo "Number of tests passed ${TESTS_PASSED}"
 	echo "Number of tests failed ${TESTS_FAILED}"
 	echo ""
-	if [ "${TESTS_FAILED}" -ne "0" ]; then
+	if [[ "${TESTS_FAILED}" -ne "0" || "${TESTS_PASSED}" -eq "0" ]]; then
 		echo "~~~~~~~~~~~~~~~~~~~~~~~ ${TEST_SUITE_NAME} failed ~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		echo "Failed cases are :"
 		for fails in "${FAILED_CASES[@]}"
@@ -326,6 +370,8 @@ function set_app_folder() {
 	app_name=$1
 	if [ "${app_name}" == "petclinic" ]; then
 		APP_FOLDER="spring-petclinic"
+	elif [ "${app_name}" == "tfb-qrh" ]; then
+                APP_FOLDER="techempower"
 	else
 		APP_FOLDER="${app_name}"
 	fi
@@ -342,7 +388,11 @@ function run_jmeter_load() {
 	echo
 	echo "Starting ${app_name} jmeter workload..."
 	# Invoke the jmeter load script
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP} 
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-load.sh -c ${cluster_type} -i ${num_instances} --iter=${MAX_LOOP}
+	fi
 }
 
 # Remove the application setup
@@ -353,7 +403,11 @@ function app_cleanup() {
 	set_app_folder "${app_name}"
 	echo
 	echo -n "Removing ${app_name} app..."
-	${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	if [ ${app_name} == "tfb-qrh" ]; then
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	else
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	fi
 	echo "done"
 }
 
@@ -376,9 +430,17 @@ function deploy_app() {
 
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+                else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		if [ ${app_name} == "tfb-qrh" ]; then
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s "localhost" -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		else
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		fi
 	fi
 	echo "done"
 }
@@ -443,7 +505,7 @@ function validate_yaml () {
 			error_message "${failed}"  
 		else	
 			echo "${object} object ${testcase} did not get created" | tee -a ${LOG}
-			if grep -q "${expected_log_msg}" "kubectl.log" ; then
+			if grep -q "${expected_log_msg}" "${LOG_DIR}/kubectl.log" ; then
 				failed=0
 				error_message "${failed}"  
 			else
@@ -497,7 +559,7 @@ function run_test_case() {
 	# Apply the yaml
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
 	err_exit "Error: Issue in deploying ${object} object" 
-	echo "${kubectl_log_msg}" > kubectl.log
+	echo "${kubectl_log_msg}" > ${LOG_DIR}/kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
 	
 	sed -i "s|${prometheus_url}|PROMETHEUS_URL|g" ${yaml}.yaml
@@ -527,7 +589,7 @@ function run_test_case() {
 	# check if the expected message is matching with the actual message
 	validate_yaml
 	
-	rm kubectl.log
+#	rm kubectl.log
 	echo ""
 	echo "--------------------------------------------------------------------------------"| tee -a ${LOG}
 }
@@ -597,22 +659,37 @@ function run_test() {
 # Form the curl command based on the cluster type
 function form_curl_cmd() {
 	# Form the curl command based on the cluster type
+	service="autotune"
+	if [ ${target} == "crc" ]; then
+		service="kruize"
+	fi
 	case $cluster_type in
-	   openshift) ;;
+	   openshift)
+		NAMESPACE="openshift-tuning"
+
+        	AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+
+        	echo "PORT = $AUTOTUNE_PORT"
+
+		SERVER_IP=$(kubectl get pods -l=app=${service} -o wide -n openshift-tuning -o=custom-columns=NODE:.spec.nodeName --no-headers)
+	        echo "IP = $SERVER_IP"
+
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		;;
 	   minikube)
-		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+		NAMESPACE="monitoring"
+		
+		echo "service = $service namespace = $NAMESPACE"
+		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 		SERVER_IP=$(minikube ip)
-		AUTOTUNE_URL="http://${SERVER_IP}";;
+		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		;;
 	   docker) ;;
 	   *);;
 	esac
 
-	if [ $cluster_type == "openshift" ]; then
-		curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
-	else
-		curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}:${AUTOTUNE_PORT}"
-	fi
-
+	curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
 	echo "curl_cmd = ${curl_cmd}"
 }
 
@@ -847,9 +924,8 @@ function create_expected_liststacktunables_json() {
 
 		printf '\n    "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
 
-		# Uncomment these when the json output is updated
-		#printf '\n    "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
-		#printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n    "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 		printf '\n    "function_variables": [' >> ${file_name}
 		variables_count=$(cat ${autotune_json} | jq '.spec.slo.function_variables' | jq length)
 
@@ -1239,9 +1315,8 @@ function create_expected_liststacklayers_json() {
 		fi
 
 		printf '\n    "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
-		# Uncomment these when added to the json output
-		#printf '\n    "deployment_name":  "'${deployment_names[index]}'",' >> ${file_name}
-		#printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n    "deployment_name":  "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n    "namespace":  '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 
 		images_count=${#container_images[@]}
 		printf '\n    "stacks": [{' >> ${file_name}
@@ -1373,8 +1448,7 @@ function create_expected_liststacks_json() {
 		autotune_json="${AUTOTUNE_JSONS_DIR}/${exp_names[index]}.json"
 		printf '{\n  "experiment_name": "'${exp_names[index]}'",' >> ${file_name}
 		printf '\n  "objective_function": '$(cat ${autotune_json} | jq '.spec.slo.objective_function')',' >> ${file_name}
-		# Uncomment when included in the json output
-		# printf '\n  "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
+		printf '\n  "deployment_name": "'${deployment_names[index]}'",' >> ${file_name}
 		hpo_algo_impl=$(cat ${autotune_json} | jq '.spec.slo.hpo_algo_impl')
 
 		if [ ${hpo_algo_impl} == null ]; then
@@ -1382,8 +1456,7 @@ function create_expected_liststacks_json() {
 		fi
 
 		printf '\n  "hpo_algo_impl":  "'${hpo_algo_impl}'",' >> ${file_name}
-		# Uncomment when included in the json output
-		# printf '\n  "namespace": '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
+		printf '\n  "namespace": '$(cat ${autotune_json} | jq '.metadata.namespace')',' >> ${file_name}
 		printf '\n  "slo_class": '$(cat ${autotune_json} | jq '.spec.slo.slo_class')',' >> ${file_name}
 
 		images_count=${#container_images[@]}
@@ -1673,8 +1746,14 @@ function get_autotune_pod_log() {
 	# Fetch the autotune container log
 	container="autotune"
 
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
+	echo "target = $target"
+	if [ ${target} == "crc" ]; then
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	else
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
+		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
+	fi
 	echo "${pod_log_msg}" > "${log}"
 }
 
@@ -1706,3 +1785,29 @@ function compare_result() {
 
 	display_result "${expected_behaviour}" "${__test__}" "${failed}"
 }
+
+function create_performance_profile() {
+        perf_profile_json=$1
+
+        echo "Forming the curl command to create the performance profile ..."
+        form_curl_cmd
+
+        curl_cmd="${curl_cmd}/createPerformanceProfile -d @${perf_profile_json}"
+
+        echo "curl_cmd = ${curl_cmd}"
+
+        status_json=$(${curl_cmd})
+        echo "create performance profile status = ${status_json}"
+
+        echo ""
+        echo "Command used to create the performance profile = ${curl_cmd}"
+        echo ""
+
+        perf_profile_status=$(echo ${status_json} | jq '.status')
+        echo "create performance profile status = ${perf_profile_status}"
+        if [ "${perf_profile_status}" != \"SUCCESS\" ]; then
+                echo "Failed! Create performance profile failed. Status - ${perf_profile_status}"
+                exit 1
+        fi
+}
+

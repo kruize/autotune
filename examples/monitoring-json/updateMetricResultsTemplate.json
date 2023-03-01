@@ -1,0 +1,117 @@
+[
+  {
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "deployments": [
+      {
+        "deployment_name": "tfb-qrh-sample",
+        "namespace": "default",
+        "pod_metrics": [],
+        "containers": [
+          {
+            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "container_metrics": {
+              "cpuRequest": {
+                "results": {
+                  "value": 1.1,
+                  "units": "cores",
+                  "aggregation_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuLimit": {
+                "results": {
+                  "value": 0.5,
+                  "units": "cores",
+                  "aggregation_info": {
+                    "sum": 2.0,
+                    "avg": 0.5,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuUsage": {
+                "results": {
+                  "value": 0.12,
+                  "units": "cores",
+                  "aggregation_info": {
+                    "min": 0.14,
+                    "max": 0.84,
+                    "sum": 0.84,
+                    "avg": 0.12,
+                    "units": "cores"
+                  }
+                }
+              },
+              "cpuThrottle": {
+                "results": {
+                  "value": 0.045,
+                  "units": "cores",
+                  "aggregation_info": {
+                    "sum": 0.19,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "units": "cores"
+                  }
+                }
+              },
+              "memoryRequest": {
+                "results": {
+                  "value": 50.12,
+                  "units": "MiB",
+                  "aggregation_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryLimit": {
+                "results": {
+                  "value": 100,
+                  "units": "MiB",
+                  "aggregation_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryUsage": {
+                "results": {
+                  "value": 40.1,
+                  "units": "MiB",
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
+                    "avg": 40.1,
+                    "units": "MiB"
+                  }
+                }
+              },
+              "memoryRSS": {
+                "value": 31.91,
+                "units": "MiB",
+                "results": {
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 123.6,
+                    "sum": 123.6,
+                    "avg": 31.91,
+                    "units": "MiB"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
