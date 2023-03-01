@@ -171,7 +171,7 @@ public class EMUtil {
                     Results results = new Results();
                     AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
                     aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                    aggregationInfoResult.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
+                    aggregationInfoResult.setFormat(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
                     results.setAggregation_info(aggregationInfoResult);
                     HashMap<String, Results> resultsHashMap = new HashMap<>();
                     resultsHashMap.put("results", results);

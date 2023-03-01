@@ -19,7 +19,6 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.AutotuneResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.result.ViewRecommendation;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
@@ -69,8 +68,14 @@ public class ListRecommendation extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
-        if (null != experimentName && this.mainKruizeExperimentMap.contains(experimentName)) {
-            kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+        if (null != experimentName) {
+            experimentName = experimentName.trim();
+            if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
+                kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+            } else {
+                // TODO: Needs to be implemented
+                //sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
+            }
         } else {
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
         }

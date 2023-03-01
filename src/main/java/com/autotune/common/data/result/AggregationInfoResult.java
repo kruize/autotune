@@ -20,7 +20,7 @@ public class AggregationInfoResult {
     private Double avg;
     private Double min;
     private Double max;
-    private String units;
+    private String format;
 
     public Double getSum() {
         return sum;
@@ -38,12 +38,12 @@ public class AggregationInfoResult {
         this.avg = avg;
     }
 
-    public String getUnits() {
-        return units;
+    public String getFormat() {
+        return format;
     }
 
-    public void setUnits(String units) {
-        this.units = units;
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     public Double getMin() {
@@ -69,7 +69,7 @@ public class AggregationInfoResult {
                 ", avg=" + avg +
                 ", min=" + min +
                 ", max=" + max +
-                ", units='" + units + '\'' +
+                ", units='" + format + '\'' +
                 '}';
     }
 }
