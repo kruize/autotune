@@ -103,13 +103,20 @@ public class GenerateRecommendation {
 
     private static RecommendationConfigItem getCPUCapacityRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
                     .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getSum() + e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuThrottle).getSum())
                     .collect(Collectors.toList());
 
-            recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), "");
+            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
+                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+                if (null != format && !format.isEmpty())
+                    break;
+            }
+            recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), format);
+
         } catch (Exception e) {
             LOGGER.error("Not able to get getCPUCapacityRecommendation due to " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
@@ -119,6 +126,7 @@ public class GenerateRecommendation {
 
     private static RecommendationConfigItem getCPUMaxRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
         try {
             Double max_cpu = filteredResultsMap.values()
                     .stream()
@@ -128,7 +136,12 @@ public class GenerateRecommendation {
                     .stream()
                     .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getSum() / e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getAvg())
                     .max(Double::compareTo).get();
-            recommendationConfigItem = new RecommendationConfigItem(max_cpu * max_pods, "");
+            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
+                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+                if (null != format && !format.isEmpty())
+                    break;
+            }
+            recommendationConfigItem = new RecommendationConfigItem(max_cpu * max_pods, format);
             LOGGER.debug("Max_cpu : {} , max_pods : {}", max_cpu, max_pods);
         } catch (Exception e) {
             LOGGER.error("Not able to get getCPUMaxRecommendation due to " + e.getMessage());
@@ -140,13 +153,18 @@ public class GenerateRecommendation {
 
     private static RecommendationConfigItem getMemoryCapacityRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
                     .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryRSS).getSum())
                     .collect(Collectors.toList());
-
-            recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), "");
+            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
+                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.memoryRSS).getFormat();
+                if (null != format && !format.isEmpty())
+                    break;
+            }
+            recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), format);
         } catch (Exception e) {
             LOGGER.error("Not able to get getMemoryCapacityRecommendation due to " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
@@ -156,6 +174,7 @@ public class GenerateRecommendation {
 
     private static RecommendationConfigItem getMemoryMaxRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
         try {
             Double max_mem = filteredResultsMap.values()
                     .stream()
@@ -165,7 +184,12 @@ public class GenerateRecommendation {
                     .stream()
                     .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getSum() / e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getAvg())
                     .max(Double::compareTo).get();
-            recommendationConfigItem = new RecommendationConfigItem(max_mem * max_pods, "");
+            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
+                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getFormat();
+                if (null != format && !format.isEmpty())
+                    break;
+            }
+            recommendationConfigItem = new RecommendationConfigItem(max_mem * max_pods, format);
             LOGGER.debug("Max_cpu : {} , max_pods : {}", max_mem, max_pods);
         } catch (Exception e) {
             LOGGER.error("Not able to get getCPUMaxRecommendation due to " + e.getMessage());
