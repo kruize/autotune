@@ -42,6 +42,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -69,8 +70,14 @@ public class ListRecommendation extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
-        if (null != experimentName && this.mainKruizeExperimentMap.contains(experimentName)) {
-            kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+        if (null != experimentName) {
+            experimentName = experimentName.trim();
+            if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
+                kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+            } else {
+                // TODO: Needs to be implemented
+                //sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
+            }
         } else {
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
         }
