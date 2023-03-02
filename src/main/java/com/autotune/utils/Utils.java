@@ -144,6 +144,8 @@ public class Utils
 		return null;
 	}
 
+	// TODO: Ideally CORS should be added as web filter but for a quick fix we are adding headers
+	// Need to add CORSFilter in xml in future when moving to web filter way of fixing cors, this method should not be used after that change
 	public static void addCORSHeaders(HttpServletResponse response) {
 		if (null != response) {
 			response.addHeader("Access-Control-Allow-Origin", "*");
