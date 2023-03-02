@@ -88,11 +88,11 @@ public class GenerateRecommendation {
                             recommendationPeriodMap.put(recPeriod, new Recommendation("There is not enough data available to generate a recommendation."));
                         }
                     }
-                    HashMap<Timestamp, HashMap<String, Recommendation>> containerRecommendationMap = containerObject.getRecommendation();
+                    HashMap<Timestamp, HashMap<String, Recommendation>> containerRecommendationMap = containerObject.getRecommendations();
                     if (null == containerRecommendationMap)
                         containerRecommendationMap = new HashMap<>();
                     containerRecommendationMap.put(monitorEndDate, recommendationPeriodMap);
-                    containerObject.setRecommendation(containerRecommendationMap);
+                    containerObject.setRecommendations(containerRecommendationMap);
                     System.out.println(containerRecommendationMap);
                 }
             }
