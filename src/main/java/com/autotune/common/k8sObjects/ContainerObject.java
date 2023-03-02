@@ -30,6 +30,7 @@ public class ContainerObject {
     private String image;
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
+    @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
     private HashMap<Timestamp, HashMap<String, Recommendation>> recommendation;
     private List<ContainerMetricsHelper> metrics;
 
