@@ -346,7 +346,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                     {
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
-                        "recommendation": {
+                        "recommendations": {
                             "2022-01-23T18:25:43.511Z": {
                                 "short_term": {
                                     "monitoring_start_time": "2022-01-22T18:25:43.511Z",
@@ -393,7 +393,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
                     {
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
-                        "recommendation": {
+                        "recommendations": {
                             "2022-01-23T18:25:43.511Z": {
                                 "short_term": {
                                     "monitoring_start_time": "2022-01-22T18:25:43.511Z",
