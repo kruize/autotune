@@ -31,7 +31,7 @@ public class ContainerObject {
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
     @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
-    private HashMap<Timestamp, HashMap<String, Recommendation>> recommendation;
+    private HashMap<Timestamp, HashMap<String, Recommendation>> recommendations;
     private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
@@ -63,12 +63,12 @@ public class ContainerObject {
         this.results = results;
     }
 
-    public HashMap<Timestamp, HashMap<String, Recommendation>> getRecommendation() {
-        return recommendation;
+    public HashMap<Timestamp, HashMap<String, Recommendation>> getRecommendations() {
+        return recommendations;
     }
 
-    public void setRecommendation(HashMap<Timestamp, HashMap<String, Recommendation>> recommendation) {
-        this.recommendation = recommendation;
+    public void setRecommendations(HashMap<Timestamp, HashMap<String, Recommendation>> recommendations) {
+        this.recommendations = recommendations;
     }
 
     public List<ContainerMetricsHelper> getMetrics() {
