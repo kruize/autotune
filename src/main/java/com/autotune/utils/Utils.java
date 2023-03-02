@@ -25,6 +25,7 @@ import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 
+import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -141,6 +142,15 @@ public class Utils
 			return AnalyzerConstants.MetricName.memoryRSS;
 
 		return null;
+	}
+
+	public static void addCORSHeaders(HttpServletResponse response) {
+		if (null != response) {
+			response.addHeader("Access-Control-Allow-Origin", "*");
+			response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+			response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+			response.addHeader("Access-Control-Max-Age", "1728000");
+		}
 	}
 
 	public static class Converters {
