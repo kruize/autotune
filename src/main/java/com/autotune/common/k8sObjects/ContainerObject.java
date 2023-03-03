@@ -18,6 +18,7 @@ package com.autotune.common.k8sObjects;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
+import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -31,7 +32,7 @@ public class ContainerObject {
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
     @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
-    private HashMap<Timestamp, HashMap<String, Recommendation>> recommendations;
+    private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
     private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
@@ -63,11 +64,11 @@ public class ContainerObject {
         this.results = results;
     }
 
-    public HashMap<Timestamp, HashMap<String, Recommendation>> getRecommendations() {
+    public HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> getRecommendations() {
         return recommendations;
     }
 
-    public void setRecommendations(HashMap<Timestamp, HashMap<String, Recommendation>> recommendations) {
+    public void setRecommendations(HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations) {
         this.recommendations = recommendations;
     }
 
