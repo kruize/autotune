@@ -151,7 +151,8 @@ public class AnalyzerConstants {
     public enum RecommendationNotificationTypes {
         INFO ("info", 1),
         WARN ("warning", 2),
-        ERROR ("error", 3);
+        ERROR ("error", 3),
+        CRITICAL ("critical", 4);
 
         private String name;
         private int severity;

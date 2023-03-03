@@ -58,6 +58,7 @@ public class GenerateRecommendation {
                     HashMap<String,HashMap<String, Recommendation>> recCatMap = new HashMap<String, HashMap<String, Recommendation>>();
                     for (AnalyzerConstants.RecommendationCategory recommendationCategory : AnalyzerConstants.RecommendationCategory.values()) {
                         HashMap<String, Recommendation> recommendationPeriodMap = new HashMap<>();
+                        // TODO: add appropriate sub functions and call via switch case
                         if (recommendationCategory.getName().equalsIgnoreCase(AutotuneConstants.JSONKeys.DURATION_BASED)) {
                             for (String recPeriod : recommendation_periods.keySet()) {
                                 int days = recommendation_periods.get(recPeriod);
