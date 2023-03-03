@@ -244,6 +244,10 @@ public final class KruizeObject {
         return clusterName;
     }
 
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
     public String getApiVersion() {
         return apiVersion;
     }
