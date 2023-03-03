@@ -337,6 +337,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
 ```
 [
     {
+        "cluster_name": "cluster-one-division-bell",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -485,6 +486,7 @@ If no parameter is passed API returns all the recommendations available.
 ```
 [
   {
+        "cluster_name": "cluster-one-division-bell",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -506,6 +508,7 @@ If no parameter is passed API returns all the recommendations available.
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_2"
     },
     {
+        "cluster_name": "cluster-one-division-bell",
         "kubernetes_objects": [
             {
                 "type": "deployment",
