@@ -17,6 +17,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.RecommendationConfigItem;
+import com.autotune.common.data.result.RecommendationNotification;
 import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
@@ -86,7 +87,10 @@ public class GenerateRecommendation {
                             recommendation.setConfig(config);
                             recommendationPeriodMap.put(recPeriod, recommendation);
                         } else {
-                            recommendationPeriodMap.put(recPeriod, new Recommendation("There is not enough data available to generate a recommendation."));
+                            RecommendationNotification notification = new RecommendationNotification(
+                                    AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
+                                    AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                            recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
                         }
                     }
                     HashMap<Timestamp, HashMap<AnalyzerConstants.RecommendationCategory,HashMap<String, Recommendation>>>  containerRecommendationMap = containerObject.getRecommendations();
