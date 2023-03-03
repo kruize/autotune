@@ -119,6 +119,11 @@ public class Recommendation {
         this.variation = variation;
     }
 
+    public void addNotification(RecommendationNotification notification) {
+        if (null != notification)
+            this.notifications.add(notification);
+    }
+
     @Override
     public String toString() {
         return "Recommendation{" +
