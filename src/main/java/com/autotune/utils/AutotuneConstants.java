@@ -174,6 +174,8 @@ public class AutotuneConstants {
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
+        public static final String DURATION_BASED = "duration_based";
+        public static final String PROFILE_BASED = "profile_based";
         private JSONKeys() {
         }
     }

@@ -135,8 +135,17 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationCategory {
-        duration_based,
-        profile_based
+        DURATION_BASED(AutotuneConstants.JSONKeys.DURATION_BASED),
+        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED);
+
+        private String name;
+        private RecommendationCategory(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
     }
 
     public enum RecommendationNotificationTypes {
