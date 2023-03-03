@@ -134,6 +134,11 @@ public class AnalyzerConstants {
         limits
     }
 
+    public enum RecommendationCategory {
+        duration_based,
+        profile_based
+    }
+
     public enum MetricName {
         cpuRequest,
         cpuLimit,

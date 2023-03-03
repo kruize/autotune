@@ -54,6 +54,7 @@ public class GenerateRecommendation {
                     Timestamp monitorEndDate = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerObject.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
+                    HashMap<AnalyzerConstants.RecommendationCategory,HashMap<String, Recommendation>> recCatMap = new HashMap<AnalyzerConstants.RecommendationCategory,HashMap<String, Recommendation>>();
                     HashMap<String, Recommendation> recommendationPeriodMap = new HashMap<>();
                     for (String recPeriod : recommendation_periods.keySet()) {
                         int days = recommendation_periods.get(recPeriod);
@@ -88,10 +89,11 @@ public class GenerateRecommendation {
                             recommendationPeriodMap.put(recPeriod, new Recommendation("There is not enough data available to generate a recommendation."));
                         }
                     }
-                    HashMap<Timestamp, HashMap<String, Recommendation>> containerRecommendationMap = containerObject.getRecommendations();
+                    HashMap<Timestamp, HashMap<AnalyzerConstants.RecommendationCategory,HashMap<String, Recommendation>>>  containerRecommendationMap = containerObject.getRecommendations();
                     if (null == containerRecommendationMap)
                         containerRecommendationMap = new HashMap<>();
-                    containerRecommendationMap.put(monitorEndDate, recommendationPeriodMap);
+                    recCatMap.put(AnalyzerConstants.RecommendationCategory.duration_based, recommendationPeriodMap);
+                    containerRecommendationMap.put(monitorEndDate, recCatMap);
                     containerObject.setRecommendations(containerRecommendationMap);
                     System.out.println(containerRecommendationMap);
                 }
