@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.data.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.data.RecommendationSubCategory;
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.RecommendationConfigItem;
 import com.autotune.common.data.result.RecommendationNotification;
@@ -38,19 +40,11 @@ import java.util.stream.Collectors;
 public class GenerateRecommendation {
     private static final Logger LOGGER = LoggerFactory.getLogger(GenerateRecommendation.class);
 
-    private static Map<String, Integer> recommendation_periods = new HashMap<>();
-
-
     public static void generateRecommendation(KruizeObject kruizeObject) {
         try {
-            recommendation_periods.put(AutotuneConstants.JSONKeys.SHORT_TERM, 1);
-            recommendation_periods.put(AutotuneConstants.JSONKeys.MEDIUM_TERM, 7);
-            recommendation_periods.put(AutotuneConstants.JSONKeys.LONG_TERM, 15);
-
             for (String dName : kruizeObject.getDeployments().keySet()) {
                 DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
                 for (String cName : deploymentObj.getContainers().keySet()) {
-                    System.out.println(cName);
                     ContainerObject containerObject = deploymentObj.getContainers().get(cName);
                     Timestamp monitorEndDate = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerObject.getResults().keySet().stream().min(Timestamp::compareTo).get();
@@ -58,48 +52,53 @@ public class GenerateRecommendation {
                     HashMap<String,HashMap<String, Recommendation>> recCatMap = new HashMap<String, HashMap<String, Recommendation>>();
                     for (AnalyzerConstants.RecommendationCategory recommendationCategory : AnalyzerConstants.RecommendationCategory.values()) {
                         HashMap<String, Recommendation> recommendationPeriodMap = new HashMap<>();
-                        // TODO: add appropriate sub functions and call via switch case
-                        if (recommendationCategory.getName().equalsIgnoreCase(AutotuneConstants.JSONKeys.DURATION_BASED)) {
-                            for (String recPeriod : recommendation_periods.keySet()) {
-                                int days = recommendation_periods.get(recPeriod);
-                                monitorStartDate = addDays(monitorEndDate, -1 * days);
-                                if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
-                                    Timestamp finalMonitorStartDate = monitorStartDate;
-                                    System.out.println(finalMonitorStartDate);
-                                    System.out.println(monitorEndDate);
-                                    Map<Timestamp, StartEndTimeStampResults> filteredResultsMap = containerObject.getResults().entrySet().stream()
-                                            .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
-                                                    && (x.getKey().compareTo(monitorEndDate) <= 0))))
-                                            .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-                                    System.out.println(filteredResultsMap);
-                                    Recommendation recommendation = new Recommendation(monitorStartDate, monitorEndDate);
-                                    HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
-                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
-                                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUCapacityRecommendation(filteredResultsMap));
-                                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryCapacityRecommendation(filteredResultsMap));
-                                    config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
-                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
-                                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUMaxRecommendation(filteredResultsMap));
-                                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryMaxRecommendation(filteredResultsMap));
-                                    config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-                                    Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
-                                            .collect(Collectors.toList())
-                                            .stream()
-                                            .mapToDouble(f -> f.doubleValue()).sum() / 60;
-                                    recommendation.setDuration_in_hours(hours);
-                                    recommendation.setConfig(config);
-                                    recommendationPeriodMap.put(recPeriod, recommendation);
-                                } else {
-                                    RecommendationNotification notification = new RecommendationNotification(
-                                            AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                                            AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
-                                    recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
+                        // TODO: Add all possible cases which are added in RecommendationCategory
+                        switch (recommendationCategory) {
+                            case DURATION_BASED:
+                                for (RecommendationSubCategory recommendationSubCategory : recommendationCategory.getRecommendationSubCategories()) {
+                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
+                                    String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
+                                    int days = durationBasedRecommendationSubCategory.getDuration();
+                                    monitorStartDate = addDays(monitorEndDate, -1 * days);
+                                    if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
+                                        Timestamp finalMonitorStartDate = monitorStartDate;
+                                        System.out.println(finalMonitorStartDate);
+                                        System.out.println(monitorEndDate);
+                                        Map<Timestamp, StartEndTimeStampResults> filteredResultsMap = containerObject.getResults().entrySet().stream()
+                                                .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
+                                                        && (x.getKey().compareTo(monitorEndDate) <= 0))))
+                                                .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+                                        System.out.println(filteredResultsMap);
+                                        Recommendation recommendation = new Recommendation(monitorStartDate, monitorEndDate);
+                                        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+                                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
+                                        requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUCapacityRecommendation(filteredResultsMap));
+                                        requestsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryCapacityRecommendation(filteredResultsMap));
+                                        config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+                                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
+                                        limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPUMaxRecommendation(filteredResultsMap));
+                                        limitsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryMaxRecommendation(filteredResultsMap));
+                                        config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+                                        Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
+                                                .collect(Collectors.toList())
+                                                .stream()
+                                                .mapToDouble(f -> f.doubleValue()).sum() / 60;
+                                        recommendation.setDuration_in_hours(hours);
+                                        recommendation.setConfig(config);
+                                        recommendationPeriodMap.put(recPeriod, recommendation);
+                                    } else {
+                                        RecommendationNotification notification = new RecommendationNotification(
+                                                AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
+                                                AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                                        recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
+                                    }
                                 }
-                            }
-                            // This needs to be moved to common area after implementing other categories of recommedations
-                            recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
-                        } else if (recommendationCategory.getName().equalsIgnoreCase(AutotuneConstants.JSONKeys.PROFILE_BASED)) {
-                            // TODO: Needs to be implemented
+                                // This needs to be moved to common area after implementing other categories of recommedations
+                                recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
+                                break;
+                            case PROFILE_BASED:
+                                // Need to be implemented
+                                break;
                         }
                     }
                     HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>  containerRecommendationMap = containerObject.getRecommendations();

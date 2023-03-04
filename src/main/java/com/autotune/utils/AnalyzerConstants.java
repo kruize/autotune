@@ -15,7 +15,12 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.data.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.data.ProfileBasedRecommendationSubCategory;
+import com.autotune.analyzer.data.RecommendationSubCategory;
+
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -148,16 +153,43 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationCategory {
-        DURATION_BASED(AutotuneConstants.JSONKeys.DURATION_BASED),
-        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED);
+        DURATION_BASED(
+                AutotuneConstants.JSONKeys.DURATION_BASED,
+                new DurationBasedRecommendationSubCategory[]{
+                        new DurationBasedRecommendationSubCategory(
+                                AutotuneConstants.JSONKeys.SHORT_TERM,
+                                1,
+                                TimeUnit.DAYS
+                        ),
+                        new DurationBasedRecommendationSubCategory(
+                                AutotuneConstants.JSONKeys.MEDIUM_TERM,
+                                7,
+                                TimeUnit.DAYS
+                        ),
+                        new DurationBasedRecommendationSubCategory(
+                                AutotuneConstants.JSONKeys.LONG_TERM,
+                                15,
+                                TimeUnit.DAYS
+                        ),
+                }
+        ),
+        // Need to update with profile based sub categories
+        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED, null);
 
         private String name;
-        private RecommendationCategory(String name) {
+        private RecommendationSubCategory[] recommendationSubCategories;
+
+        private RecommendationCategory(String name, RecommendationSubCategory[] recommendationSubCategories) {
             this.name = name;
+            this.recommendationSubCategories = recommendationSubCategories;
         }
 
         public String getName() {
             return this.name;
+        }
+
+        public RecommendationSubCategory[] getRecommendationSubCategories() {
+            return this.recommendationSubCategories;
         }
     }
 
