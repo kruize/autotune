@@ -63,4 +63,5 @@ public class ServerContext {
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
     public static final String LIST_NAMESPACES = QUERY_CONTEXT + "listNamespaces";
     public static final String LIST_DEPLOYMENTS = QUERY_CONTEXT + "listDeployments";
+    public static final String LIST_K8S_OBJECTS = QUERY_CONTEXT + "listK8sObjects";
 }
