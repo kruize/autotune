@@ -97,7 +97,7 @@ jobs:
           echo Deploy kruize in crc mode
           echo "***************************************************************"
           cp ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old
-          sed -e "s/image: \"kruize\/autotune_operator:.*\"/image: \"autotune_operator:test\"/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+          sed -e "s/image: kruize\/autotune_operator:.*/image: autotune_operator:test/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           kubectl apply -f ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
