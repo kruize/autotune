@@ -138,16 +138,18 @@ spec:
               value: "info"
             - name: ROOT_LOGGING_LEVEL
               value: "info"
-            - name: DATABASE_URL
+            - name: DB_URL
               value: "postgres-service"
             - name: DB_PORT
               value: "5432"
             - name: DB_NAME
               value: "kruizeDB"
-            - name: DATABASE_USER
+            - name: DB_USER
               value: "admin"
-            - name: DATABASE_PASSWORD
+            - name: DB_PASSWORD
               value: "admin"
+            - name: DB_DRIVER
+              value: "jdbc:postgresql://"
           ports:
             - name: kruize-port
               containerPort: 8080
