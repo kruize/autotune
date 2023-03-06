@@ -1,4 +1,4 @@
-name: Test on Pull Request 
+name: Test on Pull Request
 
 # Controls when the action will run. 
 on:
@@ -61,9 +61,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-           name: autotune-results
-           path: ./autotune_results.tar
-           retention-days: 2
+          name: autotune-results
+          path: ./autotune_results.tar
+          retention-days: 2
 
 
   build_crc:
@@ -96,12 +96,12 @@ jobs:
         run: |
           echo Deploy kruize in crc mode
           echo "***************************************************************"
-          cp ./manifests/crc/kruize-crc-minikube.yaml ./manifests/crc/kruize-crc-minikube.yaml.old
+          cp ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old
           KRUIZE_VERSION="$(grep -A 1 "autotune" pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
-          sed -e "s/image: \"kruize\/autotune_operator:$KRUIZE_VERSION\"/image: \"autotune_operator:test\"/g" ./manifests/crc/kruize-crc-minikube.yaml.old > ./manifests/crc/kruize-crc-minikube.yaml
-          sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/kruize-crc-minikube.yaml
-          cat ./manifests/crc/kruize-crc-minikube.yaml
-          kubectl apply -f ./manifests/crc/kruize-crc-minikube.yaml
+          sed -e "s/image: \"kruize\/autotune_operator:$KRUIZE_VERSION\"/image: \"autotune_operator:test\"/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+          sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+          cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+          kubectl apply -f ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           sleep 120
           ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}
       - name: Archive results
@@ -114,7 +114,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-           name: crc-results
-           path: ./crc_results.tar
-           retention-days: 2
+          name: crc-results
+          path: ./crc_results.tar
+          retention-days: 2
 
