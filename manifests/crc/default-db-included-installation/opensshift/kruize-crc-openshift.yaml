@@ -62,7 +62,7 @@ spec:
       #  fsGroup: 1001
       containers:
         - name: postgres
-          image: postgres:latest
+          image: postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD

@@ -51,7 +51,7 @@ spec:
       #  runAsUser: 1000
       containers:
         - name: postgres
-          image: postgres:latest
+          image: postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
@@ -106,7 +106,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.8_mvp
+          image: docker.io/msvinaykumar/autotune_operator:ros
           imagePullPolicy: Always
           env:
             - name: CLUSTER_TYPE
