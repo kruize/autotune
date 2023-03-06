@@ -29,13 +29,13 @@ public class KruizeHibernateUtil {
         SessionFactory sfTemp = null;
         try {
             Configuration configuration = new Configuration().configure();
-            String connectionURL = "jdbc:postgresql://" +
-                    System.getenv("DATABASE_URL") +
+            String connectionURL = System.getenv("DB_DRIVER") +
+                    System.getenv("DB_URL") +
                     ":" + System.getenv("DB_PORT") +
                     "/" + System.getenv("DB_NAME");
             configuration.setProperty("hibernate.connection.url", connectionURL);
-            configuration.setProperty("hibernate.connection.username", System.getenv("DATABASE_USER"));
-            configuration.setProperty("hibernate.connection.password", System.getenv("DATABASE_PASSWORD"));
+            configuration.setProperty("hibernate.connection.username", System.getenv("DB_USER"));
+            configuration.setProperty("hibernate.connection.password", System.getenv("DB_PASSWORD"));
             sfTemp = configuration.buildSessionFactory();
         } catch (Exception e) {
             LOGGER.error("DB init failed due to : {}", e.getMessage());
@@ -43,7 +43,6 @@ public class KruizeHibernateUtil {
         } finally {
             sessionFactory = sfTemp;
         }
-
     }
 
     public static Session getSession() {

@@ -18,20 +18,17 @@ package com.autotune.dbactivites.livenessProbe;
 import com.autotune.dbactivites.init.KruizeHibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestDBConnection {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestDBConnection.class);
+
     public static void main(String[] args) {
-        System.out.println("Checking DB connection...");
+        LOGGER.debug("Checking DB connection...");
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = factory.openSession();
-        String sql = "SELECT routine_name FROM information_schema.routines WHERE routine_schema='public' AND routine_type='FUNCTION'";
-        List<String> functionNames = session.createNativeQuery(sql).getResultList();
-        for (String functionName : functionNames) {
-            System.out.println("Function: " + functionName);
-        }
         session.close();
-        System.out.println("DB connection successful!");
+        LOGGER.debug("DB connection successful!");
     }
 }
