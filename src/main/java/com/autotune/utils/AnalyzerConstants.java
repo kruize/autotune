@@ -134,6 +134,43 @@ public class AnalyzerConstants {
         limits
     }
 
+    public enum RecommendationCategory {
+        DURATION_BASED(AutotuneConstants.JSONKeys.DURATION_BASED),
+        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED);
+
+        private String name;
+        private RecommendationCategory(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    public enum RecommendationNotificationTypes {
+        INFO ("info", 1),
+        WARN ("warning", 2),
+        ERROR ("error", 3),
+        CRITICAL ("critical", 4);
+
+        private String name;
+        private int severity;
+
+        private RecommendationNotificationTypes(String name, int severity) {
+            this.name = name;
+            this.severity = severity;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getSeverity() {
+            return severity;
+        }
+    }
+
     public enum MetricName {
         gc,
         cpuRequest,
@@ -468,5 +505,13 @@ public class AnalyzerConstants {
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
 
+    }
+
+    public static final class RecommendationNotificationMsgConstant {
+        private RecommendationNotificationMsgConstant() {
+
+        }
+
+        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
     }
 }
