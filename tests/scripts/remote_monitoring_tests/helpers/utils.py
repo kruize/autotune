@@ -98,7 +98,7 @@ update_results_test_data = {
         "memoryRSS_format": "\"MiB\""
     }
 
-test_type = {"blank": "\"\"", "null": "NULL", "invalid": "\"xyz\""}
+test_type = {"blank": "\"\"", "null": "null", "invalid": "\"xyz\""}
 
 def generate_test_data(csvfile, test_data):
     if os.path.isfile(csvfile):
