@@ -86,6 +86,8 @@ public class ContainerObject {
                 "image='" + image + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
+                ", recommendations=" + recommendations +
+                ", metrics=" + metrics +
                 '}';
     }
 }

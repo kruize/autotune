@@ -34,10 +34,10 @@ public class AggregationInfoResult {
     }
 
     public AggregationInfoResult(JSONObject jsonObject) {
-        this.sum = (jsonObject.has(AutotuneConstants.JSONKeys.SUM)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SUM) : Double.MIN_VALUE;
-        this.avg = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
-        this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MAX) : Double.MIN_VALUE;
-        this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MIN) : Double.MIN_VALUE;
+        this.sum = (jsonObject.has(AutotuneConstants.JSONKeys.SUM)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.SUM) : Double.MIN_VALUE;
+        this.avg = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
+        this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MAX) : Double.MIN_VALUE;
+        this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MIN) : Double.MIN_VALUE;
         this.format = (jsonObject.has(AutotuneConstants.JSONKeys.FORMAT)) ? jsonObject.getString(AutotuneConstants.JSONKeys.FORMAT) : "";
     }
 
@@ -83,12 +83,12 @@ public class AggregationInfoResult {
 
     @Override
     public String toString() {
-        return "GeneralInfoResult{" +
+        return "AggregationInfoResult{" +
                 "sum=" + sum +
                 ", avg=" + avg +
                 ", min=" + min +
                 ", max=" + max +
-                ", units='" + format + '\'' +
+                ", format='" + format + '\'' +
                 '}';
     }
 }

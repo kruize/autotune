@@ -17,9 +17,11 @@ package com.autotune.analyzer.serviceObjects;
 
 
 import com.autotune.common.data.metrics.MetricResults;
+import com.google.gson.annotations.SerializedName;
 
 public class ContainerMetricsHelper {
     public String name;
+    @SerializedName("results")
     public MetricResults metricResults;
 
     public String getName() {
@@ -36,5 +38,12 @@ public class ContainerMetricsHelper {
 
     public void setMetricResults(MetricResults metricResults) {
         this.metricResults = metricResults;
+    }
+    @Override
+    public String toString() {
+        return "ContainerMetricsHelper{" +
+                "name='" + name + '\'' +
+                ", metricResults=" + metricResults +
+                '}';
     }
 }
