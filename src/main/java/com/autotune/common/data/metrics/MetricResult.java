@@ -1,32 +1,33 @@
 package com.autotune.common.data.metrics;
 
+import com.autotune.common.data.result.AggregationInfoResult;
 import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AutotuneConstants;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
-public class EMMetricResult implements ConvertToJSON {
+public class MetricResult implements ConvertToJSON {
     @SerializedName("aggregation_info")
-    private EMMetricGenericResults emMetricGenericResults;
+    private AggregationInfoResult aggregationInfoResult;
     @SerializedName("percentile_info")
-    private EMMetricPercentileResults emMetricPercentileResults;
+    private MetricPercentileResults metricPercentileResults;
     private boolean isPercentileResultsAvailable;
 
-    public EMMetricResult() {
-        emMetricGenericResults = new EMMetricGenericResults();
-        emMetricPercentileResults = new EMMetricPercentileResults();
+    public MetricResult() {
+        aggregationInfoResult = new AggregationInfoResult();
+        metricPercentileResults = new MetricPercentileResults();
     }
 
-    public EMMetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
+    public MetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
         if (!jsonObject.has(AutotuneConstants.JSONKeys.AGGREGATION_INFO) &&
                 !jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             throw new IncompatibleInputJSONException();
         }
-        emMetricGenericResults = new EMMetricGenericResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.AGGREGATION_INFO));
+        aggregationInfoResult = new AggregationInfoResult(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.AGGREGATION_INFO));
         if (jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             isPercentileResultsAvailable = true;
-            emMetricPercentileResults = new EMMetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
+            metricPercentileResults = new MetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
 
@@ -41,18 +42,18 @@ public class EMMetricResult implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AutotuneConstants.JSONKeys.AGGREGATION_INFO, emMetricGenericResults.toJSON());
+        jsonObject.put(AutotuneConstants.JSONKeys.AGGREGATION_INFO, aggregationInfoResult.toJSON());
         if (isPercentileResultsAvailable) {
-            jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, emMetricPercentileResults.toJSON());
+            jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, metricPercentileResults.toJSON());
         }
         return jsonObject;
     }
 
-    public EMMetricGenericResults getEmMetricGenericResults() {
-        return emMetricGenericResults;
+    public AggregationInfoResult getAggregationInfoResult() {
+        return aggregationInfoResult;
     }
 
-    public EMMetricPercentileResults getEmMetricPercentileResults() {
-        return emMetricPercentileResults;
+    public MetricPercentileResults getEmMetricPercentileResults() {
+        return metricPercentileResults;
     }
 }

@@ -15,12 +15,32 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-public class AggregationInfoResult {
+import com.autotune.common.interfaces.ConvertToJSON;
+import com.autotune.utils.AutotuneConstants;
+import org.json.JSONObject;
+
+public class AggregationInfoResult implements ConvertToJSON {
     private Double sum;
     private Double avg;
     private Double min;
     private Double max;
     private String format;
+
+    public AggregationInfoResult() {
+        sum = Double.MIN_VALUE;
+        avg = Double.MIN_VALUE;
+        min = Double.MIN_VALUE;
+        max = Double.MIN_VALUE;
+        format = "";
+    }
+
+    public AggregationInfoResult(JSONObject jsonObject) {
+        this.sum = (jsonObject.has(AutotuneConstants.JSONKeys.SUM)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.SUM) : Double.MIN_VALUE;
+        this.avg = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
+        this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MAX) : Double.MIN_VALUE;
+        this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.MIN) : Double.MIN_VALUE;
+        this.format = (jsonObject.has(AutotuneConstants.JSONKeys.FORMAT)) ? jsonObject.getString(AutotuneConstants.JSONKeys.FORMAT) : "";
+    }
 
     public Double getSum() {
         return sum;
@@ -71,5 +91,21 @@ public class AggregationInfoResult {
                 ", max=" + max +
                 ", units='" + format + '\'' +
                 '}';
+    }
+
+    @Override
+    public JSONObject toJSON() {
+        JSONObject jsonObject = new JSONObject();
+        if (this.sum != Double.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.SUM, sum);
+        if (this.avg != Double.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.MEAN, avg);
+        if (this.max != Double.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.MAX, max);
+        if (this.min != Double.MIN_VALUE)
+            jsonObject.put(AutotuneConstants.JSONKeys.MIN, min);
+        if (null != this.format && !this.format.isEmpty() && !this.format.isBlank())
+            jsonObject.put(AutotuneConstants.JSONKeys.FORMAT, this.format);
+        return jsonObject;
     }
 }

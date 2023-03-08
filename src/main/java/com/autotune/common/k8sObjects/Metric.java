@@ -14,7 +14,7 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.metrics.MetricResult;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;
@@ -39,9 +39,9 @@ public final class Metric {
     private final String valueType;
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
-    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<>();
-    private EMMetricResult emMetricResult;
-    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<>();
+    private final LinkedHashMap<String, MetricResult> trialSummaryResult = new LinkedHashMap<>();
+    private MetricResult metricResult;
+    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")
     private List<AggregationFunctions> aggregationFunctions;
 
@@ -70,19 +70,19 @@ public final class Metric {
         return valueType;
     }
 
-    public EMMetricResult getEmMetricResult() {
-        return emMetricResult;
+    public MetricResult getEmMetricResult() {
+        return metricResult;
     }
 
-    public void setEmMetricResult(EMMetricResult emMetricResult) {
-        this.emMetricResult = emMetricResult;
+    public void setEmMetricResult(MetricResult metricResult) {
+        this.metricResult = metricResult;
     }
 
-    public LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> getCycleDataMap() {
+    public LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>>> getCycleDataMap() {
         return cycleDataMap;
     }
 
-    public LinkedHashMap<String, EMMetricResult> getTrialSummaryResult() {
+    public LinkedHashMap<String, MetricResult> getTrialSummaryResult() {
         return trialSummaryResult;
     }
 
@@ -110,7 +110,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
-                ", emMetricResult=" + emMetricResult +
+                ", emMetricResult=" + metricResult +
                 ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }

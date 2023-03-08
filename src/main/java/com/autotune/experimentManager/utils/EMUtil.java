@@ -16,7 +16,7 @@
 package com.autotune.experimentManager.utils;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.metrics.MetricResult;
 import com.autotune.common.data.result.*;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
@@ -146,9 +146,9 @@ public class EMUtil {
         List<PodResultData> podResultDataList = new ArrayList<>();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
                 AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                aggregationInfoResult.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                aggregationInfoResult.setAvg(podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                 HashMap<String, AggregationInfoResult> generalInfoResultHashMap = new HashMap<>();
                 generalInfoResultHashMap.put("general_info", aggregationInfoResult);
                 PodResultData podResultData = new PodResultData();
@@ -167,11 +167,11 @@ public class EMUtil {
             HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
+                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
                     Results results = new Results();
                     AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                    aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                    aggregationInfoResult.setFormat(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
+                    aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
+                    aggregationInfoResult.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
                     results.setAggregation_info(aggregationInfoResult);
                     HashMap<String, Results> resultsHashMap = new HashMap<>();
                     resultsHashMap.put("results", results);
@@ -203,7 +203,7 @@ public class EMUtil {
         HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
+            LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
             try {
                 if (null != iterationDataMap) {
                     LOGGER.debug(iterationDataMap.toString());
@@ -225,7 +225,7 @@ public class EMUtil {
             JSONArray containerMetrics = new JSONArray();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
+                LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
                 if (null != iterationDataMap) {
                     JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
                     JSONObject containerMetricJSON = new JSONObject();

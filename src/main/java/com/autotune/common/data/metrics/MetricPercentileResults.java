@@ -4,7 +4,7 @@ import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
-public class EMMetricPercentileResults implements ConvertToJSON {
+public class MetricPercentileResults implements ConvertToJSON {
     private float percentile50;
     private float percentile97;
     private float percentile95;
@@ -15,7 +15,7 @@ public class EMMetricPercentileResults implements ConvertToJSON {
     private float percentile99Point9999;
     private float percentile100;
 
-    public EMMetricPercentileResults() {
+    public MetricPercentileResults() {
         this.percentile50 = Float.MIN_VALUE;
         this.percentile97 = Float.MIN_VALUE;
         this.percentile95 = Float.MIN_VALUE;
@@ -27,7 +27,7 @@ public class EMMetricPercentileResults implements ConvertToJSON {
         this.percentile100 = Float.MIN_VALUE;
     }
 
-    public EMMetricPercentileResults(JSONObject jsonObject) {
+    public MetricPercentileResults(JSONObject jsonObject) {
         this.percentile50 = (jsonObject.has(AutotuneConstants.JSONKeys.P_50_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_50_0) : Float.MIN_VALUE;
         this.percentile95 = (jsonObject.has(AutotuneConstants.JSONKeys.P_95_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_95_0) : Float.MIN_VALUE;
         this.percentile97 = (jsonObject.has(AutotuneConstants.JSONKeys.P_97_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_97_0) : Float.MIN_VALUE;

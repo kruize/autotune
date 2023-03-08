@@ -60,16 +60,16 @@ public class PostResultsHandler implements EMHandlerInterface {
             HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
             for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
                 Metric podMetric = podMetricEntry.getValue();
-                if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                    LOGGER.info("Mean result for {} is {} ", podMetric.getName(), podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+                    LOGGER.info("Mean result for {} is {} ", podMetric.getName(), podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                 }
             }
             HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
             for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
                 for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                     Metric containerMetric = containerMetricEntry.getValue();
-                    if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                        LOGGER.info("Mean result for {} is {} ", containerMetric.getName(), containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+                        LOGGER.info("Mean result for {} is {} ", containerMetric.getName(), containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                     }
                 }
             }
