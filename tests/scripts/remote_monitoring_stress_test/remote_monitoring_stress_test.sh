@@ -35,7 +35,7 @@ CONTAINER_NAME=kruize
 NAMESPACE=monitoring
 
 target="crc"
-KRUIZE_IMAGE="kruize/autotune_operator:0.0.8_mvp"
+KRUIZE_IMAGE="kruize/autotune_operator:test"
 
 jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
