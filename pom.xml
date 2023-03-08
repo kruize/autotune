@@ -20,6 +20,9 @@
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.13</apachehttpclient-version>
         <gson-version>2.9.0</gson-version>
+        <postgresql-version>42.3.1</postgresql-version>
+        <hibernatecore-version>5.5.7.Final</hibernatecore-version>
+        <hibernatecp30-version>5.5.7.Final</hibernatecp30-version>
     </properties>
     <dependencies>
         <dependency>
@@ -133,6 +136,24 @@
             <artifactId>gson</artifactId>
             <version>${gson-version}</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernatecore-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-c3p0</artifactId>
+            <version>${hibernatecp30-version}</version>
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>

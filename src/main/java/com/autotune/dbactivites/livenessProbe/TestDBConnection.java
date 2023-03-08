@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2023 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,20 @@
  *******************************************************************************/
 package com.autotune.dbactivites.livenessProbe;
 
+import com.autotune.dbactivites.init.KruizeHibernateUtil;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TestDBConnection {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestDBConnection.class);
+
     public static void main(String[] args) {
-        System.out.println("Checking DB connection...");
-        //TO DO Next PR
-        System.out.println("DB connection successful!");
+        LOGGER.debug("Checking DB connection...");
+        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+        Session session = factory.openSession();
+        session.close();
+        LOGGER.debug("DB connection successful!");
     }
 }
