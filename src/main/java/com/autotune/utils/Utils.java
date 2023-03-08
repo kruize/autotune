@@ -19,6 +19,7 @@ import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
@@ -229,10 +230,10 @@ public class Utils
 						Containers containers =  new Containers();
 						containers.setContainer_name(containerObject.getContainer_name());
 						containers.setImage_name(containerObject.getImage());
-						HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> metricsMap =  new HashMap<>();
+						HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> metricsMap =  new HashMap<>();
 						for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
-							HashMap<String, Results> resultsHashMap =  new HashMap<>();
-							resultsHashMap.put("results", containerMetricsHelper.getResults());
+							HashMap<String, MetricResults> resultsHashMap =  new HashMap<>();
+							resultsHashMap.put("results", containerMetricsHelper.getMetricResults());
 							AnalyzerConstants.MetricName metricName = getAppropriateMetricName(containerMetricsHelper.getName());
 							if (null != metricName) {
 								metricsMap.put(metricName, resultsHashMap);

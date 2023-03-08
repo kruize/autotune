@@ -1,10 +1,9 @@
 package com.autotune.common.data.metrics;
 
-import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
-public class MetricPercentileResults implements ConvertToJSON {
+public class MetricPercentileResults {
     private float percentile50;
     private float percentile97;
     private float percentile95;
@@ -111,27 +110,4 @@ public class MetricPercentileResults implements ConvertToJSON {
         this.percentile100 = percentile100;
     }
 
-    @Override
-    public JSONObject toJSON() {
-        JSONObject jsonObject = new JSONObject();
-        if (this.percentile50 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_50_0, percentile50);
-        if (this.percentile95 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_95_0, percentile95);
-        if (this.percentile97 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_97_0, percentile97);
-        if (this.percentile99 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_99_0, percentile99);
-        if (this.percentile99Point9 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_99_9, percentile99Point9);
-        if (this.percentile99Point99 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_99_99, percentile99Point99);
-        if (this.percentile99Point999 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_99_999, percentile99Point999);
-        if (this.percentile99Point9999 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_99_9999, percentile99Point9999);
-        if (this.percentile100 != Float.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.P_100_0, percentile100);
-        return jsonObject;
-    }
 }

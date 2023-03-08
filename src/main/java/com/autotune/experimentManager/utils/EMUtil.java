@@ -16,7 +16,7 @@
 package com.autotune.experimentManager.utils;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
-import com.autotune.common.data.metrics.MetricResult;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
@@ -164,17 +164,17 @@ public class EMUtil {
             containers.setContainer_name(containerMapEntry.getKey());
             containers.setImage_name(null);
 
-            HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> containerMetrics = new HashMap<>();
+            HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
-                    Results results = new Results();
+                    MetricResults metricResults = new MetricResults();
                     AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
                     aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                     aggregationInfoResult.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
-                    results.setAggregation_info(aggregationInfoResult);
-                    HashMap<String, Results> resultsHashMap = new HashMap<>();
-                    resultsHashMap.put("results", results);
+                    metricResults.setAggregationInfoResult(aggregationInfoResult);
+                    HashMap<String, MetricResults> resultsHashMap = new HashMap<>();
+                    resultsHashMap.put("results", metricResults);
                     containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);
                 }
             }
@@ -203,7 +203,7 @@ public class EMUtil {
         HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
+            LinkedHashMap<String, LinkedHashMap<Integer, com.autotune.common.data.metrics.MetricResults>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
             try {
                 if (null != iterationDataMap) {
                     LOGGER.debug(iterationDataMap.toString());
@@ -225,7 +225,7 @@ public class EMUtil {
             JSONArray containerMetrics = new JSONArray();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                LinkedHashMap<String, LinkedHashMap<Integer, MetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
+                LinkedHashMap<String, LinkedHashMap<Integer, com.autotune.common.data.metrics.MetricResults>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
                 if (null != iterationDataMap) {
                     JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
                     JSONObject containerMetricJSON = new JSONObject();

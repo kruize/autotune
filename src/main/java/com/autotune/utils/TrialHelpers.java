@@ -23,7 +23,7 @@ import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.layer.Layer;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
-import com.autotune.common.data.metrics.MetricResult;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.*;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.k8sObjects.Metric;
@@ -104,10 +104,10 @@ public class TrialHelpers {
         }
         for (Object metricPodObject : podMetricsArray) {
             JSONObject podMetric = (JSONObject) metricPodObject;
-            MetricResult metricResult = new MetricResult(podMetric.getJSONObject(SUMMARY_RESULTS));
+            MetricResults metricResults = new MetricResults(podMetric.getJSONObject(SUMMARY_RESULTS));
             String metricName = podMetric.getString(NAME);
             Metric metric = experimentTrial.getPodMetricsHashMap().get(metricName);
-            metric.setEmMetricResult(metricResult);
+            metric.setEmMetricResult(metricResults);
         }
         LOGGER.info("Successfully updated results for trialNum: " + trialNumber);
     }

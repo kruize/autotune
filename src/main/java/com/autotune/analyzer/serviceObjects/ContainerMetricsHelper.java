@@ -15,11 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.common.data.result.Results;
+
+import com.autotune.common.data.metrics.MetricResults;
 
 public class ContainerMetricsHelper {
     public String name;
-    public Results results;
+    public MetricResults metricResults;
 
     public String getName() {
         return name;
@@ -29,11 +30,11 @@ public class ContainerMetricsHelper {
         this.name = name;
     }
 
-    public Results getResults() {
-        return results;
+    public MetricResults getMetricResults() {
+        return metricResults;
     }
 
-    public void setResults(Results results) {
-        this.results = results;
+    public void setMetricResults(MetricResults metricResults) {
+        this.metricResults = metricResults;
     }
 }

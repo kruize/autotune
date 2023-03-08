@@ -1,25 +1,26 @@
 package com.autotune.common.data.metrics;
 
 import com.autotune.common.data.result.AggregationInfoResult;
-import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AutotuneConstants;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
-public class MetricResult implements ConvertToJSON {
+public class MetricResults {
     @SerializedName("aggregation_info")
     private AggregationInfoResult aggregationInfoResult;
     @SerializedName("percentile_info")
     private MetricPercentileResults metricPercentileResults;
+    private Double value;
+    private String format;
     private boolean isPercentileResultsAvailable;
 
-    public MetricResult() {
+    public MetricResults() {
         aggregationInfoResult = new AggregationInfoResult();
         metricPercentileResults = new MetricPercentileResults();
     }
 
-    public MetricResult(JSONObject jsonObject) throws IncompatibleInputJSONException {
+    public MetricResults(JSONObject jsonObject) throws IncompatibleInputJSONException {
         if (!jsonObject.has(AutotuneConstants.JSONKeys.AGGREGATION_INFO) &&
                 !jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
             throw new IncompatibleInputJSONException();
@@ -38,22 +39,41 @@ public class MetricResult implements ConvertToJSON {
     public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
         isPercentileResultsAvailable = percentileResultsAvailable;
     }
-
-    @Override
-    public JSONObject toJSON() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AutotuneConstants.JSONKeys.AGGREGATION_INFO, aggregationInfoResult.toJSON());
-        if (isPercentileResultsAvailable) {
-            jsonObject.put(AutotuneConstants.JSONKeys.PERCENTILE_INFO, metricPercentileResults.toJSON());
-        }
-        return jsonObject;
-    }
-
     public AggregationInfoResult getAggregationInfoResult() {
         return aggregationInfoResult;
     }
 
     public MetricPercentileResults getEmMetricPercentileResults() {
         return metricPercentileResults;
+    }
+
+    public void setAggregationInfoResult(AggregationInfoResult aggregationInfoResult) {
+        this.aggregationInfoResult = aggregationInfoResult;
+    }
+
+    public Double getValue() {
+        return value;
+    }
+
+    public void setValue(Double value) {
+        this.value = value;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+    @Override
+    public String toString() {
+        return "MetricResult{" +
+                "aggregationInfoResult=" + aggregationInfoResult +
+                ", metricPercentileResults=" + metricPercentileResults +
+                ", value=" + value +
+                ", format='" + format + '\'' +
+                ", isPercentileResultsAvailable=" + isPercentileResultsAvailable +
+                '}';
     }
 }

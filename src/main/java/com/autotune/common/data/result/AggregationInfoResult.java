@@ -15,11 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.interfaces.ConvertToJSON;
 import com.autotune.utils.AutotuneConstants;
 import org.json.JSONObject;
 
-public class AggregationInfoResult implements ConvertToJSON {
+public class AggregationInfoResult {
     private Double sum;
     private Double avg;
     private Double min;
@@ -91,21 +90,5 @@ public class AggregationInfoResult implements ConvertToJSON {
                 ", max=" + max +
                 ", units='" + format + '\'' +
                 '}';
-    }
-
-    @Override
-    public JSONObject toJSON() {
-        JSONObject jsonObject = new JSONObject();
-        if (this.sum != Double.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.SUM, sum);
-        if (this.avg != Double.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.MEAN, avg);
-        if (this.max != Double.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.MAX, max);
-        if (this.min != Double.MIN_VALUE)
-            jsonObject.put(AutotuneConstants.JSONKeys.MIN, min);
-        if (null != this.format && !this.format.isEmpty() && !this.format.isBlank())
-            jsonObject.put(AutotuneConstants.JSONKeys.FORMAT, this.format);
-        return jsonObject;
     }
 }

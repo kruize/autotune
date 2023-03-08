@@ -102,7 +102,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             }
                             HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> aggregatorHashMap = new HashMap<>();
                             for (AnalyzerConstants.MetricName aggregationInfoName : containers.getContainer_metrics().keySet()) {
-                                AggregationInfoResult aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregation_info();
+                                AggregationInfoResult aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregationInfoResult();
                                 aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggregationInfoName.toString()), aggregatorResult);
                             }
                             HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
