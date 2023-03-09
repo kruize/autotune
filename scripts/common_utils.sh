@@ -81,16 +81,16 @@ check_err() {
 
 # Deploy kruize in remote monitoring mode with the specified docker image
 kruize_crc_start() {
-	echo "$MANIFEST_FILE $autotune_ns"
-	MANIFEST_FILE_OLD="/tmp/kruize.yaml"
+	kubectl_cmd="kubectl -n ${autotune_ns}"
+	CRC_MANIFEST_FILE_OLD="/tmp/kruize.yaml"
 
-	cp $MANIFEST_FILE $MANIFEST_FILE_OLD
-	sed -e "s/image: kruize\/autotune_operator:.*/image: ${AUTOTUNE_DOCKER_IMAGE//\//\\\/}/g" ${MANIFEST_FILE_OLD} > ${MANIFEST_FILE}
-	kubectl apply -f ${MANIFEST_FILE}
+	cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
+	sed -e "s/image: kruize\/autotune_operator:.*/image: ${AUTOTUNE_DOCKER_IMAGE//\//\\\/}/g" ${CRC_MANIFEST_FILE_OLD} > ${CRC_MANIFEST_FILE}
+	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
 	check_running kruize ${autotune_ns}
 	if [ "${err}" != "0" ]; then
 		# Indicate deploy failed on error
 		exit 1
 	fi
-	cp ${MANIFEST_FILE_OLD} ${MANIFEST_FILE}
+	cp ${CRC_MANIFEST_FILE_OLD} ${CRC_MANIFEST_FILE}
 }
