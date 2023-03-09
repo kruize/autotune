@@ -117,7 +117,7 @@ pushd ${KRUIZE_REPO} > /dev/null
 
 	sleep 5
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${LOG_DIR}/kruize_setup.log 2>&1
-	sleep 100
+	sleep 20
 popd > /dev/null
 echo "Setting up kruize...Done" | tee -a ${LOG}
 

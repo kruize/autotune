@@ -6,7 +6,7 @@
         "slo_class": "resource_usage",
         "direction": "minimize",
         "objective_function": {
-            "type": "source"
+            "function_type": "source"
         },
         "function_variables": [
             {
