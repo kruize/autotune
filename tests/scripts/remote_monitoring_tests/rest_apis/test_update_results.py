@@ -9,8 +9,8 @@ import time
 csvfile = "/tmp/update_results_test_data.csv"
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, experiment_name, start_timestamp, end_timestamp, deployment_name, namespace, image_name, container_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_units, cpuLimit_sum, cpuLimit_avg, cpuLimit_units, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_units, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_units, memoryRequest_sum, memoryRequest_avg, memoryRequest_units, memoryLimit_sum, memoryLimit_avg, memoryLimit_units, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_units, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_units", generate_test_data(csvfile, update_results_test_data))
-def test_update_results_invalid_tests(test_name, expected_status_code, experiment_name, start_timestamp, end_timestamp, deployment_name, namespace, image_name, container_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_units, cpuLimit_sum, cpuLimit_avg, cpuLimit_units, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_units, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_units, memoryRequest_sum, memoryRequest_avg, memoryRequest_units, memoryLimit_sum, memoryLimit_avg, memoryLimit_units, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_units, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_units, cluster_type):
+@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, start_timestamp, end_timestamp, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format", generate_test_data(csvfile, update_results_test_data))
+def test_update_results_invalid_tests(test_name, expected_status_code, version, experiment_name, start_timestamp, end_timestamp, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format, cluster_type):
 
     print("\n*******************************************************")
     print("Test - ", test_name)
@@ -40,44 +40,54 @@ def test_update_results_invalid_tests(test_name, expected_status_code, experimen
 
     filename = f"/tmp/update_results_{test_name}.json"
     content = template.render(
+        version = version,
         experiment_name = experiment_name,
         start_timestamp = start_timestamp,
         end_timestamp = end_timestamp,
-        deployment_name = deployment_name,
+        kubernetes_obj_type = kubernetes_obj_type,
+        name = name,
         namespace = namespace,
-        image_name = image_name,
+        container_image_name = container_image_name,
         container_name = container_name,
+        cpuRequest_name = cpuRequest_name,
         cpuRequest_sum = cpuRequest_sum,
         cpuRequest_avg = cpuRequest_avg,
-        cpuRequest_units = cpuRequest_units,
+        cpuRequest_format = cpuRequest_format,
+        cpuLimit_name = cpuLimit_name,
         cpuLimit_sum = cpuLimit_sum,
         cpuLimit_avg = cpuLimit_avg,
-        cpuLimit_units = cpuLimit_units,
+        cpuLimit_format = cpuLimit_format,
+        cpuUsage_name = cpuUsage_name,
         cpuUsage_sum = cpuUsage_sum,
         cpuUsage_max = cpuUsage_max,
         cpuUsage_avg = cpuUsage_avg,
         cpuUsage_min = cpuUsage_min,
-        cpuUsage_units = cpuUsage_units,
+        cpuUsage_format = cpuUsage_format,
+        cpuThrottle_name = cpuThrottle_name,
         cpuThrottle_sum = cpuThrottle_sum,
         cpuThrottle_max = cpuThrottle_max,
         cpuThrottle_avg = cpuThrottle_avg,
-        cpuThrottle_units = cpuThrottle_units,
+        cpuThrottle_format = cpuThrottle_format,
+        memoryRequest_name = memoryRequest_name,
         memoryRequest_sum = memoryRequest_sum,
         memoryRequest_avg = memoryRequest_avg,
-        memoryRequest_units = memoryRequest_units,
+        memoryRequest_format = memoryRequest_format,
+        memoryLimit_name = memoryLimit_name,
         memoryLimit_sum = memoryLimit_sum,
         memoryLimit_avg = memoryLimit_avg,
-        memoryLimit_units = memoryLimit_units,
+        memoryLimit_format = memoryLimit_format,
+        memoryUsage_name = memoryUsage_name,
         memoryUsage_sum = memoryUsage_sum,
         memoryUsage_max = memoryUsage_max,
         memoryUsage_avg = memoryUsage_avg,
         memoryUsage_min = memoryUsage_min,
-        memoryUsage_units = memoryUsage_units,
+        memoryUsage_format = memoryUsage_format,
+        memoryRSS_name = memoryRSS_name,
         memoryRSS_sum = memoryRSS_sum,
         memoryRSS_max = memoryRSS_max,
         memoryRSS_avg = memoryRSS_avg,
         memoryRSS_min = memoryRSS_min,
-        memoryRSS_units = memoryRSS_units
+        memoryRSS_format = memoryRSS_format
     )
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)

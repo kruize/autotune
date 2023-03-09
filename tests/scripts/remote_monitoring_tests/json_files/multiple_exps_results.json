@@ -1,299 +1,369 @@
 [
   {
+    "version": "1.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
     "start_timestamp": "2022-01-23T18:25:43.511Z",
     "end_timestamp": "2022-01-23T18:25:43.511Z",
-    "deployments": [
+    "kubernetes_objects": [
       {
-        "deployment_name": "tfb-qrh-sample-1",
+        "type": "deployment",
+        "name": "tfb-qrh-sample-1",
         "namespace": "default",
-        "pod_metrics": [],
         "containers": [
           {
-            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server",
-            "container_metrics": {
-              "cpuRequest": {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "metrics": [
+              {
+                "name": "cpuRequest",
                 "results": {
+                  "value": 1.1,
+                  "format": "cores",
                   "aggregation_info": {
                     "sum": 4.4,
                     "avg": 1.1,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuLimit": {
+              {
+                "name": "cpuLimit",
                 "results": {
+                  "value": 0.5,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2,
+                    "sum": 2.0,
                     "avg": 0.5,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuUsage": {
+              {
+                "name": "cpuUsage",
                 "results": {
+                  "value": 0.12,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2.84,
+                    "min": 0.14,
                     "max": 0.84,
-                    "min": 0.4,
+                    "sum": 0.84,
                     "avg": 0.12,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuThrottle": {
+              {
+                "name": "cpuThrottle",
                 "results": {
+                  "value": 0.045,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 1.09,
+                    "sum": 0.19,
                     "max": 0.09,
                     "avg": 0.045,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "memoryRequest": {
+              {
+                "name": "memoryRequest",
                 "results": {
+                  "value": 50.12,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 250.85,
                     "avg": 50.21,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryLimit": {
+              {
+                "name": "memoryLimit",
                 "results": {
+                  "value": 100,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 500,
                     "avg": 100,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryUsage": {
+              {
+                "name": "memoryUsage",
                 "results": {
+                  "value": 40.1,
+                  "format": "MiB",
                   "aggregation_info": {
-                    "sum": 298.5,
-                    "max": 198.5,
-                    "min": 18.5,
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
                     "avg": 40.1,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryRSS": {
+              {
+                "name": "memoryRSS",
                 "results": {
                   "aggregation_info": {
-                    "sum": 223.6,
+                    "min": 50.6,
                     "max": 123.6,
-                    "min": 13.6,
+                    "sum": 123.6,
                     "avg": 31.91,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               }
-            }
+            ]
           }
         ]
       }
     ]
   },
   {
+    "version": "1.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
     "start_timestamp": "2022-01-23T18:25:43.511Z",
     "end_timestamp": "2022-01-23T18:25:43.511Z",
-    "deployments": [
+    "kubernetes_objects": [
       {
-        "deployment_name": "tfb-qrh-sample-2",
+        "type": "deployment",
+        "name": "tfb-qrh-sample-2",
         "namespace": "default",
-        "pod_metrics": [],
         "containers": [
           {
-            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server",
-            "container_metrics": {
-              "cpuRequest": {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "metrics": [
+              {
+                "name": "cpuRequest",
                 "results": {
+                  "value": 1.1,
+                  "format": "cores",
                   "aggregation_info": {
                     "sum": 4.4,
                     "avg": 1.1,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuLimit": {
+              {
+                "name": "cpuLimit",
                 "results": {
+                  "value": 0.5,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2,
+                    "sum": 2.0,
                     "avg": 0.5,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuUsage": {
+              {
+                "name": "cpuUsage",
                 "results": {
+                  "value": 0.12,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2.84,
+                    "min": 0.14,
                     "max": 0.84,
-                    "min": 0.4,
+                    "sum": 0.84,
                     "avg": 0.12,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuThrottle": {
+              {
+                "name": "cpuThrottle",
                 "results": {
+                  "value": 0.045,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2.09,
+                    "sum": 0.19,
                     "max": 0.09,
                     "avg": 0.045,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "memoryRequest": {
+              {
+                "name": "memoryRequest",
                 "results": {
+                  "value": 50.12,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 250.85,
                     "avg": 50.21,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryLimit": {
+              {
+                "name": "memoryLimit",
                 "results": {
+                  "value": 100,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 500,
                     "avg": 100,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryUsage": {
+              {
+                "name": "memoryUsage",
                 "results": {
+                  "value": 40.1,
+                  "format": "MiB",
                   "aggregation_info": {
-                    "sum": 298.5,
-                    "max": 198.5,
-                    "min": 19.5,
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
                     "avg": 40.1,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryRSS": {
+              {
+                "name": "memoryRSS",
                 "results": {
                   "aggregation_info": {
-                    "sum": 223.6,
+                    "min": 50.6,
                     "max": 123.6,
-                    "min": 20.4,
+                    "sum": 123.6,
                     "avg": 31.91,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               }
-            }
+            ]
           }
         ]
       }
     ]
   },
   {
+    "version": "1.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
     "start_timestamp": "2022-01-23T18:25:43.511Z",
     "end_timestamp": "2022-01-23T18:25:43.511Z",
-    "deployments": [
+    "kubernetes_objects": [
       {
-        "deployment_name": "tfb-qrh-sample-3",
-        "namespace": "default",
-        "pod_metrics": [],
+        "type": "deployment",
+        "name": "tfb-qrh-sample-3",
+        "namespace": "default-3",
         "containers": [
           {
-            "image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server",
-            "container_metrics": {
-              "cpuRequest": {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "metrics": [
+              {
+                "name": "cpuRequest",
                 "results": {
+                  "value": 1.1,
+                  "format": "cores",
                   "aggregation_info": {
                     "sum": 4.4,
                     "avg": 1.1,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuLimit": {
+              {
+                "name": "cpuLimit",
                 "results": {
+                  "value": 0.5,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 2,
+                    "sum": 2.0,
                     "avg": 0.5,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuUsage": {
+              {
+                "name": "cpuUsage",
                 "results": {
+                  "value": 0.12,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 1.84,
+                    "min": 0.14,
                     "max": 0.84,
-                    "min": 0.04,
+                    "sum": 0.84,
                     "avg": 0.12,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "cpuThrottle": {
+              {
+                "name": "cpuThrottle",
                 "results": {
+                  "value": 0.045,
+                  "format": "cores",
                   "aggregation_info": {
-                    "sum": 1.09,
-                    "max": 0.093,
+                    "sum": 0.19,
+                    "max": 0.09,
                     "avg": 0.045,
-                    "units": "cores"
+                    "format": "cores"
                   }
                 }
               },
-              "memoryRequest": {
+              {
+                "name": "memoryRequest",
                 "results": {
+                  "value": 50.12,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 250.85,
                     "avg": 50.21,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryLimit": {
+              {
+                "name": "memoryLimit",
                 "results": {
+                  "value": 100,
+                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 500,
                     "avg": 100,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryUsage": {
+              {
+                "name": "memoryUsage",
                 "results": {
+                  "value": 40.1,
+                  "format": "MiB",
                   "aggregation_info": {
-                    "sum": 298.5,
-                    "max": 198.5,
-                    "min": 18.5,
+                    "min": 50.6,
+                    "max": 198.50,
+                    "sum": 198.50,
                     "avg": 40.1,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               },
-              "memoryRSS": {
+              {
+                "name": "memoryRSS",
                 "results": {
                   "aggregation_info": {
-                    "sum": 223.6,
+                    "min": 50.6,
                     "max": 123.6,
-                    "min": 13.6,
+                    "sum": 123.6,
                     "avg": 31.91,
-                    "units": "MiB"
+                    "format": "MiB"
                   }
                 }
               }
-            }
+            ]
           }
         ]
       }
     ]
   }
 ]
+

@@ -1,96 +1,111 @@
-[{
- "experiment_name": "{{experiment_name}}",
- "start_timestamp": "{{start_timestamp}}",
- "end_timestamp": "{{end_timestamp}}",
- "deployments": [{
-   "deployment_name": "{{deployment_name}}",
-   "namespace": "{{namespace}}",
-   "pod_metrics": [],
-   "containers": [{
-     "image_name": "{{image_name}}",
-     "container_name": "{{container_name}}",
-     "container_metrics": {
-       "cpuRequest" : {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{cpuRequest_sum}}",
-             "avg": "{{cpuRequest_avg}}",
-             "units": "{{cpuRequest_units}}"
-           }
-         }
-       },
-       "cpuLimit": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{cpuLimit_sum}}",
-             "avg": "{{cpuLimit_avg}}",
-             "units": "{{cpuLimit_units}}"
-           }
-         }
-       },
-       "cpuUsage": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{cpuUsage_sum}}",
-             "max": "{{cpuUsage_max}}",
-             "avg": "{{cpuUsage_avg}}",
-             "min": "{{cpuUsage_min}}",
-             "units": "{{cpuUsage_units}}"
-           }
-         }
-       },
-       "cpuThrottle": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{cpuThrottle_sum}}",
-             "max": "{{cpuThrottle_max}}",
-             "avg": "{{cpuThrottle_avg}}",
-             "units": "{{cpuThrottle_units}}"
-           }
-         }
-       },
-       "memoryRequest": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{memoryRequest_sum}}",
-             "avg": "{{memoryRequest_avg}}",
-             "units": "{{memoryRequest_units}}"
-           }
-         }
-       },
-       "memoryLimit": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{memoryLimit_sum}}",
-             "avg": "{{memoryLimit_avg}}",
-             "units": "{{memoryLimit_units}}"
-           }
-         }
-       },
-       "memoryUsage": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{memoryUsage_sum}}",
-             "max": "{{memoryUsage_max}}",
-             "avg": "{{memoryUsage_avg}}",
-             "min": "{{memoryUsage_min}}",
-             "units": "{{memoryUsage_units}}"
-           }
-         }
-       },
-       "memoryRSS": {
-         "results": {
-           "aggregation_info": {
-             "sum": "{{memoryRSS_sum}}",
-             "max": "{{memoryRSS_max}}",
-             "avg": "{{memoryRSS_avg}}",
-             "min": "{{memoryRSS_min}}",
-             "units": "{{memoryRSS_units}}"
-           }
-         }
-       }
-     }
-   }]
- }]
-}]
+[
+  {
+    "version": "{{version}}",
+    "experiment_name": "{{experiment_name}}",
+    "start_timestamp": "{{start_timestamp}}",
+    "end_timestamp": "{{end_timestamp}}",
+    "kubernetes_objects": [
+      {
+        "type": "{{kubernetes_obj_type}}",
+        "name": "{{name}}",
+        "namespace": "{{namespace}}",
+        "containers": [
+          {
+            "container_image_name": "{{container_image_name}}",
+            "container_name": "{{container_name}}",
+            "metrics": [
+              {
+                "name": "{{cpuRequest_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": "{{cpuRequest_sum}}",
+                    "avg": "{{cpuRequest_avg}}",
+                    "format": "{{cpuRequest_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuLimit_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": "{{cpuLimit_sum}}",
+                    "avg": "{{cpuLimit_avg}}",
+                    "format": "{{cpuLimit_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuUsage_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": "{{cpuUsage_min}}",
+                    "max": "{{cpuUsage_max}}",
+                    "sum": "{{cpuUsage_sum}}",
+                    "avg": "{{cpuUsage_avg}}",
+                    "format": "{{cpuUsage_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuThrottle_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": "{{cpuThrottle_sum}}",
+                    "max": "{{cpuThrottle_max}}",
+                    "avg": "{{cpuThrottle_avg}}",
+                    "format": "{{cpuThrottle_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryRequest_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": "{{memoryRequest_sum}}",
+                    "avg": "{{memoryRequest_avg}}",
+                    "format": "{{memoryRequest_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryLimit_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": "{{memoryLimit_sum}}",
+                    "avg": "{{memoryLimit_avg}}",
+                    "format": "{{memoryLimit_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryUsage_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": "{{memoryUsage_min}}",
+                    "max": "{{memoryUsage_max}}",
+                    "sum": "{{memoryUsage_sum}}",
+                    "avg": "{{memoryUsage_avg}}",
+                    "format": "{{memoryUsage_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryRSS_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": "{{memoryRSS_min}}",
+                    "max": "{{memoryRSS_max}}",
+                    "sum": "{{memoryRSS_sum}}",
+                    "avg": "{{memoryRSS_avg}}",
+                    "format": "{{memoryRSS_format}}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
 
