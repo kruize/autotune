@@ -137,17 +137,9 @@ spec:
             - name: LOGGING_LEVEL
               value: "info"
             - name: ROOT_LOGGING_LEVEL
-              value: "info"
-            - name: DB_URL
-              value: "postgres-service"
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_NAME
-              value: "kruizeDB"
-            - name: DB_USER
-              value: "admin"
-            - name: DB_PASSWORD
-              value: "admin"
+              value: "error"
+            - name: CONFIG_FILE
+              value: "/home/autotune/app/target/classes/config.json"
             - name: DB_DRIVER
               value: "jdbc:postgresql://"
           ports:

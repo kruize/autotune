@@ -1,0 +1,12 @@
+{
+  "database": {
+    "adminPassword": "admin",
+    "adminUsername": "admin",
+    "hostname": "postgres-service",
+    "name": "kruizeDB",
+    "password": "admin",
+    "port": 5432,
+    "sslMode": "require",
+    "username": "admin"
+  }
+}
