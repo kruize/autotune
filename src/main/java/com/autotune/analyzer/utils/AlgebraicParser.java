@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 
 import java.util.ArrayList;
 import java.util.Map;

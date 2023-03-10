@@ -26,7 +26,7 @@ import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.*;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;

@@ -15,8 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
-import com.autotune.common.k8sObjects.Metric;
-import com.google.gson.JsonObject;
+import com.autotune.common.data.metrics.Metric;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;

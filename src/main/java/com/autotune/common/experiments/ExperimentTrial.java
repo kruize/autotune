@@ -16,13 +16,12 @@
 package com.autotune.common.experiments;
 
 import com.autotune.common.annotations.json.Exclude;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.data.result.ExperimentMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.annotations.SerializedName;
 
-import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**

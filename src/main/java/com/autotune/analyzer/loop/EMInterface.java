@@ -2,7 +2,7 @@ package com.autotune.analyzer.loop;
 
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.HttpUtils;
 import com.autotune.utils.TrialHelpers;
 import org.slf4j.Logger;

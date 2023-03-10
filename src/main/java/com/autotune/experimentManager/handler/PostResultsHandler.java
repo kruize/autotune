@@ -18,7 +18,7 @@ package com.autotune.experimentManager.handler;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;

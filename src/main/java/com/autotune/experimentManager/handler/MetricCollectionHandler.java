@@ -22,7 +22,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.KubernetesContexts;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;

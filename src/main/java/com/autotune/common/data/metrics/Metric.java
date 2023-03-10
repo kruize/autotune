@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.common.data.metrics;
 
-import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.k8sObjects.AggregationFunctions;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;

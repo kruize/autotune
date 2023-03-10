@@ -19,7 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationResultData;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.utils.AnalyzerConstants;

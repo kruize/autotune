@@ -16,11 +16,12 @@
 package com.autotune.experimentManager.utils;
 
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
@@ -147,10 +148,10 @@ public class EMUtil {
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
             if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
-                AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                aggregationInfoResult.setAvg(podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
-                HashMap<String, AggregationInfoResult> generalInfoResultHashMap = new HashMap<>();
-                generalInfoResultHashMap.put("general_info", aggregationInfoResult);
+                MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+                metricAggregationInfoResults.setAvg(podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
+                HashMap<String, MetricAggregationInfoResults> generalInfoResultHashMap = new HashMap<>();
+                generalInfoResultHashMap.put("general_info", metricAggregationInfoResults);
                 PodResultData podResultData = new PodResultData();
                 podResultData.setName(podMetric.getName());
                 podResultData.setDatasource(podMetric.getDatasource());
@@ -169,10 +170,10 @@ public class EMUtil {
                 Metric containerMetric = containerMetricEntry.getValue();
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
                     MetricResults metricResults = new MetricResults();
-                    AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                    aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
-                    aggregationInfoResult.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
-                    metricResults.setAggregationInfoResult(aggregationInfoResult);
+                    MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+                    metricAggregationInfoResults.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
+                    metricAggregationInfoResults.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
+                    metricResults.setAggregationInfoResult(metricAggregationInfoResults);
                     HashMap<String, MetricResults> resultsHashMap = new HashMap<>();
                     resultsHashMap.put("results", metricResults);
                     containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);

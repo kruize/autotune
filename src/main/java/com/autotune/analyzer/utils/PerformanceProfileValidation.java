@@ -17,7 +17,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.common.data.ValidationResultData;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.experimentManager.utils.EMConstants;

@@ -16,6 +16,7 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.common.data.metrics.Metric;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;

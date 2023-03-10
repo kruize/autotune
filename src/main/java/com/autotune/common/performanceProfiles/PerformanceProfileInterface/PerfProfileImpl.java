@@ -6,7 +6,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.Containers;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
