@@ -204,5 +204,5 @@ function openshift_crc_terminate() {
 
 	echo -n "###   Removing Kruize for openshift"
 	echo
-	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/nul
+	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
 }

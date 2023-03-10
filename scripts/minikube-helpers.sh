@@ -199,6 +199,8 @@ function minikube_crc_terminate() {
 	if [ -z "$autotune_ns" ]; then
 		autotune_ns="monitoring"
 	fi
+	kubectl_cmd="kubectl -n ${autotune_ns}"
+
 	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
 	echo -n "###   Removing Kruize for minikube"
