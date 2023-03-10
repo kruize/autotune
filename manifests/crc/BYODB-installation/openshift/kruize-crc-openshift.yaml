@@ -3,6 +3,26 @@ kind: Namespace
 metadata:
   name: openshift-tuning
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kruizeconfig
+  namespace: openshift-tuning
+data:
+  kruizeconfigjson: |
+    {
+      "database": {
+        "adminPassword": "admin",
+        "adminUsername": "admin",
+        "hostname": "postgres-service",
+        "name": "kruizeDB",
+        "password": "admin",
+        "port": 5432,
+        "sslMode": "require",
+        "username": "admin"
+      }
+    }
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +45,9 @@ spec:
         - name: kruize
           image: kruize/autotune_operator:0.0.9_rm
           imagePullPolicy: Always
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
           env:
             - name: CLUSTER_TYPE
               value: "kubernetes"
@@ -43,17 +66,9 @@ spec:
             - name: LOGGING_LEVEL
               value: "info"
             - name: ROOT_LOGGING_LEVEL
-              value: "info"
-            - name: DB_URL
-              value: "postgres-service"
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_NAME
-              value: "kruizeDB"
-            - name: DB_USER
-              value: "admin"
-            - name: DB_PASSWORD
-              value: "admin"
+              value: "error"
+            - name: CONFIG_FILE
+              value: "/etc/config/kruizeconfigjson"
             - name: DB_DRIVER
               value: "jdbc:postgresql://"
           ports:
@@ -68,6 +83,10 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 20
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kruizeconfig
 ---
 apiVersion: v1
 kind: Service

@@ -25,10 +25,10 @@ public class TestDBConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestDBConnection.class);
 
     public static void main(String[] args) {
-        LOGGER.debug("Checking DB connection...");
+        LOGGER.info("Checking Liveliness probe DB connection...");
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = factory.openSession();
         session.close();
-        LOGGER.debug("DB connection successful!");
+        LOGGER.info("DB Liveliness probe connection successful!");
     }
 }
