@@ -262,7 +262,6 @@ def validate_container(create_exp_container, update_results_json, list_reco_cont
     duration_terms = ["short_term", "medium_term", "long_term"]
     for term in duration_terms:
         if check_if_recommendations_are_present(duration_based_obj[term]):
-
             # Validate timestamps
             assert duration_based_obj[term]["monitoring_end_time"] == end_timestamp
 

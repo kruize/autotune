@@ -119,8 +119,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         
         response = update_results(result_json_file)
         data = response.json()
-
-
+        
         print("message = ", data['message'])
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
