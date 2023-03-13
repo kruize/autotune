@@ -39,20 +39,20 @@ public class ExperimentTrialHandler {
         JSONObject percentile_info = new JSONObject().
                 put("99p", 82.59).put("97p", 64.75).put("95p", 8.94).put("50p", 0.63).
                 put("99.9p", 93.48).put("100p", 30000).put("99.99p", 111.5).put("99.999p", 198.52);
-        JSONObject general_info = new JSONObject().
+        JSONObject aggregation_info = new JSONObject().
                 put("min", 2.15).put("max", 2107.212121).put("mean", 31.91);
         JSONArray podMetrics = new JSONArray();
         podMetrics.put(new JSONObject().
                 put("summary_results", new JSONObject().
                         put("percentile_info", percentile_info).
-                        put("general_info", general_info)
+                        put("aggregation_info", aggregation_info)
                 ).
                 put("name", "request_sum").
                 put("datasource", "prometheus"));
         podMetrics.put(new JSONObject().
                 put("summary_results", new JSONObject().
                         put("percentile_info", percentile_info).
-                        put("general_info", general_info)
+                        put("aggregation_info", aggregation_info)
                 ).
                 put("name", "request_count").
                 put("datasource", "prometheus"));
@@ -73,7 +73,7 @@ public class ExperimentTrialHandler {
                                 "name", "memoryRequest"
                         ).put(
                                 "summary_results", new JSONObject().put(
-                                        "general_info", general_info
+                                        "aggregation_info", aggregation_info
                                 )
                         ).put(
                                 "datasource", "prometheus"

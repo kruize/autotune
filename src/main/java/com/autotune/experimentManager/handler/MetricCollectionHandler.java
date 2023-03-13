@@ -209,27 +209,31 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
                 for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
                     Metric podMetric = podMetricEntry.getValue();
-                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = podMetric.getCycleDataMap();
-                    if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
-                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
-                    }
-                    LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
-                    if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
-                        LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
-                        double sumVal = 0;
-                        int removableEntries = 0;
-                        for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
-                            EMMetricResult emMetricResult = measurementMapEntry.getValue();
-                            if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
-                                removableEntries = removableEntries + 1;
-                            else
-                                sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                    try {
+                        LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = podMetric.getCycleDataMap();
+                        if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
+                            trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
                         }
-                        double avgVal = sumVal / (measurementMap.size() - removableEntries);
-                        EMMetricResult emMetricResult = new EMMetricResult();
-                        emMetricResult.getEmMetricGenericResults().setMean(avgVal);
-                        podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), emMetricResult);
-                        podMetric.setEmMetricResult(emMetricResult);
+                        LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
+                        if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
+                            LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                            double sumVal = 0;
+                            int removableEntries = 0;
+                            for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
+                                EMMetricResult emMetricResult = measurementMapEntry.getValue();
+                                if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
+                                    removableEntries = removableEntries + 1;
+                                else
+                                    sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                            }
+                            double avgVal = sumVal / (measurementMap.size() - removableEntries);
+                            EMMetricResult emMetricResult = new EMMetricResult();
+                            emMetricResult.getEmMetricGenericResults().setMean(avgVal);
+                            podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), emMetricResult);
+                            podMetric.setEmMetricResult(emMetricResult);
+                        }
+                    } catch (NullPointerException npe){
+                        LOGGER.error(npe.getMessage());
                     }
                 }
                 HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
