@@ -1,0 +1,186 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: monitoring
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: monitoring
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      #securityContext:      #todo
+      #  runAsNonRoot: true
+      #  runAsUser: 1000
+      containers:
+        - name: postgres
+          image: postgres:15.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_PASSWORD
+              value: admin
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_DB
+              value: kruizeDB
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: monitoring
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres-port
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kruizeconfig
+  namespace: monitoring
+data:
+  kruizeconfigjson: |
+    {
+      "database": {
+        "adminPassword": "admin",
+        "adminUsername": "admin",
+        "hostname": "postgres-service",
+        "name": "kruizeDB",
+        "password": "admin",
+        "port": 5432,
+        "sslMode": "require",
+        "username": "admin"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kruize
+  labels:
+    app: kruize
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kruize
+  template:
+    metadata:
+      labels:
+        app: kruize
+        name: kruize
+    spec:
+      containers:
+        - name: kruize
+          image: kruize/autotune_operator:0.0.10_rm
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          env:
+            - name: CLUSTER_TYPE
+              value: "kubernetes"
+            - name: K8S_TYPE
+              value: "minikube"
+            - name: AUTH_TYPE
+              value: ""
+            - name: AUTH_TOKEN
+              value: ""
+            - name: MONITORING_AGENT
+              value: "prometheus"
+            - name: MONITORING_SERVICE
+              value: "prometheus-k8s"
+            - name: MONITORING_AGENT_ENDPOINT
+              value: "prometheus-k8s"
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: ROOT_LOGGING_LEVEL
+              value: "error"
+            - name: CONFIG_FILE
+              value: "/etc/config/kruizeconfigjson"
+            - name: DB_DRIVER
+              value: "jdbc:postgresql://"
+          ports:
+            - name: kruize-port
+              containerPort: 8080
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 20
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kruizeconfig
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize
+  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: kruize
+spec:
+  type: NodePort
+  selector:
+    app: kruize
+  ports:
+    - name: kruize-port
+      port: 8080
+      targetPort: 8080

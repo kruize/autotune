@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.0.8_mvp</version>
+    <version>0.0.10_mvp</version>
     <properties>
         <fabric8-version>4.13.0</fabric8-version>
         <org-json-version>20201115</org-json-version>
@@ -20,6 +20,9 @@
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.13</apachehttpclient-version>
         <gson-version>2.9.0</gson-version>
+        <postgresql-version>42.3.1</postgresql-version>
+        <hibernatecore-version>5.5.7.Final</hibernatecore-version>
+        <hibernatecp30-version>5.5.7.Final</hibernatecp30-version>
     </properties>
     <dependencies>
         <dependency>
@@ -97,7 +100,7 @@
             <scope>test</scope>
         </dependency>
 
-		<!-- The Prometheus client -->
+        <!-- The Prometheus client -->
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
@@ -133,6 +136,24 @@
             <artifactId>gson</artifactId>
             <version>${gson-version}</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernatecore-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-c3p0</artifactId>
+            <version>${hibernatecp30-version}</version>
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>
@@ -147,6 +168,10 @@
                         <program>
                             <mainClass>com.autotune.Autotune</mainClass>
                             <name>Autotune</name>
+                        </program>
+                        <program>
+                            <mainClass>com.autotune.dbactivites.livenessProbe.TestDBConnection</mainClass>
+                            <name>TestDBConnection</name>
                         </program>
                     </programs>
                 </configuration>

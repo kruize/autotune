@@ -183,6 +183,7 @@ public class Utils
 				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
 				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
 				kruizeObject.setTargetCluster(createExperimentSO.getTargetCluster());
+				kruizeObject.setClusterName(createExperimentSO.getClusterName());
 				kruizeObject.setMode(createExperimentSO.getMode());
 				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());
 				kruizeObject.setTrial_settings(createExperimentSO.getTrialSettings());

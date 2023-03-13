@@ -1,32 +1,28 @@
 [{
+  	"version": "{{version}}",
         "experiment_name": "{{experiment_name}}",
-        "deployment_name": "{{deployment_name}}",
-        "namespace": "{{namespace}}",
-        "performanceProfile": "{{performanceProfile}}",
-	"slo": {
-        	"slo_class": "{{slo_class}}",
-        	"direction": "{{direction}}"
-    	},
+        "cluster_name": "{{cluster_name}}",
+        "performance_profile": "{{performance_profile}}",
         "mode": "{{mode}}",
-        "targetCluster": "{{targetCluster}}",
-        "containers": [
-            {
-                "image": "{{image}}",
-                "container_name": "{{container_name}}"
-            }
-        ],
+        "target_cluster": "{{target_cluster}}",
+  	"kubernetes_objects": [
+    	 {
+		"type": "{{kubernetes_obj_type}}",
+        	"name": "{{name}}",
+	        "namespace": "{{namespace}}",
+        	"containers": [
+            	  {
+                	"container_image_name": "{{container_image_name}}",
+	                "container_name": "{{container_name}}"
+                  }
+		]
+	 }
+	],
         "trial_settings": {
             "measurement_duration": "{{measurement_duration}}"
         },
         "recommendation_settings": {
             "threshold": "{{threshold}}"
-        },
-        "selector": {
-            "matchLabel": "{{matchLabel}}",
-            "matchLabelValue": "{{matchLabelvalue}}",
-            "matchRoute": "",
-            "matchURI": "",
-            "matchService": ""
         }
 }]
 

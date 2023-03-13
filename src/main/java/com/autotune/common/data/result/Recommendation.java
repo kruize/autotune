@@ -20,7 +20,9 @@ import com.autotune.utils.AutotuneConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Storage object for recommendation
@@ -35,18 +37,30 @@ public class Recommendation {
     @SerializedName(AutotuneConstants.JSONKeys.PODS_COUNT)
     private int podsCount;
     private double confidence_level;
-    @SerializedName(AutotuneConstants.JSONKeys.ERROR_MSG)
-    private String errorMessage;
 
+    @SerializedName(AutotuneConstants.JSONKeys.CONFIG)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
+    @SerializedName(AutotuneConstants.JSONKeys.VARIATION)
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
+    @SerializedName(AutotuneConstants.JSONKeys.NOTIFICATIONS)
+    private List<RecommendationNotification> notifications;
 
     public Recommendation(Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.monitoringStartTime = monitoringStartTime;
         this.monitoringEndTime = monitoringEndTime;
+        notifications = new ArrayList<RecommendationNotification>();
     }
 
-    public Recommendation(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public Recommendation(List<RecommendationNotification> notifications) {
+        notifications = new ArrayList<RecommendationNotification>();
+        if (null != notifications && notifications.size() > 0)
+            notifications.addAll(notifications);
+    }
+
+    public Recommendation(RecommendationNotification notification) {
+        notifications = new ArrayList<RecommendationNotification>();
+        if (null != notification)
+            notifications.add(notification);
     }
 
     public Timestamp getMonitoringStartTime() {
@@ -95,6 +109,19 @@ public class Recommendation {
 
     public void setConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
         this.config = config;
+    }
+
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getVariation() {
+        return variation;
+    }
+
+    public void setVariation(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation) {
+        this.variation = variation;
+    }
+
+    public void addNotification(RecommendationNotification notification) {
+        if (null != notification)
+            this.notifications.add(notification);
     }
 
     @Override

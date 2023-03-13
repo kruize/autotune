@@ -82,6 +82,19 @@ public class AnalyzerConstants {
     public static final String SELECTOR = "selectorInfo";
     public static final String NULL = "null";
 
+
+    public static final class DBConstants {
+
+        public static final String HOSTNAME = "hostname";
+        public static final String PORT = "port";
+        public static final String NAME = "name";
+        public static final String USERNAME = "username";
+        public static final String PASSWORD = "password";
+        public static final String CONFIG_FILE = "CONFIG_FILE";
+        public static final String CONFIG_FILE_DB_KEY = "database";
+        public static final String DB_DRIVER = "DB_DRIVER";
+    }
+
     private AnalyzerConstants() {
     }
 
@@ -132,6 +145,43 @@ public class AnalyzerConstants {
     public enum ResourceSetting {
         requests,
         limits
+    }
+
+    public enum RecommendationCategory {
+        DURATION_BASED(AutotuneConstants.JSONKeys.DURATION_BASED),
+        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED);
+
+        private String name;
+        private RecommendationCategory(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
+    public enum RecommendationNotificationTypes {
+        INFO ("info", 1),
+        WARN ("warning", 2),
+        ERROR ("error", 3),
+        CRITICAL ("critical", 4);
+
+        private String name;
+        private int severity;
+
+        private RecommendationNotificationTypes(String name, int severity) {
+            this.name = name;
+            this.severity = severity;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getSeverity() {
+            return severity;
+        }
     }
 
     public enum MetricName {
@@ -467,5 +517,13 @@ public class AnalyzerConstants {
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
 
+    }
+
+    public static final class RecommendationNotificationMsgConstant {
+        private RecommendationNotificationMsgConstant() {
+
+        }
+
+        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
     }
 }

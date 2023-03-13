@@ -7,10 +7,10 @@ from helpers.fixtures import *
 
 mandatory_fields = [
         ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("deployment_name", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("name", ERROR_STATUS_CODE, ERROR_STATUS),
         ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("performanceProfile", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
         ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
         ("deployment_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
@@ -20,8 +20,8 @@ mandatory_fields = [
 csvfile = "/tmp/create_exp_test_data.csv"
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, experiment_name, deployment_name, namespace, performanceProfile, slo_class, direction, mode, targetCluster, image, container_name, measurement_duration, threshold,matchLabel, matchLabelValue", generate_test_data(csvfile, create_exp_test_data))
-def test_create_exp_invalid_tests(test_name, expected_status_code, experiment_name, deployment_name, namespace, performanceProfile, slo_class, direction, mode, targetCluster, image, container_name, measurement_duration, threshold, matchLabel, matchLabelValue, cluster_type):
+@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold", generate_test_data(csvfile, create_exp_test_data))
+def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API against 
     invalid input (blank, null, empty) for the json parameters.
@@ -39,21 +39,19 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, experiment_na
     template = environment.get_template("create_exp_template.json")
 
     content = template.render(
+        version=version,
         experiment_name=experiment_name,
-        deployment_name=deployment_name,
-        namespace=namespace,
-        performanceProfile=performanceProfile,
-        slo_class=slo_class,
-        direction=direction,
+        cluster_name=cluster_name,
+        performance_profile=performance_profile,
         mode=mode,
-        targetCluster=targetCluster,
-        image=image,
+        target_cluster=target_cluster,
+        kubernetes_obj_type=kubernetes_obj_type,
+        name=name,
+        namespace=namespace,
+        container_image_name=container_image_name,
         container_name=container_name,
         measurement_duration=measurement_duration,
-        threshold=threshold,
-        matchLabel=matchLabel,
-        matchLabelValue=matchLabelValue,
-        cluster_type=cluster_type
+        threshold=threshold
     )
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
         message.write(content)
@@ -175,8 +173,8 @@ def test_create_multiple_exps_from_diff_json_files(cluster_type):
     json_data = json.load(open(input_json_file))
 
     find.append(json_data[0]['experiment_name'])
-    find.append(json_data[0]['deployment_name'])
-    find.append(json_data[0]['namespace'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
 
     form_kruize_url(cluster_type)
 
@@ -248,6 +246,9 @@ def test_create_exp_with_both_performance_profile_slo(cluster_type):
 
     form_kruize_url(cluster_type)
 
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
 
@@ -289,7 +290,7 @@ def test_create_exp_with_invalid_header(cluster_type):
     Test Description: This test validates the creation of an experiment by specifying invalid content type in the header
     """
 
-    input_json_file="../json_files/deployment_name_selector.json"
+    input_json_file="../json_files/create_exp.json"
 
     form_kruize_url(cluster_type)
 
