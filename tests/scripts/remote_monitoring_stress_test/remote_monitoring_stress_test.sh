@@ -141,7 +141,7 @@ case ${CLUSTER_TYPE} in
 		if [ -z "${SERVER_IP_ADDR}" ]; then
 			SERVER_IP_ADDR=$(minikube ip)
 			echo "Port forward prometheus..." | tee -a ${LOG}
-			kubectl port-forward svc/prometheus-k8s 9090:9090 -n ${NAMESPACE} > /dev/null &
+			kubectl port-forward svc/prometheus-k8s 9090:9090 -n ${NAMESPACE} > /dev/null 2>/dev/null &
 			echo "Port forward prometheus...done" | tee -a ${LOG}
 			port=$(kubectl -n ${NAMESPACE} get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 			if [ "${port}" == "" ]; then
