@@ -21,8 +21,8 @@ ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
 RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-17-openjdk-devel \
-     && microdnf clean all \
-     && rpm -q java-17-openjdk-devel
+     && microdnf install tar gzip java-17-openjdk-jmods binutils git vim \
+     && microdnf clean all 
 
 RUN microdnf install tar gzip  java-17-openjdk-jmods binutils
 
