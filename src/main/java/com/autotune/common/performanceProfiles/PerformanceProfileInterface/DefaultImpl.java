@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
@@ -31,7 +32,7 @@ public class DefaultImpl extends PerfProfileImpl {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultImpl.class);
 
-    private String validateValues(HashMap<String, Results> funcVar, List<String> funcVarValueTypes) {
+    private String validateValues(HashMap<String, MetricResults> funcVar, List<String> funcVarValueTypes) {
         LOGGER.info("Func variables : {}", funcVar);
         LOGGER.info("Func variable value types : {}", funcVarValueTypes);
         return "";
@@ -53,14 +54,14 @@ public class DefaultImpl extends PerfProfileImpl {
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
             for (Containers containers : deploymentResultData.getContainers()) {
-                HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> containerMetricsMap =
+                HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetricsMap =
                         containers.getContainer_metrics();
                 List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
-                for (HashMap<String, Results> funcVar : containerMetricsMap.values()) {
+                for (HashMap<String, com.autotune.common.data.metrics.MetricResults> funcVar : containerMetricsMap.values()) {
                     Map<String, Object> aggrInfoClassAsMap;
                     try {
                         // TODO: Need to update the below code
-                        aggrInfoClassAsMap = DefaultImpl.convertObjectToMap(funcVar.get("results").getAggregation_info());
+                        aggrInfoClassAsMap = DefaultImpl.convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
                        LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);

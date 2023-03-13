@@ -17,7 +17,7 @@
 
 package com.autotune.analyzer.utils;
 
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
 import com.udojava.evalex.Expression;

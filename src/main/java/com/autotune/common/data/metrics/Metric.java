@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.common.data.metrics;
 
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.k8sObjects.AggregationFunctions;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;
@@ -39,9 +39,9 @@ public final class Metric {
     private final String valueType;
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
-    private final LinkedHashMap<String, EMMetricResult> trialSummaryResult = new LinkedHashMap<>();
-    private EMMetricResult emMetricResult;
-    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> cycleDataMap = new LinkedHashMap<>();
+    private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
+    private MetricResults metricResults;
+    private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")
     private List<AggregationFunctions> aggregationFunctions;
 
@@ -70,19 +70,19 @@ public final class Metric {
         return valueType;
     }
 
-    public EMMetricResult getEmMetricResult() {
-        return emMetricResult;
+    public MetricResults getEmMetricResult() {
+        return metricResults;
     }
 
-    public void setEmMetricResult(EMMetricResult emMetricResult) {
-        this.emMetricResult = emMetricResult;
+    public void setEmMetricResult(MetricResults metricResults) {
+        this.metricResults = metricResults;
     }
 
-    public LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> getCycleDataMap() {
+    public LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> getCycleDataMap() {
         return cycleDataMap;
     }
 
-    public LinkedHashMap<String, EMMetricResult> getTrialSummaryResult() {
+    public LinkedHashMap<String, MetricResults> getTrialSummaryResult() {
         return trialSummaryResult;
     }
 
@@ -110,7 +110,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
-                ", emMetricResult=" + emMetricResult +
+                ", emMetricResult=" + metricResults +
                 ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }

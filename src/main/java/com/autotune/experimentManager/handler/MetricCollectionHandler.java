@@ -18,11 +18,11 @@ package com.autotune.experimentManager.handler;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.common.data.datasource.AutotuneDatasourceOperator;
 import com.autotune.common.data.datasource.DatasourceOperator;
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.KubernetesContexts;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.parallelengine.executor.AutotuneExecutor;
 import com.autotune.common.parallelengine.worker.AutotuneWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
@@ -128,17 +128,17 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
-                                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = podMetric.getCycleDataMap();
+                                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> trialDataMap = podMetric.getCycleDataMap();
                                     if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
-                                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                                     }
-                                    LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
+                                    LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                                     if (!metricCycleDataMap.containsKey(cycleName)) {
-                                        metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
+                                        metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, MetricResults>());
                                     }
-                                    EMMetricResult emMetricResult = new EMMetricResult();
-                                    emMetricResult.getEmMetricGenericResults().setMean(Double.parseDouble(queryResult));
-                                    metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
+                                    MetricResults metricResults = new MetricResults();
+                                    metricResults.getAggregationInfoResult().setAvg(Double.parseDouble(queryResult));
+                                    metricCycleDataMap.get(cycleName).put(iteration, metricResults);
                                     LOGGER.debug("Query Result - {}", queryResult);
                                 } catch (Exception e) {
                                     LOGGER.error("The Query result - {} cannot be parsed as float", queryResult);
@@ -167,32 +167,32 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();
-                                            LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = containerMetric.getCycleDataMap();
+                                            LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> trialDataMap = containerMetric.getCycleDataMap();
                                             if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
-                                                trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                                                trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                                             }
-                                            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
+                                            LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                                             if (!metricCycleDataMap.containsKey(cycleName)) {
-                                                metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, EMMetricResult>());
+                                                metricCycleDataMap.put(cycleName, new LinkedHashMap<Integer, MetricResults>());
                                             }
                                             DecimalFormat df = new DecimalFormat("0.00");
                                             df.setMaximumFractionDigits(2);
-                                            EMMetricResult emMetricResult = new EMMetricResult();
+                                            MetricResults metricResults = new MetricResults();
                                             Double resultFloat = Double.parseDouble(queryResult);
                                             if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
-                                                emMetricResult.getEmMetricGenericResults().setUnits("cores");
+                                                metricResults.getAggregationInfoResult().setFormat("cores");
 
                                             } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
                                                     || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
                                                 resultFloat = (Double) EMUtil.convertToMiB(resultFloat, EMUtil.MemoryUnits.BYTES);
                                                 LOGGER.debug("Result float from util - " + resultFloat);
-                                                emMetricResult.getEmMetricGenericResults().setUnits("MiB");
+                                                metricResults.getAggregationInfoResult().setFormat("MiB");
                                             }
                                             LOGGER.debug("Result float before- " + resultFloat);
                                             resultFloat = Double.parseDouble(df.format(resultFloat));
                                             LOGGER.debug("Result float after - " + resultFloat);
-                                            emMetricResult.getEmMetricGenericResults().setMean(resultFloat);
-                                            metricCycleDataMap.get(cycleName).put(iteration, emMetricResult);
+                                            metricResults.getAggregationInfoResult().setAvg(resultFloat);
+                                            metricCycleDataMap.get(cycleName).put(iteration, metricResults);
                                             LOGGER.debug("Query Result - " + queryResult);
                                         } catch (Exception e) {
                                             LOGGER.error("The Query result - {} cannot be parsed as float", queryResult);
@@ -209,27 +209,27 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
                 for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
                     Metric podMetric = podMetricEntry.getValue();
-                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = podMetric.getCycleDataMap();
+                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> trialDataMap = podMetric.getCycleDataMap();
                     if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
-                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                        trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                     }
-                    LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
+                    LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                     if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
-                        LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                        LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
                         double sumVal = 0;
                         int removableEntries = 0;
-                        for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
-                            EMMetricResult emMetricResult = measurementMapEntry.getValue();
-                            if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
+                        for (Map.Entry<Integer, MetricResults> measurementMapEntry : measurementMap.entrySet()) {
+                            MetricResults metricResults = measurementMapEntry.getValue();
+                            if (Float.MIN_VALUE == metricResults.getAggregationInfoResult().getAvg())
                                 removableEntries = removableEntries + 1;
                             else
-                                sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                                sumVal = sumVal + metricResults.getAggregationInfoResult().getAvg();
                         }
                         double avgVal = sumVal / (measurementMap.size() - removableEntries);
-                        EMMetricResult emMetricResult = new EMMetricResult();
-                        emMetricResult.getEmMetricGenericResults().setMean(avgVal);
-                        podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), emMetricResult);
-                        podMetric.setEmMetricResult(emMetricResult);
+                        MetricResults metricResults = new MetricResults();
+                        metricResults.getAggregationInfoResult().setAvg(avgVal);
+                        podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), metricResults);
+                        podMetric.setEmMetricResult(metricResults);
                     }
                 }
                 HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
@@ -238,34 +238,34 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                     LOGGER.debug("Container name - " + containerName);
                     for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                         Metric containerMetric = containerMetricEntry.getValue();
-                        LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>> trialDataMap = containerMetric.getCycleDataMap();
+                        LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> trialDataMap = containerMetric.getCycleDataMap();
                         if (!trialDataMap.containsKey(String.valueOf(trialDetails.getTrialNumber()))) {
-                            trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>>());
+                            trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                         }
-                        LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
+                        LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
                         if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
-                            LinkedHashMap<Integer, EMMetricResult> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                            LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
                             double sumVal = 0;
                             int removableEntries = 0;
-                            for (Map.Entry<Integer, EMMetricResult> measurementMapEntry : measurementMap.entrySet()) {
-                                EMMetricResult emMetricResult = measurementMapEntry.getValue();
-                                if (Float.MIN_VALUE == emMetricResult.getEmMetricGenericResults().getMean())
+                            for (Map.Entry<Integer, MetricResults> measurementMapEntry : measurementMap.entrySet()) {
+                                MetricResults metricResults = measurementMapEntry.getValue();
+                                if (Float.MIN_VALUE == metricResults.getAggregationInfoResult().getAvg())
                                     removableEntries = removableEntries + 1;
                                 else
-                                    sumVal = sumVal + emMetricResult.getEmMetricGenericResults().getMean();
+                                    sumVal = sumVal + metricResults.getAggregationInfoResult().getAvg();
                             }
                             double avgVal = sumVal / (measurementMap.size() - removableEntries);
-                            EMMetricResult emMetricResult = new EMMetricResult();
+                            MetricResults metricResults = new MetricResults();
                             if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.CPU_REQUEST)) {
-                                emMetricResult.getEmMetricGenericResults().setUnits("cores");
+                                metricResults.getAggregationInfoResult().setFormat("cores");
 
                             } else if (containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.MEMORY_REQUEST)
                                     || containerMetric.getName().equalsIgnoreCase(EMConstants.QueryNames.Container.GC)) {
-                                emMetricResult.getEmMetricGenericResults().setUnits("MiB");
+                                metricResults.getAggregationInfoResult().setFormat("MiB");
                             }
-                            emMetricResult.getEmMetricGenericResults().setMean(avgVal);
-                            containerMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), emMetricResult);
-                            containerMetric.setEmMetricResult(emMetricResult);
+                            metricResults.getAggregationInfoResult().setAvg(avgVal);
+                            containerMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), metricResults);
+                            containerMetric.setEmMetricResult(metricResults);
                         }
                     }
                 }

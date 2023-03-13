@@ -150,7 +150,11 @@ public class AutotuneConstants {
         public static final String CYCLES = "cycles";
         public static final String DURATION = "duration";
         public static final String PERCENTILE_INFO = "percentile_info";
-        public static final String UNITS = "units";
+        public static final String FORMAT = "format";
+        public static final String SUM = "sum";
+        public static final String COUNT = "count";
+        public static final String MEDIAN = "median";
+        public static final String RANGE = "range";
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";

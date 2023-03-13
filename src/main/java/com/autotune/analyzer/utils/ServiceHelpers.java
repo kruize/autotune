@@ -22,7 +22,7 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.common.k8sObjects.AutotuneConfig;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.AnalyzerConstants;

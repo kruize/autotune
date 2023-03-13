@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
@@ -100,9 +101,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             } else {
                                 containerObject = containersMap.get(cName);
                             }
-                            HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> aggregatorHashMap = new HashMap<>();
+                            HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> aggregatorHashMap = new HashMap<>();
                             for (AnalyzerConstants.MetricName aggregationInfoName : containers.getContainer_metrics().keySet()) {
-                                AggregationInfoResult aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregation_info();
+                                MetricAggregationInfoResults aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregationInfoResult();
                                 aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggregationInfoName.toString()), aggregatorResult);
                             }
                             HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();

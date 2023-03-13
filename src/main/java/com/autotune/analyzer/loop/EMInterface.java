@@ -2,7 +2,7 @@ package com.autotune.analyzer.loop;
 
 import com.autotune.analyzer.AutotuneExperiment;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.HttpUtils;
 import com.autotune.utils.TrialHelpers;
 import org.slf4j.Logger;
@@ -61,8 +61,8 @@ public class EMInterface {
 
         // TODO: Need to parse all the obj function results and calculate the result
         try {
-            double reqSumMean = reqSum.getEmMetricResult().getEmMetricGenericResults().getMean();
-            double reqCountMean = reqCount.getEmMetricResult().getEmMetricGenericResults().getMean();
+            double reqSumMean = reqSum.getEmMetricResult().getAggregationInfoResult().getAvg();
+            double reqCountMean = reqCount.getEmMetricResult().getAggregationInfoResult().getAvg();
             double rspTime = reqSumMean / reqCountMean;
             LOGGER.info("Calculated rspTime (" + rspTime + ") = reqSumMean (" + reqSumMean + ") / reqCountMean (" + reqCountMean + ");");
             experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(String.valueOf(rspTime));
