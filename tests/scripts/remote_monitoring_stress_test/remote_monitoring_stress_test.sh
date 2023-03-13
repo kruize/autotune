@@ -33,6 +33,9 @@ CLUSTER_TYPE=minikube
 DEPLOYMENT_NAME=kruize
 CONTAINER_NAME=kruize
 NAMESPACE=monitoring
+users=1000
+rampup=120
+loop=1
 
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
@@ -41,7 +44,7 @@ jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c CLUSTER_TYPE[minikube|openshift] [-i Kruize image] [-r <Specify resultsdir path> ]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u users] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
 	exit -1
 }
 
@@ -71,7 +74,7 @@ function jmeter_setup() {
 	export PATH=$JMETER_HOME/bin:$PATH 
 }
 
-while getopts c:r:i: gopts
+while getopts c:r:i:u:d:t: gopts
 do
 	case ${gopts} in
 	c)
@@ -82,6 +85,15 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
+		;;
+	u)
+		users="${OPTARG}"		
+		;;
+	d)
+		rampup="${OPTARG}"		
+		;;
+	t)
+		TIMEOUT="${OPTARG}"		
 		;;
 	esac
 done
@@ -113,9 +125,11 @@ echo "Invoking jmeter setup...done" | tee -a ${LOG}
 
 echo "Setting up kruize..." | tee -a ${LOG}
 pushd ${KRUIZE_REPO} > /dev/null
+	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log"
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log 2>&1
 
 	sleep 5
+	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${LOG_DIR}/kruize_setup.log"
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${LOG_DIR}/kruize_setup.log 2>&1
 	sleep 20
 popd > /dev/null
@@ -146,6 +160,7 @@ case ${CLUSTER_TYPE} in
 			port=""
 			BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f3-)
 
+			#Uncomment below and check on ephemeral cluster
 			#SERVER_IP_ADDR=$(oc get pods -l=app=${APP_NAME} -o wide -n ${NAMESPACE} -o=custom-columns=NODE:.spec.nodeName --no-headers)
 			#port=$(oc -n ${NAMESPACE} get svc ${APP_NAME} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 			#BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f2-)
@@ -166,7 +181,8 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	# Create the performance profile
 	#cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
 	#curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
-	
+
+	# If kruize service is exposed then do not specify the port	
 	cmd="curl http://$SERVER_IP_ADDR/createPerformanceProfile -d @resource_optimization_openshift.json"
 	echo ""
 	echo "cmd = $cmd"
@@ -190,9 +206,6 @@ echo | tee -a ${LOG}
 kruize_stats="${JMETER_LOG_DIR}/jmeter_kruize.stats"
 kruize_log="${JMETER_LOG_DIR}/jmeter_kruize.log"
 	
-users=10000
-rampup=120
-loop=1
 host=${SERVER_IP_ADDR}
 
 get_kruize_pod_log ${LOG_DIR}/kruize_pod.log
