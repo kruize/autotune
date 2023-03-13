@@ -21,6 +21,7 @@ import com.autotune.analyzer.deployment.KruizeDeployment;
 import com.autotune.common.k8sObjects.AutotuneConfig;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -134,6 +135,8 @@ public class ListStackLayers extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Adding CORS headers as this API is accessed by UI
+        Utils.addCORSHeaders(response);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);

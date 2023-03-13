@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -29,13 +30,10 @@ import java.util.stream.Collectors;
 public class ListDeploymentsInNamespace extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        // Adding CORS headers as this API is accessed by UI
+        Utils.addCORSHeaders(response);
         KubernetesServices kubernetesServices = null;
         try {
-            // Add headers to avoid CORS
-            response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods", "POST, GET");
-            response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-            response.addHeader("Access-Control-Max-Age", "1728000");
             // Set content type
             response.setContentType("application/json");
             // Set encoding

@@ -27,6 +27,7 @@ import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -64,6 +65,8 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Adding CORS headers as this API is accessed by UI
+        Utils.addCORSHeaders(response);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -96,6 +99,8 @@ public class ListExperiments extends HttpServlet {
     //TODO this function no more used.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Adding CORS headers as this API is accessed by UI
+        Utils.addCORSHeaders(response);
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
