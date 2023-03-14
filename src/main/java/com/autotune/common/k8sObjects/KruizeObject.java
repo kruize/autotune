@@ -19,6 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.ExperimentUseCaseType;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.performanceProfiles.SloInfo;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneSupportedTypes;
 import com.autotune.utils.Utils;

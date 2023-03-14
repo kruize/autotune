@@ -1,4 +1,4 @@
-package com.autotune.common.k8sObjects;
+package com.autotune.common.performanceProfiles;
 
 public class ObjectiveFunction {
     private String function_type;

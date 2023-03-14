@@ -18,7 +18,6 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;

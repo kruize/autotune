@@ -8,7 +8,7 @@ import com.autotune.common.experiments.ExperimentSummary;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.AutotuneConfig;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.ObjectiveFunction;
+import com.autotune.common.performanceProfiles.ObjectiveFunction;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
 import org.slf4j.Logger;

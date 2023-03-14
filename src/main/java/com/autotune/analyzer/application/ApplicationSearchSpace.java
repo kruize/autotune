@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.common.k8sObjects.ObjectiveFunction;
+import com.autotune.common.performanceProfiles.ObjectiveFunction;
 
 import java.util.HashMap;
 import java.util.Map;

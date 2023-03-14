@@ -28,6 +28,7 @@ import com.autotune.common.k8sObjects.*;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.common.performanceProfiles.SloInfo;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
@@ -56,7 +57,6 @@ import java.net.MalformedURLException;
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 

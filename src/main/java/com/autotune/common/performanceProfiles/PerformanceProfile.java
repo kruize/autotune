@@ -15,13 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.performanceProfiles;
 
-import com.autotune.common.k8sObjects.SloInfo;
-import com.autotune.common.k8sObjects.ValidatePerformanceProfileObject;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.google.gson.annotations.SerializedName;
-
-import java.util.HashMap;
 
 /**
  * Container class for the PerformanceProfile kubernetes kind, which is used to define
