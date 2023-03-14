@@ -245,7 +245,7 @@ public class KruizeDeployment {
             kubernetesServices = new KubernetesServicesImpl();
             String namespace = kruizeObject.getNamespace();
             String experimentName = kruizeObject.getExperimentName();
-            List<Pod> podList = new KubernetesServicesImpl().getPodsBy(namespace, userLabelKey, userLabelValue);
+            List<Pod> podList = kubernetesServices.getPodsBy(namespace, userLabelKey, userLabelValue);
             if (podList.isEmpty()) {
                 LOGGER.error("autotune object " + kruizeObject.getExperimentName() + " not added as no related deployments found!");
                 // TODO: No matching pods with the userLabelKey found, need to warn the user.
@@ -310,6 +310,9 @@ public class KruizeDeployment {
             }
         } catch (NullPointerException e) {
             e.printStackTrace();
+        } finally {
+            if (null != kubernetesServices)
+                kubernetesServices.shutdownClient();
         }
     }
 
@@ -601,6 +604,9 @@ public class KruizeDeployment {
         } catch (JSONException | InvalidValueException | NullPointerException e) {
             e.printStackTrace();
             return null;
+        } finally {
+            if (null != kubernetesServices)
+                kubernetesServices.shutdownClient();
         }
     }
 
