@@ -348,5 +348,14 @@ public class KruizeConstants {
         }
 
         public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
+    }
+
+    public static class SupportedPerformanceProfiles {
+        private SupportedPerformanceProfiles() {
+
+        }
+
+        public static final String RESOURCE_OPTIMISATION_PROFILE = "resource_optimisation_profile";
     }
 }

@@ -269,4 +269,30 @@ public class CommonUtils {
             return 0;
         return timeValue * secsInUnit * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
     }
+
+    public static class RecommendationEngineUtils {
+        private RecommendationEngineUtils() {
+
+        }
+
+        public enum SetEngineOutputStatus {
+            SUCCESS,
+            FAILURE,
+            DUPLICATE_FOUND,
+            OVERWRITTEN
+        }
+    }
+
+    public enum SupportedPerformanceProfiles {
+        RESOURCE_OPTIMIZATION_PROFILE (AutotuneConstants.SupportedPerformanceProfiles.RESOURCE_OPTIMISATION_PROFILE);
+
+        private String key;
+        private SupportedPerformanceProfiles(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return this.key;
+        }
+    }
 }
