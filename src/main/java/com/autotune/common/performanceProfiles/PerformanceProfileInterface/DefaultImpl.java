@@ -15,8 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
+import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -53,15 +56,15 @@ public class DefaultImpl extends PerfProfileImpl {
 
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (Containers containers : deploymentResultData.getContainers()) {
-                HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetricsMap =
-                        containers.getContainer_metrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
-                for (HashMap<String, com.autotune.common.data.metrics.MetricResults> funcVar : containerMetricsMap.values()) {
+            for (ContainerObject containerObject : deploymentResultData.getContainerObjects()) {
+                List<ContainerMetricsHelper> containerMetricsHelpers = containerObject.getMetrics();
+                List<String> kruizeFunctionVariablesList = containerMetricsHelpers.stream().map(ContainerMetricsHelper::getName)
+                        .collect(Collectors.toCollection(ArrayList::new));
+                for (ContainerMetricsHelper containerMetricsHelper : containerMetricsHelpers) {
                     Map<String, Object> aggrInfoClassAsMap;
                     try {
                         // TODO: Need to update the below code
-                        aggrInfoClassAsMap = DefaultImpl.convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
+                        aggrInfoClassAsMap = DefaultImpl.convertObjectToMap(containerMetricsHelper.getMetricResults().getAggregationInfoResult());
                        LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);

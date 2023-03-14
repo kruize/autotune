@@ -1,12 +1,12 @@
 package com.autotune.common.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.utils.PerformanceProfileValidation;
 import com.autotune.common.data.ValidationResultData;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.Containers;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PerfProfileImpl implements PerfProfileInterface {
 
@@ -80,10 +81,10 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (Containers containers : deploymentResultData.getContainers()) {
-                HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> containerMetricsMap =
-                        containers.getContainer_metrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
+            for (ContainerObject containerObject : deploymentResultData.getContainerObjects()) {
+                List<ContainerMetricsHelper> containerMetricsHelpers = containerObject.getMetrics();
+                List<String> kruizeFunctionVariablesList = containerMetricsHelpers.stream().map(ContainerMetricsHelper::getName)
+                        .collect(Collectors.toCollection(ArrayList::new));
                 if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
                         new HashSet<>(perfProfileFunctionVariablesList).containsAll(kruizeFunctionVariablesList) &&
                         new HashSet<>(kruizeFunctionVariablesList).containsAll(perfProfileFunctionVariablesList))) {
@@ -93,11 +94,12 @@ public class PerfProfileImpl implements PerfProfileInterface {
                     errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
                     break;
                 } else {
-                    for (HashMap<String, MetricResults> funcVar : containerMetricsMap.values()) {
+//                    for (HashMap<String, MetricResults> funcVar : containerMetricsMap.values()) {
+                    for (ContainerMetricsHelper containerMetricsHelper : containerMetricsHelpers) {
                         Map<String, Object> aggrInfoClassAsMap;
                         if (!aggrFunctionsObjects.isEmpty()) {
                             try {
-                                aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
+                                aggrInfoClassAsMap = convertObjectToMap(containerMetricsHelper.getMetricResults().getAggregationInfoResult());
                                 errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
                                 if (!errorMsg.isBlank()) {
                                     errorMsg = errorMsg.concat(String.format("for the experiment : %s"
@@ -112,7 +114,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
                             if (queryList.isEmpty()) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                                 break;
-                            } else if (null == funcVar.get("results").getValue()) {
+                            } else if (null == containerMetricsHelper.getMetricResults().getValue()) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
                                 break;
                             }

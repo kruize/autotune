@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -22,6 +23,7 @@ import com.autotune.common.data.result.*;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
@@ -159,14 +161,16 @@ public class EMUtil {
                 podResultDataList.add(podResultData);
             }
         }
-        List<Containers> containersList = new ArrayList<>();
+        List<ContainerObject> containerObjectList = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
-            Containers containers = new Containers();
-            containers.setContainer_name(containerMapEntry.getKey());
-            containers.setImage_name(null);
+            ContainerObject containerObjects = new ContainerObject();
+            containerObjects.setContainer_name(containerMapEntry.getKey());
+            containerObjects.setImage(null);
 
             HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetrics = new HashMap<>();
+            List<ContainerMetricsHelper> metrics = new ArrayList<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
+                ContainerMetricsHelper containerMetricsHelper = new ContainerMetricsHelper();
                 Metric containerMetric = containerMetricEntry.getValue();
                 if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
                     MetricResults metricResults = new MetricResults();
@@ -174,16 +178,16 @@ public class EMUtil {
                     metricAggregationInfoResults.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                     metricAggregationInfoResults.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
                     metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                    HashMap<String, MetricResults> resultsHashMap = new HashMap<>();
-                    resultsHashMap.put("results", metricResults);
-                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);
+                    containerMetricsHelper.setName(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()).toString());
+                    containerMetricsHelper.setMetricResults(metricResults);
+                    metrics.add(containerMetricsHelper);
                 }
             }
-            containers.setContainer_metrics(containerMetrics);
-            containersList.add(containers);
+            containerObjects.setMetrics(metrics);
+            containerObjectList.add(containerObjects);
         }
         deploymentResultData.setPod_metrics(podResultDataList);
-        deploymentResultData.setContainers(containersList);
+        deploymentResultData.setContainerObjects(containerObjectList);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
         experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));

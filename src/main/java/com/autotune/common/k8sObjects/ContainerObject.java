@@ -16,10 +16,8 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
-import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AutotuneConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -35,12 +33,6 @@ public class ContainerObject {
     @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
     private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
     private List<ContainerMetricsHelper> metrics;
-    private HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> container_metrics;
-
-    public ContainerObject(String container_name, String image) {
-        this.image = image;
-        this.container_name = container_name;
-    }
 
     public String getImage() {
         return image;
@@ -81,14 +73,6 @@ public class ContainerObject {
     public void setMetrics(List<ContainerMetricsHelper> metrics) {
         this.metrics = metrics;
     }
-    public HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> getContainer_metrics() {
-        return container_metrics;
-    }
-
-    public void setContainer_metrics(HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> container_metrics) {
-        this.container_metrics = container_metrics;
-    }
-
     @Override
     public String toString() {
         return "ContainerObject{" +

@@ -25,6 +25,9 @@ import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
@@ -182,7 +185,7 @@ public class Utils
 						if (null != objectType)
 							deploymentObject.setType(objectType);
 						HashMap<String, ContainerObject> containerObjectHashMap = new HashMap<String, ContainerObject>();
-						for (ContainerObject containerObject: k8sObject.getContainers()) {
+						for (ContainerObject containerObject: k8sObject.getContainerObjects()) {
 							containerObjectHashMap.put(containerObject.getContainer_name(), containerObject);
 						}
 						deploymentObject.setContainers(containerObjectHashMap);
@@ -220,7 +223,7 @@ public class Utils
 					for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
 						containerObjects.add(containerObject);
 					}
-					k8sObject.setContainers(containerObjects);
+					k8sObject.setContainerObjects(containerObjects);
 					k8sObjectsList.add(k8sObject);
 				}
 				listRecommendationsSO.setKubernetesObjects(k8sObjectsList);
@@ -237,24 +240,7 @@ public class Utils
 					DeploymentResultData deploymentResultData = new DeploymentResultData();
 					deploymentResultData.setDeployment_name(k8sObject.getName());
 					deploymentResultData.setNamespace(k8sObject.getNamespace());
-					List<Containers> containersList =  new ArrayList<Containers>();
-					for (ContainerObject containerObject: k8sObject.getContainers()) {
-						Containers containers =  new Containers();
-						containers.setContainer_name(containerObject.getContainer_name());
-						containers.setImage_name(containerObject.getImage());
-						HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> metricsMap =  new HashMap<>();
-						for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
-							HashMap<String, MetricResults> resultsHashMap =  new HashMap<>();
-							resultsHashMap.put("results", containerMetricsHelper.getMetricResults());
-							AnalyzerConstants.MetricName metricName = getAppropriateMetricName(containerMetricsHelper.getName());
-							if (null != metricName) {
-								metricsMap.put(metricName, resultsHashMap);
-							}
-						}
-						containers.setContainer_metrics(metricsMap);
-						containersList.add(containers);
-					}
-					deploymentResultData.setContainers(containersList);
+					deploymentResultData.setContainerObjects(k8sObject.getContainerObjects());
 					deploymentResultDataList.add(deploymentResultData);
 				}
 				experimentResultData.setDeployments(deploymentResultDataList);

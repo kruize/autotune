@@ -215,14 +215,18 @@ if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
 fi
 
 # check for benchmarks directory path
-if [ -z "${APP_REPO}" ]; then
-	echo "Error: Do specify the benchmarks directory path"
-	usage
-else
-	if [ ! -d "${APP_REPO}" ]; then
-		echo "Error: benchmark directory does not exists"
+if [ ! "${testsuite}" == "remote_monitoring_tests" ]; then
+	if [ -z "${APP_REPO}" ]; then
+		echo "Error: Do specify the benchmarks directory path"
 		usage
+	else
+		if [ ! -d "${APP_REPO}" ]; then
+			echo "Error: benchmark directory does not exists"
+			usage
+		fi
 	fi
+else
+	APP_REPO="NA"
 fi
 
 if [ "${setup}" -ne "0" ]; then

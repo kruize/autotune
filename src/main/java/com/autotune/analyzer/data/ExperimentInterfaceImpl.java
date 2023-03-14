@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.data;
 
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
@@ -91,20 +92,19 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             deploymentObject = deploymentsMap.get(dName);
                             containersMap = deploymentObject.getContainers();
                         }
-                        List<Containers> resultContainerList = deploymentResultData.getContainers();
-                        for (Containers containers : resultContainerList) {
-                            String cName = containers.getContainer_name();
-                            String imgName = containers.getImage_name();
-                            ContainerObject containerObject;
+                        List<ContainerObject> resultContainerObjectList = deploymentResultData.getContainerObjects();
+                        for (ContainerObject containerObject : resultContainerObjectList) {
+                            String cName = containerObject.getContainer_name();
+                            String imgName = containerObject.getImage();
                             if (null == containersMap.get(cName)) {
-                                containerObject = new ContainerObject(cName, imgName);
+                                containerObject = new ContainerObject();
                             } else {
                                 containerObject = containersMap.get(cName);
                             }
                             HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> aggregatorHashMap = new HashMap<>();
-                            for (AnalyzerConstants.MetricName aggregationInfoName : containers.getContainer_metrics().keySet()) {
-                                MetricAggregationInfoResults aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregationInfoResult();
-                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggregationInfoName.toString()), aggregatorResult);
+                             for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
+                                MetricAggregationInfoResults aggregatorResult = containerMetricsHelper.getMetricResults().getAggregationInfoResult();
+                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(containerMetricsHelper.getName()), aggregatorResult);
                             }
                             HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
 

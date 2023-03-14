@@ -1,12 +1,16 @@
 package com.autotune.common.k8sObjects;
 
+import com.autotune.utils.AutotuneConstants;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class K8sObject {
     private String type; // TODO: Change to ENUM
     private String name;
     private String namespace;
-    private List<ContainerObject> containers;
+    @SerializedName(AutotuneConstants.JSONKeys.CONTAINERS)
+    private List<ContainerObject> containerObjects;
 
     public String getType() {
         return type;
@@ -32,11 +36,21 @@ public class K8sObject {
         this.namespace = namespace;
     }
 
-    public List<ContainerObject> getContainers() {
-        return containers;
+    public List<ContainerObject> getContainerObjects() {
+        return containerObjects;
     }
 
-    public void setContainers(List<ContainerObject> containers) {
-        this.containers = containers;
+    public void setContainerObjects(List<ContainerObject> containerObjects) {
+        this.containerObjects = containerObjects;
+    }
+
+    @Override
+    public String toString() {
+        return "K8sObject{" +
+                "type='" + type + '\'' +
+                ", name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", containerObjects=" + containerObjects +
+                '}';
     }
 }
