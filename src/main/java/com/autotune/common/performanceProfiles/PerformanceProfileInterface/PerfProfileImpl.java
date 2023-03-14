@@ -62,6 +62,11 @@ public class PerfProfileImpl implements PerfProfileInterface {
     @Override
     public String validateResults(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
         String errorMsg = "";
+        List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
+                AnalyzerConstants.MetricNameConstants.CPU_USAGE,
+                AnalyzerConstants.MetricNameConstants.MEMORY_USAGE,
+                AnalyzerConstants.MetricNameConstants.MEMORY_RSS
+        ));
         // Get the metrics data from the Performance Profile
         List<String> aggrFunctionsObjects = new ArrayList<>();
         List<String> queryList = new ArrayList<>();
@@ -84,42 +89,40 @@ public class PerfProfileImpl implements PerfProfileInterface {
                 HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> containerMetricsMap =
                         containers.getContainer_metrics();
                 List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
-                if (!(perfProfileFunctionVariablesList.size() == kruizeFunctionVariablesList.size() &&
-                        new HashSet<>(perfProfileFunctionVariablesList).containsAll(kruizeFunctionVariablesList) &&
-                        new HashSet<>(kruizeFunctionVariablesList).containsAll(perfProfileFunctionVariablesList))) {
-                    LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
-                    LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
-                    perfProfileFunctionVariablesList.removeAll(kruizeFunctionVariablesList);
-                    errorMsg = errorMsg.concat(String.format("Following Performance Profile parameters are missing for experiment - %s : %s", experimentResultData.getExperiment_name(), perfProfileFunctionVariablesList));
+                LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
+                LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
+                if (!kruizeFunctionVariablesList.containsAll(mandatoryFields)) {
+                    errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", experimentResultData.getExperiment_name(), mandatoryFields));
                     break;
-                } else {
-                    for (HashMap<String, MetricResults> funcVar : containerMetricsMap.values()) {
-                        Map<String, Object> aggrInfoClassAsMap;
-                        if (!aggrFunctionsObjects.isEmpty()) {
-                            try {
-                                aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
-                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
-                                if (!errorMsg.isBlank()) {
-                                    errorMsg = errorMsg.concat(String.format("for the experiment : %s"
-                                            , experimentResultData.getExperiment_name()));
-                                    break;
-                                }
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                throw new RuntimeException(e);
-                            }
-                        } else {
-                            // TODO: check for query and validate against value in kruize object
-                            if (queryList.isEmpty()) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
-                                break;
-                            } else if (null == funcVar.get("results").getValue()) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
+                }
+                for (HashMap<String, MetricResults> funcVar : containerMetricsMap.values()) {
+                    Map<String, Object> aggrInfoClassAsMap;
+                    if (!aggrFunctionsObjects.isEmpty()) {
+                        try {
+                            aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
+                            errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
+                            if (!errorMsg.isBlank()) {
+                                errorMsg = errorMsg.concat(String.format("for the experiment : %s"
+                                        , experimentResultData.getExperiment_name()));
                                 break;
                             }
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
                         }
-
-
+                    } else {
+                        // TODO: check for query and validate against value in kruize object
+                        if (queryList.isEmpty()) {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
+                            break;
+                        } else if (null == funcVar.get("results").getValue()) {
+                            LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE);
+                            //TODO: Need to update the below code later
+//                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
+//                                break;
+                        }
                     }
+
+
                 }
             }
         }

@@ -68,7 +68,7 @@ public class ExperimentResultValidation {
                          and then validate the Performance Profile data
                         */
                         try {
-                            LOGGER.info("Kruize Object: {}", kruizeObject);
+                            LOGGER.debug("Kruize Object: {}", kruizeObject);
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
                             errorMsg = new PerfProfileImpl().validateResults(performanceProfile,resultData);
