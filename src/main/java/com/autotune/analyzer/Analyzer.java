@@ -65,5 +65,6 @@ public class Analyzer {
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
         context.addServlet(ListDeploymentsInNamespace.class, ServerContext.LIST_DEPLOYMENTS);
+        context.addServlet(ListSupportedK8sObjects.class, ServerContext.LIST_K8S_OBJECTS);
     }
 }
