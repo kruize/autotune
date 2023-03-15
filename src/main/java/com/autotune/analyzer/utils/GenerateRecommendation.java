@@ -62,13 +62,10 @@ public class GenerateRecommendation {
                                     monitorStartDate = addDays(monitorEndDate, -1 * days);
                                     if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
                                         Timestamp finalMonitorStartDate = monitorStartDate;
-                                        System.out.println(finalMonitorStartDate);
-                                        System.out.println(monitorEndDate);
                                         Map<Timestamp, StartEndTimeStampResults> filteredResultsMap = containerObject.getResults().entrySet().stream()
                                                 .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
                                                         && (x.getKey().compareTo(monitorEndDate) <= 0))))
                                                 .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-                                        System.out.println(filteredResultsMap);
                                         Recommendation recommendation = new Recommendation(monitorStartDate, monitorEndDate);
                                         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
                                         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
@@ -106,7 +103,6 @@ public class GenerateRecommendation {
                         containerRecommendationMap = new HashMap<>();
                     containerRecommendationMap.put(monitorEndDate, recCatMap);
                     containerObject.setRecommendations(containerRecommendationMap);
-                    System.out.println(containerRecommendationMap);
                 }
             }
         } catch (Exception e) {
