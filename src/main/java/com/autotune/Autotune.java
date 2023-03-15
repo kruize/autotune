@@ -23,6 +23,7 @@ import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
 import com.autotune.utils.AutotuneConstants;
 import com.autotune.utils.ServerContext;
+import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
@@ -32,6 +33,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 
 import static com.autotune.utils.ServerContext.*;
 
@@ -48,6 +52,11 @@ public class Autotune {
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
         context.setErrorHandler(new AutotuneErrorHandler());
+        context.addFilter(
+                KruizeCORSFilter.getFilter(),
+                AutotuneConstants.CORSConstants.PATH_WILDCARD,
+                EnumSet.of(DispatcherType.REQUEST)
+        );
         /**
          *  Adding Listener to initiate variables during server start.
          */
