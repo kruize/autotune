@@ -95,11 +95,11 @@ public class PerfProfileImpl implements PerfProfileInterface {
                     errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", experimentResultData.getExperiment_name(), mandatoryFields));
                     break;
                 }
-                for (HashMap<String, MetricResults> funcVar : containerMetricsMap.values()) {
+                for (Map.Entry<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> funcVar : containerMetricsMap.entrySet()) {
                     Map<String, Object> aggrInfoClassAsMap;
                     if (!aggrFunctionsObjects.isEmpty()) {
                         try {
-                            aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
+                            aggrInfoClassAsMap = convertObjectToMap(funcVar.getValue().get("results").getAggregationInfoResult());
                             errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
                             if (!errorMsg.isBlank()) {
                                 errorMsg = errorMsg.concat(String.format("for the experiment : %s"
@@ -110,19 +110,16 @@ public class PerfProfileImpl implements PerfProfileInterface {
                             throw new RuntimeException(e);
                         }
                     } else {
-                        // TODO: check for query and validate against value in kruize object
+                        // check if query is also absent
                         if (queryList.isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                             break;
-                        } else if (null == funcVar.get("results").getValue()) {
-                            LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE);
-                            //TODO: Need to update the below code later
-//                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE;
-//                                break;
                         }
                     }
-
-
+                    // check if the 'value' is present in the result JSON
+                    if (null == funcVar.getValue().get("results").getValue()) {
+                        LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(funcVar.getKey().toString()));
+                    }
                 }
             }
         }
@@ -154,7 +151,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
     private String validateAggFunction(Set<String> keySet, List<String> aggrFunctionsObjects) {
 
         List<String> aggrInfoObjects = keySet.stream().toList();
-        List<String> missingAggFunction = new ArrayList<>();
+        Set<String> missingAggFunction = new HashSet<>();
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the aggrInfoObjects List
         if (aggrInfoObjects.stream().noneMatch(aggrFunctionsObjects::contains)) {
