@@ -40,7 +40,7 @@ loop=1
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
 
-jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
+jmx_file="kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
@@ -54,7 +54,7 @@ function get_kruize_pod_log() {
 	# Fetch the kruize pod log
 
 	echo ""
-	echo "Fetch the kruize pod logs and store in $log..."
+	echo "Fetch the kruize pod logs and store in ${log}..."
 	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
@@ -62,16 +62,16 @@ function get_kruize_pod_log() {
 function jmeter_setup() {
 	JMETER_VERSION="5.5"
 
-	if [ ! -d ${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION ]; then
+	if [ ! -d ${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION} ]; then
 		echo "Downloading jmeter..." | tee -a ${LOG}
-		wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-$JMETER_VERSION.tgz
-		tar -xzf apache-jmeter-$JMETER_VERSION.tgz
-		rm apache-jmeter-$JMETER_VERSION.tgz
+		wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz
+		tar -xzf apache-jmeter-${JMETER_VERSION}.tgz
+		rm apache-jmeter-${JMETER_VERSION}.tgz
 	else 
-		echo "Skipping jmeter install as it is already present here - ${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION"
+		echo "Skipping jmeter install as it is already present here - ${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION}"
 	fi
-	export JMETER_HOME=${CURRENT_DIR}/apache-jmeter-$JMETER_VERSION
-	export PATH=$JMETER_HOME/bin:$PATH 
+	export JMETER_HOME=${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION}
+	export PATH=${JMETER_HOME}/bin:${PATH}
 }
 
 while getopts c:r:i:u:d:t: gopts
@@ -143,12 +143,13 @@ case ${CLUSTER_TYPE} in
 			echo "Port forward prometheus..." | tee -a ${LOG}
 			kubectl port-forward svc/prometheus-k8s 9090:9090 -n ${NAMESPACE} > /dev/null 2>/dev/null &
 			echo "Port forward prometheus...done" | tee -a ${LOG}
-			port=$(kubectl -n ${NAMESPACE} get svc $APP_NAME --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+			port=$(kubectl -n ${NAMESPACE} get svc ${APP_NAME} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 			if [ "${port}" == "" ]; then
 				echo "Failed to get the Kruize port, Check if kruize is runnning!" | tee -a ${LOG}
 				exit -1
 			fi
 			BENCHMARK_SERVER="localhost"
+			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER} port = ${port}"
 		fi
 		;;
 	openshift)
@@ -158,19 +159,14 @@ case ${CLUSTER_TYPE} in
 
 			SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
 			port=""
-			BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f3-)
-
-			#Uncomment below and check on ephemeral cluster
-			#SERVER_IP_ADDR=$(oc get pods -l=app=${APP_NAME} -o wide -n ${NAMESPACE} -o=custom-columns=NODE:.spec.nodeName --no-headers)
-			#port=$(oc -n ${NAMESPACE} get svc ${APP_NAME} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-			#BENCHMARK_SERVER=$(echo $SERVER_IP_ADDR | cut -d "." -f2-)
+			BENCHMARK_SERVER=$(echo ${SERVER_IP_ADDR} | cut -d "." -f3-)
+			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER}"
 		fi
 		;;
 	*)
-		err_exit "Error: Cluster type $CLUSTER_TYPE is not supported" | tee -a ${LOG}
+		err_exit "Error: Cluster type ${CLUSTER_TYPE} is not supported" | tee -a ${LOG}
 		;;
 esac	
-echo "SERVER_IP_ADDR = $SERVER_IP_ADDR BENCHMARK_SERVER = $BENCHMARK_SERVER port = $port"
 
 # Start monitoring metrics
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
@@ -179,27 +175,22 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} > ${LOG_DIR}/monitor-metrics.log 2>&1 &
 
 	# Create the performance profile
-	#cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
-	#curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
-
 	# If kruize service is exposed then do not specify the port	
-	cmd="curl http://$SERVER_IP_ADDR/createPerformanceProfile -d @resource_optimization_openshift.json"
+	cmd="curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @resource_optimization_openshift.json"
 	echo ""
-	echo "cmd = $cmd"
-	curl http://$SERVER_IP_ADDR/createPerformanceProfile -d @resource_optimization_openshift.json
+	echo "cmd = ${cmd}"
+	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @resource_optimization_openshift.json
 else
 	echo ""
 	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
 
 	# Create the performance profile
-	cmd="curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json"
+	cmd="curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @resource_optimization_openshift.json"
 	echo ""
-	echo "cmd = $cmd"
-	curl http://$SERVER_IP_ADDR:$port/createPerformanceProfile -d @resource_optimization_openshift.json
+	echo "cmd = ${cmd}"
+	curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @resource_optimization_openshift.json
 fi
-
-
 
 echo | tee -a ${LOG}
 
@@ -213,17 +204,22 @@ get_kruize_pod_log ${LOG_DIR}/kruize_pod.log
 # sleep for sometime before starting the experiments to capture initial resource usage of kruize
 sleep 200
 
+JMETER_LOG="${LOG_DIR}/jmeter.log"
 # Run the jmeter load
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
-	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log" | tee -a ${LOG}
-	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
+	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
+
 else
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
-	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log" | tee -a ${LOG}
-	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=$port -Jusers=$users -Jlogdir=${JMETER_LOG_DIR} -Jrampup=$rampup -Jloop=$loop > ${LOG_DIR}/jmeter.log
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
+	#exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
+	cmd="jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop}"
+	${cmd} > ${JMETER_LOG}
+
 fi
 		
