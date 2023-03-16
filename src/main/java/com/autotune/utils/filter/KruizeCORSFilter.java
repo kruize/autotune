@@ -23,13 +23,19 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class contains the required methods to serve the CORS filter added to server
+ */
 public class KruizeCORSFilter {
+    // Making sure instance/object is not created
     private KruizeCORSFilter() {
 
     }
+    // Initialise the Filter Holder to null
     private static FilterHolder filterHolder = null;
 
     public static FilterHolder getFilter() {
+        // If it's the first call for the filterholder, Create it
         if (null == filterHolder) {
             filterHolder = new FilterHolder(CrossOriginFilter.class);
             Map<String, String> filterParams = new HashMap<String, String>();
