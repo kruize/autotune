@@ -22,6 +22,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -69,6 +70,7 @@ public class ListRecommendation extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         boolean getLatest = false;
         boolean error = false;
         if (null != latestRecommendation
@@ -77,6 +79,11 @@ public class ListRecommendation extends HttpServlet {
         )
         {
             getLatest = true;
+        }
+        if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
+
+        } else if (null != monitoringTimestamp && monitoringTimestamp.isEmpty()) {
+            monitoringTimestamp = null;
         }
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
         if (null != experimentName) {
