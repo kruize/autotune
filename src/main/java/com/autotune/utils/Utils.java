@@ -27,8 +27,10 @@ import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -193,7 +195,7 @@ public class Utils
 				return kruizeObject;
 			}
 
-			public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject) {
+			public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject, boolean getLatest) {
 				// Need to be implemented if needed
 				ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
 				listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
@@ -207,7 +209,29 @@ public class Utils
 					k8sObject.setNamespace(deploymentObject.getNamespace());
 					List<ContainerObject> containerObjects = new ArrayList<ContainerObject>();
 					for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
-						containerObjects.add(containerObject);
+						if (getLatest) {
+							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
+							ContainerObject clonedContainerObject = (ContainerObject) getClone(containerObject);
+							if (null != clonedContainerObject) {
+								HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getRecommendations();
+								Timestamp latestTimestamp = null;
+								for (Timestamp timestamp : recommendations.keySet()) {
+									if (null == latestTimestamp) {
+										latestTimestamp = timestamp;
+									} else {
+										if (timestamp.after(latestTimestamp)) {
+											recommendations.remove(latestTimestamp);
+											latestTimestamp = timestamp;
+										} else {
+											recommendations.remove(timestamp);
+										}
+									}
+								}
+							}
+							containerObjects.add(clonedContainerObject);
+						} else {
+							containerObjects.add(containerObject);
+						}
 					}
 					k8sObject.setContainers(containerObjects);
 					k8sObjectsList.add(k8sObject);
@@ -250,5 +274,35 @@ public class Utils
 				return experimentResultData;
 			}
 		}
+	}
+
+	/**
+	 * Get a deep copy of an object
+	 *
+	 * CAUTION: Using this mechanism will have high impact on the performance. As
+	 * this causes performance degradation USE ONLY IF NECESSARY
+	 *
+	 * @param object
+	 * @return
+	 */
+	public static Object getClone(Object object) {
+		if (null == object)
+			return null;
+
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		ObjectOutputStream objectOutputStream = null;
+		try {
+			objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+			objectOutputStream.writeObject(object);
+			objectOutputStream.flush();
+			objectOutputStream.close();
+			byteArrayOutputStream.close();
+			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+			Object cloneObject = new ObjectInputStream(byteArrayInputStream).readObject();
+			return cloneObject;
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

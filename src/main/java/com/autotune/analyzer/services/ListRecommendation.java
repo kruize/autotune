@@ -41,6 +41,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -67,24 +68,35 @@ public class ListRecommendation extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        boolean getLatest = false;
+        boolean error = false;
+        if (null != latestRecommendation
+                && !latestRecommendation.isEmpty()
+                && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
+        )
+        {
+            getLatest = true;
+        }
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
         if (null != experimentName) {
             experimentName = experimentName.trim();
             if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
                 kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
             } else {
-                // TODO: Needs to be implemented
-                //sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
+                error = true;
+                sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
             }
         } else {
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
         }
-        //List<ViewRecommendation> recommendationList = new ArrayList<>();
-        List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
-        for (KruizeObject ko : kruizeObjectList) {
-            try {
-                LOGGER.debug(ko.getDeployment_name());
-                LOGGER.debug(ko.getDeployments().toString());
+        if (!error) {
+            //List<ViewRecommendation> recommendationList = new ArrayList<>();
+            List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
+            for (KruizeObject ko : kruizeObjectList) {
+                try {
+                    LOGGER.debug(ko.getDeployment_name());
+                    LOGGER.debug(ko.getDeployments().toString());
 //                recommendationList.add(
 //                        new ViewRecommendation(
 //                                ko.getExperimentName(),
@@ -93,39 +105,40 @@ public class ListRecommendation extends HttpServlet {
 //                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
 //                        )
 //                );
-                recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
-            } catch (Exception e) {
-                LOGGER.error("Not able to generate recommendation for expName : {} : {}", ko.getExperimentName(), e.getMessage());
-            }
-        }
-
-        ExclusionStrategy strategy = new ExclusionStrategy() {
-            @Override
-            public boolean shouldSkipField(FieldAttributes field) {
-                if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
-                    return true;
+                    recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko, getLatest));
+                } catch (Exception e) {
+                    LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }
-                return false;
             }
 
-            @Override
-            public boolean shouldSkipClass(Class<?> clazz) {
-                return false;
+            ExclusionStrategy strategy = new ExclusionStrategy() {
+                @Override
+                public boolean shouldSkipField(FieldAttributes field) {
+                    if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean shouldSkipClass(Class<?> clazz) {
+                    return false;
+                }
+            };
+            String gsonStr = "[]";
+            if (recommendationList.size() > 0) {
+                Gson gsonObj = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .setExclusionStrategies(strategy)
+                        .create();
+                gsonStr = gsonObj.toJson(recommendationList);
             }
-        };
-        String gsonStr = "[]";
-        if (recommendationList.size() > 0) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(strategy)
-                    .create();
-            gsonStr = gsonObj.toJson(recommendationList);
+            response.getWriter().println(gsonStr);
+            response.getWriter().close();
         }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {

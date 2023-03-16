@@ -19,6 +19,7 @@ import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSu
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -346,6 +347,7 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_TRIALS = "experiment_trials";
         public static final String NA = "NA";
         public static final String SECONDS = " seconds";
+        public static final String LATEST = "latest";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
 
@@ -546,5 +548,20 @@ public class AnalyzerConstants {
         }
 
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
+    }
+
+    public static final class BooleanString {
+        private BooleanString() {
+
+        }
+
+        public static final String TRUE_DEFAULT = "True";
+        public static final String FALSE_DEFAULT = "False";
+        public static final String TRUE_LOWER = TRUE_DEFAULT.toLowerCase();
+        public static final String FALSE_LOWER = FALSE_DEFAULT.toLowerCase();
+        public static final String TRUE_UPPER = TRUE_DEFAULT.toUpperCase();
+        public static final String FALSE_UPPER = FALSE_DEFAULT.toUpperCase();
+        public static final String TRUE = TRUE_LOWER;
+        public static final String FALSE = FALSE_LOWER;
     }
 }
