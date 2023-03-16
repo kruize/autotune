@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
 public class ListDeploymentsInNamespace extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         KubernetesServices kubernetesServices = null;
         try {
             // Set content type
