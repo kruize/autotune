@@ -16,12 +16,20 @@
 package com.autotune.analyzer.data;
 
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.result.*;
+import com.autotune.common.data.result.Containers;
+import com.autotune.common.data.result.DeploymentResultData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.dbactivites.init.KruizeHibernateUtil;
+import com.autotune.dbactivites.model.ExperimentDetail;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,17 +56,41 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
         return true;
     }
 
+    /**
+     * @param kruizeObject
+     * @return boolean
+     * <p>
+     * This is a Java method that adds an experiment to a database. It takes a KruizeObject parameter, which is converted to an ExperimentDetail object using a converter method from a class named KruizeObjectConverters. The ExperimentDetail object is then persisted to the database using Hibernate.
+     * The Hibernate session is opened using a try-with-resources statement that automatically closes the session after the transaction completes or an exception is thrown.
+     */
     @Override
     public boolean addExperimentToDB(KruizeObject kruizeObject) {
-        //TODO insert in to db
+        boolean success = false;
         updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-        return true;
+        ExperimentDetail experimentDetail = Utils.Converters.KruizeObjectConverters.convertKruizeObjectToExperimentDBObj(kruizeObject);
+
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(experimentDetail);
+                tx.commit();
+                success = true;
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.FAILED);
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                //todo save error to API_ERROR_LOG
+            }
+        }
+
+        return success;
     }
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);
-        // TODO   update into database
         return true;
     }
 

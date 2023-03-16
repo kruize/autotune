@@ -45,7 +45,7 @@ public final class KruizeObject {
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
-    private String targetCluster;           //Todo convert into Enum
+    private String target_cluster;           //Todo convert into Enum
     @SerializedName("slo")
     private SloInfo sloInfo;
     private String hpoAlgoImpl;
@@ -69,18 +69,18 @@ public final class KruizeObject {
                         String clusterName,
                         String namespace,
                         String mode,
-                        String targetCluster,
+                        String target_cluster,
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
                         String performanceProfile,
                         ObjectReference objectReference
-                        ) throws InvalidValueException {
+    ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, namespace);
         map.put(AnalyzerConstants.AutotuneObjectConstants.MODE, mode);
-        map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, target_cluster);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
@@ -88,7 +88,7 @@ public final class KruizeObject {
         if (error.toString().isEmpty()) {
             this.experimentName = experimentName;
             this.mode = mode;
-            this.targetCluster = targetCluster;
+            this.target_cluster = target_cluster;
             this.selectorInfo = selectorInfo;
             this.experimentId = Utils.generateID(toString());
             this.objectReference = objectReference;
@@ -140,12 +140,12 @@ public final class KruizeObject {
         this.mode = mode;
     }
 
-    public String getTargetCluster() {
-        return targetCluster;
+    public String getTarget_cluster() {
+        return target_cluster;
     }
 
-    public void setTargetCluster(String targetCluster) {
-        this.targetCluster = targetCluster;
+    public void setTarget_cluster(String target_cluster) {
+        this.target_cluster = target_cluster;
     }
 
     public String getExperimentId() {
@@ -284,7 +284,7 @@ public final class KruizeObject {
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName +
                 ", mode='" + mode + '\'' +
-                ", targetCluster='" + targetCluster + '\'' +
+                ", targetCluster='" + target_cluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +
                 ", selectorInfo=" + selectorInfo +
                 ", objectReference=" + objectReference +

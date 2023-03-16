@@ -23,10 +23,10 @@ import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.layer.Layer;
 import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.*;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
@@ -157,7 +157,7 @@ public class TrialHelpers {
             do_experiments = false;
         }
         boolean do_monitoring = true;
-        if (kruizeObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getTarget_cluster().equals("remote")) {
             do_monitoring = false;
         }
         /**
@@ -165,7 +165,7 @@ public class TrialHelpers {
          * TODO: In the future this might need its own flag
          */
         boolean wait_for_load = true;
-        if (kruizeObject.getMode().equals("monitor") && kruizeObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getMode().equals("monitor") && kruizeObject.getTarget_cluster().equals("remote")) {
             wait_for_load = false;
         }
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,

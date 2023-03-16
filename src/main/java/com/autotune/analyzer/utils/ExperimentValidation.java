@@ -26,7 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * create Experiment input validation
@@ -75,7 +78,7 @@ public class ExperimentValidation {
             if (validationResultData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
                 String mode = kruizeObject.getMode();
-                String target_cluster = kruizeObject.getTargetCluster();
+                String target_cluster = kruizeObject.getTarget_cluster();
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
