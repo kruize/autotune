@@ -95,7 +95,7 @@ public class ListRecommendation extends HttpServlet {
 //                );
                 recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
             } catch (Exception e) {
-                LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+                LOGGER.error("Not able to generate recommendation for expName : {} : {}", ko.getExperimentName(), e.getMessage());
             }
         }
 

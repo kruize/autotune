@@ -22,6 +22,7 @@ import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.utils.ExperimentInitiator;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -79,26 +80,31 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
-            List<KruizeObject> kruizeExpList = new ArrayList<>();
-            for (CreateExperimentSO createExperimentSO: experimentSOList) {
-                KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
-                if (null != kruizeObject) {
-                    kruizeExpList.add(kruizeObject);
-                }
-            }
-            new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
-            //TODO: UX needs to be modified - Handle response for the multiple objects
-            KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
-            if (null == invalidKruizeObject) {
-                sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+            if (experimentSOList.size() > 1) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
-                LOGGER.error("Failed to create experiment due to {}", invalidKruizeObject.getValidationData().getMessage());
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+                for (CreateExperimentSO createExperimentSO : experimentSOList) {
+                    KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    }
+                }
+                new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
+                //TODO: UX needs to be modified - Handle response for the multiple objects
+                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+                if (null == invalidKruizeObject) {
+                    sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                } else {
+                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Unknown exception caught due to : " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            LOGGER.error("Unknown exception caught: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 
@@ -122,7 +128,7 @@ public class CreateExperiment extends HttpServlet {
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 

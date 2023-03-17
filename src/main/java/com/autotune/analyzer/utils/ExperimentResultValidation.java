@@ -18,7 +18,6 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.ValidationResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.SloInfo;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
@@ -35,7 +34,7 @@ import java.util.Map;
  * Util class to validate input request related to Experiment Results for metrics collection.
  */
 public class ExperimentResultValidation {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentValidation.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentResultValidation.class);
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
@@ -68,7 +67,7 @@ public class ExperimentResultValidation {
                          and then validate the Performance Profile data
                         */
                         try {
-                            LOGGER.info("Kruize Object: {}", kruizeObject);
+                            LOGGER.debug("Kruize Object: {}", kruizeObject);
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
                             errorMsg = new PerfProfileImpl().validateResults(performanceProfile,resultData);
@@ -82,10 +81,10 @@ public class ExperimentResultValidation {
                                     Class<?> validationClass = Class.forName(validationClassName);
                                     Object object = validationClass.getDeclaredConstructor().newInstance();
                                     Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
-                                    Method method = validationClass.getMethod("recommend",parameterTypes);
+                                    Method method = validationClass.getMethod("recommend", parameterTypes);
                                     errorMsg = (String) method.invoke(object, performanceProfile, resultData);
                                 }
-                                if (null == errorMsg || errorMsg.isEmpty())
+                                if (errorMsg.isEmpty())
                                     proceed = true;
                             } else {
                                 proceed = false;
@@ -95,7 +94,7 @@ public class ExperimentResultValidation {
                         } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
                                  IllegalAccessException | InvocationTargetException e) {
                             LOGGER.error("Caught Exception: {}",e);
-                            errorMsg = "Validation failed due to : " + e.getMessage();
+                            errorMsg = "Validation failed: " + e.getMessage();
                             proceed = false;
                             resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                             break;
@@ -103,11 +102,11 @@ public class ExperimentResultValidation {
 
                     } else {
                         proceed = false;
-                        errorMsg = errorMsg.concat(String.format("Experiment name : %s not found", resultData.getExperiment_name()));
+                        errorMsg = errorMsg.concat(String.format("Experiment name: %s not found", resultData.getExperiment_name()));
                         resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                         break;
                     }
-                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments ."));
+                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments."));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;
@@ -121,22 +120,9 @@ public class ExperimentResultValidation {
                 markFailed(errorMsg);
         } catch (Exception e) {
             e.printStackTrace();
-            setErrorMessage("Validation failed due to : " + e.getMessage());
+            setErrorMessage("Validation failed: " + e.getMessage());
         }
     }
-
-    private String getValidationClass(String name) {
-        String[] words = name.split("-");
-        StringBuilder output = new StringBuilder();
-        for (String word : words) {
-            output.append(word.substring(0,1).toUpperCase() + word.substring(1));
-        }
-        output.append("Impl");
-        LOGGER.debug("ClassName = {}",output);
-
-        return output.toString();
-    }
-
     public void markFailed(String message) {
         setSuccess(false);
         setErrorMessage(message);

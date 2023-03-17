@@ -44,7 +44,7 @@ public class ExperimentValidation {
 //            AnalyzerConstants.NAMESPACE
     ));
     private List<String> mandatoryFieldsForLocalRemoteMonitoring = new ArrayList<>((
-            Arrays.asList(AnalyzerConstants.RECOMMENDATION_SETTINGS)
+            List.of(AnalyzerConstants.RECOMMENDATION_SETTINGS)
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
 //            AnalyzerConstants.DEPLOYMENT_NAME,
@@ -67,7 +67,7 @@ public class ExperimentValidation {
     /**
      * Validates Mode and ClusterType parameter values
      *
-     * @param kruizeExptList
+     * @param kruizeExptList - contains list of experiments to be validated
      */
     public void validate(List<KruizeObject> kruizeExptList) {
         for (KruizeObject kruizeObject : kruizeExptList) {
@@ -152,13 +152,12 @@ public class ExperimentValidation {
     /**
      * Check if all mandatory values are present.
      *
-     * @param expObj
-     * @return
+     * @param expObj - KruizeObject whose mandatory fields needs to be validated
+     * @return - Returns the object containing the validation details
      */
     public ValidationResultData validateMandatoryFields(KruizeObject expObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
         ValidationResultData validationResultData = new ValidationResultData(false, null);
-        boolean missingSLOPerf = true;
         boolean missingDeploySelector = true;
         String errorMsg = "";
         String expName = expObj.getExperimentName();
@@ -172,7 +171,7 @@ public class ExperimentValidation {
                             missingMandatoryFields.add(mField);
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Methode name for {} not exist and error is {}", mField, e.getMessage());
+                        LOGGER.error("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                     }
                 }
         );
@@ -189,7 +188,7 @@ public class ExperimentValidation {
                                         missingMandatoryFields.add(mField);
                                     }
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                    LOGGER.error("Methode name for {} not exsist and error is {}", mField, e.getMessage());
+                                    LOGGER.error("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                                 }
                             }
                     );
@@ -202,13 +201,13 @@ public class ExperimentValidation {
                             missingDeploySelector = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        //LOGGER.warn("Methode name for {} not exist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                     }
                 }
                 // Adding temporary validation skip
                 missingDeploySelector = false;
                 if (missingDeploySelector) {
-                    errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
+                    errorMsg = errorMsg.concat(String.format("Either parameter should be present %s ", mandatoryDeploymentSelector));
 
                     validationResultData.setSuccess(false);
                     validationResultData.setMessage(errorMsg);
@@ -221,7 +220,7 @@ public class ExperimentValidation {
                 validationResultData.setMessage(errorMsg);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s ", missingMandatoryFields.toString()));
+            errorMsg = errorMsg.concat(String.format("Mandatory parameters missing %s ", missingMandatoryFields));
             validationResultData.setSuccess(false);
             validationResultData.setMessage(errorMsg);
         }

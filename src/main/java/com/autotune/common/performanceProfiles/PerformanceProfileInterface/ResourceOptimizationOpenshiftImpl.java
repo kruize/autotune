@@ -30,7 +30,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
 
         //TODO: Will be updated once algo is completed
-        return null;
+        return "";
     }
 
 }
