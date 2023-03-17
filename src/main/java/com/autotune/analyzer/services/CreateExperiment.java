@@ -77,8 +77,6 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));

@@ -29,8 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ListNamespaces extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         KubernetesServices kubernetesServices = null;
         try {
             // Initialising the kubernetes service

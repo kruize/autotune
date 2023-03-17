@@ -17,6 +17,8 @@ package com.autotune.utils;
 
 /**
  * Holds the server context of the dependency analyzer.
+ *
+ * All endpoints are having CORS enabled by default
  */
 public class ServerContext {
     public static final int AUTOTUNE_SERVER_PORT = Integer.parseInt(System.getenv().getOrDefault("AUTOTUNE_SERVER_PORT", "8080"));
@@ -63,4 +65,5 @@ public class ServerContext {
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
     public static final String LIST_NAMESPACES = QUERY_CONTEXT + "listNamespaces";
     public static final String LIST_DEPLOYMENTS = QUERY_CONTEXT + "listDeployments";
+    public static final String LIST_K8S_OBJECTS = QUERY_CONTEXT + "listK8sObjects";
 }
