@@ -18,11 +18,11 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../"
+KRUIZE_REPO="${CURRENT_DIR}/../../../../"
 
 
 # Source the common functions scripts
-. ${CURRENT_DIR}/../common/common_functions.sh
+. ${CURRENT_DIR}/../../common/common_functions.sh
 
 ITER=1
 TIMEOUT=1200
@@ -37,10 +37,12 @@ users=1000
 rampup=120
 loop=1
 
+RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
+
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
 
-jmx_file="kruize_remote_monitoring_stress.jmx"
+jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
@@ -176,20 +178,20 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 
 	# Create the performance profile
 	# If kruize service is exposed then do not specify the port	
-	cmd="curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @resource_optimization_openshift.json"
+	cmd="curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}"
 	echo ""
 	echo "cmd = ${cmd}"
-	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @resource_optimization_openshift.json
+	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}
 else
 	echo ""
 	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
 
 	# Create the performance profile
-	cmd="curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @resource_optimization_openshift.json"
+	cmd="curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}"
 	echo ""
 	echo "cmd = ${cmd}"
-	curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @resource_optimization_openshift.json
+	curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}
 fi
 
 echo | tee -a ${LOG}

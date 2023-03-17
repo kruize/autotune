@@ -44,7 +44,7 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 
 - **Basic API tests**
 
-  Here we validate all the [Autotune REST APIs](https://github.com/kruize/autotune/blob/master/design/API.md).
+  Here we validate all the [Autotune REST APIs](/design/ExperimentModeAPI.md).
   
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
@@ -124,11 +124,18 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   - Validates the trial result summary obtained from the listTrialStatus API once the experiment is completed.
 
 ### Remote monitoring tests
-  Here we test Kruize [Remote monitoring APIs](https://github.com/kruize/autotune/blob/mvp_demo/design/MonitoringModeAPI.md). 
+  Here we test Kruize [Remote monitoring APIs](/design/MonitoringModeAPI.md). 
+
+
+#### API tests
 
   The tests does the following:
   - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
   - Validates the behaviour of createExperiment, updateResults and listRecommendations APIs in various scenarios covering both positive and negative usecases.
+
+#### Stress test
+
+To run the stress test refer the Stress test [README](/tests/scripts/remote_monitoring_tests/README.md)
 
 ## Supported Clusters
 - Minikube
