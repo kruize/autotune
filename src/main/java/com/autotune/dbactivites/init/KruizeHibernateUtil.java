@@ -45,7 +45,7 @@ public class KruizeHibernateUtil {
                 JSONObject jsonObj = new JSONObject(jsonTxt);
                 databaseObj = jsonObj.getJSONObject(AnalyzerConstants.DBConstants.CONFIG_FILE_DB_KEY);
             } catch (FileNotFoundException fileNotFoundException) {
-                LOGGER.error("DB init failed due to {}", fileNotFoundException.getMessage());
+                LOGGER.error("DB init failed: {}", fileNotFoundException.getMessage());
                 try {
                     databaseObj = new JSONObject();
                     for (String env : Arrays.asList(AnalyzerConstants.DBConstants.DB_DRIVER,
@@ -62,7 +62,7 @@ public class KruizeHibernateUtil {
                     }
                 } catch (Exception e) {
                     databaseObj = null;
-                    LOGGER.error("DB connection failed due to {}", e.getMessage());
+                    LOGGER.error("DB connection failed: {}", e.getMessage());
                     LOGGER.error("Either {} parameter or following env should be set for db integration {},{},{},{},{}",
                             AnalyzerConstants.DBConstants.CONFIG_FILE,
                             AnalyzerConstants.DBConstants.HOSTNAME,
@@ -72,7 +72,7 @@ public class KruizeHibernateUtil {
                             AnalyzerConstants.DBConstants.PASSWORD);
                 }
             } catch (Exception e) {
-                LOGGER.error("DB connection failed due to {}", e.getMessage());
+                LOGGER.error("DB connection failed: {}", e.getMessage());
                 LOGGER.error("Either {} parameter or following env should be set to proceed {},{},{},{},{}",
                         AnalyzerConstants.DBConstants.CONFIG_FILE,
                         AnalyzerConstants.DBConstants.HOSTNAME,
@@ -97,7 +97,7 @@ public class KruizeHibernateUtil {
                 LOGGER.info("DB build session failed !");
             }
         } catch (Exception e) {
-            LOGGER.error("DB init failed due to : {}", e.getMessage());
+            LOGGER.error("DB init failed: {}", e.getMessage());
             e.printStackTrace();
         } finally {
             sessionFactory = sfTemp;

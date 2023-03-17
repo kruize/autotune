@@ -67,7 +67,7 @@ public class EMInterface {
             LOGGER.info("Calculated rspTime (" + rspTime + ") = reqSumMean (" + reqSumMean + ") / reqCountMean (" + reqCountMean + ");");
             experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(String.valueOf(rspTime));
         } catch (Exception e) {
-            LOGGER.error("Error calculating response time due to {}", e.getMessage());
+            LOGGER.error("Error calculating response time: {}", e.getMessage());
             experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(null);   // ToDO handle Null values at receiver end
         }
 

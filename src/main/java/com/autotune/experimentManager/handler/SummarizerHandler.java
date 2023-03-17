@@ -70,7 +70,7 @@ public class SummarizerHandler implements EMHandlerInterface {
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute SummarizerHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+            LOGGER.error("Failed to execute SummarizerHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrialNumber(),
                     (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,

@@ -80,7 +80,7 @@ public class PerformanceProfileValidation {
             setSuccess(true);
         else {
             markFailed(validationResultData.getMessage());
-            LOGGER.debug("Performance profile validation failed due to : {}",validationResultData.getMessage());
+            LOGGER.debug("Performance profile validation failed: {}",validationResultData.getMessage());
         }
         return validationResultData;
     }

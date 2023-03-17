@@ -90,7 +90,7 @@ public class PerformanceProfileService extends HttpServlet {
             else
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,validationResultData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed: " + e.getMessage());
         }
     }
 

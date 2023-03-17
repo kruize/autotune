@@ -58,12 +58,12 @@ public class ExperimentInitiator {
                 validationResultData.setSuccess(true);
             } else {
                 validationResultData.setSuccess(false);
-                validationResultData.setMessage("Validation failed due to " + validationObject.getErrorMessage());
+                validationResultData.setMessage("Validation failed: " + validationObject.getErrorMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and push experiment falied due to : " + e.getMessage());
+            LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationResultData.setSuccess(false);
-            validationResultData.setMessage("Validation failed due to " + e.getMessage());
+            validationResultData.setMessage("Validation failed: " + e.getMessage());
         }
         return validationResultData;
     }
@@ -88,12 +88,12 @@ public class ExperimentInitiator {
                 validationResultData.setSuccess(true);
             } else {
                 validationResultData.setSuccess(false);
-                validationResultData.setMessage("Validation failed due to " + experimentResultValidation.getErrorMessage());
+                validationResultData.setMessage("Validation failed: " + experimentResultValidation.getErrorMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and push experiment falied due to : " + e.getMessage());
+            LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationResultData.setSuccess(false);
-            validationResultData.setMessage("Validation failed due to " + e.getMessage());
+            validationResultData.setMessage("Validation failed: " + e.getMessage());
         }
         return validationResultData;
     }

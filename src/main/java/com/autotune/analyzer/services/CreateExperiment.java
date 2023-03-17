@@ -97,14 +97,14 @@ public class CreateExperiment extends HttpServlet {
                 if (null == invalidKruizeObject) {
                     sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                 } else {
-                    LOGGER.error("Failed to create experiment due to {}", invalidKruizeObject.getValidationData().getMessage());
+                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Unknown exception caught due to : " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            LOGGER.error("Unknown exception caught: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 
@@ -128,7 +128,7 @@ public class CreateExperiment extends HttpServlet {
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 

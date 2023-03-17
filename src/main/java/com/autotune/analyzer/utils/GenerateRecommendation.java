@@ -106,7 +106,7 @@ public class GenerateRecommendation {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Unable to get recommendation for : {} due to {}", kruizeObject.getExperimentName(), e.getMessage());
+            LOGGER.error("Unable to get recommendation for : {} : {}", kruizeObject.getExperimentName(), e.getMessage());
         }
     }
 
@@ -127,7 +127,7 @@ public class GenerateRecommendation {
             recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), format);
 
         } catch (Exception e) {
-            LOGGER.error("Not able to get getCPUCapacityRecommendation due to " + e.getMessage());
+            LOGGER.error("Not able to get getCPUCapacityRecommendation: " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
@@ -153,7 +153,7 @@ public class GenerateRecommendation {
             recommendationConfigItem = new RecommendationConfigItem(max_cpu * max_pods, format);
             LOGGER.debug("Max_cpu : {} , max_pods : {}", max_cpu, max_pods);
         } catch (Exception e) {
-            LOGGER.error("Not able to get getCPUMaxRecommendation due to " + e.getMessage());
+            LOGGER.error("Not able to get getCPUMaxRecommendation: " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
@@ -175,7 +175,7 @@ public class GenerateRecommendation {
             }
             recommendationConfigItem = new RecommendationConfigItem(percentile(0.9, doubleList), format);
         } catch (Exception e) {
-            LOGGER.error("Not able to get getMemoryCapacityRecommendation due to " + e.getMessage());
+            LOGGER.error("Not able to get getMemoryCapacityRecommendation: " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
@@ -201,7 +201,7 @@ public class GenerateRecommendation {
             recommendationConfigItem = new RecommendationConfigItem(max_mem * max_pods, format);
             LOGGER.debug("Max_cpu : {} , max_pods : {}", max_mem, max_pods);
         } catch (Exception e) {
-            LOGGER.error("Not able to get getCPUMaxRecommendation due to " + e.getMessage());
+            LOGGER.error("Not able to get getCPUMaxRecommendation: " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;

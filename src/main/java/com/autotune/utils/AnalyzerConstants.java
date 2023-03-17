@@ -503,8 +503,7 @@ public class AnalyzerConstants {
         public static final String DEFAULT_PROFILE = "default";
 
         public static final Map<String, String> PerfProfileNames = Map.of(
-                "resource-optimization-openshift", "ResourceOptimizationOpenshiftImpl",
-                "advance-cluster-management", "AdvancedClusterMgmtImpl"
+                "resource-optimization-openshift", "ResourceOptimizationOpenshiftImpl"
         );
     }
 

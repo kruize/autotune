@@ -44,12 +44,12 @@ public class PerfProfileImpl implements PerfProfileInterface {
                 validationResultData.setSuccess(true);
             } else {
                 validationResultData.setSuccess(false);
-                validationResultData.setMessage("Validation failed due to " + performanceProfileValidation.getErrorMessage());
+                validationResultData.setMessage("Validation failed: " + performanceProfileValidation.getErrorMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and add profile falied due to : " + e.getMessage());
+            LOGGER.error("Validate and add profile falied: " + e.getMessage());
             validationResultData.setSuccess(false);
-            validationResultData.setMessage("Validation failed due to " + e.getMessage());
+            validationResultData.setMessage("Validation failed: " + e.getMessage());
         }
         return validationResultData;
     }
@@ -133,7 +133,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
      */
     @Override
     public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
-        return null;
+        return "";
     }
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {

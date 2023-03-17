@@ -86,7 +86,7 @@ public class Autotune {
                 session.close();
                 LOGGER.info("DB connection successful!");
             } catch (Exception e) {
-                LOGGER.error("DB connection failed! due to {}", e.getMessage());
+                LOGGER.error("DB connection failed! : {}", e.getMessage());
                 e.printStackTrace();
             }
         } catch (Exception e) {

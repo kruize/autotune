@@ -81,12 +81,12 @@ public class UpdateResults extends HttpServlet {
                 if (null == invalidKExperimentResultData) {
                     sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
                 } else {
-                    LOGGER.error("Unable to save results due to :" + invalidKExperimentResultData.getValidationResultData().getMessage());
+                    LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationResultData().getMessage());
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Exception due to :" + e.getMessage());
+            LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }

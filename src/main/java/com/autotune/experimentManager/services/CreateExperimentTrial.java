@@ -107,7 +107,7 @@ public class CreateExperimentTrial extends HttpServlet {
             }
             sendSuccessResponse(response);
         } catch (JsonParseException e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Not able to parse JSON due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Not able to parse JSON: " + e.getMessage());
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
         } finally {
