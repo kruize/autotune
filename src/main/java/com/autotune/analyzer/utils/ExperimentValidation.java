@@ -171,7 +171,7 @@ public class ExperimentValidation {
                             missingMandatoryFields.add(mField);
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Method name for {} not exist and error is {}", mField, e.getMessage());
+                        LOGGER.error("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                     }
                 }
         );
@@ -188,7 +188,7 @@ public class ExperimentValidation {
                                         missingMandatoryFields.add(mField);
                                     }
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                    LOGGER.error("Method name for {} not exist and error is {}", mField, e.getMessage());
+                                    LOGGER.error("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                                 }
                             }
                     );
@@ -201,13 +201,13 @@ public class ExperimentValidation {
                             missingDeploySelector = false;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        //LOGGER.warn("Method name for {} not exist and error is {}", mField, e.getMessage());
+                        //LOGGER.warn("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                     }
                 }
                 // Adding temporary validation skip
                 missingDeploySelector = false;
                 if (missingDeploySelector) {
-                    errorMsg = errorMsg.concat(String.format("Either one of the parameter should present %s ", mandatoryDeploymentSelector));
+                    errorMsg = errorMsg.concat(String.format("Either parameter should be present %s ", mandatoryDeploymentSelector));
 
                     validationResultData.setSuccess(false);
                     validationResultData.setMessage(errorMsg);
@@ -220,7 +220,7 @@ public class ExperimentValidation {
                 validationResultData.setMessage(errorMsg);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing following Mandatory parameters %s ", missingMandatoryFields));
+            errorMsg = errorMsg.concat(String.format("Mandatory parameters missing %s ", missingMandatoryFields));
             validationResultData.setSuccess(false);
             validationResultData.setMessage(errorMsg);
         }

@@ -81,7 +81,7 @@ public class ExperimentResultValidation {
                                     Class<?> validationClass = Class.forName(validationClassName);
                                     Object object = validationClass.getDeclaredConstructor().newInstance();
                                     Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
-                                    Method method = validationClass.getMethod("recommend",parameterTypes);
+                                    Method method = validationClass.getMethod("recommend", parameterTypes);
                                     errorMsg = (String) method.invoke(object, performanceProfile, resultData);
                                 }
                                 if (errorMsg.isEmpty())
@@ -102,11 +102,11 @@ public class ExperimentResultValidation {
 
                     } else {
                         proceed = false;
-                        errorMsg = errorMsg.concat(String.format("Experiment name : %s not found", resultData.getExperiment_name()));
+                        errorMsg = errorMsg.concat(String.format("Experiment name: %s not found", resultData.getExperiment_name()));
                         resultData.setValidationResultData(new ValidationResultData(false, errorMsg));
                         break;
                     }
-                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments ."));
+                    resultData.setValidationResultData(new ValidationResultData(true, "Result Saved successfully! View saved results at /listExperiments."));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;
