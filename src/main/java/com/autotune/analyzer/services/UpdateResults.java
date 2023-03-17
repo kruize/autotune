@@ -23,6 +23,7 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.performanceProfiles.PerformanceProfile;
 import com.autotune.utils.AnalyzerConstants;
+import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -67,19 +68,24 @@ public class UpdateResults extends HttpServlet {
         Utils.addCORSHeaders(response);
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<ExperimentResultData> experimentResultDataList = new ArrayList<ExperimentResultData>();
+            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsSO> updateResultsSOList = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsSO[].class));
-            for (UpdateResultsSO updateResultsSO : updateResultsSOList) {
-                experimentResultDataList.add(Utils.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
-            }
-            LOGGER.debug(experimentResultDataList.toString());
-            new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
-            ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
-            if (null == invalidKExperimentResultData) {
-                sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
+            if (updateResultsSOList.size() > 1) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
-                LOGGER.error("Unable to save results due to :" + invalidKExperimentResultData.getValidationResultData().getMessage());
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
+                for (UpdateResultsSO updateResultsSO : updateResultsSOList) {
+                    experimentResultDataList.add(Utils.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
+                }
+                LOGGER.debug(experimentResultDataList.toString());
+                new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
+                ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
+                if (null == invalidKExperimentResultData) {
+                    sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
+                } else {
+                    LOGGER.error("Unable to save results due to :" + invalidKExperimentResultData.getValidationResultData().getMessage());
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Exception due to :" + e.getMessage());
