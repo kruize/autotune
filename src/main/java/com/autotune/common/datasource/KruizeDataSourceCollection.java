@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.common.exceptions.KruizeDatasourceAlreadyExists;
 import com.autotune.common.exceptions.KruizeDatasourceDoesNotExist;
@@ -23,37 +23,37 @@ import com.autotune.common.utils.CommonUtils;
 import java.util.Map;
 
 /**
- * KruizeDatasourceCollection is an abstraction which needs to be implemented
+ * KruizeDataSourceCollection is an abstraction which needs to be implemented
  * by every entity which needs a datasource collection used in Autotune
  *
  * Currently Supported Implementations:
  *  - ExperimentDatasourceCollection
  */
 
-public interface KruizeDatasourceCollection {
+public interface KruizeDataSourceCollection {
     /**
      * Adds datasource to the collection map using its name as key
-     * @param kruizeDatasource KruizeDatasource Object which has the datasource details
+     * @param kruizeDatasource KruizeDataSource Object which has the datasource details
      * @return Appropriate value of AddDataSourceStatus
      *          SUCCESS on successfully adding the datasource
      *          FAILURE on failing to add datasource
      *          DATASOURCE_NOT_REACHABLE if the added datasource is not reachable
      * @throws KruizeDatasourceAlreadyExists
      */
-    public CommonUtils.AddDataSourceStatus addDataSource(KruizeDatasource kruizeDatasource) throws KruizeDatasourceAlreadyExists;
+    public CommonUtils.AddDataSourceStatus addDataSource(KruizeDataSource kruizeDatasource) throws KruizeDatasourceAlreadyExists;
 
     /**
      * Return a particular datasource with the name passed
      * @param datasourceName name of the datasource to be returned
-     * @return the particular KruizeDatasource object
+     * @return the particular KruizeDataSource object
      */
-    public KruizeDatasource getDatasource(String datasourceName);
+    public KruizeDataSource getDatasource(String datasourceName);
 
     /**
      * Returns the datasource collection map
      * @return Map of AutotuneDatasources
      */
-    public Map<String, KruizeDatasource> getDatasourceMap();
+    public Map<String, KruizeDataSource> getDatasourceMap();
 
     /**
      * Remove a particular datasource matching the passed name

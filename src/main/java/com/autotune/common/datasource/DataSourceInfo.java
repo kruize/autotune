@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import java.net.URL;
 
@@ -25,11 +25,11 @@ import java.net.URL;
  * "url": "http://10.101.144.137:9090"
  * }
  */
-public class DatasourceInfo {
+public class DataSourceInfo {
     private final String provider;
     private final URL url;
 
-    public DatasourceInfo(String provider, URL url) {
+    public DataSourceInfo(String provider, URL url) {
         this.provider = provider;
         this.url = url;
     }
@@ -44,7 +44,7 @@ public class DatasourceInfo {
 
     @Override
     public String toString() {
-        return "DatasourceInfo{" +
+        return "DataSourceInfo{" +
                 "provider='" + provider + '\'' +
                 ", url=" + url +
                 '}';

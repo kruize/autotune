@@ -14,15 +14,15 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils;
 
 /**
- * KruizeDatasourceServiceability holds the possible functions of a datasources which can state
+ * KruizeDataSourceServiceability holds the possible functions of a datasources which can state
  * that the datasource is serviceable
  */
-public interface KruizeDatasourceServiceability {
+public interface KruizeDataSourceServiceability {
 
     /**
      * Check if a datasource is reachable, implementation of this function

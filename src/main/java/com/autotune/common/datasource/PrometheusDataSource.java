@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.auth_models.BearerAccessToken;
+import com.autotune.utils.authModels.BearerAccessToken;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

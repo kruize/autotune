@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.utils.auth_models;
+package com.autotune.utils.authModels;
 
 public class BearerAccessToken {
     private String accessToken;

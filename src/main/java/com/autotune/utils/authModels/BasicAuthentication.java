@@ -13,16 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.utils.auth_models;
+package com.autotune.utils.authModels;
 
-public class APIKeysAuthentication {
-    private String accessToken;
+import java.util.Base64;
 
-    public APIKeysAuthentication(String accessToken) {
-        this.accessToken = accessToken;
+public class BasicAuthentication {
+    private String userName;
+    private String password;
+    private String base64String;
+
+    public BasicAuthentication(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
+        String usernamePassword = this.userName + ":" + this.password;
+        this.setBase64String(Base64.getEncoder().encodeToString(usernamePassword.getBytes()));
+    }
+
+    public BasicAuthentication(String base64String) {
+        this.base64String = base64String;
+    }
+
+    private String getBase64String() {
+        return base64String;
+    }
+
+    private void setBase64String(String base64String) {
+        this.base64String = base64String;
     }
 
     public String getAuthHeader() {
-        return "Apikey " + this.accessToken;
+        return "Basic " + this.base64String;
     }
 }

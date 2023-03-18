@@ -14,12 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils.AutotuneDatasourceTypes;
 
 /**
- * KruizeDatasource is an abstraction which needs to be implemented
+ * KruizeDataSource is an abstraction which needs to be implemented
  * by every datasource type which is used in Autotune
  *
  * Currently Supported Implementations:
@@ -40,7 +40,7 @@ import com.autotune.common.utils.CommonUtils.AutotuneDatasourceTypes;
  *
  */
 
-public interface KruizeDatasource {
+public interface KruizeDataSource {
 
     /**
      * Function to return the name of the datasource
@@ -55,13 +55,13 @@ public interface KruizeDatasource {
     public void setName(String name);
 
     /**
-     * Return the type of KruizeDatasource
-     * @return Type of KruizeDatasource
+     * Return the type of KruizeDataSource
+     * @return Type of KruizeDataSource
      */
     public AutotuneDatasourceTypes getType();
 
     /**
-     * Set the type of KruizeDatasource
+     * Set the type of KruizeDataSource
      * @param type
      */
     public void setType(AutotuneDatasourceTypes type);

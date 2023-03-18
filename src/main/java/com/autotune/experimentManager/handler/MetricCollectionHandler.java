@@ -17,8 +17,8 @@ package com.autotune.experimentManager.handler;
 
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.common.data.datasource.KruizeDatasourceOperator;
-import com.autotune.common.data.datasource.DatasourceOperator;
+import com.autotune.common.datasource.KruizeDataSourceOperator;
+import com.autotune.common.datasource.DataSourceOperator;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.trials.TrialDetails;
@@ -118,7 +118,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
                             updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
                             // Need to run the updated query by calling the datasource
-                            KruizeDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
+                            KruizeDataSourceOperator ado = DataSourceOperator.getOperator(podMetric.getDatasource());
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
@@ -155,7 +155,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
                                 updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
                                 // Need to run the updated query by calling the datasource
-                                KruizeDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
+                                KruizeDataSourceOperator ado = DataSourceOperator.getOperator(containerMetric.getDatasource());
                                 if (null == ado) {
                                     // TODO: Return an error saying unsupported datasource
                                 }

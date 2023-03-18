@@ -16,7 +16,7 @@
 package com.autotune.common.trials;
 
 import com.autotune.common.annotations.json.Exclude;
-import com.autotune.common.data.datasource.DatasourceInfo;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.data.result.ExperimentMetaData;
 import com.autotune.experimentManager.utils.EMConstants;
@@ -70,7 +70,7 @@ public class ExperimentTrial {
      * Value : Metric collection utility details like prometheus, cAdvisor, fluent
      */
     @SerializedName("datasource_info")
-    private final HashMap<String, DatasourceInfo> datasourceInfoHashMap;
+    private final HashMap<String, DataSourceInfo> datasourceInfoHashMap;
     /**
      * Detailed settings for Trial run and deployment
      */
@@ -126,7 +126,7 @@ public class ExperimentTrial {
                            HashMap<String, Metric> podMetricsHashMap,
                            HashMap<String, HashMap<String, Metric>> containerMetricsHashMap,
                            TrialInfo trialInfo,
-                           HashMap<String, DatasourceInfo> datasourceInfoHashMap,
+                           HashMap<String, DataSourceInfo> datasourceInfoHashMap,
                            ExperimentSettings experimentSettings,
                            HashMap<String, TrialDetails> trialDetails) {
         this.mode = mode;
@@ -177,7 +177,7 @@ public class ExperimentTrial {
         return resourceDetails;
     }
 
-    public HashMap<String, DatasourceInfo> getDatasourceInfoHashMap() {
+    public HashMap<String, DataSourceInfo> getDatasourceInfoHashMap() {
         return datasourceInfoHashMap;
     }
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import java.net.MalformedURLException;
 import java.util.List;

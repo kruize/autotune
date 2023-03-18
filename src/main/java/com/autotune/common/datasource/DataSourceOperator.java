@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.utils.KruizeConstants;
 
-public class DatasourceOperator {
-    private DatasourceOperator() { }
+public class DataSourceOperator {
+    private DataSourceOperator() { }
 
-    public static KruizeDatasourceOperator getOperator(String datasource) {
+    public static KruizeDataSourceOperator getOperator(String datasource) {
         if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return PrometheusDataOperator.getInstance();
         }

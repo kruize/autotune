@@ -19,7 +19,7 @@ import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.data.datasource.DatasourceInfo;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.kruizeLayer.layers.Layer;
@@ -145,9 +145,9 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DatasourceInfo datasourceInfo = new DatasourceInfo(KruizeDeploymentInfo.getMonitoringAgent(),
+        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.getMonitoringAgent(),
                 new URL(KruizeDeploymentInfo.getMonitoringAgentEndpoint()));
-        HashMap<String, DatasourceInfo> datasourceInfoHashMap = new HashMap<>();
+        HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
         datasourceInfoHashMap.put(KruizeDeploymentInfo.getMonitoringAgent(), datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,

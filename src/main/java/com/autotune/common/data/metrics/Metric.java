@@ -14,7 +14,6 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
-import com.autotune.analyzer.performanceProfiles.AggregationFunctions;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.LinkedHashMap;

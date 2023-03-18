@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
@@ -26,7 +26,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
-public class PrometheusDataOperator implements KruizeDatasourceOperator {
+public class PrometheusDataOperator implements KruizeDataSourceOperator {
     private static PrometheusDataOperator prometheusDataOperator = null;
     private PrometheusDataOperator() {
 

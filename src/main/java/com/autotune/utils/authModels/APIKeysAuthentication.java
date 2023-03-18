@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.data.datasource;
+package com.autotune.utils.authModels;
 
-public interface KruizeDatasourceOperator {
-    public Object extract(String url, String query);
+public class APIKeysAuthentication {
+    private String accessToken;
+
+    public APIKeysAuthentication(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getAuthHeader() {
+        return "Apikey " + this.accessToken;
+    }
 }

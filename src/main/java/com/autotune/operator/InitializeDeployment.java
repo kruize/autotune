@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.operator;
 
-import com.autotune.common.data.datasource.DataSourceFactory;
+import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
