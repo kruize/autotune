@@ -20,7 +20,7 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;

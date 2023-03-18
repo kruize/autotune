@@ -16,13 +16,13 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.KruizeExperiment;
-import com.autotune.analyzer.RunExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
+import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.trials.ExperimentTrial;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -44,7 +44,7 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 

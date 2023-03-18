@@ -1,4 +1,4 @@
-package com.autotune.analyzer;
+package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.common.trials.ExperimentTrial;
@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.autotune.analyzer.loop.EMInterface.*;
-import static com.autotune.analyzer.loop.HPOInterface.getTrialFromHPO;
-import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
+import static com.autotune.analyzer.experiment.loop.EMInterface.*;
+import static com.autotune.analyzer.experiment.loop.HPOInterface.getTrialFromHPO;
+import static com.autotune.analyzer.experiment.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 import static com.autotune.utils.KruizeConstants.HpoOperations.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;

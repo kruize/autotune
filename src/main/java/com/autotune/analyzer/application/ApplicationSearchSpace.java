@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.common.k8sObjects.ObjectiveFunction;
+import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 
 import java.util.HashMap;
 import java.util.Map;

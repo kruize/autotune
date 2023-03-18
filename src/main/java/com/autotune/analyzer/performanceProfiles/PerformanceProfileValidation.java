@@ -19,7 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;

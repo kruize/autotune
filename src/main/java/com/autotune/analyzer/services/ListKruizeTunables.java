@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.common.k8sObjects.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;

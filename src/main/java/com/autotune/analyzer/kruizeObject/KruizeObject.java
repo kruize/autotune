@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.experiment.ExperimentUseCaseType;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.*;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;

@@ -1,7 +1,7 @@
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.KruizeExperiment;
-import com.autotune.analyzer.Experimentator;
+import com.autotune.analyzer.experiment.KruizeExperiment;
+import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.experiment.ExperimentHelpers;
 import org.json.JSONArray;
 import org.json.JSONObject;

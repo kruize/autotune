@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiment;
+package com.autotune.analyzer.kruizeObject;
 
-import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

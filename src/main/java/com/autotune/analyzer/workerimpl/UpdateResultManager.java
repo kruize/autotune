@@ -15,15 +15,15 @@
  *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
-import com.autotune.analyzer.KruizeExperiment;
-import com.autotune.analyzer.RunExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
+import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.GenerateRecommendation;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContext;
 import java.util.List;
 
-import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 
 /**

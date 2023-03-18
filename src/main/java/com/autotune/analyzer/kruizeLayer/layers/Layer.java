@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2023 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.analyzer.kruizeLayer.layers;
 
-package com.autotune.analyzer.recommendations;
-
+import com.autotune.analyzer.application.Tunable;
+import com.autotune.common.trials.ContainerConfigData;
+import org.json.JSONObject;
 /**
- * Interface to add the recommendation sub-category
- *
- * Example:
- * Duration Based recommendations has sub categories like `short term`, `medium term`, `long term`
+ * 	Interface layer gets implemented by Quarkus, Hotspot etc
  */
-public interface RecommendationSubCategory {
-    public String getSubCategory();
+public interface Layer {
+	/**
+	 * 	Methode used to set CPU, Limit or Application env details.
+	 */
+	void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData);
+	void parseTunableResults(Tunable tunable);
 }

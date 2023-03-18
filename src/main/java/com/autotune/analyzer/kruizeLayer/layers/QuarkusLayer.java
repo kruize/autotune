@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.layer;
+package com.autotune.analyzer.kruizeLayer.layers;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.trials.ContainerConfigData;

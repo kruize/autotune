@@ -1,8 +1,8 @@
-package com.autotune.analyzer;
+package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.trials.ExperimentSummary;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.trials.TrialDetails;

@@ -16,7 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.List;

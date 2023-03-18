@@ -20,7 +20,7 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;

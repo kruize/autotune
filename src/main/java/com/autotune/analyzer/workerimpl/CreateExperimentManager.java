@@ -20,7 +20,7 @@ import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.operator.KruizeOperator;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContext;
 import java.util.Map;
 
-import static com.autotune.analyzer.Experimentator.startExperiment;
+import static com.autotune.analyzer.experiment.Experimentator.startExperiment;
 import static com.autotune.operator.KruizeOperator.addLayerInfo;
 import static com.autotune.operator.KruizeOperator.matchPodsToAutotuneObject;
 

@@ -1,4 +1,4 @@
-package com.autotune.analyzer;
+package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
@@ -6,9 +6,9 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.trials.ExperimentSummary;
 import com.autotune.common.trials.ExperimentTrial;
-import com.autotune.common.k8sObjects.KruizeLayer;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.k8sObjects.ObjectiveFunction;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import org.slf4j.Logger;

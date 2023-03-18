@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles;
 
-import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.google.gson.annotations.SerializedName;
 
 /**

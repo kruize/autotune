@@ -42,7 +42,6 @@ import static com.autotune.utils.ServerContext.*;
 public class Autotune {
     private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
-
     public static void main(String[] args) {
         ServletContextHandler context = null;
 
@@ -117,6 +116,4 @@ public class Autotune {
         Analyzer.start(contextHandler);
         ExperimentManager.launch(contextHandler);
     }
-
-
 }

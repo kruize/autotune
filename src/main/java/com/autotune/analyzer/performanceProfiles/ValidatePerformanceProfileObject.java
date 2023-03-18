@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.analyzer.performanceProfiles;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.utils.EMConstants;

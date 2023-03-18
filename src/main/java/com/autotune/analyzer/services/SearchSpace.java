@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.KruizeExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.autotune.analyzer.Experimentator.experimentsMap;
+import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
 import static com.autotune.operator.KruizeOperator.deploymentMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;

@@ -20,7 +20,7 @@ import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;

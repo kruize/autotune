@@ -14,11 +14,13 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations;
+package com.autotune.analyzer.recommendations.algos;
+
+import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 
 import java.util.concurrent.TimeUnit;
 
-public class DurationBasedRecommendationSubCategory implements RecommendationSubCategory{
+public class DurationBasedRecommendationSubCategory implements RecommendationSubCategory {
     private String name;
     private int duration;
     private TimeUnit recommendationDurationUnits;

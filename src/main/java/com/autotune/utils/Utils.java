@@ -25,7 +25,7 @@ import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

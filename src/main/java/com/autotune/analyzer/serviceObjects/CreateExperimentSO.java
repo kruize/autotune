@@ -16,7 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.k8sObjects.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;

@@ -14,9 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations;
+package com.autotune.analyzer.recommendations.algos;
 
-public class ProfileBasedRecommendationSubCategory implements RecommendationSubCategory{
+import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
+
+public class ProfileBasedRecommendationSubCategory implements RecommendationSubCategory {
     // TODO: Need to be implemented
     @Override
     public String getSubCategory() {

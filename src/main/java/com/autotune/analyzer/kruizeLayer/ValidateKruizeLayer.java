@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.utils.KruizeSupportedTypes;

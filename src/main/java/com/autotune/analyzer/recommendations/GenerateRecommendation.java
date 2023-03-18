@@ -15,10 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
+import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

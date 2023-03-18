@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.analyzer.recommendations.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;

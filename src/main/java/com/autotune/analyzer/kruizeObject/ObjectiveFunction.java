@@ -1,4 +1,4 @@
-package com.autotune.common.k8sObjects;
+package com.autotune.analyzer.kruizeObject;
 
 public class ObjectiveFunction {
     private String function_type;

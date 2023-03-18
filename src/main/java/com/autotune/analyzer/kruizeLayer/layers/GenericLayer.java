@@ -13,18 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.layer;
+package com.autotune.analyzer.kruizeLayer.layers;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.trials.ContainerConfigData;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 /**
- * 	Interface layer gets implemented by Quarkus, Hotspot etc
+ * Layer object used to store Generic Container config details.
  */
-public interface Layer {
-	/**
-	 * 	Methode used to set CPU, Limit or Application env details.
-	 */
-	void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData);
-	void parseTunableResults(Tunable tunable);
+public class GenericLayer implements Layer {
+
+    public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
+        String tunableName = tunable.getName();
+        ArrayList<EnvVar> environmentalAmendList = new ArrayList<>();
+        environmentalAmendList.add(new EnvVar(tunableName, String.valueOf(tunableJSON.getLong("tunable_value")), null));
+        containerConfigData.setEnvList(environmentalAmendList);
+    }
+
+    public void parseTunableResults(Tunable tunable) {
+
+    }
 }

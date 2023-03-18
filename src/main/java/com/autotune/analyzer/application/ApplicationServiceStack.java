@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.common.k8sObjects.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;

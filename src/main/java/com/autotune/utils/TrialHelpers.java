@@ -15,20 +15,20 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.KruizeExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.data.datasource.DatasourceInfo;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.layer.Layer;
+import com.autotune.analyzer.kruizeLayer.layers.Layer;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.trials.*;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.k8sObjects.SloInfo;
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;

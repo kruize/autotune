@@ -1,6 +1,6 @@
-package com.autotune.analyzer.loop;
+package com.autotune.analyzer.experiment.loop;
 
-import com.autotune.analyzer.KruizeExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.HttpUtils;
