@@ -14,11 +14,10 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.common.experiments;
+package com.autotune.common.trials;
 
 import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMUtil;
-import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;

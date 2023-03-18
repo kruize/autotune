@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.experimentManager.data;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.experimentManager.data.result.ExperimentMetaData;
 import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.autotune.experimentManager.utils.EMUtil;

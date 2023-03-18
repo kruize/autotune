@@ -1,7 +1,7 @@
 package com.autotune.analyzer;
 
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

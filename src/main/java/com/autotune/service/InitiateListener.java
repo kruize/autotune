@@ -20,7 +20,7 @@ import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.workerimpl.CreateExperimentManager;
 import com.autotune.analyzer.workerimpl.UpdateResultManager;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.parallelengine.queue.KruizeQueue;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;

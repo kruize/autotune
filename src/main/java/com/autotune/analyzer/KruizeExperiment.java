@@ -3,9 +3,9 @@ package com.autotune.analyzer;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.experiments.ExperimentSummary;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentSummary;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 

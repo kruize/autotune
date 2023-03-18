@@ -16,8 +16,8 @@
 
 package com.autotune.experimentManager.handler.eminterface;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;

@@ -16,7 +16,7 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.json.JSONObject;

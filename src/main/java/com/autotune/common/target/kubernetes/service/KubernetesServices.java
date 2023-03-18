@@ -16,7 +16,7 @@
 
 package com.autotune.common.target.kubernetes.service;
 
-import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.common.utils.ExponentialBackOff;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.Namespace;

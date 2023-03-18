@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.experimentManager.workerimpl;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;

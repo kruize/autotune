@@ -16,9 +16,9 @@
 
 package com.autotune.experimentManager.services;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.ExperimentTrialView;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrialView;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.result.TrialMetaData;

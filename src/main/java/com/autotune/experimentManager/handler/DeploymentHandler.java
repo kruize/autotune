@@ -16,9 +16,9 @@
 
 package com.autotune.experimentManager.handler;
 
-import com.autotune.common.experiments.ContainerConfigData;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ContainerConfigData;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;

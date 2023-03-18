@@ -21,7 +21,7 @@ import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;

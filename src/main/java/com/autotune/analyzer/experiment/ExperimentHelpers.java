@@ -2,9 +2,9 @@ package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.experiments.ExperimentSummary;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentSummary;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

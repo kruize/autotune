@@ -1,7 +1,7 @@
 package com.autotune.experimentManager.services.util;
 
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.experimentManager.data.*;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;

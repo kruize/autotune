@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.experiments;
+package com.autotune.common.trials;
 
 import com.autotune.experimentManager.data.result.TrialMetaData;
 import com.google.gson.annotations.SerializedName;

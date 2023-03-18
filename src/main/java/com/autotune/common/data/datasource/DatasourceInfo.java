@@ -13,38 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.experiments;
+package com.autotune.common.data.datasource;
 
-import com.google.gson.annotations.SerializedName;
+import java.net.URL;
 
 /**
- * Experiment Manager deploys application based on Kubernetes Deployment Strategy like
- * . Rolling deployment
- * . Recreate
- * . Ramped slow rollout
- * . Best-effort controlled rollout
- * . Canary deployment   etc.
- * deploymentType is used to mention Kubernetes Deployment Strategy. Example
- *        "deployment_policy": {
- *                  "type": "rollingUpdate"
- *         }
+ * This Data object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
+ * Example
+ * "datasource_info": {
+ * "name": "prometheus",
+ * "url": "http://10.101.144.137:9090"
+ * }
  */
-public class DeploymentPolicy {
-    @SerializedName("type")
-    private final String deploymentType;
+public class DatasourceInfo {
+    private final String provider;
+    private final URL url;
 
-    public DeploymentPolicy(String deploymentType) {
-        this.deploymentType = deploymentType;
+    public DatasourceInfo(String provider, URL url) {
+        this.provider = provider;
+        this.url = url;
     }
 
-    public String getDeploymentType() {
-        return deploymentType;
+    public String getProvider() {
+        return provider;
+    }
+
+    public URL getUrl() {
+        return url;
     }
 
     @Override
     public String toString() {
-        return "DeploymentPolicy{" +
-                "deploymentType='" + deploymentType + '\'' +
+        return "DatasourceInfo{" +
+                "provider='" + provider + '\'' +
+                ", url=" + url +
                 '}';
     }
 }

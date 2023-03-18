@@ -16,8 +16,7 @@
 package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.experiments.ContainerConfigData;
-import com.autotune.common.experiments.PodContainer;
+import com.autotune.common.trials.ContainerConfigData;
 import org.json.JSONObject;
 /**
  * 	Interface layer gets implemented by Quarkus, Hotspot etc

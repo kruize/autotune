@@ -16,7 +16,7 @@
 package com.autotune.experimentManager.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;

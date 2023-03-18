@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.experiments;
+package com.autotune.common.trials;
 
 import com.autotune.common.annotations.json.Exclude;
+import com.autotune.common.data.datasource.DatasourceInfo;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.data.result.ExperimentMetaData;
 import com.autotune.experimentManager.utils.EMConstants;

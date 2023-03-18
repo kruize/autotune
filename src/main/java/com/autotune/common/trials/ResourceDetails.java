@@ -1,4 +1,4 @@
-package com.autotune.common.experiments;
+package com.autotune.common.trials;
 
 import com.google.gson.annotations.SerializedName;
 

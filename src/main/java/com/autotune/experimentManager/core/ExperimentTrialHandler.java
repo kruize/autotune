@@ -16,8 +16,8 @@
 package com.autotune.experimentManager.core;
 
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -1,4 +1,4 @@
-package com.autotune.common.experiments;
+package com.autotune.common.trials;
 
 /**
  * This object should have the current summary of all the trials

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2021, 2022 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.common.trials;
 
-package com.autotune.common.queue;
-/**
- * KruizeQueue is an interface having three main contracts
- * send method: it send data to the KruizeQueue
- * get method: received data from KruizeQueue
- * getName method: return the name of the component currently operating on AutotuneDTO object
- * @author bipkumar
- */
-public interface AutotuneQueue {
+public class DeploymentTracking {
 
-	public boolean send(AutotuneDTO data) throws InterruptedException;
+    public DeploymentTracking(){
 
-	public AutotuneDTO get() throws InterruptedException;
+    }
 
-	public String getName();
+
 }
