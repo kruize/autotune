@@ -1,0 +1,1070 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Kruize Remote Monitoring Stress Test" enabled="true">
+      <stringProp name="TestPlan.comments"></stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="host" elementType="Argument">
+            <stringProp name="Argument.name">host</stringProp>
+            <stringProp name="Argument.value">${__P(host, 10.88.0.4)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="port" elementType="Argument">
+            <stringProp name="Argument.name">port</stringProp>
+            <stringProp name="Argument.value">${__P(port,30964)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="users" elementType="Argument">
+            <stringProp name="Argument.name">users</stringProp>
+            <stringProp name="Argument.value">${__P(users,1000)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="rampup" elementType="Argument">
+            <stringProp name="Argument.name">rampup</stringProp>
+            <stringProp name="Argument.value">${__P(ramup, 120)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="loop" elementType="Argument">
+            <stringProp name="Argument.name">loop</stringProp>
+            <stringProp name="Argument.value">${__P(loop, 1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="logdir" elementType="Argument">
+            <stringProp name="Argument.name">logdir</stringProp>
+            <stringProp name="Argument.value">${__P(logdir, /tmp/results)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Create Experiments" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${loop}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create Experiment" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">[{&#xd;
+  &quot;version&quot;: &quot;1.0&quot;,&#xd;
+  &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
+  &quot;cluster_name&quot;: &quot;cluster-one-division-bell&quot;,&#xd;
+  &quot;performance_profile&quot;: &quot;resource-optimization-openshift&quot;,&#xd;
+  &quot;mode&quot;: &quot;monitor&quot;,&#xd;
+  &quot;target_cluster&quot;: &quot;remote&quot;,&#xd;
+  &quot;kubernetes_objects&quot;: [&#xd;
+    {&#xd;
+      &quot;type&quot;: &quot;deployment&quot;,&#xd;
+      &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
+      &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
+      &quot;containers&quot;: [&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-db:1.15&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-0&quot;&#xd;
+        },&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-1&quot;&#xd;
+        }&#xd;
+      ]&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;trial_settings&quot;: {&#xd;
+    &quot;measurement_duration&quot;: &quot;15min&quot;&#xd;
+  },&#xd;
+  &quot;recommendation_settings&quot;: {&#xd;
+    &quot;threshold&quot;: &quot;0.1&quot;&#xd;
+  }&#xd;
+}]&#xd;
+</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/createExperiment</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+          <collectionProp name="Asserion.test_strings">
+            <stringProp name="49587">201</stringProp>
+          </collectionProp>
+          <stringProp name="Assertion.custom_message"></stringProp>
+          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+          <boolProp name="Assertion.assume_success">false</boolProp>
+          <intProp name="Assertion.test_type">8</intProp>
+        </ResponseAssertion>
+        <hashTree/>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">true</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename">${logdir}/create_exp.log</stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Update Results" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${loop}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Results" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">[&#xd;
+  {&#xd;
+    &quot;version&quot;: &quot;1.0&quot;,&#xd;
+    &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
+    &quot;start_timestamp&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
+    &quot;end_timestamp&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT15M,,)}&quot;,&#xd;
+    &quot;kubernetes_objects&quot;: [&#xd;
+      {&#xd;
+        &quot;type&quot;: &quot;deployment&quot;,&#xd;
+        &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
+        &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
+        &quot;containers&quot;: [&#xd;
+          {&#xd;
+            &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
+            &quot;container_name&quot;: &quot;tfb-server-1&quot;,&#xd;
+            &quot;metrics&quot;: [&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuRequest&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 4.4,&#xd;
+                    &quot;avg&quot;: 1.1,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuLimit&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 2.0,&#xd;
+                    &quot;avg&quot;: 0.5,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuUsage&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 0.14,&#xd;
+                    &quot;max&quot;: 0.84,&#xd;
+                    &quot;sum&quot;: 0.84,&#xd;
+                    &quot;avg&quot;: 0.12,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuThrottle&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 0.19,&#xd;
+                    &quot;max&quot;: 0.09,&#xd;
+                    &quot;avg&quot;: 0.045,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryRequest&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 250.85,&#xd;
+                    &quot;avg&quot;: 50.21,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryLimit&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 500,&#xd;
+                    &quot;avg&quot;: 100,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryUsage&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 50.6,&#xd;
+                    &quot;max&quot;: 198.50,&#xd;
+                    &quot;sum&quot;: 198.50,&#xd;
+                    &quot;avg&quot;: 40.1,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryRSS&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 50.6,&#xd;
+                    &quot;max&quot;: 123.6,&#xd;
+                    &quot;sum&quot;: 123.6,&#xd;
+                    &quot;avg&quot;: 31.91,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              }&#xd;
+            ]&#xd;
+          }&#xd;
+        ]&#xd;
+      }&#xd;
+    ]&#xd;
+  }&#xd;
+]&#xd;
+</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/updateResults</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename">${logdir}/update_results.log</stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">5000</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="List Recommendations by exp name" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${loop}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="List Recommendations by exp name" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="experiment_name" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">experiment_name</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/listRecommendations</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename">${logdir}/list_reco_exp_name.log</stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+            <stringProp name="ConstantTimer.delay">200</stringProp>
+          </ConstantTimer>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="List Recommendations" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">2</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">100</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">200</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Results Again" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">[&#xd;
+  {&#xd;
+    &quot;version&quot;: &quot;1.0&quot;,&#xd;
+    &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
+    &quot;start_timestamp&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
+    &quot;end_timestamp&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT20M,,)}&quot;,&#xd;
+    &quot;kubernetes_objects&quot;: [&#xd;
+      {&#xd;
+        &quot;type&quot;: &quot;deployment&quot;,&#xd;
+        &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
+        &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
+        &quot;containers&quot;: [&#xd;
+          {&#xd;
+            &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
+            &quot;container_name&quot;: &quot;tfb-server-1&quot;,&#xd;
+            &quot;metrics&quot;: [&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuRequest&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 4.4,&#xd;
+                    &quot;avg&quot;: 1.1,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuLimit&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 2.0,&#xd;
+                    &quot;avg&quot;: 0.5,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuUsage&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 0.14,&#xd;
+                    &quot;max&quot;: 0.84,&#xd;
+                    &quot;sum&quot;: 0.84,&#xd;
+                    &quot;avg&quot;: 0.12,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;cpuThrottle&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 0.19,&#xd;
+                    &quot;max&quot;: 0.09,&#xd;
+                    &quot;avg&quot;: 0.045,&#xd;
+                    &quot;format&quot;: &quot;cores&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryRequest&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 250.85,&#xd;
+                    &quot;avg&quot;: 50.21,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryLimit&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;sum&quot;: 500,&#xd;
+                    &quot;avg&quot;: 100,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryUsage&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 50.6,&#xd;
+                    &quot;max&quot;: 198.50,&#xd;
+                    &quot;sum&quot;: 198.50,&#xd;
+                    &quot;avg&quot;: 40.1,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              },&#xd;
+              {&#xd;
+                &quot;name&quot;: &quot;memoryRSS&quot;,&#xd;
+                &quot;results&quot;: {&#xd;
+                  &quot;aggregation_info&quot;: {&#xd;
+                    &quot;min&quot;: 50.6,&#xd;
+                    &quot;max&quot;: 123.6,&#xd;
+                    &quot;sum&quot;: 123.6,&#xd;
+                    &quot;avg&quot;: 31.91,&#xd;
+                    &quot;format&quot;: &quot;MiB&quot;&#xd;
+                  }&#xd;
+                }&#xd;
+              }&#xd;
+            ]&#xd;
+          }&#xd;
+        ]&#xd;
+      }&#xd;
+    ]&#xd;
+  }&#xd;
+]&#xd;
+</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/updateResults</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename">${logdir}/update_results_again.log</stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="List Recommendations" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/listRecommendations</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename">${logdir}/list_reco.log</stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">5000</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Delete Experiments" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${loop}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Delete Experiment" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">[{&#xd;
+  &quot;version&quot;: &quot;1.0&quot;,&#xd;
+  &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
+  &quot;cluster_name&quot;: &quot;cluster-one-division-bell&quot;,&#xd;
+  &quot;performance_profile&quot;: &quot;resource-optimization-openshift&quot;,&#xd;
+  &quot;mode&quot;: &quot;monitor&quot;,&#xd;
+  &quot;target_cluster&quot;: &quot;remote&quot;,&#xd;
+  &quot;kubernetes_objects&quot;: [&#xd;
+    {&#xd;
+      &quot;type&quot;: &quot;deployment&quot;,&#xd;
+      &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
+      &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
+      &quot;containers&quot;: [&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-db:1.15&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-0&quot;&#xd;
+        },&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-1&quot;&#xd;
+        }&#xd;
+      ]&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;trial_settings&quot;: {&#xd;
+    &quot;measurement_duration&quot;: &quot;15min&quot;&#xd;
+  },&#xd;
+  &quot;recommendation_settings&quot;: {&#xd;
+    &quot;threshold&quot;: &quot;0.1&quot;&#xd;
+  }&#xd;
+}]&#xd;
+</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/createExperiment</stringProp>
+          <stringProp name="HTTPSampler.method">DELETE</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">16</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">5000</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+        <boolProp name="ResultCollector.error_logging">true</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">${logdir}/delete_exps.log</stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+          <collectionProp name="Arguments.arguments"/>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain">${host}</stringProp>
+        <stringProp name="HTTPSampler.port"></stringProp>
+        <stringProp name="HTTPSampler.protocol"></stringProp>
+        <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+        <stringProp name="HTTPSampler.path"></stringProp>
+        <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+        <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+        <stringProp name="HTTPSampler.response_timeout"></stringProp>
+      </ConfigTestElement>
+      <hashTree/>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Set up - Delete Experiments" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${loop}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Set up - Delete Experiments" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">[{&#xd;
+  &quot;version&quot;: &quot;1.0&quot;,&#xd;
+  &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
+  &quot;cluster_name&quot;: &quot;cluster-one-division-bell&quot;,&#xd;
+  &quot;performance_profile&quot;: &quot;resource-optimization-openshift&quot;,&#xd;
+  &quot;mode&quot;: &quot;monitor&quot;,&#xd;
+  &quot;target_cluster&quot;: &quot;remote&quot;,&#xd;
+  &quot;kubernetes_objects&quot;: [&#xd;
+    {&#xd;
+      &quot;type&quot;: &quot;deployment&quot;,&#xd;
+      &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
+      &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
+      &quot;containers&quot;: [&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-db:1.15&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-0&quot;&#xd;
+        },&#xd;
+        {&#xd;
+          &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
+          &quot;container_name&quot;: &quot;tfb-server-1&quot;&#xd;
+        }&#xd;
+      ]&#xd;
+    }&#xd;
+  ],&#xd;
+  &quot;trial_settings&quot;: {&#xd;
+    &quot;measurement_duration&quot;: &quot;15min&quot;&#xd;
+  },&#xd;
+  &quot;recommendation_settings&quot;: {&#xd;
+    &quot;threshold&quot;: &quot;0.1&quot;&#xd;
+  }&#xd;
+}]&#xd;
+</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/createExperiment</stringProp>
+          <stringProp name="HTTPSampler.method">DELETE</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">16</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename">${logdir}/setup_delete_exps.log</stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
+          <stringProp name="ConstantTimer.delay">5000</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
