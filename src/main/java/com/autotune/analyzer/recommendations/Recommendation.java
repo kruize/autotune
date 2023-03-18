@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 

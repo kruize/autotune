@@ -5,7 +5,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
 import com.google.gson.Gson;

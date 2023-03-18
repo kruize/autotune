@@ -16,7 +16,7 @@
 package com.autotune.common.data.result;
 
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;

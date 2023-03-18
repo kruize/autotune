@@ -19,7 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.ExperimentUseCaseType;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
@@ -140,11 +140,11 @@ public final class KruizeObject {
         this.mode = mode;
     }
 
-    public String getTargetCluster() {
+    public String getTarget_cluster() {
         return targetCluster;
     }
 
-    public void setTargetCluster(String targetCluster) {
+    public void setTarget_cluster(String targetCluster) {
         this.targetCluster = targetCluster;
     }
 

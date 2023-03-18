@@ -25,7 +25,7 @@ import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.Experimentator.experimentsMap;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 
 /**

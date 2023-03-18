@@ -20,7 +20,7 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.common.k8sObjects.KruizeLayer;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,9 +30,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.autotune.operator.KruizeOperator.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
 import static com.autotune.analyzer.utils.ServiceHelpers.addLayerDetails;
 

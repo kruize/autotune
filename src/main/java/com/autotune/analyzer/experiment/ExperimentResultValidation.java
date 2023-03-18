@@ -21,7 +21,7 @@ import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

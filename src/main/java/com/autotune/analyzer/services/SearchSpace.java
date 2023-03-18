@@ -19,7 +19,7 @@ import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 
 import javax.servlet.http.HttpServlet;
@@ -31,9 +31,9 @@ import java.util.Map;
 import static com.autotune.analyzer.Experimentator.experimentsMap;
 import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
 import static com.autotune.operator.KruizeOperator.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 
 /**

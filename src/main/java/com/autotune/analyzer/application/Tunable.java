@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.*;
-import static com.autotune.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
 
 /**
  * Contains the tunable to optimize, along with its upper & lower bounds or categorical choices, value type

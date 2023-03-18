@@ -48,9 +48,9 @@ import java.util.HashMap;
 
 import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
 import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.TRAINING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.TRAINING;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
@@ -157,7 +157,7 @@ public class TrialHelpers {
             do_experiments = false;
         }
         boolean do_monitoring = true;
-        if (kruizeObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getTarget_cluster().equals("remote")) {
             do_monitoring = false;
         }
         /**
@@ -165,7 +165,7 @@ public class TrialHelpers {
          * TODO: In the future this might need its own flag
          */
         boolean wait_for_load = true;
-        if (kruizeObject.getMode().equals("monitor") && kruizeObject.getTargetCluster().equals("remote")) {
+        if (kruizeObject.getMode().equals("monitor") && kruizeObject.getTarget_cluster().equals("remote")) {
             wait_for_load = false;
         }
         ExperimentSettings experimentSettings = new ExperimentSettings(trialSettings,

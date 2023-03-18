@@ -21,8 +21,8 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -43,8 +43,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.

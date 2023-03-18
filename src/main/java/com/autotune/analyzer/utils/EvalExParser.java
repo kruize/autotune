@@ -18,7 +18,6 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.udojava.evalex.Expression;
 import org.slf4j.Logger;

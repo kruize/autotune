@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.utils;
+package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.recommendations.DurationBasedRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.RecommendationSubCategory;
+import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -486,7 +487,7 @@ public class AnalyzerConstants {
         public static final String FUNCTION_VARIABLES = "functionVariables";
         public static final String VALUE_TYPE = "valueType";
         public static final String SOURCE = "source";
-        public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.common.performanceProfiles.PerformanceProfileInterface.";
+        public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
 
         public static final Map<String, String> PerfProfileNames = Map.of(

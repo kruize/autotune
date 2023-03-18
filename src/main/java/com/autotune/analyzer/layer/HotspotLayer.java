@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TRUE;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
-import static com.autotune.utils.AnalyzerConstants.HotspotConstants.*;
-import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TRUE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.HotspotConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 
 /**

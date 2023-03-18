@@ -16,7 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +33,13 @@ public class ExperimentUseCaseType {
     boolean localExperiment;
 
     public ExperimentUseCaseType(KruizeObject kruizeObject) throws Exception {
-        if (kruizeObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+        if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 setRemoteMonitoring(true);
             } else {
                 throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Remote.");
             }
-        } else if (kruizeObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+        } else if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 setLocalMonitoring(true);
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {

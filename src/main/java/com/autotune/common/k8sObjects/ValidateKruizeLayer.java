@@ -17,13 +17,13 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.utils.KruizeSupportedTypes;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
 /**
  * Check if the KruizeLayer object in the kubernetes cluster is valid

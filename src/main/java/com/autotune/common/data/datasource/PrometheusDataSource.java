@@ -16,7 +16,7 @@
 package com.autotune.common.data.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.auth_models.BearerAccessToken;

@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
-import static com.autotune.utils.AnalyzerConstants.ContainerConstants.CPU_REQUEST;
-import static com.autotune.utils.AnalyzerConstants.ContainerConstants.MEM_REQUEST;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ContainerConstants.CPU_REQUEST;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ContainerConstants.MEM_REQUEST;
 
 /**
  * Layer object used to store Container config details like CPU,Memory.

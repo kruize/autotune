@@ -18,8 +18,6 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import org.json.JSONArray;
 import org.json.JSONObject;

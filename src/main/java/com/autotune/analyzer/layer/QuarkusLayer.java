@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
-import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.QUARKUS;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.QuarkusConstants.QUARKUS;
 import static com.autotune.utils.KruizeConstants.JSONKeys.EQUALS;
 import static com.autotune.utils.KruizeConstants.JSONKeys.JAVA_OPTIONS;
-import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
+import static com.autotune.analyzer.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
 
 /**
  * Layer object used to store Container config details like Java ENV variables etc.

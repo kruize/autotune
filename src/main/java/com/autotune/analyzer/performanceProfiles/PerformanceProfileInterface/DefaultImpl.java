@@ -18,7 +18,7 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

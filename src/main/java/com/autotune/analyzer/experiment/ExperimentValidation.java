@@ -19,8 +19,8 @@ import com.autotune.operator.KruizeOperator;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,7 @@ public class ExperimentValidation {
             if (validationOutputData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
                 String mode = kruizeObject.getMode();
-                String target_cluster = kruizeObject.getTargetCluster();
+                String target_cluster = kruizeObject.getTarget_cluster();
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {

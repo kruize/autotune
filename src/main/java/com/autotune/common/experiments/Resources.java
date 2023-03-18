@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.experiments;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_CHARS;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.BOUND_DIGITS;
 
 /**
  *

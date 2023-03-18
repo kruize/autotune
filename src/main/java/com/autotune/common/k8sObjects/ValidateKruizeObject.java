@@ -16,8 +16,8 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.utils.KruizeSupportedTypes;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 
 import java.util.HashMap;
 

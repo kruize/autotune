@@ -30,9 +30,9 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.Per
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
 import com.google.gson.Gson;
@@ -57,7 +57,7 @@ import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.autotune.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
+import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
 
 /**
  * Maintains information about the Autotune resources deployed in the cluster

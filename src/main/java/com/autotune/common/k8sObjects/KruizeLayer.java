@@ -17,7 +17,7 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 

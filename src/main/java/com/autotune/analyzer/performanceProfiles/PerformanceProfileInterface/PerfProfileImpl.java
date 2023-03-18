@@ -8,8 +8,8 @@ import com.autotune.common.data.result.Containers;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

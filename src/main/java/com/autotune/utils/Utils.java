@@ -19,6 +19,7 @@ import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
@@ -26,7 +27,6 @@ import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.KruizeObject;
 
-import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -184,7 +184,7 @@ public class Utils
 				kruizeObject.setDeployments(deploymentObjectHashMap);
 				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
 				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
-				kruizeObject.setTargetCluster(createExperimentSO.getTargetCluster());
+				kruizeObject.setTarget_cluster(createExperimentSO.getTargetCluster());
 				kruizeObject.setClusterName(createExperimentSO.getClusterName());
 				kruizeObject.setMode(createExperimentSO.getMode());
 				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());

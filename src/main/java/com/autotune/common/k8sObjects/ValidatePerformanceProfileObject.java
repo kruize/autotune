@@ -19,8 +19,8 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 

@@ -11,9 +11,9 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 
 import java.util.TreeMap;
 
-import static com.autotune.utils.AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE;
-import static com.autotune.utils.AnalyzerConstants.AutotuneObjectConstants.MINIMIZE;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.TRAINING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneObjectConstants.MINIMIZE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.TRAINING;
 
 /**
  *

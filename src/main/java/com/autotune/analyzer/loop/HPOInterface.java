@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.HpoOperations.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.EQUALS;

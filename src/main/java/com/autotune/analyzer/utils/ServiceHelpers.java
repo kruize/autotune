@@ -25,12 +25,11 @@ import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static com.autotune.operator.KruizeOperator.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object

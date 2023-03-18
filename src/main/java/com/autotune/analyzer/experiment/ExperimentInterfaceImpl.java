@@ -20,7 +20,7 @@ import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

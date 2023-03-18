@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 import static com.autotune.analyzer.utils.ServiceHelpers.addDeploymentDetails;
 import static com.autotune.analyzer.utils.ServiceHelpers.addExperimentDetails;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 
 /**
  *

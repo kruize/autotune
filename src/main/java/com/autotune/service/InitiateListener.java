@@ -29,7 +29,7 @@ import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.autotune.experimentManager.workerimpl.IterationManager;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
