@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.autotune.common.data.datasource.DataSourceFactory;
-import com.autotune.utils.AutotuneUtils;
+import com.autotune.utils.KruizeUtils;
 
 /**
  * AutotuneDTO is a data traversing object, it used to transfer data between different autotune components.
@@ -79,7 +79,7 @@ public class AutotuneDTO implements Serializable {
 	}
 
 	public void setUrl(String url) {
-		if (! AutotuneUtils.isValidURL(url)) {
+		if (! KruizeUtils.isValidURL(url)) {
 			errorMessage.append("\n URL is not valid or empty");
 			LOGGER.error("URL is not valid");
 		}

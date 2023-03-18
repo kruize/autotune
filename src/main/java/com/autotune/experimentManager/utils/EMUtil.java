@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
-import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
@@ -27,7 +27,7 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -260,7 +260,7 @@ public class EMUtil {
             retJson.put("info", new JSONObject().put("trial_info",
                     new JSONObject(
                             new GsonBuilder()
-                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .setExclusionStrategies(new KruizeJSONExclusionStrategy())
                                     .create()
                                     .toJson(experimentTrial.getTrialInfo())
                     )
@@ -274,14 +274,14 @@ public class EMUtil {
         if (value <= 0)
             return 0;
         if (memoryUnits == MemoryUnits.BYTES) {
-            LOGGER.debug("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
-            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+            LOGGER.debug("Calcuclated val - " + value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
+            return value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
         } else if (memoryUnits == MemoryUnits.KIBIBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+            return value * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
         } else if (memoryUnits == MemoryUnits.MEBIBYTES) {
             return value;
         } else if (memoryUnits == MemoryUnits.GIBIBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
+            return value * KruizeConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
         }
         return 0.0;
     }
@@ -290,13 +290,13 @@ public class EMUtil {
         if (value <= 0)
             return 0;
         if (memoryUnits == MemoryUnits.BYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * AutotuneConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * KruizeConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
         } else if (memoryUnits == MemoryUnits.KILOBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
         } else if (memoryUnits == MemoryUnits.MEGABYTES) {
             return value;
         } else if (memoryUnits == MemoryUnits.GIGABYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
         }
         return 0.0;
     }

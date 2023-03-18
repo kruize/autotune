@@ -15,14 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ListSupportedK8sObjectsSO {
-    @SerializedName(AutotuneConstants.JSONKeys.KUBERNETES_OBJECTS)
+    @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<String> kubernetesObjects;
 
     public ListSupportedK8sObjectsSO() {

@@ -15,9 +15,8 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.data.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.data.ProfileBasedRecommendationSubCategory;
-import com.autotune.analyzer.data.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.RecommendationSubCategory;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -88,18 +87,6 @@ public class AnalyzerConstants {
     public static final String NULL = "null";
 
 
-    public static final class DBConstants {
-
-        public static final String HOSTNAME = "hostname";
-        public static final String PORT = "port";
-        public static final String NAME = "name";
-        public static final String USERNAME = "username";
-        public static final String PASSWORD = "password";
-        public static final String CONFIG_FILE = "CONFIG_FILE";
-        public static final String CONFIG_FILE_DB_KEY = "database";
-        public static final String DB_DRIVER = "DB_DRIVER";
-    }
-
     private AnalyzerConstants() {
     }
 
@@ -154,27 +141,27 @@ public class AnalyzerConstants {
 
     public enum RecommendationCategory {
         DURATION_BASED(
-                AutotuneConstants.JSONKeys.DURATION_BASED,
+                KruizeConstants.JSONKeys.DURATION_BASED,
                 new DurationBasedRecommendationSubCategory[]{
                         new DurationBasedRecommendationSubCategory(
-                                AutotuneConstants.JSONKeys.SHORT_TERM,
+                                KruizeConstants.JSONKeys.SHORT_TERM,
                                 1,
                                 TimeUnit.DAYS
                         ),
                         new DurationBasedRecommendationSubCategory(
-                                AutotuneConstants.JSONKeys.MEDIUM_TERM,
+                                KruizeConstants.JSONKeys.MEDIUM_TERM,
                                 7,
                                 TimeUnit.DAYS
                         ),
                         new DurationBasedRecommendationSubCategory(
-                                AutotuneConstants.JSONKeys.LONG_TERM,
+                                KruizeConstants.JSONKeys.LONG_TERM,
                                 15,
                                 TimeUnit.DAYS
                         ),
                 }
         ),
         // Need to update with profile based sub categories
-        PROFILE_BASED(AutotuneConstants.JSONKeys.PROFILE_BASED, null);
+        PROFILE_BASED(KruizeConstants.JSONKeys.PROFILE_BASED, null);
 
         private String name;
         private RecommendationSubCategory[] recommendationSubCategories;
@@ -271,7 +258,7 @@ public class AnalyzerConstants {
     }
 
     /**
-     * Used to parse the AutotuneConfig resource
+     * Used to parse the KruizeLayer resource
      */
     public static final class AutotuneConfigConstants {
 

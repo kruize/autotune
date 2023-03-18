@@ -17,7 +17,7 @@ package com.autotune.analyzer.layer;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.experiments.ContainerConfigData;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -49,13 +49,13 @@ public class ContainerLayer extends GenericLayer implements Layer {
                 String cpu = tunableJSON.getDouble(TUNABLE_VALUE) +
                         tunable.getBoundUnits();
                 LOGGER.debug("CPU Request: " + cpu);
-                requestPropertiesMap.put(AutotuneConstants.JSONKeys.CPU, new Quantity(cpu));
+                requestPropertiesMap.put(KruizeConstants.JSONKeys.CPU, new Quantity(cpu));
                 break;
             case MEM_REQUEST:
                 String memory = tunableJSON.getDouble(TUNABLE_VALUE) +
                         tunable.getBoundUnits();
                 LOGGER.debug("Mem Request: " + memory);
-                requestPropertiesMap.put(AutotuneConstants.JSONKeys.MEMORY, new Quantity(memory));
+                requestPropertiesMap.put(KruizeConstants.JSONKeys.MEMORY, new Quantity(memory));
                 break;
         }
         containerConfigData.setRequestPropertiesMap(requestPropertiesMap);

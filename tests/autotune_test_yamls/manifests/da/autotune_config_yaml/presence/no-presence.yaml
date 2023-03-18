@@ -1,11 +1,11 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-presence"
 layer_name: container
 layer_level: 0
 details: generic container tunables
-layer_presence: 
+layer_presence:
 tunables:
   - name: memoryRequest
     value_type: double
@@ -30,4 +30,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

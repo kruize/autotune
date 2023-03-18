@@ -16,7 +16,7 @@
 package com.autotune.common.data.datasource;
 
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,7 +26,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
-public class PrometheusDataOperator implements AutotuneDatasourceOperator{
+public class PrometheusDataOperator implements KruizeDatasourceOperator {
     private static PrometheusDataOperator prometheusDataOperator = null;
     private PrometheusDataOperator() {
 
@@ -44,7 +44,7 @@ public class PrometheusDataOperator implements AutotuneDatasourceOperator{
         GenericRestApiClient apiClient = new GenericRestApiClient(
                 CommonUtils.getBaseDataSourceUrl(
                         url,
-                        AutotuneConstants.SupportedDatasources.PROMETHEUS
+                        KruizeConstants.SupportedDatasources.PROMETHEUS
                 )
         );
         if (null == apiClient) {
@@ -52,7 +52,7 @@ public class PrometheusDataOperator implements AutotuneDatasourceOperator{
         }
         try {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
-                    AutotuneConstants.HttpConstants.MethodType.GET,
+                    KruizeConstants.HttpConstants.MethodType.GET,
                     query);
             if (!jsonObject.has("status"))
                 return null;

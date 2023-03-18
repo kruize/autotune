@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "valid-tunable-slo-class"
 layer_name: container
@@ -14,7 +14,7 @@ tunables:
     upper_bound: '300 Mi'
     lower_bound: '150 Mi'
     queries:
-    - datasource: 'prometheus' 
+    - datasource: 'prometheus'
       query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
     slo_class:
       - response_time
@@ -26,10 +26,9 @@ tunables:
     upper_bound: '3.0'
     lower_bound: '1.0'
     queries:
-    - datasource: 'prometheus' 
+    - datasource: 'prometheus'
       query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
     slo_class:
       - response_time
       - throughput
       - resource_usage
-

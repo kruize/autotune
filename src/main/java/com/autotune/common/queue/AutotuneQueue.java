@@ -16,9 +16,9 @@
 
 package com.autotune.common.queue;
 /**
- * AutotuneQueue is an interface having three main contracts
- * send method: it send data to the AutotuneQueue
- * get method: received data from AutotuneQueue
+ * KruizeQueue is an interface having three main contracts
+ * send method: it send data to the KruizeQueue
+ * get method: received data from KruizeQueue
  * getName method: return the name of the component currently operating on AutotuneDTO object
  * @author bipkumar
  */

@@ -155,7 +155,7 @@ tunable_upper_bound_testcases=("blank-tunable-upper-bound"
 "no-tunable-upper-bound-value"
 "null-tunable-upper-bound"
 "char-tunable-upper-bound"
-"zero-tunable-upper-bound" 
+"zero-tunable-upper-bound"
 "valid-tunable-upper-bound")
 
 # tests for tunable lower bound
@@ -226,12 +226,12 @@ layer_name_autotune_objects=([blank-layer-name]='true'
 # Expected log message for layer-name
 declare -A layer_name_expected_log_msgs
 layer_name_yaml_path="${yaml_path}/${autotune_config_tests[0]}"
-layer_name_kubectl_error=': error validating data: ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
-layer_name_expected_log_msgs=([blank-layer-name]=''${exception}' AutotuneConfig object name cannot be null or empty'
+layer_name_kubectl_error=': error validating data: ValidationError(KruizeLayer): missing required field "layer_name" in com.recommender.v1.KruizeLayer; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_name_expected_log_msgs=([blank-layer-name]=''${exception}' KruizeLayer object name cannot be null or empty'
 [no-layer-name]='error: error validating "'${layer_name_yaml_path}/no-layer-name.yaml'"'${layer_name_kubectl_error}''
 [no-layer-name-value]='error: error validating "'${layer_name_yaml_path}/no-layer-name-value.yaml'"'${layer_name_kubectl_error}''
 [null-layer-name]='error: error validating "'${layer_name_yaml_path}/null-layer-name.yaml'"'${layer_name_kubectl_error}''
-[numerical-layer-name]='The AutotuneConfig "numerical-layer-name" is invalid: layer_name: Invalid value: "integer": layer_name in body must be of type string: "integer"'
+[numerical-layer-name]='The KruizeLayer "numerical-layer-name" is invalid: layer_name: Invalid value: "integer": layer_name in body must be of type string: "integer"'
 [valid-layer-name]=''${autotune_config_obj_create_msg}' valid-layer-name')
 
 # Expected autotune object for layer-level
@@ -247,8 +247,8 @@ layer_level_autotune_objects=([char-layer-level]='false'
 # Expected log message for layer-level
 declare -A layer_level_expected_log_msgs
 layer_level_yaml_path="${yaml_path}/${autotune_config_tests[1]}"
-layer_level_kubectl_error=': error validating data: ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
-layer_level_expected_log_msgs=([char-layer-level]='error: error validating "'${layer_level_yaml_path}/char-layer-level.yaml'": error validating data: ValidationError(AutotuneConfig.layer_level): invalid type for com.recommender.v1.AutotuneConfig.layer_level: got "string", expected "integer"; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_level_kubectl_error=': error validating data: ValidationError(KruizeLayer): missing required field "layer_level" in com.recommender.v1.KruizeLayer; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_level_expected_log_msgs=([char-layer-level]='error: error validating "'${layer_level_yaml_path}/char-layer-level.yaml'": error validating data: ValidationError(KruizeLayer.layer_level): invalid type for com.recommender.v1.KruizeLayer.layer_level: got "string", expected "integer"; if you choose to ignore these errors, turn validation off with --validate=false'
 [invalid-layer-level]=''${exception}' Layer level must be a non-negative integer'
 [no-layer-level]='error: error validating "'${layer_level_yaml_path}/no-layer-level.yaml'"'${layer_level_kubectl_error}''
 [no-layer-level-value]='error: error validating "'${layer_level_yaml_path}/no-layer-level-value.yaml'"'${layer_level_kubectl_error}''
@@ -271,10 +271,10 @@ presence_yaml_path="${yaml_path}/${autotune_config_tests[2]}"
 presence_exception='Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel'
 presence_expected_log_msgs=([blank-presence]=''${exception}' '${presence_exception}''
 [invalid-presence]=''${exception}' '${presence_exception}''
-[no-presence]='error: error validating "'${presence_yaml_path}/no-presence.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-presence]='error: error validating "'${presence_yaml_path}/no-presence.yaml'": error validating data: ValidationError(KruizeLayer): missing required field "layerPresence" in com.recommender.v1.KruizeLayer; if you choose to ignore these errors, turn validation off with --validate=false'
 [no-presence-value]=''${exception}' '${presence_exception}''
 [null-presence]=''${exception}' '${presence_exception}''
-[numerical-presence]='The AutotuneConfig "numerical-presence" is invalid: layerPresence.presence: Invalid value: "integer": layerPresence.presence in body must be of type string: "integer"'
+[numerical-presence]='The KruizeLayer "numerical-presence" is invalid: layerPresence.presence: Invalid value: "integer": layerPresence.presence in body must be of type string: "integer"'
 [valid-presence]=''${autotune_config_obj_create_msg}' valid-presence')
 
 # Expected autotune object for layer preseence query
@@ -290,13 +290,13 @@ layer_presence_query_datasource_autotune_objects=([blank-layer-presence-query-da
 #Expected log message for layer preseence query
 declare -A layer_presence_query_datasource_expected_log_msgs
 layer_presence_query_ds_yaml_path="${yaml_path}/${autotune_config_tests[3]}"
-layer_presence_query_ds_kubectl_error=': error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_presence_query_ds_kubectl_error=': error validating data: ValidationError(KruizeLayer.layerPresence.query.datasource\[0\]): missing required field "name" in com.recommender.v1.KruizeLayer.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
 layer_presence_query_datasource_expected_log_msgs=([blank-layer-presence-query-datasource]=''${exception}' '${presence_exception}''
 [invalid-layer-presence-query-datasource]=''${exception}' '${presence_exception}''
-[no-layer-presence-query-datasource]='error: error validating "'${layer_presence_query_ds_yaml_path}/no-layer-presence-query-datasource.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.query.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-layer-presence-query-datasource]='error: error validating "'${layer_presence_query_ds_yaml_path}/no-layer-presence-query-datasource.yaml'": error validating data: ValidationError(KruizeLayer.layerPresence.query.datasource): invalid type for com.recommender.v1.KruizeLayer.layerPresence.query.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
 [no-layer-presence-query-datasource-value]='error: error validating "'${layer_presence_query_ds_yaml_path}/no-layer-presence-query-datasource-value.yaml'"'${layer_presence_query_ds_kubectl_error}''
 [null-layer-presence-query-datasource]='error: error validating "'${layer_presence_query_ds_yaml_path}/null-layer-presence-query-datasource.yaml'"'${layer_presence_query_ds_kubectl_error}''
-[numerical-layer-presence-query-datasource]='The AutotuneConfig "numerical-layer-presence-query-datasource" is invalid: layerPresence.query.datasource.name: Invalid value: "integer": layerPresence.query.datasource.name in body must be of type string: "integer"'
+[numerical-layer-presence-query-datasource]='The KruizeLayer "numerical-layer-presence-query-datasource" is invalid: layerPresence.query.datasource.name: Invalid value: "integer": layerPresence.query.datasource.name in body must be of type string: "integer"'
 [valid-layer-presence-query-datasource]=''${autotune_config_obj_create_msg}' valid-layer-presence-query-datasource')
 
 # Expected autotune object for layer presence query
@@ -312,13 +312,13 @@ layer_presence_query_autotune_objects=([blank-layer-presence-query]='true'
 #Expected log message for layer presence query
 declare -A layer_presence_query_expected_log_msgs
 layer_presence_query_yaml_path="${yaml_path}/${autotune_config_tests[4]}"
-layer_presence_query_kubectl_error=': error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_presence_query_kubectl_error=': error validating data: ValidationError(KruizeLayer.layerPresence.query.datasource\[0\]): missing required field "query" in com.recommender.v1.KruizeLayer.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
 layer_presence_query_expected_log_msgs=([blank-layer-presence-query]='com.autotune.analyzer.deployment.AutotuneDeployment - Could not get the applications for the layer blank-layer-presence-query'
 [invalid-layer-presence-query]='validation from da'
 [no-layer-presence-query]='error: error validating "'${layer_presence_query_yaml_path}/no-layer-presence-query.yaml'"'${layer_presence_query_kubectl_error}''
 [no-layer-presence-query-value]='error: error validating "'${layer_presence_query_yaml_path}/no-layer-presence-query-value.yaml'"'${layer_presence_query_kubectl_error}''
 [null-layer-presence-query]='error: error validating "'${layer_presence_query_yaml_path}/null-layer-presence-query.yaml'"'${layer_presence_query_kubectl_error}''
-[numerical-layer-presence-query]='The AutotuneConfig "numerical-layer-presence-query" is invalid: layerPresence.query.datasource.query: Invalid value: "integer": layerPresence.query.datasource.query in body must be of type string: "integer"'
+[numerical-layer-presence-query]='The KruizeLayer "numerical-layer-presence-query" is invalid: layerPresence.query.datasource.query: Invalid value: "integer": layerPresence.query.datasource.query in body must be of type string: "integer"'
 [valid-layer-presence-query]=''${autotune_config_obj_create_msg}' valid-layer-presence-query')
 
 # Expected autotune object for layer presence query key
@@ -334,13 +334,13 @@ layer_presence_query_key_autotune_objects=([blank-layer-presence-query-key]='tru
 # Expected autotune object for layer presence query key
 declare -A layer_presence_query_key_expected_log_msgs
 layer_presence_query_key_yaml_path="${yaml_path}/${autotune_config_tests[5]}"
-layer_presence_query_key_kubectl_error=': error validating data: ValidationError(AutotuneConfig.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.AutotuneConfig.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_presence_query_key_kubectl_error=': error validating data: ValidationError(KruizeLayer.layerPresence.query.datasource\[0\]): missing required field "key" in com.recommender.v1.KruizeLayer.layerPresence.query.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
 layer_presence_query_key_expected_log_msgs=([blank-layer-presence-query-key]='validation from da'
 [invalid-layer-presence-query-key]='validation from da'
 [no-layer-presence-query-key]='error: error validating "'${layer_presence_query_key_yaml_path}/no-layer-presence-query-key.yaml'"'${layer_presence_query_key_kubectl_error}''
 [no-layer-presence-query-key-value]='error: error validating "'${layer_presence_query_key_yaml_path}/no-layer-presence-query-key-value.yaml'"'${layer_presence_query_key_kubectl_error}''
 [null-layer-presence-query-key]='error: error validating "'${layer_presence_query_key_yaml_path}/null-layer-presence-query-key.yaml'"'${layer_presence_query_key_kubectl_error}''
-[numerical-layer-presence-query-key]='The AutotuneConfig "numerical-layer-presence-query-key" is invalid: layerPresence.query.datasource.key: Invalid value: "integer": layerPresence.query.datasource.key in body must be of type string: "integer"'
+[numerical-layer-presence-query-key]='The KruizeLayer "numerical-layer-presence-query-key" is invalid: layerPresence.query.datasource.key: Invalid value: "integer": layerPresence.query.datasource.key in body must be of type string: "integer"'
 [valid-layer-presence-query-key]=''${autotune_config_obj_create_msg}' valid-layer-presence-query-key')
 
 # Expected autotune object for layer presence label name
@@ -357,10 +357,10 @@ layer_presence_label_name_autotune_objects=([blank-layer-presence-label-name]='t
 declare -A layer_presence_label_name_expected_log_msgs
 layer_presence_label_name_expected_log_msgs=([blank-layer-presence-label-name]='validation from da'
 [invalid-layer-presence-label-name]='validation from da'
-[no-layer-presence-label-name]='error: error validating "'${yaml_path}/${autotune_config_tests[6]}/no-layer-presence-label-name.yaml'": error validating data: ValidationError(AutotuneConfig.layerPresence.label): invalid type for com.recommender.v1.AutotuneConfig.layerPresence.label: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-layer-presence-label-name]='error: error validating "'${yaml_path}/${autotune_config_tests[6]}/no-layer-presence-label-name.yaml'": error validating data: ValidationError(KruizeLayer.layerPresence.label): invalid type for com.recommender.v1.KruizeLayer.layerPresence.label: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
 [no-layer-presence-label-name-value]='validation from crd'
 [null-layer-presence-label-name]='validation from crd'
-[numerical-layer-presence-label-name]='The AutotuneConfig "numerical-layer-presence-label-name" is invalid: layerPresence.label.name: Invalid value: "integer": layerPresence.label.name in body must be of type string: "integer"'
+[numerical-layer-presence-label-name]='The KruizeLayer "numerical-layer-presence-label-name" is invalid: layerPresence.label.name: Invalid value: "integer": layerPresence.label.name in body must be of type string: "integer"'
 [valid-layer-presence-label-name]=''${autotune_config_obj_create_msg}' valid-layer-presence-label-name')
 
 # Expected autotune object for layer-presence-labelvalue
@@ -379,9 +379,9 @@ layer_presence_labelvalue_error=': layerPresence.label.value in body must be of 
 layer_presence_labelvalue_expected_log_msgs=([blank-layer-presence-labelvalue]='Validation from da'
 [invalid-layer-presence-labelvalue]='validation from da'
 [no-layer-presence-labelvalue]='validation from crd'
-[no-layer-presence-labelvalue-value]='The AutotuneConfig "no-layer-presence-labelvalue-value" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
-[null-layer-presence-labelvalue]='The AutotuneConfig "null-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
-[numerical-layer-presence-labelvalue]='The AutotuneConfig "numerical-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "integer"'${layer_presence_labelvalue_error}' "integer"'
+[no-layer-presence-labelvalue-value]='The KruizeLayer "no-layer-presence-labelvalue-value" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
+[null-layer-presence-labelvalue]='The KruizeLayer "null-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
+[numerical-layer-presence-labelvalue]='The KruizeLayer "numerical-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "integer"'${layer_presence_labelvalue_error}' "integer"'
 [valid-layer-presence-labelvalue]=''${autotune_config_obj_create_msg}' valid-layer-presence-labelvalue')
 
 # Expected autotune object for layer presence
@@ -399,7 +399,7 @@ layer_presence_autotune_objects=([complete-layer-presence]='true'
 # Expected log message for layer presence
 declare -A layer_presence_expected_log_msgs
 layer_presence_yaml_path="${yaml_path}/${autotune_config_tests[8]}"
-layer_presence_kubectl_error=': error validating data: ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false'
+layer_presence_kubectl_error=': error validating data: ValidationError(KruizeLayer): missing required field "layerPresence" in com.recommender.v1.KruizeLayer; if you choose to ignore these errors, turn validation off with --validate=false'
 layer_presence_expected_log_msgs=([complete-layer-presence]=''${exception}' Both layerPresenceQuery and layerPresenceLabel cannot be set'
 [empty-layer-presence]='error: error validating "'${layer_presence_yaml_path}/empty-layer-presence.yaml'"'${layer_presence_kubectl_error}''
 [no-label-layer-presence]=''${autotune_config_obj_create_msg}' no-label-layer-presence'
@@ -421,11 +421,11 @@ tunable_name_autotune_objects=([blank-tunable-name]='true'
 # Expected log message for tunable-name
 declare -A tunable_name_expected_log_msgs
 tunable_name_yaml_path="${yaml_path}/${autotune_config_tests[9]}"
-tunable_name_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_name_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "name" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
 tunable_name_expected_log_msgs=([blank-tunable-name]=''${exception}' Tunable name cannot be empty'
 [no-tunable-name-value]='error: error validating "'${tunable_name_yaml_path}/no-tunable-name-value.yaml'"'${tunable_name_kubectl_error}''
 [null-tunable-name]='error: error validating "'${tunable_name_yaml_path}/null-tunable-name.yaml'"'${tunable_name_kubectl_error}''
-[numerical-tunable-name]='The AutotuneConfig "numerical-tunable-name" is invalid: tunables.name: Invalid value: "integer": tunables.name in body must be of type string: "integer"'
+[numerical-tunable-name]='The KruizeLayer "numerical-tunable-name" is invalid: tunables.name: Invalid value: "integer": tunables.name in body must be of type string: "integer"'
 [valid-tunable-name]=''${autotune_config_obj_create_msg}' valid-tunable-name')
 
 # Expected autotune object for tunable-value-type
@@ -441,13 +441,13 @@ tunable_value_type_autotune_objects=([blank-tunable-value-type]='true'
 # Expected log message for tunable-value-type
 declare -A tunable_value_type_expected_log_msgs
 tunable_value_yaml_path="${yaml_path}/${autotune_config_tests[10]}"
-tunable_value_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_value_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "value_type" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
 tunable_value_type_expected_log_msgs=([blank-tunable-value-type]='Validation from da'
 [invalid-tunable-value-type]='validation from da'
 [no-tunable-value-type]='error: error validating "'${tunable_value_yaml_path}/no-tunable-value-type.yaml'"'${tunable_value_kubectl_error}''
-[no-tunable-value-type-value]='error: error validating "'${tunable_value_yaml_path}/no-tunable-value-type-value.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\]): missing required field "value_type" in com.recommender.v1.AutotuneConfig.tunables, ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-tunable-value-type-value]='error: error validating "'${tunable_value_yaml_path}/no-tunable-value-type-value.yaml'": error validating data: \[ValidationError(KruizeLayer.tunables\[0\]): missing required field "value_type" in com.recommender.v1.KruizeLayer.tunables, ValidationError(KruizeLayer): missing required field "layer_name" in com.recommender.v1.KruizeLayer\]; if you choose to ignore these errors, turn validation off with --validate=false'
 [null-tunable-value-type]='error: error validating "'${tunable_value_yaml_path}/null-tunable-value-type.yaml'"'${tunable_value_kubectl_error}''
-[numerical-tunable-value-type]='The AutotuneConfig "numerical-tunable-value-type" is invalid: tunables.value_type: Invalid value: "integer": tunables.value_type in body must be of type string: "integer"'
+[numerical-tunable-value-type]='The KruizeLayer "numerical-tunable-value-type" is invalid: tunables.value_type: Invalid value: "integer": tunables.value_type in body must be of type string: "integer"'
 [valid-tunable-value-type]=''${autotune_config_obj_create_msg}' valid-tunable-value-type')
 
 # Expected autotune object for tunable upper bound
@@ -464,8 +464,8 @@ tunable_upper_bound_autotune_objects=([blank-tunable-upper-bound]='false'
 # Expected log message for tunable-upper-bound
 declare -A tunable_upper_bound_expected_log_msgs
 tunable_upper_bound_yaml_path="${yaml_path}/${autotune_config_tests[11]}"
-tunable_upper_bound_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-invalid_upper_bound_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\].upper_bound): invalid type for com.recommender.v1.AutotuneConfig.tunables.upper_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_upper_bound_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+invalid_upper_bound_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].upper_bound): invalid type for com.recommender.v1.KruizeLayer.tunables.upper_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
 tunable_upper_bound_expected_log_msgs=([blank-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/blank-tunable-upper-bound.yaml'"'${invalid_upper_bound_error}''
 [invalid-tunable-upper-bound]=''${invalid_bound_exception}''
 [no-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/no-tunable-upper-bound.yaml'"'${tunable_upper_bound_kubectl_error}''
@@ -489,8 +489,8 @@ tunable_lower_bound_autotune_objects=([blank-tunable-lower-bound]='false'
 # Expected log message for tunable-lower-bound
 declare -A tunable_lower_bound_expected_log_msgs
 tunable_lower_bound_yaml_path="${yaml_path}/${autotune_config_tests[12]}"
-tunable_lower_bound_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-invalid_lower_bound_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\].lower_bound): invalid type for com.recommender.v1.AutotuneConfig.tunables.lower_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_lower_bound_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+invalid_lower_bound_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].lower_bound): invalid type for com.recommender.v1.KruizeLayer.tunables.lower_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
 tunable_lower_bound_expected_log_msgs=([blank-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/blank-tunable-lower-bound.yaml'"'${invalid_lower_bound_error}''
 [invalid-tunable-lower-bound]=''${invalid_bound_exception}''
 [no-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/no-tunable-lower-bound.yaml'"'${tunable_lower_bound_kubectl_error}''
@@ -515,7 +515,7 @@ step_yaml_path="${yaml_path}/${autotune_config_tests[13]}"
 step_expected_log_msgs=([invalid-step]=''${invalid_bound_exception}''
 [no-step-value]='validation from da'
 [null-step]='validation from da'
-[char-step]='error: error validating "'${step_yaml_path}/char-step.yaml'": error validating data: \[ValidationError(AutotuneConfig.tunables\[0\].step): invalid type for com.recommender.v1.AutotuneConfig.tunables.step: got "string", expected "number", ValidationError(AutotuneConfig.tunables\[1\].step): invalid type for com.recommender.v1.AutotuneConfig.tunables.step: got "string", expected "number"\]; if you choose to ignore these errors, turn validation off with --validate=false'
+[char-step]='error: error validating "'${step_yaml_path}/char-step.yaml'": error validating data: \[ValidationError(KruizeLayer.tunables\[0\].step): invalid type for com.recommender.v1.KruizeLayer.tunables.step: got "string", expected "number", ValidationError(KruizeLayer.tunables\[1\].step): invalid type for com.recommender.v1.KruizeLayer.tunables.step: got "string", expected "number"\]; if you choose to ignore these errors, turn validation off with --validate=false'
 [zero-step]=''${exception}' Tunable step cannot be 0'
 [valid-step]=''${autotune_config_obj_create_msg}' valid-step')
 
@@ -532,13 +532,13 @@ tunable_query_autotune_objects=([blank-tunable-query]='true'
 # Expected log message for tunable query
 declare -A tunable_query_expected_log_msgs
 tunable_query_yaml_path="${yaml_path}/${autotune_config_tests[14]}"
-tunable_query_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-tunable_query_expected_log_msgs=([blank-tunable-query]='validation from da' 
-[invalid-tunable-query]='validation from da' 
-[no-tunable-query]='error: error validating "'${tunable_query_yaml_path}/no-tunable-query.yaml'"'${tunable_query_kubectl_error}'' 
-[no-tunable-query-value]='error: error validating "'${tunable_query_yaml_path}/no-tunable-query-value.yaml'"'${tunable_query_kubectl_error}'' 
-[null-tunable-query]='error: error validating "'${tunable_query_yaml_path}/null-tunable-query.yaml'"'${tunable_query_kubectl_error}'' 
-[numerical-tunable-query]='The AutotuneConfig "numerical-tunable-query" is invalid: tunables.queries.datasource.query: Invalid value: "integer": tunables.queries.datasource.query in body must be of type string: "integer"' 
+tunable_query_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].queries.datasource\[0\]): missing required field "query" in com.recommender.v1.KruizeLayer.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_query_expected_log_msgs=([blank-tunable-query]='validation from da'
+[invalid-tunable-query]='validation from da'
+[no-tunable-query]='error: error validating "'${tunable_query_yaml_path}/no-tunable-query.yaml'"'${tunable_query_kubectl_error}''
+[no-tunable-query-value]='error: error validating "'${tunable_query_yaml_path}/no-tunable-query-value.yaml'"'${tunable_query_kubectl_error}''
+[null-tunable-query]='error: error validating "'${tunable_query_yaml_path}/null-tunable-query.yaml'"'${tunable_query_kubectl_error}''
+[numerical-tunable-query]='The KruizeLayer "numerical-tunable-query" is invalid: tunables.queries.datasource.query: Invalid value: "integer": tunables.queries.datasource.query in body must be of type string: "integer"'
 [valid-tunable-query]=''${autotune_config_obj_create_msg}' valid-tunable-query' )
 
 # Expected autotune object for tunable datasource name
@@ -554,13 +554,13 @@ tunable_datasource_name_autotune_objects=([blank-tunable-datasource-name]='true'
 # Expected log message for tunable datasource name
 declare -A tunable_datasource_name_expected_log_msgs
 tunable_datasource_name_yaml_path="${yaml_path}/${autotune_config_tests[15]}"
-tunable_datasource_name_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource\[0\]): missing required field "name" in com.recommender.v1.AutotuneConfig.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
-tunable_datasource_name_expected_log_msgs=([blank-tunable-datasource-name]='validation form da' 
-[invalid-tunable-datasource-name]='error from da' 
-[no-tunable-datasource-name]='error: error validating "'${tunable_datasource_name_yaml_path}/no-tunable-datasource-name.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\].queries.datasource): invalid type for com.recommender.v1.AutotuneConfig.tunables.queries.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunable-datasource-name-value]='error: error validating "'${tunable_datasource_name_yaml_path}/no-tunable-datasource-name-value.yaml'"'${tunable_datasource_name_kubectl_error}'' 
-[null-tunable-datasource-name]='error: error validating "'${tunable_datasource_name_yaml_path}/null-tunable-datasource-name.yaml'"'${tunable_datasource_name_kubectl_error}'' 
-[numerical-tunable-datasource-name]='The AutotuneConfig "numerical-tunable-datasource-name" is invalid: tunables.queries.datasource.name: Invalid value: "integer": tunables.queries.datasource.name in body must be of type string: "integer"' 
+tunable_datasource_name_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].queries.datasource\[0\]): missing required field "name" in com.recommender.v1.KruizeLayer.tunables.queries.datasource; if you choose to ignore these errors, turn validation off with --validate=false'
+tunable_datasource_name_expected_log_msgs=([blank-tunable-datasource-name]='validation form da'
+[invalid-tunable-datasource-name]='error from da'
+[no-tunable-datasource-name]='error: error validating "'${tunable_datasource_name_yaml_path}/no-tunable-datasource-name.yaml'": error validating data: ValidationError(KruizeLayer.tunables\[0\].queries.datasource): invalid type for com.recommender.v1.KruizeLayer.tunables.queries.datasource: got "map", expected "array"; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-tunable-datasource-name-value]='error: error validating "'${tunable_datasource_name_yaml_path}/no-tunable-datasource-name-value.yaml'"'${tunable_datasource_name_kubectl_error}''
+[null-tunable-datasource-name]='error: error validating "'${tunable_datasource_name_yaml_path}/null-tunable-datasource-name.yaml'"'${tunable_datasource_name_kubectl_error}''
+[numerical-tunable-datasource-name]='The KruizeLayer "numerical-tunable-datasource-name" is invalid: tunables.queries.datasource.name: Invalid value: "integer": tunables.queries.datasource.name in body must be of type string: "integer"'
 [valid-tunable-datasource-name]=''${autotune_config_obj_create_msg}' valid-tunable-datasource-name' )
 
 # Expected autotune object for slo class
@@ -577,15 +577,15 @@ tunable_slo_class_autotune_objects=([blank-tunable-slo-class]='true'
 # Expected log message for slo class
 declare -A tunable_slo_class_expected_log_msgs
 tunable_slo_class_yaml_path="${yaml_path}/${autotune_config_tests[16]}"
-tunable_slo_class_kubectl_error=': error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-validation_error='ValidationError(AutotuneConfig.tunables\[0\].slo_class): unknown object type "nil" in AutotuneConfig.tunables\[0\]'
-tunable_slo_class_expected_log_msgs=([blank-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest' 
-[invalid-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest' 
-[empty-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/empty-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}'' 
-[no-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}'' 
-[no-tunable-slo-class-value]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class-value.yaml'": error validating data: \['${validation_error}'.slo_class\[0\], '${validation_error}'.slo_class\[1\], '${validation_error}'.slo_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[null-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/null-tunable-slo-class.yaml'": error validating data: '${validation_error}'.slo_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false' 
-[numerical-tunable-slo-class]='The AutotuneConfig "numerical-tunable-slo-class" is invalid: tunables.slo_class: Invalid value: "integer": tunables.slo_class in body must be of type string: "integer"' 
+tunable_slo_class_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+validation_error='ValidationError(KruizeLayer.tunables\[0\].slo_class): unknown object type "nil" in KruizeLayer.tunables\[0\]'
+tunable_slo_class_expected_log_msgs=([blank-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest'
+[invalid-tunable-slo-class]=''${exception}' Invalid slo_class for tunable memoryRequest'
+[empty-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/empty-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}''
+[no-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class.yaml'"'${tunable_slo_class_kubectl_error}''
+[no-tunable-slo-class-value]='error: error validating "'${tunable_slo_class_yaml_path}/no-tunable-slo-class-value.yaml'": error validating data: \['${validation_error}'.slo_class\[0\], '${validation_error}'.slo_class\[1\], '${validation_error}'.slo_class\[2\]\]; if you choose to ignore these errors, turn validation off with --validate=false'
+[null-tunable-slo-class]='error: error validating "'${tunable_slo_class_yaml_path}/null-tunable-slo-class.yaml'": error validating data: '${validation_error}'.slo_class\[0\]; if you choose to ignore these errors, turn validation off with --validate=false'
+[numerical-tunable-slo-class]='The KruizeLayer "numerical-tunable-slo-class" is invalid: tunables.slo_class: Invalid value: "integer": tunables.slo_class in body must be of type string: "integer"'
 [valid-tunable-slo-class]=''${autotune_config_obj_create_msg}' valid-tunable-slo-class')
 
 # Expected autotune object for tunables
@@ -599,10 +599,10 @@ tunables_autotune_objects=([interchanged-bound]='true'
 # Expected log message for tunables
 declare -A tunables_expected_log_msgs
 tunables_yaml_path="${yaml_path}/${autotune_config_tests[17]}"
-tunables_expected_log_msgs=([interchanged-bound]=''${invalid_bound_exception}'' 
-[no-tunables]='error: error validating "'${tunables_yaml_path}/no-tunables.yaml'": error validating data: ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig; if you choose to ignore these errors, turn validation off with --validate=false' 
-[no-tunables-queries]=''${autotune_config_obj_create_msg}' no-tunables-queries' 
-[no-tunables-slo-class]='error: error validating "'${tunables_yaml_path}/no-tunables-slo-class.yaml'": error validating data: ValidationError(AutotuneConfig.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.AutotuneConfig.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
+tunables_expected_log_msgs=([interchanged-bound]=''${invalid_bound_exception}''
+[no-tunables]='error: error validating "'${tunables_yaml_path}/no-tunables.yaml'": error validating data: ValidationError(KruizeLayer): missing required field "tunables" in com.recommender.v1.KruizeLayer; if you choose to ignore these errors, turn validation off with --validate=false'
+[no-tunables-queries]=''${autotune_config_obj_create_msg}' no-tunables-queries'
+[no-tunables-slo-class]='error: error validating "'${tunables_yaml_path}/no-tunables-slo-class.yaml'": error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "slo_class" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
  [valid-tunables]=''${autotune_config_obj_create_msg}' valid-tunables' )
 
 # Expected autotune object for other test cases
@@ -610,5 +610,4 @@ declare -A autotuneconfig_other_autotune_objects
 autotuneconfig_other_autotune_objects=([incomplete-autotuneconfig]='false')
 # Expected log message for other test cases
 declare -A autotuneconfig_other_expected_log_msgs
-autotuneconfig_other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/autotuneconfig_other/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(AutotuneConfig): missing required field "layer_name" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layer_level" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "layerPresence" in com.recommender.v1.AutotuneConfig, ValidationError(AutotuneConfig): missing required field "tunables" in com.recommender.v1.AutotuneConfig\]; if you choose to ignore these errors, turn validation off with --validate=false')
-
+autotuneconfig_other_expected_log_msgs=([incomplete-autotuneconfig]='error: error validating "'${yaml_path}/autotuneconfig_other/incomplete-autotuneconfig.yaml'": error validating data: \[ValidationError(KruizeLayer): missing required field "layer_name" in com.recommender.v1.KruizeLayer, ValidationError(KruizeLayer): missing required field "layer_level" in com.recommender.v1.KruizeLayer, ValidationError(KruizeLayer): missing required field "layerPresence" in com.recommender.v1.KruizeLayer, ValidationError(KruizeLayer): missing required field "tunables" in com.recommender.v1.KruizeLayer\]; if you choose to ignore these errors, turn validation off with --validate=false')

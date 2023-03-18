@@ -16,7 +16,7 @@
 package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
-import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KruizeSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +195,7 @@ public class Tunable {
         this.name = Objects.requireNonNull(name, TUNABLE_NAME_EMPTY);
         this.valueType = Objects.requireNonNull(valueType, VALUE_TYPE_NULL);
         this.sloClassList = Objects.requireNonNull(sloClassList, INVALID_SLO_CLASS);
-        if (AutotuneSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
+        if (KruizeSupportedTypes.LAYERS_SUPPORTED.contains(layerName))
             this.layerName = layerName;
         else
             this.layerName = "generic";

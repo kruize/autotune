@@ -72,7 +72,7 @@ public interface KubernetesServices {
     //get events.
     Event getEvent(String namespace, String eventName);
 
-    //get environment variable from CRD's. Parse AutotuneConfig JSON and create matching AutotuneConfig object
+    //get environment variable from CRD's. Parse KruizeLayer JSON and create matching KruizeLayer object
     Map<String, Object> getCRDEnvMap(CustomResourceDefinitionContext crd, String namespace, String kubernetesType);
 
     //Create Event. Event logging class that allows creating or replacing events with custom messages and reasons

@@ -1,8 +1,8 @@
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.analyzer.Experimentator;
-import com.autotune.analyzer.utils.ExperimentHelpers;
+import com.autotune.analyzer.experiment.ExperimentHelpers;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,8 +27,8 @@ public class ExperimentsSummary extends HttpServlet
 
 		JSONArray experimentsJSONArray = new JSONArray();
 		for (String experimentID : Experimentator.experimentsMap.keySet()) {
-			AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(experimentID);
-			JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(autotuneExperiment);
+			KruizeExperiment kruizeExperiment = Experimentator.experimentsMap.get(experimentID);
+			JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(kruizeExperiment);
 			experimentsJSONArray.put(experimentJSON);
 		}
 		response.getWriter().println(experimentsJSONArray.toString(4));

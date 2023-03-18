@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "invalid-step"
 layer_name: container
@@ -34,4 +34,3 @@ tunables:
   - response_time
   - throughput
   - resource_usage
-

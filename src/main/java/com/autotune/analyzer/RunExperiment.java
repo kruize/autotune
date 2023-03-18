@@ -14,8 +14,8 @@ import static com.autotune.analyzer.loop.EMInterface.*;
 import static com.autotune.analyzer.loop.HPOInterface.getTrialFromHPO;
 import static com.autotune.analyzer.loop.HPOInterface.postTrialResultToHPO;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
-import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
+import static com.autotune.utils.KruizeConstants.HpoOperations.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.ServerContext.HPO_TRIALS_END_POINT;
 
 /**
@@ -24,10 +24,10 @@ import static com.autotune.utils.ServerContext.HPO_TRIALS_END_POINT;
 public class RunExperiment implements Runnable
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RunExperiment.class);
-	private final AutotuneExperiment autotuneExperiment;
+	private final KruizeExperiment kruizeExperiment;
 
-	public RunExperiment(AutotuneExperiment autotuneExperiment) {
-		this.autotuneExperiment = autotuneExperiment;
+	public RunExperiment(KruizeExperiment kruizeExperiment) {
+		this.kruizeExperiment = kruizeExperiment;
 	}
 
 	/**
@@ -57,8 +57,8 @@ public class RunExperiment implements Runnable
 	 */
 	@Override
 	public void run() {
-		String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
-		ApplicationSearchSpace applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+		String experimentName = kruizeExperiment.getAutotuneObject().getExperimentName();
+		ApplicationSearchSpace applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
 		JSONArray searchSpaceJsonArray = new JSONArray();
 		addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
 
@@ -73,22 +73,22 @@ public class RunExperiment implements Runnable
 			e.printStackTrace();
 		}
 
-		for (int i = 0; i<autotuneExperiment.getExperimentSummary().getTotalTrials(); i++) {
+		for (int i = 0; i< kruizeExperiment.getExperimentSummary().getTotalTrials(); i++) {
 			try {
 				// Request a new trial config from HPO and return a trial config
-				ExperimentTrial experimentTrial = getTrialFromHPO(autotuneExperiment, experimentTrialsURL, hpoTrial);
+				ExperimentTrial experimentTrial = getTrialFromHPO(kruizeExperiment, experimentTrialsURL, hpoTrial);
 
 				// Now send the trial to EM to actually deploy it
-				SendTrialToEM(autotuneExperiment, experimentTrial);
+				SendTrialToEM(kruizeExperiment, experimentTrial);
 
 				// Now wait for the results to be posted by EM
 				receive();
 
 				// Now process the result from EM
-				ProcessTrialResultFromEM(autotuneExperiment, experimentTrial);
+				ProcessTrialResultFromEM(kruizeExperiment, experimentTrial);
 
 				// POST the result back to HPO
-				postTrialResultToHPO(autotuneExperiment, experimentTrial, experimentTrialsURL);
+				postTrialResultToHPO(kruizeExperiment, experimentTrial, experimentTrialsURL);
 
 				// Now get a subsequent config from HPO for a fresh trial
 				hpoTrial.remove(OPERATION);

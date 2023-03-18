@@ -18,7 +18,7 @@ package com.autotune.experimentManager.handler.eminterface;
 
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 
@@ -30,7 +30,7 @@ import javax.servlet.ServletContext;
  */
 public interface EMHandlerInterface {
     void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails,
-                 TrialIterationMetaData iterationMetaData,
-                 StepsMetaData stepsMeatData,
-                 AutotuneExecutor autotuneExecutor, ServletContext context);
+				 TrialIterationMetaData iterationMetaData,
+				 StepsMetaData stepsMeatData,
+				 KruizeExecutor kruizeExecutor, ServletContext context);
 }

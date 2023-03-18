@@ -21,8 +21,8 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
-import com.autotune.utils.AutotuneConstants;
-import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 
 import java.util.HashMap;
 
@@ -43,18 +43,18 @@ public class ValidatePerformanceProfileObject
 
 		// Check if k8s type is supported
 		String k8sType = (String) map.get(AnalyzerConstants.K8S_TYPE);
-		if (!AutotuneSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
+		if (!KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
 			errorString.append(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE).append(k8sType).append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
 		}
 
 		// Check if slo_class is supported
 		SloInfo sloInfo = (SloInfo) map.get(AnalyzerConstants.AutotuneObjectConstants.SLO);
-		if (!AutotuneSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloInfo.getSloClass())) {
+		if (!KruizeSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloInfo.getSloClass())) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_CLASS_NOT_SUPPORTED);
 		}
 
 		// Check if direction is supported
-		if (!AutotuneSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection())) {
+		if (!KruizeSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection())) {
 			errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
 		}
 
@@ -83,14 +83,14 @@ public class ValidatePerformanceProfileObject
 		String expression = null;
 		for (Metric functionVariable : sloInfo.getFunctionVariables()) {
 			// Check if datasource is supported
-			if (!AutotuneSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
+			if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
 				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
 						.append(functionVariable.getName())
 						.append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
 			}
 
 			// Check if value_type is supported
-			if (!AutotuneSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase())) {
+			if (!KruizeSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase())) {
 				errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
 						.append(functionVariable.getName())
 						.append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
@@ -99,9 +99,9 @@ public class ValidatePerformanceProfileObject
 			// Check if kubernetes_object type is supported, set default to 'container' if it's absent.
 			String kubernetes_object = functionVariable.getKubernetesObject();
 			if (null == kubernetes_object)
-				functionVariable.setKubernetesObject(AutotuneConstants.JSONKeys.CONTAINER);
+				functionVariable.setKubernetesObject(KruizeConstants.JSONKeys.CONTAINER);
 			else {
-				if (!AutotuneSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object.toLowerCase()))
+				if (!KruizeSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object.toLowerCase()))
 					errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object)
 							.append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
 			}

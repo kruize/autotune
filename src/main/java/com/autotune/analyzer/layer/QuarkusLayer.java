@@ -26,8 +26,8 @@ import java.util.ArrayList;
 
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
 import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.QUARKUS;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.EQUALS;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.JAVA_OPTIONS;
+import static com.autotune.utils.KruizeConstants.JSONKeys.EQUALS;
+import static com.autotune.utils.KruizeConstants.JSONKeys.JAVA_OPTIONS;
 import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
 
 /**

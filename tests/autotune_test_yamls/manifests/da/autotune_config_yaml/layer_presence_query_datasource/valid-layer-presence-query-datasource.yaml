@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "valid-layer-presence-query-datasource"
 layer_name: hotspot

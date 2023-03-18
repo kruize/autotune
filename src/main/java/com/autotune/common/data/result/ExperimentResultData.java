@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.utils.AnalyzerConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -35,7 +35,7 @@ public class ExperimentResultData {
     private Timestamp endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
-    private ValidationResultData validationResultData;
+    private ValidationOutputData validationOutputData;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -70,12 +70,12 @@ public class ExperimentResultData {
         this.status = status;
     }
 
-    public ValidationResultData getValidationResultData() {
-        return validationResultData;
+    public ValidationOutputData getValidationResultData() {
+        return validationOutputData;
     }
 
-    public void setValidationResultData(ValidationResultData validationResultData) {
-        this.validationResultData = validationResultData;
+    public void setValidationResultData(ValidationOutputData validationOutputData) {
+        this.validationOutputData = validationOutputData;
     }
 
     public Timestamp getStarttimestamp() {
@@ -103,7 +103,7 @@ public class ExperimentResultData {
                 ", endTimestamp='" + endtimestamp + '\'' +
                 ", deployments=" + deployments +
                 ", status=" + status +
-                ", validationResultData=" + validationResultData +
+                ", validationOutputData=" + validationOutputData +
                 '}';
     }
 

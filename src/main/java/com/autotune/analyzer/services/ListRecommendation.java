@@ -16,7 +16,7 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.k8sObjects.ContainerObject;
@@ -135,7 +135,7 @@ public class ListRecommendation extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

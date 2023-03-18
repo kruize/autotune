@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-layer-presence-query-value"
 layer_name: hotspot
@@ -8,7 +8,7 @@ details: hotspot tunables
 layer_presence:
   queries:
   - datasource: prometheus
-    query: 
+    query:
     key: pod
 tunables:
 - name: MaxInlineLevel

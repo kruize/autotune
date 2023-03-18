@@ -19,7 +19,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.AnalyzerErrorConstants;
-import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KruizeSupportedTypes;
 import com.udojava.evalex.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +121,7 @@ public class EvalExParser implements AlgebraicParser {
         }
         for (Character mathOperator : mathOperators) {
 
-            if (!AutotuneSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(mathOperator))) {
+            if (!KruizeSupportedTypes.MATH_OPERATORS_SUPPORTED.contains(String.valueOf(mathOperator))) {
                 return false;
             }
         }

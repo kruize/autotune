@@ -1,6 +1,6 @@
 package com.autotune.analyzer.loop;
 
-import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.utils.HttpUtils;
@@ -14,9 +14,9 @@ import java.net.URL;
 
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
-import static com.autotune.utils.AutotuneConstants.HpoOperations.*;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.EQUALS;
+import static com.autotune.utils.KruizeConstants.HpoOperations.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.EQUALS;
 import static com.autotune.utils.ExperimentMessages.RunExperiment.*;
 import static com.autotune.utils.ServerContext.HPO_TRIALS_END_POINT;
 
@@ -28,24 +28,24 @@ public class HPOInterface {
 
 	/**
 	 *
-	 * @param autotuneExperiment
+	 * @param kruizeExperiment
 	 * @param experimentTrialsURL
 	 * @param hpoTrial
 	 * @return
 	 */
-	public static ExperimentTrial getTrialFromHPO(AutotuneExperiment autotuneExperiment,
+	public static ExperimentTrial getTrialFromHPO(KruizeExperiment kruizeExperiment,
 												  URL experimentTrialsURL,
 												  JSONObject hpoTrial) {
 		try {
-			String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
-			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + STATUS_GET_TRIAL_CONFIG);
+			String experimentName = kruizeExperiment.getAutotuneObject().getExperimentName();
+			kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + STATUS_GET_TRIAL_CONFIG);
 			LOGGER.info(hpoTrial.toString());
 
 			/* STEP 1: Send a request for a trial config from HPO */
 			int trialNumber = Integer.parseInt(HttpUtils.postRequest(experimentTrialsURL, hpoTrial.toString()));
 
-			autotuneExperiment.initializeTrial(trialNumber);
-			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RECEIVED_TRIAL_CONFIG);
+			kruizeExperiment.initializeTrial(trialNumber);
+			kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RECEIVED_TRIAL_CONFIG);
 			LOGGER.info("HPO Trial No: " + trialNumber);
 
 			StringBuilder trialConfigUrl = new StringBuilder(HPO_TRIALS_END_POINT)
@@ -58,16 +58,16 @@ public class HPOInterface {
 
 			/* STEP 2: We got a trial id from HPO, now use that to get the actual config */
 			String trialConfigJson = HttpUtils.getDataFromURL(trialConfigURL, "");
-			autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RECEIVED_TRIAL_CONFIG_INFO);
+			kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RECEIVED_TRIAL_CONFIG_INFO);
 			LOGGER.info(trialConfigJson);
 
 			/* STEP 3: Now create a trial to be passed to experiment manager to run */
 			ExperimentTrial experimentTrial = null;
 			experimentTrial = TrialHelpers.createDefaultExperimentTrial(trialNumber,
-						autotuneExperiment,
+					kruizeExperiment,
 						trialConfigJson);
 
-			autotuneExperiment.getExperimentTrials().put(trialNumber, experimentTrial);
+			kruizeExperiment.getExperimentTrials().put(trialNumber, experimentTrial);
 
 			return experimentTrial;
 		} catch (MalformedURLException e) {
@@ -78,11 +78,11 @@ public class HPOInterface {
 
 	/**
 	 *
-	 * @param autotuneExperiment
+	 * @param kruizeExperiment
 	 * @param experimentTrial
 	 * @param experimentTrialsURL
 	 */
-	public static void postTrialResultToHPO(AutotuneExperiment autotuneExperiment,
+	public static void postTrialResultToHPO(KruizeExperiment kruizeExperiment,
 											ExperimentTrial experimentTrial,
 											URL experimentTrialsURL) {
 
@@ -91,7 +91,7 @@ public class HPOInterface {
 		int max = 10;
 		double rand;
 
-		String experimentName = autotuneExperiment.getAutotuneObject().getExperimentName();
+		String experimentName = kruizeExperiment.getAutotuneObject().getExperimentName();
 		JSONObject sendTrialResult = new JSONObject();
 		sendTrialResult.put(EXPERIMENT_NAME, experimentName);
 		sendTrialResult.put(TRIAL_NUMBER, trialNumber);
@@ -104,11 +104,11 @@ public class HPOInterface {
 		/* STEP 7: Now send the calculated result back to HPO */
 		String response = HttpUtils.postRequest(experimentTrialsURL, sendTrialResult.toString());
 		LOGGER.info("HPO Trial No: " + trialNumber + " result response: " + response);
-		autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENT_RESULT_TO_HPO);
+		kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENT_RESULT_TO_HPO);
 
 		/* STEP 8: Compare and Summarize the result just obtained */
 		TrialDetails trialDetails = experimentTrial.getTrialDetails().get(String.valueOf(trialNumber));
-		autotuneExperiment.summarizeTrial(trialDetails);
+		kruizeExperiment.summarizeTrial(trialDetails);
 	}
 
 }

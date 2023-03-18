@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.queue;
 
-import com.autotune.utils.AutotuneUtils.QueueName;
+import com.autotune.utils.KruizeUtils.QueueName;
 
 /**
  * AutotuneQueueFactory return object of a Queue, In autotune we are using two queues,

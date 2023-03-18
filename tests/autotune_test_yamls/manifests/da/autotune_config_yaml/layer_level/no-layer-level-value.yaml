@@ -1,9 +1,9 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-layer-level-val"
 layer_name: container
-layer_level: 
+layer_level:
 details: generic container tunables
 layer_presence:
   # This layer is assumed to be available by default for all applications.

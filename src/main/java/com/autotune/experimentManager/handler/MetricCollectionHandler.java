@@ -15,16 +15,16 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
-import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
-import com.autotune.common.data.datasource.AutotuneDatasourceOperator;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.common.data.datasource.KruizeDatasourceOperator;
 import com.autotune.common.data.datasource.DatasourceOperator;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.experiments.TrialDetails;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -37,7 +37,7 @@ import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricCollectionHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, KruizeExecutor kruizeExecutor, ServletContext context) {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
@@ -79,7 +79,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 kubernetesServices = new KubernetesServicesImpl();
                 // Get the env variables map from kubernetes
                 // TODO: Move the constants to common constants or Autotune Constants
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", AutotuneDeploymentInfo.getKubernetesType());
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", KruizeDeploymentInfo.getKubernetesType());
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
                 LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
                 LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();
@@ -87,16 +87,16 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 String measurementCycles = experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementCycles();
                 int warmupCyclesCount = (warmupCycles != null) ? Integer.parseInt(warmupCycles) : -1;
                 int measurementCyclesCount = (measurementCycles != null) ? Integer.parseInt(measurementCycles) : -1;
-                if (warmupCyclesCount > 0) cycles.put(AutotuneConstants.CycleTypes.WARMUP, warmupCyclesCount);
+                if (warmupCyclesCount > 0) cycles.put(KruizeConstants.CycleTypes.WARMUP, warmupCyclesCount);
                 if (measurementCyclesCount > 0)
-                    cycles.put(AutotuneConstants.CycleTypes.MEASUREMENT, measurementCyclesCount);
+                    cycles.put(KruizeConstants.CycleTypes.MEASUREMENT, measurementCyclesCount);
                 cycles.forEach((cycleName, count) -> {
                     LinkedHashMap<Integer, CycleMetaData> iterationCycle = new LinkedHashMap<>();
                     IntStream.rangeClosed(1, count).forEach((iteration) -> {
                         String durationTime = null;
-                        if (cycleName == AutotuneConstants.CycleTypes.WARMUP) {
+                        if (cycleName == KruizeConstants.CycleTypes.WARMUP) {
                             durationTime = experimentTrial.getExperimentSettings().getTrialSettings().getTrialWarmupDuration();
-                        } else if (cycleName == AutotuneConstants.CycleTypes.MEASUREMENT) {
+                        } else if (cycleName == KruizeConstants.CycleTypes.MEASUREMENT) {
                             durationTime = experimentTrial.getExperimentSettings().getTrialSettings().getTrialMeasurementDuration();
                         }
                         int timeToSleep = CommonUtils.getTimeToSleepMillis(CommonUtils.getTimeValue(durationTime), CommonUtils.getTimeUnit(durationTime));
@@ -118,7 +118,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
                             updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
                             // Need to run the updated query by calling the datasource
-                            AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
+                            KruizeDatasourceOperator ado = DatasourceOperator.getOperator(podMetric.getDatasource());
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
@@ -155,7 +155,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
                                 updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
                                 // Need to run the updated query by calling the datasource
-                                AutotuneDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
+                                KruizeDatasourceOperator ado = DatasourceOperator.getOperator(containerMetric.getDatasource());
                                 if (null == ado) {
                                     // TODO: Return an error saying unsupported datasource
                                 }
@@ -214,8 +214,8 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                     }
                     LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
-                    if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
-                        LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                    if (metricCycleDataMap.containsKey(KruizeConstants.CycleTypes.MEASUREMENT)) {
+                        LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(KruizeConstants.CycleTypes.MEASUREMENT);
                         double sumVal = 0;
                         int removableEntries = 0;
                         for (Map.Entry<Integer, MetricResults> measurementMapEntry : measurementMap.entrySet()) {
@@ -243,8 +243,8 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             trialDataMap.put(String.valueOf(trialDetails.getTrialNumber()), new LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>());
                         }
                         LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>> metricCycleDataMap = trialDataMap.get(String.valueOf(trialDetails.getTrialNumber()));
-                        if (metricCycleDataMap.containsKey(AutotuneConstants.CycleTypes.MEASUREMENT)) {
-                            LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(AutotuneConstants.CycleTypes.MEASUREMENT);
+                        if (metricCycleDataMap.containsKey(KruizeConstants.CycleTypes.MEASUREMENT)) {
+                            LinkedHashMap<Integer, MetricResults> measurementMap = metricCycleDataMap.get(KruizeConstants.CycleTypes.MEASUREMENT);
                             double sumVal = 0;
                             int removableEntries = 0;
                             for (Map.Entry<Integer, MetricResults> measurementMapEntry : measurementMap.entrySet()) {
@@ -282,12 +282,12 @@ public class MetricCollectionHandler implements EMHandlerInterface {
             EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
-            autotuneExecutor.submit(
+            kruizeExecutor.submit(
                     new Runnable() {
                         @Override
                         public void run() {
-                            AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
+                            KruizeWorker theWorker = new CallableFactory().create(kruizeExecutor.getWorker());
+                            theWorker.execute(null, experimentTrial, kruizeExecutor, context);
                         }
                     }
             );

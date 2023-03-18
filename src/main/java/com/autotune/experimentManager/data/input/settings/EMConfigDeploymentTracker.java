@@ -2,8 +2,7 @@ package com.autotune.experimentManager.data.input.settings;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -29,14 +28,14 @@ public class EMConfigDeploymentTracker implements ConvertToJSON {
 
     public EMConfigDeploymentTracker(JSONObject jsonObject) throws IncompatibleInputJSONException {
         this.trackerList = new ArrayList<String>();
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.DEPLOYMENT_TRACKING)) {
+        if (!jsonObject.has(KruizeConstants.JSONKeys.DEPLOYMENT_TRACKING)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONObject trackingObject = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.DEPLOYMENT_TRACKING);
-        if(!trackingObject.has(AutotuneConstants.JSONKeys.TRACKERS)) {
+        JSONObject trackingObject = jsonObject.getJSONObject(KruizeConstants.JSONKeys.DEPLOYMENT_TRACKING);
+        if(!trackingObject.has(KruizeConstants.JSONKeys.TRACKERS)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONArray trackersList = trackingObject.getJSONArray(AutotuneConstants.JSONKeys.TRACKERS);
+        JSONArray trackersList = trackingObject.getJSONArray(KruizeConstants.JSONKeys.TRACKERS);
         for (Object o: trackersList.toList()) {
             LOGGER.info("In the loop");
             if (null != o) {
@@ -50,7 +49,7 @@ public class EMConfigDeploymentTracker implements ConvertToJSON {
     public JSONObject toJSON() {
         JSONArray trackerArray = new JSONArray(this.trackerList);
         JSONObject trackerJsonObject =  new JSONObject();
-        trackerJsonObject.put(AutotuneConstants.JSONKeys.TRACKERS, trackerArray);
+        trackerJsonObject.put(KruizeConstants.JSONKeys.TRACKERS, trackerArray);
         return trackerJsonObject;
     }
 }

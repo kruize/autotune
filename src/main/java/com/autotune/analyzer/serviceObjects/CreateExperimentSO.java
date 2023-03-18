@@ -18,25 +18,25 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.RecommendationSettings;
 import com.autotune.common.k8sObjects.TrialSettings;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
 public class CreateExperimentSO extends BaseSO {
-    @SerializedName(AutotuneConstants.JSONKeys.CLUSTER_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
-    @SerializedName(AutotuneConstants.JSONKeys.PERFORMANCE_PROFILE)
+    @SerializedName(KruizeConstants.JSONKeys.PERFORMANCE_PROFILE)
     private String performanceProfile;
-    @SerializedName(AutotuneConstants.JSONKeys.MODE)
+    @SerializedName(KruizeConstants.JSONKeys.MODE)
     private String mode;
-    @SerializedName(AutotuneConstants.JSONKeys.TARGET_CLUSTER)
+    @SerializedName(KruizeConstants.JSONKeys.TARGET_CLUSTER)
     private String targetCluster;
-    @SerializedName(AutotuneConstants.JSONKeys.KUBERNETES_OBJECTS)
+    @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<K8sObject> kubernetesObjects;
-    @SerializedName(AutotuneConstants.JSONKeys.TRIAL_SETTINGS)
+    @SerializedName(KruizeConstants.JSONKeys.TRIAL_SETTINGS)
     private TrialSettings trialSettings;
-    @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATION_SETTINGS)
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
 
     public String getClusterName() {

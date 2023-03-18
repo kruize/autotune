@@ -6,11 +6,11 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.common.experiments.ExperimentSummary;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.k8sObjects.AutotuneConfig;
+import com.autotune.common.k8sObjects.KruizeLayer;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.k8sObjects.ObjectiveFunction;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public class Experimentator implements Runnable {
     private static final int MAX_NUMBER_OF_TRIALS = 10;
     private static final int NUMBER_OF_PARALLEL_TRIALS = 1;
     private static int num_experiments = 0;
-    public static HashMap<String, AutotuneExperiment> experimentsMap = new HashMap<>();
+    public static HashMap<String, KruizeExperiment> experimentsMap = new HashMap<>();
 
     public static void start() {
         Experimentator experimentator = new Experimentator();
@@ -49,10 +49,10 @@ public class Experimentator implements Runnable {
                                        ApplicationDeployment applicationDeployment) {
 
         try {
-            AutotuneExperiment autotuneExperiment = experimentsMap.get(applicationDeployment.getDeploymentName());
+            KruizeExperiment kruizeExperiment = experimentsMap.get(applicationDeployment.getDeploymentName());
             // If a experiment is already underway, need to update it
-            if (null != autotuneExperiment) {
-                updateExperiment(autotuneExperiment);
+            if (null != kruizeExperiment) {
+                updateExperiment(kruizeExperiment);
                 return;
             }
 
@@ -66,22 +66,22 @@ public class Experimentator implements Runnable {
                     0,
                     -1
             );
-            autotuneExperiment = new AutotuneExperiment(applicationDeployment.getDeploymentName(),
+            kruizeExperiment = new KruizeExperiment(applicationDeployment.getDeploymentName(),
                     kruizeObject.getExperimentName(),
                     kruizeObject,
                     INITIAL_STATUS,
                     experimentSummary,
                     applicationDeployment,
                     experimentTrials);
-            experimentsMap.put(applicationDeployment.getDeploymentName(), autotuneExperiment);
+            experimentsMap.put(applicationDeployment.getDeploymentName(), kruizeExperiment);
 
-            ApplicationSearchSpace applicationSearchSpace = updateSearchSpace(autotuneExperiment);
-            autotuneExperiment.setApplicationSearchSpace(applicationSearchSpace);
+            ApplicationSearchSpace applicationSearchSpace = updateSearchSpace(kruizeExperiment);
+            kruizeExperiment.setApplicationSearchSpace(applicationSearchSpace);
 
             // Autotune can only handle MAX_NUMBER_OF_EXPERIMENTS at any given time
             if (++num_experiments <= MAX_NUMBER_OF_EXPERIMENTS) {
-                RunExperiment runExperiment = new RunExperiment(autotuneExperiment);
-                autotuneExperiment.setExperimentThread(runExperiment);
+                RunExperiment runExperiment = new RunExperiment(kruizeExperiment);
+                kruizeExperiment.setExperimentThread(runExperiment);
                 Thread runExp = new Thread(runExperiment);
                 runExp.start();
                 runExp.join();
@@ -91,19 +91,19 @@ public class Experimentator implements Runnable {
         }
     }
 
-    private static void updateExperiment(AutotuneExperiment autotuneExperiment) {
+    private static void updateExperiment(KruizeExperiment kruizeExperiment) {
     }
 
-    private static ApplicationSearchSpace updateSearchSpace(AutotuneExperiment autotuneExperiment) {
+    private static ApplicationSearchSpace updateSearchSpace(KruizeExperiment kruizeExperiment) {
 
         try {
-            ApplicationSearchSpace applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+            ApplicationSearchSpace applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
             if (null != applicationSearchSpace) {
                 return applicationSearchSpace;
             }
 
-            KruizeObject kruizeObject = autotuneExperiment.getAutotuneObject();
-            String experimentName = autotuneExperiment.getExperimentName();
+            KruizeObject kruizeObject = kruizeExperiment.getAutotuneObject();
+            String experimentName = kruizeExperiment.getExperimentName();
             String experimentId = kruizeObject.getExperimentId();
             PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
                     .get(kruizeObject.getPerformanceProfile());
@@ -122,10 +122,10 @@ public class Experimentator implements Runnable {
                     MAX_NUMBER_OF_TRIALS,
                     NUMBER_OF_PARALLEL_TRIALS);
 
-            for (String stackName : autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
-                ApplicationServiceStack applicationServiceStack = autotuneExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(stackName);
+            for (String stackName : kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
+                ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(stackName);
                 for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
-                    AutotuneConfig layer = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
+                    KruizeLayer layer = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
                     for (Tunable tunable : layer.getTunables()) {
                         StringBuilder tunableFullName = new StringBuilder(stackName)
                                 .append("|")

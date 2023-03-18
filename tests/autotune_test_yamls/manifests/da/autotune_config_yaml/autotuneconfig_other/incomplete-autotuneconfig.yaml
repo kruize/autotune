@@ -1,6 +1,4 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "incomplete-autotuneconfig"
-
-

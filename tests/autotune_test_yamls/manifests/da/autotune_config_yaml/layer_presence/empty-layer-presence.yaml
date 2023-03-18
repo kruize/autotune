@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "complete-layer-presence"
 layer_name: container
@@ -30,4 +30,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

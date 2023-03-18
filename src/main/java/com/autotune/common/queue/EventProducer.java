@@ -18,7 +18,7 @@ package com.autotune.common.queue;
 import java.util.concurrent.Callable;
 /**
  * EventProducer is a collable which will run in a separate
- * thread and push the data into the AutotuneQueue.
+ * thread and push the data into the KruizeQueue.
  * @author bipkumar
  *
  */

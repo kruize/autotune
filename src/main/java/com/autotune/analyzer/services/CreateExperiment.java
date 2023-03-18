@@ -16,10 +16,10 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
-import com.autotune.analyzer.utils.ExperimentInitiator;
+import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
@@ -65,7 +65,7 @@ public class CreateExperiment extends HttpServlet {
     /**
      * It reads the input data from the request, converts it into a List of "KruizeObject" objects using the GSON library.
      * It then calls the validateAndAddNewExperiments method of the "ExperimentInitiator" class, passing in the mainKruizeExperimentMap and kruizeExpList as arguments.
-     * If the validateAndAddNewExperiments method returns an ValidationResultData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
+     * If the validateAndAddNewExperiments method returns an ValidationOutputData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
      * Otherwise, it sends an error response to the client with the appropriate error message.
      * If an exception is thrown, it prints the stack trace and sends an error response to the client with the appropriate error message.
      *
@@ -123,7 +123,7 @@ public class CreateExperiment extends HttpServlet {
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
             for (KruizeObject ko : kruizeExpList) {
                 mainKruizeExperimentMap.remove(ko.getExperimentName());
-                KruizeDeployment.deploymentMap.remove(ko.getExperimentName());
+                KruizeOperator.deploymentMap.remove(ko.getExperimentName());
             }
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
@@ -139,7 +139,7 @@ public class CreateExperiment extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

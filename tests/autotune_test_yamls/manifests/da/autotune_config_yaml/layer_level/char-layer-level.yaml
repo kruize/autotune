@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "char-layer-level"
 layer_name: container
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

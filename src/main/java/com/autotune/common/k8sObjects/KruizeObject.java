@@ -16,11 +16,11 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.ExperimentUseCaseType;
-import com.autotune.common.data.ValidationResultData;
+import com.autotune.analyzer.experiment.ExperimentUseCaseType;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -60,7 +60,7 @@ public final class KruizeObject {
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;
-    private ValidationResultData validationData;
+    private ValidationOutputData validationData;
     private HashMap<String, DeploymentObject> deployments;
     private List<K8sObject> kubernetes_objects;
 
@@ -84,7 +84,7 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
 
-        StringBuilder error = ValidateAutotuneObject.validate(map);
+        StringBuilder error = ValidateKruizeObject.validate(map);
         if (error.toString().isEmpty()) {
             this.experimentName = experimentName;
             this.mode = mode;
@@ -97,7 +97,7 @@ public final class KruizeObject {
             throw new InvalidValueException(error.toString());
         }
         this.performanceProfile = performanceProfile;
-        if (AutotuneSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
+        if (KruizeSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
             this.hpoAlgoImpl = hpoAlgoImpl;
         else
             throw new InvalidValueException("Hyperparameter Optimization Algorithm " + hpoAlgoImpl + " not supported");
@@ -220,11 +220,11 @@ public final class KruizeObject {
         this.resultData = resultData;
     }
 
-    public ValidationResultData getValidationData() {
+    public ValidationOutputData getValidationData() {
         return validationData;
     }
 
-    public void setValidationData(ValidationResultData validationData) {
+    public void setValidationData(ValidationOutputData validationData) {
         this.validationData = validationData;
     }
 

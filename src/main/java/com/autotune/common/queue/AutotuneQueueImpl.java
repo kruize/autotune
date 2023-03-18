@@ -18,7 +18,7 @@ package com.autotune.common.queue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * AutotuneQueueImpl is default implementation of the AutotuneQueue contracts
+ * AutotuneQueueImpl is default implementation of the KruizeQueue contracts
  * @author bipkumar
  *
  */

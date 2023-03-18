@@ -17,8 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.utils.AutotuneConstants;
-import com.autotune.utils.Utils;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -37,28 +36,28 @@ public class ListDeploymentsInNamespace extends HttpServlet {
             // Set encoding
             response.setCharacterEncoding("UTF-8");
             // Check if the namespace is passed as a URL param
-            String namespace = request.getParameter(AutotuneConstants.JSONKeys.NAMESPACE);
+            String namespace = request.getParameter(KruizeConstants.JSONKeys.NAMESPACE);
             String error = null;
             if (null == namespace) {
                 // Check if the request has a JSON body in which namespace is passed
                 String inputData = request.getReader().lines().collect(Collectors.joining());
                 JSONObject inputJson = new JSONObject(inputData);
-                if (!inputJson.has(AutotuneConstants.JSONKeys.NAMESPACE)) {
+                if (!inputJson.has(KruizeConstants.JSONKeys.NAMESPACE)) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
+                    error = KruizeConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
                     namespace = null;
                 } else {
-                    if (null == inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE)) {
-                        error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
+                    if (null == inputJson.getString(KruizeConstants.JSONKeys.NAMESPACE)) {
+                        error = KruizeConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.NO_NAMESPACE_SENT;
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         namespace = null;
-                    } else if( inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE).isBlank()
-                            || inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE).isEmpty()) {
-                        error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.EMPTY_NAMESPACE;
+                    } else if( inputJson.getString(KruizeConstants.JSONKeys.NAMESPACE).isBlank()
+                            || inputJson.getString(KruizeConstants.JSONKeys.NAMESPACE).isEmpty()) {
+                        error = KruizeConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.EMPTY_NAMESPACE;
                         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                         namespace = null;
                     } else {
-                        namespace = inputJson.getString(AutotuneConstants.JSONKeys.NAMESPACE);
+                        namespace = inputJson.getString(KruizeConstants.JSONKeys.NAMESPACE);
                     }
                 }
             }
@@ -66,10 +65,10 @@ public class ListDeploymentsInNamespace extends HttpServlet {
             if (null == namespace) {
                 // if error is not set, set it to invalid namespace
                 if (null == error) {
-                    error = AutotuneConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.INVALID_NAMESPACE;
+                    error = KruizeConstants.ErrorMsgs.APIErrorMsgs.ListDeploymentsInNamespace.INVALID_NAMESPACE;
                 }
                 JSONObject returnJson = new JSONObject();
-                returnJson.put(AutotuneConstants.JSONKeys.ERROR, error);
+                returnJson.put(KruizeConstants.JSONKeys.ERROR, error);
                 response.getWriter().println(returnJson.toString(4));
             } else {
                 // Initialising the kubernetes service
@@ -81,8 +80,8 @@ public class ListDeploymentsInNamespace extends HttpServlet {
                 kubernetesServices.getDeploymentsBy(namespace).forEach(deployment -> {
                     deploymentsList.put(deployment.getMetadata().getName());
                 });
-                dataJson.put(AutotuneConstants.JSONKeys.DEPLOYMENTS, deploymentsList);
-                returnJson.put(AutotuneConstants.JSONKeys.DATA, dataJson);
+                dataJson.put(KruizeConstants.JSONKeys.DEPLOYMENTS, deploymentsList);
+                returnJson.put(KruizeConstants.JSONKeys.DATA, dataJson);
                 // Return OK
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().println(returnJson.toString(4));

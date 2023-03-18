@@ -1,8 +1,8 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-tunable-value-type-val"
-layer_name: 
+layer_name:
 layer_level: 0
 details: generic container tunables
 layer_presence:
@@ -10,7 +10,7 @@ layer_presence:
   presence: always
 tunables:
   - name: memoryRequest
-    value_type: 
+    value_type:
     upper_bound: '300 Mi'
     lower_bound: '150 Mi'
     queries:
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

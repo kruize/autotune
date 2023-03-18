@@ -15,15 +15,13 @@
  *******************************************************************************/
 package com.autotune.common.data.datasource;
 
-import com.autotune.utils.AutotuneConstants;
-
-import java.util.Locale;
+import com.autotune.utils.KruizeConstants;
 
 public class DatasourceOperator {
     private DatasourceOperator() { }
 
-    public static AutotuneDatasourceOperator getOperator(String datasource) {
-        if (datasource.equalsIgnoreCase(AutotuneConstants.SupportedDatasources.PROMETHEUS)) {
+    public static KruizeDatasourceOperator getOperator(String datasource) {
+        if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return PrometheusDataOperator.getInstance();
         }
         return null;

@@ -16,18 +16,17 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.analyzer.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
+import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;
-import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -75,15 +74,15 @@ public class ListExperiments extends HttpServlet {
                     .setPrettyPrinting()
                     .enableComplexMapKeySerialization()
                     .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                    .setExclusionStrategies(new KruizeJSONExclusionStrategy())
                     .create();
             gsonStr = gsonObj.toJson(this.mainKruizeExperimentMap);
         } else {
             JSONArray experimentTrialJSONArray = new JSONArray();
             for (String deploymentName : experimentsMap.keySet()) {
-                AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentName);
-                for (int trialNum : autotuneExperiment.getExperimentTrials().keySet()) {
-                    ExperimentTrial experimentTrial = autotuneExperiment.getExperimentTrials().get(trialNum);
+                KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
+                for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
+                    ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
                     JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
                     experimentTrialJSONArray.put(experimentTrialJSON.get(0));
                 }
@@ -117,21 +116,21 @@ public class ListExperiments extends HttpServlet {
             for (Object deploymentObject : deploymentsJsonArray) {
                 JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
                 String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
-                AutotuneExperiment autotuneExperiment = experimentsMap.get(deploymentNameJson);
+                KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentNameJson);
 
                 // Check if the passed in JSON has the same info as in the URL
-                if (!experimentName.equals(experimentNameJson) || autotuneExperiment == null) {
+                if (!experimentName.equals(experimentNameJson) || kruizeExperiment == null) {
                     LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     break;
                 }
 
                 try {
-                    updateExperimentTrial(trialNumber, autotuneExperiment, trialResultsJson);
+                    updateExperimentTrial(trialNumber, kruizeExperiment, trialResultsJson);
                 } catch (InvalidValueException | IncompatibleInputJSONException e) {
                     e.printStackTrace();
                 }
-                RunExperiment runExperiment = autotuneExperiment.getExperimentThread();
+                RunExperiment runExperiment = kruizeExperiment.getExperimentThread();
                 // Received a metrics JSON from EM after a trial, let the waiting thread know
                 LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
                 runExperiment.send();

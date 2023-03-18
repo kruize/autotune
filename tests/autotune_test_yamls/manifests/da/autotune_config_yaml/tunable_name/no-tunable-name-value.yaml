@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-tunable-name-val"
 layer_name: container
@@ -9,7 +9,7 @@ layer_presence:
   # This layer is assumed to be available by default for all applications.
   presence: always
 tunables:
-  - name: 
+  - name:
     value_type: double
     upper_bound: '300 Mi'
     lower_bound: '150 Mi'
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

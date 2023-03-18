@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-layer-presence-query-datasource-value"
 layer_name: hotspot
@@ -7,7 +7,7 @@ layer_level: 1
 details: hotspot tunables
 layer_presence:
   queries:
-  - datasource: 
+  - datasource:
     query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
     key: pod
 tunables:

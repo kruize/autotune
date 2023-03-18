@@ -31,7 +31,7 @@ public class AutotuneExecutor {
 
 	/**
 	 * Default pool size = 5, it can be configured with new size while
-	 * Initializing the AutotuneExecutor.
+	 * Initializing the KruizeExecutor.
 	 */
 	private final int DEFAULT_POOL_SIZE = 5;
 

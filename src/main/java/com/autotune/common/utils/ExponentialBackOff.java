@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.utils;
 
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +28,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ExponentialBackOff {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExponentialBackOff.class);
     // Maximum total time in Millis to complete exponential backoff approach. Default set to 10sec
-    public static long defaultMaxElapsedTimeMillis = AutotuneConstants.ExponentialBackOff.MAX_ELAPSED_TIME_MILLIS;
+    public static long defaultMaxElapsedTimeMillis = KruizeConstants.ExponentialBackOff.MAX_ELAPSED_TIME_MILLIS;
     // Default time to wait for each retry
-    public static long defaultTimeToWait = AutotuneConstants.ExponentialBackOff.TIME_TO_WAIT;
+    public static long defaultTimeToWait = KruizeConstants.ExponentialBackOff.TIME_TO_WAIT;
     // increases the back off period for each retry attempt using a randomization function that grows exponentially.
     // randomized_interval = retryIntervalMillis * (random value in range [1 - randomization_factor, 1 + randomization_factor])
-    public static double defaultRandomizationFactor = AutotuneConstants.ExponentialBackOff.RANDOM_FACTOR;
+    public static double defaultRandomizationFactor = KruizeConstants.ExponentialBackOff.RANDOM_FACTOR;
     // Some task need initial sleep before proceedings . defaults to zero.
-    public static long defaultInitialIntervalMillis = AutotuneConstants.ExponentialBackOff.INITIAL_TIME_MILLIS;
+    public static long defaultInitialIntervalMillis = KruizeConstants.ExponentialBackOff.INITIAL_TIME_MILLIS;
     //  increases the back off period for each retry attempt using a randomization function that grows exponentially.
     public static double defaultMultiplier = 0.5;
     // Set retry after backoff exhausted with MaxElapsedTimeMillis , default is set to zero that means no retries.

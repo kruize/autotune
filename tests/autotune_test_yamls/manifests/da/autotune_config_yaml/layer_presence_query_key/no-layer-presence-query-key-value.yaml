@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-layer-presence-query-key-value"
 layer_name: hotspot
@@ -9,7 +9,7 @@ layer_presence:
   queries:
   - datasource: prometheus
     query: jvm_memory_used_bytes{area="heap",id="Tenured Gen",}
-    key: 
+    key:
 tunables:
 - name: MaxInlineLevel
   description: 'maximum number of nested calls that are inlined. Default is 9'

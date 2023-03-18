@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-tunable-datasource-name-val"
 layer_name: container
@@ -14,7 +14,7 @@ tunables:
     upper_bound: '300 Mi'
     lower_bound: '150 Mi'
     queries:
-    - datasource: 
+    - datasource:
       query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
     slo_class:
       - response_time
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

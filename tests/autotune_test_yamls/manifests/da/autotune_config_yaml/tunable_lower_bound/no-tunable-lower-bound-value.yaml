@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-tunable-lower-bound-val"
 layer_name: container
@@ -12,7 +12,7 @@ tunables:
   - name: memoryRequest
     value_type: double
     upper_bound: '300 Mi'
-    lower_bound: 
+    lower_bound:
     queries:
     - datasource: 'prometheus'
       query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

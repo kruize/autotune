@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-tunable-query-val"
 layer_name: container
@@ -15,7 +15,7 @@ tunables:
     lower_bound: '150 Mi'
     queries:
     - datasource: 'prometheus'
-      query: 
+      query:
     slo_class:
       - response_time
       - throughput
@@ -32,4 +32,3 @@ tunables:
       - response_time
       - throughput
       - resource_usage
-

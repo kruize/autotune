@@ -15,13 +15,13 @@
  *******************************************************************************/
 package com.autotune.common.data.datasource;
 
-import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.api.model.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,8 +42,8 @@ public class DataSourceFactory
 
 	public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
 		String monitoringAgentEndpoint = null;
-		if (dataSource.toLowerCase().equals(AutotuneDeploymentInfo.getMonitoringAgent()))
-			monitoringAgentEndpoint = AutotuneDeploymentInfo.getMonitoringAgentEndpoint();
+		if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.getMonitoringAgent()))
+			monitoringAgentEndpoint = KruizeDeploymentInfo.getMonitoringAgentEndpoint();
 
 		// Monitoring agent endpoint not set in the configmap
 		if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
@@ -68,7 +68,7 @@ public class DataSourceFactory
 		KubernetesServices kubernetesServices = new KubernetesServicesImpl();
 		List<Service> serviceList = kubernetesServices.getServicelist(null);
 		kubernetesServices.shutdownClient();
-		String monitoringAgentService = AutotuneDeploymentInfo.getMonitoringAgentService();
+		String monitoringAgentService = KruizeDeploymentInfo.getMonitoringAgentService();
 
 		if (monitoringAgentService == null)
 			throw new MonitoringAgentNotFoundException();
@@ -79,11 +79,11 @@ public class DataSourceFactory
 				try {
 					String clusterIP = service.getSpec().getClusterIP();
 					int port = service.getSpec().getPorts().get(0).getPort();
-					LOGGER.info(AutotuneDeploymentInfo.getClusterType());
-					if (AutotuneDeploymentInfo.getKubernetesType().equalsIgnoreCase(AutotuneConstants.MINIKUBE)) {
+					LOGGER.info(KruizeDeploymentInfo.getClusterType());
+					if (KruizeDeploymentInfo.getKubernetesType().equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
 						return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
 					}
-					if (AutotuneDeploymentInfo.getKubernetesType().equalsIgnoreCase(AutotuneConstants.OPENSHIFT)) {
+					if (KruizeDeploymentInfo.getKubernetesType().equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
 						return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
 					}
 				} catch (Exception e) {

@@ -20,7 +20,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.AnalyzerConstants;
 import com.autotune.utils.AnalyzerErrorConstants;
-import com.autotune.utils.AutotuneSupportedTypes;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestEvalExParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestEvalExParser.class);
-    Set<String> objFunctionsList = AutotuneSupportedTypes.OBJECTIVE_FUNCTION_LIST;
+    Set<String> objFunctionsList = KruizeSupportedTypes.OBJECTIVE_FUNCTION_LIST;
 
     @Test
     public void testValidate() {

@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "no-layer-presence-labelvalue-value"
 layer_name: quarkus
@@ -8,7 +8,7 @@ details: quarkus tunables
 layer_presence:
   label:
   - name: app.kubernetes.io/layer
-    value: 
+    value:
 tunables:
 - name: quarkus.thread-pool.core-threads
   description: 'The core thread pool size. This number of threads will always be kept alive.'

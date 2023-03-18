@@ -15,16 +15,16 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.deployment.KruizeDeployment;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
+import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.workerimpl.CreateExperimentManager;
 import com.autotune.analyzer.workerimpl.UpdateResultManager;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.queue.AutotuneQueue;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.parallelengine.queue.KruizeQueue;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
-import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
@@ -66,11 +66,11 @@ public class InitiateListener implements ServletContextListener {
         /*
           Thread pool executor declaration for Experiment Manager
          */
-        AutotuneExecutor EMExecutor = new AutotuneExecutor(ParallelEngineConfigs.EM_CORE_POOL_SIZE,
+        KruizeExecutor EMExecutor = new KruizeExecutor(ParallelEngineConfigs.EM_CORE_POOL_SIZE,
                 ParallelEngineConfigs.EM_MAX_POOL_SIZE,
                 ParallelEngineConfigs.EM_CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(ParallelEngineConfigs.EM_QUEUE_SIZE),
+                new KruizeQueue<>(ParallelEngineConfigs.EM_QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 IterationManager.class
         );
@@ -79,12 +79,12 @@ public class InitiateListener implements ServletContextListener {
         /*
           Kruize Create Experiment thread configuration
          */
-        sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, KruizeDeployment.autotuneObjectMap);
-        AutotuneExecutor analyserExecutor = new AutotuneExecutor(AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_SIZE,
+        sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, KruizeOperator.autotuneObjectMap);
+        KruizeExecutor analyserExecutor = new KruizeExecutor(AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_SIZE,
                 AnalyzerConstants.createExperimentParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(AnalyzerConstants.createExperimentParallelEngineConfigs.QUEUE_SIZE),
+                new KruizeQueue<>(AnalyzerConstants.createExperimentParallelEngineConfigs.QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 CreateExperimentManager.class
         );
@@ -92,14 +92,14 @@ public class InitiateListener implements ServletContextListener {
 
         ScheduledThreadPoolExecutor createExperimentExecutorScheduled = new ScheduledThreadPoolExecutor(1);
         Runnable checkForNewExperiment = () -> {
-            KruizeDeployment.autotuneObjectMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
+            KruizeOperator.autotuneObjectMap.forEach(           //TOdo do pre filter where status=QUEUED before loop
                     (name, ko) -> {
                         if (ko.getStatus().equals(AnalyzerConstants.ExperimentStatus.QUEUED)) {
                             analyserExecutor.submit(
                                     new Runnable() {
                                         @Override
                                         public void run() {
-                                            AutotuneWorker theWorker = new CallableFactory().create(analyserExecutor.getWorker());
+                                            KruizeWorker theWorker = new CallableFactory().create(analyserExecutor.getWorker());
                                             theWorker.execute(ko, null, analyserExecutor, null);
                                         }
                                     }
@@ -114,11 +114,11 @@ public class InitiateListener implements ServletContextListener {
            Kruize Update results thread Configuration
          */
 
-        AutotuneExecutor updateResultExecutor = new AutotuneExecutor(AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_SIZE,
+        KruizeExecutor updateResultExecutor = new KruizeExecutor(AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_SIZE,
                 AnalyzerConstants.updateResultsParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
-                new AutotuneQueue<>(AnalyzerConstants.updateResultsParallelEngineConfigs.QUEUE_SIZE),
+                new KruizeQueue<>(AnalyzerConstants.updateResultsParallelEngineConfigs.QUEUE_SIZE),
                 new ThreadPoolExecutor.AbortPolicy(),
                 UpdateResultManager.class
         );
@@ -126,7 +126,7 @@ public class InitiateListener implements ServletContextListener {
 
         ScheduledThreadPoolExecutor updateResultsExecutorScheduled = new ScheduledThreadPoolExecutor(1);
         Runnable checkForNewResults = () -> {
-            KruizeDeployment.autotuneObjectMap.forEach(           //TOdo do pre filter where status=IN_PROGRESS before loop
+            KruizeOperator.autotuneObjectMap.forEach(           //TOdo do pre filter where status=IN_PROGRESS before loop
                     (name, ko) -> {
                         if (ko.getStatus().equals(AnalyzerConstants.ExperimentStatus.IN_PROGRESS)) {
                             if (null != ko.getResultData()) {
@@ -137,7 +137,7 @@ public class InitiateListener implements ServletContextListener {
                                             new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    AutotuneWorker theWorker = new CallableFactory().create(updateResultExecutor.getWorker());
+                                                    KruizeWorker theWorker = new CallableFactory().create(updateResultExecutor.getWorker());
                                                     theWorker.execute(ko, resultDataObj, updateResultExecutor, null);
                                                 }
                                             }

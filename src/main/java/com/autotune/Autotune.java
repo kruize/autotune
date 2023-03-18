@@ -16,12 +16,12 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
-import com.autotune.analyzer.exceptions.AutotuneErrorHandler;
-import com.autotune.dbactivites.init.KruizeHibernateUtil;
+import com.autotune.analyzer.exceptions.KruizeErrorHandler;
+import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -51,10 +51,10 @@ public class Autotune {
         Server server = new Server(AUTOTUNE_SERVER_PORT);
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
-        context.setErrorHandler(new AutotuneErrorHandler());
+        context.setErrorHandler(new KruizeErrorHandler());
         context.addFilter(
                 KruizeCORSFilter.getFilter(),
-                AutotuneConstants.CORSConstants.PATH_WILDCARD,
+                KruizeConstants.CORSConstants.PATH_WILDCARD,
                 EnumSet.of(DispatcherType.REQUEST)
         );
         /**
@@ -63,12 +63,12 @@ public class Autotune {
         InitiateListener contextListener = new InitiateListener();
         context.addEventListener(contextListener);
         server.setHandler(context);
-        server.addBean(new AutotuneErrorHandler());
+        server.addBean(new KruizeErrorHandler());
         addAutotuneServlets(context);
-        String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
+        String autotuneMode = System.getenv(KruizeConstants.StartUpMode.AUTOTUNE_MODE);
 
         if (null != autotuneMode) {
-            if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
+            if (autotuneMode.equalsIgnoreCase(KruizeConstants.StartUpMode.EM_ONLY_MODE)) {
                 startAutotuneEMOnly(context);
             } else {
                 startAutotuneNormalMode(context);

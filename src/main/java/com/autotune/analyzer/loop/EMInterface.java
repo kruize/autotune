@@ -1,6 +1,6 @@
 package com.autotune.analyzer.loop;
 
-import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.KruizeExperiment;
 import com.autotune.common.experiments.ExperimentTrial;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.HttpUtils;
@@ -12,8 +12,8 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
 
-import static com.autotune.utils.AutotuneConstants.JSONKeys.REQUEST_COUNT;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.REQUEST_SUM;
+import static com.autotune.utils.KruizeConstants.JSONKeys.REQUEST_COUNT;
+import static com.autotune.utils.KruizeConstants.JSONKeys.REQUEST_SUM;
 import static com.autotune.utils.ExperimentMessages.RunExperiment.*;
 import static com.autotune.utils.ServerContext.EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT;
 
@@ -24,33 +24,33 @@ public class EMInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMInterface.class);
 
     /**
-     * @param autotuneExperiment
+     * @param kruizeExperiment
      * @param experimentTrial
      */
-    public static void SendTrialToEM(AutotuneExperiment autotuneExperiment,
-                                     ExperimentTrial experimentTrial) {
+    public static void SendTrialToEM(KruizeExperiment kruizeExperiment,
+									 ExperimentTrial experimentTrial) {
         try {
             int trialNumber = experimentTrial.getTrialInfo().getTrialNum();
             // Prepare to send the trial config to EM
             String experimentTrialJSON = TrialHelpers.experimentTrialToJSON(experimentTrial);
 
             /* STEP 4: Send trial to EM */
-            autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENDING_TRIAL_CONFIG_INFO);
+            kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_SENDING_TRIAL_CONFIG_INFO);
             LOGGER.info(experimentTrialJSON);
             URL createExperimentTrialURL = new URL(EXPERIMENT_MANAGER_CREATE_TRIAL_END_POINT);
             String runId = HttpUtils.postRequest(createExperimentTrialURL, experimentTrialJSON.toString());
-            autotuneExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RUNNING_TRIAL + runId);
+            kruizeExperiment.setExperimentStatus(STATUS_TRIAL_NUMBER + trialNumber + STATUS_RUNNING_TRIAL + runId);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * @param autotuneExperiment
+     * @param kruizeExperiment
      * @param experimentTrial
      */
-    public static void ProcessTrialResultFromEM(AutotuneExperiment autotuneExperiment,
-                                                ExperimentTrial experimentTrial) {
+    public static void ProcessTrialResultFromEM(KruizeExperiment kruizeExperiment,
+												ExperimentTrial experimentTrial) {
         int trialNumber = experimentTrial.getTrialInfo().getTrialNum();
 
         LOGGER.info("Processing trial result for " + trialNumber);

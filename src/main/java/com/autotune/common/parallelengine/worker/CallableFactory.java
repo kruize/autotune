@@ -28,11 +28,11 @@ import java.lang.reflect.Constructor;
 public final class CallableFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(EMHandlerFactory.class);
 
-    public <T extends AutotuneWorker> AutotuneWorker create(Class<T> classType) {
-        AutotuneWorker toReturn = null;
+    public <T extends KruizeWorker> KruizeWorker create(Class<T> classType) {
+        KruizeWorker toReturn = null;
         try {
             Constructor<?> constructor = classType.getConstructor();
-            toReturn = (AutotuneWorker) constructor.newInstance();
+            toReturn = (KruizeWorker) constructor.newInstance();
         } catch (Exception e) {
             LOGGER.error("Factory class not updated for Handler : {} ", classType.getName());
         }

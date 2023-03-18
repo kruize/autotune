@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 
 public class MetricAggregationInfoResults {
@@ -42,15 +42,15 @@ public class MetricAggregationInfoResults {
     }
 
     public MetricAggregationInfoResults(JSONObject jsonObject) {
-        this.avg = (jsonObject.has(AutotuneConstants.JSONKeys.MEAN)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
-        this.count = (jsonObject.has(AutotuneConstants.JSONKeys.COUNT)) ? jsonObject.getInt(AutotuneConstants.JSONKeys.COUNT) : Integer.MIN_VALUE;
-        this.max = (jsonObject.has(AutotuneConstants.JSONKeys.MAX)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MAX) : Double.MIN_VALUE;
-        this.median = (jsonObject.has(AutotuneConstants.JSONKeys.MEDIAN)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MEDIAN) : Double.MIN_VALUE;
-        this.min = (jsonObject.has(AutotuneConstants.JSONKeys.MIN)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MIN) : Double.MIN_VALUE;
-        this.mode = (jsonObject.has(AutotuneConstants.JSONKeys.MODE)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.MODE) : Double.MIN_VALUE;
-        this.range = (jsonObject.has(AutotuneConstants.JSONKeys.RANGE)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.RANGE) : Double.MIN_VALUE;
-        this.sum = (jsonObject.has(AutotuneConstants.JSONKeys.SUM)) ? jsonObject.getDouble(AutotuneConstants.JSONKeys.SUM) : Double.MIN_VALUE;
-        this.format = (jsonObject.has(AutotuneConstants.JSONKeys.FORMAT)) ? jsonObject.getString(AutotuneConstants.JSONKeys.FORMAT) : "";
+        this.avg = (jsonObject.has(KruizeConstants.JSONKeys.MEAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
+        this.count = (jsonObject.has(KruizeConstants.JSONKeys.COUNT)) ? jsonObject.getInt(KruizeConstants.JSONKeys.COUNT) : Integer.MIN_VALUE;
+        this.max = (jsonObject.has(KruizeConstants.JSONKeys.MAX)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MAX) : Double.MIN_VALUE;
+        this.median = (jsonObject.has(KruizeConstants.JSONKeys.MEDIAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEDIAN) : Double.MIN_VALUE;
+        this.min = (jsonObject.has(KruizeConstants.JSONKeys.MIN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MIN) : Double.MIN_VALUE;
+        this.mode = (jsonObject.has(KruizeConstants.JSONKeys.MODE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MODE) : Double.MIN_VALUE;
+        this.range = (jsonObject.has(KruizeConstants.JSONKeys.RANGE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.RANGE) : Double.MIN_VALUE;
+        this.sum = (jsonObject.has(KruizeConstants.JSONKeys.SUM)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.SUM) : Double.MIN_VALUE;
+        this.format = (jsonObject.has(KruizeConstants.JSONKeys.FORMAT)) ? jsonObject.getString(KruizeConstants.JSONKeys.FORMAT) : "";
     }
 
     public Double getSum() {

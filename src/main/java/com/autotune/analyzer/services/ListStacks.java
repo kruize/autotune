@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.deployment.KruizeDeployment;
+import com.autotune.operator.KruizeOperator;
 import com.autotune.common.k8sObjects.KruizeObject;
 import com.autotune.utils.AnalyzerConstants;
 import org.json.JSONArray;
@@ -98,7 +98,7 @@ public class ListStacks extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         // If experiment name is not null, try to find it in the hashmap
         if (experimentName != null) {
-            KruizeObject kruizeObject = KruizeDeployment.autotuneObjectMap.get(experimentName);
+            KruizeObject kruizeObject = KruizeOperator.autotuneObjectMap.get(experimentName);
             if (kruizeObject != null) {
                 JSONObject experimentJson = new JSONObject();
                 addExperimentDetails(experimentJson, kruizeObject);
@@ -107,8 +107,8 @@ public class ListStacks extends HttpServlet {
             }
         } else {
             // Print all the experiments
-            for (String autotuneObjectKey : KruizeDeployment.autotuneObjectMap.keySet()) {
-                KruizeObject kruizeObject = KruizeDeployment.autotuneObjectMap.get(autotuneObjectKey);
+            for (String autotuneObjectKey : KruizeOperator.autotuneObjectMap.keySet()) {
+                KruizeObject kruizeObject = KruizeOperator.autotuneObjectMap.get(autotuneObjectKey);
                 JSONObject experimentJson = new JSONObject();
                 addExperimentDetails(experimentJson, kruizeObject);
                 addDeploymentDetails(experimentJson, kruizeObject);

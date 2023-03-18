@@ -28,7 +28,7 @@ import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TRUE;
 import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
 import static com.autotune.utils.AnalyzerConstants.HotspotConstants.*;
 import static com.autotune.utils.AnalyzerConstants.QuarkusConstants.DOPTION;
-import static com.autotune.utils.AutotuneConstants.JSONKeys.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 
 /**
  * Layer object used to store Container config details like Java ENV variables etc.

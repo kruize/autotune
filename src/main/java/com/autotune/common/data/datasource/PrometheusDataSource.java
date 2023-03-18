@@ -17,9 +17,8 @@ package com.autotune.common.data.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.HttpUtils;
 import com.autotune.utils.auth_models.BearerAccessToken;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,10 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -62,7 +58,7 @@ public class PrometheusDataSource implements DataSource
 	}
 
 	public String getToken() throws IOException {
-		String fileName = AutotuneConstants.AUTH_MOUNT_PATH+"token";
+		String fileName = KruizeConstants.AUTH_MOUNT_PATH+"token";
 		String authToken = new String(Files.readAllBytes(Paths.get(fileName)));
 		return authToken;
 	}
