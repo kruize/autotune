@@ -23,8 +23,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
     @Override
     public String getName(PerformanceProfile performanceProfile) {
-        String name = AnalyzerConstants.PerformanceProfileConstants.PerfProfileNames.get(performanceProfile.getName());
-        return name;
+        return AnalyzerConstants.PerformanceProfileConstants.PerfProfileNames.get(performanceProfile.getName());
     }
 
 
@@ -35,7 +34,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
      */
     @Override
     public ValidationOutputData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             PerformanceProfileValidation performanceProfileValidation = new PerformanceProfileValidation(performanceProfilesMap);
             performanceProfileValidation.validate(performanceProfile);

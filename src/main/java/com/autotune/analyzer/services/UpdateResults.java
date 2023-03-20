@@ -79,10 +79,10 @@ public class UpdateResults extends HttpServlet {
                 new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKExperimentResultData) {
-                    sendSuccessResponse(response, "Results added successfully! View saved results at /listExperiments.");
+                    sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationResultData().getMessage());
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKExperimentResultData.getValidationResultData().getMessage());
+                    sendErrorResponse(response, null, invalidKExperimentResultData.getValidationResultData().getErrorCode(), invalidKExperimentResultData.getValidationResultData().getMessage());
                 }
             }
         } catch (Exception e) {
@@ -95,11 +95,11 @@ public class UpdateResults extends HttpServlet {
     private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_CREATED);
+        response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse(message, HttpServletResponse.SC_OK, "", "SUCCESS")
                 )
         );
         out.flush();

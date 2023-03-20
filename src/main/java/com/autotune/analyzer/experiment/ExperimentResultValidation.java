@@ -25,6 +25,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -51,7 +52,7 @@ public class ExperimentResultValidation {
             String errorMsg = "";
             for (ExperimentResultData resultData : experimentResultDataList) {
                 if (null != resultData.getExperiment_name() && null != resultData.getEndtimestamp() && null != resultData.getStarttimestamp()) {
-                    if (mainKruizeExperimentMAP.keySet().contains(resultData.getExperiment_name())) {
+                    if (mainKruizeExperimentMAP.containsKey(resultData.getExperiment_name())) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         boolean isExist = false;
                         if (null != kruizeObject.getResultData())
@@ -59,7 +60,7 @@ public class ExperimentResultValidation {
                         if (isExist) {
                             proceed = false;
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
-                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg));
+                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
                         }
                         /*
@@ -88,7 +89,7 @@ public class ExperimentResultValidation {
                                     proceed = true;
                             } else {
                                 proceed = false;
-                                resultData.setValidationResultData(new ValidationOutputData(false, errorMsg));
+                                resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                                 break;
                             }
                         } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
@@ -96,21 +97,20 @@ public class ExperimentResultValidation {
                             LOGGER.error("Caught Exception: {}",e);
                             errorMsg = "Validation failed: " + e.getMessage();
                             proceed = false;
-                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg));
+                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
                             break;
                         }
-
                     } else {
                         proceed = false;
                         errorMsg = errorMsg.concat(String.format("Experiment name: %s not found", resultData.getExperiment_name()));
-                        resultData.setValidationResultData(new ValidationOutputData(false, errorMsg));
+                        resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                         break;
                     }
-                    resultData.setValidationResultData(new ValidationOutputData(true, "Result Saved successfully! View saved results at /listExperiments."));
+                    resultData.setValidationResultData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_OK));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;
-                    resultData.setValidationResultData(new ValidationOutputData(false, errorMsg));
+                    resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                     break;
                 }
             }

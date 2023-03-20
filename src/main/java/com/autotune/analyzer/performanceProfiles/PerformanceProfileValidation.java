@@ -113,7 +113,7 @@ public class PerformanceProfileValidation {
      */
     public ValidationOutputData validateMandatoryFieldsAndData(PerformanceProfile perfObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         String errorMsg;
         String perfProfileName = perfObj.getName();
         errorMsg = String.format("Performance Profile Name : %s \n", perfProfileName);
@@ -199,7 +199,7 @@ public class PerformanceProfileValidation {
      * @return
      */
     private ValidationOutputData validatePerformanceProfileData(PerformanceProfile performanceProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         StringBuilder errorString = new StringBuilder();
         // check if the performance profile is duplicate
         if (performanceProfilesMap.get(performanceProfile.getName()) != null) {

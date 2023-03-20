@@ -73,6 +73,7 @@ public class AnalyzerErrorConstants {
 		public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists!";
 		public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
 		public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
+		public static final String DUPLICATE_EXPERIMENT = "Experiment name is duplicate: ";
 
 	}
 

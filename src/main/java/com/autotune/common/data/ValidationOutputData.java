@@ -19,12 +19,14 @@ package com.autotune.common.data;
  * General data carrier between functions.
  */
 public class ValidationOutputData {
-    private boolean success = false;
-    private String message = null;
+    private boolean success;
+    private String message;
+    private Integer errorCode;
 
-    public ValidationOutputData(boolean success, String message) {
+    public ValidationOutputData(boolean success, String message, Integer errorCode) {
         this.success = success;
         this.message = message;
+        this.errorCode = errorCode;
     }
 
     public boolean isSuccess() {
@@ -43,11 +45,20 @@ public class ValidationOutputData {
         this.message = message;
     }
 
+    public Integer getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(Integer errorCode) {
+        this.errorCode = errorCode;
+    }
+
     @Override
     public String toString() {
-        return "GeneralDataHolder{" +
+        return "ValidationOutputData{" +
                 "success=" + success +
                 ", message='" + message + '\'' +
+                ", errorCode=" + errorCode +
                 '}';
     }
 }
