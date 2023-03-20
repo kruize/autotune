@@ -20,21 +20,21 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 
 # Source the common functions scripts
-. ${CURRENT_DIR}/da/constants/autotune_config_constants.sh
+. ${CURRENT_DIR}/da/constants/kruize_layer_constants.sh
 
 # application autotune yaml tests
 # output: Run the test cases for autotune config yaml
-function autotune_config_yaml_tests() {
+function kruize_layer_yaml_tests() {
 	start_time=$(get_date)
 	# create the result directory for given testsuite
 	TEST_SUITE_DIR="${RESULTS}/${FUNCNAME}"
 	mkdir ${TEST_SUITE_DIR}
 	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
-	
+
 	if [ ! -z "${testcase}" ]; then
-		check_test_case autotune_config
+		check_test_case kruize_layer
 	fi
-	
+
 	echo ""
 	((TOTAL_TEST_SUITES++))
 	FAILED_CASES=()
@@ -44,9 +44,9 @@ function autotune_config_yaml_tests() {
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
 	echo ""
-	
+
 	if [ -z "${testcase}" ]; then
-		testtorun=${autotune_config_tests[@]}
+		testtorun=${kruize_layer_tests[@]}
 	else
 		testtorun=${testcase}
 	fi
@@ -58,16 +58,15 @@ function autotune_config_yaml_tests() {
 
 	# perform the tests for autotuneconfig yamls
 	run_test "${testtorun}" autotuneconfig ${yaml_path}
-	
+
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
-	
+
 	# Summary of the test suite
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
-	
+
 	# Check if any test failed in the testsuite if so add the testsuite to FAILED_TEST_SUITE array
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
 	fi
-} 
-
+}

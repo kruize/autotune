@@ -27,7 +27,7 @@ api_autotune_yaml="api_test_yamls/basic_api_tests"
 module="da"
 YAML_PATH=${MANIFESTS}/${module}/${api_autotune_yaml}
 
-# Main function that calls all the other tests to test the Autotune APIs 
+# Main function that calls all the other tests to test the Autotune APIs
 function basic_api_tests() {
 	start_time=$(get_date)
 	FAILED_CASES=()
@@ -36,7 +36,7 @@ function basic_api_tests() {
 	TESTS=0
 
 	# check if the test case is supported
-	basic_api_tests=("liststacklayers" "liststacktunables" "liststacks" "searchspace" "list_autotune_tunables")
+	basic_api_tests=("liststacklayers" "liststacktunables" "liststacks" "searchspace" "list_kruize_tunables")
 
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "basic_api"
@@ -47,38 +47,38 @@ function basic_api_tests() {
 	TEST_SUITE_DIR="${RESULTS}/basic_api_tests"
 	AUTOTUNE_YAMLS_DIR="${TEST_SUITE_DIR}/autotune_yamls"
 	AUTOTUNE_JSONS_DIR="${TEST_SUITE_DIR}/autotune_jsons"
-	AUTOTUNE_CONFIG_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
+	KRUIZE_LAYER_JSONS_DIR="${TEST_SUITE_DIR}/autotuneconfig_jsons"
 	AUTOTUNE_SETUP_LOG="${TEST_SUITE_DIR}/setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
 	mkdir -p ${AUTOTUNE_YAMLS_DIR}
 	mkdir -p ${AUTOTUNE_JSONS_DIR}
-	mkdir -p ${AUTOTUNE_CONFIG_JSONS_DIR}
+	mkdir -p ${KRUIZE_LAYER_JSONS_DIR}
 	echo ""
 	((TOTAL_TEST_SUITES++))
-	
-	declare -A layer_configs=([petclinic]="container" [galaxies]="container hotspot quarkus") 
-	
+
+	declare -A layer_configs=([petclinic]="container" [galaxies]="container hotspot quarkus")
+
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
 	echo ""
-	
+
 	# create the autotune setup
 	echo "Setting up autotune..."
 	setup >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	echo "Setting up autotune...Done"
-	
+
 	# Giving a sleep for autotune pod to be up and running
 	sleep 10
 
 	# Get the autotune config names applied by default
-	autotune_config_names=$(kubectl get autotuneconfig -n ${NAMESPACE} --no-headers=true | cut -d " " -f1 | tr "\n" " ")
-	IFS=' ' read -r -a autotune_config_names <<<  ${autotune_config_names}
+	kruize_layer_names=$(kubectl get autotuneconfig -n ${NAMESPACE} --no-headers=true | cut -d " " -f1 | tr "\n" " ")
+	IFS=' ' read -r -a kruize_layer_names <<<  ${kruize_layer_names}
 
 	# form the curl command based on the cluster type
 	form_curl_cmd
 
-	# Deploy petclinic application instances	
+	# Deploy petclinic application instances
 	appln="petclinic"
 	instances="3"
 	deploy_app "${APP_REPO}" "${appln}" "${instances}"
@@ -88,7 +88,7 @@ function basic_api_tests() {
 
 	# Get the application pods
 	app_pod_names=$(kubectl get pod | grep petclinic | cut -d " " -f1)
-	
+
 	# Add label to your application pods for autotune to monitor
 	label_names=("petclinic-deployment-0" "petclinic-deployment-1" "petclinic-deployment-2")
 	label_pods app_pod_names label_names
@@ -98,7 +98,7 @@ function basic_api_tests() {
 
 	# Get the autotune jsons and autotune config jsons
 	get_autotune_jsons "${AUTOTUNE_JSONS_DIR}"
-	get_autotune_config_jsons "${AUTOTUNE_CONFIG_JSONS_DIR}"
+	get_kruize_layer_jsons "${KRUIZE_LAYER_JSONS_DIR}"
 
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
@@ -106,22 +106,22 @@ function basic_api_tests() {
 	else
 		testtorun=${testcase}
 	fi
-	
+
 	case "$testtorun" in
 
 	   liststacks|all)
 		# Test listStacks API for a specific application
 		exp_name="${autotune_names[0]}"
 		liststacks_test "${exp_name}"
-	
+
 		# Test listStacks API for all applications
 		liststacks_test
-		;;&	
+		;;&
 	   liststacklayers|all)
 		# Test listStackLayer API for a specific application
 		exp_name="${autotune_names[1]}"
 		liststacklayers_test "${appln}" "${exp_name}"
-	
+
 		# Test listStackLayers API for all applications
 		liststacklayers_test "${appln}"
 		;;&
@@ -129,22 +129,22 @@ function basic_api_tests() {
 		# Test searchSpace API for a specific application
 		exp_name="${autotune_names[0]}"
 		searchspace_test "${appln}" "${exp_name}"
-	
+
 		# Test searchSpace API for all applications
 		searchspace_test "${appln}"
 		;;&
-	    list_autotune_tunables|all)
-		# Test listAutotuneTunables API for a specific slo_class and layer
+	    list_kruize_tunables|all)
+		# Test listKruizeTunables API for a specific slo_class and layer
 		slo_class="response_time"
 		layer="container"
-		list_autotune_tunables_test "${slo_class}" "${layer}"
+		list_kruize_tunables_test "${slo_class}" "${layer}"
 
-		# Test listAutotuneTunables API for a specific slo_class
+		# Test listKruizeTunables API for a specific slo_class
 		slo_class="response_time"
-		list_autotune_tunables_test "${slo_class}" 
-	
-		# Test listAutotuneTunables API for all layers
-		list_autotune_tunables_test
+		list_kruize_tunables_test "${slo_class}"
+
+		# Test listKruizeTunables API for all layers
+		list_kruize_tunables_test
 		;;&
 	    liststacktunables|all)
 		# Test listStackTunables API for a specific application and a specific layer
@@ -163,17 +163,17 @@ function basic_api_tests() {
 
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
-	fi 
+	fi
 
 	# Cleanup the deployed apps
 	app_cleanup "${appln}"
 
 	# Cleanup autotune
 	autotune_cleanup
-	
+
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
-	
+
 	# print the testsuite summary
 	testsuitesummary "${FUNCNAME}" "${elapsed_time}" "${FAILED_CASES}"
 }
