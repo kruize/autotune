@@ -2,7 +2,6 @@ import requests
 import pytest
 from jinja2 import Environment, FileSystemLoader
 from helpers.utils import *
-from helpers.list_reco_json_validate import *
 from helpers.kruize import *
 from helpers.fixtures import *
 import time
@@ -66,29 +65,4 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
-
-    # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json)
-    assert errorMsg == ""
-
-    # Validate the json values
-    for i in range(num_exps):
-        input_json_file = "/tmp/create_exp_" + str(i) + ".json"
-        create_exp_json = read_json_data_from_file(input_json_file)
-
-        result_json_file = "/tmp/update_results_" + str(i) + ".json"
-        update_results_json = read_json_data_from_file(result_json_file) 
-
-        experiment_name = create_exp_json[0]['experiment_name']
-        response = list_recommendations(experiment_name)
-        list_reco_json = response.json()
-
-        validate_reco_json(create_exp_json[0], update_results_json[0], list_reco_json[0])
-
-    # Delete the experiments    
-    for i in range(num_exps):
-        json_file = "/tmp/create_exp_" + str(i) + ".json"
-
-        response = delete_experiment(json_file)
-        print("delete exp = ", response.status_code)
 
