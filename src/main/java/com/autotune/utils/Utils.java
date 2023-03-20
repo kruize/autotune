@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
