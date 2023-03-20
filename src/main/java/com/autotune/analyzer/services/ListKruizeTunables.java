@@ -37,11 +37,11 @@ public class ListKruizeTunables extends HttpServlet {
      * Get the tunables supported by autotune for the SLO.
      * <p>
      * Request:
-     * `GET /listAutotuneTunables` gives all tunables for all layers in the cluster
+     * `GET /listKruizeTunables` gives all tunables for all layers in the cluster
      * <p>
-     * `GET /listAutotuneTunables?slo_class=<SLO_CLASS>` gives all tunables for the SLO class
+     * `GET /listKruizeTunables?slo_class=<SLO_CLASS>` gives all tunables for the SLO class
      * <p>
-     * `GET /listAutotuneTunables?slo_class=<SLO_CLASS>&layer=<LAYER>` gives tunables for the SLO class and the layer
+     * `GET /listKruizeTunables?slo_class=<SLO_CLASS>&layer=<LAYER>` gives tunables for the SLO class and the layer
      * <p>
      * Example JSON:
      * [

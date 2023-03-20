@@ -122,7 +122,7 @@ autotune-58cf47df84-rhqhx              1/1     Running   0          54s
 Info: autotune deploy succeeded: Running
 autotune-58cf47df84-rhqhx              1/1     Running   0          54s
 
-Info: Access Autotune at http://192.168.39.12:30113/listAutotuneTunables
+Info: Access Autotune at http://192.168.39.12:30113/listKruizeTunables
 ```
 
 # Demo

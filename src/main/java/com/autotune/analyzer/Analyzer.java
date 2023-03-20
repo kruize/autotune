@@ -52,7 +52,7 @@ public class Analyzer {
         context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
         context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
         context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
-        context.addServlet(ListKruizeTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
+        context.addServlet(ListKruizeTunables.class, ServerContext.LIST_KRUIZE_TUNABLES);
         context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);

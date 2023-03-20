@@ -47,7 +47,7 @@ public class Autotune {
 
         disableServerLogging();
 
-        Server server = new Server(AUTOTUNE_SERVER_PORT);
+        Server server = new Server(KRUIZE_SERVER_PORT);
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
         context.setErrorHandler(new KruizeErrorHandler());
