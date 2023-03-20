@@ -93,16 +93,16 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             containersMap = deploymentObject.getContainers();
                         }
                         List<ContainerObject> resultContainerObjectList = deploymentResultData.getContainerObjects();
-                        for (ContainerObject containerObject : resultContainerObjectList) {
-                            String cName = containerObject.getContainer_name();
-                            String imgName = containerObject.getImage();
+                        for (ContainerObject resultContainerObject : resultContainerObjectList) {
+                            String cName = resultContainerObject.getContainer_name();
+                            ContainerObject containerObject;
                             if (null == containersMap.get(cName)) {
                                 containerObject = new ContainerObject();
                             } else {
                                 containerObject = containersMap.get(cName);
                             }
                             HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> aggregatorHashMap = new HashMap<>();
-                             for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
+                             for (ContainerMetricsHelper containerMetricsHelper : resultContainerObject.getMetrics()) {
                                 MetricAggregationInfoResults aggregatorResult = containerMetricsHelper.getMetricResults().getAggregationInfoResult();
                                 aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(containerMetricsHelper.getName()), aggregatorResult);
                             }

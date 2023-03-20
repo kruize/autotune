@@ -1,11 +1,15 @@
 package com.autotune.common.k8sObjects;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class K8sObject {
     private String type; // TODO: Change to ENUM
     private String name;
     private String namespace;
+    @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private List<ContainerObject> containerObjects;
 
     public String getType() {
