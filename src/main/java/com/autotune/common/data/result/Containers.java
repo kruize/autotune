@@ -16,7 +16,7 @@
 package com.autotune.common.data.result;
 
 import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.HashMap;
 

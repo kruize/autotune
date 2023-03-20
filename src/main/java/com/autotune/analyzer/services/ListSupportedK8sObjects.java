@@ -17,7 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.serviceObjects.ListSupportedK8sObjectsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.experimentManager.services;
 
-import com.autotune.analyzer.exceptions.AutotuneResponse;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -45,8 +45,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 
 /**
@@ -58,7 +58,7 @@ import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT
 public class CreateExperimentTrial extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentTrial.class);
-    AutotuneExecutor emExecutor;
+    KruizeExecutor emExecutor;
     ExperimentDetailsMap<String, ExperimentTrial> EMExperimentTrialMap;
 
     public CreateExperimentTrial() {
@@ -74,7 +74,7 @@ public class CreateExperimentTrial extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.emExecutor = (AutotuneExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
+        this.emExecutor = (KruizeExecutor) getServletContext().getAttribute(ParallelEngineConfigs.EM_EXECUTOR);
         this.EMExperimentTrialMap = (ExperimentDetailsMap<String, ExperimentTrial>) getServletContext().getAttribute(EMConstants.EMKeys.EM_STORAGE_CONTEXT_KEY);
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
         getServletContext().setAttribute(EMConstants.EMKeys.EM_KUBERNETES_SERVICE, kubernetesServices);
@@ -122,7 +122,7 @@ public class CreateExperimentTrial extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse(null, HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse(null, HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();
@@ -149,7 +149,7 @@ public class CreateExperimentTrial extends HttpServlet {
                         new Runnable() {
                             @Override
                             public void run() {
-                                AutotuneWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
+                                KruizeWorker theWorker = new CallableFactory().create(emExecutor.getWorker());
                                 theWorker.execute(null, experimentTrial, emExecutor, getServletContext());
                             }
                         }

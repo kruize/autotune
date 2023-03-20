@@ -19,18 +19,17 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.analyzer.deployment.AutotuneDeploymentInfo;
-import com.autotune.common.k8sObjects.AutotuneConfig;
-import com.autotune.common.k8sObjects.KruizeObject;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import static com.autotune.analyzer.deployment.KruizeDeployment.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+import static com.autotune.operator.KruizeOperator.deploymentMap;
+import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object
@@ -93,16 +92,16 @@ public class ServiceHelpers {
     }
 
     /**
-     * Copy over the details of the LAYER from the given AutotuneConfig object to the JSON object provided
+     * Copy over the details of the LAYER from the given KruizeLayer object to the JSON object provided
      *
      * @param layerJson
-     * @param autotuneConfig
+     * @param kruizeLayer
      */
-    public static void addLayerDetails(JSONObject layerJson, AutotuneConfig autotuneConfig) {
-        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_ID, autotuneConfig.getLayerId());
-        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, autotuneConfig.getLayerName());
-        layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, autotuneConfig.getDetails());
-        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, autotuneConfig.getLevel());
+    public static void addLayerDetails(JSONObject layerJson, KruizeLayer kruizeLayer) {
+        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_ID, kruizeLayer.getLayerId());
+        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, kruizeLayer.getLayerName());
+        layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, kruizeLayer.getDetails());
+        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, kruizeLayer.getLevel());
     }
 
     /**
@@ -125,19 +124,19 @@ public class ServiceHelpers {
     }
 
     /**
-     * Copy over the details of the TUNABLES of a LAYER from the given AutotuneConfig object to the JSON object provided
+     * Copy over the details of the TUNABLES of a LAYER from the given KruizeLayer object to the JSON object provided
      * If the sloClass is not null then only copy over the TUNABLE if it matches the sloClass.
      *
      * @param tunablesArray
-     * @param autotuneConfig
+     * @param kruizeLayer
      * @param sloClass
      */
-    public static void addLayerTunableDetails(JSONArray tunablesArray, AutotuneConfig autotuneConfig, String sloClass) {
-        for (Tunable tunable : autotuneConfig.getTunables()) {
+    public static void addLayerTunableDetails(JSONArray tunablesArray, KruizeLayer kruizeLayer, String sloClass) {
+        for (Tunable tunable : kruizeLayer.getTunables()) {
             if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
                 JSONObject tunableJson = new JSONObject();
                 addTunable(tunableJson, tunable);
-                String tunableQuery = tunable.getQueries().get(AutotuneDeploymentInfo.getMonitoringAgent());
+                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.getMonitoringAgent());
                 String query = AnalyzerConstants.NONE;
                 if (tunableQuery != null && !tunableQuery.isEmpty()) {
                     query = tunableQuery;

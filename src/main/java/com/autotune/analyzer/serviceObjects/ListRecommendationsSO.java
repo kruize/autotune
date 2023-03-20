@@ -16,16 +16,16 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
 public class ListRecommendationsSO extends BaseSO{
-    @SerializedName(AutotuneConstants.JSONKeys.CLUSTER_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
 
-    @SerializedName(AutotuneConstants.JSONKeys.KUBERNETES_OBJECTS)
+    @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<K8sObject> kubernetesObjects;
 
     public String getClusterName() {

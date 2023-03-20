@@ -99,7 +99,7 @@ function openshift_deploy() {
 	# Get the Autotune application port in openshift
 	OPENSHIFT_IP=$(${kubectl_cmd} get pods -l=app=autotune -o wide -n ${autotune_ns} -o=custom-columns=NODE:.spec.nodeName --no-headers)
 	AUTOTUNE_PORT=$(${kubectl_cmd} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-	echo "Info: Access Autotune at http://$OPENSHIFT_IP:${AUTOTUNE_PORT}/listAutotuneTunables"
+	echo "Info: Access Autotune at http://$OPENSHIFT_IP:${AUTOTUNE_PORT}/listKruizeTunables"
 	echo
 }
 

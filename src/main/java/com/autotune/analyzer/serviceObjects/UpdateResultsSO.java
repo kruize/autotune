@@ -16,18 +16,18 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.List;
 
 public class UpdateResultsSO extends BaseSO{
-    @SerializedName(AutotuneConstants.JSONKeys.START_TIMESTAMP)
+    @SerializedName(KruizeConstants.JSONKeys.START_TIMESTAMP)
     public Timestamp startTimestamp;
-    @SerializedName(AutotuneConstants.JSONKeys.END_TIMESTAMP)
+    @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
     public Timestamp endTimestamp;
-    @SerializedName(AutotuneConstants.JSONKeys.KUBERNETES_OBJECTS)
+    @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<K8sObject> kubernetesObjects;
 
     public Timestamp getStartTimestamp() {

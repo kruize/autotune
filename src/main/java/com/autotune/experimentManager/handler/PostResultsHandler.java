@@ -16,10 +16,10 @@
 package com.autotune.experimentManager.handler;
 
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
@@ -44,7 +44,7 @@ public class PostResultsHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostResultsHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, KruizeExecutor kruizeExecutor, ServletContext context) {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),

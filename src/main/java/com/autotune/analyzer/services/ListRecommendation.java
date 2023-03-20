@@ -16,12 +16,12 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -43,8 +43,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * Rest API used to recommend right configuration.
@@ -135,7 +135,7 @@ public class ListRecommendation extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

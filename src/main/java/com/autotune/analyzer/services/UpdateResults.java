@@ -16,14 +16,14 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
-import com.autotune.analyzer.utils.ExperimentInitiator;
+import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -41,8 +41,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API used to receive Experiment metric results .
@@ -99,7 +99,7 @@ public class UpdateResults extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

@@ -1,10 +1,9 @@
 package com.autotune.experimentManager.data;
 
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class EMMapper {

@@ -7,7 +7,7 @@ import com.autotune.experimentManager.data.input.metadata.EMConfigMetaData;
 import com.autotune.experimentManager.data.input.settings.EMConfigSettings;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +56,11 @@ public class EMConfigObject implements ConvertToJSON {
         JSONObject settingsJsonObject = getSettings().toJSON();
         JSONObject deploymentsJsonObject = getDeployments().toJSON();
 
-        jsonObject.put(AutotuneConstants.JSONKeys.EXPERIMENT_ID, metadataJsonObject.getString(AutotuneConstants.JSONKeys.EXPERIMENT_ID));
-        jsonObject.put(AutotuneConstants.JSONKeys.EXPERIMENT_NAME, metadataJsonObject.getString(AutotuneConstants.JSONKeys.EXPERIMENT_NAME));
-        jsonObject.put(AutotuneConstants.JSONKeys.INFO, infoJsonObject);
-        jsonObject.put(AutotuneConstants.JSONKeys.SETTINGS,settingsJsonObject);
-        jsonObject.put(AutotuneConstants.JSONKeys.DEPLOYMENTS, deploymentsJsonObject.getJSONArray(AutotuneConstants.JSONKeys.DEPLOYMENTS));
+        jsonObject.put(KruizeConstants.JSONKeys.EXPERIMENT_ID, metadataJsonObject.getString(KruizeConstants.JSONKeys.EXPERIMENT_ID));
+        jsonObject.put(KruizeConstants.JSONKeys.EXPERIMENT_NAME, metadataJsonObject.getString(KruizeConstants.JSONKeys.EXPERIMENT_NAME));
+        jsonObject.put(KruizeConstants.JSONKeys.INFO, infoJsonObject);
+        jsonObject.put(KruizeConstants.JSONKeys.SETTINGS,settingsJsonObject);
+        jsonObject.put(KruizeConstants.JSONKeys.DEPLOYMENTS, deploymentsJsonObject.getJSONArray(KruizeConstants.JSONKeys.DEPLOYMENTS));
         return jsonObject;
     }
 }

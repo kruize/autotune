@@ -16,7 +16,7 @@
 
 package com.autotune.utils.filter;
 
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 
@@ -41,19 +41,19 @@ public class KruizeCORSFilter {
             Map<String, String> filterParams = new HashMap<String, String>();
             filterParams.put(
                     CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER,
-                    AutotuneConstants.CORSConstants.ALLOWED_ORIGINS
+                    KruizeConstants.CORSConstants.ALLOWED_ORIGINS
             );
             filterParams.put(
                     CrossOriginFilter.ACCESS_CONTROL_ALLOW_METHODS_HEADER,
-                    AutotuneConstants.CORSConstants.ALLOWED_METHODS
+                    KruizeConstants.CORSConstants.ALLOWED_METHODS
             );
             filterParams.put(
                     CrossOriginFilter.ACCESS_CONTROL_ALLOW_HEADERS_HEADER,
-                    AutotuneConstants.CORSConstants.ALLOWED_HEADERS
+                    KruizeConstants.CORSConstants.ALLOWED_HEADERS
             );
             filterParams.put(
                     CrossOriginFilter.ACCESS_CONTROL_MAX_AGE_HEADER,
-                    AutotuneConstants.CORSConstants.MAX_AGE
+                    KruizeConstants.CORSConstants.MAX_AGE
             );
             filterHolder.setInitParameters(filterParams);
         }

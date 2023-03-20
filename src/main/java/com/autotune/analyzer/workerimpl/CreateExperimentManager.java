@@ -16,21 +16,21 @@
 package com.autotune.analyzer.workerimpl;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
-import com.autotune.analyzer.data.ExperimentInterface;
-import com.autotune.analyzer.data.ExperimentInterfaceImpl;
-import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.analyzer.experiment.ExperimentInterface;
+import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import java.util.Map;
 
-import static com.autotune.analyzer.Experimentator.startExperiment;
-import static com.autotune.analyzer.deployment.KruizeDeployment.addLayerInfo;
-import static com.autotune.analyzer.deployment.KruizeDeployment.matchPodsToAutotuneObject;
+import static com.autotune.analyzer.experiment.Experimentator.startExperiment;
+import static com.autotune.operator.KruizeOperator.addLayerInfo;
+import static com.autotune.operator.KruizeOperator.matchPodsToAutotuneObject;
 
 /**
  * Analyser worker which gets initiated via blocking queue either from rest API or Autotune CRD.
@@ -40,24 +40,24 @@ import static com.autotune.analyzer.deployment.KruizeDeployment.matchPodsToAutot
  * mode : Experiment or Monitoring
  */
 
-public class CreateExperimentManager implements AutotuneWorker {
+public class CreateExperimentManager implements KruizeWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentManager.class);
 
     @Override
-    public void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         experimentInterface.addExperimentToDB(kruizeObject);
         //experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExpStatus.IN_PROGRESS);
 
         if (kruizeObject.getExperimentUseCaseType().isLocalExperiment() || kruizeObject.getExperimentUseCaseType().isLocalMonitoring()) {
             matchPodsToAutotuneObject(kruizeObject);
-            for (String kruizeConfig : KruizeDeployment.autotuneConfigMap.keySet()) {
-                addLayerInfo(KruizeDeployment.autotuneConfigMap.get(kruizeConfig), kruizeObject);
+            for (String kruizeConfig : KruizeOperator.autotuneConfigMap.keySet()) {
+                addLayerInfo(KruizeOperator.autotuneConfigMap.get(kruizeConfig), kruizeObject);
             }
             if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
-                if (!KruizeDeployment.deploymentMap.isEmpty() &&
-                        KruizeDeployment.deploymentMap.get(kruizeObject.getExperimentName()) != null) {
-                    Map<String, ApplicationDeployment> depMap = KruizeDeployment.deploymentMap.get(kruizeObject.getExperimentName());
+                if (!KruizeOperator.deploymentMap.isEmpty() &&
+                        KruizeOperator.deploymentMap.get(kruizeObject.getExperimentName()) != null) {
+                    Map<String, ApplicationDeployment> depMap = KruizeOperator.deploymentMap.get(kruizeObject.getExperimentName());
                     for (String deploymentName : depMap.keySet()) {
                         startExperiment(kruizeObject, depMap.get(deploymentName));
                     }

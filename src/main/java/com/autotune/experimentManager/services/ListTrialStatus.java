@@ -16,13 +16,12 @@
 
 package com.autotune.experimentManager.services;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.ExperimentTrialView;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrialView;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.experimentManager.core.ExperimentTrialHandler;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.data.result.TrialMetaData;
-import com.autotune.experimentManager.handler.MetricCollectionHandler;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.google.gson.Gson;
@@ -41,8 +40,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * This class is the handler for the endpoint `listTrialStatus`

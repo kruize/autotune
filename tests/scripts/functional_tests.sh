@@ -18,18 +18,18 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-SCRIPTS_DIR="${CURRENT_DIR}" 
+SCRIPTS_DIR="${CURRENT_DIR}"
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/common/common_functions.sh
 
 # Source the test suite scripts
 . ${SCRIPTS_DIR}/da/da_app_autotune_yaml_tests.sh
-. ${SCRIPTS_DIR}/da/da_autotune_config_yaml_tests.sh
+. ${SCRIPTS_DIR}/da/da_kruize_layer_yaml_tests.sh
 . ${SCRIPTS_DIR}/da/da_basic_api_tests.sh
-. ${SCRIPTS_DIR}/da/modify_autotune_config_tests.sh
+. ${SCRIPTS_DIR}/da/modify_kruize_layer_tests.sh
 . ${SCRIPTS_DIR}/da/configmap_yaml_tests.sh
 . ${SCRIPTS_DIR}/da/autotune_id_tests.sh
-. ${SCRIPTS_DIR}/da/autotune_layer_config_id_tests.sh
+. ${SCRIPTS_DIR}/da/kruize_layer_id_tests.sh
 . ${SCRIPTS_DIR}/em/em_standalone_tests.sh
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 
@@ -63,15 +63,15 @@ do
 		esac
 		;;
 	i)
-		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
+		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
 		;;
 	r)
-		APP_REPO="${OPTARG}"		
+		APP_REPO="${OPTARG}"
 		;;
 	esac
 done
 
-# Set the root for result directory 
+# Set the root for result directory
 if [ -z "${resultsdir}" ]; then
 	RESULTS_ROOT_DIR="${PWD}/kruize_test_results"
 else
@@ -99,7 +99,7 @@ if [ ! $testsuite == "remote_monitoring_tests" ]; then
 	update_yaml ${find} ${replace} ${config_yaml}
 fi
 
-# Set of functional tests to be performed 
+# Set of functional tests to be performed
 # input: Result directory to store the functional test results
 # output: Perform the set of functional tests
 function functional_test() {
@@ -115,32 +115,32 @@ function functional_test() {
 
 # Execute all tests for DA (Dependency Analyzer) module
 function execute_da_testsuites() {
-	# perform the application autotune yaml tests 
+	# perform the application autotune yaml tests
 	app_autotune_yaml_tests > >(tee "${RESULTS}/app_autotune_yaml_tests.log") 2>&1
 
 	testcase=""
 	# perform the autotune config yaml tests
-	autotune_config_yaml_tests > >(tee "${RESULTS}/autotune_config_yaml_tests.log") 2>&1
+	kruize_layer_yaml_tests > >(tee "${RESULTS}/kruize_layer_yaml_tests.log") 2>&1
 
 	testcase=""
 	# perform the basic api tests
 	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-		
+
 	testcase=""
 	# Modify existing autotuneconfig yamls and check for API results
-	modify_autotune_config_tests > >(tee "${RESULTS}/modify_autotune_config_tests.log") 2>&1
-	
+	modify_kruize_layer_tests > >(tee "${RESULTS}/modify_kruize_layer_tests.log") 2>&1
+
 	testcase=""
 	# perform the configmap yaml tests
 	configmap_yaml_tests > >(tee "${RESULTS}/configmap_yaml_tests.log") 2>&1
-		
+
 	testcase=""
 	# validate the autotune object id
 	autotune_id_tests > >(tee "${RESULTS}/autotune_id_tests.log") 2>&1
 
-	testcase=""	
+	testcase=""
 	# validate the autotune config object id
-	autotune_layer_config_id_tests > >(tee "${RESULTS}/autotune_layer_config_id_tests.log") 2>&1
+	kruize_layer_id_tests > >(tee "${RESULTS}/kruize_layer_id_tests.log") 2>&1
 }
 
 # Execute all tests for EM (Experiment Manager) module
@@ -157,11 +157,11 @@ function execute_remote_monitoring_testsuites() {
         remote_monitoring_tests > >(tee "${RESULTS}/remote_monitoring_tests.log") 2>&1
 }
 
-# Perform the specific testsuite if specified 
+# Perform the specific testsuite if specified
 if [ ! -z "${testmodule}" ]; then
 	case "${testmodule}" in
 	da)
-		# Execute tests for Dependency Analyzer Module 
+		# Execute tests for Dependency Analyzer Module
 		execute_da_testsuites
 		;;
 	em)
@@ -172,7 +172,7 @@ if [ ! -z "${testmodule}" ]; then
 elif [ ! -z "${testsuite}" ]; then
 	if [ "${testsuite}" == "sanity" ]; then
 		sanity=1
-		functional_test 
+		functional_test
 	else
 		${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
 	fi
@@ -183,7 +183,7 @@ fi
 echo ""
 echo "*********************************************************************************"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Overall summary of the tests ~~~~~~~~~~~~~~~~~~~~~~~"
-overallsummary  ${FAILED_TEST_SUITE} 
+overallsummary  ${FAILED_TEST_SUITE}
 echo ""
 echo "*********************************************************************************"
 
@@ -192,4 +192,3 @@ if [ "${TOTAL_TESTS_FAILED}" -ne "0" ]; then
 else
 	exit 0
 fi
-
