@@ -170,7 +170,7 @@
                             <name>Autotune</name>
                         </program>
                         <program>
-                            <mainClass>com.autotune.dbactivites.livenessProbe.TestDBConnection</mainClass>
+                            <mainClass>com.autotune.database.livenessProbe.TestDBConnection</mainClass>
                             <name>TestDBConnection</name>
                         </program>
                     </programs>

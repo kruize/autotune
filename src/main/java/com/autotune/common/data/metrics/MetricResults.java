@@ -16,7 +16,7 @@
 package com.autotune.common.data.metrics;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
@@ -35,14 +35,14 @@ public class MetricResults {
     }
 
     public MetricResults(JSONObject jsonObject) throws IncompatibleInputJSONException {
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.AGGREGATION_INFO) &&
-                !jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
+        if (!jsonObject.has(KruizeConstants.JSONKeys.AGGREGATION_INFO) &&
+                !jsonObject.has(KruizeConstants.JSONKeys.PERCENTILE_INFO)) {
             throw new IncompatibleInputJSONException();
         }
-        metricAggregationInfoResults = new MetricAggregationInfoResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.AGGREGATION_INFO));
-        if (jsonObject.has(AutotuneConstants.JSONKeys.PERCENTILE_INFO)) {
+        metricAggregationInfoResults = new MetricAggregationInfoResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.AGGREGATION_INFO));
+        if (jsonObject.has(KruizeConstants.JSONKeys.PERCENTILE_INFO)) {
             isPercentileResultsAvailable = true;
-            metricPercentileResults = new MetricPercentileResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.PERCENTILE_INFO));
+            metricPercentileResults = new MetricPercentileResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
 

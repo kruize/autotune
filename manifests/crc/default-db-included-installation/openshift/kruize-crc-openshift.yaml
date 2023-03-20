@@ -3,6 +3,33 @@ kind: Namespace
 metadata:
   name: openshift-tuning
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kruize-sa
+  namespace : openshift-tuning
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: autotune-scc-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: manual
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -14,7 +41,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 5Gi # Sets PV Volume
+    storage: 1Gi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -33,7 +60,7 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 5Gi  # Sets volume size
+      storage: 1Gi  # Sets volume size
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -72,14 +99,7 @@ spec:
       labels:
         app: postgres
     spec:
-      #securityContext:      #todo
-      #  runAsNonRoot: true
-      #  runAsUser: 1000
-      #serviceAccountName: postgres-sa
-      #securityContext:
-      #  runAsUser: 1001
-      #  runAsGroup: 1001
-      #  fsGroup: 1001
+      serviceAccountName: kruize-sa
       containers:
         - name: postgres
           image: postgres:15.2
@@ -91,6 +111,8 @@ spec:
               value: admin
             - name: POSTGRES_DB
               value: kruizeDB
+            - name: PGDATA
+              value: /var/lib/pg_data
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -135,6 +157,7 @@ spec:
         app: kruize
         name: kruize
     spec:
+      serviceAccountName: kruize-sa
       containers:
         - name: kruize
           image: kruize/autotune_operator:0.0.10_rm

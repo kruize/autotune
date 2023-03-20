@@ -1,8 +1,8 @@
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.AutotuneExperiment;
-import com.autotune.analyzer.Experimentator;
-import com.autotune.analyzer.utils.ExperimentHelpers;
+import com.autotune.analyzer.experiment.KruizeExperiment;
+import com.autotune.analyzer.experiment.Experimentator;
+import com.autotune.analyzer.experiment.ExperimentHelpers;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,8 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 public class ExperimentsSummary extends HttpServlet
 {
@@ -27,8 +27,8 @@ public class ExperimentsSummary extends HttpServlet
 
 		JSONArray experimentsJSONArray = new JSONArray();
 		for (String experimentID : Experimentator.experimentsMap.keySet()) {
-			AutotuneExperiment autotuneExperiment = Experimentator.experimentsMap.get(experimentID);
-			JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(autotuneExperiment);
+			KruizeExperiment kruizeExperiment = Experimentator.experimentsMap.get(experimentID);
+			JSONObject experimentJSON = ExperimentHelpers.experimentToJSON(kruizeExperiment);
 			experimentsJSONArray.put(experimentJSON);
 		}
 		response.getWriter().println(experimentsJSONArray.toString(4));

@@ -19,17 +19,14 @@ import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 
-import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -148,17 +145,6 @@ public class Utils
 		return null;
 	}
 
-	// TODO: Ideally CORS should be added as web filter but for a quick fix we are adding headers
-	// Need to add CORSFilter in xml in future when moving to web filter way of fixing cors, this method should not be used after that change
-	public static void addCORSHeaders(HttpServletResponse response) {
-		if (null != response) {
-			response.addHeader("Access-Control-Allow-Origin", "*");
-			response.addHeader("Access-Control-Allow-Methods", "POST, GET");
-			response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-			response.addHeader("Access-Control-Max-Age", "1728000");
-		}
-	}
-
 	public static class Converters {
 		private Converters() {
 
@@ -198,7 +184,7 @@ public class Utils
 				kruizeObject.setDeployments(deploymentObjectHashMap);
 				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
 				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
-				kruizeObject.setTargetCluster(createExperimentSO.getTargetCluster());
+				kruizeObject.setTarget_cluster(createExperimentSO.getTargetCluster());
 				kruizeObject.setClusterName(createExperimentSO.getClusterName());
 				kruizeObject.setMode(createExperimentSO.getMode());
 				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());

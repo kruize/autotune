@@ -17,8 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.utils.AutotuneConstants;
-import com.autotune.utils.Utils;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -29,8 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ListNamespaces extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         KubernetesServices kubernetesServices = null;
         try {
             // Initialising the kubernetes service
@@ -41,8 +38,8 @@ public class ListNamespaces extends HttpServlet {
             kubernetesServices.getNamespaces().forEach(namespace -> {
                 namespacesList.put(namespace.getMetadata().getName());
             });
-            dataJson.put(AutotuneConstants.JSONKeys.NAMESPACES, namespacesList);
-            returnJson.put(AutotuneConstants.JSONKeys.DATA, dataJson);
+            dataJson.put(KruizeConstants.JSONKeys.NAMESPACES, namespacesList);
+            returnJson.put(KruizeConstants.JSONKeys.DATA, dataJson);
             // Set content type
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

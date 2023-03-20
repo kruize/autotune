@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.AutotuneExperiment;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 
 import javax.servlet.http.HttpServlet;
@@ -28,12 +28,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.autotune.analyzer.Experimentator.experimentsMap;
-import static com.autotune.analyzer.deployment.KruizeDeployment.autotuneObjectMap;
-import static com.autotune.analyzer.deployment.KruizeDeployment.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
+import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
+import static com.autotune.operator.KruizeOperator.deploymentMap;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.addApplicationToSearchSpace;
 
 /**
@@ -123,7 +123,7 @@ public class SearchSpace extends HttpServlet {
         String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
         String containerImageName = request.getParameter(AnalyzerConstants.ServiceConstants.STACK_NAME);
 
-        AutotuneExperiment autotuneExperiment = null;
+        KruizeExperiment kruizeExperiment = null;
         ApplicationSearchSpace applicationSearchSpace = null;
         if (null != experimentName) {
             KruizeObject kruizeObject = autotuneObjectMap.get(experimentName);
@@ -133,17 +133,17 @@ public class SearchSpace extends HttpServlet {
                     if (null != deploymentName) {
                         ApplicationDeployment applicationDeployment = depMap.get(deploymentName);
                         if (null != applicationDeployment) {
-                            autotuneExperiment = experimentsMap.get(deploymentName);
-                            if (null != autotuneExperiment) {
-                                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                            kruizeExperiment = experimentsMap.get(deploymentName);
+                            if (null != kruizeExperiment) {
+                                applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
                                 addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                             }
                         }
                     } else {
                         for (String depName : depMap.keySet()) {
-                            autotuneExperiment = experimentsMap.get(depName);
-                            if (null != autotuneExperiment) {
-                                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                            kruizeExperiment = experimentsMap.get(depName);
+                            if (null != kruizeExperiment) {
+                                applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
                                 addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
                             }
                         }
@@ -151,16 +151,16 @@ public class SearchSpace extends HttpServlet {
                 }
             }
         } else if (null != deploymentName) {
-            autotuneExperiment = experimentsMap.get(deploymentName);
-            if (null != autotuneExperiment) {
-                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+            kruizeExperiment = experimentsMap.get(deploymentName);
+            if (null != kruizeExperiment) {
+                applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
                 addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
             }
         } else {
             // No experiment name parameter, generate search space for all experiments
             for (String expName : experimentsMap.keySet()) {
-                autotuneExperiment = experimentsMap.get(expName);
-                applicationSearchSpace = autotuneExperiment.getApplicationSearchSpace();
+                kruizeExperiment = experimentsMap.get(expName);
+                applicationSearchSpace = kruizeExperiment.getApplicationSearchSpace();
                 addApplicationToSearchSpace(searchSpaceJsonArray, applicationSearchSpace);
             }
         }

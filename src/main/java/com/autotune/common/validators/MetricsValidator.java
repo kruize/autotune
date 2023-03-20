@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.validators;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialSettings;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialSettings;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.utils.CommonUtils;
 import org.slf4j.Logger;

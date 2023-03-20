@@ -1,5 +1,5 @@
 apiVersion: "recommender.com/v1"
-kind: "AutotuneConfig"
+kind: "KruizeLayer"
 metadata:
   name: "hotspot"
 layer_name: hotspot
@@ -74,7 +74,7 @@ tunables:
   slo_class:
   - response_time
   - throughput
-  - resource_usage 
+  - resource_usage
 
 - name: CompileThreshold
   description: 'number of interpreted method invocations before (re-)compiling. Default is 1500'
@@ -364,7 +364,7 @@ tunables:
 - name: StackTraceInThrowable
   description: 'Collect backtrace in throwable when exception happens. Default is true'
   value_type: categorical
-  choices: 
+  choices:
     - 'true'
     - 'false'
   slo_class:
@@ -382,4 +382,3 @@ tunables:
   slo_class:
   - response_time
   - throughput
-

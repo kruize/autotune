@@ -18,13 +18,12 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.ValidationResultData;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
-import com.autotune.utils.Utils;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -47,8 +46,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API to create performance profile .
@@ -78,21 +77,19 @@ public class PerformanceProfileService extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = new Gson().fromJson(inputData, PerformanceProfile.class);
-            ValidationResultData validationResultData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
-            if (validationResultData.isSuccess()) {
+            ValidationOutputData validationOutputData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            if (validationOutputData.isSuccess()) {
                 LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
                         performanceProfile.getName(), performanceProfile.getProfile_version());
                 sendSuccessResponse(response, "Performance Profile : "+performanceProfile.getName()+" created successfully.");
             }
             else
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,validationResultData.getMessage());
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed: " + e.getMessage());
         }
     }
 
@@ -105,8 +102,6 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
@@ -149,8 +144,6 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(resp);
         super.doPut(req, resp);
     }
 
@@ -163,8 +156,6 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(resp);
         super.doDelete(req, resp);
     }
 

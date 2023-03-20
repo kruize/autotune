@@ -4,7 +4,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.experimentManager.data.input.EMMetricInput;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 
 public class EMMetricData {
@@ -17,7 +17,7 @@ public class EMMetricData {
     }
 
     public EMMetricData(JSONObject jsonObject) throws EMInvalidInstanceCreation, IncompatibleInputJSONException {
-        emMetricInput =  new EMMetricInput(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.METRIC_INFO));
-        metricResults = new MetricResults(jsonObject.getJSONObject(AutotuneConstants.JSONKeys.METRICS_RESULTS));
+        emMetricInput =  new EMMetricInput(jsonObject.getJSONObject(KruizeConstants.JSONKeys.METRIC_INFO));
+        metricResults = new MetricResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.METRICS_RESULTS));
     }
 }

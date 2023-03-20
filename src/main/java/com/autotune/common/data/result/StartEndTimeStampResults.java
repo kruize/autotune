@@ -16,7 +16,7 @@
 package com.autotune.common.data.result;
 
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -78,5 +78,5 @@ public class StartEndTimeStampResults {
                 ", metrics=" + metrics +
                 '}';
     }
-    
+
 }

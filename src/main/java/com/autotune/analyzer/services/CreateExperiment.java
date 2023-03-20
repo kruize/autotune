@@ -16,12 +16,13 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
-import com.autotune.analyzer.utils.ExperimentInitiator;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -42,8 +43,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -64,7 +65,7 @@ public class CreateExperiment extends HttpServlet {
     /**
      * It reads the input data from the request, converts it into a List of "KruizeObject" objects using the GSON library.
      * It then calls the validateAndAddNewExperiments method of the "ExperimentInitiator" class, passing in the mainKruizeExperimentMap and kruizeExpList as arguments.
-     * If the validateAndAddNewExperiments method returns an ValidationResultData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
+     * If the validateAndAddNewExperiments method returns an ValidationOutputData object with the success flag set to true, it sends a success response to the client with a message "Experiment registered successfully with Kruize."
      * Otherwise, it sends an error response to the client with the appropriate error message.
      * If an exception is thrown, it prints the stack trace and sends an error response to the client with the appropriate error message.
      *
@@ -76,31 +77,34 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Adding CORS headers as this API is accessed by UI
-        Utils.addCORSHeaders(response);
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
-            List<KruizeObject> kruizeExpList = new ArrayList<>();
-            for (CreateExperimentSO createExperimentSO: experimentSOList) {
-                KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
-                if (null != kruizeObject) {
-                    kruizeExpList.add(kruizeObject);
-                }
-            }
-            new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
-            //TODO: UX needs to be modified - Handle response for the multiple objects
-            KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
-            if (null == invalidKruizeObject) {
-                sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+            if (experimentSOList.size() > 1) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
-                LOGGER.error("Failed to create experiment due to {}", invalidKruizeObject.getValidationData().getMessage());
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+                for (CreateExperimentSO createExperimentSO : experimentSOList) {
+                    KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    }
+                }
+                new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
+                //TODO: UX needs to be modified - Handle response for the multiple objects
+                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+                if (null == invalidKruizeObject) {
+                    sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                } else {
+                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.error("Unknown exception caught due to : " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            LOGGER.error("Unknown exception caught: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 
@@ -119,12 +123,12 @@ public class CreateExperiment extends HttpServlet {
             List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
             for (KruizeObject ko : kruizeExpList) {
                 mainKruizeExperimentMap.remove(ko.getExperimentName());
-                KruizeDeployment.deploymentMap.remove(ko.getExperimentName());
+                KruizeOperator.deploymentMap.remove(ko.getExperimentName());
             }
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         }
     }
 
@@ -135,7 +139,7 @@ public class CreateExperiment extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

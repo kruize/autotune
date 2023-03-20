@@ -1,10 +1,8 @@
 package com.autotune.experimentManager.data.input.info;
 
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
-import com.autotune.experimentManager.data.input.metadata.EMConfigMetaData;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +30,12 @@ public class EMConfigInfo implements ConvertToJSON {
 
     public EMConfigInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.INFO)) {
+        if (!jsonObject.has(KruizeConstants.JSONKeys.INFO)) {
             throw  new IncompatibleInputJSONException();
         }
-        JSONObject subObj = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.INFO);
+        JSONObject subObj = jsonObject.getJSONObject(KruizeConstants.JSONKeys.INFO);
         if (null != subObj) {
-            if (!subObj.has(AutotuneConstants.JSONKeys.TRIAL_INFO) || !subObj.has(AutotuneConstants.JSONKeys.DATASOURCE_INFO)) {
+            if (!subObj.has(KruizeConstants.JSONKeys.TRIAL_INFO) || !subObj.has(KruizeConstants.JSONKeys.DATASOURCE_INFO)) {
                 throw new IncompatibleInputJSONException();
             }
             trialInfo = new EMTrialInfo(subObj);
@@ -50,8 +48,8 @@ public class EMConfigInfo implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AutotuneConstants.JSONKeys.TRIAL_INFO, trialInfo.toJSON());
-        jsonObject.put(AutotuneConstants.JSONKeys.DATASOURCE_INFO, dataSourceInfo.toJSON());
+        jsonObject.put(KruizeConstants.JSONKeys.TRIAL_INFO, trialInfo.toJSON());
+        jsonObject.put(KruizeConstants.JSONKeys.DATASOURCE_INFO, dataSourceInfo.toJSON());
         return jsonObject;
     }
 }

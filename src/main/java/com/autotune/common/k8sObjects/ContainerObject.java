@@ -16,9 +16,9 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.result.Recommendation;
+import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -26,11 +26,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ContainerObject {
-    @SerializedName(AutotuneConstants.JSONKeys.CONTAINER_IMAGE_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME)
     private String image;
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
-    @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
     private List<ContainerMetricsHelper> metrics;
 

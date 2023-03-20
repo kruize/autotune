@@ -24,7 +24,7 @@ function minikube_first() {
 
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	echo "Info: One time setup - Create a service account to deploy autotune"
-	
+
 	${kubectl_cmd} apply -f ${AUTOTUNE_SA_MANIFEST}
 	check_err "Error: Failed to create service account and RBAC"
 
@@ -86,7 +86,7 @@ function minikube_deploy() {
 	# Get the Autotune application port in minikube
 	MINIKUBE_IP=$(minikube ip)
 	AUTOTUNE_PORT=$(${kubectl_cmd} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-	echo "Info: Access Autotune at http://${MINIKUBE_IP}:${AUTOTUNE_PORT}/listAutotuneTunables"
+	echo "Info: Access Autotune at http://${MINIKUBE_IP}:${AUTOTUNE_PORT}/listKruizeTunables"
 	echo
 }
 
@@ -161,7 +161,7 @@ function minikube_terminate() {
 	echo
 	echo "Removing AutotuneQueryVariable objects"
 	${kubectl_cmd} delete -f ${AUTOTUNE_QUERY_VARIABLES} 2>/dev/null
-	
+
 	echo
 	echo "Removing Autotune configmap"
 	${kubectl_cmd} delete -f ${AUTOTUNE_CONFIGMAPS}/${cluster_type}-config.yaml 2>/dev/null

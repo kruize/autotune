@@ -16,7 +16,7 @@
 
 package com.autotune.common.target.kubernetes.service;
 
-import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.common.utils.ExponentialBackOff;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -72,7 +72,7 @@ public interface KubernetesServices {
     //get events.
     Event getEvent(String namespace, String eventName);
 
-    //get environment variable from CRD's. Parse AutotuneConfig JSON and create matching AutotuneConfig object
+    //get environment variable from CRD's. Parse KruizeLayer JSON and create matching KruizeLayer object
     Map<String, Object> getCRDEnvMap(CustomResourceDefinitionContext crd, String namespace, String kubernetesType);
 
     //Create Event. Event logging class that allows creating or replacing events with custom messages and reasons

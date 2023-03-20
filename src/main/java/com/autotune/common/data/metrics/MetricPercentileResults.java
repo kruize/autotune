@@ -1,6 +1,6 @@
 package com.autotune.common.data.metrics;
 
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 
 public class MetricPercentileResults {
@@ -27,15 +27,15 @@ public class MetricPercentileResults {
     }
 
     public MetricPercentileResults(JSONObject jsonObject) {
-        this.percentile50 = (jsonObject.has(AutotuneConstants.JSONKeys.P_50_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_50_0) : Float.MIN_VALUE;
-        this.percentile95 = (jsonObject.has(AutotuneConstants.JSONKeys.P_95_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_95_0) : Float.MIN_VALUE;
-        this.percentile97 = (jsonObject.has(AutotuneConstants.JSONKeys.P_97_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_97_0) : Float.MIN_VALUE;
-        this.percentile99 = (jsonObject.has(AutotuneConstants.JSONKeys.P_99_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_0) : Float.MIN_VALUE;
-        this.percentile99Point9 = (jsonObject.has(AutotuneConstants.JSONKeys.P_99_9)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_9) : Float.MIN_VALUE;
-        this.percentile99Point99 = (jsonObject.has(AutotuneConstants.JSONKeys.P_99_99)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_99) : Float.MIN_VALUE;
-        this.percentile99Point999 = (jsonObject.has(AutotuneConstants.JSONKeys.P_99_999)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_999) : Float.MIN_VALUE;
-        this.percentile99Point9999 = (jsonObject.has(AutotuneConstants.JSONKeys.P_99_9999)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_99_9999) : Float.MIN_VALUE;
-        this.percentile100 = (jsonObject.has(AutotuneConstants.JSONKeys.P_100_0)) ? jsonObject.getFloat(AutotuneConstants.JSONKeys.P_100_0) : Float.MIN_VALUE;
+        this.percentile50 = (jsonObject.has(KruizeConstants.JSONKeys.P_50_0)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_50_0) : Float.MIN_VALUE;
+        this.percentile95 = (jsonObject.has(KruizeConstants.JSONKeys.P_95_0)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_95_0) : Float.MIN_VALUE;
+        this.percentile97 = (jsonObject.has(KruizeConstants.JSONKeys.P_97_0)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_97_0) : Float.MIN_VALUE;
+        this.percentile99 = (jsonObject.has(KruizeConstants.JSONKeys.P_99_0)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_99_0) : Float.MIN_VALUE;
+        this.percentile99Point9 = (jsonObject.has(KruizeConstants.JSONKeys.P_99_9)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_99_9) : Float.MIN_VALUE;
+        this.percentile99Point99 = (jsonObject.has(KruizeConstants.JSONKeys.P_99_99)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_99_99) : Float.MIN_VALUE;
+        this.percentile99Point999 = (jsonObject.has(KruizeConstants.JSONKeys.P_99_999)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_99_999) : Float.MIN_VALUE;
+        this.percentile99Point9999 = (jsonObject.has(KruizeConstants.JSONKeys.P_99_9999)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_99_9999) : Float.MIN_VALUE;
+        this.percentile100 = (jsonObject.has(KruizeConstants.JSONKeys.P_100_0)) ? jsonObject.getFloat(KruizeConstants.JSONKeys.P_100_0) : Float.MIN_VALUE;
     }
 
     public float getPercentile50() {

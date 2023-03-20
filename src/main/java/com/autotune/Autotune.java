@@ -16,13 +16,14 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
-import com.autotune.analyzer.exceptions.AutotuneErrorHandler;
-import com.autotune.dbactivites.init.KruizeHibernateUtil;
+import com.autotune.analyzer.exceptions.KruizeErrorHandler;
+import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.ServerContext;
+import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
@@ -33,33 +34,40 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
+
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
     private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
-
 
     public static void main(String[] args) {
         ServletContextHandler context = null;
 
         disableServerLogging();
 
-        Server server = new Server(AUTOTUNE_SERVER_PORT);
+        Server server = new Server(KRUIZE_SERVER_PORT);
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
-        context.setErrorHandler(new AutotuneErrorHandler());
+        context.setErrorHandler(new KruizeErrorHandler());
+        context.addFilter(
+                KruizeCORSFilter.getFilter(),
+                KruizeConstants.CORSConstants.PATH_WILDCARD,
+                EnumSet.of(DispatcherType.REQUEST)
+        );
         /**
          *  Adding Listener to initiate variables during server start.
          */
         InitiateListener contextListener = new InitiateListener();
         context.addEventListener(contextListener);
         server.setHandler(context);
-        server.addBean(new AutotuneErrorHandler());
+        server.addBean(new KruizeErrorHandler());
         addAutotuneServlets(context);
-        String autotuneMode = System.getenv(AutotuneConstants.StartUpMode.AUTOTUNE_MODE);
+        String autotuneMode = System.getenv(KruizeConstants.StartUpMode.AUTOTUNE_MODE);
 
         if (null != autotuneMode) {
-            if (autotuneMode.equalsIgnoreCase(AutotuneConstants.StartUpMode.EM_ONLY_MODE)) {
+            if (autotuneMode.equalsIgnoreCase(KruizeConstants.StartUpMode.EM_ONLY_MODE)) {
                 startAutotuneEMOnly(context);
             } else {
                 startAutotuneNormalMode(context);
@@ -77,7 +85,7 @@ public class Autotune {
                 session.close();
                 LOGGER.info("DB connection successful!");
             } catch (Exception e) {
-                LOGGER.error("DB connection failed! due to {}", e.getMessage());
+                LOGGER.error("DB connection failed! : {}", e.getMessage());
                 e.printStackTrace();
             }
         } catch (Exception e) {
@@ -108,6 +116,4 @@ public class Autotune {
         Analyzer.start(contextHandler);
         ExperimentManager.launch(contextHandler);
     }
-
-
 }

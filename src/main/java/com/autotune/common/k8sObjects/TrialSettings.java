@@ -18,7 +18,7 @@ package com.autotune.common.k8sObjects;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * ToDO TrialSettings in common.experiments and this class should be merged
+ * ToDO TrialSettings in common.trials and this class should be merged
  */
 public class TrialSettings {
     @SerializedName("measurement_duration")

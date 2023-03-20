@@ -16,10 +16,10 @@
 
 package com.autotune.experimentManager.handler;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
@@ -39,7 +39,7 @@ public class LoadValidationHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadValidationHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, KruizeExecutor kruizeExecutor, ServletContext context) {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
@@ -57,19 +57,19 @@ public class LoadValidationHandler implements EMHandlerInterface {
             EMStatusUpdateHandler.updateTrialIterationDataStatus(experimentTrial, trialDetails, iterationMetaData);
             EMStatusUpdateHandler.updateTrialMetaDataStatus(experimentTrial, trialDetails);
             EMStatusUpdateHandler.updateExperimentTrialMetaDataStatus(experimentTrial);
-            autotuneExecutor.submit(
+            kruizeExecutor.submit(
                     new Runnable() {
                         @Override
                         public void run() {
-                            AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
+                            KruizeWorker theWorker = new CallableFactory().create(kruizeExecutor.getWorker());
+                            theWorker.execute(null, experimentTrial, kruizeExecutor, context);
                         }
                     }
             );
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute LoadValidationHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+            LOGGER.error("Failed to execute LoadValidationHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrialNumber(),
                     iterationMetaData.getIterationNumber(),

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.common.k8sObjects.AutotuneConfig;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,7 @@ public class ApplicationServiceStack
 {
 	private final String stackName;
 	private final String containerName;
-	private Map<String, AutotuneConfig> applicationServiceStackLayers;
+	private Map<String, KruizeLayer> applicationServiceStackLayers;
 
 	public ApplicationServiceStack(String stackName, String containerName) {
 		this.stackName = stackName;
@@ -63,7 +63,7 @@ public class ApplicationServiceStack
 		return stackName;
 	}
 
-	public Map<String, AutotuneConfig> getApplicationServiceStackLayers() {
+	public Map<String, KruizeLayer> getApplicationServiceStackLayers() {
 		return applicationServiceStackLayers;
 	}
 

@@ -3,7 +3,7 @@ package com.autotune.experimentManager.data.input.settings;
 import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +18,14 @@ public class EMConfigDeploymentPolicy implements ConvertToJSON {
 
     public EMConfigDeploymentPolicy(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigDeploymentPolicy");
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.DEPLOYMENT_POLICY)) {
+        if (!jsonObject.has(KruizeConstants.JSONKeys.DEPLOYMENT_POLICY)) {
             throw new IncompatibleInputJSONException();
         }
-        JSONObject depPolicyObject = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.DEPLOYMENT_POLICY);
-        if (!depPolicyObject.has(AutotuneConstants.JSONKeys.TYPE)) {
+        JSONObject depPolicyObject = jsonObject.getJSONObject(KruizeConstants.JSONKeys.DEPLOYMENT_POLICY);
+        if (!depPolicyObject.has(KruizeConstants.JSONKeys.TYPE)) {
             this.type = EMConstants.EMJSONValueDefaults.DEPLOYMENT_TYPE_DEFAULT;
         } else {
-            this.type = depPolicyObject.getString(AutotuneConstants.JSONKeys.TYPE);
+            this.type = depPolicyObject.getString(KruizeConstants.JSONKeys.TYPE);
         }
     }
 
@@ -41,7 +41,7 @@ public class EMConfigDeploymentPolicy implements ConvertToJSON {
     @Override
     public JSONObject toJSON() {
         JSONObject typeObject = new JSONObject();
-        typeObject.put(AutotuneConstants.JSONKeys.TYPE, this.type);
+        typeObject.put(KruizeConstants.JSONKeys.TYPE, this.type);
         return typeObject;
     }
 }

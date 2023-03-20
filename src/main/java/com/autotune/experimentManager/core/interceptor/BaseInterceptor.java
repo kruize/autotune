@@ -1,6 +1,6 @@
 package com.autotune.experimentManager.core.interceptor;
 
-import com.autotune.common.experiments.ExperimentTrial;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.utils.EMUtil;
 
 /**

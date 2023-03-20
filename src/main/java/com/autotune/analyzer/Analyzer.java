@@ -15,14 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.analyzer.deployment.InitializeDeployment;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.experiment.Experimentator;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.operator.InitializeDeployment;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -37,12 +37,12 @@ public class Analyzer {
             System.exit(1);
         }
         Experimentator.start();
-        KruizeDeployment kruizeDeployment = new KruizeDeployment();
+        KruizeOperator kruizeOperator = new KruizeOperator();
 
         try {
             addServlets(contextHandler);
             PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
-            KruizeDeployment.getKruizeObjects(kruizeDeployment);
+            KruizeOperator.getKruizeObjects(kruizeOperator);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,7 +52,7 @@ public class Analyzer {
         context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
         context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
         context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
-        context.addServlet(ListAutotuneTunables.class, ServerContext.LIST_AUTOTUNE_TUNABLES);
+        context.addServlet(ListKruizeTunables.class, ServerContext.LIST_KRUIZE_TUNABLES);
         context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
@@ -65,5 +65,6 @@ public class Analyzer {
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
         context.addServlet(ListDeploymentsInNamespace.class, ServerContext.LIST_DEPLOYMENTS);
+        context.addServlet(ListSupportedK8sObjects.class, ServerContext.LIST_K8S_OBJECTS);
     }
 }
