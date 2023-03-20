@@ -17,8 +17,6 @@
               {
                 "name": "cpuRequest",
                 "results": {
-                  "value": 1.1,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 3.4,
                     "avg": 2.1,
@@ -29,8 +27,6 @@
               {
                 "name": "cpuLimit",
                 "results": {
-                  "value": 0.8,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 3.0,
                     "avg": 1.5,
@@ -41,8 +37,6 @@
               {
                 "name": "cpuUsage",
                 "results": {
-                  "value": 0.15,
-                  "format": "cores",
                   "aggregation_info": {
                     "min": 0.54,
                     "max": 0.94,
@@ -55,8 +49,6 @@
               {
                 "name": "cpuThrottle",
                 "results": {
-                  "value": 0.05,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 0.9,
                     "max": 0.09,
@@ -68,8 +60,6 @@
               {
                 "name": "memoryRequest",
                 "results": {
-                  "value": 50.12,
-                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 260.85,
                     "avg": 50.21,
@@ -80,8 +70,6 @@
               {
                 "name": "memoryLimit",
                 "results": {
-                  "value": 100,
-                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 700,
                     "avg": 100,
@@ -92,8 +80,6 @@
               {
                 "name": "memoryUsage",
                 "results": {
-                  "value": 40.1,
-                  "format": "MiB",
                   "aggregation_info": {
                     "min": 50.6,
                     "max": 198.50,
@@ -124,8 +110,6 @@
               {
                 "name": "cpuRequest",
                 "results": {
-                  "value": 1.1,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 4.4,
                     "avg": 1.1,
@@ -136,8 +120,6 @@
               {
                 "name": "cpuLimit",
                 "results": {
-                  "value": 0.5,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 2.0,
                     "avg": 0.5,
@@ -148,8 +130,6 @@
               {
                 "name": "cpuUsage",
                 "results": {
-                  "value": 0.12,
-                  "format": "cores",
                   "aggregation_info": {
                     "min": 0.14,
                     "max": 0.84,
@@ -162,8 +142,6 @@
               {
                 "name": "cpuThrottle",
                 "results": {
-                  "value": 0.045,
-                  "format": "cores",
                   "aggregation_info": {
                     "sum": 0.19,
                     "max": 0.09,
@@ -175,8 +153,6 @@
               {
                 "name": "memoryRequest",
                 "results": {
-                  "value": 50.12,
-                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 250.85,
                     "avg": 50.21,
@@ -187,8 +163,6 @@
               {
                 "name": "memoryLimit",
                 "results": {
-                  "value": 100,
-                  "format": "MiB",
                   "aggregation_info": {
                     "sum": 500,
                     "avg": 100,
@@ -199,8 +173,6 @@
               {
                 "name": "memoryUsage",
                 "results": {
-                  "value": 40.1,
-                  "format": "MiB",
                   "aggregation_info": {
                     "min": 50.6,
                     "max": 198.50,
