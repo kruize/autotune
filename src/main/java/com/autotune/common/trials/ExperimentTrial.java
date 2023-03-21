@@ -47,16 +47,16 @@ public class ExperimentTrial {
     @SerializedName("experiment_id")
     private final String experimentId;
     /**
-     * Key : metric name
-     * Value : Query
+     * Key : Metric Name
+     * Value : Metric Object
      */
     @SerializedName("pod_metrics")
     private final HashMap<String, Metric> podMetricsHashMap;
     /**
-     * Key : Container Name
-     * Value : hashmap of Metrics having
-     * Key : metric name
-     * Value : Query
+     * Level 1 Hashmap Key : Container Name
+     * Level 1 Hashmap Value : Hashmap of Metrics (Level 2 Hashmap)
+     * Level 2 Hashmap Key : Metric Name
+     * Level 2 Hashmap Value : Metric Object
      */
     @SerializedName("container_metrics")
     private final HashMap<String, HashMap<String, Metric>> containerMetricsHashMap;
