@@ -60,7 +60,7 @@ public class ExperimentResultValidation {
                         if (isExist) {
                             proceed = false;
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
-                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
                         }
                         /*
@@ -89,7 +89,7 @@ public class ExperimentResultValidation {
                                     proceed = true;
                             } else {
                                 proceed = false;
-                                resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                                resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                                 break;
                             }
                         } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
@@ -97,20 +97,20 @@ public class ExperimentResultValidation {
                             LOGGER.error("Caught Exception: {}",e);
                             errorMsg = "Validation failed: " + e.getMessage();
                             proceed = false;
-                            resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
                             break;
                         }
                     } else {
                         proceed = false;
                         errorMsg = errorMsg.concat(String.format("Experiment name: %s not found", resultData.getExperiment_name()));
-                        resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                        resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                         break;
                     }
-                    resultData.setValidationResultData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_OK));
+                    resultData.setValidationOutputData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_OK));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;
-                    resultData.setValidationResultData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                    resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                     break;
                 }
             }

@@ -70,11 +70,11 @@ public class ExperimentResultData {
         this.status = status;
     }
 
-    public ValidationOutputData getValidationResultData() {
+    public ValidationOutputData getValidationOutputData() {
         return validationOutputData;
     }
 
-    public void setValidationResultData(ValidationOutputData validationOutputData) {
+    public void setValidationOutputData(ValidationOutputData validationOutputData) {
         this.validationOutputData = validationOutputData;
     }
 

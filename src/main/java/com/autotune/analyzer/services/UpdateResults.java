@@ -77,12 +77,12 @@ public class UpdateResults extends HttpServlet {
                 }
                 LOGGER.debug(experimentResultDataList.toString());
                 new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
-                ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationResultData().isSuccess())).findAny().orElse(null);
+                ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKExperimentResultData) {
                     sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 } else {
-                    LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationResultData().getMessage());
-                    sendErrorResponse(response, null, invalidKExperimentResultData.getValidationResultData().getErrorCode(), invalidKExperimentResultData.getValidationResultData().getMessage());
+                    LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
+                    sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
                 }
             }
         } catch (Exception e) {
