@@ -17,6 +17,12 @@ package com.autotune.utils;
 
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.k8sObjects.ContainerObject;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -145,25 +151,19 @@ public class Utils
 	 * @param object
 	 * @return
 	 */
-	public static Object getClone(Object object) {
+	public static <T> T getClone(T object, Class<T> classMetadata) {
 		if (null == object)
 			return null;
+		Gson gson = new GsonBuilder()
+				.disableHtmlEscaping()
+				.setPrettyPrinting()
+				.enableComplexMapKeySerialization()
+				.registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+				.create();
 
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		ObjectOutputStream objectOutputStream = null;
-		try {
-			objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-			objectOutputStream.writeObject(object);
-			objectOutputStream.flush();
-			objectOutputStream.close();
-			byteArrayOutputStream.close();
-			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-			Object cloneObject = new ObjectInputStream(byteArrayInputStream).readObject();
-			return cloneObject;
-		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null;
+		String serialisedString = gson.toJson(object);
+		T returnObject = gson.fromJson(serialisedString, classMetadata);
+		return returnObject;
 	}
 
 	public static class DateUtils {
@@ -192,5 +192,26 @@ public class Utils
 				return null;
 			}
 		}
+	}
+
+	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
+		if (object instanceof ContainerObject) {
+			ExclusionStrategy strategy = new ExclusionStrategy() {
+				@Override
+				public boolean shouldSkipField(FieldAttributes field) {
+					if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+						return true;
+					}
+					return false;
+				}
+
+				@Override
+				public boolean shouldSkipClass(Class<?> clazz) {
+					return false;
+				}
+			};
+			return strategy;
+		}
+		return null;
 	}
 }
