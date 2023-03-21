@@ -37,12 +37,14 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -281,7 +283,11 @@ public class ServiceHelpers {
                 return kruizeObject;
             }
 
-            public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject, boolean getLatest) {
+            public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(
+                    KruizeObject kruizeObject,
+                    boolean getLatest,
+                    boolean checkForTimestamp,
+                    String monitoringEndTimestamp) {
                 // Need to be implemented if needed
                 ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
                 listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
@@ -295,7 +301,21 @@ public class ServiceHelpers {
                     k8sObject.setNamespace(deploymentObject.getNamespace());
                     List<ContainerObject> containerObjects = new ArrayList<ContainerObject>();
                     for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
-                        if (getLatest) {
+                        // if a Time stamp is passed it holds the priority than latest
+                        if (checkForTimestamp) {
+                            // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
+                            ContainerObject clonedContainerObject = (ContainerObject) Utils.getClone(containerObject);
+                            if (null != clonedContainerObject) {
+                                HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getRecommendations();
+                                Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,monitoringEndTimestamp);
+                                Timestamp givenTimestamp = new Timestamp(medDate.getTime());
+                                if (recommendations.containsKey(givenTimestamp)) {
+
+                                } else {
+                                    // Add notification that timestamp given is missing
+                                }
+                            }
+                        } else if (getLatest) {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerObject clonedContainerObject = (ContainerObject) Utils.getClone(containerObject);
                             if (null != clonedContainerObject) {

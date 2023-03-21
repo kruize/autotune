@@ -31,10 +31,12 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.TemporalField;
+import java.util.*;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -176,5 +178,33 @@ public class Utils
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public static class DateUtils {
+		private DateUtils() {
+
+		}
+
+		public static boolean isAValidDate(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return false;
+				Date _unused = (new SimpleDateFormat(format)).parse(date);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+
+		public static Date getDateFrom(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return null;
+				Date convertedDate = (new SimpleDateFormat(format)).parse(date);
+				return convertedDate;
+			} catch (Exception e) {
+				return null;
+			}
+		}
 	}
 }

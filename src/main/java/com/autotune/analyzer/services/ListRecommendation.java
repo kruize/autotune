@@ -73,6 +73,7 @@ public class ListRecommendation extends HttpServlet {
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         boolean getLatest = false;
+        boolean checkForTimestamp = false;
         boolean error = false;
         if (null != latestRecommendation
                 && !latestRecommendation.isEmpty()
@@ -82,7 +83,18 @@ public class ListRecommendation extends HttpServlet {
             getLatest = true;
         }
         if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
-
+            monitoringTimestamp = monitoringTimestamp.trim();
+            if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                checkForTimestamp = true;
+            } else {
+                error = true;
+                sendErrorResponse(
+                        response,
+                        new Exception("Invalid Timestamp format"),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid Timestamp format"
+                );
+            }
         } else if (null != monitoringTimestamp && monitoringTimestamp.isEmpty()) {
             monitoringTimestamp = null;
         }
@@ -93,7 +105,12 @@ public class ListRecommendation extends HttpServlet {
                 kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
             } else {
                 error = true;
-                sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
+                sendErrorResponse(
+                        response,
+                        new Exception("Invalid Experiment Name"),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid Experiment Name"
+                );
             }
         } else {
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
@@ -113,7 +130,13 @@ public class ListRecommendation extends HttpServlet {
 //                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
 //                        )
 //                );
-                    recommendationList.add(ServiceHelpers.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko, getLatest));
+                    recommendationList.add(ServiceHelpers.Converters.KruizeObjectConverters.
+                            convertKruizeObjectToListRecommendationSO(
+                                    ko,
+                                    getLatest,
+                                    checkForTimestamp,
+                                    monitoringTimestamp)
+                    );
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }

@@ -328,6 +328,9 @@ public class KruizeConstants {
     }
 
     public static final class DBConstants {
+        private DBConstants() {
+
+        }
 
         public static final String HOSTNAME = "hostname";
         public static final String PORT = "port";
@@ -337,5 +340,13 @@ public class KruizeConstants {
         public static final String CONFIG_FILE = "CONFIG_FILE";
         public static final String CONFIG_FILE_DB_KEY = "database";
         public static final String DB_DRIVER = "DB_DRIVER";
+    }
+
+    public static final class DateFormats {
+        private DateFormats() {
+
+        }
+
+        public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-mm-dd'T'HH:mm:ss.SSS'Z'";
     }
 }
