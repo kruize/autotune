@@ -15,23 +15,10 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
-import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.*;
-import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.DeploymentObject;
-import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -143,95 +130,5 @@ public class Utils
 			return AnalyzerConstants.MetricName.memoryRSS;
 
 		return null;
-	}
-
-	public static class Converters {
-		private Converters() {
-
-		}
-
-		public static class KruizeObjectConverters {
-			private KruizeObjectConverters() {
-
-			}
-
-			public static CreateExperimentSO convertKruizeObjectToCreateExperimentSO(KruizeObject kruizeObject) {
-				// Need to be implemented if needed
-				return null;
-			}
-
-			public static KruizeObject convertCreateExperimentSOToKruizeObject(CreateExperimentSO createExperimentSO) {
-				// To be implemented
-				KruizeObject kruizeObject =  new KruizeObject();
-				HashMap<String, DeploymentObject> deploymentObjectHashMap = new HashMap<String, DeploymentObject>();
-				for (K8sObject k8sObject: createExperimentSO.getKubernetesObjects()) {
-					if (null != k8sObject.getName() && !k8sObject.getName().isBlank()) {
-						DeploymentObject deploymentObject = new DeploymentObject(k8sObject.getName());
-						AnalyzerConstants.K8S_OBJECT_TYPES objectType = getApproriateK8sObjectType(k8sObject.getType());
-						if (null != objectType)
-							deploymentObject.setType(objectType);
-						HashMap<String, ContainerObject> containerObjectHashMap = new HashMap<String, ContainerObject>();
-						for (ContainerObject containerObject: k8sObject.getContainerObjects()) {
-							containerObjectHashMap.put(containerObject.getContainer_name(), containerObject);
-						}
-						deploymentObject.setContainers(containerObjectHashMap);
-						deploymentObject.setNamespace(k8sObject.getNamespace());
-						// TODO: Need to be changed as it should not be set at higher level
-						kruizeObject.setNamespace(k8sObject.getNamespace());
-						deploymentObjectHashMap.put(k8sObject.getName(), deploymentObject);
-					}
-				}
-				kruizeObject.setDeployments(deploymentObjectHashMap);
-				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
-				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
-				kruizeObject.setTarget_cluster(createExperimentSO.getTargetCluster());
-				kruizeObject.setClusterName(createExperimentSO.getClusterName());
-				kruizeObject.setMode(createExperimentSO.getMode());
-				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());
-				kruizeObject.setTrial_settings(createExperimentSO.getTrialSettings());
-				kruizeObject.setRecommendation_settings(createExperimentSO.getRecommendationSettings());
-				return kruizeObject;
-			}
-
-			public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject) {
-				// Need to be implemented if needed
-				ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
-				listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
-				listRecommendationsSO.setExperimentName(kruizeObject.getExperimentName());
-				listRecommendationsSO.setClusterName(kruizeObject.getClusterName());
-				List<K8sObject> k8sObjectsList = new ArrayList<K8sObject>();
-				for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
-					K8sObject k8sObject = new K8sObject();
-					k8sObject.setName(deploymentObject.getName());
-					k8sObject.setType(getAppropriateK8sObjectTypeString(deploymentObject.getType()));
-					k8sObject.setNamespace(deploymentObject.getNamespace());
-					List<ContainerObject> containerObjects = new ArrayList<ContainerObject>();
-					for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
-						containerObjects.add(containerObject);
-					}
-					k8sObject.setContainerObjects(containerObjects);
-					k8sObjectsList.add(k8sObject);
-				}
-				listRecommendationsSO.setKubernetesObjects(k8sObjectsList);
-				return listRecommendationsSO;
-			}
-
-			public static ExperimentResultData convertUpdateResultsSOToExperimentResultData(UpdateResultsSO updateResultsSO) {
-				ExperimentResultData experimentResultData = new ExperimentResultData();
-				experimentResultData.setStarttimestamp(updateResultsSO.getStartTimestamp());
-				experimentResultData.setEndtimestamp(updateResultsSO.getEndTimestamp());
-				experimentResultData.setExperiment_name(updateResultsSO.getExperimentName());
-				List<DeploymentResultData> deploymentResultDataList = new ArrayList<DeploymentResultData>();
-				for (K8sObject k8sObject : updateResultsSO.getKubernetesObjects()) {
-					DeploymentResultData deploymentResultData = new DeploymentResultData();
-					deploymentResultData.setDeployment_name(k8sObject.getName());
-					deploymentResultData.setNamespace(k8sObject.getNamespace());
-					deploymentResultData.setContainerObjects(k8sObject.getContainerObjects());
-					deploymentResultDataList.add(deploymentResultData);
-				}
-				experimentResultData.setDeployments(deploymentResultDataList);
-				return experimentResultData;
-			}
-		}
 	}
 }

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.common.data.result;
 
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.recommendations.Recommendation;
-import com.autotune.common.data.result.StartEndTimeStampResults;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -25,21 +24,30 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 
-public class ContainerObject {
-    @SerializedName(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME)
-    private String image;
+public class ContainerData {
+    private String container_image_name;
     private String container_name;
-    private HashMap<Timestamp, StartEndTimeStampResults> results;
+    private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
-    private List<ContainerMetricsHelper> metrics;
+    private List<Metric> metrics;
 
-    public String getImage() {
-        return image;
+    public ContainerData(String container_name, String container_image_name, List<Metric> metrics) {
+        this.container_name = container_name;
+        this.container_image_name = container_image_name;
+        this.metrics = metrics;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public ContainerData() {
+
+    }
+
+    public String getContainer_image_name() {
+        return container_image_name;
+    }
+
+    public void setContainer_image_name(String container_image_name) {
+        this.container_image_name = container_image_name;
     }
 
     public String getContainer_name() {
@@ -50,11 +58,11 @@ public class ContainerObject {
         this.container_name = container_name;
     }
 
-    public HashMap<Timestamp, StartEndTimeStampResults> getResults() {
+    public HashMap<Timestamp, IntervalResults> getResults() {
         return results;
     }
 
-    public void setResults(HashMap<Timestamp, StartEndTimeStampResults> results) {
+    public void setResults(HashMap<Timestamp, IntervalResults> results) {
         this.results = results;
     }
 
@@ -66,17 +74,17 @@ public class ContainerObject {
         this.recommendations = recommendations;
     }
 
-    public List<ContainerMetricsHelper> getMetrics() {
+    public List<Metric> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(List<ContainerMetricsHelper> metrics) {
+    public void setMetrics(List<Metric> metrics) {
         this.metrics = metrics;
     }
     @Override
     public String toString() {
-        return "ContainerObject{" +
-                "image='" + image + '\'' +
+        return "ContainerData{" +
+                "container_image_name='" + container_image_name + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
                 ", recommendations=" + recommendations +

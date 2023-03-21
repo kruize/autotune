@@ -16,6 +16,7 @@
 package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
 
 import java.util.HashMap;
 
@@ -23,7 +24,7 @@ public class DeploymentObject {
     private String name;
     private String namespace;
     private AnalyzerConstants.K8S_OBJECT_TYPES type;
-    private HashMap<String, ContainerObject> containers;
+    private HashMap<String, ContainerData> containers;
 
     public DeploymentObject(String name) {
         this.name = name;
@@ -37,11 +38,11 @@ public class DeploymentObject {
         this.name = name;
     }
 
-    public HashMap<String, ContainerObject> getContainers() {
+    public HashMap<String, ContainerData> getContainers() {
         return containers;
     }
 
-    public void setContainers(HashMap<String, ContainerObject> containers) {
+    public void setContainers(HashMap<String, ContainerData> containers) {
         this.containers = containers;
     }
 

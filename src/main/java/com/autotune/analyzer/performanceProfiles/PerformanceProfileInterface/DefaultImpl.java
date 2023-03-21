@@ -16,10 +16,10 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,15 +55,15 @@ public class DefaultImpl extends PerfProfileImpl {
 
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (ContainerObject containerObject : deploymentResultData.getContainerObjects()) {
-                List<ContainerMetricsHelper> containerMetricsHelpers = containerObject.getMetrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsHelpers.stream().map(ContainerMetricsHelper::getName)
+            for (ContainerData containerData : deploymentResultData.getContainerDataList()) {
+                List<Metric> metrics = containerData.getMetrics();
+                List<String> kruizeFunctionVariablesList = metrics.stream().map(Metric::getName)
                         .collect(Collectors.toCollection(ArrayList::new));
-                for (ContainerMetricsHelper containerMetricsHelper : containerMetricsHelpers) {
+                for (Metric metric : metrics) {
                     Map<String, Object> aggrInfoClassAsMap;
                     try {
                         // TODO: Need to update the below code
-                        aggrInfoClassAsMap = convertObjectToMap(containerMetricsHelper.getMetricResults().getAggregationInfoResult());
+                        aggrInfoClassAsMap = convertObjectToMap(metric.getMetricResult().getAggregationInfoResult());
                        LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);

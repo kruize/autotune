@@ -296,6 +296,7 @@ public final class KruizeObject {
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
+                ", kubernetes_objects=" + kubernetes_objects +
                 '}';
     }
 }

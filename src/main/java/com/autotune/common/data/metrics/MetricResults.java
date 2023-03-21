@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
 public class MetricResults {
+    private String name;
     @SerializedName("aggregation_info")
     private MetricAggregationInfoResults metricAggregationInfoResults;
     @SerializedName("percentile_info")
@@ -80,10 +81,18 @@ public class MetricResults {
     public void setFormat(String format) {
         this.format = format;
     }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
     @Override
     public String toString() {
-        return "MetricResult{" +
-                "aggregationInfoResult=" + metricAggregationInfoResults +
+        return "MetricResults{" +
+                "name='" + name + '\'' +
+                ", metricAggregationInfoResults=" + metricAggregationInfoResults +
                 ", metricPercentileResults=" + metricPercentileResults +
                 ", value=" + value +
                 ", format='" + format + '\'' +

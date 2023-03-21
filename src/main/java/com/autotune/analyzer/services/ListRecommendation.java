@@ -17,9 +17,10 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
@@ -93,7 +94,7 @@ public class ListRecommendation extends HttpServlet {
 //                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
 //                        )
 //                );
-                recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
+                recommendationList.add(Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
             } catch (Exception e) {
                 LOGGER.error("Not able to generate recommendation for expName : {} : {}", ko.getExperimentName(), e.getMessage());
             }
@@ -102,7 +103,7 @@ public class ListRecommendation extends HttpServlet {
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
-                if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+                if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
                     return true;
                 }
                 return false;

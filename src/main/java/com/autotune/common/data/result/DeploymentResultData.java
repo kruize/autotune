@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.k8sObjects.ContainerObject;
-
 import java.util.List;
 
 /**
@@ -26,7 +24,7 @@ import java.util.List;
 public class DeploymentResultData {
     private String deployment_name;
     private String namespace;
-    private List<ContainerObject> containerObjects;
+    private List<ContainerData> containerDataList;
     private List<PodResultData> pod_metrics;
 
     public String getDeployment_name() {
@@ -45,12 +43,12 @@ public class DeploymentResultData {
         this.namespace = namespace;
     }
 
-    public List<ContainerObject> getContainerObjects() {
-        return containerObjects;
+    public List<ContainerData> getContainerDataList() {
+        return containerDataList;
     }
 
-    public void setContainerObjects(List<ContainerObject> containerObjects) {
-        this.containerObjects = containerObjects;
+    public void setContainerDataList(List<ContainerData> containerDataList) {
+        this.containerDataList = containerDataList;
     }
 
     public List<PodResultData> getPod_metrics() {
@@ -66,7 +64,7 @@ public class DeploymentResultData {
         return "DeploymentResultData{" +
                 "deployment_name='" + deployment_name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", containerObjects=" + containerObjects +
+                ", containerDataList=" + containerDataList +
                 ", pod_metrics=" + pod_metrics +
                 '}';
     }

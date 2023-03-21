@@ -15,22 +15,22 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricResults;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 
 /**
- * Raw results are segregated and organized using  StartEndTimeStampResults
+ * Raw results are segregated and organized using IntervalResults
  */
-public class StartEndTimeStampResults {
-    HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> metrics;
+public class IntervalResults {
+    HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsMap;
     private Timestamp startTimeStamp;
     private Timestamp endTimeStamp;
     private Double durationInMinutes;
 
-    public StartEndTimeStampResults(Timestamp startTimeStamp, Timestamp endTimeStamp) {
+    public IntervalResults(Timestamp startTimeStamp, Timestamp endTimeStamp) {
         this.startTimeStamp = startTimeStamp;
         this.endTimeStamp = endTimeStamp;
         this.durationInMinutes = Double.valueOf((endTimeStamp.getTime() - startTimeStamp.getTime()) / (60 * 1000));
@@ -61,22 +61,21 @@ public class StartEndTimeStampResults {
         this.durationInMinutes = durationInMinutes;
     }
 
-    public HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> getMetrics() {
-        return metrics;
+    public HashMap<AnalyzerConstants.AggregatorType, MetricResults> getMetricResultsMap() {
+        return metricResultsMap;
     }
 
-    public void setMetrics(HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> metrics) {
-        this.metrics = metrics;
+    public void setMetricResultsMap(HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsMap) {
+        this.metricResultsMap = metricResultsMap;
     }
 
     @Override
     public String toString() {
-        return "StartEndTimeStampResults{" +
-                "startTimeStamp=" + startTimeStamp +
+        return "IntervalResults{" +
+                "metricResultsMap=" + metricResultsMap +
+                ", startTimeStamp=" + startTimeStamp +
                 ", endTimeStamp=" + endTimeStamp +
                 ", durationInMinutes=" + durationInMinutes +
-                ", metrics=" + metrics +
                 '}';
     }
-
 }

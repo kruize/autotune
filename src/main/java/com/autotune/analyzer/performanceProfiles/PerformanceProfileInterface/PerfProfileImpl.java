@@ -2,14 +2,13 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileValidation;
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,9 +85,9 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (ContainerObject containerObject : deploymentResultData.getContainerObjects()) {
-                List<ContainerMetricsHelper> containerMetricsHelpers = containerObject.getMetrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsHelpers.stream().map(ContainerMetricsHelper::getName)
+            for (ContainerData containerData : deploymentResultData.getContainerDataList()) {
+                List<Metric> metrics = containerData.getMetrics();
+                List<String> kruizeFunctionVariablesList = metrics.stream().map(Metric::getName)
                         .collect(Collectors.toCollection(ArrayList::new));
                 LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                 LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
@@ -96,11 +95,11 @@ public class PerfProfileImpl implements PerfProfileInterface {
                     errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", experimentResultData.getExperiment_name(), mandatoryFields));
                     break;
                 }
-                for (ContainerMetricsHelper containerMetricsHelper : containerMetricsHelpers) {
+                for (Metric metric : metrics) {
                     Map<String, Object> aggrInfoClassAsMap;
                     if (!aggrFunctionsObjects.isEmpty()) {
                         try {
-                            aggrInfoClassAsMap = convertObjectToMap(containerMetricsHelper.getMetricResults().getAggregationInfoResult());
+                            aggrInfoClassAsMap = convertObjectToMap(metric.getMetricResult().getAggregationInfoResult());
                             errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
                             if (!errorMsg.isBlank()) {
                                 errorMsg = errorMsg.concat(String.format("for the experiment : %s"
@@ -118,8 +117,8 @@ public class PerfProfileImpl implements PerfProfileInterface {
                         }
                     }
                     // check if the 'value' is present in the result JSON
-                    if (null == containerMetricsHelper.getMetricResults().getValue()) {
-                        LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(containerMetricsHelper.getName()));
+                    if (null == metric.getMetricResult().getValue()) {
+                        LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metric.getName()));
                     }
                 }
             }

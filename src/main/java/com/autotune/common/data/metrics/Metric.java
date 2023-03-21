@@ -31,11 +31,11 @@ import java.util.List;
  * value_type: "double"
  */
 public final class Metric {
-    private final String name;
-    private final String query;
-    private final String datasource;
+    private String name;
+    private String query;
+    private String datasource;
     @SerializedName("value_type")
-    private final String valueType;
+    private String valueType;
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
     private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
@@ -53,6 +53,9 @@ public final class Metric {
         this.datasource = datasource;
         this.valueType = valueType;
     }
+    public Metric() {
+
+    }
     public String getName() {
         return name;
     }
@@ -69,11 +72,11 @@ public final class Metric {
         return valueType;
     }
 
-    public MetricResults getEmMetricResult() {
+    public MetricResults getMetricResult() {
         return metricResults;
     }
 
-    public void setEmMetricResult(MetricResults metricResults) {
+    public void setMetricResult(MetricResults metricResults) {
         this.metricResults = metricResults;
     }
 
@@ -109,7 +112,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
-                ", emMetricResult=" + metricResults +
+                ", metricResult=" + metricResults +
                 ", aggregationFunctions=" + aggregationFunctions +
                 '}';
     }

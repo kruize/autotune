@@ -21,12 +21,15 @@ import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.TrialHelpers;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -74,7 +77,19 @@ public class ListExperiments extends HttpServlet {
                     .setPrettyPrinting()
                     .enableComplexMapKeySerialization()
                     .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(new KruizeJSONExclusionStrategy())
+                    .setExclusionStrategies(new ExclusionStrategy() {
+                        @Override
+                        public boolean shouldSkipField(FieldAttributes f) {
+                            return f.getDeclaringClass() == Metric.class && (
+                                    f.getName().equals("trialSummaryResult")
+                                            || f.getName().equals("cycleDataMap")
+                            );
+                        }
+                        @Override
+                        public boolean shouldSkipClass(Class<?> aClass) {
+                            return false;
+                        }
+                    })
                     .create();
             gsonStr = gsonObj.toJson(this.mainKruizeExperimentMap);
         } else {

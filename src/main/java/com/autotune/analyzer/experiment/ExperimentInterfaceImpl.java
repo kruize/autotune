@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -84,7 +84,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     for (DeploymentResultData deploymentResultData : resultDeploymentList) {
                         String dName = deploymentResultData.getDeployment_name();
                         DeploymentObject deploymentObject;
-                        HashMap<String, ContainerObject> containersMap;
+                        HashMap<String, ContainerData> containersMap;
                         if (null == deploymentsMap.get(dName)) {
                             deploymentObject = new DeploymentObject(dName);
                             containersMap = new HashMap<>();
@@ -92,31 +92,31 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             deploymentObject = deploymentsMap.get(dName);
                             containersMap = deploymentObject.getContainers();
                         }
-                        List<ContainerObject> resultContainerObjectList = deploymentResultData.getContainerObjects();
-                        for (ContainerObject resultContainerObject : resultContainerObjectList) {
-                            String cName = resultContainerObject.getContainer_name();
-                            ContainerObject containerObject;
+                        List<ContainerData> resultContainerDataList = deploymentResultData.getContainerDataList();
+                        for (ContainerData resultContainerData : resultContainerDataList) {
+                            String cName = resultContainerData.getContainer_name();
+                            ContainerData containerData;
                             if (null == containersMap.get(cName)) {
-                                containerObject = new ContainerObject();
+                                containerData = new ContainerData();
                             } else {
-                                containerObject = containersMap.get(cName);
+                                containerData = containersMap.get(cName);
                             }
-                            HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> aggregatorHashMap = new HashMap<>();
-                             for (ContainerMetricsHelper containerMetricsHelper : resultContainerObject.getMetrics()) {
-                                MetricAggregationInfoResults aggregatorResult = containerMetricsHelper.getMetricResults().getAggregationInfoResult();
-                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(containerMetricsHelper.getName()), aggregatorResult);
+                            HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsHashMap = new HashMap<>();
+                             for (Metric metrics : resultContainerData.getMetrics()) {
+                                MetricResults metricResults = metrics.getMetricResult();
+                                metricResultsHashMap.put(AnalyzerConstants.AggregatorType.valueOf(metrics.getName()), metricResults);
                             }
-                            HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
+                            HashMap<Timestamp, IntervalResults> resultsAggregatorStartEndTimeStampMap = containerData.getResults();
 
                             if (null == resultsAggregatorStartEndTimeStampMap) {
                                 resultsAggregatorStartEndTimeStampMap = new HashMap<>();
                             }
-                            StartEndTimeStampResults startEndTimeStampResults = new StartEndTimeStampResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
-                            startEndTimeStampResults.setMetrics(aggregatorHashMap);
-                            resultsAggregatorStartEndTimeStampMap.put(resultData.getEndtimestamp(), startEndTimeStampResults);
+                            IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                            intervalResults.setMetricResultsMap(metricResultsHashMap);
+                            resultsAggregatorStartEndTimeStampMap.put(resultData.getEndtimestamp(), intervalResults);
 
-                            containerObject.setResults(resultsAggregatorStartEndTimeStampMap);
-                            containersMap.put(cName, containerObject);
+                            containerData.setResults(resultsAggregatorStartEndTimeStampMap);
+                            containersMap.put(cName, containerData);
                         }
                         deploymentObject.setContainers(containersMap);
                         deploymentsMap.put(dName, deploymentObject);

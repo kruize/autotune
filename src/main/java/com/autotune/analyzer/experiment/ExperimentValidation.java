@@ -16,12 +16,18 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,6 +132,24 @@ public class ExperimentValidation {
                 markFailed(validationOutputData.getMessage());
                 break;
             }
+            // set performance profile metrics in the kruize Object
+            PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            List<Metric> metricList = new ArrayList<>();
+            for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
+                if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
+                    metricList.add(metric);
+            }
+            List<K8sObject> k8sObjectList = new ArrayList<>();
+            List<ContainerData> containerDataList = new ArrayList<>();
+            for (K8sObject k8sObject:kruizeObject.getKubernetesObjects()) {
+                for (ContainerData containerData : k8sObject.getContainerDataList()) {
+                    containerDataList.add(new ContainerData(containerData.getContainer_name(), containerData.getContainer_image_name(), metricList));
+                }
+                k8sObject.setContainerDataList(containerDataList);
+                k8sObjectList.add(k8sObject);
+            }
+            kruizeObject.setKubernetesObjects(k8sObjectList);
+            LOGGER.debug("{}", new Gson().toJson(kruizeObject));
         }
     }
 

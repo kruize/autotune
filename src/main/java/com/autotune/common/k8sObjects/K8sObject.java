@@ -1,5 +1,6 @@
 package com.autotune.common.k8sObjects;
 
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -10,7 +11,7 @@ public class K8sObject {
     private String name;
     private String namespace;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
-    private List<ContainerObject> containerObjects;
+    private List<ContainerData> containerDataList;
 
     public String getType() {
         return type;
@@ -36,12 +37,12 @@ public class K8sObject {
         this.namespace = namespace;
     }
 
-    public List<ContainerObject> getContainerObjects() {
-        return containerObjects;
+    public List<ContainerData> getContainerDataList() {
+        return containerDataList;
     }
 
-    public void setContainerObjects(List<ContainerObject> containerObjects) {
-        this.containerObjects = containerObjects;
+    public void setContainerDataList(List<ContainerData> containerDataList) {
+        this.containerDataList = containerDataList;
     }
 
     @Override
@@ -50,7 +51,7 @@ public class K8sObject {
                 "type='" + type + '\'' +
                 ", name='" + name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", containerObjects=" + containerObjects +
+                ", containerDataList=" + containerDataList +
                 '}';
     }
 }
