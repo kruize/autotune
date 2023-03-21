@@ -115,20 +115,11 @@ public class ListRecommendation extends HttpServlet {
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
         }
         if (!error) {
-            //List<ViewRecommendation> recommendationList = new ArrayList<>();
             List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
             for (KruizeObject ko : kruizeObjectList) {
                 try {
                     LOGGER.debug(ko.getDeployment_name());
                     LOGGER.debug(ko.getDeployments().toString());
-//                recommendationList.add(
-//                        new ViewRecommendation(
-//                                ko.getExperimentName(),
-//                                ko.getNamespace(),
-//                                ko.getDeployment_name(),
-//                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
-//                        )
-//                );
                     recommendationList.add(ServiceHelpers.Converters.KruizeObjectConverters.
                             convertKruizeObjectToListRecommendationSO(
                                     ko,
