@@ -20,6 +20,7 @@ import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
@@ -262,6 +263,8 @@ public class ServiceHelpers {
                             deploymentObject.setType(objectType);
                         HashMap<String, ContainerObject> containerObjectHashMap = new HashMap<String, ContainerObject>();
                         for (ContainerObject containerObject: k8sObject.getContainers()) {
+                            ContainerRecommendations containerRecommendations =  new ContainerRecommendations();
+                            containerObject.setContainerRecommendations(containerRecommendations);
                             containerObjectHashMap.put(containerObject.getContainer_name(), containerObject);
                         }
                         deploymentObject.setContainers(containerObjectHashMap);
@@ -306,7 +309,7 @@ public class ServiceHelpers {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerObject clonedContainerObject = (ContainerObject) Utils.getClone(containerObject);
                             if (null != clonedContainerObject) {
-                                HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getRecommendations();
+                                HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getContainerRecommendations().getData();
                                 Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,monitoringEndTimestamp);
                                 Timestamp givenTimestamp = new Timestamp(medDate.getTime());
                                 if (recommendations.containsKey(givenTimestamp)) {
@@ -319,7 +322,7 @@ public class ServiceHelpers {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerObject clonedContainerObject = (ContainerObject) Utils.getClone(containerObject);
                             if (null != clonedContainerObject) {
-                                HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getRecommendations();
+                                HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getContainerRecommendations().getData();
                                 Timestamp latestTimestamp = null;
                                 for (Timestamp timestamp : recommendations.keySet()) {
                                     if (null == latestTimestamp) {

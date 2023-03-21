@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
@@ -31,12 +32,15 @@ public class ContainerObject {
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
+    private ContainerRecommendations containerRecommendations;
     private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
     private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
         this.image = image;
         this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
     }
 
     public String getImage() {
@@ -61,6 +65,14 @@ public class ContainerObject {
 
     public void setResults(HashMap<Timestamp, StartEndTimeStampResults> results) {
         this.results = results;
+    }
+
+    public ContainerRecommendations getContainerRecommendations() {
+        return containerRecommendations;
+    }
+
+    public void setContainerRecommendations(ContainerRecommendations containerRecommendations) {
+        this.containerRecommendations = containerRecommendations;
     }
 
     public HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> getRecommendations() {

@@ -94,11 +94,11 @@ public class GenerateRecommendation {
                                 break;
                         }
                     }
-                    HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>  containerRecommendationMap = containerObject.getRecommendations();
+                    HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>  containerRecommendationMap = containerObject.getContainerRecommendations().getData();
                     if (null == containerRecommendationMap)
-                        containerRecommendationMap = new HashMap<>();
+                        containerRecommendationMap = new HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>();
                     containerRecommendationMap.put(monitorEndDate, recCatMap);
-                    containerObject.setRecommendations(containerRecommendationMap);
+                    containerObject.getContainerRecommendations().setData(containerRecommendationMap);
                 }
             }
         } catch (Exception e) {
