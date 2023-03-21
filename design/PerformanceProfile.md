@@ -61,28 +61,28 @@ tuned.
     * Duplicate Performance Profile name.
   ```
   {
-  "message": "Performance Profile already exists",
-  "httpcode": 409,
-  "documentationLink": "",
-  "status": "ERROR"
+      "message": "Performance Profile already exists",
+      "httpcode": 409,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
-    * Mandatory attribute value are missing.
+    * Mandatory parameters are missing.
   ```
   {
-  "message": "Missing mandatory parameters",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
+      "message": "Missing mandatory parameters",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
-  * Server Error
+  * Any unknown exception on server side
   ```
   {
-  "message": "Internal Server Error",
-  "httpcode": 500,
-  "documentationLink": "",
-  "status": "ERROR"
+      "message": "Internal Server Error",
+      "httpcode": 500,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
 * #####  You can get the API details [here](/design/PerformanceProfileAPI.md)

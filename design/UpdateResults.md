@@ -31,36 +31,36 @@ tuned.
     * Experiment name not found.
   ```
   {
-  "message": "Experiment name: <experiment-name> not found",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "Experiment name: <experiment-name> not found",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
     * Duplicate Experiment name and Timestamp.
   ```
   {
-  "message": "Experiment name : <experiment-name> already contains result for timestamp : <timestamp>",
-  "httpcode": 409,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "Experiment name : <experiment-name> already contains result for timestamp : <timestamp>",
+      "httpcode": 409,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
-    * Mandatory attribute value are missing.
+    * Mandatory parameters are missing.
   ```
   {
-  "message": "experiment_name and timestamp are mandatory fields.",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "experiment_name and timestamp are mandatory fields.",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
-    * Server Error
+    * Any unknown exception on server side
   ```
   {
-  "message": "Internal Server Error",
-  "httpcode": 500,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "Internal Server Error",
+      "httpcode": 500,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```

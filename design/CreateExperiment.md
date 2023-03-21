@@ -29,27 +29,27 @@ tuned.
   * Duplicate Experiment name.
   ```
   {
-  "message": "Experiment name already exists",
-  "httpcode": 409,
-  "documentationLink": "",
-  "status": "FAILED"
+    "message": "Experiment name already exists",
+    "httpcode": 409,
+    "documentationLink": "",
+    "status": "ERROR"
   }
   ```
-  * Mandatory attribute value are missing.
+  * Mandatory parameters are missing.
   ```
   {
-  "message": "Mandatory parameters missing.",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
+    "message": "Mandatory parameters missing.",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
   }
   ```
-  * Server Error
+  * Any unknown exception on server side
   ```
   {
-  "message": "Internal Server Error",
-  "httpcode": 500,
-  "documentationLink": "",
-  "status": "ERROR"
+    "message": "Internal Server Error",
+    "httpcode": 500,
+    "documentationLink": "",
+    "status": "ERROR"
   }
   ```

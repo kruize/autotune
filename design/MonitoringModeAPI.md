@@ -67,6 +67,11 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
+* Mandatory parameters in the input JSON:
+ ```
+ cpuUsage, memoryUsage, memoryRSS
+ ```
+* Note: If the parameters `cpuRequest`, `cpuLimit`, `memoryRequest` and `memoryLimit` are missing, then they are assumed to not have been set for the container in question.
 
 **Request**
 `POST /updateResults`
