@@ -22,6 +22,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +89,8 @@ public class ExperimentInitiator {
         } catch (Exception e) {
             LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationOutputData.setSuccess(false);
-            validationOutputData.setMessage("Validation failed: " + e.getMessage());
+            validationOutputData.setMessage("Exception occurred while validating the result data: " + e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -109,11 +109,6 @@ public class ExperimentValidation {
                                 }
                             }
                         } else {
-                            if (!kruizeObject.getExperimentUseCaseType().isRemoteMonitoring()) {
-                                errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
-                                validationOutputData.setErrorCode(HttpServletResponse.SC_OK);
-                            }
-                            else
                                 proceed = true;
                         }
                     } else {
@@ -121,7 +116,7 @@ public class ExperimentValidation {
                     }
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
-                    validationOutputData.setErrorCode(200);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
                 }
                 if (!proceed) {
                     kruizeObject.setValidationData(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
@@ -171,8 +166,6 @@ public class ExperimentValidation {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         boolean missingDeploySelector = true;
         String errorMsg = "";
-        String expName = expObj.getExperimentName();
-        errorMsg = String.format("Experiment Name : %s ", expName);
         mandatoryFields.forEach(
                 mField -> {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);

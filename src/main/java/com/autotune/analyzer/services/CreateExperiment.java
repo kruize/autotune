@@ -80,6 +80,7 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
+            // check for bulk entries and respond accordingly
             if (experimentSOList.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );

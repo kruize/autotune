@@ -29,8 +29,8 @@ tuned.
   * Duplicate Experiment name.
   ```
   {
-  "message": "Experiment name already exsist with Kruize. View registered experiments at /listExperiments",
-  "httpcode": 400,
+  "message": "Experiment name already exists",
+  "httpcode": 409,
   "documentationLink": "",
   "status": "FAILED"
   }
@@ -38,9 +38,18 @@ tuned.
   * Mandatory attribute value are missing.
   ```
   {
-  "message": "Mandatory attributes value missing.",
+  "message": "Mandatory parameters missing.",
   "httpcode": 400,
   "documentationLink": "",
-  "status": "FAILED"
+  "status": "ERROR"
+  }
+  ```
+  * Server Error
+  ```
+  {
+  "message": "Internal Server Error",
+  "httpcode": 500,
+  "documentationLink": "",
+  "status": "ERROR"
   }
   ```

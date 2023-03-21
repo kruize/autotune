@@ -68,6 +68,7 @@ public class UpdateResults extends HttpServlet {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsSO> updateResultsSOList = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsSO[].class));
+            // check for bulk entries and respond accordingly
             if (updateResultsSOList.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
@@ -88,7 +89,7 @@ public class UpdateResults extends HttpServlet {
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
