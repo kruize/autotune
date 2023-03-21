@@ -155,6 +155,8 @@ public class ListRecommendation extends HttpServlet {
         } else {
             // Add all experiments to list
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+            // Making latest results to be displayed for each experiment as default
+            getLatest = true;
         }
         if (!error) {
             List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
