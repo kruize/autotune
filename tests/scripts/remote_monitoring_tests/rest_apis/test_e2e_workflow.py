@@ -32,9 +32,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         json_file = "/tmp/create_exp_" + str(i) + ".json"
         generate_json(find, input_json_file, json_file, i)
 
+        # Delete the experiment
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
 
+        # Create the experiment
         response = create_experiment(json_file)
 
         data = response.json()
@@ -66,10 +68,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
 
-        for i in range(num_exps):
-            json_file = "/tmp/create_exp_" + str(i) + ".json"
-            response = delete_experiment(json_file)
-            print("delete exp = ", response.status_code)
+    # Delete all the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
 
 @pytest.mark.extended
 def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type):
