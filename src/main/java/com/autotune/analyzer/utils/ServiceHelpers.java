@@ -291,7 +291,6 @@ public class ServiceHelpers {
                     boolean getLatest,
                     boolean checkForTimestamp,
                     String monitoringEndTimestamp) {
-                // Need to be implemented if needed
                 ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
                 listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
                 listRecommendationsSO.setExperimentName(kruizeObject.getExperimentName());
@@ -313,9 +312,11 @@ public class ServiceHelpers {
                                 Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,monitoringEndTimestamp);
                                 Timestamp givenTimestamp = new Timestamp(medDate.getTime());
                                 if (recommendations.containsKey(givenTimestamp)) {
-
-                                } else {
-                                    // Add notification that timestamp given is missing
+                                    for (Timestamp timestamp : recommendations.keySet()) {
+                                        if (!timestamp.equals(givenTimestamp))
+                                            recommendations.remove(timestamp);
+                                    }
+                                    containerObjects.add(clonedContainerObject);
                                 }
                             }
                         } else if (getLatest) {
@@ -382,6 +383,31 @@ public class ServiceHelpers {
                 experimentResultData.setDeployments(deploymentResultDataList);
                 return experimentResultData;
             }
+        }
+    }
+
+    public static class KruizeObjectOperations {
+        private KruizeObjectOperations() {
+
+        }
+
+        public static boolean checkRecommendationTimestampExists(KruizeObject kruizeObject, String timestamp) {
+            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,timestamp))
+                return false;
+            Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,timestamp);
+            if (null == medDate)
+                return false;
+            boolean timestampExists = false;
+            Timestamp givenTimestamp = new Timestamp(medDate.getTime());
+            for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
+                for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
+                    if (containerObject.getContainerRecommendations().getData().containsKey(givenTimestamp)) {
+                        // Expecting atleast one entry of timestamp exists, needs to be changed if requirement changes in future
+                        timestampExists = true;
+                    }
+                }
+            }
+            return timestampExists;
         }
     }
 }

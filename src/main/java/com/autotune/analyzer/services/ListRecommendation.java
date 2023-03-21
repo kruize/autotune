@@ -63,6 +63,32 @@ public class ListRecommendation extends HttpServlet {
         this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
 
+    /**
+     * If experiment name is passed:
+     *      If experiment name exists:
+     *          If latest & timestamp requested:
+     *              timestamp takes priority and latest is set to false
+     *          If timestamp requested:
+     *              If timestamp is valid:
+     *                  If timestamp exists:
+     *                      return recommendation related to timestamp
+     *                  else:
+     *                      return error timestamp doesnot exist
+     *              else:
+     *                  return error invalid time stamp
+     *          If latest requested:
+     *              return latest recommendation
+     *      else:
+     *          return error experiment name not found
+     * else:
+     *      return all experiments recommendations
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType(JSON_CONTENT_TYPE);
@@ -74,33 +100,48 @@ public class ListRecommendation extends HttpServlet {
         boolean getLatest = false;
         boolean checkForTimestamp = false;
         boolean error = false;
-        if (null != latestRecommendation
-                && !latestRecommendation.isEmpty()
-                && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
-        )
-        {
-            getLatest = true;
-        }
-        if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
-            monitoringTimestamp = monitoringTimestamp.trim();
-            if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
-                checkForTimestamp = true;
-            } else {
-                error = true;
-                sendErrorResponse(
-                        response,
-                        new Exception("Invalid Timestamp format"),
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        "Invalid Timestamp format"
-                );
-            }
-        } else if (null != monitoringTimestamp && monitoringTimestamp.isEmpty()) {
-            monitoringTimestamp = null;
-        }
+
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
+        // Check if experiment name is passed
         if (null != experimentName) {
+            // trim the experiment name to remove whitespaces
             experimentName = experimentName.trim();
+            // Check if experiment exists
             if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
+                // Check if timestamp is passed
+                if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
+                    monitoringTimestamp = monitoringTimestamp.trim();
+                    if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                        // Check if timestamp exists in recommendations
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(experimentName), monitoringTimestamp);
+                        if (timestampExists) {
+                            checkForTimestamp = true;
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception("Recommendation doesnot exist"),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    "Recommendation for timestamp - \"" + monitoringTimestamp + "\" does not exist"
+                            );
+                        }
+                    } else {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception("Invalid Timestamp format"),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                "Given timestamp \"" + monitoringTimestamp + "\" is not a valid timestamp format"
+                        );
+                    }
+                }
+                if (null != latestRecommendation
+                        && !latestRecommendation.isEmpty()
+                        && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
+                ) {
+                    if (!checkForTimestamp)
+                        getLatest = true;
+                }
                 kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
             } else {
                 error = true;
@@ -112,6 +153,7 @@ public class ListRecommendation extends HttpServlet {
                 );
             }
         } else {
+            // Add all experiments to list
             kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
         }
         if (!error) {
@@ -120,13 +162,13 @@ public class ListRecommendation extends HttpServlet {
                 try {
                     LOGGER.debug(ko.getDeployment_name());
                     LOGGER.debug(ko.getDeployments().toString());
-                    recommendationList.add(ServiceHelpers.Converters.KruizeObjectConverters.
-                            convertKruizeObjectToListRecommendationSO(
-                                    ko,
-                                    getLatest,
-                                    checkForTimestamp,
-                                    monitoringTimestamp)
-                    );
+                    ListRecommendationsSO listRecommendationsSO = ServiceHelpers.Converters.KruizeObjectConverters.
+                                                                    convertKruizeObjectToListRecommendationSO(
+                                                                        ko,
+                                                                        getLatest,
+                                                                        checkForTimestamp,
+                                                                        monitoringTimestamp);
+                    recommendationList.add(listRecommendationsSO);
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }
