@@ -19,6 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -112,7 +113,7 @@ public class ListRecommendation extends HttpServlet {
 //                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
 //                        )
 //                );
-                    recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko, getLatest));
+                    recommendationList.add(ServiceHelpers.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko, getLatest));
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }

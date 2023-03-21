@@ -19,6 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -74,7 +75,7 @@ public class UpdateResults extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
                 for (UpdateResultsSO updateResultsSO : updateResultsSOList) {
-                    experimentResultDataList.add(Utils.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
+                    experimentResultDataList.add(ServiceHelpers.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
                 }
                 LOGGER.debug(experimentResultDataList.toString());
                 new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
