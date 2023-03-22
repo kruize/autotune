@@ -98,10 +98,15 @@ public class ListRecommendation extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
-        boolean getLatest = false;
+        boolean getLatest = true;
         boolean checkForTimestamp = false;
         boolean error = false;
-
+        if (null != latestRecommendation
+                && !latestRecommendation.isEmpty()
+                && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)
+        ) {
+            getLatest = false;
+        }
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
         // Check if experiment name is passed
         if (null != experimentName) {
@@ -136,13 +141,6 @@ public class ListRecommendation extends HttpServlet {
                         );
                     }
                 }
-                if (null != latestRecommendation
-                        && !latestRecommendation.isEmpty()
-                        && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
-                ) {
-                    if (!checkForTimestamp)
-                        getLatest = true;
-                }
                 kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
             } else {
                 error = true;
@@ -154,10 +152,38 @@ public class ListRecommendation extends HttpServlet {
                 );
             }
         } else {
-            // Add all experiments to list
-            kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
-            // Making latest results to be displayed for each experiment as default
-            getLatest = true;
+            if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
+                monitoringTimestamp = monitoringTimestamp.trim();
+                if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                    for (String expName : this.mainKruizeExperimentMap.keySet()) {
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(expName), monitoringTimestamp);
+                        if (timestampExists) {
+                            kruizeObjectList.add(this.mainKruizeExperimentMap.get(expName));
+                            checkForTimestamp = true;
+                        }
+                    }
+                    if (kruizeObjectList.isEmpty()) {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
+                        );
+                    }
+                } else {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
+                    );
+                }
+            } else {
+                // Add all experiments to list
+                kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+            }
         }
         if (!error) {
             List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
