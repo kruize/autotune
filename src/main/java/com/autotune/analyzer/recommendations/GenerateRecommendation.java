@@ -42,6 +42,9 @@ public class GenerateRecommendation {
                 DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
                 for (String cName : deploymentObj.getContainers().keySet()) {
                     ContainerObject containerObject = deploymentObj.getContainers().get(cName);
+                    if (containerObject.getResults().isEmpty()) {
+                        continue;
+                    }
                     Timestamp monitorEndDate = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerObject.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
@@ -88,6 +91,20 @@ public class GenerateRecommendation {
                                 }
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
+                                boolean notifyExist = false;
+                                for (RecommendationNotification recNotify : containerObject.getContainerRecommendations().getNotifications()) {
+                                    if (recNotify.getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE)) {
+                                        notifyExist = true;
+                                        break;
+                                    }
+                                }
+                                if (!notifyExist) {
+                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                            AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
+                                            AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE
+                                    );
+                                    containerObject.getContainerRecommendations().getNotifications().add(recommendationNotification);
+                                }
                                 break;
                             case PROFILE_BASED:
                                 // Need to be implemented

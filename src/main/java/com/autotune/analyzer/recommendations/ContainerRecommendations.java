@@ -40,7 +40,7 @@ public class ContainerRecommendations {
 
     public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data) {
         if (!data.isEmpty())
-            if (this.notifications.size() == 1)
+            if (this.notifications.get(0).getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA))
                 this.notifications.remove(0);
         this.data = data;
     }
