@@ -106,7 +106,7 @@ public class ExperimentResultValidation {
                         resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                         break;
                     }
-                    resultData.setValidationOutputData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_OK));
+                    resultData.setValidationOutputData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_CREATED));
                 } else {
                     errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
                     proceed = false;

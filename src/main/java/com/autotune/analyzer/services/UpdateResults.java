@@ -96,11 +96,11 @@ public class UpdateResults extends HttpServlet {
     private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new KruizeResponse(message, HttpServletResponse.SC_OK, "", "SUCCESS")
+                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();
