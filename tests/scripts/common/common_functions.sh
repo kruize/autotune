@@ -1796,7 +1796,7 @@ function create_performance_profile() {
 
         echo "curl_cmd = ${curl_cmd}"
 
-        status_json=$(${curl_cmd})
+        status_json=$($curl_cmd)
         echo "create performance profile status = ${status_json}"
 
         echo ""

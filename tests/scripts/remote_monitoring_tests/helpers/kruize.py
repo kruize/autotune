@@ -103,6 +103,7 @@ def list_recommendations(experiment_name):
         response = requests.get(url)
     else:
         PARAMS = {'experiment_name': experiment_name}
+        print("PARAMS = ", PARAMS)
         response = requests.get(url = url, params = PARAMS)
 
     print("Response status code = ", response.status_code)
