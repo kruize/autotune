@@ -100,7 +100,7 @@ public class UpdateResults extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new KruizeResponse(message, HttpServletResponse.SC_OK, "", "SUCCESS")
+                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();
