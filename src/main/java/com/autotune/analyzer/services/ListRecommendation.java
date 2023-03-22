@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.k8sObjects.ContainerObject;
@@ -120,18 +121,18 @@ public class ListRecommendation extends HttpServlet {
                             error = true;
                             sendErrorResponse(
                                     response,
-                                    new Exception("Recommendation doesnot exist"),
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    "Recommendation for timestamp - \"" + monitoringTimestamp + "\" does not exist"
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
                             );
                         }
                     } else {
                         error = true;
                         sendErrorResponse(
                                 response,
-                                new Exception("Invalid Timestamp format"),
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                "Given timestamp \"" + monitoringTimestamp + "\" is not a valid timestamp format"
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
                         );
                     }
                 }
@@ -147,9 +148,9 @@ public class ListRecommendation extends HttpServlet {
                 error = true;
                 sendErrorResponse(
                         response,
-                        new Exception("Invalid Experiment Name"),
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        "Invalid Experiment Name"
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
                 );
             }
         } else {

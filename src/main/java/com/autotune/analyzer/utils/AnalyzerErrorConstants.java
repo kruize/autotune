@@ -98,4 +98,25 @@ public class AnalyzerErrorConstants {
 		public static final String AUTOTUNE_OBJECTS_NOT_FOUND = "Error: No objects of kind Autotune found!";
 
 	}
+
+	public static final class APIErrors {
+		private APIErrors() {
+
+		}
+
+		public static final class ListRecommendationsAPI {
+			private ListRecommendationsAPI() {
+
+			}
+
+			public static final String RECOMMENDATION_DOES_NOT_EXIST_EXCPTN = "Recommendation does not exist";
+			public static final String RECOMMENDATION_DOES_NOT_EXIST_MSG = "Recommendation for timestamp - \" %s \" does not exist";
+
+			public static final String INVALID_TIMESTAMP_EXCPTN = "Invalid Timestamp format";
+			public static final String INVALID_TIMESTAMP_MSG = "Given timestamp - \" %s \" is not a valid timestamp format";
+
+			public static final String INVALID_EXPERIMENT_NAME_EXCPTN = "Invalid Experiment Name";
+			public static final String INVALID_EXPERIMENT_NAME_MSG = "Given experiment name - \" %s \" is not valid";
+		}
+	}
 }
