@@ -3,12 +3,12 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileValidation;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.K8sObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +80,8 @@ public class PerfProfileImpl implements PerfProfileInterface {
         LOGGER.debug(String.format("List of agg func objects: %s", aggrFunctionsObjects));
 
         // Get the metrics data from the Kruize Object
-        for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (ContainerData containerData : deploymentResultData.getContainerDataList()) {
+        for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
+            for (ContainerData containerData : k8sObject.getContainerDataList()) {
                 List<Metric> metrics = containerData.getMetrics();
                 List<String> kruizeFunctionVariablesList = metrics.stream().map(Metric::getName)
                         .collect(Collectors.toCollection(ArrayList::new));

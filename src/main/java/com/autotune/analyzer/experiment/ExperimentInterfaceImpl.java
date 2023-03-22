@@ -19,10 +19,11 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.Utils;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,55 +77,55 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
-                    HashMap<String, DeploymentObject> deploymentsMap = ko.getDeployments();
-                    if (null == deploymentsMap) {
-                        deploymentsMap = new HashMap<>();
+                    List<K8sObject> k8sObjectList = ko.getKubernetesObjects();
+                    if (null == k8sObjectList) {
+                        k8sObjectList = new ArrayList<>();
                     }
-                    List<DeploymentResultData> resultDeploymentList = resultData.getDeployments();
-                    for (DeploymentResultData deploymentResultData : resultDeploymentList) {
-                        String dName = deploymentResultData.getDeployment_name();
-                        DeploymentObject deploymentObject;
-                        HashMap<String, ContainerData> containersMap;
-                        if (null == deploymentsMap.get(dName)) {
-                            deploymentObject = new DeploymentObject(dName);
-                            containersMap = new HashMap<>();
+                    List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
+                    for(K8sObject resultK8sObject:resultK8sObjectList) {
+                        K8sObject k8sObject;
+                        List<ContainerData> containerDataList;
+                        if (!k8sObjectList.contains(resultK8sObject)) {
+                            k8sObject = new K8sObject();
+                            containerDataList = new ArrayList<>();
                         } else {
-                            deploymentObject = deploymentsMap.get(dName);
-                            containersMap = deploymentObject.getContainers();
+                            k8sObject = resultK8sObject;
+                            containerDataList = k8sObject.getContainerDataList();
                         }
-                        List<ContainerData> resultContainerDataList = deploymentResultData.getContainerDataList();
+                        List<ContainerData> resultContainerDataList = resultK8sObject.getContainerDataList();
                         for (ContainerData resultContainerData : resultContainerDataList) {
-                            String cName = resultContainerData.getContainer_name();
                             ContainerData containerData;
-                            if (null == containersMap.get(cName)) {
+                            if (!containerDataList.contains(resultContainerData)) {
                                 containerData = new ContainerData();
                             } else {
-                                containerData = containersMap.get(cName);
+                                containerData = resultContainerData;
                             }
                             HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsHashMap = new HashMap<>();
                              for (Metric metrics : resultContainerData.getMetrics()) {
                                 MetricResults metricResults = metrics.getMetricResult();
                                 metricResultsHashMap.put(AnalyzerConstants.AggregatorType.valueOf(metrics.getName()), metricResults);
                             }
-                            HashMap<Timestamp, IntervalResults> resultsAggregatorStartEndTimeStampMap = containerData.getResults();
+                            HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
 
-                            if (null == resultsAggregatorStartEndTimeStampMap) {
-                                resultsAggregatorStartEndTimeStampMap = new HashMap<>();
+
+                            if (null == resultsIntervalMap) {
+                                resultsIntervalMap = new HashMap<>();
                             }
                             IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
                             intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsAggregatorStartEndTimeStampMap.put(resultData.getEndtimestamp(), intervalResults);
+                            resultsIntervalMap.put(resultData.getEndtimestamp(), intervalResults);
 
-                            containerData.setResults(resultsAggregatorStartEndTimeStampMap);
-                            containersMap.put(cName, containerData);
+                            containerData.setResults(resultsIntervalMap);
+                            containerDataList.add(containerData);
                         }
-                        deploymentObject.setContainers(containersMap);
-                        deploymentsMap.put(dName, deploymentObject);
+                        k8sObject.setContainerDataList(containerDataList);
+                        k8sObjectList.add(k8sObject);
                     }
-                    ko.setDeployments(deploymentsMap);
+                    ko.setKubernetesObjects(k8sObjectList);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
         );
+        LOGGER.debug("{}", new Gson().toJson(experimentResultDataList));
         // TODO   Insert into database
         return true;
     }

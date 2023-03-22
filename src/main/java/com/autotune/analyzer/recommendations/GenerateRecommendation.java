@@ -19,9 +19,9 @@ import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSu
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.K8sObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +38,8 @@ public class GenerateRecommendation {
 
     public static void generateRecommendation(KruizeObject kruizeObject) {
         try {
-            for (String dName : kruizeObject.getDeployments().keySet()) {
-                DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
-                for (String cName : deploymentObj.getContainers().keySet()) {
-                    ContainerData containerData = deploymentObj.getContainers().get(cName);
+            for (K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
+                for (ContainerData containerData : k8sObject.getContainerDataList()) {
                     Timestamp monitorEndDate = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerData.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
