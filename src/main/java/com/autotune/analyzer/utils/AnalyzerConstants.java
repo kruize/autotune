@@ -347,7 +347,7 @@ public class AnalyzerConstants {
         public static final String NA = "NA";
         public static final String SECONDS = " seconds";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
-        public static final String RESULT_SAVED = "Result Saved successfully! View saved results at /listExperiments";
+        public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
 
         private ServiceConstants() {
         }
