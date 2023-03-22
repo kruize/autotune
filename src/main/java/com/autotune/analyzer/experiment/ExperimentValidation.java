@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -90,17 +91,23 @@ public class ExperimentValidation {
                         String nsDepName = kruizeObject.getNamespace().toLowerCase() + ":" + kruizeObject.getDeployment_name().toLowerCase();
                         if (!namespaceDeploymentNameList.contains(nsDepName)) {
                             if (null != kruizeObject.getPerformanceProfile()) {
-                                if (null != kruizeObject.getSloInfo())
+                                if (null != kruizeObject.getSloInfo()) {
                                     errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                }
                                 else {
-                                    if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile()))
+                                    if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
                                         errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
+                                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    }
                                     else
                                         proceed = true;
                                 }
                             } else {
-                                if (null == kruizeObject.getSloInfo())
+                                if (null == kruizeObject.getSloInfo()) {
                                     errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                }
                                 else {
                                     String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
                                     kruizeObject.setPerformanceProfile(perfProfileName);
@@ -108,24 +115,22 @@ public class ExperimentValidation {
                                 }
                             }
                         } else {
-                            if (!kruizeObject.getExperimentUseCaseType().isRemoteMonitoring())
-                                errorMsg = errorMsg.concat(String.format("Experiment name : %s with Deployment name : %s is duplicate", expName, nsDepName));
-                            else
                                 proceed = true;
                         }
                     } else {
                         proceed = true;
                     }
                 } else {
-                    errorMsg = errorMsg.concat(String.format("Experiment name : %s is duplicate", expName));
+                    errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
                 }
                 if (!proceed) {
-                    kruizeObject.setValidationData(new ValidationOutputData(false, errorMsg));
+                    kruizeObject.setValidationData(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
                     markFailed(errorMsg);
                     break;
                 } else {
                     setSuccess(true);
-                    kruizeObject.setValidationData(new ValidationOutputData(true, "Registered successfully with Kruize! View registered experiments at /listExperiments."));
+                    kruizeObject.setValidationData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.EXPERIMENT_REGISTERED, HttpServletResponse.SC_CREATED));
                 }
             } else {
                 kruizeObject.setValidationData(validationOutputData);
@@ -182,11 +187,9 @@ public class ExperimentValidation {
      */
     public ValidationOutputData validateMandatoryFields(KruizeObject expObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         boolean missingDeploySelector = true;
         String errorMsg = "";
-        String expName = expObj.getExperimentName();
-        errorMsg = String.format("Experiment Name : %s ", expName);
         mandatoryFields.forEach(
                 mField -> {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
@@ -233,19 +236,21 @@ public class ExperimentValidation {
                 missingDeploySelector = false;
                 if (missingDeploySelector) {
                     errorMsg = errorMsg.concat(String.format("Either parameter should be present %s ", mandatoryDeploymentSelector));
-
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
             } catch (Exception e) {
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 validationOutputData.setSuccess(false);
                 errorMsg = errorMsg.concat(e.getMessage());
                 validationOutputData.setMessage(errorMsg);
             }
         } else {
             errorMsg = errorMsg.concat(String.format("Mandatory parameters missing %s ", missingMandatoryFields));
+            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorMsg);
         }

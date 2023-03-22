@@ -70,9 +70,10 @@ public class AnalyzerErrorConstants {
 		public static final String MISSING_VALUE = "Missing 'value' in the results for the metric : ";
 		public static final String MISSING_SLO_DATA = "No Performance Profile or SLO data is Present!";
 		public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
-		public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists!";
+		public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
 		public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
 		public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
+		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
 
 	}
 

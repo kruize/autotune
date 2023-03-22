@@ -81,6 +81,7 @@ public class CreateExperiment extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
+            // check for bulk entries and respond accordingly
             if (experimentSOList.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
@@ -99,13 +100,13 @@ public class CreateExperiment extends HttpServlet {
                     sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                 } else {
                     LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, invalidKruizeObject.getValidationData().getMessage());
+                    sendErrorResponse(response, null, invalidKruizeObject.getValidationData().getErrorCode(), invalidKruizeObject.getValidationData().getMessage());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         }
     }
 
@@ -121,7 +122,7 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<KruizeObject> kruizeExpList = Arrays.asList(new Gson().fromJson(inputData, KruizeObject[].class));
+            KruizeObject[] kruizeExpList = new Gson().fromJson(inputData, KruizeObject[].class);
             for (KruizeObject ko : kruizeExpList) {
                 mainKruizeExperimentMap.remove(ko.getExperimentName());
                 KruizeOperator.deploymentMap.remove(ko.getExperimentName());

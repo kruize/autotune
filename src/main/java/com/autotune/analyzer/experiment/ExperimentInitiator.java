@@ -22,6 +22,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +41,12 @@ public class ExperimentInitiator {
      *
      * @param mainKruizeExperimentMap
      * @param kruizeExpList
-     * @return
      */
-    public ValidationOutputData validateAndAddNewExperiments(
+    public void validateAndAddNewExperiments(
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<KruizeObject> kruizeExpList
     ) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             ExperimentValidation validationObject = new ExperimentValidation(mainKruizeExperimentMap);
             validationObject.validate(kruizeExpList);
@@ -63,20 +63,18 @@ public class ExperimentInitiator {
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage("Validation failed: " + e.getMessage());
         }
-        return validationOutputData;
     }
 
     /**
      * @param mainKruizeExperimentMap
      * @param experimentResultDataList
      * @param performanceProfilesMap
-     * @return
      */
-    public ValidationOutputData validateAndUpdateResults(
+    public void validateAndUpdateResults(
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<ExperimentResultData> experimentResultDataList,
             Map<String, PerformanceProfile> performanceProfilesMap) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             ExperimentResultValidation experimentResultValidation = new ExperimentResultValidation(mainKruizeExperimentMap, performanceProfilesMap);
             experimentResultValidation.validate(experimentResultDataList, performanceProfilesMap);
@@ -91,8 +89,8 @@ public class ExperimentInitiator {
         } catch (Exception e) {
             LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationOutputData.setSuccess(false);
-            validationOutputData.setMessage("Validation failed: " + e.getMessage());
+            validationOutputData.setMessage("Exception occurred while validating the result data: " + e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        return validationOutputData;
     }
 }

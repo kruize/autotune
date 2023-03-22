@@ -87,9 +87,9 @@ public class PerformanceProfileService extends HttpServlet {
                 sendSuccessResponse(response, "Performance Profile : "+performanceProfile.getName()+" created successfully.");
             }
             else
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationOutputData.getMessage());
+                sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Validation failed: " + e.getMessage());
         }
     }
 
