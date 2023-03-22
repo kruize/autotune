@@ -61,12 +61,20 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         time.sleep(20)
 
         # Get the experiment name
-        json_data = json.load(open(input_json_file))
+        json_data = json.load(open(json_file))
         experiment_name = json_data[0]['experiment_name']
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+
+    # Invoke list recommendations for the specified experiment
+    response = list_recommendations(experiment_name)
+    assert response.status_code == ERROR_STATUS_CODE
 
     # Delete all the experiments
     for i in range(num_exps):
