@@ -64,32 +64,6 @@ public class ListRecommendation extends HttpServlet {
         this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
 
-    /**
-     * If experiment name is passed:
-     *      If experiment name exists:
-     *          If latest & timestamp requested:
-     *              timestamp takes priority and latest is set to false
-     *          If timestamp requested:
-     *              If timestamp is valid:
-     *                  If timestamp exists:
-     *                      return recommendation related to timestamp
-     *                  else:
-     *                      return error timestamp doesnot exist
-     *              else:
-     *                  return error invalid time stamp
-     *          If latest requested:
-     *              return latest recommendation
-     *      else:
-     *          return error experiment name not found
-     * else:
-     *      return all experiments recommendations
-     *
-     * @param request
-     * @param response
-     * @throws ServletException
-     * @throws IOException
-     */
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType(JSON_CONTENT_TYPE);
