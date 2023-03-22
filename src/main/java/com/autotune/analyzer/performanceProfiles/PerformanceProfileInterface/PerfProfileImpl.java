@@ -13,6 +13,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -23,8 +24,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
     @Override
     public String getName(PerformanceProfile performanceProfile) {
-        String name = AnalyzerConstants.PerformanceProfileConstants.PerfProfileNames.get(performanceProfile.getName());
-        return name;
+        return AnalyzerConstants.PerformanceProfileConstants.PerfProfileNames.get(performanceProfile.getName());
     }
 
 
@@ -35,21 +35,17 @@ public class PerfProfileImpl implements PerfProfileInterface {
      */
     @Override
     public ValidationOutputData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null);
+        ValidationOutputData validationOutputData;
         try {
-            PerformanceProfileValidation performanceProfileValidation = new PerformanceProfileValidation(performanceProfilesMap);
-            performanceProfileValidation.validate(performanceProfile);
-            if (performanceProfileValidation.isSuccess()) {
+            validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile);
+            if (validationOutputData.isSuccess()) {
                 addPerformanceProfile(performanceProfilesMap, performanceProfile);
-                validationOutputData.setSuccess(true);
             } else {
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage("Validation failed: " + performanceProfileValidation.getErrorMessage());
+                validationOutputData.setMessage("Validation failed: " + validationOutputData.getMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and add profile falied: " + e.getMessage());
-            validationOutputData.setSuccess(false);
-            validationOutputData.setMessage("Validation failed: " + e.getMessage());
+            LOGGER.error("Validate and add profile failed: " + e.getMessage());
+            validationOutputData = new ValidationOutputData(false, "Validation failed: " + e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }
