@@ -15,6 +15,9 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
+import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -29,11 +32,15 @@ public class ContainerData {
     private String container_name;
     private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
+    private ContainerRecommendations containerRecommendations;
+    private List<ContainerMetricsHelper> metrics;
     private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
     private List<Metric> metrics;
 
     public ContainerData(String container_name, String container_image_name, List<Metric> metrics) {
         this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
         this.container_image_name = container_image_name;
         this.metrics = metrics;
     }
@@ -66,12 +73,12 @@ public class ContainerData {
         this.results = results;
     }
 
-    public HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> getRecommendations() {
-        return recommendations;
+    public ContainerRecommendations getContainerRecommendations() {
+        return containerRecommendations;
     }
 
-    public void setRecommendations(HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations) {
-        this.recommendations = recommendations;
+    public void setContainerRecommendations(ContainerRecommendations containerRecommendations) {
+        this.containerRecommendations = containerRecommendations;
     }
 
     public List<Metric> getMetrics() {
@@ -87,7 +94,7 @@ public class ContainerData {
                 "container_image_name='" + container_image_name + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
-                ", recommendations=" + recommendations +
+                ", recommendations=" + containerRecommendations.getData() +
                 ", metrics=" + metrics +
                 '}';
     }

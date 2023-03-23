@@ -15,10 +15,21 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.ContainerObject;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -129,6 +140,79 @@ public class Utils
 		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_RSS))
 			return AnalyzerConstants.MetricName.memoryRSS;
 
+		return null;
+	}
+
+	/**
+	 * Get a deep copy of an object
+	 *
+	 * CAUTION: Using this mechanism will have high impact on the performance. As
+	 * this causes performance degradation USE ONLY IF NECESSARY
+	 *
+	 * @param object
+	 * @return
+	 */
+	public static <T> T getClone(T object, Class<T> classMetadata) {
+		if (null == object)
+			return null;
+		Gson gson = new GsonBuilder()
+				.disableHtmlEscaping()
+				.setPrettyPrinting()
+				.enableComplexMapKeySerialization()
+				.registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+				.create();
+
+		String serialisedString = gson.toJson(object);
+		T returnObject = gson.fromJson(serialisedString, classMetadata);
+		return returnObject;
+	}
+
+	public static class DateUtils {
+		private DateUtils() {
+
+		}
+
+		public static boolean isAValidDate(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return false;
+				Date _unused = (new SimpleDateFormat(format)).parse(date);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+
+		public static Date getDateFrom(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return null;
+				Date convertedDate = (new SimpleDateFormat(format)).parse(date);
+				return convertedDate;
+			} catch (Exception e) {
+				return null;
+			}
+		}
+	}
+
+	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
+		if (object instanceof ContainerData) {
+			ExclusionStrategy strategy = new ExclusionStrategy() {
+				@Override
+				public boolean shouldSkipField(FieldAttributes field) {
+					if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+						return true;
+					}
+					return false;
+				}
+
+				@Override
+				public boolean shouldSkipClass(Class<?> clazz) {
+					return false;
+				}
+			};
+			return strategy;
+		}
 		return null;
 	}
 }

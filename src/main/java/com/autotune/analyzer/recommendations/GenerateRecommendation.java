@@ -40,6 +40,9 @@ public class GenerateRecommendation {
         try {
             for (K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
                 for (ContainerData containerData : k8sObject.getContainerDataList()) {
+                    if (containerData.getResults().isEmpty()) {
+                        continue;
+                    }
                     Timestamp monitorEndDate = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerData.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
@@ -86,16 +89,31 @@ public class GenerateRecommendation {
                                 }
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
+                                boolean notifyExist = false;
+                                for (RecommendationNotification recNotify : containerData.getContainerRecommendations().getNotifications()) {
+                                    if (recNotify.getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE)) {
+                                        notifyExist = true;
+                                        break;
+                                    }
+                                }
+                                if (!notifyExist) {
+                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                            AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
+                                            AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE
+                                    );
+                                    containerData.getContainerRecommendations().getNotifications().add(recommendationNotification);
+                                }
                                 break;
                             case PROFILE_BASED:
                                 // Need to be implemented
                                 break;
                         }
                     }
-                    HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>  containerRecommendationMap = containerData.getRecommendations();
+                    HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>  containerRecommendationMap = containerData.getContainerRecommendations().getData();
                     if (null == containerRecommendationMap)
-                        containerRecommendationMap = new HashMap<>();
+                        containerRecommendationMap = new HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>();
                     containerRecommendationMap.put(monitorEndDate, recCatMap);
+                    containerObject.getContainerRecommendations().setData(containerRecommendationMap);
                     containerData.setRecommendations(containerRecommendationMap);
                 }
             }
