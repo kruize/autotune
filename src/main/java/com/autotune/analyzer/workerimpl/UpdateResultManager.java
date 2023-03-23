@@ -47,7 +47,7 @@ public class UpdateResultManager implements KruizeWorker {
     public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
         ExperimentResultData resultData = (ExperimentResultData) o;
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-        experimentInterface.addResultsToDB(kruizeObject, resultData);
+        experimentInterface.addResultsToDB(resultData);
         if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
             String trialNumber = resultData.getTrialNumber();
             List<DeploymentResultData> deploymentResultDataList = resultData.getDeployments();

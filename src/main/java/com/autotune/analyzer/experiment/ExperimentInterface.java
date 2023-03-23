@@ -46,7 +46,7 @@ public interface ExperimentInterface {
 
     //Add experiment results from local storage to DB and set status to Inprogress
     public boolean addResultsToDB(
-            KruizeObject kruizeObject, ExperimentResultData resultData
+            ExperimentResultData resultData
     );
 
     //If Kruize object restarts load all experiment which are in inprogress

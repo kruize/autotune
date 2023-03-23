@@ -23,6 +23,8 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -34,6 +36,7 @@ import java.util.*;
  */
 public class Utils
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 	private Utils() { }
 
 	public static String generateID(Object object) {

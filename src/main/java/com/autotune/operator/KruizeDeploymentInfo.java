@@ -22,6 +22,7 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import org.slf4j.Logger;
@@ -49,6 +50,10 @@ public class KruizeDeploymentInfo {
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
+    private static int bulkupload_createexperiment_limit;
+    private static AnalyzerConstants.PersistenceType persistence_type;
+
+
     private KruizeDeploymentInfo() {
     }
 
@@ -199,5 +204,21 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Monitoring Agent: {}", getMonitoringAgent());
         LOGGER.info("Monitoring Agent URL: {}", getMonitoringAgentEndpoint());
         LOGGER.info("Monitoring agent service: {}\n\n", getMonitoringAgentService());
+    }
+
+    public static int getBulkupload_createexperiment_limit() {
+        return bulkupload_createexperiment_limit;
+    }
+
+    public static void setBulkupload_createexperiment_limit(int bulkupload_createexperiment_limit) {
+        KruizeDeploymentInfo.bulkupload_createexperiment_limit = bulkupload_createexperiment_limit;
+    }
+
+    public static AnalyzerConstants.PersistenceType getPersistence_type() {
+        return persistence_type;
+    }
+
+    public static void setPersistence_type(AnalyzerConstants.PersistenceType persistence_type) {
+        KruizeDeploymentInfo.persistence_type = persistence_type;
     }
 }

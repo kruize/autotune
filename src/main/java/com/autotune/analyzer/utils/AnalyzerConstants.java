@@ -90,6 +90,8 @@ public class AnalyzerConstants {
     public static final String DEPLOYMENT_NAME = "name";
     public static final String SELECTOR = "selectorInfo";
     public static final String NULL = "null";
+    public static final String BULKUPLOAD_CREATEEXPERIMENT_LIMIT = "blukupload_createexperiment_limit";
+    public static final String PERSISTANCE_STORAGE = "persistance_storage";
 
 
     private AnalyzerConstants() {
@@ -131,6 +133,12 @@ public class AnalyzerConstants {
     public enum ResourceSetting {
         requests,
         limits
+    }
+
+    public enum PersistenceType {
+        LOCAL,              //Store only local  , Default
+        HYBRID,             //Store data both in db and local
+        DB                  //Store only DB
     }
 
     public enum RecommendationCategory {

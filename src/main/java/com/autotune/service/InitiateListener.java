@@ -15,21 +15,21 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.common.parallelengine.executor.KruizeExecutor;
-import com.autotune.operator.KruizeOperator;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.workerimpl.CreateExperimentManager;
 import com.autotune.analyzer.workerimpl.UpdateResultManager;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.queue.KruizeQueue;
-import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
+import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.autotune.experimentManager.workerimpl.IterationManager;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +108,7 @@ public class InitiateListener implements ServletContextListener {
                     }
             );
         };
-        createExperimentExecutorScheduled.scheduleAtFixedRate(checkForNewExperiment, 5, 5, TimeUnit.SECONDS);
+        createExperimentExecutorScheduled.scheduleAtFixedRate(checkForNewExperiment, 1, 1, TimeUnit.SECONDS);
 
         /*
            Kruize Update results thread Configuration
@@ -148,7 +148,7 @@ public class InitiateListener implements ServletContextListener {
                     }
             );
         };
-        updateResultsExecutorScheduled.scheduleAtFixedRate(checkForNewResults, 5, 5, TimeUnit.SECONDS);
+        updateResultsExecutorScheduled.scheduleAtFixedRate(checkForNewResults, 1, 1, TimeUnit.SECONDS);
 
         /*
           Kruize Performance Profile configuration
