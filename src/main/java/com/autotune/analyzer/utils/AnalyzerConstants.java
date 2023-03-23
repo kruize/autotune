@@ -548,7 +548,7 @@ public class AnalyzerConstants {
         }
 
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_AVAILABLE = "Duration Based recommendations available";
+        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
     }
 
     public static final class BooleanString {
