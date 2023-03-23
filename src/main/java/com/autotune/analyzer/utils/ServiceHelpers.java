@@ -291,7 +291,9 @@ public class ServiceHelpers {
                     KruizeObject kruizeObject,
                     boolean getLatest,
                     boolean checkForTimestamp,
-                    String monitoringEndTimestamp) {
+                    String monitoringEndTimestamp,
+                    String fromTime,
+                    String toTime) {
                 ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
                 try {
                     listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
@@ -342,6 +344,46 @@ public class ServiceHelpers {
                                             } else {
                                                 tempList.add(timestamp);
                                             }
+                                        }
+                                    }
+                                    for (Timestamp timestamp : tempList) {
+                                        recommendations.remove(timestamp);
+                                    }
+                                    containerObjects.add(clonedContainerObject);
+                                }
+                            } else if (null != fromTime || null != toTime) {
+                                // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
+                                ContainerObject clonedContainerObject = Utils.getClone(containerObject, ContainerObject.class);
+                                if (null != clonedContainerObject) {
+                                    HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations = clonedContainerObject.getContainerRecommendations().getData();
+                                    Timestamp fromTimestamp = null;
+                                    Timestamp toTimestamp = null;
+                                    if (null != fromTime) {
+                                        Date fromDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,fromTime);
+                                        fromTimestamp = new Timestamp(fromDate.getTime());
+                                    }
+                                    if (null != toTime) {
+                                        Date toDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,toTime);
+                                        toTimestamp = new Timestamp(toDate.getTime());
+                                    }
+
+                                    List<Timestamp> tempList = new ArrayList<Timestamp>();
+                                    for (Timestamp timestamp : recommendations.keySet()) {
+                                        boolean canBeAdded = false;
+                                        if (null != fromTimestamp) {
+                                            if (timestamp.equals(fromTimestamp) || timestamp.after(fromTimestamp)) {
+                                                canBeAdded = true;
+                                            }
+                                        }
+                                        if (null != toTimestamp) {
+                                            if (timestamp.equals(toTimestamp) || timestamp.before(toTimestamp)) {
+                                                canBeAdded = true;
+                                            } else {
+                                                canBeAdded = false;
+                                            }
+                                        }
+                                        if (!canBeAdded) {
+                                            tempList.add(timestamp);
                                         }
                                     }
                                     for (Timestamp timestamp : tempList) {

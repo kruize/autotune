@@ -351,6 +351,10 @@ public class AnalyzerConstants {
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
 
+        public static final String MONITORING_END_TIME = "monitoring_end_time";
+        public static final String FROM_TIME = "from_time" ;
+        public static final String TO_TIME = "to_time";
+
         private ServiceConstants() {
         }
     }
