@@ -114,7 +114,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
                     }
                     // check if the 'value' is present in the result JSON
                     if (null == funcVar.getValue().get("results").getValue()) {
-                        LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(funcVar.getKey().toString()));
+                        LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(funcVar.getKey().toString()));
                     }
                 }
             }
