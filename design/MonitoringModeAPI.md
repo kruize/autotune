@@ -857,7 +857,7 @@ Returns the recommendation at a particular timestamp if it exists
 ]
 ```
 
-###Invalid Scenarios:
+### Invalid Scenarios:
 
 **Invalid experiment name**
 
