@@ -334,7 +334,9 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
 | --- | --- | --- | --- |
 |`experiment_name`|Any string|None|Passing Experiment Name as the parameter to the API returns the recommendation of the particular experiment if it exists|
 |`latest`|`true`, `false`|`true`|Gets you the latest available recommendation if true, else returns all the recommendations|
-|`monitoring_end_time`|Any valid timestamp|None|Gets the recommendation of a particular timestamp if it exists|
+|`monitoring_end_time`|*Any valid timestamp|None|Gets the recommendation of a particular timestamp if it exists|
+
+`*valid timestamp is the same format as that used by the updateResults API`
 
 **Request without Parameter**
 
