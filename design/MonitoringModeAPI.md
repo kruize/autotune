@@ -404,7 +404,7 @@ If no parameter is passed API returns all the latest recommendations available f
                             "notifications": [
                                 {
                                     "type": "info",
-                                    "message": "Duration Based recommendations available"
+                                    "message": "Duration Based Recommendations Available"
                                 }
                             ],
                             "data": {
@@ -513,7 +513,7 @@ Returns the latest result of that experiment
                             "notifications": [
                                 {
                                     "type": "info",
-                                    "message": "Duration Based recommendations available"
+                                    "message": "Duration Based Recommendations Available"
                                 }
                             ],
                             "data": {
@@ -623,7 +623,7 @@ Returns all the results of that experiment
                             "notifications": [
                                 {
                                     "type": "info",
-                                    "message": "Duration Based recommendations available"
+                                    "message": "Duration Based Recommendations Available"
                                 }
                             ],
                             "data": {
@@ -760,7 +760,7 @@ Returns all the results of that experiment
 ]
 ```
 
-**Request with experiment name parameter and monitoing end time set to a valid timestamo**
+**Request with experiment name parameter and monitoing end time set to a valid timestamp**
 
 `GET /listRecommendations`
 
@@ -787,7 +787,7 @@ Returns the recommendation at a particular timestamp if it exists
                             "notifications": [
                                 {
                                     "type": "info",
-                                    "message": "Duration Based recommendations available"
+                                    "message": "Duration Based Recommendations Available"
                                 }
                             ],
                             "data": {
@@ -857,7 +857,7 @@ Returns the recommendation at a particular timestamp if it exists
 ]
 ```
 
-###Invalid Scenerios:
+### Invalid Scenarios:
 
 **Invalid experiment name**
 

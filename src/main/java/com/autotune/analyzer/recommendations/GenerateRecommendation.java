@@ -40,9 +40,10 @@ public class GenerateRecommendation {
         try {
             for (K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
                 for (ContainerData containerData : k8sObject.getContainerDataList()) {
-                    if (containerData.getResults().isEmpty()) {
+                    if (null == containerData.getResults())
                         continue;
-                    }
+                    if (containerData.getResults().isEmpty())
+                        continue;
                     Timestamp monitorEndDate = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerData.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
@@ -113,8 +114,7 @@ public class GenerateRecommendation {
                     if (null == containerRecommendationMap)
                         containerRecommendationMap = new HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>>();
                     containerRecommendationMap.put(monitorEndDate, recCatMap);
-                    containerObject.getContainerRecommendations().setData(containerRecommendationMap);
-                    containerData.setRecommendations(containerRecommendationMap);
+                    containerData.getContainerRecommendations().setData(containerRecommendationMap);
                 }
             }
         } catch (Exception e) {

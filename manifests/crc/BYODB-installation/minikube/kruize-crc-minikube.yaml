@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.10_rm
+          image: kruize/autotune_operator:0.0.11_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

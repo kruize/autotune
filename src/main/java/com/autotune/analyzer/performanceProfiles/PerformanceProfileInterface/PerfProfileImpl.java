@@ -51,7 +51,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
     }
 
     /**
-     * @param performanceProfile 
+     * @param performanceProfile
      * @param experimentResultData
      * @return
      */
@@ -114,7 +114,7 @@ public class PerfProfileImpl implements PerfProfileInterface {
                     }
                     // check if the 'value' is present in the result JSON
                     if (null == metric.getMetricResult().getValue()) {
-                        LOGGER.warn(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metric.getName()));
+                        LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metric.getName()));
                     }
                 }
             }
