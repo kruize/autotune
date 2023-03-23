@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -31,12 +31,14 @@ public class ContainerObject {
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
-    private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
+    private ContainerRecommendations containerRecommendations;
     private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
         this.image = image;
         this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
     }
 
     public String getImage() {
@@ -63,12 +65,12 @@ public class ContainerObject {
         this.results = results;
     }
 
-    public HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> getRecommendations() {
-        return recommendations;
+    public ContainerRecommendations getContainerRecommendations() {
+        return containerRecommendations;
     }
 
-    public void setRecommendations(HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations) {
-        this.recommendations = recommendations;
+    public void setContainerRecommendations(ContainerRecommendations containerRecommendations) {
+        this.containerRecommendations = containerRecommendations;
     }
 
     public List<ContainerMetricsHelper> getMetrics() {
@@ -85,7 +87,7 @@ public class ContainerObject {
                 "image='" + image + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
-                ", recommendations=" + recommendations +
+                ", recommendations=" + containerRecommendations.getData() +
                 ", metrics=" + metrics +
                 '}';
     }

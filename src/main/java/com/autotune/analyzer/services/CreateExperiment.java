@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
@@ -87,7 +88,7 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentSO createExperimentSO : experimentSOList) {
-                    KruizeObject kruizeObject = Utils.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
+                    KruizeObject kruizeObject = ServiceHelpers.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
                     if (null != kruizeObject) {
                         kruizeExpList.add(kruizeObject);
                     }
