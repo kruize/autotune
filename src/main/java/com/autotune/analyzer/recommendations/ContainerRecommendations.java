@@ -21,9 +21,7 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class ContainerRecommendations {
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
@@ -32,7 +30,7 @@ public class ContainerRecommendations {
     private HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data;
 
     public ContainerRecommendations() {
-        this.notifications = new ArrayList<RecommendationNotification>();
+        this.notifications = Collections.synchronizedList(new ArrayList<RecommendationNotification>());
         this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
 
         RecommendationNotification recommendationNotification = new RecommendationNotification(
@@ -44,10 +42,6 @@ public class ContainerRecommendations {
 
     public List<RecommendationNotification> getNotifications() {
         return notifications;
-    }
-
-    public void setNotifications(List<RecommendationNotification> notifications) {
-        this.notifications = notifications;
     }
 
     public HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> getData() {
