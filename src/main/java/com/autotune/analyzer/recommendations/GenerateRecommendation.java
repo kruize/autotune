@@ -42,9 +42,10 @@ public class GenerateRecommendation {
                 DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
                 for (String cName : deploymentObj.getContainers().keySet()) {
                     ContainerObject containerObject = deploymentObj.getContainers().get(cName);
-                    if (containerObject.getResults().isEmpty()) {
+                    if (null == containerObject.getResults())
                         continue;
-                    }
+                    if (containerObject.getResults().isEmpty())
+                        continue;
                     Timestamp monitorEndDate = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     Timestamp minDate = containerObject.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
