@@ -4,6 +4,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class K8sObject {

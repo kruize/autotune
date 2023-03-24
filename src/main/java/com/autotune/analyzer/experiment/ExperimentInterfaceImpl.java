@@ -38,6 +38,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
+                    LOGGER.info("kruizeObject = {}", kruizeObject.toString());
                     kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     kruizeObject.setExperimentId(Utils.generateID(toString()));
                     mainKruizeExperimentMap.put(
@@ -47,6 +48,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
+//        LOGGER.info("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
         return true;
     }
 
@@ -82,7 +84,8 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         k8sObjectList = new ArrayList<>();
                     }
                     List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
-                    for(K8sObject resultK8sObject:resultK8sObjectList) {
+                    for(int k8sObjectCount = 0; k8sObjectCount<resultK8sObjectList.size(); k8sObjectCount++) {
+                        K8sObject resultK8sObject = resultK8sObjectList.get(k8sObjectCount);
                         K8sObject k8sObject;
                         List<ContainerData> containerDataList;
                         if (!k8sObjectList.contains(resultK8sObject)) {
@@ -107,7 +110,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             }
                             HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
 
-
                             if (null == resultsIntervalMap) {
                                 resultsIntervalMap = new HashMap<>();
                             }
@@ -119,7 +121,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             containerDataList.add(containerData);
                         }
                         k8sObject.setContainerDataList(containerDataList);
-                        k8sObjectList.add(k8sObject);
+                        k8sObjectList.set(k8sObjectCount, k8sObject);
                     }
                     ko.setKubernetesObjects(k8sObjectList);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());

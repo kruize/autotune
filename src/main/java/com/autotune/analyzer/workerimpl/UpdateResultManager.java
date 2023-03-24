@@ -21,9 +21,11 @@ import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.GenerateRecommendation;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -72,6 +74,7 @@ public class UpdateResultManager implements KruizeWorker {
         }
         try {
             GenerateRecommendation.generateRecommendation(kruizeObject);
+
         } catch (Exception e) {
             LOGGER.error("Not able to generate recommendation for expName: {} ", kruizeObject.getExperimentName());
         }

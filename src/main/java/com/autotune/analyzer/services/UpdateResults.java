@@ -20,13 +20,11 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +74,6 @@ public class UpdateResults extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
                 for (UpdateResultsSO updateResultsSO : updateResultsSOList) {
-                    experimentResultDataList.add(ServiceHelpers.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
                     experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
                 }
                 LOGGER.debug(experimentResultDataList.toString());

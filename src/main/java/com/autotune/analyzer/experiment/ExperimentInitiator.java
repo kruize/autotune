@@ -16,9 +16,11 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.common.k8sObjects.K8sObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,16 @@ public class ExperimentInitiator {
     ) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
+//            for (KruizeObject kruizeObject : kruizeExpList){
+//                for ( K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
+//                for ( ContainerData containerData : k8sObject.getContainerDataList()) {
+//                    if ( null == containerData.getContainerRecommendations())
+//                        System.out.println("NUll recommendation");
+//                    else
+//                        System.out.println("recomm = "+containerData.getContainerRecommendations());
+//                }}
+//
+//            }
             ExperimentValidation validationObject = new ExperimentValidation(mainKruizeExperimentMap);
             validationObject.validate(kruizeExpList);
             if (validationObject.isSuccess()) {

@@ -89,11 +89,9 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentSO createExperimentSO : experimentSOList) {
-                    KruizeObject kruizeObject = ServiceHelpers.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
-                    if (null != kruizeObject) {
+                    if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
-                    }
                 }
                 new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects

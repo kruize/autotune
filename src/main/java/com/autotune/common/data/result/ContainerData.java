@@ -16,8 +16,6 @@
 package com.autotune.common.data.result;
 
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.result.StartEndTimeStampResults;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -32,9 +30,7 @@ public class ContainerData {
     private String container_name;
     private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
-    private ContainerRecommendations containerRecommendations;
-    private List<ContainerMetricsHelper> metrics;
-    private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
+    private ContainerRecommendations containerRecommendations; //= new ContainerRecommendations();
     private List<Metric> metrics;
 
     public ContainerData(String container_name, String container_image_name, List<Metric> metrics) {
@@ -94,7 +90,7 @@ public class ContainerData {
                 "container_image_name='" + container_image_name + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
-                ", recommendations=" + containerRecommendations.getData() +
+//                ", recommendations=" + containerRecommendations.getData() +
                 ", metrics=" + metrics +
                 '}';
     }

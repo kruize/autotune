@@ -22,7 +22,6 @@ import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -167,7 +166,7 @@ public class ListRecommendation extends HttpServlet {
                 try {
                     LOGGER.debug(ko.getDeployment_name());
                     LOGGER.debug(ko.getDeployments().toString());
-                    ListRecommendationsSO listRecommendationsSO = ServiceHelpers.Converters.KruizeObjectConverters.
+                    ListRecommendationsSO listRecommendationsSO = Converters.KruizeObjectConverters.
                                                                     convertKruizeObjectToListRecommendationSO(
                                                                         ko,
                                                                         getLatest,
