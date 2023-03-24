@@ -17,7 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -32,19 +32,14 @@ public class ListNamespaces extends HttpServlet {
         try {
             // Initialising the kubernetes service
             kubernetesServices = new KubernetesServicesImpl();
-            // Set response headers
-            response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods", "POST, GET");
-            response.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-            response.addHeader("Access-Control-Max-Age", "1728000");
             JSONObject returnJson = new JSONObject();
             JSONObject dataJson = new JSONObject();
             JSONArray namespacesList = new JSONArray();
             kubernetesServices.getNamespaces().forEach(namespace -> {
                 namespacesList.put(namespace.getMetadata().getName());
             });
-            dataJson.put(AutotuneConstants.JSONKeys.NAMESPACES, namespacesList);
-            returnJson.put(AutotuneConstants.JSONKeys.DATA, dataJson);
+            dataJson.put(KruizeConstants.JSONKeys.NAMESPACES, namespacesList);
+            returnJson.put(KruizeConstants.JSONKeys.DATA, dataJson);
             // Set content type
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

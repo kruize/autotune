@@ -1,0 +1,33 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "no-tunable-datasource-name"
+layer_name: container
+layer_level: 0
+details: generic container tunables
+layer_presence:
+  # This layer is assumed to be available by default for all applications.
+  presence: always
+tunables:
+  - name: memoryRequest
+    value_type: double
+    upper_bound: '300 Mi'
+    lower_bound: '150 Mi'
+    queries:
+      query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage
+
+  - name: cpuRequest
+    value_type: double
+    upper_bound: '3.0'
+    lower_bound: '1.0'
+    queries:
+    - datasource: 'prometheus'
+      query: '(container_cpu_usage_seconds_total{$CONTAINER_LABEL$!="POD", $POD_LABEL$="$POD$"}[1m])'
+    slo_class:
+      - response_time
+      - throughput
+      - resource_usage

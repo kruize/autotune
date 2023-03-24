@@ -7,14 +7,14 @@ from helpers.fixtures import *
 
 mandatory_fields = [
         ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("kubernetes_objects_name", ERROR_STATUS_CODE, ERROR_STATUS),
         ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
         ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
         ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("deployment_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("performanceProfile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
+        ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
 
 csvfile = "/tmp/create_exp_test_data.csv"
@@ -321,14 +321,18 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
     input_json_file="../json_files/mandatory.json"
     json_data = json.load(open(input_json_file))
 
-    if field == "performanceProfile_slo":
-        json_data[0].pop("performanceProfile", None)
+    if field == "performance_profile_slo":
+        json_data[0].pop("performance_profile", None)
         json_data[0].pop("slo", None)
-        json_data[0].pop("deployment_name", None)
-    elif field == "deployment_name_selector":
-        json_data[0].pop("deployment_name", None)
+        json_data[0]["kubernetes_objects"][0].pop("name", None)
+    elif field == "kubernetes_objects_name_selector":
+        json_data[0]["kubernetes_objects"][0].pop("name", None)
         json_data[0].pop("selector", None)
         json_data[0].pop("slo", None)
+    elif field == "kubernetes_objects_name":
+        json_data[0]["kubernetes_objects"][0].pop("name", None)
+    elif field == "namespace":
+        json_data[0]["kubernetes_objects"][0].pop("namespace", None)
     else:
         json_data[0].pop("slo", None)
         json_data[0].pop("selector", None)

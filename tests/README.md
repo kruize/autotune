@@ -16,8 +16,8 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 ## High level Test Scenarios
 
 - IT Admin adds Autotune object (application config for autotune to tune the app)
-- SME adds / modifies Autotune layer
-- SME adds / modifies Autotune tunable
+- SME adds / modifies kruize layer
+- SME adds / modifies Kruize Tunable
 - Autotune REST APIs
 
 ## Functional tests description
@@ -35,7 +35,7 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 
 - **Autotune config yaml tests**
 
-  Here we validate if a user can add a new autotune layer configuration with the required tunables or modify the existing layer configuration. We also check if autotune handles invalid configurations well giving out appropriate error messages to the users.
+  Here we validate if a user can add a new kruize layer configuration with the required tunables or modify the existing layer configuration. We also check if autotune handles invalid configurations well giving out appropriate error messages to the users.
    
    The test does the following:
    - Deploys autotune and its dependencies using the deploy script from the autotune repo
@@ -44,7 +44,7 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 
 - **Basic API tests**
 
-  Here we validate all the [Autotune REST APIs](https://github.com/kruize/autotune/blob/master/design/API.md).
+  Here we validate all the [Autotune REST APIs](/design/ExperimentModeAPI.md).
   
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
@@ -52,14 +52,14 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   - Applies the autotune application yamls for the petclinic deployments
   - Validates the JSON output for all the Autotune REST APIs 
 
-- **Modify autotune config tests**
+- **Modify kruize layer tests**
 
-  Here we modify the layer config and validate the listAutotuneTunables Autotune REST API.
+  Here we modify the layer config and validate the listKruizeTunables Autotune REST API.
   
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
   - Modify the layer config and apply
-  - Validate if the modified config is reflected in the JSON output from listAutotuneTunables Autotune API
+  - Validate if the modified config is reflected in the JSON output from listKruizeTunables Autotune API
 
 - **ConfigMap yaml tests**
 
@@ -82,21 +82,21 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
-  - Deploys benchmark applications and requried application autotune yamls
+  - Deploys benchmark applications and required application autotune yamls
   - Validate autotune id for following scenarios:
   	1. Check the uniqueness of the autotune object ids
   	2. Check if re-applying the autotune object without modifying the yaml does not change the autotune object id
   	3. Update and apply the application autotune yaml and compare the ids
   	4. Deploy multiple applications and check if the autotune object ids are unique
     
-- **Autotune layer config object id tests**
+- **kruize layer object id tests**
 
-  Here we validate the autotune layer config object id for different scenarios.
+  Here we validate the kruize layer object id for different scenarios.
   
   The test does the following:
   - Deploys autotune and its dependencies using the deploy script from the autotune repo
-  - Validate autotune layer config id for following scenarios:
-  	1. Check the uniqueness of the autotune layer config ids
+  - Validate kruize layer id for following scenarios:
+  	1. Check the uniqueness of the kruize layer ids
   	2. Re-apply the layer config without modifying yaml and check if both the ids are same
   	3. Update and apply the layer config yaml and compare the ids
   	4. Apply new layer config and validate the id
@@ -124,11 +124,18 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   - Validates the trial result summary obtained from the listTrialStatus API once the experiment is completed.
 
 ### Remote monitoring tests
-  Here we test Kruize [Remote monitoring APIs](https://github.com/kruize/autotune/blob/mvp_demo/design/MonitoringModeAPI.md). 
+  Here we test Kruize [Remote monitoring APIs](/design/MonitoringModeAPI.md). 
+
+
+#### API tests
 
   The tests does the following:
   - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
   - Validates the behaviour of createExperiment, updateResults and listRecommendations APIs in various scenarios covering both positive and negative usecases.
+
+#### Stress test
+
+To run the stress test refer the Stress test [README](/tests/scripts/remote_monitoring_tests/README.md)
 
 ## Supported Clusters
 - Minikube

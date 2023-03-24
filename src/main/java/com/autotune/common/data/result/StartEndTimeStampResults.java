@@ -15,7 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ import java.util.HashMap;
  * Raw results are segregated and organized using  StartEndTimeStampResults
  */
 public class StartEndTimeStampResults {
-    HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> metrics;
+    HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> metrics;
     private Timestamp startTimeStamp;
     private Timestamp endTimeStamp;
     private Double durationInMinutes;
@@ -60,11 +61,11 @@ public class StartEndTimeStampResults {
         this.durationInMinutes = durationInMinutes;
     }
 
-    public HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> getMetrics() {
+    public HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(HashMap<AnalyzerConstants.AggregatorType, AggregationInfoResult> metrics) {
+    public void setMetrics(HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> metrics) {
         this.metrics = metrics;
     }
 
@@ -77,5 +78,5 @@ public class StartEndTimeStampResults {
                 ", metrics=" + metrics +
                 '}';
     }
-    
+
 }

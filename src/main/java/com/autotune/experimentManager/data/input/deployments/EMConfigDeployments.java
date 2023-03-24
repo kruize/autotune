@@ -4,7 +4,7 @@ import com.autotune.experimentManager.data.input.interfaces.ConvertToJSON;
 import com.autotune.experimentManager.exceptions.EMInvalidInstanceCreation;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -33,18 +33,18 @@ public class EMConfigDeployments implements ConvertToJSON {
 
     public EMConfigDeployments(JSONObject jsonObject) throws IncompatibleInputJSONException, EMInvalidInstanceCreation {
         LOGGER.info("Creating EMConfigDeployment");
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.DEPLOYMENTS)){
+        if (!jsonObject.has(KruizeConstants.JSONKeys.DEPLOYMENTS)){
             throw new IncompatibleInputJSONException();
         }
-        JSONArray deploymentsArray = jsonObject.getJSONArray(AutotuneConstants.JSONKeys.DEPLOYMENTS);
+        JSONArray deploymentsArray = jsonObject.getJSONArray(KruizeConstants.JSONKeys.DEPLOYMENTS);
         for (Object o : deploymentsArray) {
             JSONObject job = (JSONObject) o;
-            if (!job.has(AutotuneConstants.JSONKeys.TYPE)) {
+            if (!job.has(KruizeConstants.JSONKeys.TYPE)) {
                 throw new IncompatibleInputJSONException();
             }
-            if (job.getString(AutotuneConstants.JSONKeys.TYPE).equalsIgnoreCase(EMConstants.EMConfigDeployments.DeploymentTypes.TRAINING)) {
+            if (job.getString(KruizeConstants.JSONKeys.TYPE).equalsIgnoreCase(EMConstants.EMConfigDeployments.DeploymentTypes.TRAINING)) {
                 this.trainingDeployment = new EMConfigTrainingDeployment(job);
-            } else if (job.getString(AutotuneConstants.JSONKeys.TYPE).equalsIgnoreCase(EMConstants.EMConfigDeployments.DeploymentTypes.PRODUCTION)) {
+            } else if (job.getString(KruizeConstants.JSONKeys.TYPE).equalsIgnoreCase(EMConstants.EMConfigDeployments.DeploymentTypes.PRODUCTION)) {
                 this.productionDeployment = new EMConfigProductionDeployment(job);
             }
         }
@@ -62,7 +62,7 @@ public class EMConfigDeployments implements ConvertToJSON {
         if (null != getProductionDeployment())
             jsonArray.put(getProductionDeployment().toJSON());
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(AutotuneConstants.JSONKeys.DEPLOYMENTS, jsonArray);
+        jsonObject.put(KruizeConstants.JSONKeys.DEPLOYMENTS, jsonArray);
         return jsonObject;
     }
 }

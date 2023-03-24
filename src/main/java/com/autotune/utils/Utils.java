@@ -15,21 +15,20 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
-import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
-import com.autotune.common.data.result.*;
-import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.DeploymentObject;
-import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.k8sObjects.KruizeObject;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.k8sObjects.ContainerObject;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -143,110 +142,76 @@ public class Utils
 		return null;
 	}
 
-	public static class Converters {
-		private Converters() {
+	/**
+	 * Get a deep copy of an object
+	 *
+	 * CAUTION: Using this mechanism will have high impact on the performance. As
+	 * this causes performance degradation USE ONLY IF NECESSARY
+	 *
+	 * @param object
+	 * @return
+	 */
+	public static <T> T getClone(T object, Class<T> classMetadata) {
+		if (null == object)
+			return null;
+		Gson gson = new GsonBuilder()
+				.disableHtmlEscaping()
+				.setPrettyPrinting()
+				.enableComplexMapKeySerialization()
+				.registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+				.create();
+
+		String serialisedString = gson.toJson(object);
+		T returnObject = gson.fromJson(serialisedString, classMetadata);
+		return returnObject;
+	}
+
+	public static class DateUtils {
+		private DateUtils() {
 
 		}
 
-		public static class KruizeObjectConverters {
-			private KruizeObjectConverters() {
-
+		public static boolean isAValidDate(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return false;
+				Date _unused = (new SimpleDateFormat(format)).parse(date);
+				return true;
+			} catch (Exception e) {
+				return false;
 			}
+		}
 
-			public static CreateExperimentSO convertKruizeObjectToCreateExperimentSO(KruizeObject kruizeObject) {
-				// Need to be implemented if needed
+		public static Date getDateFrom(String format, String date) {
+			try {
+				if (null == format || null == date)
+					return null;
+				Date convertedDate = (new SimpleDateFormat(format)).parse(date);
+				return convertedDate;
+			} catch (Exception e) {
 				return null;
 			}
-
-			public static KruizeObject convertCreateExperimentSOToKruizeObject(CreateExperimentSO createExperimentSO) {
-				// To be implemented
-				KruizeObject kruizeObject =  new KruizeObject();
-				HashMap<String, DeploymentObject> deploymentObjectHashMap = new HashMap<String, DeploymentObject>();
-				for (K8sObject k8sObject: createExperimentSO.getKubernetesObjects()) {
-					if (null != k8sObject.getName() && !k8sObject.getName().isBlank()) {
-						DeploymentObject deploymentObject = new DeploymentObject(k8sObject.getName());
-						AnalyzerConstants.K8S_OBJECT_TYPES objectType = getApproriateK8sObjectType(k8sObject.getType());
-						if (null != objectType)
-							deploymentObject.setType(objectType);
-						HashMap<String, ContainerObject> containerObjectHashMap = new HashMap<String, ContainerObject>();
-						for (ContainerObject containerObject: k8sObject.getContainers()) {
-							containerObjectHashMap.put(containerObject.getContainer_name(), containerObject);
-						}
-						deploymentObject.setContainers(containerObjectHashMap);
-						deploymentObject.setNamespace(k8sObject.getNamespace());
-						// TODO: Need to be changed as it should not be set at higher level
-						kruizeObject.setNamespace(k8sObject.getNamespace());
-						deploymentObjectHashMap.put(k8sObject.getName(), deploymentObject);
-					}
-				}
-				kruizeObject.setDeployments(deploymentObjectHashMap);
-				kruizeObject.setExperimentName(createExperimentSO.getExperimentName());
-				kruizeObject.setApiVersion(createExperimentSO.getApiVersion());
-				kruizeObject.setTargetCluster(createExperimentSO.getTargetCluster());
-				kruizeObject.setClusterName(createExperimentSO.getClusterName());
-				kruizeObject.setMode(createExperimentSO.getMode());
-				kruizeObject.setPerformanceProfile(createExperimentSO.getPerformanceProfile());
-				kruizeObject.setTrial_settings(createExperimentSO.getTrialSettings());
-				kruizeObject.setRecommendation_settings(createExperimentSO.getRecommendationSettings());
-				return kruizeObject;
-			}
-
-			public static ListRecommendationsSO convertKruizeObjectToListRecommendationSO(KruizeObject kruizeObject) {
-				// Need to be implemented if needed
-				ListRecommendationsSO listRecommendationsSO =  new ListRecommendationsSO();
-				listRecommendationsSO.setApiVersion(kruizeObject.getApiVersion());
-				listRecommendationsSO.setExperimentName(kruizeObject.getExperimentName());
-				listRecommendationsSO.setClusterName(kruizeObject.getClusterName());
-				List<K8sObject> k8sObjectsList = new ArrayList<K8sObject>();
-				for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
-					K8sObject k8sObject = new K8sObject();
-					k8sObject.setName(deploymentObject.getName());
-					k8sObject.setType(getAppropriateK8sObjectTypeString(deploymentObject.getType()));
-					k8sObject.setNamespace(deploymentObject.getNamespace());
-					List<ContainerObject> containerObjects = new ArrayList<ContainerObject>();
-					for (ContainerObject containerObject: deploymentObject.getContainers().values()) {
-						containerObjects.add(containerObject);
-					}
-					k8sObject.setContainers(containerObjects);
-					k8sObjectsList.add(k8sObject);
-				}
-				listRecommendationsSO.setKubernetesObjects(k8sObjectsList);
-				return listRecommendationsSO;
-			}
-
-			public static ExperimentResultData convertUpdateResultsSOToExperimentResultData(UpdateResultsSO updateResultsSO) {
-				ExperimentResultData experimentResultData = new ExperimentResultData();
-				experimentResultData.setStarttimestamp(updateResultsSO.getStartTimestamp());
-				experimentResultData.setEndtimestamp(updateResultsSO.getEndTimestamp());
-				experimentResultData.setExperiment_name(updateResultsSO.getExperimentName());
-				List<DeploymentResultData> deploymentResultDataList = new ArrayList<DeploymentResultData>();
-				for (K8sObject k8sObject : updateResultsSO.getKubernetesObjects()) {
-					DeploymentResultData deploymentResultData = new DeploymentResultData();
-					deploymentResultData.setDeployment_name(k8sObject.getName());
-					deploymentResultData.setNamespace(k8sObject.getNamespace());
-					List<Containers> containersList =  new ArrayList<Containers>();
-					for (ContainerObject containerObject: k8sObject.getContainers()) {
-						Containers containers =  new Containers();
-						containers.setContainer_name(containerObject.getContainer_name());
-						containers.setImage_name(containerObject.getImage());
-						HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> metricsMap =  new HashMap<>();
-						for (ContainerMetricsHelper containerMetricsHelper : containerObject.getMetrics()) {
-							HashMap<String, Results> resultsHashMap =  new HashMap<>();
-							resultsHashMap.put("results", containerMetricsHelper.getResults());
-							AnalyzerConstants.MetricName metricName = getAppropriateMetricName(containerMetricsHelper.getName());
-							if (null != metricName) {
-								metricsMap.put(metricName, resultsHashMap);
-							}
-						}
-						containers.setContainer_metrics(metricsMap);
-						containersList.add(containers);
-					}
-					deploymentResultData.setContainers(containersList);
-					deploymentResultDataList.add(deploymentResultData);
-				}
-				experimentResultData.setDeployments(deploymentResultDataList);
-				return experimentResultData;
-			}
 		}
+	}
+
+	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
+		if (object instanceof ContainerObject) {
+			ExclusionStrategy strategy = new ExclusionStrategy() {
+				@Override
+				public boolean shouldSkipField(FieldAttributes field) {
+					if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+						return true;
+					}
+					return false;
+				}
+
+				@Override
+				public boolean shouldSkipClass(Class<?> clazz) {
+					return false;
+				}
+			};
+			return strategy;
+		}
+		return null;
 	}
 }

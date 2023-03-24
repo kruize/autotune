@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.experimentManager.data.result;
 
-import com.autotune.common.data.metrics.EMMetricResult;
 import com.autotune.experimentManager.utils.EMUtil;
 
 import java.util.Date;

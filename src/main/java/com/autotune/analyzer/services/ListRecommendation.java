@@ -16,12 +16,15 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.AutotuneResponse;
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -43,8 +46,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * Rest API used to recommend right configuration.
@@ -67,65 +70,141 @@ public class ListRecommendation extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        boolean getLatest = true;
+        boolean checkForTimestamp = false;
+        boolean error = false;
+        if (null != latestRecommendation
+                && !latestRecommendation.isEmpty()
+                && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)
+        ) {
+            getLatest = false;
+        }
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
+        // Check if experiment name is passed
         if (null != experimentName) {
+            // trim the experiment name to remove whitespaces
             experimentName = experimentName.trim();
+            // Check if experiment exists
             if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
+                // Check if timestamp is passed
+                if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
+                    monitoringTimestamp = monitoringTimestamp.trim();
+                    if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                        // Check if timestamp exists in recommendations
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(experimentName), monitoringTimestamp);
+                        if (timestampExists) {
+                            checkForTimestamp = true;
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
+                            );
+                        }
+                    } else {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
+                        );
+                    }
+                }
                 kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
             } else {
-                // TODO: Needs to be implemented
-                //sendErrorResponse(response, new Exception("Invalid Experiment Name"), HttpServletResponse.SC_BAD_REQUEST, "Invalid Experiment Name");
+                error = true;
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                );
             }
         } else {
-            kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
-        }
-        //List<ViewRecommendation> recommendationList = new ArrayList<>();
-        List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
-        for (KruizeObject ko : kruizeObjectList) {
-            try {
-                LOGGER.debug(ko.getDeployment_name());
-                LOGGER.debug(ko.getDeployments().toString());
-//                recommendationList.add(
-//                        new ViewRecommendation(
-//                                ko.getExperimentName(),
-//                                ko.getNamespace(),
-//                                ko.getDeployment_name(),
-//                                ko.getDeployments().get(ko.getDeployment_name()).getContainers()
-//                        )
-//                );
-                recommendationList.add(Utils.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(ko));
-            } catch (Exception e) {
-                LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
-            }
-        }
-
-        ExclusionStrategy strategy = new ExclusionStrategy() {
-            @Override
-            public boolean shouldSkipField(FieldAttributes field) {
-                if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
-                    return true;
+            if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
+                monitoringTimestamp = monitoringTimestamp.trim();
+                if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                    for (String expName : this.mainKruizeExperimentMap.keySet()) {
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(expName), monitoringTimestamp);
+                        if (timestampExists) {
+                            kruizeObjectList.add(this.mainKruizeExperimentMap.get(expName));
+                            checkForTimestamp = true;
+                        }
+                    }
+                    if (kruizeObjectList.isEmpty()) {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
+                        );
+                    }
+                } else {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
+                    );
                 }
-                return false;
+            } else {
+                // Add all experiments to list
+                kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+            }
+        }
+        if (!error) {
+            List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
+            for (KruizeObject ko : kruizeObjectList) {
+                try {
+                    LOGGER.debug(ko.getDeployment_name());
+                    LOGGER.debug(ko.getDeployments().toString());
+                    ListRecommendationsSO listRecommendationsSO = ServiceHelpers.Converters.KruizeObjectConverters.
+                                                                    convertKruizeObjectToListRecommendationSO(
+                                                                        ko,
+                                                                        getLatest,
+                                                                        checkForTimestamp,
+                                                                        monitoringTimestamp);
+                    recommendationList.add(listRecommendationsSO);
+                } catch (Exception e) {
+                    LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+                }
             }
 
-            @Override
-            public boolean shouldSkipClass(Class<?> clazz) {
-                return false;
+            ExclusionStrategy strategy = new ExclusionStrategy() {
+                @Override
+                public boolean shouldSkipField(FieldAttributes field) {
+                    if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean shouldSkipClass(Class<?> clazz) {
+                    return false;
+                }
+            };
+            String gsonStr = "[]";
+            if (recommendationList.size() > 0) {
+                Gson gsonObj = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .setExclusionStrategies(strategy)
+                        .create();
+                gsonStr = gsonObj.toJson(recommendationList);
             }
-        };
-        String gsonStr = "[]";
-        if (recommendationList.size() > 0) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(strategy)
-                    .create();
-            gsonStr = gsonObj.toJson(recommendationList);
+            response.getWriter().println(gsonStr);
+            response.getWriter().close();
         }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {
@@ -135,7 +214,7 @@ public class ListRecommendation extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.append(
                 new Gson().toJson(
-                        new AutotuneResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                        new KruizeResponse("Updated metrics results successfully with Autotune. View update results at /listExperiments \"results\" section.", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
         out.flush();

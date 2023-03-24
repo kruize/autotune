@@ -10,7 +10,7 @@ spec:
     plural: autotuneconfigs
     singular: autotuneconfig
     #types can be identified with this tag
-    kind: AutotuneConfig
+    kind: KruizeLayer
   scope: Namespaced
   versions:
   - name: v1

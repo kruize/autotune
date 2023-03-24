@@ -322,44 +322,8 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
     json_data = json.load(open(input_json_file))
 
     find.append(json_data[0]['experiment_name'])
-    find.append(json_data[0]['deployment_name'])
-    find.append(json_data[0]['namespace'])
-
-    form_kruize_url(cluster_type)
-
-@pytest.mark.sanity
-def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
-    """
-    Test Description: This test validates the updation of results for multiple experiments using different json files
-    """
-
-    input_json_file="../json_files/create_exp.json"
-    result_json_file="../json_files/update_results.json"
-
-    find = []
-    json_data = json.load(open(input_json_file))
-
-    find.append(json_data[0]['experiment_name'])
-    find.append(json_data[0]['deployment_name'])
-    find.append(json_data[0]['namespace'])
-
-    form_kruize_url(cluster_type)
-
-@pytest.mark.sanity
-def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
-    """
-    Test Description: This test validates the updation of results for multiple experiments using different json files
-    """
-
-    input_json_file="../json_files/create_exp.json"
-    result_json_file="../json_files/update_results.json"
-
-    find = []
-    json_data = json.load(open(input_json_file))
-
-    find.append(json_data[0]['experiment_name'])
-    find.append(json_data[0]['deployment_name'])
-    find.append(json_data[0]['namespace'])
+    find.append(json_data[0]["kubernetes_objects"][0]['name'])
+    find.append(json_data[0]["kubernetes_objects"][0]['namespace'])
 
     form_kruize_url(cluster_type)
 
@@ -370,7 +334,7 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
         generate_json(find, input_json_file, json_file, i)
 
         response = delete_experiment(json_file)
-        print("delet exp = ", response.status_code)
+        print("delete exp = ", response.status_code)
 
         response = create_experiment(json_file)
 

@@ -2,7 +2,7 @@ package com.autotune.experimentManager.data.input.info;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +39,18 @@ public class EMTrialInfo {
 
     public EMTrialInfo(JSONObject jsonObject) throws IncompatibleInputJSONException {
         LOGGER.info("Creating EMConfigInfo");
-        if (!jsonObject.has(AutotuneConstants.JSONKeys.TRIAL_INFO)) {
+        if (!jsonObject.has(KruizeConstants.JSONKeys.TRIAL_INFO)) {
             throw  new IncompatibleInputJSONException();
         }
-        JSONObject subObj = jsonObject.getJSONObject(AutotuneConstants.JSONKeys.TRIAL_INFO);
+        JSONObject subObj = jsonObject.getJSONObject(KruizeConstants.JSONKeys.TRIAL_INFO);
         if (null != subObj) {
-            if (!subObj.has(AutotuneConstants.JSONKeys.TRIAL_ID) || !subObj.has(AutotuneConstants.JSONKeys.TRIAL_NUM)) {
+            if (!subObj.has(KruizeConstants.JSONKeys.TRIAL_ID) || !subObj.has(KruizeConstants.JSONKeys.TRIAL_NUM)) {
                 throw new IncompatibleInputJSONException();
             }
-            this.trialId = subObj.getString(AutotuneConstants.JSONKeys.TRIAL_ID);
-            this.trialNum = subObj.getInt(AutotuneConstants.JSONKeys.TRIAL_NUM);
-            if(subObj.has(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL)){
-                this.trialResultUrl = subObj.getString(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL);
+            this.trialId = subObj.getString(KruizeConstants.JSONKeys.TRIAL_ID);
+            this.trialNum = subObj.getInt(KruizeConstants.JSONKeys.TRIAL_NUM);
+            if(subObj.has(KruizeConstants.JSONKeys.TRIAL_RESULT_URL)){
+                this.trialResultUrl = subObj.getString(KruizeConstants.JSONKeys.TRIAL_RESULT_URL);
             }
         } else {
             throw new IncompatibleInputJSONException();
@@ -72,9 +72,9 @@ public class EMTrialInfo {
     public JSONObject toJSON() {
 
         JSONObject infoJsonObject = new JSONObject();
-        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_ID, this.trialId);
-        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_NUM, this.trialNum);
-        infoJsonObject.put(AutotuneConstants.JSONKeys.TRIAL_RESULT_URL, this.trialResultUrl);
+        infoJsonObject.put(KruizeConstants.JSONKeys.TRIAL_ID, this.trialId);
+        infoJsonObject.put(KruizeConstants.JSONKeys.TRIAL_NUM, this.trialNum);
+        infoJsonObject.put(KruizeConstants.JSONKeys.TRIAL_RESULT_URL, this.trialResultUrl);
 
 
         return infoJsonObject;

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.HashMap;
 

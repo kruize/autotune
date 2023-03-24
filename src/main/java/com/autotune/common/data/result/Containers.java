@@ -15,7 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.HashMap;
 
@@ -25,7 +26,7 @@ import java.util.HashMap;
 public class Containers {
     private String image_name;
     private String container_name;
-    private HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> container_metrics;
+    private HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> container_metrics;
 
     public String getImage_name() {
         return image_name;
@@ -42,12 +43,11 @@ public class Containers {
     public void setContainer_name(String container_name) {
         this.container_name = container_name;
     }
-
-    public HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> getContainer_metrics() {
+    public HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> getContainer_metrics() {
         return container_metrics;
     }
 
-    public void setContainer_metrics(HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> container_metrics) {
+    public void setContainer_metrics(HashMap<AnalyzerConstants.MetricName, HashMap<String, MetricResults>> container_metrics) {
         this.container_metrics = container_metrics;
     }
 

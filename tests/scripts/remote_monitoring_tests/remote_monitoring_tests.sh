@@ -33,6 +33,7 @@ function remote_monitoring_tests() {
 	TESTS_PASSED=0
 	TESTS=0
 	failed=0
+	marker_options=""
 	((TOTAL_TEST_SUITES++))
 
 	python3 --version >/dev/null 2>/dev/null
@@ -47,7 +48,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_create_experiment" "test_update_results")
+	remote_monitoring_tests=("sanity" "negative" "extended" "test_e2e")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -107,9 +108,9 @@ function remote_monitoring_tests() {
 		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
-		echo "pytest ${REMOTE_MONITORING_TEST_DIR}/rest_apis/${test}.py --cluster_type ${cluster_type}" | tee -a ${LOG}
 		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
-			pytest --html=${TEST_DIR}/report.html ${test}.py --cluster_type ${cluster_type} | tee -a ${LOG}
+			echo "pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type}"
+			pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type} | tee -a ${LOG}
 		popd > /dev/null
 		if  grep -q "AssertionError" "${LOG}" ; then
 			failed=1

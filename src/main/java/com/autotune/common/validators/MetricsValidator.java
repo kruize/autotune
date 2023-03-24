@@ -15,11 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.validators;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialSettings;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialSettings;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.experimentManager.handler.PreValidationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

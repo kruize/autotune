@@ -16,10 +16,10 @@
 package com.autotune.experimentManager.handler;
 
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.Metric;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.experimentManager.data.result.StepsMetaData;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
@@ -44,7 +44,7 @@ public class PostResultsHandler implements EMHandlerInterface {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostResultsHandler.class);
 
     @Override
-    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(ExperimentTrial experimentTrial, TrialDetails trialDetails, TrialIterationMetaData iterationMetaData, StepsMetaData stepsMeatData, KruizeExecutor kruizeExecutor, ServletContext context) {
         try {
             LOGGER.debug("ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {}",
                     experimentTrial.getExperimentName(),
@@ -60,16 +60,16 @@ public class PostResultsHandler implements EMHandlerInterface {
             HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
             for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
                 Metric podMetric = podMetricEntry.getValue();
-                if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                    LOGGER.info("Mean result for {} is {} ", podMetric.getName(), podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+                    LOGGER.info("Mean result for {} is {} ", podMetric.getName(), podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                 }
             }
             HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
             for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
                 for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                     Metric containerMetric = containerMetricEntry.getValue();
-                    if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                        LOGGER.info("Mean result for {} is {} ", containerMetric.getName(), containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
+                    if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+                        LOGGER.info("Mean result for {} is {} ", containerMetric.getName(), containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
                     }
                 }
             }
@@ -96,7 +96,7 @@ public class PostResultsHandler implements EMHandlerInterface {
         } catch (Exception e) {
             trialDetails.getTrialMetaData().setStatus(EMUtil.EMExpStatus.FAILED);
             e.printStackTrace();
-            LOGGER.error("Failed to execute PostResultsHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- due to {}",
+            LOGGER.error("Failed to execute PostResultsHandler ExperimentName: \"{}\" - TrialNo: {} - Iteration: {} - StepName: {} -- {}",
                     experimentTrial.getExperimentName(),
                     trialDetails.getTrialNumber(),
                     (null != iterationMetaData) ? iterationMetaData.getIterationNumber() : null,

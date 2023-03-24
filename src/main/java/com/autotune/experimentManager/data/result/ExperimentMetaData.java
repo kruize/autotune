@@ -27,7 +27,7 @@ public class ExperimentMetaData {
     private Timestamp creationDate;
     private Timestamp beginTimestamp;
     private Timestamp endTimestamp;
-    private transient AutoTuneWorkFlow autoTuneWorkFlow;
+    private transient KruizeWorkFlow kruizeWorkFlow;
 
     public Timestamp getBeginTimestamp() {
         return beginTimestamp;
@@ -45,12 +45,12 @@ public class ExperimentMetaData {
         this.endTimestamp = endTimestamp;
     }
 
-    public AutoTuneWorkFlow getAutoTuneWorkFlow() {
-        return autoTuneWorkFlow;
+    public KruizeWorkFlow getAutoTuneWorkFlow() {
+        return kruizeWorkFlow;
     }
 
-    public void setAutoTuneWorkFlow(AutoTuneWorkFlow autoTuneWorkFlow) {
-        this.autoTuneWorkFlow = autoTuneWorkFlow;
+    public void setAutoTuneWorkFlow(KruizeWorkFlow kruizeWorkFlow) {
+        this.kruizeWorkFlow = kruizeWorkFlow;
     }
 
     public Timestamp getCreationDate() {
@@ -66,7 +66,7 @@ public class ExperimentMetaData {
         return "ExperimentMetaData{" +
                 ", beginTimestamp=" + beginTimestamp +
                 ", endTimestamp=" + endTimestamp +
-                ", autoTuneWorkFlow=" + autoTuneWorkFlow +
+                ", kruizeWorkFlow=" + kruizeWorkFlow +
                 '}';
     }
 }

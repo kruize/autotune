@@ -15,11 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.k8sObjects;
 
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.result.Recommendation;
 import com.autotune.common.data.result.StartEndTimeStampResults;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -27,17 +26,19 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ContainerObject {
-    @SerializedName(AutotuneConstants.JSONKeys.CONTAINER_IMAGE_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME)
     private String image;
     private String container_name;
     private HashMap<Timestamp, StartEndTimeStampResults> results;
-    @SerializedName(AutotuneConstants.JSONKeys.RECOMMENDATIONS)
-    private HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations;
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
+    private ContainerRecommendations containerRecommendations;
     private List<ContainerMetricsHelper> metrics;
 
     public ContainerObject(String container_name, String image) {
         this.image = image;
         this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
     }
 
     public String getImage() {
@@ -64,12 +65,12 @@ public class ContainerObject {
         this.results = results;
     }
 
-    public HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> getRecommendations() {
-        return recommendations;
+    public ContainerRecommendations getContainerRecommendations() {
+        return containerRecommendations;
     }
 
-    public void setRecommendations(HashMap<Timestamp, HashMap<String,HashMap<String, Recommendation>>> recommendations) {
-        this.recommendations = recommendations;
+    public void setContainerRecommendations(ContainerRecommendations containerRecommendations) {
+        this.containerRecommendations = containerRecommendations;
     }
 
     public List<ContainerMetricsHelper> getMetrics() {
@@ -86,6 +87,8 @@ public class ContainerObject {
                 "image='" + image + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
+                ", recommendations=" + containerRecommendations.getData() +
+                ", metrics=" + metrics +
                 '}';
     }
 }
