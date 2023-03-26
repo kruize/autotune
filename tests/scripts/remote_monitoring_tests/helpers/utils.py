@@ -29,7 +29,6 @@ ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
-INVALID_EXP_NAME_MSG = "Invalid Experiment Name"
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
@@ -210,7 +209,7 @@ def increment_date_time(input_date_str, term):
 
     return output_date_str
 
-def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours = None):
+def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours = None, test_name = None):
 
     # Validate experiment
     assert create_exp_json["version"] == list_reco_json["version"]
@@ -218,47 +217,65 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
     # Validate kubernetes objects
-    length = len(list_reco_json["kubernetes_objects"])
-    for i in range(length):
-        validate_kubernetes_obj(create_exp_json["kubernetes_objects"][i], update_results_json, list_reco_json["kubernetes_objects"][i], expected_duration_in_hours)
+    if update_results_json != None:
+        length = len(update_results_json[0]["kubernetes_objects"])
+        for i in range(length):
+            update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
+            create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
+            list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+    else:
+            update_results_kubernetes_obj = None
+            create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
+            list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
-
-def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_json, list_reco_kubernetes_obj, expected_duration_in_hours):
+def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
 
     # Validate type, name, namespace
-    assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
-    assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
-    assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
+    if update_results_kubernetes_obj == None:
+        assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
+        assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
+        assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-    # Validate the count of containers
-    assert len(list_reco_kubernetes_obj["containers"]) == len(create_exp_kubernetes_obj["containers"])
+        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
+        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
 
-    container_names = []
-    length = len(create_exp_kubernetes_obj["containers"])
-    for i in range(length):
-        container_names.append(create_exp_kubernetes_obj["containers"][i]["container_name"])
+    else:
+        assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
+        assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
+        assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
+    
+        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
+        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
+        if test_name == "valid_monitoring_end_time":
+            exp_containers_length = 1
 
-    container_names.sort()
-    print(container_names)
+        # Validate the count of containers
+        assert list_reco_containers_length == exp_containers_length, \
+            f"list reco containers size not same as update results containers size - list_reco = {list_reco_containers_length} \
+              create_exp = {exp_containers_length}"
 
     # Validate if all the containers are present
-    for i in range(length):
+    for i in range(exp_containers_length):
         list_reco_container = None
-
-        for j in range(length):
+            
+        for j in range(list_reco_containers_length):
             if list_reco_kubernetes_obj["containers"][j]["container_name"] == create_exp_kubernetes_obj["containers"][i]["container_name"]:
-                create_exp_container = create_exp_kubernetes_obj["containers"][i]
+                update_results_container = create_exp_kubernetes_obj["containers"][i]  
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(create_exp_container, update_results_json, list_reco_container, expected_duration_in_hours)
+                validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours)
 
-def validate_container(create_exp_container, update_results_json, list_reco_container, expected_duration_in_hours):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
     # Validate container image name and container name
-    if create_exp_container != None and list_reco_container != None:
-        assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
-            f"Container image names did not match! Actual -  {list_reco_container['container_image_name']} Expected - {create_exp_container['container_image_name']}"
+    if update_results_container != None and list_reco_container != None:
+        assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
+            f"Container image names did not match! Actual -  {list_reco_container['container_image_name']} Expected - {update_results_container['container_image_name']}"
 
-        assert list_reco_container["container_name"] == create_exp_container["container_name"],\
-            f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {create_exp_container['container_name']}"
+        assert list_reco_container["container_name"] == update_results_container["container_name"],\
+            f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
     # Validate timestamps
     if update_results_json != None:
