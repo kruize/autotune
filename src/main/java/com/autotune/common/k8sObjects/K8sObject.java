@@ -4,7 +4,6 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
 import java.util.List;
 
 public class K8sObject {
@@ -13,6 +12,12 @@ public class K8sObject {
     private String namespace;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private List<ContainerData> containerDataList;
+
+    public K8sObject(String name, String type, String namespace) {
+        this.name = name;
+        this.type = type;
+        this.namespace = namespace;
+    }
 
     public String getType() {
         return type;

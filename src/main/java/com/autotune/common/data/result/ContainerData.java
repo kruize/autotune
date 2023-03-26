@@ -16,7 +16,6 @@
 package com.autotune.common.data.result;
 
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -30,13 +29,12 @@ public class ContainerData {
     private String container_name;
     private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
-    private ContainerRecommendations containerRecommendations; //= new ContainerRecommendations();
+    private ContainerRecommendations containerRecommendations;
     private List<Metric> metrics;
 
     public ContainerData(String container_name, String container_image_name, List<Metric> metrics) {
         this.container_name = container_name;
-        if (null == containerRecommendations)
-            containerRecommendations = new ContainerRecommendations();
+        containerRecommendations = new ContainerRecommendations();
         this.container_image_name = container_image_name;
         this.metrics = metrics;
     }
@@ -90,7 +88,7 @@ public class ContainerData {
                 "container_image_name='" + container_image_name + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
-//                ", recommendations=" + containerRecommendations.getData() +
+                ", recommendations=" + containerRecommendations +
                 ", metrics=" + metrics +
                 '}';
     }

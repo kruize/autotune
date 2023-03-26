@@ -5,7 +5,6 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -98,13 +97,12 @@ public class Converters {
 				listRecommendationsSO.setExperimentName(kruizeObject.getExperimentName());
 				listRecommendationsSO.setClusterName(kruizeObject.getClusterName());
 				List<K8sObject> k8sObjectsList = new ArrayList<>();
-				for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
-					K8sObject k8sObject = new K8sObject();
-					k8sObject.setName(deploymentObject.getName());
-					k8sObject.setType(Utils.getAppropriateK8sObjectTypeString(deploymentObject.getType()));
-					k8sObject.setNamespace(deploymentObject.getNamespace());
+				for (K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
+					k8sObject.setName(k8sObject.getName());
+					k8sObject.setType(k8sObject.getType()); // TODO: Need to check for proper type here
+					k8sObject.setNamespace(k8sObject.getNamespace());
 					List<ContainerData> containerDataList = new ArrayList<>();
-					for (ContainerData containerData: deploymentObject.getContainers().values()) {
+					for (ContainerData containerData: k8sObject.getContainerDataList()) {
 						// if a Time stamp is passed it holds the priority than latest
 						if (checkForTimestamp) {
 							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
@@ -114,7 +112,7 @@ public class Converters {
 								Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,monitoringEndTimestamp);
 								Timestamp givenTimestamp = new Timestamp(medDate.getTime());
 								if (recommendations.containsKey(givenTimestamp)) {
-									List<Timestamp> tempList = new ArrayList<Timestamp>();
+									List<Timestamp> tempList = new ArrayList<>();
 									for (Timestamp timestamp : recommendations.keySet()) {
 										if (!timestamp.equals(givenTimestamp))
 											tempList.add(timestamp);

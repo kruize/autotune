@@ -38,7 +38,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
-                    LOGGER.info("kruizeObject = {}", kruizeObject.toString());
+                    LOGGER.debug("kruizeObject = {}", kruizeObject.toString());
                     kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     kruizeObject.setExperimentId(Utils.generateID(toString()));
                     mainKruizeExperimentMap.put(
@@ -72,7 +72,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 (resultData) -> {
                     resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
-                    Set<ExperimentResultData> results = null;
+                    Set<ExperimentResultData> results;
                     if (ko.getResultData() == null)
                         results = new HashSet<>();
                     else
@@ -86,10 +86,13 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
                     for(int k8sObjectCount = 0; k8sObjectCount<resultK8sObjectList.size(); k8sObjectCount++) {
                         K8sObject resultK8sObject = resultK8sObjectList.get(k8sObjectCount);
+                        String dName = resultK8sObject.getName();
+                        String dType = resultK8sObject.getType();
+                        String dNamespace = resultK8sObject.getNamespace();
                         K8sObject k8sObject;
                         List<ContainerData> containerDataList;
                         if (!k8sObjectList.contains(resultK8sObject)) {
-                            k8sObject = new K8sObject();
+                            k8sObject = new K8sObject(dName, dType, dNamespace);
                             containerDataList = new ArrayList<>();
                         } else {
                             k8sObject = resultK8sObject;
@@ -97,9 +100,12 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         }
                         List<ContainerData> resultContainerDataList = resultK8sObject.getContainerDataList();
                         for (ContainerData resultContainerData : resultContainerDataList) {
+                            String cName = resultContainerData.getContainer_name();
+                            String imgName = resultContainerData.getContainer_image_name();
+                            List<Metric> metricList = resultContainerData.getMetrics();
                             ContainerData containerData;
                             if (!containerDataList.contains(resultContainerData)) {
-                                containerData = new ContainerData();
+                                containerData = new ContainerData(cName, imgName, metricList);
                             } else {
                                 containerData = resultContainerData;
                             }

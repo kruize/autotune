@@ -161,11 +161,10 @@ public class ListRecommendation extends HttpServlet {
             }
         }
         if (!error) {
-            List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
+            List<ListRecommendationsSO> recommendationList = new ArrayList<>();
             for (KruizeObject ko : kruizeObjectList) {
                 try {
-                    LOGGER.debug(ko.getDeployment_name());
-                    LOGGER.debug(ko.getDeployments().toString());
+                    LOGGER.debug(ko.getKubernetesObjects().toString());
                     ListRecommendationsSO listRecommendationsSO = Converters.KruizeObjectConverters.
                                                                     convertKruizeObjectToListRecommendationSO(
                                                                         ko,
@@ -181,10 +180,7 @@ public class ListRecommendation extends HttpServlet {
             ExclusionStrategy strategy = new ExclusionStrategy() {
                 @Override
                 public boolean shouldSkipField(FieldAttributes field) {
-                    if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
-                        return true;
-                    }
-                    return false;
+                    return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"));
                 }
 
                 @Override
