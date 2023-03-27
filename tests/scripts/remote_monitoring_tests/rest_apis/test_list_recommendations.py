@@ -632,7 +632,8 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 
     form_kruize_url(cluster_type)
 
-    drop_metrics = [0, 1, 3, 4, 5]
+    drop_metrics = {"cpuRequest":0, "cpuLimit":1, "cpuThrottle":3, "memoryRequest":4, "memoryLimit":5}
+    keys = list(drop_metrics.keys())
     j = 0
     num_exps = 10
     for i in range(num_exps):
@@ -657,10 +658,8 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 
         result_json = read_json_data_from_file(update_results_json_file)
         if i % 2 == 0:
-            print(i)
-            metrics = drop_metrics[i]
-            result_json[0]['kubernetes_objects'][0]['containers'][0]['metrics'].pop(drop_metrics[j])
-            tmp_update_results_json_file = "/tmp/update_results_metric" + str(drop_metrics[j]) + ".json"
+            result_json[0]['kubernetes_objects'][0]['containers'][0]['metrics'].pop(drop_metrics[keys[j]])
+            tmp_update_results_json_file = "/tmp/update_results_metric" + str(drop_metrics[keys[j]]) + ".json"
             write_json_data_to_file(tmp_update_results_json_file, result_json)
             response = update_results(tmp_update_results_json_file)
             j += 1

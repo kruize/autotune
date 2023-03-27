@@ -321,10 +321,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
 def validate_config(reco_config):
     usage_list = ["requests", "limits"]
     for usage in usage_list:
-        assert reco_config[usage]["cpu"]["amount"] > 0
-        assert reco_config[usage]["cpu"]["format"] == "cores"
-        assert reco_config[usage]["memory"]["amount"] > 0
-        assert reco_config[usage]["memory"]["format"] == "MiB"
+        assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
+        assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
+        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
     for notification in duration_based_obj["notifications"]:
