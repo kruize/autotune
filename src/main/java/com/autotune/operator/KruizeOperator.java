@@ -25,6 +25,7 @@ import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.variables.Variables;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.datasource.DataSource;
@@ -428,7 +429,7 @@ public class KruizeOperator {
             performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
             if ( null != performanceProfile) {
-                ValidationOutputData validationOutputData = new PerfProfileImpl().validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
+                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
                 if (validationOutputData.isSuccess()) {
                     LOGGER.info("Added Performance Profile : {} into the map with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());

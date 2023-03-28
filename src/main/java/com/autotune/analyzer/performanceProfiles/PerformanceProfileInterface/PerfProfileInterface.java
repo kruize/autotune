@@ -17,9 +17,12 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,7 +32,9 @@ import java.util.Map;
 public interface PerfProfileInterface {
 // name, validateResults, validateProfile, recommend
     String getName(PerformanceProfile profile);
-    ValidationOutputData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile);
-    String validateResults(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
     String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
+
+    // Register Recommendation Engines
+    AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine);
+    List<KruizeRecommendationEngine> getEngines();
 }

@@ -16,12 +16,13 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
 import org.slf4j.Logger;
@@ -29,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -88,19 +87,20 @@ public class ExperimentResultValidation {
                             LOGGER.debug("Kruize Object: {}", kruizeObject);
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
-                            errorMsg = new PerfProfileImpl().validateResults(performanceProfile,resultData);
+                            errorMsg = PerformanceProfileUtil.validateResults(performanceProfile,resultData);
                             if (null == errorMsg || errorMsg.isEmpty()) {
                                 if (performanceProfile.getName().equalsIgnoreCase(AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE)) {
                                     errorMsg = new DefaultImpl().recommend(performanceProfile, resultData);
                                 } else {
                                     // check the performance profile and instantiate corresponding class for parsing
-                                    String validationClassName = AnalyzerConstants.PerformanceProfileConstants
-                                            .PERFORMANCE_PROFILE_PKG.concat(new PerfProfileImpl().getName(performanceProfile));
-                                    Class<?> validationClass = Class.forName(validationClassName);
-                                    Object object = validationClass.getDeclaredConstructor().newInstance();
-                                    Class<?>[] parameterTypes = new Class<?>[] { PerformanceProfile.class, ExperimentResultData.class };
-                                    Method method = validationClass.getMethod("recommend", parameterTypes);
-                                    errorMsg = (String) method.invoke(object, performanceProfile, resultData);
+                                    if (null != performanceProfile.getName()) {
+                                        PerfProfileInterface perfProfileInstance =
+                                                (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
+                                                        .perfProfileInstances.get(performanceProfile.getName())
+                                                        .getDeclaredConstructor().newInstance();
+                                        errorMsg = (String) perfProfileInstance.recommend(performanceProfile, resultData);
+                                    }
+
                                 }
                                 if (errorMsg.isEmpty())
                                     proceed = true;
@@ -109,7 +109,7 @@ public class ExperimentResultValidation {
                                 resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                                 break;
                             }
-                        } catch (NullPointerException | ClassNotFoundException | NoSuchMethodException |
+                        } catch (NullPointerException | NoSuchMethodException |
                                  IllegalAccessException | InvocationTargetException e) {
                             LOGGER.error("Caught Exception: {}",e);
                             errorMsg = "Validation failed: " + e.getMessage();

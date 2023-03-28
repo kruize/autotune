@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
 import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
@@ -484,8 +485,15 @@ public class AnalyzerConstants {
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
 
+        // Perf profile names
+        public static final String RESOURCE_OPT_OPENSHIFT = "resource-optimization-openshift";
+
         public static final Map<String, String> PerfProfileNames = Map.of(
-                "resource-optimization-openshift", "ResourceOptimizationOpenshiftImpl"
+                RESOURCE_OPT_OPENSHIFT, "ResourceOptimizationOpenshiftImpl"
+        );
+
+        public static final Map<String , Class> perfProfileInstances = Map.of(
+                RESOURCE_OPT_OPENSHIFT, ResourceOptimizationOpenshiftImpl.class
         );
     }
 
@@ -554,5 +562,25 @@ public class AnalyzerConstants {
         public static final String FALSE_UPPER = FALSE_DEFAULT.toUpperCase();
         public static final String TRUE = TRUE_LOWER;
         public static final String FALSE = FALSE_LOWER;
+    }
+
+    public enum RegisterRecommendationEngineStatus {
+        SUCCESS,
+        ALREADY_EXISTS,
+        INVALID
+    }
+
+    public static class RecommendationEngine {
+        private RecommendationEngine() {
+
+        }
+        public static class EngineNames {
+            private EngineNames() {
+
+            }
+            public static String DEFAULT_NAME = "Default";
+            public static String DURATION_BASED = "Duration Based";
+            public static String PROFILE_BASED = "Profile Based";
+        }
     }
 }

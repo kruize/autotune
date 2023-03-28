@@ -1,6 +1,6 @@
 package com.autotune.analyzer.performanceProfiles;
 
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.*;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -42,7 +42,7 @@ public class PerformanceProfilesDeployment {
                     case "ADDED":
                         performanceProfile = getPerformanceProfile(resource);
                         if ( validatePerformanceProfile(performanceProfile))
-                            new PerfProfileImpl().addPerformanceProfile(performanceProfilesMap, performanceProfile);
+                            PerformanceProfileUtil.addPerformanceProfile(performanceProfilesMap, performanceProfile);
                         break;
                     case "MODIFIED":
                         performanceProfile = getPerformanceProfile(resource);
@@ -52,7 +52,7 @@ public class PerformanceProfilesDeployment {
                                     .equals(performanceProfile)) {
                                 if (validatePerformanceProfile(performanceProfile)) {
                                     deleteExistingPerformanceProfile(resource);
-                                    new PerfProfileImpl().addPerformanceProfile(performanceProfilesMap, performanceProfile);
+                                    PerformanceProfileUtil.addPerformanceProfile(performanceProfilesMap, performanceProfile);
                                 }
                             }
                         }
