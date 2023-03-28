@@ -11,6 +11,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,11 +60,10 @@ public class PerfProfileImpl implements PerfProfileInterface {
     @Override
     public String validateResults(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
         String errorMsg = "";
-        List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
-                AnalyzerConstants.MetricNameConstants.CPU_USAGE,
-                AnalyzerConstants.MetricNameConstants.MEMORY_USAGE,
-                AnalyzerConstants.MetricNameConstants.MEMORY_RSS
-        ));
+        List<AnalyzerConstants.MetricName> mandatoryFields = Arrays.asList(
+                AnalyzerConstants.MetricName.cpuUsage,
+                AnalyzerConstants.MetricName.memoryUsage,
+                AnalyzerConstants.MetricName.memoryRSS);
         // Get the metrics data from the Performance Profile
         List<String> aggrFunctionsObjects = new ArrayList<>();
         List<String> queryList = new ArrayList<>();
@@ -82,9 +82,10 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
         // Get the metrics data from the Kruize Object
         for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
+            LOGGER.debug("k8sObject = {}", new Gson().toJson(k8sObject));
             for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                 HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
-                Set<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet();
+                List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet().stream().toList();
                 LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                 LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                 if (!kruizeFunctionVariablesList.containsAll(mandatoryFields)) {

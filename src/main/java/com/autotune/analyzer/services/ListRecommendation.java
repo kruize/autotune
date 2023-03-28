@@ -18,7 +18,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
@@ -161,17 +161,17 @@ public class ListRecommendation extends HttpServlet {
             }
         }
         if (!error) {
-            List<ListRecommendationsSO> recommendationList = new ArrayList<>();
+            List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
             for (KruizeObject ko : kruizeObjectList) {
                 try {
                     LOGGER.debug(ko.getKubernetes_objects().toString());
-                    ListRecommendationsSO listRecommendationsSO = Converters.KruizeObjectConverters.
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                                                                     convertKruizeObjectToListRecommendationSO(
                                                                         ko,
                                                                         getLatest,
                                                                         checkForTimestamp,
                                                                         monitoringTimestamp);
-                    recommendationList.add(listRecommendationsSO);
+                    recommendationList.add(listRecommendationsAPIObject);
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }

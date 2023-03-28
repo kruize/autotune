@@ -22,13 +22,13 @@ import com.google.gson.annotations.SerializedName;
 import java.sql.Timestamp;
 import java.util.List;
 
-public class UpdateResultsSO extends BaseSO{
+public class UpdateResultsAPIObject extends BaseSO{
     @SerializedName(KruizeConstants.JSONKeys.START_TIMESTAMP)
     public Timestamp startTimestamp;
     @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
     public Timestamp endTimestamp;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<K8sObject> kubernetesObjects;
+    private List<KubernetesObject> kubernetesObjects;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -46,11 +46,20 @@ public class UpdateResultsSO extends BaseSO{
         this.endTimestamp = endTimestamp;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
+    public List<KubernetesObject> getKubernetesObjects() {
         return kubernetesObjects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetesObjects) {
+    public void setKubernetesObjects(List<KubernetesObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
+    }
+
+    @Override
+    public String toString() {
+        return "UpdateResultsAPIObject{" +
+                "startTimestamp=" + startTimestamp +
+                ", endTimestamp=" + endTimestamp +
+                ", kubernetesObjects=" + kubernetesObjects +
+                '}';
     }
 }

@@ -19,7 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -79,15 +79,15 @@ public class CreateExperiment extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentSO> experimentSOList = Converters.KruizeObjectConverters.convertInputJSONToCreateExperimentSO(inputData);
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             // check for bulk entries and respond accordingly
-            if (experimentSOList.size() > 1) {
+            if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
-                for (CreateExperimentSO createExperimentSO : experimentSOList) {
-                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
                 }

@@ -16,17 +16,18 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.experiment.RunExperiment;
-import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.TrialHelpers;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -72,6 +73,7 @@ public class ListExperiments extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String gsonStr = "[]";
         if (this.mainKruizeExperimentMap.size() > 0) {
+            ConcurrentHashMap<String, CreateExperimentAPIObject> createExperimentMap = Converters.KruizeObjectConverters.ConvertExperimentDataToAPIResponse(mainKruizeExperimentMap);
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()
@@ -91,7 +93,7 @@ public class ListExperiments extends HttpServlet {
                         }
                     })
                     .create();
-            gsonStr = gsonObj.toJson(this.mainKruizeExperimentMap);
+            gsonStr = gsonObj.toJson(createExperimentMap);
         } else {
             JSONArray experimentTrialJSONArray = new JSONArray();
             for (String deploymentName : experimentsMap.keySet()) {

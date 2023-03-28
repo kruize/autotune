@@ -16,7 +16,8 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
@@ -24,7 +25,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class CreateExperimentSO extends BaseSO {
+public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.PERFORMANCE_PROFILE)
@@ -36,7 +37,7 @@ public class CreateExperimentSO extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.TARGET_CLUSTER)
     private String targetCluster;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<K8sObject> kubernetesObjects;
+    private List<KubernetesObject> kubernetesObjects;
     @SerializedName(KruizeConstants.JSONKeys.TRIAL_SETTINGS)
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
@@ -74,11 +75,11 @@ public class CreateExperimentSO extends BaseSO {
         this.targetCluster = targetCluster;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
+    public List<KubernetesObject> getKubernetesObjects() {
         return kubernetesObjects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetesObjects) {
+    public void setKubernetesObjects(List<KubernetesObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
     }
 
@@ -116,6 +117,90 @@ public class CreateExperimentSO extends BaseSO {
                 ", kubernetesObjects=" + kubernetesObjects +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
+                '}';
+    }
+}
+class KubernetesObject {
+    private String type;
+    private String name;
+    private String namespace;
+    private List<Container> containers;
+
+    public KubernetesObject(String name, String type, String namespace) {
+        this.name = name;
+        this.type = type;
+        this.namespace = namespace;
+    }
+
+    // getters and setters
+
+    public String getType() {
+        return type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public List<Container> getContainers() {
+        return containers;
+    }
+
+    public void setContainers(List<Container> containers) {
+        this.containers = containers;
+    }
+
+    @Override
+    public String toString() {
+        return "KubernetesObject{" +
+                "type='" + type + '\'' +
+                ", name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", containers=" + containers +
+                '}';
+    }
+}
+
+class Container {
+    private String container_image_name;
+    private String container_name;
+    private ContainerRecommendations containerRecommendations;
+    private List<Metric> metrics;
+
+    public Container(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, List<Metric> metrics) {
+        this.container_name = container_name;
+        this.containerRecommendations = containerRecommendations;
+        this.container_image_name = container_image_name;
+        this.metrics = metrics;
+    }
+
+    public String getContainer_image_name() {
+        return container_image_name;
+    }
+
+    public String getContainer_name() {
+        return container_name;
+    }
+
+    public ContainerRecommendations getContainerRecommendations() {
+        return containerRecommendations;
+    }
+
+    public List<Metric> getMetrics() {
+        return metrics;
+    }
+
+    @Override
+    public String toString() {
+        return "Container{" +
+                "container_image_name='" + container_image_name + '\'' +
+                ", container_name='" + container_name + '\'' +
+                ", containerRecommendations=" + containerRecommendations +
+                ", metrics=" + metrics +
                 '}';
     }
 }

@@ -17,6 +17,7 @@ package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -144,7 +145,7 @@ public class ExperimentValidation {
             for (K8sObject k8sObject:kruizeObject.getKubernetes_objects()) {
                 for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                     containerDataMap.put(containerData.getContainer_name(), new ContainerData(
-                            containerData.getContainer_name(), containerData.getContainer_image_name(), metricsMap));
+                            containerData.getContainer_name(), containerData.getContainer_image_name(), new ContainerRecommendations(), metricsMap));
                 }
                 k8sObject.setContainerDataMap(containerDataMap);
                 k8sObjectList.add(k8sObject);
