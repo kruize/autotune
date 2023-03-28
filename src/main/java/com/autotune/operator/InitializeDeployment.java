@@ -21,14 +21,73 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.utils.KruizeConstants;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Get the deployment information from the config map and initialize
  */
 public class InitializeDeployment
-{
+{   
+	private static final Logger LOGGER = LoggerFactory.getLogger(InitializeDeployment.class);
 	private InitializeDeployment() { }
+    
+	
+	public static void populateDatasourceMapWithCongfig (HashMap<String,DataSourceInfo> datasourceMap){
+		System.out.println("Reaching the desired functionnnnnnnnnnnnnn");
+		HashMap<String, Integer>  keyFlag = new HashMap<String, Integer>();
+        String configFile = System.getenv(KruizeConstants.DataSourceConstants.CONFIG_FILE);
+        try {
+            InputStream is = new FileInputStream(configFile);
+            String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject jsonObj = new JSONObject(jsonTxt);
+            JSONArray datasourceArr = jsonObj.getJSONArray("datasource");
+            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            for (int i = 0; i < datasourceArr.length(); i++) {
+                JSONObject datasourceObj = datasourceArr.getJSONObject(i);
+                String name = datasourceObj.getString("name");
+                String source = datasourceObj.getString("source");
+                String urlString = datasourceObj.getString("url");
+                URL url = null;
+            try {
+                url = new URL(urlString);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                continue;
+            }  
+              if(url==null){
+                LOGGER.error("Invalid datasource URL");
+              }else if(keyFlag.containsKey(name)){
+				LOGGER.error("Datasource with similar name Exists");
+			  }
+			  else
+			  { 
+				keyFlag.put(name,(keyFlag.getOrDefault(name,0))+1);
+                DataSourceInfo tempDatasourceObj = new DataSourceInfo(name, source, url);
+                datasourceMap.put(name,tempDatasourceObj);
+              }
+            }        
+            
+        } catch (FileNotFoundException fileNotFoundException) {
+            System.out.println("CONFIG FIle ");
+        }catch (Exception e) {
+
+            System.out.println("SOMEEEE ERRRORR OCCURRED");
+            System.out.println("PRINTINGGG STACKK TRACE");
+            System.out.println("========================================================================");
+            e.printStackTrace();
+        }
+	}
 
 	public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
 		String k8S_type = System.getenv(AnalyzerConstants.K8S_TYPE);
@@ -63,9 +122,11 @@ public class InitializeDeployment
 		}
 		KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
         
+		//Populate the datasourceinfo hasmap and validate it.
 		System.out.println("GOING iNNNN......");
+        populateDatasourceMapWithCongfig(dataSourceMap);
 		KruizeDeploymentInfo.setDatasourceMap(dataSourceMap);
-		System.out.println("PRINTING DATA SOURCEE MAPP");
+		System.out.println("PRINTING DATA SOURCEE MAPP"); 
 		System.out.println(".............................");
 		for (Map.Entry<String, DataSourceInfo> entry : dataSourceMap.entrySet()) {
 			String key = entry.getKey();
@@ -79,4 +140,5 @@ public class InitializeDeployment
 
 		KruizeDeploymentInfo.logDeploymentInfo();
 	}
+
 }

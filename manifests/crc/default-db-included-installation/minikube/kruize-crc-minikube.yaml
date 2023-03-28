@@ -99,18 +99,22 @@ data:
         "sslMode": "require",
         "username": "admin"
       },
-      "datasource": [{
-        "name": "prometheus-1",
-        "source": "prometheus",
-        "url":"Stub.URL.1"
-      },
-      {
-        "name": "prometheus-2",
-        "source": "prometheus",
-        "url":"Stub.URL.2"
-      }
-      ]
+      "datasource": [ 
+          { "name": "prometheus-1", 
+          "source": "prometheus", 
+          "url": "http://www.exampleone.com:8080/" 
+          }, 
+          { "name": "prometheus-2", 
+          "source": "prometheus", 
+          "url": "http://www.exampletwo.com:8080/" 
+          } ,
+          { "name": "prometheus-1", 
+          "source": "prometheus", 
+          "url": "http://www.exampleone.com:8080/" 
+          }, 
+        ]
     }
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -183,8 +187,8 @@ metadata:
   name: kruize
   namespace: monitoring
   annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/path: "/metrics"
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
   labels:
     app: kruize
 spec:

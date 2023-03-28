@@ -23,22 +23,14 @@ import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.Hashtable;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 
@@ -93,43 +85,7 @@ public class KruizeDeploymentInfo {
     }
 
     public static void setDatasourceMap(HashMap<String,DataSourceInfo> datasourceMap){
-        System.out.println("Reaching the desired functionnnnnnnnnnnnnn");
-        String configFile = System.getenv(KruizeConstants.DataSourceConstants.CONFIG_FILE);
-        try {
-            InputStream is = new FileInputStream(configFile);
-            String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            JSONObject jsonObj = new JSONObject(jsonTxt);
-            JSONArray datasourceArr = jsonObj.getJSONArray("datasource");
-            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-            for (int i = 0; i < datasourceArr.length(); i++) {
-                JSONObject datasourceObj = datasourceArr.getJSONObject(i);
-                String name = datasourceObj.getString("name");
-                String source = datasourceObj.getString("source");
-                String urlString = datasourceObj.getString("url");
-                URL url = null;
-            try {
-                url = new URL(urlString);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                continue;
-            }  
-              if(url==null){
-                LOGGER.error("Invalid datasource URL");
-              }else{
-                DataSourceInfo tempDatasourceObj = new DataSourceInfo(name, source, url);
-                datasourceMap.put(name,tempDatasourceObj);
-              }
-            }        
-            
-        } catch (FileNotFoundException fileNotFoundException) {
-            System.out.println("CONFIG FIle ");
-        }catch (Exception e) {
-
-            System.out.println("SOMEEEE ERRRORR OCCURRED");
-            System.out.println("PRINTINGGG STACKK TRACE");
-            System.out.println("========================================================================");
-            e.printStackTrace();
-        }
+        
     }
 
     public static void setClusterType(String clusterType) throws ClusterTypeNotSupportedException {

@@ -15,30 +15,25 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeLayer.layers.Layer;
-import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.trials.*;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.trials.*;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -46,6 +41,11 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
 import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
@@ -145,7 +145,7 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.getMonitoringAgent(),
+        DataSourceInfo datasourceInfo = new DataSourceInfo("provider-stub",KruizeDeploymentInfo.getMonitoringAgent(),
                 new URL(KruizeDeploymentInfo.getMonitoringAgentEndpoint()));
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
         datasourceInfoHashMap.put(KruizeDeploymentInfo.getMonitoringAgent(), datasourceInfo);  //Change key value as per YAML input
