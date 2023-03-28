@@ -58,7 +58,7 @@ public class MetricResults {
         return metricAggregationInfoResults;
     }
 
-    public MetricPercentileResults getEmMetricPercentileResults() {
+    public MetricPercentileResults getMetricPercentileResults() {
         return metricPercentileResults;
     }
 

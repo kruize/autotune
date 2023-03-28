@@ -64,7 +64,8 @@ public class AnalyzerConstants {
     public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
     public static final String FUNCTION = "function";
     public static final String VERSIONS = "versions";
-    public static final String KUBERNETES_OBJECTS = "kubernetes_object";
+    public static final String KUBERNETES_OBJECT = "kubernetes_object";
+    public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
     public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
     public static final String AUTOTUNE_CONFIG_RESOURCE_NAME = AUTOTUNE_CONFIG_PLURALS + GROUP;
     public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
@@ -84,7 +85,7 @@ public class AnalyzerConstants {
     public static final String SLO = "sloInfo";
     public static final String NAMESPACE = "namespace";
     public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
-    public static final String DEPLOYMENT_NAME = "deployment_name";
+    public static final String DEPLOYMENT_NAME = "name";
     public static final String SELECTOR = "selectorInfo";
     public static final String NULL = "null";
 
@@ -113,17 +114,6 @@ public class AnalyzerConstants {
         DELETE,
         COMPLETED,
         FAILED;
-    }
-
-    public enum AggregatorType {
-        cpuRequest,
-        cpuLimit,
-        cpuUsage,
-        cpuThrottle,
-        memoryRequest,
-        memoryLimit,
-        memoryUsage,
-        memoryRSS
     }
 
     public enum RecommendationItem {
@@ -483,7 +473,7 @@ public class AnalyzerConstants {
 
         public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
         public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
-        public static final String K8S_TYPE = "K8S_TYPE";
+        public static final String K8S_TYPE = "k8s_type";
         public static final String PERF_PROFILE = "performanceProfile";
         public static final String PERF_PROFILE_MAP = "performanceProfileMap";
         public static final String PERF_PROFILE_NAME = "name";

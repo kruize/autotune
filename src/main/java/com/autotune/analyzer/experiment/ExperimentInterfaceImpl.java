@@ -79,7 +79,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
-                    List<K8sObject> k8sObjectList = ko.getKubernetesObjects();
+                    List<K8sObject> k8sObjectList = ko.getKubernetes_objects();
                     if (null == k8sObjectList) {
                         k8sObjectList = new ArrayList<>();
                     }
@@ -90,29 +90,29 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         String dType = resultK8sObject.getType();
                         String dNamespace = resultK8sObject.getNamespace();
                         K8sObject k8sObject;
-                        List<ContainerData> containerDataList;
+                        HashMap<String, ContainerData> containerDataMap;
                         if (!k8sObjectList.contains(resultK8sObject)) {
                             k8sObject = new K8sObject(dName, dType, dNamespace);
-                            containerDataList = new ArrayList<>();
+                            containerDataMap = new HashMap<>();
                         } else {
                             k8sObject = resultK8sObject;
-                            containerDataList = k8sObject.getContainerDataList();
+                            containerDataMap = k8sObject.getContainerDataMap();
                         }
-                        List<ContainerData> resultContainerDataList = resultK8sObject.getContainerDataList();
-                        for (ContainerData resultContainerData : resultContainerDataList) {
+                        HashMap<String, ContainerData> resultContainerDataMap = resultK8sObject.getContainerDataMap();
+                        for (ContainerData resultContainerData : resultContainerDataMap.values()) {
                             String cName = resultContainerData.getContainer_name();
                             String imgName = resultContainerData.getContainer_image_name();
-                            List<Metric> metricList = resultContainerData.getMetrics();
+                            HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = resultContainerData.getMetrics();
                             ContainerData containerData;
-                            if (!containerDataList.contains(resultContainerData)) {
-                                containerData = new ContainerData(cName, imgName, metricList);
+                            if (null == containerDataMap.get(cName)) {
+                                containerData = new ContainerData(cName, imgName, metricsMap);
                             } else {
                                 containerData = resultContainerData;
                             }
-                            HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsHashMap = new HashMap<>();
-                             for (Metric metrics : resultContainerData.getMetrics()) {
-                                MetricResults metricResults = metrics.getMetricResult();
-                                metricResultsHashMap.put(AnalyzerConstants.AggregatorType.valueOf(metrics.getName()), metricResults);
+                            HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                             for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
+                                MetricResults metricResults = (MetricResults) intervalResults.getMetricResultsMap().values();
+                                metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
                             }
                             HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
 
@@ -124,12 +124,12 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             resultsIntervalMap.put(resultData.getEndtimestamp(), intervalResults);
 
                             containerData.setResults(resultsIntervalMap);
-                            containerDataList.add(containerData);
+                            containerDataMap.put(cName, containerData);
                         }
-                        k8sObject.setContainerDataList(containerDataList);
+                        k8sObject.setContainerDataMap(containerDataMap);
                         k8sObjectList.set(k8sObjectCount, k8sObject);
                     }
-                    ko.setKubernetesObjects(k8sObjectList);
+                    ko.setKubernetes_objects(k8sObjectList);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
         );

@@ -222,7 +222,7 @@ public class TrialHelpers {
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
                         KruizeDeploymentInfo.getMonitoringAgent(),
-                        tunable.getValueType());
+                        tunable.getValueType(), null);
                 if (containerMetricsHashMap != null
                         && !containerMetricsHashMap.isEmpty()
                         && containerMetricsHashMap.containsKey(applicationServiceStack.getContainerName())) {

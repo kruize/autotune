@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.common.k8sObjects.TrialSettings;
@@ -28,6 +29,8 @@ public class CreateExperimentSO extends BaseSO {
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.PERFORMANCE_PROFILE)
     private String performanceProfile;
+    @SerializedName("slo")
+    private SloInfo sloInfo;
     @SerializedName(KruizeConstants.JSONKeys.MODE)
     private String mode;
     @SerializedName(KruizeConstants.JSONKeys.TARGET_CLUSTER)
@@ -93,5 +96,26 @@ public class CreateExperimentSO extends BaseSO {
 
     public void setRecommendationSettings(RecommendationSettings recommendationSettings) {
         this.recommendationSettings = recommendationSettings;
+    }
+
+    public SloInfo getSloInfo() {
+        return sloInfo;
+    }
+
+    public void setSloInfo(SloInfo sloInfo) {
+        this.sloInfo = sloInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "CreateExperimentSO{" +
+                "clusterName='" + clusterName + '\'' +
+                ", performanceProfile='" + performanceProfile + '\'' +
+                ", mode='" + mode + '\'' +
+                ", targetCluster='" + targetCluster + '\'' +
+                ", kubernetesObjects=" + kubernetesObjects +
+                ", trialSettings=" + trialSettings +
+                ", recommendationSettings=" + recommendationSettings +
+                '}';
     }
 }

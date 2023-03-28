@@ -3,11 +3,13 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileValidation;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PerfProfileImpl implements PerfProfileInterface {
 
@@ -69,8 +70,8 @@ public class PerfProfileImpl implements PerfProfileInterface {
         List<String> perfProfileFunctionVariablesList = new ArrayList<>();
         for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
             perfProfileFunctionVariablesList.add(metric.getName());
-            if (null != metric.getAggregationFunctions()) {
-                metric.getAggregationFunctions().forEach(aggregationFunctions ->
+            if (null != metric.getAggregationFunctionsMap()) {
+                metric.getAggregationFunctionsMap().values().forEach(aggregationFunctions ->
                         aggrFunctionsObjects.add(aggregationFunctions.getFunction()));
             }
             if (null != metric.getQuery())
@@ -81,42 +82,47 @@ public class PerfProfileImpl implements PerfProfileInterface {
 
         // Get the metrics data from the Kruize Object
         for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
-            for (ContainerData containerData : k8sObject.getContainerDataList()) {
-                List<Metric> metrics = containerData.getMetrics();
-                List<String> kruizeFunctionVariablesList = metrics.stream().map(Metric::getName)
-                        .collect(Collectors.toCollection(ArrayList::new));
+            for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
+                Set<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet();
                 LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                 LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                 if (!kruizeFunctionVariablesList.containsAll(mandatoryFields)) {
                     errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", experimentResultData.getExperiment_name(), mandatoryFields));
                     break;
                 }
-                for (Metric metric : metrics) {
-                    Map<String, Object> aggrInfoClassAsMap;
-                    if (!aggrFunctionsObjects.isEmpty()) {
-                        try {
-                            aggrInfoClassAsMap = convertObjectToMap(metric.getMetricResult().getAggregationInfoResult());
-                            errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
-                            if (!errorMsg.isBlank()) {
-                                errorMsg = errorMsg.concat(String.format("for the experiment : %s"
-                                        , experimentResultData.getExperiment_name()));
+                for (IntervalResults intervalResults : containerData.getResults().values()) {
+                    for (MetricResults metricResults : intervalResults.getMetricResultsMap().values()) {
+                        Map<String, Object> aggrInfoClassAsMap;
+                        if (!aggrFunctionsObjects.isEmpty()) {
+                            try {
+                                aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
+                                if (!errorMsg.isBlank()) {
+                                    errorMsg = errorMsg.concat(String.format("for the experiment : %s"
+                                            , experimentResultData.getExperiment_name()));
+                                    break;
+                                }
+                            } catch(IllegalAccessException | InvocationTargetException e){
+                                throw new RuntimeException(e);
+                            }
+                        } else{
+                            // check if query is also absent
+                            if (queryList.isEmpty()) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                                 break;
                             }
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
                         }
-                    } else {
-                        // check if query is also absent
-                        if (queryList.isEmpty()) {
-                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
-                            break;
+                        // check if the 'value' is present in the result JSON
+                        if (null == metricResults.getValue()) {
+                            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metricResults.getName()));
                         }
                     }
-                    // check if the 'value' is present in the result JSON
-                    if (null == metric.getMetricResult().getValue()) {
-                        LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metric.getName()));
-                    }
+                    if (!errorMsg.isBlank())
+                        break;
                 }
+                if (!errorMsg.isBlank())
+                    break;
             }
         }
         return errorMsg;

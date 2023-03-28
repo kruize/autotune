@@ -164,7 +164,7 @@ public class ListRecommendation extends HttpServlet {
             List<ListRecommendationsSO> recommendationList = new ArrayList<>();
             for (KruizeObject ko : kruizeObjectList) {
                 try {
-                    LOGGER.debug(ko.getKubernetesObjects().toString());
+                    LOGGER.debug(ko.getKubernetes_objects().toString());
                     ListRecommendationsSO listRecommendationsSO = Converters.KruizeObjectConverters.
                                                                     convertKruizeObjectToListRecommendationSO(
                                                                         ko,

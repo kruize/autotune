@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ import java.util.List;
 public class DeploymentResultData {
     private String deployment_name;
     private String namespace;
-    private List<ContainerData> containerDataList;
+    private HashMap<String, ContainerData> containerDataMap;
     private List<PodResultData> pod_metrics;
 
     public String getDeployment_name() {
@@ -43,12 +44,12 @@ public class DeploymentResultData {
         this.namespace = namespace;
     }
 
-    public List<ContainerData> getContainerDataList() {
-        return containerDataList;
+    public HashMap<String, ContainerData> getContainerDataMap() {
+        return containerDataMap;
     }
 
-    public void setContainerDataList(List<ContainerData> containerDataList) {
-        this.containerDataList = containerDataList;
+    public void setContainerDataMap(HashMap<String, ContainerData> containerDataMap) {
+        this.containerDataMap = containerDataMap;
     }
 
     public List<PodResultData> getPod_metrics() {
@@ -64,7 +65,7 @@ public class DeploymentResultData {
         return "DeploymentResultData{" +
                 "deployment_name='" + deployment_name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", containerDataList=" + containerDataList +
+                ", containerDataMap=" + containerDataMap +
                 ", pod_metrics=" + pod_metrics +
                 '}';
     }

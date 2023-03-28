@@ -16,7 +16,9 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
@@ -79,7 +81,7 @@ public class PerformanceProfileService extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            PerformanceProfile performanceProfile = new Gson().fromJson(inputData, PerformanceProfile.class);
+            PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
             ValidationOutputData validationOutputData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
                 LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
@@ -90,6 +92,8 @@ public class PerformanceProfileService extends HttpServlet {
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Validation failed: " + e.getMessage());
+        } catch (InvalidValueException e) {
+            throw new RuntimeException(e);
         }
     }
 

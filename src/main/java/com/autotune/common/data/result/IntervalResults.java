@@ -17,6 +17,7 @@ package com.autotune.common.data.result;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
+import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -25,32 +26,33 @@ import java.util.HashMap;
  * Raw results are segregated and organized using IntervalResults
  */
 public class IntervalResults {
-    HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsMap;
-    private Timestamp startTimeStamp;
-    private Timestamp endTimeStamp;
+    @SerializedName("results")
+    HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
+    private Timestamp intervalStart;
+    private Timestamp intervalEnd;
     private Double durationInMinutes;
 
-    public IntervalResults(Timestamp startTimeStamp, Timestamp endTimeStamp) {
-        this.startTimeStamp = startTimeStamp;
-        this.endTimeStamp = endTimeStamp;
-        this.durationInMinutes = Double.valueOf((endTimeStamp.getTime() - startTimeStamp.getTime()) / (60 * 1000));
+    public IntervalResults(Timestamp intervalStart, Timestamp intervalEnd) {
+        this.intervalStart = intervalStart;
+        this.intervalEnd = intervalEnd;
+        this.durationInMinutes = Double.valueOf((intervalEnd.getTime() - intervalStart.getTime()) / (60 * 1000));
     }
 
-    public Timestamp getStartTimeStamp() {
-        return startTimeStamp;
+    public Timestamp getIntervalStart() {
+        return intervalStart;
     }
 
-    public void setStartTimeStamp(Timestamp startTimeStamp) {
-        this.startTimeStamp = startTimeStamp;
+    public void setIntervalStart(Timestamp intervalStart) {
+        this.intervalStart = intervalStart;
     }
 
 
-    public Timestamp getEndTimeStamp() {
-        return endTimeStamp;
+    public Timestamp getIntervalEnd() {
+        return intervalEnd;
     }
 
-    public void setEndTimeStamp(Timestamp endTimeStamp) {
-        this.endTimeStamp = endTimeStamp;
+    public void setIntervalEnd(Timestamp intervalEnd) {
+        this.intervalEnd = intervalEnd;
     }
 
     public Double getDurationInMinutes() {
@@ -61,11 +63,11 @@ public class IntervalResults {
         this.durationInMinutes = durationInMinutes;
     }
 
-    public HashMap<AnalyzerConstants.AggregatorType, MetricResults> getMetricResultsMap() {
+    public HashMap<AnalyzerConstants.MetricName, MetricResults> getMetricResultsMap() {
         return metricResultsMap;
     }
 
-    public void setMetricResultsMap(HashMap<AnalyzerConstants.AggregatorType, MetricResults> metricResultsMap) {
+    public void setMetricResultsMap(HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap) {
         this.metricResultsMap = metricResultsMap;
     }
 
@@ -73,8 +75,8 @@ public class IntervalResults {
     public String toString() {
         return "IntervalResults{" +
                 "metricResultsMap=" + metricResultsMap +
-                ", startTimeStamp=" + startTimeStamp +
-                ", endTimeStamp=" + endTimeStamp +
+                ", intervalStart=" + intervalStart +
+                ", intervalEnd=" + intervalEnd +
                 ", durationInMinutes=" + durationInMinutes +
                 '}';
     }

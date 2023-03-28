@@ -160,13 +160,13 @@ public class EMUtil {
                 podResultDataList.add(podResultData);
             }
         }
-        List<ContainerData> containerDataList = new ArrayList<>();
+        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
             ContainerData containerData = new ContainerData();
             containerData.setContainer_name(containerMapEntry.getKey());
             containerData.setContainer_image_name(null);
 
-            List<Metric> metrics = new ArrayList<>();
+            HashMap<AnalyzerConstants.MetricName, Metric> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
                 Metric metric = new Metric();
@@ -178,14 +178,14 @@ public class EMUtil {
                     metricResults.setAggregationInfoResult(metricAggregationInfoResults);
                     metricResults.setName(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()).toString());
                     metric.setMetricResult(metricResults);
-                    metrics.add(metric);
+                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), metric);
                 }
             }
-            containerData.setMetrics(metrics);
-            containerDataList.add(containerData);
+            containerData.setMetrics(containerMetrics);
+            containerDataMap.put(containerData.getContainer_name(), containerData);
         }
         deploymentResultData.setPod_metrics(podResultDataList);
-        deploymentResultData.setContainerDataList(containerDataList);
+        deploymentResultData.setContainerDataMap(containerDataMap);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
         experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));

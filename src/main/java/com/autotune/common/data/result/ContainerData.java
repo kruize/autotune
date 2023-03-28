@@ -16,23 +16,24 @@
 package com.autotune.common.data.result;
 
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.List;
 
 public class ContainerData {
     private String container_image_name;
     private String container_name;
+    //key is IntervalEnd
     private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
-    private List<Metric> metrics;
+    private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
 
-    public ContainerData(String container_name, String container_image_name, List<Metric> metrics) {
+    public ContainerData(String container_name, String container_image_name, HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.container_name = container_name;
         containerRecommendations = new ContainerRecommendations();
         this.container_image_name = container_image_name;
@@ -75,11 +76,11 @@ public class ContainerData {
         this.containerRecommendations = containerRecommendations;
     }
 
-    public List<Metric> getMetrics() {
+    public HashMap<AnalyzerConstants.MetricName, Metric> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(List<Metric> metrics) {
+    public void setMetrics(HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.metrics = metrics;
     }
     @Override

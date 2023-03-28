@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * create Experiment input validation
@@ -55,21 +56,23 @@ public class ExperimentValidation {
             List.of(AnalyzerConstants.RECOMMENDATION_SETTINGS)
     ));
     private List<String> mandatoryDeploymentSelector = new ArrayList<>(Arrays.asList(
-//            AnalyzerConstants.DEPLOYMENT_NAME,
-//            AnalyzerConstants.SELECTOR
+            AnalyzerConstants.DEPLOYMENT_NAME,
+            AnalyzerConstants.SELECTOR,
+            AnalyzerConstants.KUBERNETES_OBJECTS
     ));
 
     private List<String> namespaceDeploymentNameList = new ArrayList<>();
+    private boolean invalidType = false;
 
     public ExperimentValidation(Map<String, KruizeObject> mainKruizeExperimentMAP) {
         this.mainKruizeExperimentMAP = mainKruizeExperimentMAP;
-        mainKruizeExperimentMAP.forEach((name, ao) -> {
-            if (null != ao.getDeployment_name()) {
-                namespaceDeploymentNameList.add(                                //TODO this logic should run once for new exp
-                        ao.getNamespace().toLowerCase() + ":" + ao.getDeployment_name().toLowerCase()
-                );
-            }
-        });
+        mainKruizeExperimentMAP.forEach((name, ko) -> ko.getKubernetes_objects().forEach(k8sObject -> {
+        if (null != k8sObject.getName()) {
+            namespaceDeploymentNameList.add(                                //TODO this logic should run once for new exp
+                    k8sObject.getNamespace().toLowerCase() + ":" + k8sObject.getName().toLowerCase()
+            );
+        }
+        }));
     }
 
     /**
@@ -87,38 +90,30 @@ public class ExperimentValidation {
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
-                    if (null != kruizeObject.getDeployment_name()) {
-                        String nsDepName = kruizeObject.getNamespace().toLowerCase() + ":" + kruizeObject.getDeployment_name().toLowerCase();
-                        if (!namespaceDeploymentNameList.contains(nsDepName)) {
-                            if (null != kruizeObject.getPerformanceProfile()) {
-                                if (null != kruizeObject.getSloInfo()) {
-                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
-                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                }
-                                else {
-                                    if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
-                                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
-                                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                    }
-                                    else
-                                        proceed = true;
-                                }
-                            } else {
-                                if (null == kruizeObject.getSloInfo()) {
-                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
-                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                }
-                                else {
-                                    String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
-                                    kruizeObject.setPerformanceProfile(perfProfileName);
-                                    proceed = true;
-                                }
+                    // check for slo and performance profile
+                    if (null != kruizeObject.getPerformanceProfile()) {
+                        if (null != kruizeObject.getSloInfo()) {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        }
+                        else {
+                            if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             }
-                        } else {
+                            else
                                 proceed = true;
                         }
                     } else {
-                        proceed = true;
+                        if (null == kruizeObject.getSloInfo()) {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        }
+                        else {
+                            String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                            kruizeObject.setPerformanceProfile(perfProfileName);
+                            proceed = true;
+                        }
                     }
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
@@ -139,21 +134,22 @@ public class ExperimentValidation {
             }
             // set performance profile metrics in the kruize Object
             PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            List<Metric> metricList = new ArrayList<>();
+            HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
             for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
                 if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
-                    metricList.add(metric);
+                    metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
             }
             List<K8sObject> k8sObjectList = new ArrayList<>();
-            List<ContainerData> containerDataList = new ArrayList<>();
-            for (K8sObject k8sObject:kruizeObject.getKubernetesObjects()) {
-                for (ContainerData containerData : k8sObject.getContainerDataList()) {
-                    containerDataList.add(new ContainerData(containerData.getContainer_name(), containerData.getContainer_image_name(), metricList));
+            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+            for (K8sObject k8sObject:kruizeObject.getKubernetes_objects()) {
+                for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                    containerDataMap.put(containerData.getContainer_name(), new ContainerData(
+                            containerData.getContainer_name(), containerData.getContainer_image_name(), metricsMap));
                 }
-                k8sObject.setContainerDataList(containerDataList);
+                k8sObject.setContainerDataMap(containerDataMap);
                 k8sObjectList.add(k8sObject);
             }
-            kruizeObject.setKubernetesObjects(k8sObjectList);
+            kruizeObject.setKubernetes_objects(k8sObjectList);
             LOGGER.debug("{}", new Gson().toJson(kruizeObject));
         }
     }
@@ -221,6 +217,23 @@ public class ExperimentValidation {
                             }
                     );
                 }
+                String depType = "";
+                if (expObj.getExperimentUseCaseType().isRemoteMonitoring()) {
+                    // In case of RM, kubernetes_obj is mandatory
+                    mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
+                    // check for valid k8stype
+                    List<String> validK8sTypes = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
+                            .map(type -> type.name().toLowerCase())
+                            .collect(Collectors.toList());
+                    for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                        if (!validK8sTypes.contains(k8sObject.getType())) {
+                            depType = k8sObject.getType();
+                            invalidType = true;
+                            break;
+                        }
+                    }
+                }
+
                 for (String mField : mandatoryDeploymentSelector) {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
@@ -232,10 +245,11 @@ public class ExperimentValidation {
                         //LOGGER.warn("Method name for {} does not exist and the error is {}", mField, e.getMessage());
                     }
                 }
-                // Adding temporary validation skip
-                missingDeploySelector = false;
-                if (missingDeploySelector) {
-                    errorMsg = errorMsg.concat(String.format("Either parameter should be present %s ", mandatoryDeploymentSelector));
+                if (invalidType)
+                    errorMsg = errorMsg.concat(String.format("Invalid deployment type: %s", depType));
+                if (missingDeploySelector)
+                    errorMsg = errorMsg.concat(String.format("Either parameter should be present: %s", mandatoryDeploymentSelector));
+                if (invalidType || missingDeploySelector) {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);

@@ -64,7 +64,7 @@ public class TestEvalExParser {
             Metric metric = new Metric(variableName,
                     query,
                     datasource,
-                    valueType);
+                    valueType, null);
 
             metricArrayList.add(metric);
         }

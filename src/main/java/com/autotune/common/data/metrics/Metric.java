@@ -16,6 +16,7 @@ package com.autotune.common.data.metrics;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -39,20 +40,21 @@ public final class Metric {
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
     private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
-    @SerializedName("results")
     private MetricResults metricResults;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")
-    private List<AggregationFunctions> aggregationFunctions;
+    private HashMap<String, AggregationFunctions> aggregationFunctionsMap;
 
     public Metric(String name,
                   String query,
                   String datasource,
-                  String valueType) {
+                  String valueType,
+                  String kubernetesObject) {
         this.name = name;
         this.query = query;
         this.datasource = datasource;
         this.valueType = valueType;
+        this.kubernetesObject = kubernetesObject;
     }
     public Metric() {
 
@@ -97,12 +99,12 @@ public final class Metric {
         this.kubernetesObject = kubernetesObject;
     }
 
-    public List<AggregationFunctions> getAggregationFunctions() {
-        return aggregationFunctions;
+    public HashMap<String, AggregationFunctions> getAggregationFunctionsMap() {
+        return aggregationFunctionsMap;
     }
 
-    public void setAggregationFunctions(List<AggregationFunctions> aggregationFunctions) {
-        this.aggregationFunctions = aggregationFunctions;
+    public void setAggregationFunctionsMap(HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
+        this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 
     @Override
@@ -113,8 +115,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
-                ", metricResult=" + metricResults +
-                ", aggregationFunctions=" + aggregationFunctions +
+                ", aggregationFunctionsMap=" + aggregationFunctionsMap +
                 '}';
     }
 }

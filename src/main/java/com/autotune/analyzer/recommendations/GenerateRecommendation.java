@@ -38,8 +38,8 @@ public class GenerateRecommendation {
 
     public static void generateRecommendation(KruizeObject kruizeObject) {
         try {
-            for (K8sObject k8sObject : kruizeObject.getKubernetesObjects()) {
-                for (ContainerData containerData : k8sObject.getContainerDataList()) {
+            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                     if (null == containerData.getResults())
                         continue;
                     if (containerData.getResults().isEmpty())
@@ -128,11 +128,11 @@ public class GenerateRecommendation {
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getAggregationInfoResult().getSum() + e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuThrottle).getAggregationInfoResult().getSum())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getSum() + e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle).getAggregationInfoResult().getSum())
                     .collect(Collectors.toList());
 
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -151,14 +151,14 @@ public class GenerateRecommendation {
         try {
             Double max_cpu = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getAggregationInfoResult().getMax() + e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuThrottle).getAggregationInfoResult().getMax())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getMax() + e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle).getAggregationInfoResult().getMax())
                     .max(Double::compareTo).get();
             Double max_pods = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getAggregationInfoResult().getAvg())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -178,10 +178,10 @@ public class GenerateRecommendation {
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryRSS).getAggregationInfoResult().getSum())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getAggregationInfoResult().getSum())
                     .collect(Collectors.toList());
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryRSS).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -199,14 +199,14 @@ public class GenerateRecommendation {
         try {
             Double max_mem = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryUsage).getAggregationInfoResult().getMax())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getMax())
                     .max(Double::compareTo).get();
             Double max_pods = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryUsage).getAggregationInfoResult().getAvg())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.AggregatorType.memoryUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
