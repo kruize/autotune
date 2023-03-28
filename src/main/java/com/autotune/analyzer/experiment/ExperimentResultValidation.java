@@ -89,18 +89,13 @@ public class ExperimentResultValidation {
                             // validate the 'resultdata' with the performance profile
                             errorMsg = PerformanceProfileUtil.validateResults(performanceProfile,resultData);
                             if (null == errorMsg || errorMsg.isEmpty()) {
-                                if (performanceProfile.getName().equalsIgnoreCase(AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE)) {
-                                    errorMsg = new DefaultImpl().recommend(performanceProfile, resultData);
-                                } else {
-                                    // check the performance profile and instantiate corresponding class for parsing
-                                    if (null != performanceProfile.getName()) {
-                                        PerfProfileInterface perfProfileInstance =
-                                                (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
-                                                        .perfProfileInstances.get(performanceProfile.getName())
-                                                        .getDeclaredConstructor().newInstance();
-                                        errorMsg = (String) perfProfileInstance.recommend(performanceProfile, resultData);
-                                    }
-
+                                // check the performance profile and instantiate corresponding class for parsing
+                                if (null != performanceProfile.getName()) {
+                                    PerfProfileInterface perfProfileInstance =
+                                            (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
+                                                    .perfProfileInstances.get(performanceProfile.getName())
+                                                    .getDeclaredConstructor().newInstance();
+                                    errorMsg = (String) perfProfileInstance.recommend(performanceProfile, resultData);
                                 }
                                 if (errorMsg.isEmpty())
                                     proceed = true;

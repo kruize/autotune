@@ -16,12 +16,13 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class DefaultImpl extends PerfProfileImpl {
                         Map<String, Object> aggrInfoClassAsMap;
                         try {
                             // TODO: Need to update the below code
-                            aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                            aggrInfoClassAsMap = PerformanceProfileUtil.convertObjectToMap(metricResults.getAggregationInfoResult());
                             LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
                         } catch (IllegalAccessException | InvocationTargetException e) {
                             throw new RuntimeException(e);
@@ -75,5 +76,17 @@ public class DefaultImpl extends PerfProfileImpl {
         }
 
         return "";
+    }
+
+    // TODO: Update these based on requirements, currently leaving Invalid as Default impl doesn't need engine
+    @Override
+    public AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine) {
+        return AnalyzerConstants.RegisterRecommendationEngineStatus.INVALID;
+    }
+
+
+    @Override
+    public List<KruizeRecommendationEngine> getEngines() {
+        return null;
     }
 }

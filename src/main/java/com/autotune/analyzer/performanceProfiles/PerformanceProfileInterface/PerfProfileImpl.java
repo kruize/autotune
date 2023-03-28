@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class PerfProfileImpl implements PerfProfileInterface {
+public abstract class PerfProfileImpl implements PerfProfileInterface {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PerfProfileImpl.class);
 
@@ -17,16 +17,6 @@ public class PerfProfileImpl implements PerfProfileInterface {
         return AnalyzerConstants.PerformanceProfileConstants.PerfProfileNames.get(performanceProfile.getName());
     }
 
-    // Needs to be overridden by extender
-    @Override
-    public AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine) {
-        return null;
-    }
-
-
-    // Needs to be overridden by extender
-    @Override
-    public List<KruizeRecommendationEngine> getEngines() {
-        return null;
-    }
+    public abstract AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine);
+    public abstract List<KruizeRecommendationEngine> getEngines();
 }

@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
 import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
@@ -486,14 +487,15 @@ public class AnalyzerConstants {
         public static final String DEFAULT_PROFILE = "default";
 
         // Perf profile names
-        public static final String RESOURCE_OPT_OPENSHIFT = "resource-optimization-openshift";
+        public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
 
         public static final Map<String, String> PerfProfileNames = Map.of(
-                RESOURCE_OPT_OPENSHIFT, "ResourceOptimizationOpenshiftImpl"
+                RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
 
         public static final Map<String , Class> perfProfileInstances = Map.of(
-                RESOURCE_OPT_OPENSHIFT, ResourceOptimizationOpenshiftImpl.class
+                DEFAULT_PROFILE, DefaultImpl.class,
+                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class
         );
     }
 

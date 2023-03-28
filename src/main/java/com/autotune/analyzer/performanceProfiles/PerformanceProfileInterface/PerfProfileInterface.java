@@ -33,8 +33,4 @@ public interface PerfProfileInterface {
 // name, validateResults, validateProfile, recommend
     String getName(PerformanceProfile profile);
     String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
-
-    // Register Recommendation Engines
-    AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine);
-    List<KruizeRecommendationEngine> getEngines();
 }
