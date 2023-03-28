@@ -20,8 +20,14 @@ import json
 import os
 import time
 
-def form_kruize_url(cluster_type):
+def form_kruize_url(cluster_type, SERVER_IP = None):
     global URL
+
+    if SERVER_IP != None:
+        URL = "http://" + str(SERVER_IP)
+        print ("\nKRUIZE AUTOTUNE URL = ", URL)
+        return
+
     if (cluster_type == "minikube"):
         port = subprocess.run(['kubectl -n monitoring get svc kruize --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort'], shell=True, stdout=subprocess.PIPE)
 
