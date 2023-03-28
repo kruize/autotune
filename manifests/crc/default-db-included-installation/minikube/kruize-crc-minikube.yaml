@@ -98,7 +98,18 @@ data:
         "port": 5432,
         "sslMode": "require",
         "username": "admin"
+      },
+      "datasource": [{
+        "name": "prometheus-1",
+        "source": "prometheus",
+        "url":"Stub.URL.1"
+      },
+      {
+        "name": "prometheus-2",
+        "source": "prometheus",
+        "url":"Stub.URL.2"
       }
+      ]
     }
 ---
 apiVersion: apps/v1
@@ -172,8 +183,8 @@ metadata:
   name: kruize
   namespace: monitoring
   annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/path: '/metrics'
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
   labels:
     app: kruize
 spec:

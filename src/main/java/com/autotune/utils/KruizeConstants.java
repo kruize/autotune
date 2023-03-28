@@ -341,6 +341,18 @@ public class KruizeConstants {
         public static final String CONFIG_FILE_DB_KEY = "database";
         public static final String DB_DRIVER = "DB_DRIVER";
     }
+    
+    public static final class DataSourceConstants{
+        private DataSourceConstants() {
+
+        }
+
+        public static final String NAME = "name";
+        public static final String SOURCE = "source";
+        public static final String url = "url";
+        public static final String CONFIG_FILE = "CONFIG_FILE";
+    }
+
 
     public static final class DateFormats {
         private DateFormats() {

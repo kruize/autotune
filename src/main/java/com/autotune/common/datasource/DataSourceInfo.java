@@ -26,16 +26,18 @@ import java.net.URL;
  * }
  */
 public class DataSourceInfo {
-    private final String provider;
+    private final String name;
+    private final String source;
     private final URL url;
 
-    public DataSourceInfo(String provider, URL url) {
-        this.provider = provider;
+    public DataSourceInfo(String name, String source, URL url) {
+        this.name = name;
+        this.source =source;
         this.url = url;
     }
 
-    public String getProvider() {
-        return provider;
+    public String getDataSource() {
+        return source;
     }
 
     public URL getUrl() {
@@ -45,7 +47,7 @@ public class DataSourceInfo {
     @Override
     public String toString() {
         return "DataSourceInfo{" +
-                "provider='" + provider + '\'' +
+                "DataSource='" + source + '\'' +
                 ", url=" + url +
                 '}';
     }

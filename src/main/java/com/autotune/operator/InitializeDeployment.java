@@ -15,11 +15,13 @@
  *******************************************************************************/
 package com.autotune.operator;
 
-import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.datasource.DataSourceInfo;
+import java.util.*;
 
 /**
  * Get the deployment information from the config map and initialize
@@ -38,6 +40,7 @@ public class InitializeDeployment
 		String monitoring_agent = System.getenv(AnalyzerConstants.MONITORING_AGENT);
 		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
 		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
+		HashMap<String, DataSourceInfo>  dataSourceMap = new HashMap<String, DataSourceInfo>();
 
 		KruizeDeploymentInfo.setClusterType(cluster_type);
 		KruizeDeploymentInfo.setKubernetesType(k8S_type);
@@ -47,7 +50,8 @@ public class InitializeDeployment
 		KruizeDeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
 		KruizeDeploymentInfo.setLoggingLevel(logging_level);
 		KruizeDeploymentInfo.setRootLoggingLevel(root_logging_level);
-
+         
+		
 		//If no endpoint was specified in the configmap
 		if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
 			if (monitoring_agent == null || monitoring_agent_service == null) {
@@ -58,6 +62,16 @@ public class InitializeDeployment
 			}
 		}
 		KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
+        
+		System.out.println("GOING iNNNN......");
+		KruizeDeploymentInfo.setDatasourceMap(dataSourceMap);
+		System.out.println("PRINTING DATA SOURCEE MAPP");
+		System.out.println(".............................");
+		for (Map.Entry<String, DataSourceInfo> entry : dataSourceMap.entrySet()) {
+			String key = entry.getKey();
+			DataSourceInfo value = entry.getValue();
+			System.out.println("Key: " + key + ", Value: " + value.toString());
+		}
 
 		KruizeDeploymentInfo.setLayerTable();
 
