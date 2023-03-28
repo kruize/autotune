@@ -25,6 +25,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
+/**
+ * Simulating the KruizeObject class for the CreateExperiment API
+ */
 public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
@@ -37,7 +40,7 @@ public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.TARGET_CLUSTER)
     private String targetCluster;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<KubernetesObject> kubernetesObjects;
+    private List<KubernetesAPIObject> kubernetesAPIObjects;
     @SerializedName(KruizeConstants.JSONKeys.TRIAL_SETTINGS)
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
@@ -75,12 +78,12 @@ public class CreateExperimentAPIObject extends BaseSO {
         this.targetCluster = targetCluster;
     }
 
-    public List<KubernetesObject> getKubernetesObjects() {
-        return kubernetesObjects;
+    public List<KubernetesAPIObject> getKubernetesObjects() {
+        return kubernetesAPIObjects;
     }
 
-    public void setKubernetesObjects(List<KubernetesObject> kubernetesObjects) {
-        this.kubernetesObjects = kubernetesObjects;
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
     public TrialSettings getTrialSettings() {
@@ -114,19 +117,24 @@ public class CreateExperimentAPIObject extends BaseSO {
                 ", performanceProfile='" + performanceProfile + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", kubernetesObjects=" + kubernetesObjects +
+                ", kubernetesObjects=" + kubernetesAPIObjects +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';
     }
 }
-class KubernetesObject {
+
+/**
+ * Simulating the K8sObject class for the create experiment API
+ */
+class KubernetesAPIObject {
     private String type;
     private String name;
     private String namespace;
-    private List<Container> containers;
+    @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
+    private List<ContainerAPIObject> containerAPIObjects;
 
-    public KubernetesObject(String name, String type, String namespace) {
+    public KubernetesAPIObject(String name, String type, String namespace) {
         this.name = name;
         this.type = type;
         this.namespace = namespace;
@@ -146,12 +154,12 @@ class KubernetesObject {
         return namespace;
     }
 
-    public List<Container> getContainers() {
-        return containers;
+    public List<ContainerAPIObject> getContainerAPIObjects() {
+        return containerAPIObjects;
     }
 
-    public void setContainers(List<Container> containers) {
-        this.containers = containers;
+    public void setContainerAPIObjects(List<ContainerAPIObject> containerAPIObjects) {
+        this.containerAPIObjects = containerAPIObjects;
     }
 
     @Override
@@ -160,18 +168,21 @@ class KubernetesObject {
                 "type='" + type + '\'' +
                 ", name='" + name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", containers=" + containers +
+                ", containers=" + containerAPIObjects +
                 '}';
     }
 }
 
-class Container {
+/**
+ * Simulating the ContainerData class for the create experiment API
+ */
+class ContainerAPIObject {
     private String container_image_name;
     private String container_name;
     private ContainerRecommendations containerRecommendations;
     private List<Metric> metrics;
 
-    public Container(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, List<Metric> metrics) {
+    public ContainerAPIObject(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, List<Metric> metrics) {
         this.container_name = container_name;
         this.containerRecommendations = containerRecommendations;
         this.container_image_name = container_image_name;

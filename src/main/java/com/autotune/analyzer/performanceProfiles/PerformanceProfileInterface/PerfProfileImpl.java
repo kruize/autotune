@@ -65,20 +65,20 @@ public class PerfProfileImpl implements PerfProfileInterface {
                 AnalyzerConstants.MetricName.memoryUsage,
                 AnalyzerConstants.MetricName.memoryRSS);
         // Get the metrics data from the Performance Profile
-        List<String> aggrFunctionsObjects = new ArrayList<>();
+        List<String> perfProfileAggrFunctions = new ArrayList<>();
         List<String> queryList = new ArrayList<>();
         List<String> perfProfileFunctionVariablesList = new ArrayList<>();
         for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
             perfProfileFunctionVariablesList.add(metric.getName());
             if (null != metric.getAggregationFunctionsMap()) {
                 metric.getAggregationFunctionsMap().values().forEach(aggregationFunctions ->
-                        aggrFunctionsObjects.add(aggregationFunctions.getFunction()));
+                        perfProfileAggrFunctions.add(aggregationFunctions.getFunction()));
             }
             if (null != metric.getQuery())
                 queryList.add(metric.getQuery());
         }
         LOGGER.debug(String.format("List of functionVariables: %s", perfProfileFunctionVariablesList));
-        LOGGER.debug(String.format("List of agg func objects: %s", aggrFunctionsObjects));
+        LOGGER.debug(String.format("List of agg func objects: %s", perfProfileAggrFunctions));
 
         // Get the metrics data from the Kruize Object
         for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
@@ -95,10 +95,10 @@ public class PerfProfileImpl implements PerfProfileInterface {
                 for (IntervalResults intervalResults : containerData.getResults().values()) {
                     for (MetricResults metricResults : intervalResults.getMetricResultsMap().values()) {
                         Map<String, Object> aggrInfoClassAsMap;
-                        if (!aggrFunctionsObjects.isEmpty()) {
+                        if (!perfProfileAggrFunctions.isEmpty()) {
                             try {
                                 aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), aggrFunctionsObjects);
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), perfProfileAggrFunctions);
                                 if (!errorMsg.isBlank()) {
                                     errorMsg = errorMsg.concat(String.format("for the experiment : %s"
                                             , experimentResultData.getExperiment_name()));
@@ -148,28 +148,25 @@ public class PerfProfileImpl implements PerfProfileInterface {
      * Validates the aggregation function objects against the aggregationInfoResult metrics
      *
      * @param keySet
-     * @param aggrFunctionsObjects
+     * @param perfProfileAggrFunctions
      * @return
      */
-    private String validateAggFunction(Set<String> keySet, List<String> aggrFunctionsObjects) {
+    private String validateAggFunction(Set<String> keySet, List<String> perfProfileAggrFunctions) {
 
-        List<String> aggrInfoObjects = keySet.stream().toList();
-        Set<String> missingAggFunction = new HashSet<>();
+        List<String> resultDataAggrFuncObjects = keySet.stream().toList();
+        LOGGER.debug("Performance Profile aggr functions = {}", perfProfileAggrFunctions);
+        LOGGER.debug("Result Data aggr functions = {}", resultDataAggrFuncObjects);
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the aggrInfoObjects List
-        if (aggrInfoObjects.stream().noneMatch(aggrFunctionsObjects::contains)) {
+        if (resultDataAggrFuncObjects.stream().noneMatch(perfProfileAggrFunctions::contains)) {
             LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_AGG_FUNCTION);
             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_AGG_FUNCTION);
-        } else {
-            // check if some or all the values are present or not and respond accordingly
-            for (String aggFuncObj : aggrFunctionsObjects) {
-                if (!aggrInfoObjects.contains(aggFuncObj)) {
-                    missingAggFunction.add(aggFuncObj);
-                }
-            }
-            if (!missingAggFunction.isEmpty()) {
-                LOGGER.warn("Missing Aggregation Functions: {}", missingAggFunction);
-            }
+        } else if (!resultDataAggrFuncObjects.containsAll(perfProfileAggrFunctions)) {
+            List<String> missingObjects = new ArrayList<>(perfProfileAggrFunctions);
+            missingObjects.removeAll(resultDataAggrFuncObjects);
+            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH.concat(missingObjects.toString()));
+            errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH).concat(": ")
+                    .concat(missingObjects.toString());
         }
         return errorMsg;
     }

@@ -35,6 +35,8 @@ public class ContainerData {
 
     public ContainerData(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
         this.containerRecommendations = containerRecommendations;
         this.container_image_name = container_image_name;
         this.metrics = metrics;

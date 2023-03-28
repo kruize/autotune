@@ -111,8 +111,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             }
                             HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                              for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
-                                MetricResults metricResults = (MetricResults) intervalResults.getMetricResultsMap().values();
-                                metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
+                                Collection<MetricResults> metricResultsList = intervalResults.getMetricResultsMap().values();
+                                for (MetricResults metricResults : metricResultsList)
+                                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
                             }
                             HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
 

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -28,7 +27,7 @@ public class UpdateResultsAPIObject extends BaseSO{
     @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
     public Timestamp endTimestamp;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<KubernetesObject> kubernetesObjects;
+    private List<KubernetesAPIObject> kubernetesAPIObjects;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -46,12 +45,12 @@ public class UpdateResultsAPIObject extends BaseSO{
         this.endTimestamp = endTimestamp;
     }
 
-    public List<KubernetesObject> getKubernetesObjects() {
-        return kubernetesObjects;
+    public List<KubernetesAPIObject> getKubernetesObjects() {
+        return kubernetesAPIObjects;
     }
 
-    public void setKubernetesObjects(List<KubernetesObject> kubernetesObjects) {
-        this.kubernetesObjects = kubernetesObjects;
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
     @Override
@@ -59,7 +58,7 @@ public class UpdateResultsAPIObject extends BaseSO{
         return "UpdateResultsAPIObject{" +
                 "startTimestamp=" + startTimestamp +
                 ", endTimestamp=" + endTimestamp +
-                ", kubernetesObjects=" + kubernetesObjects +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects +
                 '}';
     }
 }

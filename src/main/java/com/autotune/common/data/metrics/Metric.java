@@ -40,6 +40,7 @@ public final class Metric {
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
     private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
+    @SerializedName("results")
     private MetricResults metricResults;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")

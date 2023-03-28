@@ -10,14 +10,18 @@ import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -29,6 +33,7 @@ public class Converters {
 	}
 
 	public static class KruizeObjectConverters {
+		private static final Logger LOGGER = LoggerFactory.getLogger(KruizeObjectConverters.class);
 		private KruizeObjectConverters() {
 
 		}
@@ -41,14 +46,14 @@ public class Converters {
 		public static KruizeObject convertCreateExperimentAPIObjToKruizeObject(CreateExperimentAPIObject createExperimentAPIObject) {
 			KruizeObject kruizeObject = new KruizeObject();
 			List<K8sObject> k8sObjectList = new ArrayList<>();
-			List<KubernetesObject> kubernetesObjectsList = createExperimentAPIObject.getKubernetesObjects();
-			for (KubernetesObject kubernetesObject : kubernetesObjectsList) {
-				K8sObject k8sObject = new K8sObject(kubernetesObject.getName(), kubernetesObject.getType(), kubernetesObject.getNamespace());
-				List<Container> containersList = kubernetesObject.getContainers();
+			List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetesObjects();
+			for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
+				K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
+				List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
 				HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-				for (Container container : containersList) {
-					ContainerData containerData = new ContainerData(container.getContainer_name(),
-							container.getContainer_image_name(), new ContainerRecommendations(), null);
+				for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+					ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
+							containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
 					containerDataHashMap.put(containerData.getContainer_name(), containerData);
 				}
 				k8sObject.setContainerDataMap(containerDataHashMap);
@@ -147,27 +152,37 @@ public class Converters {
 			experimentResultData.setStarttimestamp(updateResultsAPIObject.getStartTimestamp());
 			experimentResultData.setEndtimestamp(updateResultsAPIObject.getEndTimestamp());
 			experimentResultData.setExperiment_name(updateResultsAPIObject.getExperimentName());
-			List<KubernetesObject> kubernetesObjectList = updateResultsAPIObject.getKubernetesObjects();
+			List<KubernetesAPIObject> kubernetesAPIObjectList = updateResultsAPIObject.getKubernetesObjects();
 			List<K8sObject> k8sObjectList = new ArrayList<>();
-			for (KubernetesObject kubernetesObject : kubernetesObjectList) {
-				K8sObject k8sObject = new K8sObject(kubernetesObject.getName(), kubernetesObject.getType(), kubernetesObject.getNamespace());
-				List<Container> containersList = kubernetesObject.getContainers();
+			for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectList) {
+				K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
+				List<ContainerAPIObject> containersList = kubernetesAPIObject.getContainerAPIObjects();
 				HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-				for (Container container : containersList) {
+				for (ContainerAPIObject containerAPIObject : containersList) {
 					HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
-					System.out.println("******* container = "+container.toString());
-					for (Metric metric : container.getMetrics())
+					HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+					ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
+					HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+					for (Metric metric : containerAPIObject.getMetrics()) {
 						metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
-					ContainerData containerData = new ContainerData(container.getContainer_name(), container.getContainer_image_name(), container.getContainerRecommendations(), metricsMap);
+						MetricResults metricResults = metric.getMetricResult();
+						metricResults.setName(metric.getName());
+						IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
+								updateResultsAPIObject.endTimestamp);
+						metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+						intervalResults.setMetricResultsMap(metricResultsHashMap);
+						resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
+					}
+					containerData.setResults(resultsMap);
 					containerDataHashMap.put(containerData.getContainer_name(), containerData);
 				}
 				k8sObject.setContainerDataMap(containerDataHashMap);
+				LOGGER.debug("k8sObject = {}", new Gson().toJson(k8sObject));
 				k8sObjectList.add(k8sObject);
 			}
 			experimentResultData.setKubernetes_objects(k8sObjectList);
 			return experimentResultData;
 		}
-
 		public static PerformanceProfile convertInputJSONToCreatePerfProfile(String inputData) throws InvalidValueException {
 			PerformanceProfile performanceProfile = null;
 			if (inputData != null) {
@@ -205,42 +220,6 @@ public class Converters {
 				performanceProfile = new PerformanceProfile(perfProfileName, profileVersion, k8sType, sloInfo);
 			}
 			return performanceProfile;
-		}
-
-		public static ConcurrentHashMap<String, CreateExperimentAPIObject> ConvertExperimentDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
-			ConcurrentHashMap<String, CreateExperimentAPIObject> createExperimentMap = new ConcurrentHashMap<>();
-
-			for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
-				String experimentName = entry.getKey();
-				KruizeObject kruizeObject = entry.getValue();
-				CreateExperimentAPIObject createExperimentObject = new CreateExperimentAPIObject();
-
-				// set fields in createExperimentObject using kruizeObject
-				createExperimentObject.setClusterName(kruizeObject.getClusterName());
-				createExperimentObject.setPerformanceProfile(kruizeObject.getPerformanceProfile());
-				createExperimentObject.setMode(kruizeObject.getMode());
-				createExperimentObject.setTargetCluster(kruizeObject.getTarget_cluster());
-				List<KubernetesObject> kubernetesObjects = new ArrayList<>();
-				for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-					KubernetesObject kubernetesObject = new KubernetesObject(k8sObject.getName(), k8sObject.getType(),
-							k8sObject.getNamespace());
-					List<Container> containerList = new ArrayList<>();
-					for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-						Container container = new Container(containerData.getContainer_name(),
-								containerData.getContainer_image_name(), containerData.getContainerRecommendations(), (List<Metric>) containerData.getMetrics().values());
-						containerList.add(container);
-					}
-					kubernetesObject.setContainers(containerList);
-					kubernetesObjects.add(kubernetesObject);
-				}
-				createExperimentObject.setKubernetesObjects(kubernetesObjects);
-				createExperimentObject.setTrialSettings(kruizeObject.getTrial_settings());
-				createExperimentObject.setRecommendationSettings(kruizeObject.getRecommendation_settings());
-				createExperimentObject.setSloInfo(kruizeObject.getSloInfo());
-
-				createExperimentMap.put(experimentName, createExperimentObject);
-			}
-			return createExperimentMap;
 		}
 
 		public static ConcurrentHashMap<String, KruizeObject> ConvertUpdateResultDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {

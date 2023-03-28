@@ -73,7 +73,6 @@ public class ListExperiments extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String gsonStr = "[]";
         if (this.mainKruizeExperimentMap.size() > 0) {
-            ConcurrentHashMap<String, CreateExperimentAPIObject> createExperimentMap = Converters.KruizeObjectConverters.ConvertExperimentDataToAPIResponse(mainKruizeExperimentMap);
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()
@@ -93,7 +92,7 @@ public class ListExperiments extends HttpServlet {
                         }
                     })
                     .create();
-            gsonStr = gsonObj.toJson(createExperimentMap);
+            gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
         } else {
             JSONArray experimentTrialJSONArray = new JSONArray();
             for (String deploymentName : experimentsMap.keySet()) {
