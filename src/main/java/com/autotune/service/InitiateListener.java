@@ -17,13 +17,8 @@ package com.autotune.service;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.workerimpl.CreateExperimentManager;
-import com.autotune.analyzer.workerimpl.UpdateResultManager;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.queue.KruizeQueue;
-import com.autotune.common.parallelengine.worker.CallableFactory;
-import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
@@ -36,11 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Context Initializer to initialize variables used across modules.
@@ -80,7 +72,8 @@ public class InitiateListener implements ServletContextListener {
           Kruize Create Experiment thread configuration
          */
         sce.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, KruizeOperator.autotuneObjectMap);
-        KruizeExecutor analyserExecutor = new KruizeExecutor(AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_SIZE,
+     /*  //TOdo this code will be enabled once bulk upload is enabled
+     KruizeExecutor analyserExecutor = new KruizeExecutor(AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_SIZE,
                 AnalyzerConstants.createExperimentParallelEngineConfigs.MAX_POOL_SIZE,
                 AnalyzerConstants.createExperimentParallelEngineConfigs.CORE_POOL_KEEPALIVETIME_IN_SECS,
                 TimeUnit.SECONDS,
@@ -109,10 +102,11 @@ public class InitiateListener implements ServletContextListener {
             );
         };
         createExperimentExecutorScheduled.scheduleAtFixedRate(checkForNewExperiment, 1, 1, TimeUnit.SECONDS);
-
+*/
         /*
            Kruize Update results thread Configuration
          */
+/*  //TOdo this code will be enabled once bulk upload is enabled
 
         KruizeExecutor updateResultExecutor = new KruizeExecutor(AnalyzerConstants.updateResultsParallelEngineConfigs.CORE_POOL_SIZE,
                 AnalyzerConstants.updateResultsParallelEngineConfigs.MAX_POOL_SIZE,
@@ -149,7 +143,7 @@ public class InitiateListener implements ServletContextListener {
             );
         };
         updateResultsExecutorScheduled.scheduleAtFixedRate(checkForNewResults, 1, 1, TimeUnit.SECONDS);
-
+*/
         /*
           Kruize Performance Profile configuration
          */

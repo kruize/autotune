@@ -22,8 +22,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * This is a Java class named ExperimentDetail annotated with JPA annotations.
- * It represents a table named experiment_detail in a relational database.
+ * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
+ * It represents a table named kruize_experiment in a relational database.
  * <p>
  * The class has the following fields:
  * <p>
@@ -40,11 +40,11 @@ import org.hibernate.type.SqlTypes;
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
-@Table(name = "experiment_detail")
-public class ExperimentDetailTable {
+@Table(name = "kruize_experiment")
+public class KruizeExperimentEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long experiment_id;
     private String version;
     @Column(unique = true)
     private String experiment_name;
@@ -54,6 +54,8 @@ public class ExperimentDetailTable {
     private String performance_profile;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)

@@ -15,9 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ExperimentResultData;
 
 import java.util.List;
 import java.util.Map;
@@ -32,10 +32,6 @@ public interface ExperimentInterface {
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<KruizeObject> kruizeExperimentList);
 
-    //Add New experiments from local storage to DB and set status to Inprogress
-    public boolean addExperimentToDB(
-            KruizeObject kruizeObject
-    );
 
     //Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
@@ -44,11 +40,5 @@ public interface ExperimentInterface {
     public boolean addResultsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap,
                                             List<ExperimentResultData> experimentResultDataList);
 
-    //Add experiment results from local storage to DB and set status to Inprogress
-    public boolean addResultsToDB(
-            ExperimentResultData resultData
-    );
 
-    //If Kruize object restarts load all experiment which are in inprogress
-    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap);
 }
