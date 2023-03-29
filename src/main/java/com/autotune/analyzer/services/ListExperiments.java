@@ -20,11 +20,10 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -84,7 +83,10 @@ public class ListExperiments extends HttpServlet {
                             return f.getDeclaringClass() == Metric.class && (
                                     f.getName().equals("trialSummaryResult")
                                             || f.getName().equals("cycleDataMap")
-                            );
+                            ) ||
+                                    f.getDeclaringClass() == ContainerData.class && (
+                                            f.getName().equalsIgnoreCase("metrics")
+                                            );
                         }
                         @Override
                         public boolean shouldSkipClass(Class<?> aClass) {

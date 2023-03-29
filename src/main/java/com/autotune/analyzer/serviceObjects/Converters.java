@@ -82,13 +82,14 @@ public class Converters {
 				listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
 				listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
 				listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
-				List<K8sObject> k8sObjectsList = new ArrayList<>();
+				List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
+				KubernetesAPIObject kubernetesAPIObject;
 				for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-					k8sObject.setName(k8sObject.getName());
-					k8sObject.setType(k8sObject.getType()); // TODO: Need to check for proper type here
-					k8sObject.setNamespace(k8sObject.getNamespace());
+					kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
 					HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+					List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
 					for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+						ContainerAPIObject containerAPIObject;
 						// if a Time stamp is passed it holds the priority than latest
 						if (checkForTimestamp) {
 							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
@@ -106,7 +107,11 @@ public class Converters {
 									for (Timestamp timestamp : tempList) {
 										recommendations.remove(timestamp);
 									}
-									containerDataMap.put(clonedContainerData.getContainer_name(), clonedContainerData);
+									containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+											clonedContainerData.getContainer_image_name(),
+											clonedContainerData.getContainerRecommendations(),
+											new ArrayList<>(clonedContainerData.getMetrics().values()));
+									containerAPIObjects.add(containerAPIObject);
 								}
 							}
 						} else if (getLatest) {
@@ -131,16 +136,25 @@ public class Converters {
 								for (Timestamp timestamp : tempList) {
 									recommendations.remove(timestamp);
 								}
-								containerDataMap.put(clonedContainerData.getContainer_name(), clonedContainerData);
+								containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+										clonedContainerData.getContainer_image_name(),
+										clonedContainerData.getContainerRecommendations(),
+										new ArrayList<>(clonedContainerData.getMetrics().values()));
+								containerAPIObjects.add(containerAPIObject);
 							}
 						} else {
+							containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+									containerData.getContainer_image_name(),
+									containerData.getContainerRecommendations(),
+									new ArrayList<>(containerData.getMetrics().values()));
+							containerAPIObjects.add(containerAPIObject);
 							containerDataMap.put(containerData.getContainer_name(), containerData);
 						}
 					}
-					k8sObject.setContainerDataMap(containerDataMap);
-					k8sObjectsList.add(k8sObject);
+					kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+					kubernetesAPIObjects.add(kubernetesAPIObject);
 				}
-				listRecommendationsAPIObject.setKubernetesObjects(k8sObjectsList);
+				listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -192,7 +206,7 @@ public class Converters {
 				String k8sType = jsonObject.getString(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE);
 				JSONObject sloJsonObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
 				JSONArray functionVariableArray = sloJsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-				List<Metric> functionVariablesList = new ArrayList<>();
+				ArrayList<Metric> functionVariablesList = new ArrayList<>();
 				for (Object object : functionVariableArray) {
 					JSONObject functionVarObj = (JSONObject) object;
 					String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
@@ -216,7 +230,7 @@ public class Converters {
 				String sloClass = sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS).toString();
 				String direction = sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.DIRECTION).toString();
 				ObjectiveFunction objectiveFunction = new Gson().fromJson(sloJsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION).toString(), ObjectiveFunction.class);
-				SloInfo sloInfo = new SloInfo(sloClass, objectiveFunction, direction, (ArrayList<Metric>) functionVariablesList);
+				SloInfo sloInfo = new SloInfo(sloClass, objectiveFunction, direction, functionVariablesList);
 				performanceProfile = new PerformanceProfile(perfProfileName, profileVersion, k8sType, sloInfo);
 			}
 			return performanceProfile;

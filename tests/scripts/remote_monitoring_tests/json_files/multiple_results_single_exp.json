@@ -12,7 +12,7 @@
                 "containers": [
                     {
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-0",
+                        "container_name": "tfb-server-1",
                         "metrics": [
                             {
                                 "name": "cpuRequest",

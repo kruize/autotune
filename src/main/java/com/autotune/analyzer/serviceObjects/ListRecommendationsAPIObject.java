@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -26,7 +25,7 @@ public class ListRecommendationsAPIObject extends BaseSO{
     private String clusterName;
 
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<K8sObject> kubernetesObjects;
+    private List<KubernetesAPIObject> kubernetesObjects;
 
     public String getClusterName() {
         return clusterName;
@@ -36,11 +35,11 @@ public class ListRecommendationsAPIObject extends BaseSO{
         this.clusterName = clusterName;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
+    public List<KubernetesAPIObject> getKubernetesObjects() {
         return kubernetesObjects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetesObjects) {
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
     }
 }

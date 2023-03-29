@@ -26,6 +26,7 @@ import java.util.HashMap;
  * Raw results are segregated and organized using IntervalResults
  */
 public class IntervalResults {
+    @SerializedName("metrics")
     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
     private Timestamp intervalStart;
     private Timestamp intervalEnd;
