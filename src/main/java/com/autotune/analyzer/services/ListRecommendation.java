@@ -44,6 +44,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -71,7 +72,9 @@ public class ListRecommendation extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
-        String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        String monitoringTimestamp = request.getParameter(AnalyzerConstants.ServiceConstants.MONITORING_END_TIME);
+        String fromTime = request.getParameter(AnalyzerConstants.ServiceConstants.FROM_TIME);
+        String toTime = request.getParameter(AnalyzerConstants.ServiceConstants.TO_TIME);
         boolean getLatest = true;
         boolean checkForTimestamp = false;
         boolean error = false;
@@ -80,6 +83,39 @@ public class ListRecommendation extends HttpServlet {
                 && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)
         ) {
             getLatest = false;
+        }
+
+        if (null != fromTime) {
+            if (fromTime.isEmpty() || fromTime.isBlank()) {
+                fromTime = null;
+            } else {
+                fromTime = fromTime.trim();
+                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, fromTime)) {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, fromTime)
+                    );
+                }
+            }
+        }
+        if (null != toTime){
+            if (toTime.isEmpty() || toTime.isBlank()) {
+                toTime = null;
+            } else {
+                toTime = toTime.trim();
+                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, toTime)) {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, toTime)
+                    );
+                }
+            }
         }
         List<KruizeObject> kruizeObjectList =  new ArrayList<>();
         // Check if experiment name is passed
@@ -170,7 +206,9 @@ public class ListRecommendation extends HttpServlet {
                                                                         ko,
                                                                         getLatest,
                                                                         checkForTimestamp,
-                                                                        monitoringTimestamp);
+                                                                        monitoringTimestamp,
+                                                                        fromTime,
+                                                                        toTime);
                     recommendationList.add(listRecommendationsSO);
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
