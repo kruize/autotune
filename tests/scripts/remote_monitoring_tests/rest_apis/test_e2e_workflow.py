@@ -34,8 +34,9 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         generate_json(find, input_json_file, create_exp_json_file, i)
 
         # Delete the experiment
-        response = delete_experiment(json_file)
+        response = delete_experiment(create_exp_json_file)
         print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
 
         # Create the experiment
         response = create_experiment(create_exp_json_file)
@@ -68,6 +69,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
 
         # Validate the json against the json schema
         errorMsg = validate_list_reco_json(list_reco_json)
@@ -79,13 +81,12 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
         
-    # Get the experiment name
-    json_data = json.load(open(input_json_file))
-    experiment_name = json_data[0]['experiment_name']
-    
     # Invoke list recommendations for a non-existing experiment
+    experiment_name = "Non-existing-exp"
     response = list_recommendations(experiment_name)
     assert response.status_code == ERROR_STATUS_CODE
+
+    data = response.json()
 
     INVALID_EXP_NAME_MSG = "Given experiment name - \" " + experiment_name + " \" is not valid"
     assert data['message'] == INVALID_EXP_NAME_MSG, f"expected - {INVALID_EXP_NAME_MSG}, actual - {data['message']}"
@@ -95,6 +96,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         json_file = "/tmp/create_exp_" + str(i) + ".json"
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
 
 @pytest.mark.extended
 def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type):
@@ -171,3 +173,4 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
         response = delete_experiment(create_exp_json_file)
         print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
