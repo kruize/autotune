@@ -274,19 +274,6 @@ public class CommonUtils {
         return timeValue * secsInUnit * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
     }
 
-    public static class RecommendationEngineUtils {
-        private RecommendationEngineUtils() {
-
-        }
-
-        public enum SetEngineOutputStatus {
-            SUCCESS,
-            FAILURE,
-            DUPLICATE_FOUND,
-            OVERWRITTEN
-        }
-    }
-
     public static Timestamp addDays(Timestamp date, int days) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
