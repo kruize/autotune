@@ -31,7 +31,7 @@ public class ContainerRecommendations {
 
     public ContainerRecommendations() {
         this.notifications = Collections.synchronizedList(new ArrayList<RecommendationNotification>());
-        this.data = null;
+        this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
 
         RecommendationNotification recommendationNotification = new RecommendationNotification(
                 AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
