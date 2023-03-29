@@ -584,5 +584,14 @@ public class AnalyzerConstants {
             public static String DURATION_BASED = "Duration Based";
             public static String PROFILE_BASED = "Profile Based";
         }
+
+        public static class EngineKeys {
+            private EngineKeys() {
+
+            }
+
+            public static String DURATION_BASED_KEY = "duration_based";
+            public static String PROFILE_BASED_KEY = "profile_based";
+        }
     }
 }

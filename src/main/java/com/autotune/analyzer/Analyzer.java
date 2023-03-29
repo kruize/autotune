@@ -23,8 +23,6 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.operator.InitializeDeployment;
-import com.autotune.common.utils.CommonUtils;
-import com.autotune.common.utils.KruizeLocalCache;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -43,17 +41,10 @@ public class Analyzer {
 
         try {
             addServlets(contextHandler);
-            initiateRecommedationMap();
             PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
             KruizeOperator.getKruizeObjects(kruizeOperator);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void initiateRecommedationMap() {
-        for (CommonUtils.SupportedPerformanceProfiles supportedPerformanceProfile : CommonUtils.SupportedPerformanceProfiles.values()) {
-            KruizeLocalCache.getInstance();
         }
     }
 

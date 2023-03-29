@@ -72,11 +72,5 @@ public class UpdateResultManager implements KruizeWorker {
                     })
             );
         }
-        try {
-            GenerateRecommendation.generateRecommendation(kruizeObject);
-
-        } catch (Exception e) {
-            LOGGER.error("Not able to generate recommendation for expName: {} ", kruizeObject.getExperimentName());
-        }
     }
 }

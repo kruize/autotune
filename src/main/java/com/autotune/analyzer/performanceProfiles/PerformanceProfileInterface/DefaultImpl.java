@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -22,7 +23,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
+import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,11 @@ public class DefaultImpl extends PerfProfileImpl {
         }
 
         return "";
+    }
+
+    @Override
+    public void recommend(KruizeObject kruizeObject) {
+
     }
 
     // TODO: Update these based on requirements, currently leaving Invalid as Default impl doesn't need engine

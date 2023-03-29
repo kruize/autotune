@@ -18,13 +18,8 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
-
-import java.util.List;
-import java.util.Map;
+import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 
 /**
  * Abstraction layer containing methods for the validation of the Performance Profiles with respect to the updated experiment.

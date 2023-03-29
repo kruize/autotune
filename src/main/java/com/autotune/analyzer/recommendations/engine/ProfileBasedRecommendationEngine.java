@@ -1,15 +1,20 @@
-package com.autotune.common.recommendation.engine;
+package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.ContainerObject;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class ProfileBasedRecommendationEngine implements KruizeRecommendationEngine{
     private String name;
+    private String key;
+    private AnalyzerConstants.RecommendationCategory category;
 
     public ProfileBasedRecommendationEngine() {
         this.name = AnalyzerConstants.RecommendationEngine.EngineNames.PROFILE_BASED;
+        this.key = AnalyzerConstants.RecommendationEngine.EngineKeys.PROFILE_BASED_KEY;
     }
 
     public ProfileBasedRecommendationEngine(String name) {
@@ -22,7 +27,17 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public HashMap<String, Recommendation> getRecommendations() {
+    public String getEngineKey() {
+        return this.key;
+    }
+
+    @Override
+    public AnalyzerConstants.RecommendationCategory getEngineCategory() {
+        return this.category;
+    }
+
+    @Override
+    public HashMap<String, Recommendation> getRecommendations(ContainerObject containerObject, Timestamp monitoringEndTime) {
         // TODO: Needs to be implemented
         return null;
     }

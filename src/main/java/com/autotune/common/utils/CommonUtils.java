@@ -18,6 +18,10 @@ package com.autotune.common.utils;
 
 import com.autotune.utils.KruizeConstants;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -283,16 +287,15 @@ public class CommonUtils {
         }
     }
 
-    public enum SupportedPerformanceProfiles {
-        RESOURCE_OPTIMIZATION_PROFILE (AutotuneConstants.SupportedPerformanceProfiles.RESOURCE_OPTIMISATION_PROFILE);
+    public static Timestamp addDays(Timestamp date, int days) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.DATE, days);
+        return new Timestamp(cal.getTime().getTime());
+    }
 
-        private String key;
-        private SupportedPerformanceProfiles(String key) {
-            this.key = key;
-        }
-
-        public String getKey() {
-            return this.key;
-        }
+    public static double percentile(double percentile, List<Double> items) {
+        Collections.sort(items);
+        return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
 }

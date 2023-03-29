@@ -18,15 +18,20 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.recommendation.engine.DurationBasedRecommendationEngine;
-import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
+import com.autotune.common.k8sObjects.DeploymentObject;
+import com.autotune.analyzer.recommendations.engine.DurationBasedRecommendationEngine;
+import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -78,11 +83,65 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     @Override
     public void recommend(KruizeObject kruizeObject) {
         //TODO: Will be updated once algo is completed
-        for (KruizeRecommendationEngine engine : getEngines()) {
-            if (null != kruizeObject) {
-                engine.getRecommendations();
+        if (null != kruizeObject) {
+            for (String dName : kruizeObject.getDeployments().keySet()) {
+                DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
+                for (String cName : deploymentObj.getContainers().keySet()) {
+                    ContainerObject containerObject = deploymentObj.getContainers().get(cName);
+                    if (null == containerObject.getResults())
+                        continue;
+                    if (containerObject.getResults().isEmpty())
+                        continue;
+                    Timestamp monitorEndTimestamp = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
+                    for (KruizeRecommendationEngine engine : getEngines()) {
+                        HashMap<String, Recommendation> recommendationHashMap = engine.getRecommendations(containerObject, monitorEndTimestamp);
+                        if (null == recommendationHashMap || recommendationHashMap.isEmpty())
+                            continue;
+                        ContainerRecommendations containerRecommendations = containerObject.getContainerRecommendations();
+                        // check if notifiaction exists
+                        boolean notificationExist = false;
+                        for (RecommendationNotification notification : containerRecommendations.getNotifications()) {
+                            if (notification.getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE)) {
+                                notificationExist = true;
+                                break;
+                            }
+                        }
+                        // If there is no notification add one
+                        if (!notificationExist) {
+                            RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                    AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
+                                    AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE
+                            );
+                            containerRecommendations.getNotifications().add(recommendationNotification);
+                        }
+                        // Just to make sure the container recommendations object is not empty
+                        if (null == containerRecommendations) {
+                            containerRecommendations = new ContainerRecommendations();
+                        }
+                        // Get the engine recommendation map for a time stamp if it exists else create one
+                        HashMap<Timestamp, HashMap<String, HashMap<String,Recommendation>>> timestampBasedRecommendationMap
+                                = containerRecommendations.getData();
+                        if (null == timestampBasedRecommendationMap) {
+                            timestampBasedRecommendationMap = new HashMap<Timestamp, HashMap<String, HashMap<String,Recommendation>>>();
+                        }
+                        // check if engines map exists else create one
+                        HashMap<String, HashMap<String, Recommendation>> enginesRecommendationMap = null;
+                        if (timestampBasedRecommendationMap.containsKey(monitorEndTimestamp)) {
+                            enginesRecommendationMap = timestampBasedRecommendationMap.get(monitorEndTimestamp);
+                        } else {
+                            enginesRecommendationMap = new HashMap<String, HashMap<String, Recommendation>>();
+                        }
+                        // put recommendations tagging to engine
+                        enginesRecommendationMap.put(engine.getEngineKey(), recommendationHashMap);
+                        // put recommendations tagging to timestamp
+                        timestampBasedRecommendationMap.put(monitorEndTimestamp, enginesRecommendationMap);
+                        // set the data object to map
+                        containerRecommendations.setData(timestampBasedRecommendationMap);
+                        // set the container recommendations in container object
+                        containerObject.setContainerRecommendations(containerRecommendations);
+                    }
+                }
             }
         }
     }
-
 }
