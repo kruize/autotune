@@ -107,6 +107,7 @@ public class Converters {
 									for (Timestamp timestamp : tempList) {
 										recommendations.remove(timestamp);
 									}
+									clonedContainerData.getContainerRecommendations().setData(recommendations);
 									containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
 											clonedContainerData.getContainer_image_name(),
 											clonedContainerData.getContainerRecommendations(),
@@ -136,6 +137,7 @@ public class Converters {
 								for (Timestamp timestamp : tempList) {
 									recommendations.remove(timestamp);
 								}
+								clonedContainerData.getContainerRecommendations().setData(recommendations);
 								containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
 										clonedContainerData.getContainer_image_name(),
 										clonedContainerData.getContainerRecommendations(),
@@ -221,7 +223,8 @@ public class Converters {
 						HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
 						String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
 						String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
-						AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, null );
+						String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
+						AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version );
 						aggregationFunctionsMap.put(function, aggregationFunctions);
 						metric.setAggregationFunctionsMap(aggregationFunctionsMap);
 					}

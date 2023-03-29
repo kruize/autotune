@@ -107,7 +107,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             if (null == containerDataMap.get(cName)) {
                                 containerData = new ContainerData(cName, imgName, resultContainerData.getContainerRecommendations(), metricsMap);
                             } else {
-                                containerData = resultContainerData;
+                                containerData = containerDataMap.get(cName);
                             }
                             HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                              for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
