@@ -24,6 +24,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     @Override
     public HashMap<String, Recommendation> getRecommendations() {
         // TODO: Needs to be implemented
+
         return null;
     }
 }

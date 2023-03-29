@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -23,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +73,7 @@ public class ExperimentInitiator {
      * @param experimentResultDataList
      * @param performanceProfilesMap
      */
-    public void validateAndUpdateResults(
+    public ValidationOutputData validateAndUpdateResults(
             Map<String, KruizeObject> mainKruizeExperimentMap,
             List<ExperimentResultData> experimentResultDataList,
             Map<String, PerformanceProfile> performanceProfilesMap) {
@@ -92,5 +95,35 @@ public class ExperimentInitiator {
             validationOutputData.setMessage("Exception occurred while validating the result data: " + e.getMessage());
             validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+        return validationOutputData;
+    }
+
+    // Generate recommendations and add it to the kruize object
+    public boolean generateAndAddRecommendations(Map<String, KruizeObject> experimentsMap, List<String> experimentNameList) {
+        if (null == experimentNameList)
+            return false;
+        if (experimentNameList.size() == 0)
+            return false;
+        for (String experimentName: experimentNameList) {
+            if (!experimentsMap.containsKey(experimentName))
+                return false;
+        }
+        for (String experimentName : experimentNameList) {
+            KruizeObject kruizeObject = experimentsMap.get(experimentName);
+            if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
+                try {
+                    PerfProfileInterface perfProfileInstance =
+                            (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
+                                    .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
+                                    .getDeclaredConstructor().newInstance();
+                    perfProfileInstance.recommend();
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        }
+        return false;
     }
 }

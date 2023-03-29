@@ -70,6 +70,9 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     @Override
     public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
         //TODO: Will be updated once algo is completed
+        for (KruizeRecommendationEngine engine : getEngines()) {
+
+        }
         return "";
     }
 
