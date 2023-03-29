@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -33,4 +34,5 @@ public interface PerfProfileInterface {
 // name, validateResults, validateProfile, recommend
     String getName(PerformanceProfile profile);
     String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData);
+    void recommend(KruizeObject kruizeObject);
 }

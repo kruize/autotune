@@ -15,9 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.ContainerObject;
 import com.autotune.common.recommendation.engine.DurationBasedRecommendationEngine;
 import com.autotune.common.recommendation.engine.KruizeRecommendationEngine;
 import org.slf4j.Logger;
@@ -69,11 +72,17 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
     @Override
     public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
+        return "";
+    }
+
+    @Override
+    public void recommend(KruizeObject kruizeObject) {
         //TODO: Will be updated once algo is completed
         for (KruizeRecommendationEngine engine : getEngines()) {
-
+            if (null != kruizeObject) {
+                engine.getRecommendations();
+            }
         }
-        return "";
     }
 
 }
