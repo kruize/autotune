@@ -28,7 +28,7 @@ METRICS_SCRIPT_DIR="${CURRENT_DIR}/../stress_test"
 echo "METRICS_SCRIPT_DIR = ${METRICS_SCRIPT_DIR}"
 
 ITER=1
-TIMEOUT=1200
+TIMEOUT=1800
 RESULTS_DIR=/tmp/kruize_scale_test_results
 BENCHMARK_SERVER=localhost
 APP_NAME=kruize
@@ -42,10 +42,11 @@ RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
 
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
+hours=6
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments] [-d hours of data available] [-r <resultsdir path>] [-t TIMEOUT for metrics script]"
 	exit -1
 }
 
@@ -74,6 +75,9 @@ do
 		;;
 	u)
 		num_exps="${OPTARG}"		
+		;;
+	d)
+		hours="${OPTARG}"		
 		;;
 	t)
 		TIMEOUT="${OPTARG}"		
@@ -112,7 +116,7 @@ pushd ${KRUIZE_REPO} > /dev/null
         echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}"
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
 
-        sleep 5
+        sleep 60
         echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG}"
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG} 2>&1
         sleep 20
@@ -175,12 +179,14 @@ SCALE_LOG="${LOG_DIR}/scale_demo.log"
 echo ""
 echo "Running scale demo for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
-	python3 scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
+	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
+	#python3 scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
+	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 
 else
-	echo "python3 scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
-	python3 scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
+	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
+	#python3 scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
+	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 fi
 
 end_time=$(get_date)
