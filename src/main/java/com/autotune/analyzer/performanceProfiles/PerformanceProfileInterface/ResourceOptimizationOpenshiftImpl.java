@@ -76,11 +76,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     }
 
     @Override
-    public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
-        return "";
-    }
-
-    @Override
     public void recommend(KruizeObject kruizeObject) {
         //TODO: Will be updated once algo is completed
         if (null != kruizeObject) {

@@ -43,42 +43,6 @@ public class DefaultImpl extends PerfProfileImpl {
         return "";
     }
 
-    /**
-     * Calculates the objective function by calling the algebraic parser library. The result is then sent to HPO.
-     * @param performanceProfile
-     * @param experimentResultData
-     * @return
-     */
-    @Override
-    public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
-
-        String objectiveFunction = performanceProfile.getSloInfo().getObjectiveFunction().getExpression();
-        Map<String, String> objFunctionMap = new HashMap<>();
-        String errorMsg = "";
-
-        // Get the metrics data from the Kruize Object
-        for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (ContainerData containerData : deploymentResultData.getContainerDataMap().values()) {
-                HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
-                Set<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet();
-                for (IntervalResults intervalResults : containerData.getResults().values()) {
-                    for (MetricResults metricResults : intervalResults.getMetricResultsMap().values()) {
-                        Map<String, Object> aggrInfoClassAsMap;
-                        try {
-                            // TODO: Need to update the below code
-                            aggrInfoClassAsMap = PerformanceProfileUtil.convertObjectToMap(metricResults.getAggregationInfoResult());
-                            LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-            }
-        }
-
-        return "";
-    }
-
     @Override
     public void recommend(KruizeObject kruizeObject) {
 
