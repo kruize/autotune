@@ -17,6 +17,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -180,7 +181,8 @@ public class ListRecommendation extends HttpServlet {
             ExclusionStrategy strategy = new ExclusionStrategy() {
                 @Override
                 public boolean shouldSkipField(FieldAttributes field) {
-                    return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"));
+                    return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
+                            || ( field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
                 }
 
                 @Override
