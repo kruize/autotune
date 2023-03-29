@@ -132,7 +132,7 @@ public class GenerateRecommendation {
                     .collect(Collectors.toList());
 
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -158,7 +158,7 @@ public class GenerateRecommendation {
                     .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -206,7 +206,7 @@ public class GenerateRecommendation {
                     .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getSum() / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
             for (IntervalResults intervalResults : filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getFormat();
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
