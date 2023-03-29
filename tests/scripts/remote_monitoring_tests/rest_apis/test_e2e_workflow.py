@@ -1,6 +1,7 @@
 import requests
 import pytest
 from jinja2 import Environment, FileSystemLoader
+from helpers.list_reco_json_validate import *
 from helpers.utils import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
@@ -29,15 +30,15 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
     # Create experiment using the specified json
     num_exps = 10
     for i in range(num_exps):
-        json_file = "/tmp/create_exp_" + str(i) + ".json"
-        generate_json(find, input_json_file, json_file, i)
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
 
         # Delete the experiment
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
 
         # Create the experiment
-        response = create_experiment(json_file)
+        response = create_experiment(create_exp_json_file)
 
         data = response.json()
         print("message = ", data['message'])
@@ -46,10 +47,10 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
         # Update results for the experiment
-        json_file = "/tmp/update_results_" + str(i) + ".json"
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
         update_timestamps = True
-        generate_json(find, result_json_file, json_file, i, update_timestamps)
-        response = update_results(json_file)
+        generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+        response = update_results(update_results_json_file)
 
         data = response.json()
         print("message = ", data['message'])
@@ -61,20 +62,33 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         time.sleep(20)
 
         # Get the experiment name
-        json_data = json.load(open(json_file))
+        json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
+
+        # Validate the json against the json schema
+        errorMsg = validate_list_reco_json(list_reco_json)
+        assert errorMsg == ""
+
+        # Validate the json values
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        update_results_json = read_json_data_from_file(update_results_json_file)
+
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
         
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
     
-    # Invoke list recommendations for the specified experiment
+    # Invoke list recommendations for a non-existing experiment
     response = list_recommendations(experiment_name)
     assert response.status_code == ERROR_STATUS_CODE
+
+    INVALID_EXP_NAME_MSG = "Given experiment name - \" " + experiment_name + " \" is not valid"
+    assert data['message'] == INVALID_EXP_NAME_MSG, f"expected - {INVALID_EXP_NAME_MSG}, actual - {data['message']}"
 
     # Delete all the experiments
     for i in range(num_exps):
@@ -143,6 +157,16 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
 
+        list_reco_json = response.json()
+
+        # Validate the json against the json schema
+        errorMsg = validate_list_reco_json(list_reco_json)
+        assert errorMsg == ""
+
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        update_results_json = read_json_data_from_file(result_json_file)
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+        
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
         response = delete_experiment(create_exp_json_file)
