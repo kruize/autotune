@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
+ERROR_409_STATUS_CODE = 409
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -30,6 +31,7 @@ UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at 
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
+EXP_EXISTS_MSG = "Experiment name already exists: "
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {

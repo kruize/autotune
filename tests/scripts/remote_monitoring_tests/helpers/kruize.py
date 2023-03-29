@@ -99,8 +99,13 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
     url = URL + "/listRecommendations"
     print("URL = ", url)
 
-    if experiment_name == "" and latest == None and monitoring_end_time == None:
-        response = requests.get(url)
+    if experiment_name == None:
+        if latest == None and monitoring_end_time == None:
+            response = requests.get(url)
+        elif latest != None:
+            PARAMS = {'latest' : latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'monitoring_end_time' : monitoring_end_time}
     else:
         if latest == None and monitoring_end_time == None:
             PARAMS = {'experiment_name': experiment_name}
@@ -109,8 +114,8 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
         elif monitoring_end_time != None:
             PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time' : monitoring_end_time}
         
-        print("PARAMS = ", PARAMS)
-        response = requests.get(url = url, params = PARAMS)
+    print("PARAMS = ", PARAMS)
+    response = requests.get(url = url, params = PARAMS)
 
     print("Response status code = ", response.status_code)
     print("\n************************************************************")

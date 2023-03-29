@@ -60,6 +60,7 @@ def validate_list_reco_json_values(reco):
                 for subkey in reco[key][0].keys():
                     # Check if any of the key is empty or null
                     if not (str(reco[key][0][subkey]) and str(reco[key][0][subkey]).strip()):
+                        print(f"FAILED - {str(reco[key][0][subkey])} is empty or null")
                         validationErrorMsg = ",".join([validationErrorMsg, "Parameters" + VALUE_MISSING])
                     elif str(subkey) == "type" and str(reco[key][0][subkey]) not in KUBERNETES_OBJECTS_TYPE_SUPPORTED:
                         validationErrorMsg = ",".join([validationErrorMsg, KUBERNETES_OBJECTS_TYPE_NOT_SUPPORTED])
