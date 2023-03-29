@@ -49,6 +49,7 @@ public class KruizeDeploymentInfo {
     private static String loggingLevel;
     private static String rootLoggingLevel;
     private static Hashtable<String, Class> tunableLayerPair;
+    private static HashMap<String, DataSourceInfo> datasourceMap;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
     private KruizeDeploymentInfo() {
@@ -84,8 +85,10 @@ public class KruizeDeploymentInfo {
         return clusterType;
     }
 
-    public static void setDatasourceMap(HashMap<String,DataSourceInfo> datasourceMap){
-        
+    public static void setDatasourceMap(HashMap<String,DataSourceInfo> validatedDataSourceMap){
+        if(validatedDataSourceMap.size()!=0){
+            datasourceMap = validatedDataSourceMap;
+        }
     }
 
     public static void setClusterType(String clusterType) throws ClusterTypeNotSupportedException {

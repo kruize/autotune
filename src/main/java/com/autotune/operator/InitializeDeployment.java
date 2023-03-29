@@ -44,7 +44,6 @@ public class InitializeDeployment
     
 	
 	public static void populateDatasourceMapWithCongfig (HashMap<String,DataSourceInfo> datasourceMap){
-		System.out.println("Reaching the desired functionnnnnnnnnnnnnn");
 		HashMap<String, Integer>  keyFlag = new HashMap<String, Integer>();
         String configFile = System.getenv(KruizeConstants.DataSourceConstants.CONFIG_FILE);
         try {
@@ -52,7 +51,6 @@ public class InitializeDeployment
             String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject jsonObj = new JSONObject(jsonTxt);
             JSONArray datasourceArr = jsonObj.getJSONArray("datasource");
-            System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             for (int i = 0; i < datasourceArr.length(); i++) {
                 JSONObject datasourceObj = datasourceArr.getJSONObject(i);
                 String name = datasourceObj.getString("name");
@@ -65,12 +63,13 @@ public class InitializeDeployment
                 e.printStackTrace();
                 continue;
             }  
-              if(url==null){
+            if(url==null){
                 LOGGER.error("Invalid datasource URL");
-              }else if(keyFlag.containsKey(name)){
+            }else if(keyFlag.containsKey(name)){
+				//If two datasource object have same name then throw error
 				LOGGER.error("Datasource with similar name Exists");
-			  }
-			  else
+			}
+			else
 			  { 
 				keyFlag.put(name,(keyFlag.getOrDefault(name,0))+1);
                 DataSourceInfo tempDatasourceObj = new DataSourceInfo(name, source, url);
@@ -79,12 +78,8 @@ public class InitializeDeployment
             }        
             
         } catch (FileNotFoundException fileNotFoundException) {
-            System.out.println("CONFIG FIle ");
+            LOGGER.error("Config file not available!");
         }catch (Exception e) {
-
-            System.out.println("SOMEEEE ERRRORR OCCURRED");
-            System.out.println("PRINTINGGG STACKK TRACE");
-            System.out.println("========================================================================");
             e.printStackTrace();
         }
 	}
@@ -123,16 +118,8 @@ public class InitializeDeployment
 		KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
         
 		//Populate the datasourceinfo hasmap and validate it.
-		System.out.println("GOING iNNNN......");
         populateDatasourceMapWithCongfig(dataSourceMap);
 		KruizeDeploymentInfo.setDatasourceMap(dataSourceMap);
-		System.out.println("PRINTING DATA SOURCEE MAPP"); 
-		System.out.println(".............................");
-		for (Map.Entry<String, DataSourceInfo> entry : dataSourceMap.entrySet()) {
-			String key = entry.getKey();
-			DataSourceInfo value = entry.getValue();
-			System.out.println("Key: " + key + ", Value: " + value.toString());
-		}
 
 		KruizeDeploymentInfo.setLayerTable();
 
