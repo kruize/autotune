@@ -6,8 +6,8 @@ import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.result.StartEndTimeStampResults;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,10 +49,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     }
 
     @Override
-    public HashMap<String, Recommendation> getRecommendations(ContainerObject containerObject, Timestamp monitoringEndTime) {
+    public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
         // TODO: Needs to be implemented
         AnalyzerConstants.RecommendationCategory recommendationCategory = AnalyzerConstants.RecommendationCategory.DURATION_BASED;
-        HashMap<Timestamp, StartEndTimeStampResults> resultsMap = containerObject.getResults();
+        HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
         Timestamp minDate = resultsMap.keySet().stream().min(Timestamp::compareTo).get();
         HashMap<String, Recommendation> resultRecommendation = new HashMap<String, Recommendation>();
         for (RecommendationSubCategory recommendationSubCategory : recommendationCategory.getRecommendationSubCategories()) {
@@ -62,7 +62,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             Timestamp monitorStartDate = CommonUtils.addDays(monitoringEndTime, -1 * days);
             if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
                 Timestamp finalMonitorStartDate = monitorStartDate;
-                Map<Timestamp, StartEndTimeStampResults> filteredResultsMap = containerObject.getResults().entrySet().stream()
+                Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                         .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
                                 && (x.getKey().compareTo(monitoringEndTime) <= 0))))
                         .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
@@ -93,17 +93,18 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return resultRecommendation;
     }
 
-    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
+    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getSum() + e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuThrottle).getSum())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getSum()
+                            + e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle).getAggregationInfoResult().getSum())
                     .collect(Collectors.toList());
 
-            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
-                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+            for (IntervalResults intervalResults: filteredResultsMap.values()) {
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -116,20 +117,22 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return recommendationConfigItem;
     }
 
-    private static RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
+    private static RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         try {
             Double max_cpu = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getMax() + e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuThrottle).getMax())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getMax()
+                            + e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle).getAggregationInfoResult().getMax())
                     .max(Double::compareTo).get();
             Double max_pods = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getSum() / e.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getAvg())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getSum()
+                            / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
-            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
-                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.cpuUsage).getFormat();
+            for (IntervalResults intervalResults: filteredResultsMap.values()) {
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -142,16 +145,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return recommendationConfigItem;
     }
 
-    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
+    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         try {
             List<Double> doubleList = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryRSS).getSum())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getAggregationInfoResult().getSum())
                     .collect(Collectors.toList());
-            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
-                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.memoryRSS).getFormat();
+            for (IntervalResults intervalResults: filteredResultsMap.values()) {
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }
@@ -163,20 +166,21 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return recommendationConfigItem;
     }
 
-    private static RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, StartEndTimeStampResults> filteredResultsMap) {
+    private static RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         try {
             Double max_mem = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getMax())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getMax())
                     .max(Double::compareTo).get();
             Double max_pods = filteredResultsMap.values()
                     .stream()
-                    .map(e -> e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getSum() / e.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getAvg())
+                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getSum()
+                            / e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getAggregationInfoResult().getAvg())
                     .max(Double::compareTo).get();
-            for (StartEndTimeStampResults startEndTimeStampResults: filteredResultsMap.values()) {
-                format = startEndTimeStampResults.getMetrics().get(AnalyzerConstants.AggregatorType.memoryUsage).getFormat();
+            for (IntervalResults intervalResults: filteredResultsMap.values()) {
+                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage).getFormat();
                 if (null != format && !format.isEmpty())
                     break;
             }

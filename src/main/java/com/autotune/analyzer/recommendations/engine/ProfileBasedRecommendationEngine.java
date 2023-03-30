@@ -2,7 +2,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public HashMap<String, Recommendation> getRecommendations(ContainerObject containerObject, Timestamp monitoringEndTime) {
+    public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
         // TODO: Needs to be implemented
         return null;
     }

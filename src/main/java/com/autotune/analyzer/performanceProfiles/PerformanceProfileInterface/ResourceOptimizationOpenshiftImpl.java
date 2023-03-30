@@ -16,16 +16,14 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.analyzer.recommendations.engine.DurationBasedRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.K8sObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,20 +77,19 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     public void recommend(KruizeObject kruizeObject) {
         //TODO: Will be updated once algo is completed
         if (null != kruizeObject) {
-            for (String dName : kruizeObject.getDeployments().keySet()) {
-                DeploymentObject deploymentObj = kruizeObject.getDeployments().get(dName);
-                for (String cName : deploymentObj.getContainers().keySet()) {
-                    ContainerObject containerObject = deploymentObj.getContainers().get(cName);
-                    if (null == containerObject.getResults())
+            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                for (String cName : k8sObject.getContainerDataMap().keySet()) {
+                    ContainerData containerData = k8sObject.getContainerDataMap().get(cName);
+                    if (null == containerData.getResults())
                         continue;
-                    if (containerObject.getResults().isEmpty())
+                    if (containerData.getResults().isEmpty())
                         continue;
-                    Timestamp monitorEndTimestamp = containerObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
+                    Timestamp monitorEndTimestamp = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     for (KruizeRecommendationEngine engine : getEngines()) {
-                        HashMap<String, Recommendation> recommendationHashMap = engine.getRecommendations(containerObject, monitorEndTimestamp);
+                        HashMap<String, Recommendation> recommendationHashMap = engine.getRecommendations(containerData, monitorEndTimestamp);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
-                        ContainerRecommendations containerRecommendations = containerObject.getContainerRecommendations();
+                        ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
                         // check if notifiaction exists
                         boolean notificationExist = false;
                         for (RecommendationNotification notification : containerRecommendations.getNotifications()) {
@@ -133,7 +130,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // set the data object to map
                         containerRecommendations.setData(timestampBasedRecommendationMap);
                         // set the container recommendations in container object
-                        containerObject.setContainerRecommendations(containerRecommendations);
+                        containerData.setContainerRecommendations(containerRecommendations);
                     }
                 }
             }
