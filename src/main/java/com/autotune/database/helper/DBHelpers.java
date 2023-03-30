@@ -64,7 +64,7 @@ public class DBHelpers {
                     kruizeExperimentEntry.setTarget_cluster(kruizeObject.getTarget_cluster());
                     kruizeExperimentEntry.setStatus(kruizeObject.getStatus());
                     JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, kruizeObject.getKubernetesObjects());
+                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, kruizeObject.getKubernetes_objects());
                     jsonObject.put(KruizeConstants.JSONKeys.TRIAL_SETTINGS, new JSONObject(
                             new Gson().toJson(kruizeObject.getTrial_settings())));
                     jsonObject.put(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS, new JSONObject(
@@ -103,7 +103,7 @@ public class DBHelpers {
                             Double.valueOf((experimentResultData.getEndtimestamp().getTime() - experimentResultData.getStarttimestamp().getTime()) / (60 * 1000))
                     );
                     JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetesObjects());
+                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
