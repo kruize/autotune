@@ -96,7 +96,9 @@ public class UpdateResults extends HttpServlet {
                             experimentList.add(experimentName);
                     }
                     if (!experimentList.isEmpty()) {
-                        experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
+                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
+                        if (!recommendationCheck)
+                            LOGGER.error("Failed to create recommendations");
                     }
                 }
             }

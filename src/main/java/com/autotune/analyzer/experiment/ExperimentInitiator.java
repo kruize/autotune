@@ -124,6 +124,6 @@ public class ExperimentInitiator {
 
 
         }
-        return false;
+        return true;
     }
 }
