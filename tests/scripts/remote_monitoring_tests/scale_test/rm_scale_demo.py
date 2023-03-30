@@ -27,6 +27,7 @@ def main(argv):
     cluster_type = "minikube"
     results_dir = "."
     hours = 6
+    num_exps = 10
     try:
         opts, args = getopt.getopt(argv,"h:c:a:u:r:d:")
     except getopt.GetoptError:
@@ -84,21 +85,17 @@ def main(argv):
         print("\n*************************")
         print(f"Iteration {i}...")
         print("*************************\n")
-        create_exp_jsons(split, split_count, exp_json_dir, total_exps)
+        create_exp_jsons(split, split_count, exp_json_dir, num_exps)
 
         if i == 1:
-            #tmp_result_json_dir = result_json_dir + "_" + str(i)
             new_timestamp = None
-            #create_update_results_jsons(csv_filename, split, split_count, tmp_result_json_dir, total_exps, num_res, new_timestamp)
-            create_update_results_jsons(csv_filename, split, split_count, result_json_dir, total_exps, num_res, new_timestamp)
+            create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
             start_ts = get_datetime()
         else:
             # Increment the time by 365 mins or 6 hrs 6 mins for the next set of data timestamps
             new_timestamp = increment_timestamp(start_ts, 365)
             start_ts = new_timestamp
-            #tmp_result_json_dir = result_json_dir + "_" + str(i)
-            #create_update_results_jsons(csv_filename, split, split_count, tmp_result_json_dir, total_exps, num_res, new_timestamp)
-            create_update_results_jsons(csv_filename, split, split_count, result_json_dir, total_exps, num_res, new_timestamp)
+            create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
 
         for exp_num in range(num_exps):
             # create the experiment and post it
@@ -112,8 +109,7 @@ def main(argv):
 
             for res_num in range(num_res):
                 # update 6 hours result for the specified experiment
-                #json_file = tmp_result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
-                json_file = result_json_dir + "/result_" + str(res_num) + ".json"
+                json_file = result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
                 update_results(json_file)
 
         # sleep for a while before fetching recommendations for the experiments
