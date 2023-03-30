@@ -139,6 +139,10 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 
 To run the stress test refer the Stress test [README](/tests/scripts/remote_monitoring_tests/README.md)
 
+#### Scale test
+
+To run the scalability test refer the Scale test [README](/tests/scripts/remote_monitoring_tests/scale_test_readme.md)
+
 ## Supported Clusters
 - Minikube
 
