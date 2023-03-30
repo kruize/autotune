@@ -27,16 +27,26 @@ import java.net.URL;
  */
 public class DataSourceInfo {
     private final String name;
+    private final String serviceName;
     private final String provider;
     private final URL url;
 
-    public DataSourceInfo(String name, String provider, URL url) {
+    public DataSourceInfo(String name, String serviceName ,String provider, URL url) {
         this.name = name;
+        this.serviceName =serviceName;
         this.provider = provider;
         this.url = url;
     }
+    
+    public String getServiceName(){
+        return serviceName;
+    }
+    
+    public String getName(){
+        return name;
+    }
 
-    public String getDataSource() {
+    public String getProvider() {
         return provider;
     }
 
@@ -46,9 +56,12 @@ public class DataSourceInfo {
 
     @Override
     public String toString() {
+        // DataSourceInfo{DataSource='prometheus', url=http://www.exampletwo.com:8080/}
         return "DataSourceInfo{" +
-                "DataSource='" + provider + '\'' +
-                ", url=" + url +
+                "provider='" + provider + '\'' +
+                ", url='" + url + '\'' +
+                ", serviceName='" + serviceName + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }

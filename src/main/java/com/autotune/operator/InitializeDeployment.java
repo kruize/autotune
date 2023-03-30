@@ -30,6 +30,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class InitializeDeployment
 	private InitializeDeployment() { }
     
 	
-	public static void populateDatasourceMapWithCongfig (HashMap<String,DataSourceInfo> datasourceMap){
+	public static void populateDatasourceMapWithCongfig (HashMap<String,DataSourceInfo> datasourceMap) throws Exception{
 		HashMap<String, Integer>  keyFlag = new HashMap<String, Integer>();
         String configFile = System.getenv(KruizeConstants.DataSourceConstants.CONFIG_FILE);
         try {
@@ -53,31 +54,49 @@ public class InitializeDeployment
             JSONArray datasourceArr = jsonObj.getJSONArray("datasource");
             for (int i = 0; i < datasourceArr.length(); i++) {
                 JSONObject datasourceObj = datasourceArr.getJSONObject(i);
-                String name = datasourceObj.getString("name");
-                String source = datasourceObj.getString("source");
-                String urlString = datasourceObj.getString("url");
+                String name = datasourceObj.getString(KruizeConstants.DataSourceConstants.NAME);
+                String provider = datasourceObj.getString(KruizeConstants.DataSourceConstants.PROVIDER);
+				String serviceName = null;
+				
+				try{
+				serviceName = datasourceObj.getString(KruizeConstants.DataSourceConstants.SERVICE_NAME);
+				}catch (JSONException e){
+					LOGGER.info("serviceName for the data source not found");
+					serviceName = null;
+				}
+                String urlString = null;
+				try{
+					urlString = datasourceObj.getString(KruizeConstants.DataSourceConstants.URL);
+				}catch(JSONException e){
+                    LOGGER.info("URL for the datasource not found");
+					urlString=null;
+				}
+
                 URL url = null;
+				
+			if(urlString==null && serviceName==null){
+                // throw an Exception
+                throw new Exception("Url and serviceName both null for datasource");
+            }
             try {
                 url = new URL(urlString);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 continue;
             }  
-            if(url==null){
-                LOGGER.error("Invalid datasource URL");
-            }else if(keyFlag.containsKey(name)){
+            if(keyFlag.containsKey(name)){
 				//If two datasource object have same name then throw error
 				LOGGER.error("Datasource with similar name Exists");
 			}
 			else
 			  { 
 				keyFlag.put(name,(keyFlag.getOrDefault(name,0))+1);
-                DataSourceInfo tempDatasourceObj = new DataSourceInfo(name, source, url);
+                DataSourceInfo tempDatasourceObj = new DataSourceInfo(name, serviceName, provider, url);
                 datasourceMap.put(name,tempDatasourceObj);
               }
             }        
             
-        } catch (FileNotFoundException fileNotFoundException) {
+        }catch (FileNotFoundException fileNotFoundException) {
             LOGGER.error("Config file not available!");
         }catch (Exception e) {
             e.printStackTrace();
@@ -118,7 +137,11 @@ public class InitializeDeployment
 		KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
         
 		//Populate the datasourceinfo hasmap and validate it.
-        populateDatasourceMapWithCongfig(dataSourceMap);
+        try{
+		populateDatasourceMapWithCongfig(dataSourceMap);
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 		KruizeDeploymentInfo.setDatasourceMap(dataSourceMap);
 
 		KruizeDeploymentInfo.setLayerTable();

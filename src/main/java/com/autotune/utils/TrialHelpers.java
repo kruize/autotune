@@ -145,8 +145,8 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo("provider-stub",KruizeDeploymentInfo.getMonitoringAgent(),
-                new URL(KruizeDeploymentInfo.getMonitoringAgentEndpoint()));
+        DataSourceInfo datasourceInfo = new DataSourceInfo("Name-stub",KruizeDeploymentInfo.getMonitoringAgent(),
+                "Stub-provider",new URL(KruizeDeploymentInfo.getMonitoringAgentEndpoint()));
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
         datasourceInfoHashMap.put(KruizeDeploymentInfo.getMonitoringAgent(), datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();

@@ -348,8 +348,9 @@ public class KruizeConstants {
         }
 
         public static final String NAME = "name";
-        public static final String SOURCE = "source";
-        public static final String url = "url";
+        public static final String PROVIDER = "provider";
+        public static final String SERVICE_NAME = "serviceName";
+        public static final String URL = "url";
         public static final String CONFIG_FILE = "CONFIG_FILE";
     }
 

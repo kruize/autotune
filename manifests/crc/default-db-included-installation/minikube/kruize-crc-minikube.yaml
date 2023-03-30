@@ -99,19 +99,30 @@ data:
         "sslMode": "require",
         "username": "admin"
       },
-      "datasource": [ 
-          { "name": "prometheus-1", 
-          "source": "prometheus", 
-          "url": "http://www.exampleone.com:8080/" 
-          }, 
-          { "name": "prometheus-2", 
-          "source": "prometheus", 
-          "url": "http://www.exampletwo.com:8080/" 
+      "datasource": [
+          { "name": "prometheus-1",
+            "provider": "prometheus",
+            "serviceName": "prometheus-k8s",
+            "url": "http://www.exampleone.com:8080/"
+          },
+          { "name": "prometheus-2",
+            "provider": "prometheus",
+            "serviceName": "prometheus-k8s",
+            "url": "http://www.exampletwo.com:8080/"
           } ,
-          { "name": "prometheus-1", 
-          "source": "prometheus", 
-          "url": "http://www.exampleone.com:8080/" 
-          }, 
+          { "name": "prometheus-1",
+            "provider": "prometheus",
+            "serviceName": "prometheus-k8s",
+            "url": "http://www.exampleone.com:8080/"
+          },
+          { "name": "prometheus-3",
+            "provider": "prometheus",
+            "serviceName": "prometheus-k8s",
+            "url": ""
+          },
+          { "name": "prometheus-1",
+            "provider": "prometheus",
+          },
         ]
     }
 
@@ -136,7 +147,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.11_rm
+          image: ozer550/autotune:0.0.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
