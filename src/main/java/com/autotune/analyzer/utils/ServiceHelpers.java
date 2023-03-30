@@ -21,7 +21,7 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.k8sObjects.DeploymentObject;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.data.metrics.Metric;
@@ -238,9 +238,9 @@ public class ServiceHelpers {
                     return false;
                 }
                 Timestamp givenTimestamp = new Timestamp(medDate.getTime());
-                for (DeploymentObject deploymentObject : kruizeObject.getDeployments().values()) {
-                    for (ContainerData containerObject: deploymentObject.getContainers().values()) {
-                        for (Timestamp key : containerObject.getContainerRecommendations().getData().keySet()) {
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    for (ContainerData containerData: k8sObject.getContainerDataMap().values()) {
+                        for (Timestamp key : containerData.getContainerRecommendations().getData().keySet()) {
                             if (key.equals(givenTimestamp)) {
                                 timestampExists = true;
                             }

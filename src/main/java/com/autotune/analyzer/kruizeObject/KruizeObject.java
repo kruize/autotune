@@ -61,7 +61,6 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private Set<ExperimentResultData> resultData;                   // TODO: Need to remove this
     private ValidationOutputData validationData;
-    private HashMap<String, DeploymentObject> deployments;          // TODO: Need to remove this
     private List<K8sObject> kubernetes_objects;
 
 
@@ -226,14 +225,6 @@ public final class KruizeObject {
 
     public void setValidationData(ValidationOutputData validationData) {
         this.validationData = validationData;
-    }
-
-    public HashMap<String, DeploymentObject> getDeployments() {
-        return deployments;
-    }
-
-    public void setDeployments(HashMap<String, DeploymentObject> deployments) {
-        this.deployments = deployments;
     }
 
     public String getHpoAlgoImpl() {

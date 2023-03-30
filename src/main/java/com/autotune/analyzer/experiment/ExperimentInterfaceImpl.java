@@ -48,7 +48,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
-//        LOGGER.info("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
+        LOGGER.debug("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
         return true;
     }
 
@@ -79,23 +79,23 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
-                    List<K8sObject> k8sObjectList = ko.getKubernetes_objects();
-                    if (null == k8sObjectList) {
-                        k8sObjectList = new ArrayList<>();
-                    }
+                    // creating a temp map to store k8sdata
+                    HashMap<String, K8sObject> k8sObjectHashMap = new HashMap<>();
+                    for (K8sObject k8sObj : ko.getKubernetes_objects())
+                        k8sObjectHashMap.put(k8sObj.getName(), k8sObj);
+
                     List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
-                    for(int k8sObjectCount = 0; k8sObjectCount<resultK8sObjectList.size(); k8sObjectCount++) {
-                        K8sObject resultK8sObject = resultK8sObjectList.get(k8sObjectCount);
+                    for (K8sObject resultK8sObject : resultK8sObjectList) {
                         String dName = resultK8sObject.getName();
                         String dType = resultK8sObject.getType();
                         String dNamespace = resultK8sObject.getNamespace();
                         K8sObject k8sObject;
                         HashMap<String, ContainerData> containerDataMap;
-                        if (!k8sObjectList.contains(resultK8sObject)) {
+                        if (null == k8sObjectHashMap.get(dName)) {
                             k8sObject = new K8sObject(dName, dType, dNamespace);
                             containerDataMap = new HashMap<>();
                         } else {
-                            k8sObject = resultK8sObject;
+                            k8sObject = k8sObjectHashMap.get(dName);
                             containerDataMap = k8sObject.getContainerDataMap();
                         }
                         HashMap<String, ContainerData> resultContainerDataMap = resultK8sObject.getContainerDataMap();
@@ -128,8 +128,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             containerDataMap.put(cName, containerData);
                         }
                         k8sObject.setContainerDataMap(containerDataMap);
-                        k8sObjectList.set(k8sObjectCount, k8sObject);
+                        k8sObjectHashMap.put(dName, k8sObject);
                     }
+                    List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
                     ko.setKubernetes_objects(k8sObjectList);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
