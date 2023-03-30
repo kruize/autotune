@@ -79,15 +79,16 @@ public class Autotune {
 
         try {
             server.start();
-            try {
-                LOGGER.info("Checking DB connection...");
-                SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-                Session session = factory.openSession();
-                session.close();
-                LOGGER.info("DB connection successful!");
-            } catch (Exception e) {
-                LOGGER.error("DB connection failed! : {}", e.getMessage());
-                e.printStackTrace();
+            if (KruizeDeploymentInfo.isSaveToDB()) {
+                try {
+                    LOGGER.info("Checking DB connection...");
+                    SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+                    Session session = factory.openSession();
+                    session.close();
+                    LOGGER.info("DB connection successful!");
+                } catch (Exception e) {
+                    LOGGER.error("DB connection failed! : {}", e.getMessage());
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");

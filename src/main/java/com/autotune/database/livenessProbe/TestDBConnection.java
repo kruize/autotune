@@ -16,6 +16,7 @@
 package com.autotune.database.livenessProbe;
 
 import com.autotune.database.init.KruizeHibernateUtil;
+import com.autotune.operator.KruizeDeploymentInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -25,10 +26,14 @@ public class TestDBConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestDBConnection.class);
 
     public static void main(String[] args) {
-        LOGGER.info("Checking Liveliness probe DB connection...");
-        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-        Session session = factory.openSession();
-        session.close();
-        LOGGER.info("DB Liveliness probe connection successful!");
+        if (KruizeDeploymentInfo.isSaveToDB()) {
+            LOGGER.info("Checking Liveliness probe DB connection...");
+            SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+            Session session = factory.openSession();
+            session.close();
+            LOGGER.info("DB Liveliness probe connection successful!");
+        } else {
+            LOGGER.info("Persistent storage set to local so Testing DB connection not required.");
+        }
     }
 }
