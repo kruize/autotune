@@ -90,6 +90,10 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
                         ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+                        // Just to make sure the container recommendations object is not empty
+                        if (null == containerRecommendations) {
+                            containerRecommendations = new ContainerRecommendations();
+                        }
                         // check if notifiaction exists
                         boolean notificationExist = false;
                         for (RecommendationNotification notification : containerRecommendations.getNotifications()) {
@@ -106,10 +110,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             );
                             containerRecommendations.getNotifications().add(recommendationNotification);
                         }
-                        // Just to make sure the container recommendations object is not empty
-                        if (null == containerRecommendations) {
-                            containerRecommendations = new ContainerRecommendations();
-                        }
+
                         // Get the engine recommendation map for a time stamp if it exists else create one
                         HashMap<Timestamp, HashMap<String, HashMap<String,Recommendation>>> timestampBasedRecommendationMap
                                 = containerRecommendations.getData();
