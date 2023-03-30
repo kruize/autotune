@@ -16,9 +16,11 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,18 +55,19 @@ public class DefaultImpl extends PerfProfileImpl {
 
         // Get the metrics data from the Kruize Object
         for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (Containers containers : deploymentResultData.getContainers()) {
-                HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetricsMap =
-                        containers.getContainer_metrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
-                for (HashMap<String, com.autotune.common.data.metrics.MetricResults> funcVar : containerMetricsMap.values()) {
-                    Map<String, Object> aggrInfoClassAsMap;
-                    try {
-                        // TODO: Need to update the below code
-                        aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
-                       LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
+            for (ContainerData containerData : deploymentResultData.getContainerDataMap().values()) {
+                HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
+                Set<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet();
+                for (IntervalResults intervalResults : containerData.getResults().values()) {
+                    for (MetricResults metricResults : intervalResults.getMetricResultsMap().values()) {
+                        Map<String, Object> aggrInfoClassAsMap;
+                        try {
+                            // TODO: Need to update the below code
+                            aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                            LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             }

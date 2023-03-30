@@ -13,40 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.k8sObjects;
+package com.autotune.common.data.result;
 
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.serviceObjects.ContainerMetricsHelper;
-import com.autotune.common.data.result.StartEndTimeStampResults;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.List;
 
-public class ContainerObject {
-    @SerializedName(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME)
-    private String image;
+public class ContainerData {
+    private String container_image_name;
     private String container_name;
-    private HashMap<Timestamp, StartEndTimeStampResults> results;
+    //key is IntervalEnd
+    private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
-    private List<ContainerMetricsHelper> metrics;
+    private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
 
-    public ContainerObject(String container_name, String image) {
-        this.image = image;
+    public ContainerData(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.container_name = container_name;
         if (null == containerRecommendations)
             containerRecommendations = new ContainerRecommendations();
+        this.containerRecommendations = containerRecommendations;
+        this.container_image_name = container_image_name;
+        this.metrics = metrics;
     }
 
-    public String getImage() {
-        return image;
+    public ContainerData() {
+
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public String getContainer_image_name() {
+        return container_image_name;
+    }
+
+    public void setContainer_image_name(String container_image_name) {
+        this.container_image_name = container_image_name;
     }
 
     public String getContainer_name() {
@@ -57,11 +62,11 @@ public class ContainerObject {
         this.container_name = container_name;
     }
 
-    public HashMap<Timestamp, StartEndTimeStampResults> getResults() {
+    public HashMap<Timestamp, IntervalResults> getResults() {
         return results;
     }
 
-    public void setResults(HashMap<Timestamp, StartEndTimeStampResults> results) {
+    public void setResults(HashMap<Timestamp, IntervalResults> results) {
         this.results = results;
     }
 
@@ -73,21 +78,20 @@ public class ContainerObject {
         this.containerRecommendations = containerRecommendations;
     }
 
-    public List<ContainerMetricsHelper> getMetrics() {
+    public HashMap<AnalyzerConstants.MetricName, Metric> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(List<ContainerMetricsHelper> metrics) {
+    public void setMetrics(HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.metrics = metrics;
     }
-
     @Override
     public String toString() {
-        return "ContainerObject{" +
-                "image='" + image + '\'' +
+        return "ContainerData{" +
+                "container_image_name='" + container_image_name + '\'' +
                 ", container_name='" + container_name + '\'' +
                 ", results=" + results +
-                ", recommendations=" + containerRecommendations.getData() +
+                ", recommendations=" + containerRecommendations +
                 ", metrics=" + metrics +
                 '}';
     }

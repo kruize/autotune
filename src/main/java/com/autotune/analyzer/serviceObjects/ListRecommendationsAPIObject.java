@@ -15,42 +15,31 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
-import java.sql.Timestamp;
 import java.util.List;
 
-public class UpdateResultsSO extends BaseSO{
-    @SerializedName(KruizeConstants.JSONKeys.START_TIMESTAMP)
-    public Timestamp startTimestamp;
-    @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
-    public Timestamp endTimestamp;
+public class ListRecommendationsAPIObject extends BaseSO{
+    @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
+    private String clusterName;
+
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<K8sObject> kubernetesObjects;
+    private List<KubernetesAPIObject> kubernetesObjects;
 
-    public Timestamp getStartTimestamp() {
-        return startTimestamp;
+    public String getClusterName() {
+        return clusterName;
     }
 
-    public void setStartTimestamp(Timestamp startTimestamp) {
-        this.startTimestamp = startTimestamp;
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
     }
 
-    public Timestamp getEndTimestamp() {
-        return endTimestamp;
-    }
-
-    public void setEndTimestamp(Timestamp endTimestamp) {
-        this.endTimestamp = endTimestamp;
-    }
-
-    public List<K8sObject> getKubernetesObjects() {
+    public List<KubernetesAPIObject> getKubernetesObjects() {
         return kubernetesObjects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetesObjects) {
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
     }
 }

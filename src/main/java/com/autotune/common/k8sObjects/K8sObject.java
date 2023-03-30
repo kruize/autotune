@@ -1,12 +1,23 @@
 package com.autotune.common.k8sObjects;
 
-import java.util.List;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
+
+import java.util.HashMap;
 
 public class K8sObject {
     private String type; // TODO: Change to ENUM
     private String name;
     private String namespace;
-    private List<ContainerObject> containers;
+    @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
+    private HashMap<String, ContainerData> containerDataMap;
+    public K8sObject(String name, String type, String namespace) {
+        this.name = name;
+        this.type = type;
+        this.namespace = namespace;
+    }
 
     public String getType() {
         return type;
@@ -32,11 +43,21 @@ public class K8sObject {
         this.namespace = namespace;
     }
 
-    public List<ContainerObject> getContainers() {
-        return containers;
+    public HashMap<String, ContainerData> getContainerDataMap() {
+        return containerDataMap;
     }
 
-    public void setContainers(List<ContainerObject> containers) {
-        this.containers = containers;
+    public void setContainerDataMap(HashMap<String, ContainerData> containerDataMap) {
+        this.containerDataMap = containerDataMap;
+    }
+
+    @Override
+    public String toString() {
+        return "K8sObject{" +
+                "type='" + type + '\'' +
+                ", name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", containerDataMap=" + containerDataMap +
+                '}';
     }
 }

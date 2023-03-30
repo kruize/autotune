@@ -54,4 +54,12 @@ public class ContainerRecommendations {
                 this.notifications.remove(0);
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "ContainerRecommendations{" +
+                "notifications=" + notifications +
+                ", data=" + data +
+                '}';
+    }
 }

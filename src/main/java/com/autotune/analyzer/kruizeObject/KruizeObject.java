@@ -55,13 +55,12 @@ public final class KruizeObject {
     private AnalyzerConstants.ExperimentStatus status;
     @SerializedName("performance_profile")
     private String performanceProfile;
-    private String deployment_name;
+    private String deployment_name;                                 // TODO: Need to remove this
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
-    private Set<ExperimentResultData> resultData;
+    private Set<ExperimentResultData> resultData;                   // TODO: Need to remove this
     private ValidationOutputData validationData;
-    private HashMap<String, DeploymentObject> deployments;
     private List<K8sObject> kubernetes_objects;
 
 
@@ -228,14 +227,6 @@ public final class KruizeObject {
         this.validationData = validationData;
     }
 
-    public HashMap<String, DeploymentObject> getDeployments() {
-        return deployments;
-    }
-
-    public void setDeployments(HashMap<String, DeploymentObject> deployments) {
-        this.deployments = deployments;
-    }
-
     public String getHpoAlgoImpl() {
         return hpoAlgoImpl;
     }
@@ -256,11 +247,11 @@ public final class KruizeObject {
         this.apiVersion = apiVersion;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
+    public List<K8sObject> getKubernetes_objects() {
         return kubernetes_objects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetes_objects) {
+    public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
         this.kubernetes_objects = kubernetes_objects;
     }
 
@@ -296,6 +287,7 @@ public final class KruizeObject {
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
+                ", kubernetes_objects=" + kubernetes_objects +
                 '}';
     }
 }

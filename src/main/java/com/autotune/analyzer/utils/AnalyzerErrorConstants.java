@@ -62,6 +62,7 @@ public class AnalyzerErrorConstants {
 		public static final String VALUE_TYPE_NOT_SUPPORTED = " value_type " + UNSUPPORTED;
 		public static final String QUERY_FUNCTION_MISSING = "One of query or aggregation_functions is mandatory. Both cannot be null!";
 		public static final String MISSING_AGG_FUNCTION = "At least one aggregation function value needs to be present ";
+		public static final String AGG_FUNCTION_MISMATCH = "Missing aggregation functions in resultDataObjects: ";
 		public static final String FUNCTION_VARIABLE_ERROR = "missing in objective_function\n";
 		public static final String MISSING_EXPRESSION = "Expression value is missing or null!\n";
 		public static final String MISPLACED_EXPRESSION = "Expression is not allowed when the type is source\n";
@@ -74,6 +75,8 @@ public class AnalyzerErrorConstants {
 		public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
 		public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
 		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
+		public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
+		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than measurement_duration";
 
 	}
 

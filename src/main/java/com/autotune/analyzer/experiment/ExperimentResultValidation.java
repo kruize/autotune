@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -22,12 +23,14 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.IntervalResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -54,11 +57,25 @@ public class ExperimentResultValidation {
                 if (null != resultData.getExperiment_name() && null != resultData.getEndtimestamp() && null != resultData.getStarttimestamp()) {
                     if (mainKruizeExperimentMAP.containsKey(resultData.getExperiment_name())) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
+                        // check if the intervalEnd is greater than intervalStart and interval duration is greater than measurement duration
+                        IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                        Double durationInMins = intervalResults.getDurationInMinutes();
+                        String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
+                        LOGGER.debug("Duration in mins = {}", intervalResults.getDurationInMinutes());
+                        if ( durationInMins < 0) {
+                            errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
+                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                            break;
+                        } else if (durationInMins < Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3))) {
+                            errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
+                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                            break;
+                        }
+                        // check if resultData is present
                         boolean isExist = false;
                         if (null != kruizeObject.getResultData())
                             isExist = kruizeObject.getResultData().contains(resultData);
                         if (isExist) {
-                            proceed = false;
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_CONFLICT));
                             break;
