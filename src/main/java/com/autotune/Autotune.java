@@ -30,7 +30,6 @@ import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,14 +79,11 @@ public class Autotune {
         try {
             server.start();
             if (KruizeDeploymentInfo.isSaveToDB()) {
-                try {
-                    LOGGER.info("Checking DB connection...");
-                    SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-                    Session session = factory.openSession();
-                    session.close();
-                    LOGGER.info("DB connection successful!");
-                } catch (Exception e) {
-                    LOGGER.error("DB connection failed! : {}", e.getMessage());
+                LOGGER.info("Checking DB connection...");
+                SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+                if (null == factory) LOGGER.error("DB connection failed!");
+                else {
+                    LOGGER.info("DB connection Successful!");
                 }
             }
         } catch (Exception e) {
