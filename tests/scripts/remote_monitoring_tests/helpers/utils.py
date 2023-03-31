@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
+ERROR_409_STATUS_CODE = 409
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -30,6 +31,8 @@ UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at 
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
+EXP_EXISTS_MSG = "Experiment name already exists: "
+INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -193,6 +196,12 @@ def increment_timestamp(input_timestamp, step):
 
     return timestamp
 
+def increment_timestamp_by_given_mins(input_timestamp, minutes):
+    input_date = datetime.strptime(input_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    output_date = input_date + timedelta(minutes=minutes)
+    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+
+    return timestamp
 
 def get_datetime():
     my_datetime = datetime.today()
@@ -200,7 +209,7 @@ def get_datetime():
     time_str = time_str + "Z"
     return time_str
 
-def increment_date_time(input_date_str, term):
+def term_based_start_time(input_date_str, term):
     duration = {"short_term": 1, "medium_term": 7, "long_term": 15}
     input_date = datetime.strptime(input_date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -298,7 +307,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         assert duration_based_obj[term]["monitoring_end_time"] == end_timestamp,\
                             f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {end_timestamp}"
 
-                        monitoring_start_time = increment_date_time(end_timestamp, term)
+                        monitoring_start_time = term_based_start_time(end_timestamp, term)
                         assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time,\
                             f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 

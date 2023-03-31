@@ -99,8 +99,13 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
     url = URL + "/listRecommendations"
     print("URL = ", url)
 
-    if experiment_name == "" and latest == None and monitoring_end_time == None:
-        response = requests.get(url)
+    if experiment_name == None:
+        if latest == None and monitoring_end_time == None:
+            response = requests.get(url)
+        elif latest != None:
+            PARAMS = {'latest' : latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'monitoring_end_time' : monitoring_end_time}
     else:
         if latest == None and monitoring_end_time == None:
             PARAMS = {'experiment_name': experiment_name}
@@ -109,8 +114,8 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
         elif monitoring_end_time != None:
             PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time' : monitoring_end_time}
         
-        print("PARAMS = ", PARAMS)
-        response = requests.get(url = url, params = PARAMS)
+    print("PARAMS = ", PARAMS)
+    response = requests.get(url = url, params = PARAMS)
 
     print("Response status code = ", response.status_code)
     print("\n************************************************************")
@@ -128,13 +133,19 @@ def delete_experiment(input_json_file, invalid_header = False):
     print("\nDeleting the experiment...")
     url = URL + "/createExperiment"
     print("URL = ", url)
-    
+
+    experiment_name = input_json[0]['experiment_name']
+
+    delete_json = [{
+        "experiment_name": experiment_name
+    }]
+
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=input_json, headers=headers)
+        response = requests.delete(url, json=delete_json, headers=headers)
     else:
-        response = requests.delete(url, json=input_json)
+        response = requests.delete(url, json=delete_json)
         
     print(response)
     print("Response status code = ", response.status_code)

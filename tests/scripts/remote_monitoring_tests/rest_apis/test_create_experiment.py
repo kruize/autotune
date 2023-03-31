@@ -6,13 +6,24 @@ from helpers.kruize import *
 from helpers.fixtures import *
 
 mandatory_fields = [
+        ("version", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("cluster_name", ERROR_STATUS_CODE, ERROR_STATUS),
         ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("mode", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("target_cluster", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("kubernetes_objects", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("type", ERROR_STATUS_CODE, ERROR_STATUS),
         ("kubernetes_objects_name", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("containers", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("container_image_name", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("container_name", ERROR_STATUS_CODE, ERROR_STATUS),
         ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
         ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
         ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
         ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
+        ("trial_settings", ERROR_STATUS_CODE, ERROR_STATUS),
         ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
         ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
@@ -126,11 +137,9 @@ def test_create_duplicate_exp(cluster_type):
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == ERROR_STATUS_CODE
+    assert response.status_code == ERROR_409_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-
-    CREATE_EXP_DUPLICATE_MSG = "Experiment name : " + experiment_name + " is duplicate"
-    assert data['message'] == CREATE_EXP_DUPLICATE_MSG
+    assert data['message'] == EXP_EXISTS_MSG + experiment_name
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -318,21 +327,40 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
 
     # Create experiment using the specified json
     json_file = "/tmp/create_exp.json"
-    input_json_file="../json_files/mandatory.json"
+    input_json_file="../json_files/create_exp_mandatory.json"
     json_data = json.load(open(input_json_file))
 
     if field == "performance_profile_slo":
         json_data[0].pop("performance_profile", None)
         json_data[0].pop("slo", None)
-        json_data[0]["kubernetes_objects"][0].pop("name", None)
     elif field == "kubernetes_objects_name_selector":
         json_data[0]["kubernetes_objects"][0].pop("name", None)
         json_data[0].pop("selector", None)
         json_data[0].pop("slo", None)
+    elif field == "type":
+        json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "kubernetes_objects_name":
         json_data[0]["kubernetes_objects"][0].pop("name", None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "namespace":
-        json_data[0]["kubernetes_objects"][0].pop("namespace", None)
+        json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
+    elif field == "containers":
+        json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
+    elif field == "container_image_name":
+        json_data[0]["kubernetes_objects"][0]["containers"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
+    elif field == "container_name":
+        json_data[0]["kubernetes_objects"][0]["containers"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     else:
         json_data[0].pop("slo", None)
         json_data[0].pop("selector", None)
@@ -352,7 +380,8 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == expected_status_code
+    assert response.status_code == expected_status_code, \
+        f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
     response = delete_experiment(json_file)

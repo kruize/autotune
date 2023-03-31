@@ -177,24 +177,26 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
     # Update results for the experiment
     num_res = 5
     find_start_ts = "2022-01-23T18:25:43.511Z"
-    find_end_ts = "2022-01-23T18:40:43.511Z"
+    find_end_ts = "2022-01-23T18:55:43.511Z"
 
     result_json_file="../json_files/update_results.json"
     filename="/tmp/result.json"
     for i in range(num_res):
 
-
         with open(result_json_file, 'r') as file:
             data = file.read()
 
-        replace = get_datetime()
-        print("replace = ", replace)
-        data = data.replace(find_start_ts, replace)
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
 
-        time.sleep(10)
-        replace = get_datetime()
-        print("replace = ", replace)
-        data = data.replace(find_end_ts, replace)
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
 
         with open(filename, 'w') as file:
             file.write(data)
@@ -385,3 +387,49 @@ def test_update_valid_results_without_create_exp(cluster_type):
     assert data['status'] == ERROR_STATUS
     assert data['message'] == EXP_NAME_NOT_FOUND_MSG
 
+@pytest.mark.sanity
+def test_update_results_with_same_result(cluster_type):
+    """
+    Test Description: This test validates update results for a valid experiment
+    """
+    input_json_file="../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delet exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file="../json_files/update_results.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    # Post the same result again
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == ERROR_409_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+
+    exp_json_data = read_json_data_from_file(input_json_file)
+    experiment_name = exp_json_data[0]['experiment_name']
+
+    result_json_data = read_json_data_from_file(result_json_file)
+    end_timestamp = result_json_data[0]['end_timestamp']
+
+    TIMESTAMP_PRESENT_MSG = "Experiment name : " + experiment_name + " already contains result for timestamp : " + end_timestamp
+    assert data['message'] == TIMESTAMP_PRESENT_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delet exp = ", response.status_code)
