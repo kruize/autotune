@@ -105,9 +105,11 @@ public class ExperimentInitiator {
         if (experimentNameList.size() == 0)
             return false;
         for (String experimentName: experimentNameList) {
+            // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentName))
                 return false;
         }
+        // Generate recommendations for valid experiments
         for (String experimentName : experimentNameList) {
             KruizeObject kruizeObject = experimentsMap.get(experimentName);
             if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
