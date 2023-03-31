@@ -333,23 +333,34 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
     if field == "performance_profile_slo":
         json_data[0].pop("performance_profile", None)
         json_data[0].pop("slo", None)
-        json_data[0]["kubernetes_objects"][0].pop("name", None)
     elif field == "kubernetes_objects_name_selector":
         json_data[0]["kubernetes_objects"][0].pop("name", None)
         json_data[0].pop("selector", None)
         json_data[0].pop("slo", None)
     elif field == "type":
         json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "kubernetes_objects_name":
-        json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0]["kubernetes_objects"][0].pop("name", None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "namespace":
         json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "containers":
         json_data[0]["kubernetes_objects"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "container_image_name":
         json_data[0]["kubernetes_objects"][0]["containers"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     elif field == "container_name":
         json_data[0]["kubernetes_objects"][0]["containers"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
     else:
         json_data[0].pop("slo", None)
         json_data[0].pop("selector", None)
@@ -370,7 +381,7 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
     print(data['message'])
 
     assert response.status_code == expected_status_code, \
-        f"Mandatory field check failed for {field} expected - {response.status_code} expected - {expected_status_code}"
+        f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
     response = delete_experiment(json_file)

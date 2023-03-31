@@ -177,24 +177,26 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
     # Update results for the experiment
     num_res = 5
     find_start_ts = "2022-01-23T18:25:43.511Z"
-    find_end_ts = "2022-01-23T18:40:43.511Z"
+    find_end_ts = "2022-01-23T18:55:43.511Z"
 
     result_json_file="../json_files/update_results.json"
     filename="/tmp/result.json"
     for i in range(num_res):
 
-
         with open(result_json_file, 'r') as file:
             data = file.read()
 
-        replace = get_datetime()
-        print("replace = ", replace)
-        data = data.replace(find_start_ts, replace)
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
 
-        time.sleep(10)
-        replace = get_datetime()
-        print("replace = ", replace)
-        data = data.replace(find_end_ts, replace)
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
 
         with open(filename, 'w') as file:
             file.write(data)

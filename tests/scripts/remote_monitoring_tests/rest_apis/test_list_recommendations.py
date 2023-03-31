@@ -369,42 +369,43 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         if obj_type == "xyz":
             assert response.status_code == ERROR_STATUS_CODE
             assert data['status'] == ERROR_STATUS
+            assert data['message'] == INVALID_DEPLOYMENT_TYPE_MSG
         else:
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-        # Update results for the experiment
-        result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
+            # Update results for the experiment
+            result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
         
-        response = update_results(result_json_file)
-        data = response.json()
+            response = update_results(result_json_file)
+            data = response.json()
 
-        print("message = ", data['message'])
-        assert response.status_code == SUCCESS_STATUS_CODE
-        assert data['status'] == SUCCESS_STATUS
-        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        time.sleep(20)
+            time.sleep(20)
 
-        # Get the experiment name
-        json_data = json.load(open(create_exp_json_file))
-        experiment_name = json_data[0]['experiment_name']
+            # Get the experiment name
+            json_data = json.load(open(create_exp_json_file))
+            experiment_name = json_data[0]['experiment_name']
 
-        # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
-        assert response.status_code == SUCCESS_200_STATUS_CODE
+            # Invoke list recommendations for the specified experiment
+            response = list_recommendations(experiment_name)
+            assert response.status_code == SUCCESS_200_STATUS_CODE
 
-        list_reco_json = response.json()
+            list_reco_json = response.json()
 
-        # Validate the json against the json schema
-        errorMsg = validate_list_reco_json(list_reco_json)
-        assert errorMsg == ""
+            # Validate the json against the json schema
+            errorMsg = validate_list_reco_json(list_reco_json)
+            assert errorMsg == ""
 
-        create_exp_json = read_json_data_from_file(create_exp_json_file)
-        update_results_json = read_json_data_from_file(result_json_file)
+            create_exp_json = read_json_data_from_file(create_exp_json_file)
+            update_results_json = read_json_data_from_file(result_json_file)
         
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+            validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
     # Delete the experiments    
     for i in range(num_exps):
@@ -792,14 +793,14 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
         if latest == "true":
             update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i])-1])
             expected_duration_in_hours = 1.5
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            print("#######################################")
             print(update_results_json)
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            print("#######################################")
         elif latest == "false":
             update_results_json = list_of_result_json_arr[i]
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            print("#######################################")
             print(update_results_json)
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            print("#######################################")
             expected_duration_in_hours = None
 
         for list_reco in list_reco_json:
