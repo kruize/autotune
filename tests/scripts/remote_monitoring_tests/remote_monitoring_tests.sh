@@ -37,13 +37,7 @@ function remote_monitoring_tests() {
 	((TOTAL_TEST_SUITES++))
 
 	python3 --version >/dev/null 2>/dev/null
-	err=$?
-	if [ ${err} -ne 0 ]; then
-		echo "ERROR: python3 not installed"
-		exit 1
-	fi
-	
-	python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" >/dev/null 2>&1
+	err_exit "ERROR: python3 not installed"
 
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
@@ -88,6 +82,13 @@ function remote_monitoring_tests() {
 	echo ""
 	mkdir -p ${TEST_SUITE_DIR}
 
+	PIP_INSTALL_LOG="${TEST_SUITE_DIR}/pip_install.log"
+
+	echo ""
+	echo "Installing the required python modules..."
+	echo "python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG}"
+	python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG} 2>&1
+	err_exit "ERROR: Installing python modules for the test run failed!"
 
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
@@ -111,6 +112,8 @@ function remote_monitoring_tests() {
 		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
 			echo "pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type}"
 			pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type} | tee -a ${LOG}
+			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
+
 		popd > /dev/null
 		if  grep -q "AssertionError" "${LOG}" ; then
 			failed=1

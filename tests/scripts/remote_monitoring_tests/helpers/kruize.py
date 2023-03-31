@@ -133,13 +133,19 @@ def delete_experiment(input_json_file, invalid_header = False):
     print("\nDeleting the experiment...")
     url = URL + "/createExperiment"
     print("URL = ", url)
-    
+
+    experiment_name = input_json[0]['experiment_name']
+
+    delete_json = [{
+        "experiment_name": experiment_name
+    }]
+
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=input_json, headers=headers)
+        response = requests.delete(url, json=delete_json, headers=headers)
     else:
-        response = requests.delete(url, json=input_json)
+        response = requests.delete(url, json=delete_json)
         
     print(response)
     print("Response status code = ", response.status_code)

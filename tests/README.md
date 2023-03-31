@@ -196,7 +196,7 @@ For example,
 To run remote monitoring tests,
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests -r /home/benchmarks --resultsdir=/home/results
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -i kruize/autotune_operator:0.0.11_mvp --testsuite=remote_monitoring_tests --resultsdir=/home/results
 ```
 
 ## How to test a specific autotune module?

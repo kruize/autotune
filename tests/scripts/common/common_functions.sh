@@ -73,8 +73,19 @@ configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
 # checks if the previous command is executed successfully
 # input:Return value of previous command
-# output:Prompts the error message if the return value is not zero
+# output:Prompts the error message if the return value is not zero and exits
 function err_exit() {
+	err=$?
+	if [ ${err} -ne 0 ]; then
+		echo "$*"
+		exit -1
+	fi
+}
+
+# checks if the previous command is executed successfully
+# input:Return value of previous command
+# output:Prompts the error message if the return value is not zero
+function check_err() {
 	err=$?
 	if [ ${err} -ne 0 ]; then
 		echo "$*"
@@ -558,7 +569,7 @@ function run_test_case() {
 
 	# Apply the yaml
 	kubectl_log_msg=$(${kubectl_cmd} 2>&1)
-	err_exit "Error: Issue in deploying ${object} object"
+	check_err "Error: Issue in deploying ${object} object"
 	echo "${kubectl_log_msg}" > ${LOG_DIR}/kubectl.log
 	echo "${kubectl_log_msg}" >> "${LOG}"
 
@@ -1578,7 +1589,7 @@ function apply_autotune_yamls(){
 
 		echo "Applying autotune yaml ${autotune}..."
 		kubectl apply -f ${AUTOTUNE_YAMLS_DIR}/${AUTOTUNE_FILE}-${inst}.yaml
-		err_exit "Error: Issue in applying autotune yaml - ${AUTOTUNE_YAMLS_DIR}/${AUTOTUNE_FILE}-${inst}.yaml"
+		check_err "Error: Issue in applying autotune yaml - ${AUTOTUNE_YAMLS_DIR}/${AUTOTUNE_FILE}-${inst}.yaml"
 	done
 
 	# Get the container images

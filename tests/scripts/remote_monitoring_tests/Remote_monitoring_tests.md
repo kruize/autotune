@@ -112,13 +112,22 @@ Remote monitoring tests can also be run without using the test_autotune.sh. To d
 
 - Deploy Kruize using the deploy.sh from the kruize autotune repo
 - Create the performance profile by using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
-- cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/rest_apis
+- cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests
+- python3 -m pip install --user -r requirements.txt
+- cd rest_apis
 - To run all sanity tests
-	- pytest -s -m sanity --cluster_type <minikube|openshift>
+```
+	pytest -m sanity --html=<dir>/report.html --cluster_type <minikube|openshift>
+```
 - To run only sanity tests for listRecommendations API --cluster_type <minikube|openshift>
-	- pytest -s -m sanity test_list_recommendations.py
+```
+	pytest -m sanity --html=<dir>/report.html test_list_recommendations.py
+```
 - To run only a specific test within listRecommendations API
-	- pytest -s test_list_recommandations::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
+```
+	pytest -s test_list_recommandations::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
+``
 
+Note: You can check the report.html for the results and it provides better readability
  
 
