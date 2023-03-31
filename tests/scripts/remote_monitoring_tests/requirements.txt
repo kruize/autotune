@@ -2,5 +2,3 @@ pytest
 requests
 jinja2
 pytest-html
-json
-jsonschema
