@@ -28,7 +28,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class KruizeHibernateUtil {
     private static final SessionFactory sessionFactory;
@@ -39,47 +41,26 @@ public class KruizeHibernateUtil {
         try {
             String configFile = System.getenv(KruizeConstants.DBConstants.CONFIG_FILE);
             JSONObject databaseObj = null;
-            try {
-                InputStream is = new FileInputStream(configFile);
+            try (InputStream is = new FileInputStream(configFile)) {
                 String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 JSONObject jsonObj = new JSONObject(jsonTxt);
                 databaseObj = jsonObj.getJSONObject(KruizeConstants.DBConstants.CONFIG_FILE_DB_KEY);
-            } catch (FileNotFoundException fileNotFoundException) {
-                LOGGER.error("DB init failed: {}", fileNotFoundException.getMessage());
+                JSONObject databaseObjEnv = checkForENVs();
+                if (null != databaseObjEnv) {
+                    databaseObj = databaseObjEnv;
+                    LOGGER.debug("Overriding the configuration found in ENVs...");
+                } else
+                    LOGGER.debug("Continuing with the configuration found in config file...");
+            } catch (FileNotFoundException | NullPointerException exception) {
+                LOGGER.warn("Config file missing. Checking for ENVs...");
                 try {
-                    databaseObj = new JSONObject();
-                    for (String env : Arrays.asList(KruizeConstants.DBConstants.DB_DRIVER,
-                            KruizeConstants.DBConstants.HOSTNAME,
-                            KruizeConstants.DBConstants.PORT,
-                            KruizeConstants.DBConstants.NAME,
-                            KruizeConstants.DBConstants.USERNAME,
-                            KruizeConstants.DBConstants.PASSWORD)) {
-                        if (null == System.getenv(env)) {
-                            throw new Exception("env: " + env + " not set");
-                        } else {
-                            databaseObj.put(env, System.getenv(env));
-                        }
-                    }
+                    databaseObj = checkForENVs();
+                    if (null != databaseObj)
+                        LOGGER.debug("Continuing with the configuration found in ENVs...");
+                    else throw new Exception(KruizeConstants.DBConstants.MISSING_DB_CONFIGS);
                 } catch (Exception e) {
-                    databaseObj = null;
                     LOGGER.error("DB connection failed: {}", e.getMessage());
-                    LOGGER.error("Either {} parameter or following env should be set for db integration {},{},{},{},{}",
-                            KruizeConstants.DBConstants.CONFIG_FILE,
-                            KruizeConstants.DBConstants.HOSTNAME,
-                            KruizeConstants.DBConstants.PORT,
-                            KruizeConstants.DBConstants.NAME,
-                            KruizeConstants.DBConstants.USERNAME,
-                            KruizeConstants.DBConstants.PASSWORD);
                 }
-            } catch (Exception e) {
-                LOGGER.error("DB connection failed: {}", e.getMessage());
-                LOGGER.error("Either {} parameter or following env should be set to proceed {},{},{},{},{}",
-                        KruizeConstants.DBConstants.CONFIG_FILE,
-                        KruizeConstants.DBConstants.HOSTNAME,
-                        KruizeConstants.DBConstants.PORT,
-                        KruizeConstants.DBConstants.NAME,
-                        KruizeConstants.DBConstants.USERNAME,
-                        KruizeConstants.DBConstants.PASSWORD);
             }
             if (null != databaseObj) {
                 Configuration configuration = new Configuration().configure();
@@ -94,7 +75,7 @@ public class KruizeHibernateUtil {
                 sfTemp = configuration.buildSessionFactory();
                 LOGGER.info("DB build session is successful !");
             } else {
-                LOGGER.info("DB build session failed !");
+                LOGGER.error("DB build session failed !");
             }
         } catch (Exception e) {
             LOGGER.error("DB init failed: {}", e.getMessage());
@@ -102,6 +83,29 @@ public class KruizeHibernateUtil {
         } finally {
             sessionFactory = sfTemp;
         }
+    }
+    private static JSONObject checkForENVs() {
+        JSONObject databaseObj = new JSONObject();
+        List<String> missingENVs = new ArrayList<>();
+        try {
+            for (String env : Arrays.asList(KruizeConstants.DBConstants.DB_DRIVER,
+                    KruizeConstants.DBConstants.HOSTNAME,
+                    KruizeConstants.DBConstants.PORT,
+                    KruizeConstants.DBConstants.NAME,
+                    KruizeConstants.DBConstants.USERNAME,
+                    KruizeConstants.DBConstants.PASSWORD)) {
+                if (null != System.getenv(env))
+                    databaseObj.put(env, System.getenv(env));
+                else
+                    missingENVs.add(env);
+            }
+            if (!missingENVs.isEmpty())
+                throw new Exception(missingENVs.toString());
+        } catch (Exception e) {
+            databaseObj = null;
+            LOGGER.warn("Missing following mandatory ENV variables for DB integration: {}", e.getMessage());
+        }
+        return databaseObj;
     }
 
     public static Session getSession() {

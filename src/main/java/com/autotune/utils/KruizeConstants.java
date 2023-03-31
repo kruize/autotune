@@ -340,6 +340,10 @@ public class KruizeConstants {
         public static final String CONFIG_FILE = "CONFIG_FILE";
         public static final String CONFIG_FILE_DB_KEY = "database";
         public static final String DB_DRIVER = "DB_DRIVER";
+
+        // Error constants
+        public static final String MISSING_DB_CONFIGS = "Either CONFIG_FILE parameter or ENVs should be set to proceed!";
+
     }
 
     public static final class DateFormats {
