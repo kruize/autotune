@@ -202,7 +202,7 @@ public class PerformanceProfileValidation {
                 }
             }
 
-            if (!errorString.isEmpty()) {
+            if (!errorString.toString().isEmpty()) {
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(errorString.toString());
                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);

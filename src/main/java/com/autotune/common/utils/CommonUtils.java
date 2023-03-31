@@ -18,6 +18,10 @@ package com.autotune.common.utils;
 
 import com.autotune.utils.KruizeConstants;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -268,5 +272,17 @@ public class CommonUtils {
         if (secsInUnit == Integer.MIN_VALUE)
             return 0;
         return timeValue * secsInUnit * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+    }
+
+    public static Timestamp addDays(Timestamp date, int days) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.DATE, days);
+        return new Timestamp(cal.getTime().getTime());
+    }
+
+    public static double percentile(double percentile, List<Double> items) {
+        Collections.sort(items);
+        return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
 }

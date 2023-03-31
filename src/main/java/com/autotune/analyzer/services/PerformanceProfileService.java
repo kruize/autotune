@@ -19,11 +19,11 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
 import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.google.gson.ExclusionStrategy;
@@ -82,7 +82,7 @@ public class PerformanceProfileService extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
-            ValidationOutputData validationOutputData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
                 LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
                         performanceProfile.getName(), performanceProfile.getProfile_version());

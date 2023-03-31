@@ -169,7 +169,6 @@ public class GenerateRecommendation {
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
-
     }
 
     private static RecommendationConfigItem getMemoryCapacityRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -217,7 +216,6 @@ public class GenerateRecommendation {
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
-
     }
 
     public static Timestamp addDays(Timestamp date, int days) {
@@ -231,5 +229,4 @@ public class GenerateRecommendation {
         Collections.sort(items);
         return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
-
 }

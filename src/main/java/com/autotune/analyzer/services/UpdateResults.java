@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -77,13 +78,28 @@ public class UpdateResults extends HttpServlet {
                     experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
                 }
                 LOGGER.debug(experimentResultDataList.toString());
-                new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
+                ExperimentInitiator experimentInitiator = new ExperimentInitiator();
+                ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKExperimentResultData) {
                     sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
                     sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
+                }
+
+                if (validationOutputData.isSuccess()) {
+                    List<String> experimentList = new ArrayList<String>();
+                    for (ExperimentResultData experimentResultData: experimentResultDataList) {
+                        String experimentName = experimentResultData.getExperiment_name();
+                        if (mainKruizeExperimentMap.containsKey(experimentName))
+                            experimentList.add(experimentName);
+                    }
+                    if (!experimentList.isEmpty()) {
+                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
+                        if (!recommendationCheck)
+                            LOGGER.error("Failed to create recommendations");
+                    }
                 }
             }
         } catch (Exception e) {
