@@ -17,10 +17,10 @@ The Kruize Autotune project has the following entities:
 
 1. kruize_experiment
 2. kruize_results
-3. recommendations
-4. performance_profiles
+3. kruize_recommendations
+4. kruize_performance_profiles
 
-## **Kruize**
+## **kruize_experiment**
 
 ---
 
@@ -326,7 +326,7 @@ HTTP_METHODE: DELETE
 ```
 Delete from kruize_experiment where experiment_name=
 Delete from kruize_results where experiment_name=
-Delete from recommendations where experiment_name=
+Delete from kruize_recommendations where experiment_name=
 ```
 
 #### **4. ListExperiments**
@@ -620,7 +620,7 @@ Select e.* , r.*  from kruize_results r , experiment e
 Where r.experiment_name = e.experiment_name
 ```
 
-## recommendations
+## kruize_recommendations
 
 ---
 The purpose of this entity is to store the recommendations generated for each experiment, with the Kubernetes objects
@@ -702,7 +702,7 @@ container_name=& from_date>   to to_date<
 ##### DB Query
 
 ```
-SELECT * FROM recommendation
+SELECT * FROM kruize_recommendation
 WHERE 
 experiment_name = 'xyz' & 
 interval_end>data & interval_end<date &
@@ -715,7 +715,7 @@ EXISTS (
 );
 ```
 
-## performanceprofile
+## kruize_performance_profile
 
 ---
 
@@ -775,7 +775,7 @@ curl --location --request GET 'http://192.168.49.2:31583/listPerformanceProfile?
 ##### DB query
 
 ```
-Select * from performance_profiles where profile_name='resource_optimization' ; 
+Select * from kruize_performance_profiles where profile_name='resource_optimization' ; 
 ```
 
 #### 2. createPerformanceProfile
@@ -819,6 +819,6 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
 ##### DB query
 
 ```
-insert into performance_profiles; 
+insert into kruize_performance_profiles; 
 ```
 
