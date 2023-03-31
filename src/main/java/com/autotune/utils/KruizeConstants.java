@@ -352,6 +352,9 @@ public class KruizeConstants {
         public static final String SERVICE_NAME = "serviceName";
         public static final String URL = "url";
         public static final String CONFIG_FILE = "CONFIG_FILE";
+
+        //Errors
+        public static final String MISSING_DATASOURCE_ESSENTIAL_KEYS = "Either serviceName or URL should be set for a dataSource object both can't be null";
     }
 
 

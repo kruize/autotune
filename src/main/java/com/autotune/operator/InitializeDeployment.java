@@ -76,7 +76,7 @@ public class InitializeDeployment
 				
 			if(urlString==null && serviceName==null){
                 // throw an Exception
-                throw new Exception("Url and serviceName both null for datasource");
+                throw new Exception(KruizeConstants.DataSourceConstants.MISSING_DATASOURCE_ESSENTIAL_KEYS);
             }
             try {
                 url = new URL(urlString);
