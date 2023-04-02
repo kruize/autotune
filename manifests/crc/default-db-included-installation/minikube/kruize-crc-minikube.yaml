@@ -143,14 +143,14 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.12_rm
+          image: kruize/autotune_operator:0.0.11_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
           env:
             - name: LOGGING_LEVEL
-              value: "info"
+              value: "debug"
             - name: ROOT_LOGGING_LEVEL
               value: "info"
             - name: DB_CONFIG_FILE
@@ -160,15 +160,24 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
-      #          livenessProbe:
-      #            exec:
-      #              command:
-      #                - sh
-      #                - -c
-      #                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
-      #            initialDelaySeconds: 10
-      #            periodSeconds: 5
-      #            timeoutSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /dbhealth
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 300
+            timeoutSeconds: 50
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /dbhealth
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 300
+            timeoutSeconds: 50
+            successThreshold: 1
+            failureThreshold: 3
       volumes:
         - name: config-volume
           configMap:
@@ -192,3 +201,4 @@ spec:
     - name: kruize-port
       port: 8080
       targetPort: 8080
+      nodePort: 31234

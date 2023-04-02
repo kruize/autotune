@@ -23,52 +23,90 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KruizeHibernateUtil {
-    private static final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeHibernateUtil.class);
+    private static SessionFactory sessionFactory;
 
     static {
         SessionFactory sfTemp = null;
         try {
-            Configuration configuration = new Configuration();
-            String connectionURL = KruizeDeploymentInfo.settings_db_driver +
-                    KruizeDeploymentInfo.database_hostname +
-                    ":" + Integer.parseInt(KruizeDeploymentInfo.database_port) +
-                    "/" + KruizeDeploymentInfo.database_dbname;
-            configuration.setProperty("hibernate.connection.url", connectionURL);
-            configuration.setProperty("hibernate.connection.username", KruizeDeploymentInfo.database_username);
-            configuration.setProperty("hibernate.connection.password", KruizeDeploymentInfo.database_password);
-            configuration.setProperty("hibernate.dialect", KruizeDeploymentInfo.settings_hibernate_dialect);
-            configuration.setProperty("hibernate.connection.driver_class", KruizeDeploymentInfo.settings_hibernate_connection_driver_class);
-            configuration.setProperty("hibernate.c3p0.min_size", KruizeDeploymentInfo.settings_hibernate_c3p0_min_size);
-            configuration.setProperty("hibernate.c3p0.max_size", KruizeDeploymentInfo.settings_hibernate_c3p0_max_size);
-            configuration.setProperty("hibernate.c3p0.timeout", KruizeDeploymentInfo.settings_hibernate_c3p0_timeout);
-            configuration.setProperty("hibernate.c3p0.max_statements", KruizeDeploymentInfo.settings_hibernate_c3p0_max_statements);
-            configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.settings_hibernate_hbm2ddl_auto);
-            configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.settings_hibernate_show_sql);
-            configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.settings_hibernate_time_zone);
-            configuration.addAnnotatedClass(KruizeExperimentEntry.class);
-            configuration.addAnnotatedClass(KruizeResultsEntry.class);
-            configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
-            LOGGER.info("DB is trying to connect to {}", connectionURL);
-            sfTemp = configuration.buildSessionFactory();
-            LOGGER.info("DB build session is successful !");
+            String configFile = System.getenv(KruizeConstants.DBConstants.CONFIG_FILE);
+            JSONObject databaseObj = null;
+            try (InputStream is = new FileInputStream(configFile)) {
+                String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                JSONObject jsonObj = new JSONObject(jsonTxt);
+                databaseObj = jsonObj.getJSONObject(KruizeConstants.DBConstants.CONFIG_FILE_DB_KEY);
+                JSONObject databaseObjEnv = checkForENVs();
+                if (null != databaseObjEnv) {
+                    databaseObj = databaseObjEnv;
+                    LOGGER.debug("Overriding the configuration found in ENVs...");
+                } else
+                    LOGGER.debug("Continuing with the configuration found in config file...");
+            } catch (FileNotFoundException | NullPointerException exception) {
+                LOGGER.warn("Config file missing. Checking for ENVs...");
+                try {
+                    databaseObj = checkForENVs();
+                    if (null != databaseObj)
+                        LOGGER.debug("Continuing with the configuration found in ENVs...");
+                    else throw new Exception(KruizeConstants.DBConstants.MISSING_DB_CONFIGS);
+                } catch (Exception e) {
+                    LOGGER.error("DB connection failed: {}", e.getMessage());
+                }
+            }
+            if (null != databaseObj) {
+                Configuration configuration = new Configuration().configure();
+                String connectionURL = System.getenv(KruizeConstants.DBConstants.DB_DRIVER) +
+                        databaseObj.getString(KruizeConstants.DBConstants.HOSTNAME) +
+                        ":" + databaseObj.getInt(KruizeConstants.DBConstants.PORT) +
+                        "/" + databaseObj.getString(KruizeConstants.DBConstants.NAME);
+
+                configuration.setProperty("hibernate.connection.url", connectionURL);
+                configuration.setProperty("hibernate.connection.username", databaseObj.getString(KruizeConstants.DBConstants.USERNAME));
+                configuration.setProperty("hibernate.connection.password", databaseObj.getString(KruizeConstants.DBConstants.PASSWORD));
+                sfTemp = configuration.buildSessionFactory();
+                LOGGER.info("DB build session is successful !");
+            } else {
+                LOGGER.error("DB build session failed !");
+            }
         } catch (Exception e) {
             LOGGER.error("DB init failed: {}", e.getMessage());
             e.printStackTrace();
         } finally {
             sessionFactory = sfTemp;
         }
+        return sessionFactory;
+    }
+    private static JSONObject checkForENVs() {
+        JSONObject databaseObj = new JSONObject();
+        List<String> missingENVs = new ArrayList<>();
+        try {
+            for (String env : Arrays.asList(KruizeConstants.DBConstants.DB_DRIVER,
+                    KruizeConstants.DBConstants.HOSTNAME,
+                    KruizeConstants.DBConstants.PORT,
+                    KruizeConstants.DBConstants.NAME,
+                    KruizeConstants.DBConstants.USERNAME,
+                    KruizeConstants.DBConstants.PASSWORD)) {
+                if (null != System.getenv(env))
+                    databaseObj.put(env, System.getenv(env));
+                else
+                    missingENVs.add(env);
+            }
+            if (!missingENVs.isEmpty())
+                throw new Exception(missingENVs.toString());
+        } catch (Exception e) {
+            databaseObj = null;
+            LOGGER.warn("Missing following mandatory ENV variables for DB integration: {}", e.getMessage());
+        }
+        return databaseObj;
     }
 
     public static Session getSession() {
         return sessionFactory.getCurrentSession();
     }
 
-    public static SessionFactory getSessionFactory() {
-        return sessionFactory;
-    }
+
 }
