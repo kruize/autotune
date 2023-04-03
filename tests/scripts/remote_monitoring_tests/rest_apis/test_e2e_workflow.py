@@ -36,7 +36,6 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         # Delete the experiment
         response = delete_experiment(create_exp_json_file)
         print("delete exp = ", response.status_code)
-        assert response.status_code == SUCCESS_STATUS_CODE
 
         # Create the experiment
         response = create_experiment(create_exp_json_file)

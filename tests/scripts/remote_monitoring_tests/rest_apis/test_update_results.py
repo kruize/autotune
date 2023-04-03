@@ -177,7 +177,7 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
     # Update results for the experiment
     num_res = 5
     find_start_ts = "2022-01-23T18:25:43.511Z"
-    find_end_ts = "2022-01-23T18:55:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
 
     result_json_file="../json_files/update_results.json"
     filename="/tmp/result.json"
