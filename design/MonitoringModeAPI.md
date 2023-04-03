@@ -68,9 +68,11 @@ see [Create Experiment](/design/CreateExperiment.md)
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
 
-NOTE: The update to results of a particular experiment should follow Time Series Order to get valid recommendations.
+**NOTE:** The update to results of a particular experiment should follow Time Series Order to get valid recommendations.
 
-Eg: after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that timestamp
+**Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that timestamp
+
+
 * Mandatory parameters in the input JSON:
  ```
  cpuUsage, memoryUsage, memoryRSS
