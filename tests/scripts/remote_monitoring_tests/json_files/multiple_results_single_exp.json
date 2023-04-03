@@ -2,8 +2,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T15:40:02.000Z",
-        "end_timestamp": "2022-12-20T15:55:03.000Z",
+        "interval_start_time": "2022-12-20T15:40:02.000Z",
+        "interval_end_time": "2022-12-20T15:55:03.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -110,8 +110,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T15:55:03.000Z",
-        "end_timestamp": "2022-12-20T16:10:03.000Z",
+        "interval_start_time": "2022-12-20T15:55:03.000Z",
+        "interval_end_time": "2022-12-20T16:10:03.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -218,8 +218,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T16:10:03.000Z",
-        "end_timestamp": "2022-12-20T16:25:03.000Z",
+        "interval_start_time": "2022-12-20T16:10:03.000Z",
+        "interval_end_time": "2022-12-20T16:25:03.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -326,8 +326,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T16:25:03.000Z",
-        "end_timestamp": "2022-12-20T16:40:04.000Z",
+        "interval_start_time": "2022-12-20T16:25:03.000Z",
+        "interval_end_time": "2022-12-20T16:40:04.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -434,8 +434,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T16:40:04.000Z",
-        "end_timestamp": "2022-12-20T16:55:04.000Z",
+        "interval_start_time": "2022-12-20T16:40:04.000Z",
+        "interval_end_time": "2022-12-20T16:55:04.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -542,8 +542,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T16:55:04.000Z",
-        "end_timestamp": "2022-12-20T17:10:04.000Z",
+        "interval_start_time": "2022-12-20T16:55:04.000Z",
+        "interval_end_time": "2022-12-20T17:10:04.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -650,8 +650,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T17:10:04.000Z",
-        "end_timestamp": "2022-12-20T17:25:05.000Z",
+        "interval_start_time": "2022-12-20T17:10:04.000Z",
+        "interval_end_time": "2022-12-20T17:25:05.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -758,8 +758,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T17:25:05.000Z",
-        "end_timestamp": "2022-12-20T17:40:05.000Z",
+        "interval_start_time": "2022-12-20T17:25:05.000Z",
+        "interval_end_time": "2022-12-20T17:40:05.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -866,8 +866,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T17:40:05.000Z",
-        "end_timestamp": "2022-12-20T17:55:05.000Z",
+        "interval_start_time": "2022-12-20T17:40:05.000Z",
+        "interval_end_time": "2022-12-20T17:55:05.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -974,8 +974,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T17:55:05.000Z",
-        "end_timestamp": "2022-12-20T18:10:06.000Z",
+        "interval_start_time": "2022-12-20T17:55:05.000Z",
+        "interval_end_time": "2022-12-20T18:10:06.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1082,8 +1082,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T18:10:06.000Z",
-        "end_timestamp": "2022-12-20T18:25:06.000Z",
+        "interval_start_time": "2022-12-20T18:10:06.000Z",
+        "interval_end_time": "2022-12-20T18:25:06.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1190,8 +1190,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T18:25:06.000Z",
-        "end_timestamp": "2022-12-20T18:40:07.000Z",
+        "interval_start_time": "2022-12-20T18:25:06.000Z",
+        "interval_end_time": "2022-12-20T18:40:07.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1298,8 +1298,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T18:40:07.000Z",
-        "end_timestamp": "2022-12-20T18:55:07.000Z",
+        "interval_start_time": "2022-12-20T18:40:07.000Z",
+        "interval_end_time": "2022-12-20T18:55:07.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1406,8 +1406,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T18:55:07.000Z",
-        "end_timestamp": "2022-12-20T19:10:08.000Z",
+        "interval_start_time": "2022-12-20T18:55:07.000Z",
+        "interval_end_time": "2022-12-20T19:10:08.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1514,8 +1514,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T19:10:08.000Z",
-        "end_timestamp": "2022-12-20T19:25:09.000Z",
+        "interval_start_time": "2022-12-20T19:10:08.000Z",
+        "interval_end_time": "2022-12-20T19:25:09.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1622,8 +1622,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T19:25:09.000Z",
-        "end_timestamp": "2022-12-20T19:40:09.000Z",
+        "interval_start_time": "2022-12-20T19:25:09.000Z",
+        "interval_end_time": "2022-12-20T19:40:09.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1730,8 +1730,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T19:40:09.000Z",
-        "end_timestamp": "2022-12-20T19:55:09.000Z",
+        "interval_start_time": "2022-12-20T19:40:09.000Z",
+        "interval_end_time": "2022-12-20T19:55:09.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1838,8 +1838,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T19:55:09.000Z",
-        "end_timestamp": "2022-12-20T20:10:10.000Z",
+        "interval_start_time": "2022-12-20T19:55:09.000Z",
+        "interval_end_time": "2022-12-20T20:10:10.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -1946,8 +1946,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T20:10:10.000Z",
-        "end_timestamp": "2022-12-20T20:25:10.000Z",
+        "interval_start_time": "2022-12-20T20:10:10.000Z",
+        "interval_end_time": "2022-12-20T20:25:10.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2054,8 +2054,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T20:25:10.000Z",
-        "end_timestamp": "2022-12-20T20:40:10.000Z",
+        "interval_start_time": "2022-12-20T20:25:10.000Z",
+        "interval_end_time": "2022-12-20T20:40:10.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2162,8 +2162,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T20:40:10.000Z",
-        "end_timestamp": "2022-12-20T20:55:11.000Z",
+        "interval_start_time": "2022-12-20T20:40:10.000Z",
+        "interval_end_time": "2022-12-20T20:55:11.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2270,8 +2270,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T20:55:11.000Z",
-        "end_timestamp": "2022-12-20T21:10:11.000Z",
+        "interval_start_time": "2022-12-20T20:55:11.000Z",
+        "interval_end_time": "2022-12-20T21:10:11.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2378,8 +2378,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T21:10:11.000Z",
-        "end_timestamp": "2022-12-20T21:25:11.000Z",
+        "interval_start_time": "2022-12-20T21:10:11.000Z",
+        "interval_end_time": "2022-12-20T21:25:11.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2486,8 +2486,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T21:25:11.000Z",
-        "end_timestamp": "2022-12-20T21:40:12.000Z",
+        "interval_start_time": "2022-12-20T21:25:11.000Z",
+        "interval_end_time": "2022-12-20T21:40:12.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2594,8 +2594,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T21:40:12.000Z",
-        "end_timestamp": "2022-12-20T21:55:12.000Z",
+        "interval_start_time": "2022-12-20T21:40:12.000Z",
+        "interval_end_time": "2022-12-20T21:55:12.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2702,8 +2702,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T21:55:12.000Z",
-        "end_timestamp": "2022-12-20T22:10:12.000Z",
+        "interval_start_time": "2022-12-20T21:55:12.000Z",
+        "interval_end_time": "2022-12-20T22:10:12.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2810,8 +2810,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T22:10:12.000Z",
-        "end_timestamp": "2022-12-20T22:25:13.000Z",
+        "interval_start_time": "2022-12-20T22:10:12.000Z",
+        "interval_end_time": "2022-12-20T22:25:13.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -2918,8 +2918,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T22:25:13.000Z",
-        "end_timestamp": "2022-12-20T22:40:13.000Z",
+        "interval_start_time": "2022-12-20T22:25:13.000Z",
+        "interval_end_time": "2022-12-20T22:40:13.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3026,8 +3026,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T22:40:13.000Z",
-        "end_timestamp": "2022-12-20T22:55:13.000Z",
+        "interval_start_time": "2022-12-20T22:40:13.000Z",
+        "interval_end_time": "2022-12-20T22:55:13.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3134,8 +3134,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T22:55:13.000Z",
-        "end_timestamp": "2022-12-20T23:10:14.000Z",
+        "interval_start_time": "2022-12-20T22:55:13.000Z",
+        "interval_end_time": "2022-12-20T23:10:14.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3242,8 +3242,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T23:10:14.000Z",
-        "end_timestamp": "2022-12-20T23:25:14.000Z",
+        "interval_start_time": "2022-12-20T23:10:14.000Z",
+        "interval_end_time": "2022-12-20T23:25:14.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3350,8 +3350,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T23:25:14.000Z",
-        "end_timestamp": "2022-12-20T23:40:15.000Z",
+        "interval_start_time": "2022-12-20T23:25:14.000Z",
+        "interval_end_time": "2022-12-20T23:40:15.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3458,8 +3458,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T23:40:15.000Z",
-        "end_timestamp": "2022-12-20T23:55:15.000Z",
+        "interval_start_time": "2022-12-20T23:40:15.000Z",
+        "interval_end_time": "2022-12-20T23:55:15.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3566,8 +3566,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-20T23:55:15.000Z",
-        "end_timestamp": "2022-12-21T00:10:16.000Z",
+        "interval_start_time": "2022-12-20T23:55:15.000Z",
+        "interval_end_time": "2022-12-21T00:10:16.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3674,8 +3674,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-21T00:10:16.000Z",
-        "end_timestamp": "2022-12-21T00:25:16.000Z",
+        "interval_start_time": "2022-12-21T00:10:16.000Z",
+        "interval_end_time": "2022-12-21T00:25:16.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3782,8 +3782,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-21T00:25:16.000Z",
-        "end_timestamp": "2022-12-21T00:40:17.000Z",
+        "interval_start_time": "2022-12-21T00:25:16.000Z",
+        "interval_end_time": "2022-12-21T00:40:17.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",
@@ -3890,8 +3890,8 @@
     {
         "version": "1.0",
         "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "start_timestamp": "2022-12-21T00:40:17.000Z",
-        "end_timestamp": "2022-12-21T00:55:17.000Z",
+        "interval_start_time": "2022-12-21T00:40:17.000Z",
+        "interval_end_time": "2022-12-21T00:55:17.000Z",
         "kubernetes_objects": [
             {
                 "type": "deployment",

@@ -48,11 +48,11 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
     isExist = os.path.exists(exp_json_dir)
     if not isExist:
         os.mkdir(exp_json_dir)
-   
+
     j = 0
     type_index = 0
     for i in range(total_exps):
-    
+
         exp_num = i
 
         # Create a dictionary for trial settings
@@ -70,10 +70,10 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
             "container_image_name": container_image_name + "_" + str(exp_num),
             "container_name": container_name + "_" + str(exp_num),
         }
-            
+
         # Create a list to hold the containers
         containers = [container]
-            
+
         # Create a dictionary to hold the deployment information
         kubernetes_objects = [{
             "type": kubernetes_object_type[type_index],
@@ -81,7 +81,7 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
             "namespace": kubernetes_object_namespace + "_" + str(exp_num),
             "containers": containers
         }]
-          
+
         # Create a dictionary to hold the experiment data
         experiment = {
             "version": "1.0",
@@ -94,8 +94,8 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
             "trial_settings": trial_settings,
             "recommendation_settings": recommendation_settings
         }
-       
-                
+
+
         complete_json_data.append(experiment)
         if split == True:
             if i % split_count != 0:
@@ -133,16 +133,16 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
     complete_json_data = []
     single_row_json_data = []
     multi_row_json_data = []
-    
+
     # Create an empty list to hold the deployments
     mebibyte = 1048576
 
     isExist = os.path.exists(json_dir)
     if not isExist:
         os.mkdir(json_dir)
-    
+
     i = 1
-    exp_num = 0 
+    exp_num = 0
     type_index = 0
     # Open the CSV file
     with open(csv_file_path, 'r') as csvfile:
@@ -151,7 +151,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
         j = 0
 
         data_interval = 15
-        start_timestamp = get_datetime()
+        interval_start_time = get_datetime()
         for row in csvreader:
             container_metrics = []
 
@@ -166,7 +166,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-                
+
             if row["cpu_limit_avg_container"]:
                 container_metrics.append({
                     "name" : "cpuLimit",
@@ -178,7 +178,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-                
+
             if row["cpu_throttle_max_container"]:
                 container_metrics.append({
                     "name" : "cpuThrottle",
@@ -191,7 +191,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-                
+
             container_metrics.append({
                 "name" : "cpuUsage",
                 "results": {
@@ -203,8 +203,8 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         "format": "cores"
                     }
                 }
-            })            
-            
+            })
+
             if row["mem_request_avg_container"]:
                 container_metrics.append({
                     "name" : "memoryRequest",
@@ -216,7 +216,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-                
+
             if row["mem_limit_avg_container"]:
                 container_metrics.append({
                     "name" : "memoryLimit",
@@ -228,7 +228,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-                
+
             container_metrics.append({
                 "name" : "memoryUsage",
                 "results": {
@@ -241,7 +241,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                         }
                     }
                 })
-           
+
             container_metrics.append({
                 "name" : "memoryRSS",
                 "results": {
@@ -254,17 +254,17 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                     }
                 }
             })
-                      
+
             # Create a dictionary to hold the container information
             container = {
                 "container_image_name": container_image_name + "_" + str(exp_num),
                 "container_name": container_name + "_" + str(exp_num),
                 "metrics": container_metrics
             }
-            
+
             # Create a list to hold the containers
             containers = [container]
-            
+
             # Create a dictionary to hold the deployment information
             kubernetes_objects = [{
                 "type": kubernetes_object_type[type_index],
@@ -272,19 +272,19 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                 "namespace": kubernetes_object_namespace + "_" + str(exp_num),
                 "containers": containers
             }]
-          
-            end_timestamp = increment_timestamp(start_timestamp, data_interval)
-            
+
+            interval_end_time = increment_timestamp(interval_start_time, data_interval)
+
             # Create a dictionary to hold the experiment data
             update_results = {
                 "version": "1.0",
                 "experiment_name": exp_name + "_" + str(exp_num),
-                "start_timestamp": start_timestamp,
-                "end_timestamp": end_timestamp,
+                "interval_start_time": interval_start_time,
+                "interval_end_time": interval_end_time,
                 "kubernetes_objects": kubernetes_objects
             }
-       
-                
+
+
             complete_json_data.append(update_results)
             if split == True:
                 if i % split_count != 0:
@@ -301,7 +301,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                     i += 1
 
                 if i % 12 == 0:
-                    start_timestamp = end_timestamp
+                    interval_start_time = interval_end_time
 
             else:
                 single_row_json_data.append(update_results)
@@ -312,7 +312,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                     json.dump(single_row_json_data, json_file, indent=4)
 
                 single_row_json_data = []
-                start_timestamp = end_timestamp
+                interval_start_time = interval_end_time
 
             if type_index < num_obj_types-1:
                 type_index += 1
@@ -329,4 +329,3 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
     # Write the final JSON data to the output file
     with open("/tmp/complete_results.json", "w") as json_file:
         json.dump(complete_json_data, json_file, indent=4)
-

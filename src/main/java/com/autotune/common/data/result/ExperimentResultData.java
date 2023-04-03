@@ -30,9 +30,9 @@ import java.util.Objects;
 public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
-    @SerializedName("start_timestamp")
+    @SerializedName("interval_start_time")
     private Timestamp starttimestamp;
-    @SerializedName("end_timestamp")
+    @SerializedName("interval_end_time")
     private Timestamp endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;

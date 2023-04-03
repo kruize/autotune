@@ -36,7 +36,7 @@ def test_list_recommendations_single_exp(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-   
+
     time.sleep(10)
 
     # Get the experiment name
@@ -54,7 +54,7 @@ def test_list_recommendations_single_exp(cluster_type):
 
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)
-    update_results_json = read_json_data_from_file(result_json_file) 
+    update_results_json = read_json_data_from_file(result_json_file)
 
     validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
@@ -105,7 +105,7 @@ def test_list_recommendations_without_parameters(cluster_type):
 
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)
-    update_results_json = read_json_data_from_file(result_json_file) 
+    update_results_json = read_json_data_from_file(result_json_file)
 
     validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
@@ -140,7 +140,7 @@ def test_list_recommendations_invalid_exp(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    
+
     # Get the experiment name
     experiment_name = "xyz"
 
@@ -224,7 +224,7 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert data['message'] == "Bulk entries are currently unsupported!"
-   
+
     time.sleep(10)
 
     # Get the experiment name
@@ -322,7 +322,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
-    # Delete the experiments    
+    # Delete the experiments
     for i in range(num_exps):
         json_file = "/tmp/create_exp_" + str(i) + ".json"
 
@@ -344,7 +344,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
 
     # Create the update result jsons
     create_update_results_jsons(metrics_csv)
-   
+
     # Form the Kruize service URL
     form_kruize_url(cluster_type)
 
@@ -377,7 +377,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
 
             # Update results for the experiment
             result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
-        
+
             response = update_results(result_json_file)
             data = response.json()
 
@@ -404,10 +404,10 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
 
             create_exp_json = read_json_data_from_file(create_exp_json_file)
             update_results_json = read_json_data_from_file(result_json_file)
-        
+
             validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
-    # Delete the experiments    
+    # Delete the experiments
     for i in range(num_exps):
         create_exp_json_file = exp_jsons_dir + "/create_exp_" + str(i) + ".json"
 
@@ -426,13 +426,13 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
-    
+
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
-    
+
     data = response.json()
     print(data['message'])
-    
+
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
@@ -455,7 +455,7 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-   
+
         time.sleep(5)
 
     time.sleep(20)
@@ -522,7 +522,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time_invalid(monitorin
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    
+
     time.sleep(10)
 
     # Get the experiment name
@@ -532,7 +532,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time_invalid(monitorin
     latest = None
     response = list_recommendations(experiment_name, latest, monitoring_end_time)
     list_reco_json = response.json()
-    
+
     print(list_reco_json['message'])
     ERROR_MSG = "Given timestamp - \" " + monitoring_end_time + " \" is not a valid timestamp format"
     assert response.status_code == ERROR_STATUS_CODE
@@ -552,12 +552,12 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
-    
+
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
     data = response.json()
     print(data['message'])
-    
+
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
@@ -580,7 +580,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-        
+
         time.sleep(5)
 
     time.sleep(20)
@@ -597,7 +597,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     if test_name == "valid_monitoring_end_time":
         assert response.status_code == SUCCESS_200_STATUS_CODE
         for result in result_json_arr:
-            if result['end_timestamp'] == monitoring_end_time:
+            if result['interval_end_time'] == monitoring_end_time:
                 update_results_json.append(result)
                 expected_duration_in_hours = 8.0
         # Validate the json against the json schema
@@ -694,7 +694,7 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
 
-    # Delete the experiments    
+    # Delete the experiments
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
         response = delete_experiment(create_exp_json_file)
@@ -746,8 +746,8 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
-            result_json[0]['start_timestamp'] = increment_timestamp(result_json[0]['start_timestamp'], j*5)
-            result_json[0]['end_timestamp'] = increment_timestamp(result_json[0]['end_timestamp'], j*5)
+            result_json[0]['interval_start_time'] = increment_timestamp(result_json[0]['interval_start_time'], j*5)
+            result_json[0]['interval_end_time'] = increment_timestamp(result_json[0]['interval_end_time'], j*5)
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
@@ -758,9 +758,9 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    
+
             time.sleep(20)
-        
+
             # Get the experiment name
             json_data = json.load(open(create_exp_json_file))
             experiment_name = json_data[0]['experiment_name']

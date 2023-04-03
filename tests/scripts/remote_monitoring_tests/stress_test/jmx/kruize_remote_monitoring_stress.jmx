@@ -186,8 +186,8 @@
   {&#xd;
     &quot;version&quot;: &quot;1.0&quot;,&#xd;
     &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
-    &quot;start_timestamp&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
-    &quot;end_timestamp&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT15M,,)}&quot;,&#xd;
+    &quot;interval_start_time&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
+    &quot;interval_end_time&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT15M,,)}&quot;,&#xd;
     &quot;kubernetes_objects&quot;: [&#xd;
       {&#xd;
         &quot;type&quot;: &quot;deployment&quot;,&#xd;
@@ -483,8 +483,8 @@
   {&#xd;
     &quot;version&quot;: &quot;1.0&quot;,&#xd;
     &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
-    &quot;start_timestamp&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
-    &quot;end_timestamp&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT20M,,)}&quot;,&#xd;
+    &quot;interval_start_time&quot;: &quot;${__time(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;)}&quot;,&#xd;
+    &quot;interval_end_time&quot;: &quot;${__timeShift(yyyy-MM-dd&apos;T&apos;hh:mm:ss.SSS&apos;Z&apos;,,PT20M,,)}&quot;,&#xd;
     &quot;kubernetes_objects&quot;: [&#xd;
       {&#xd;
         &quot;type&quot;: &quot;deployment&quot;,&#xd;

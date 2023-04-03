@@ -9,8 +9,8 @@ import time
 csvfile = "/tmp/update_results_test_data.csv"
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, start_timestamp, end_timestamp, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format", generate_test_data(csvfile, update_results_test_data))
-def test_update_results_invalid_tests(test_name, expected_status_code, version, experiment_name, start_timestamp, end_timestamp, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format, cluster_type):
+@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format", generate_test_data(csvfile, update_results_test_data))
+def test_update_results_invalid_tests(test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format, cluster_type):
 
     print("\n*******************************************************")
     print("Test - ", test_name)
@@ -18,7 +18,7 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     input_json_file="../json_files/create_exp.json"
 
     form_kruize_url(cluster_type)
-    
+
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
@@ -42,8 +42,8 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     content = template.render(
         version = version,
         experiment_name = experiment_name,
-        start_timestamp = start_timestamp,
-        end_timestamp = end_timestamp,
+        interval_start_time = interval_start_time,
+        interval_end_time = interval_end_time,
         kubernetes_obj_type = kubernetes_obj_type,
         name = name,
         namespace = namespace,
@@ -200,7 +200,7 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
 
         with open(filename, 'w') as file:
             file.write(data)
-        
+
         response = update_results(filename)
 
         data = response.json()
@@ -217,7 +217,7 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
 def test_update_results_multiple_exps_from_same_json_file(cluster_type):
     """
     Test Description: This test validates the response status code of updateResults API by posting
-    results of multiple experiments in the same json file. 
+    results of multiple experiments in the same json file.
     """
     input_json_file="../json_files/create_multiple_exps.json"
 
@@ -250,7 +250,7 @@ def test_update_results_multiple_exps_from_same_json_file(cluster_type):
 def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cluster_type):
     """
     Test Description: This test validates the response status code of updateResults API by posting
-    results of multiple experiments with multiple containers in the same json file. 
+    results of multiple experiments with multiple containers in the same json file.
     """
     input_json_file="../json_files/create_multiple_exps_multiple_containers.json"
 
@@ -283,7 +283,7 @@ def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cl
 def test_update_results_for_containers_not_present(cluster_type):
     """
     Test Description: This test validates the response status code of updateResults API by posting
-    results of multiple experiments with multiple containers in the same json file. 
+    results of multiple experiments with multiple containers in the same json file.
     """
     input_json_file="../json_files/create_multiple_exps.json"
 
@@ -362,7 +362,7 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
 #@pytest.mark.negative
 def test_update_valid_results_without_create_exp(cluster_type):
     """
-    Test Description: This test validates the behavior of updateResults API by posting results for a non-existing experiment 
+    Test Description: This test validates the behavior of updateResults API by posting results for a non-existing experiment
     """
     input_json_file="../json_files/create_exp.json"
     json_data = json.load(open(input_json_file))
@@ -426,9 +426,9 @@ def test_update_results_with_same_result(cluster_type):
     experiment_name = exp_json_data[0]['experiment_name']
 
     result_json_data = read_json_data_from_file(result_json_file)
-    end_timestamp = result_json_data[0]['end_timestamp']
+    interval_end_time = result_json_data[0]['interval_end_time']
 
-    TIMESTAMP_PRESENT_MSG = "Experiment name : " + experiment_name + " already contains result for timestamp : " + end_timestamp
+    TIMESTAMP_PRESENT_MSG = "Experiment name : " + experiment_name + " already contains result for timestamp : " + interval_end_time
     assert data['message'] == TIMESTAMP_PRESENT_MSG
 
     response = delete_experiment(input_json_file)

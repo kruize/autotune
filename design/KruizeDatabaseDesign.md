@@ -462,8 +462,8 @@ curl --location --request POST 'http://127.0.0.1:8080/updateResults' \
   {
     "version": "1.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-    "start_timestamp": "2022-01-23T18:25:43.511Z",
-    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:25:43.511Z",
     "kubernetes_objects": [
       {
         "type": "deployment",
@@ -808,4 +808,3 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
 ```
 insert into kruize_performance_profiles; 
 ```
-
