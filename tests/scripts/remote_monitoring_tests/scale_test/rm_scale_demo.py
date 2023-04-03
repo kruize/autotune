@@ -117,14 +117,18 @@ def main(argv):
 
         # Fetch the recommendations for all the experiments
         for experiment_name in exp_list:
-            latest = False
-            reco = list_recommendations(experiment_name, latest)
+            reco = list_recommendations(experiment_name)
 
             filename = reco_json_dir + '/reco_' + experiment_name + '.json'
             write_json_data_to_file(filename, reco.json())
 
         # sleep for a while to mimic the availability of next set of results
         time.sleep(1)
+
+    for exp_num in range(num_exps):
+        # create the experiment and post it
+        create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
+        delete_experiment(create_exp_json_file)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
