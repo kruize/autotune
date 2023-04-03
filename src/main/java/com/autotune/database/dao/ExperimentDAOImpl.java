@@ -42,6 +42,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 validationOutputData.setMessage(e.getMessage());
                 //todo save error to API_ERROR_LOG
             }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
 
         return validationOutputData;
@@ -76,6 +78,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 validationOutputData.setMessage(e.getMessage());
                 //todo save error to API_ERROR_LOG
             }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
         return validationOutputData;
     }
