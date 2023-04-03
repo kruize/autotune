@@ -16,6 +16,7 @@
 package com.autotune.database.table;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.database.helper.GenrateExperimentID;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -41,10 +42,11 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "kruize_experiment")
+@IdClass(GenrateExperimentID.class)
 public class KruizeExperimentEntry {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long experiment_id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String experiment_id;
     private String version;
     @Column(unique = true)
     private String experiment_name;
@@ -134,4 +136,19 @@ public class KruizeExperimentEntry {
         this.status = status;
     }
 
+    public String getExperiment_id() {
+        return experiment_id;
+    }
+
+    public void setExperiment_id(String experiment_id) {
+        this.experiment_id = experiment_id;
+    }
+
+    public JsonNode getDatasource() {
+        return datasource;
+    }
+
+    public void setDatasource(JsonNode datasource) {
+        this.datasource = datasource;
+    }
 }
