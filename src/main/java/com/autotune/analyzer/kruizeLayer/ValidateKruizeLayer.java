@@ -82,13 +82,13 @@ public class ValidateKruizeLayer
 				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
+				// Check if tunable step value is zero
+				if (!tunable.getValueType().equals(CATEGORICAL_TYPE) && tunable.getStep() == 0) {
+					errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.ZERO_STEP);
+				}
 				for (String slo_class : tunable.getSloClassList()) {
 					if (!KruizeSupportedTypes.SLO_CLASSES_SUPPORTED.contains(slo_class)) {
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
-					}
-
-					if (!tunable.getValueType().equals(CATEGORICAL_TYPE) && tunable.getStep() == 0) {
-						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.ZERO_STEP);
 					}
 				}
 			}
