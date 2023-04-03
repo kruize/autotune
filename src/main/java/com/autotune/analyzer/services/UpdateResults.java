@@ -17,15 +17,17 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.database.dao.ExperimentDAO;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +74,7 @@ public class UpdateResults extends HttpServlet {
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
                     experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
@@ -82,7 +84,16 @@ public class UpdateResults extends HttpServlet {
                 ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKExperimentResultData) {
-                    sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    for (ExperimentResultData resultData : experimentResultDataList) {
+                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                        addedToDB = experimentDAO.addResultsToDB(resultData);
+                    }
+                    if (addedToDB.isSuccess())
+                        sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                    else {
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                    }
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
                     sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
@@ -90,7 +101,7 @@ public class UpdateResults extends HttpServlet {
 
                 if (validationOutputData.isSuccess()) {
                     List<String> experimentList = new ArrayList<String>();
-                    for (ExperimentResultData experimentResultData: experimentResultDataList) {
+                    for (ExperimentResultData experimentResultData : experimentResultDataList) {
                         String experimentName = experimentResultData.getExperiment_name();
                         if (mainKruizeExperimentMap.containsKey(experimentName))
                             experimentList.add(experimentName);

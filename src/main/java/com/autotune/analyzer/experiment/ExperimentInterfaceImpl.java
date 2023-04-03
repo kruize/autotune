@@ -15,12 +15,13 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.*;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
@@ -49,13 +50,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 }
         );
         LOGGER.debug("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
-        return true;
-    }
-
-    @Override
-    public boolean addExperimentToDB(KruizeObject kruizeObject) {
-        //TODO insert in to db
-        updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
         return true;
     }
 
@@ -110,7 +104,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                                 containerData = containerDataMap.get(cName);
                             }
                             HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                             for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
+                            for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
                                 Collection<MetricResults> metricResultsList = intervalResults.getMetricResultsMap().values();
                                 for (MetricResults metricResults : metricResultsList)
                                     metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
@@ -140,17 +134,4 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
         return true;
     }
 
-    @Override
-    public boolean addResultsToDB(KruizeObject kruizeObject, ExperimentResultData resultData) {
-        // TODO   Insert into database
-        resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-        return false;
-    }
-
-
-    @Override
-    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) {
-        //TOdo load all experiments from DB
-        return false;
-    }
 }
