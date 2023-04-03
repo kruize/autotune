@@ -118,10 +118,6 @@ data:
           { "name": "prometheus-3",
             "provider": "prometheus",
             "serviceName": "prometheus-k8s",
-            "url": ""
-          },
-          { "name": "prometheus-1",
-            "provider": "prometheus",
           },
         ]
     }
@@ -147,7 +143,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: ozer550/autotune:0.0.1
+          image: kruize/autotune_operator:0.0.11_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

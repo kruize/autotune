@@ -31,18 +31,18 @@ public class DataSourceInfo {
     private final String provider;
     private final URL url;
 
-    public DataSourceInfo(String name, String serviceName ,String provider, URL url) {
+    public DataSourceInfo(String name, String serviceName, String provider, URL url) {
         this.name = name;
         this.serviceName =serviceName;
         this.provider = provider;
         this.url = url;
     }
     
-    public String getServiceName(){
+    public String getServiceName() {
         return serviceName;
     }
     
-    public String getName(){
+    public String getName() {
         return name;
     }
 
