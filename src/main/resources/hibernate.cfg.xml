@@ -13,6 +13,6 @@
         <property name="show_sql">true</property>
         <mapping class="com.autotune.database.table.KruizeExperimentEntry"/>
         <mapping class="com.autotune.database.table.KruizeResultsEntry"/>
-        <mapping class="com.autotune.database.table.KruizeRecommendation"/>
+        <mapping class="com.autotune.database.table.KruizeRecommendationEntry"/>
     </session-factory>
 </hibernate-configuration>

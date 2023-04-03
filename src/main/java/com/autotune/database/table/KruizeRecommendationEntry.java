@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "kruize_recommendation")
-public class KruizeRecommendation {
+public class KruizeRecommendationEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recommendation_id;
