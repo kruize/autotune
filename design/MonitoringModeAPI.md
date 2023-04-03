@@ -84,7 +84,7 @@ see [Update results](/design/UpdateResults.md)
     "version": "1.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
-    "interval_end_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.602Z",
     "kubernetes_objects": [
       {
         "type": "deployment",
