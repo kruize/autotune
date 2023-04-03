@@ -120,15 +120,18 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            KruizeObject[] kruizeExpList = new Gson().fromJson(inputData, KruizeObject[].class);
-            for (KruizeObject ko : kruizeExpList) {
-                mainKruizeExperimentMap.remove(ko.getExperimentName());
-                KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+            CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
+            for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                if (mainKruizeExperimentMap.containsKey(ko.getExperimentName())) {
+                    mainKruizeExperimentMap.remove(ko.getExperimentName());
+                    KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+                }
+                else
+                    throw new Exception("Experiment not found!");
             }
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

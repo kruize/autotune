@@ -65,10 +65,16 @@ public class ExperimentResultValidation {
                             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
-                        } else if (durationInMins < Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3))) {
-                            errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
-                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
-                            break;
+                        } else {
+                            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3));
+                            // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
+                            double lowerRange = (parsedMeasurementDuration * 60 - 5) / 60.0;
+                            double upperRange = (parsedMeasurementDuration * 60 + 5) / 60.0;
+                            if (!(durationInMins >= lowerRange && durationInMins <= upperRange)) {
+                                errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
+                                resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                                break;
+                            }
                         }
                         // check if resultData is present
                         boolean isExist = false;
