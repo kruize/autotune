@@ -7,20 +7,18 @@ using various positive and negative scenarios. These tests are developed using p
 ### **Create Experiment API tests**
    
 Here are the test scenarios:
-     - Create a single valid experiment json to the API
-     - Create multiple valid experiments using a single json
-     - Create multiple valid experiments using different jsons
-     - Create multiple experiments with the same kubernetes obj type, name and namespace
-     - Post an experiment with multiple containers with different images & container names
-
-     
-     - Test with invalid values such as blank, null or an invalid value for various keys in the createExperiment json
-     - Post an invalid header content type
-     - Post the same experiment again	
-     - Post experiments with conflicting parameters 
-	- PerformanceProfile & Slo
-	- Deployment name & selector
-     - Validate error messages when the mandatory fields are missing
+- Create a single valid experiment json to the API
+- Create multiple valid experiments using a single json
+- Create multiple valid experiments using different jsons
+- Create multiple experiments with the same kubernetes obj type, name and namespace
+- Post an experiment with multiple containers with different images & container names
+- Test with invalid values such as blank, null or an invalid value for various keys in the createExperiment json
+- Post an invalid header content type
+- Post the same experiment again
+- Post experiments with conflicting parameters
+- PerformanceProfile & Slo
+- Deployment name & selector
+- Validate error messages when the mandatory fields are missing
 
 ### **Update Results API tests**
 
@@ -126,8 +124,7 @@ Remote monitoring tests can also be run without using the test_autotune.sh. To d
 - To run only a specific test within listRecommendations API
 ```
 	pytest -s test_list_recommandations::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
-``
+```
 
-Note: You can check the report.html for the results and it provides better readability
- 
+Note: You can check the report.html for the results as it provides better readability
 

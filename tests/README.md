@@ -133,7 +133,7 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
   - Validates the behaviour of createExperiment, updateResults and listRecommendations APIs in various scenarios covering both positive and negative usecases.
 
-  For details refer this [doc]/(/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)  
+  For details refer this [doc](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
 
 #### Stress test
 
