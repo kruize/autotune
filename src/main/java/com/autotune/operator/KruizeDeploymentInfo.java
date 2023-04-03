@@ -22,13 +22,15 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
+import java.time.Clock;
+import java.util.HashMap;
+import java.util.Hashtable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Clock;
-import java.util.Hashtable;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 
@@ -47,6 +49,7 @@ public class KruizeDeploymentInfo {
     private static String loggingLevel;
     private static String rootLoggingLevel;
     private static Hashtable<String, Class> tunableLayerPair;
+    private static HashMap<String, DataSourceInfo> datasourceMap;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
     private KruizeDeploymentInfo() {
@@ -80,6 +83,12 @@ public class KruizeDeploymentInfo {
 
     public static String getClusterType() {
         return clusterType;
+    }
+
+    public static void setDatasourceMap(HashMap<String,DataSourceInfo> validatedDataSourceMap){
+        if(validatedDataSourceMap.size()!=0){
+            datasourceMap = validatedDataSourceMap;
+        }
     }
 
     public static void setClusterType(String clusterType) throws ClusterTypeNotSupportedException {
