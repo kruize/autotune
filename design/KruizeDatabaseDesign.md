@@ -15,16 +15,16 @@ metrics results to generate recommendations.
 
 The Kruize Autotune project has the following entities:
 
-1. kruize_experiment
+1. kruize_experiments
 2. kruize_results
 3. kruize_recommendations
 4. kruize_performance_profiles
 
-## **kruize_experiment**
+## **kruize_experiments**
 
 ---
 
-The kruize_experiment entity represents a single experiment that is executed to optimize application resources on
+The kruize_experiments entity represents a single experiment that is executed to optimize application resources on
 Kubernetes. The experiment contains the following attributes:
 
 
@@ -114,7 +114,7 @@ Kubernetes. The experiment contains the following attributes:
    </td>
    <td>json
    </td>
-   <td>Additional data for the experiment in JSON format, which includes complete Kubernetes objects details, recommendation settings, trial settings, and ACM additional settings.
+   <td>Additional data for the experiment in JSON format, which includes complete Kubernetes objects details, recommendation settings, trial settings, and Local Monitoring additional settings.
    </td>
   </tr>
   <tr>
@@ -129,7 +129,7 @@ Kubernetes. The experiment contains the following attributes:
 
 ### Kruize entity related API's
 
-The following REST API's are available for the kruize_experiment entity:
+The following REST API's are available for the kruize_experiments entity:
 
 #### **1. CreateExperiment**
 
@@ -147,54 +147,52 @@ experiment record:
 
 ##### Request Method
 
-HTTP_METHODE: POST
+HTTP_METHOD: POST
 
 ##### Rest API Curl
 
 ```
- curl --location --request POST 'http://127.0.0.1:8080/createExperiment' \
-			--header 'Content-Type: application/json' \
-			--data-raw '[
-			    {
-				"version": "1.0",
-				"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-				"cluster_name": "cluster-one-division-bell",
-				"performance_profile": "resource-optimization-openshift",
-				"mode": "monitor",
-				"target_cluster": "remote",
-				"kubernetes_objects": [
-				    {
-					"type": "deployment",
-					"name": "tfb-qrh-deployment",
-					"namespace": "default",
-					"containers": [
-					    {
-						"container_image_name": "kruize/tfb-db:1.15",
-						"container_name": "tfb-server-0"
-					    },
-					    {
-						"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-						"container_name": "tfb-server-1"
-					    }
-					]
-				    }
-				],
-				"trial_settings": {
-				    "measurement_duration": "15min"
-				},
-				"recommendation_settings": {
-				    "threshold": "0.1"
-				}
-			    }
-			]'
-
+curl --location --request POST 'http://127.0.0.1:8080/createExperiment' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+    {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "kubernetes_objects": [
+        {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+            {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+            },
+            {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+            }
+        ]
+        }
+    ],
+    "trial_settings": {
+        "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+        "threshold": "0.1"
+    }
+    }
+]'
 ```
 
 ##### Db query
 
 ```
-insert into kruize_experiment (cluster_name, experiment_name, extended_data, meta_data, mode,  performance_profile, status, target_cluster, datasource, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)
-
+insert into kruize_experiments (version, experiment_name, experiment_id, status, cluster_name, performance_profile, mode,  target_cluster, datasource, extended_data, meta_data) values (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
 #### **2. UpdateExperiment**
@@ -205,99 +203,99 @@ experiment's status, and adjusting settings such as trial and recommendation set
 
 ##### Request Method
 
-HTTP_METHODE: POST
+HTTP_METHOD: POST
 
 ##### Rest API Curl
 
-###### add new container
+###### Update the kubernetes objects
+
+###### # add new container
 
 ```
 curl --location --request POST 'http://127.0.0.1:8080/updateExperiment' \
-			--header 'Content-Type: application/json' \
-			--data-raw '[
-			    {
-				"version": "1.0",
-				"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-				"kubernetes_objects": [
-				    {
-					"type": "deployment",
-					"name": "tfb-qrh-deployment",
-					"namespace": "default",
-					"containers": [
-					    {
-						"container_image_name": "kruize/tfb-db:1.15",
-						"container_name": "tfb-server-0"
-					    },
-					    {
-						"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-						"container_name": "tfb-server-1"
-					    },
-					    {
-						"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-						"container_name": "tfb-server-2"
-					    }
-					]
-				    }
-				]
-			    }
-			]'  	
+--header 'Content-Type: application/json' \
+--data-raw '[
+    {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
+    "kubernetes_objects": [
+        {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+            {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+            },
+            {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+            },
+            {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-2"
+            }
+        ]
+        }
+    ]
+    }
+]'  	
 ```
 
-###### delete container:
+###### # delete container:
 
 ```
-	curl --location --request POST 'http://127.0.0.1:8080/updateExperiment' \
-			--header 'Content-Type: application/json' \
-			--data-raw '[
-			    {
-				"version": "1.0",
-				"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-				"kubernetes_objects": [
-				    {
-					"type": "deployment",
-					"name": "tfb-qrh-deployment",
-					"namespace": "default",
-					"containers": [
-					    {
-						"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-						"container_name": "tfb-server-1"
-					    },
-					    {
-						"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-						"container_name": "tfb-server-2"
-					    }
-					]
-				    }
-				]
-			    }
-			]'
+curl --location --request POST 'http://127.0.0.1:8080/updateExperiment' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+    {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
+    "kubernetes_objects": [
+        {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+            {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+            },
+            {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-2"
+            }
+        ]
+        }
+    ]
+    }
+]'
 ```
 
 ###### Update status:
 
 ```
-	curl --location --request POST 'http://127.0.0.1:8080/updateExperiment' \
-			--header 'Content-Type: application/json' \
-			--data-raw '[
-			    {
-				"version": "1.0",
-				"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-				"status" : Pause/Run
-			    }
-			]'  
+curl --location --request POST 'http://127.0.0.1:8080/updateExperiment' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+    {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
+    "status" : Pause/Run
+    }
+]'  
 
 ```
 
 ###### DB Query
 
 ```
-update kruize_experiment set extended_data = extended_data ||
-				'{"kubernetes_objects" : [above data will get replaced ] }'
-
+update kruize_experiments set extended_data = extended_data ||
+'{"kubernetes_objects" : [above data will get replaced ] }'
 Where experiment_name= '';
 
-
-update kruize_experiment set status='pause' where experiment_name=?
+update kruize_experiments set status='pause' where experiment_name=?
 ```
 
 #### **3. DeleteExperiment**
@@ -306,25 +304,25 @@ Delete experiment and related results and recommendation.
 
 ##### Request Method
 
-HTTP_METHODE: DELETE
+HTTP_METHOD: DELETE
 
 ##### Rest API Curl
 
 ```
-  curl --location --request delete 'http://127.0.0.1:8080/deleteExperiment' \
-			--header 'Content-Type: application/json' \
-			--data-raw '[
-			    {
-				"version": "1.0",
-				"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10"
-                            }
-                          ]
+curl --location --request delete 'http://127.0.0.1:8080/deleteExperiment' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+{
+"version": "1.0",
+"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10"
+}
+]
 ```
 
 ##### DB query
 
 ```
-Delete from kruize_experiment where experiment_name=
+Delete from kruize_experiments where experiment_name=
 Delete from kruize_results where experiment_name=
 Delete from kruize_recommendations where experiment_name=
 ```
@@ -333,32 +331,25 @@ Delete from kruize_recommendations where experiment_name=
 
 ##### Request Method
 
-HTTP_METHODE: GET
+HTTP_METHOD: GET
 
 ##### Rest API Curl
 
 ```
- curl --location --request get  'http://127.0.0.1:8080/listExperiment' \
-
- curl --location --request get  'http://127.0.0.1:8080/listExperiment?cluster_name=xyz
-
-curl --location --request get  'http://127.0.0.1:8080/listExperiment?cluster_name=xyz&experiment_name=abc
-
-
+curl --location --request get  'http://127.0.0.1:8080/listExperiments' \
+curl --location --request get  'http://127.0.0.1:8080/listExperiments?cluster_name=xyz
+curl --location --request get  'http://127.0.0.1:8080/listExperiments?cluster_name=xyz&experiment_name=abc
 curl --location --request get  'http://127.0.0.1:8080/listExperiments?mode=monitoring
-
 curl --location --request get  'http://127.0.0.1:8080/listExperiments?mode=monitoring&target_cluster=remote
-
-
 curl --location --request get  'http://127.0.0.1:8080/listExperiments?namespace='default'
 ```
 
 ##### DB query
 
 ```
-Select * from kruize_experiment where cluster_name='xyz'
+Select * from kruize_experiments where cluster_name='xyz'
 
-Select * from kruize_experiment where cluster_name='xyz' & experiment_name='abc'
+Select * from kruize_experiments where cluster_name='xyz' & experiment_name='abc'
 
 SELECT *
 FROM  kruize_results t, json_array_elements(t.extended_data) j
@@ -460,7 +451,7 @@ The following REST API's are available for the Kruize_results entity:
 
 ##### Request Method
 
-HTTP_METHODE: POST
+HTTP_METHOD: POST
 
 ##### Rest API Curl
 
@@ -469,126 +460,126 @@ curl --location --request POST 'http://127.0.0.1:8080/updateResults' \
 --header 'Content-Type: application/json' \
 --data-raw '[
   {
-	"version": "1.0",
-	"experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
-	"start_timestamp": "2022-01-23T18:25:43.511Z",
-	"end_timestamp": "2022-01-23T18:25:43.511Z",
-	"kubernetes_objects": [
-  	{
-    	"type": "deployment",
-    	"name": "tfb-qrh-deployment",
-    	"namespace": "default",
-    	"containers": [
-      	{
-        	"container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-        	"container_name": "tfb-server",
-        	"metrics": [
-          	{
-            	"name": "cpuRequest",
-            	"results": {
-              	"value": 1.1,
-              	"format": "cores",
-              	"aggregation_info": {
-                	"sum": 4.4,
-                	"avg": 1.1,
-                	"format": "cores"
-              	}
-            	}
-          	},
-          	{
-            	"name": "cpuLimit",
-            	"results": {
-              	"value": 0.5,
-              	"format": "cores",
-              	"aggregation_info": {
-                	"sum": 2.0,
-                	"avg": 0.5,
-                	"format": "cores"
-              	}
-            	}
-          	},
-          	{
-            	"name": "cpuUsage",
-            	"results": {
-              	"value": 0.12,
-              	"format": "cores",
-              	"aggregation_info": {
-                	"min": 0.14,
-                	"max": 0.84,
-                	"sum": 0.84,
-                	"avg": 0.12,
-                	"format": "cores"
-              	}
-            	}
-          	},
-          	{
-            	"name": "cpuThrottle",
-            	"results": {
-              	"value": 0.045,
-              	"format": "cores",
-              	"aggregation_info": {
-                	"sum": 0.19,
-                	"max": 0.09,
-                	"avg": 0.045,
-                	"format": "cores"
-              	}
-            	}
-          	},
-          	{
-            	"name": "memoryRequest",
-            	"results": {
-              	"value": 50.12,
-              	"format": "MiB",
-              	"aggregation_info": {
-                	"sum": 250.85,
-                	"avg": 50.21,
-                	"format": "MiB"
-              	}
-            	}
-          	},
-          	{
-            	"name": "memoryLimit",
-            	"results": {
-              	"value": 100,
-              	"format": "MiB",
-              	"aggregation_info": {
-                	"sum": 500,
-                	"avg": 100,
-                	"format": "MiB"
-              	}
-            	}
-          	},
-          	{
-            	"name": "memoryUsage",
-            	"results": {
-              	"value": 40.1,
-              	"format": "MiB",
-              	"aggregation_info": {
-                	"min": 50.6,
-                	"max": 198.50,
-                	"sum": 198.50,
-                	"avg": 40.1,
-                	"format": "MiB"
-              	}
-            	}
-          	},
-          	{
-            	"name": "memoryRSS",
-            	"results": {
-              	"aggregation_info": {
-                	"min": 50.6,
-                	"max": 123.6,
-                	"sum": 123.6,
-                	"avg": 31.91,
-                	"format": "MiB"
-              	}
-            	}
-          	}
-        	]
-      	}
-    	]
-  	}
-	]
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-DB10",
+    "start_timestamp": "2022-01-23T18:25:43.511Z",
+    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "metrics": [
+              {
+                "name": "cpuRequest",
+                "results": {
+                  "value": 1.1,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 4.4,
+                    "avg": 1.1,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuLimit",
+                "results": {
+                  "value": 0.5,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 2,
+                    "avg": 0.5,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuUsage",
+                "results": {
+                  "value": 0.12,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "min": 0.14,
+                    "max": 0.84,
+                    "sum": 0.84,
+                    "avg": 0.12,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "cpuThrottle",
+                "results": {
+                  "value": 0.045,
+                  "format": "cores",
+                  "aggregation_info": {
+                    "sum": 0.19,
+                    "max": 0.09,
+                    "avg": 0.045,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "memoryRequest",
+                "results": {
+                  "value": 50.12,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 250.85,
+                    "avg": 50.21,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryLimit",
+                "results": {
+                  "value": 100,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "sum": 500,
+                    "avg": 100,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryUsage",
+                "results": {
+                  "value": 40.1,
+                  "format": "MiB",
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 198.5,
+                    "sum": 198.5,
+                    "avg": 40.1,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryRSS",
+                "results": {
+                  "aggregation_info": {
+                    "min": 50.6,
+                    "max": 123.6,
+                    "sum": 123.6,
+                    "avg": 31.91,
+                    "format": "MiB"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]'
 ```
@@ -603,14 +594,14 @@ Insert into kruize_results
 
 ##### Request Method
 
-HTTP_METHODE: GET
+HTTP_METHOD: GET
 
 ##### listExperiments with results
 
 Rest API Curl
 
 ```
-/listExperiment?showresults
+/listExperiments?showresults
 ```
 
 ###### DB query
@@ -684,17 +675,14 @@ tree stored in the extended_data column, where the recommendations are stored on
 
 ##### Request Method
 
-HTTP_METHODE: GET
+HTTP_METHOD: GET
 
 ##### Rest API Curl
 
 ```
 curl --location --request GET 'http://192.168.49.2:31583/listRecommendations'
-
 curl --location --request GET 'http://192.168.49.2:31583/listRecommendations?experiment_name=
-
 curl --location --request GET 'http://192.168.49.2:31583/listRecommendations?experiment_name= & container_name=
-
 curl --location --request GET 'http://192.168.49.2:31583/listRecommendations?experiment_name= &
 container_name=& from_date>   to to_date<
 ```
@@ -702,7 +690,7 @@ container_name=& from_date>   to to_date<
 ##### DB Query
 
 ```
-SELECT * FROM kruize_recommendation
+SELECT * FROM kruize_recommendations
 WHERE 
 experiment_name = 'xyz' & 
 interval_end>data & interval_end<date &
@@ -715,7 +703,7 @@ EXISTS (
 );
 ```
 
-## kruize_performance_profile
+## kruize_performance_profiles
 
 ---
 
@@ -758,18 +746,17 @@ EXISTS (
 
 ### Performance profile apis
 
-#### 1. listPerformance
+#### 1. listPerformanceProfiles
 
 ##### Request Method
 
-HTTP_METHODE: GET
+HTTP_METHOD: GET
 
 ##### Rest API Curl
 
 ```
-curl --location --request GET 'http://192.168.49.2:31583/listPerformanceProfile'
-
-curl --location --request GET 'http://192.168.49.2:31583/listPerformanceProfile?profile_name='resource_optimization'
+curl --location --request GET 'http://192.168.49.2:31583/listPerformanceProfiles'
+curl --location --request GET 'http://192.168.49.2:31583/listPerformanceProfiles?profile_name='resource_optimization'
 ```
 
 ##### DB query
@@ -782,7 +769,7 @@ Select * from kruize_performance_profiles where profile_name='resource_optimizat
 
 ##### Request Method
 
-HTTP_METHODE: POST
+HTTP_METHOD: POST
 
 ##### Rest API Curl
 
