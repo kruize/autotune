@@ -55,7 +55,6 @@ public final class KruizeObject {
     private AnalyzerConstants.ExperimentStatus status;
     @SerializedName("performance_profile")
     private String performanceProfile;
-    private String deployment_name;                                 // TODO: Need to remove this
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
@@ -179,14 +178,6 @@ public final class KruizeObject {
         this.performanceProfile = performanceProfile;
     }
 
-    public String getDeployment_name() {
-        return deployment_name;
-    }
-
-    public void setDeployment_name(String deployment_name) {
-        this.deployment_name = deployment_name;
-    }
-
     public TrialSettings getTrial_settings() {
         return trial_settings;
     }
@@ -281,7 +272,6 @@ public final class KruizeObject {
                 ", objectReference=" + objectReference +
                 ", status=" + status +
                 ", performanceProfile='" + performanceProfile + '\'' +
-                ", deployment_name='" + deployment_name + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experimentUseCaseType +
