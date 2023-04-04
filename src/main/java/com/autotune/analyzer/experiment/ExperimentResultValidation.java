@@ -18,11 +18,13 @@ package com.autotune.analyzer.experiment;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +78,16 @@ public class ExperimentResultValidation {
                         }
                         // check if resultData is present
                         boolean isExist = false;
-                        if (null != kruizeObject.getResultData())
-                            isExist = kruizeObject.getResultData().contains(resultData);
+                        for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                            for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                                if (null != containerData.getResults()) {
+                                    if (null != containerData.getResults().get(resultData.getEndtimestamp())) {
+                                        isExist = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                         if (isExist) {
                             errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_CONFLICT));

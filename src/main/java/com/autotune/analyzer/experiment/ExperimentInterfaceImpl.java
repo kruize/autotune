@@ -66,13 +66,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 (resultData) -> {
                     resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
-                    Set<ExperimentResultData> results;
-                    if (ko.getResultData() == null)
-                        results = new HashSet<>();
-                    else
-                        results = ko.getResultData();
-                    results.add(resultData);
-                    ko.setResultData(results);
                     // creating a temp map to store k8sdata
                     HashMap<String, K8sObject> k8sObjectHashMap = new HashMap<>();
                     for (K8sObject k8sObj : ko.getKubernetes_objects())
