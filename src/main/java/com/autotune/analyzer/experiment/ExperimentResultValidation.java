@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -67,8 +66,8 @@ public class ExperimentResultValidation {
                         } else {
                             Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3));
                             // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
-                            double lowerRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE - KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
-                            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+                            double lowerRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE - KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+                            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
                             if (!(durationInMins >= lowerRange && durationInMins <= upperRange)) {
                                 errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
                                 resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
