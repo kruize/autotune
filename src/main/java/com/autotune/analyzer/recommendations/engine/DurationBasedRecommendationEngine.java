@@ -123,7 +123,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 if (null != format && !format.isEmpty())
                     break;
             }
-            recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(0.9, doubleList), format);
+            recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(98, doubleList), format);
 
         } catch (Exception e) {
             LOGGER.error("Not able to get getCPUCapacityRecommendation: " + e.getMessage());
@@ -173,7 +173,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 if (null != format && !format.isEmpty())
                     break;
             }
-            recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(0.9, doubleList), format);
+            recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(100, doubleList), format);
         } catch (Exception e) {
             LOGGER.error("Not able to get getMemoryCapacityRecommendation: " + e.getMessage());
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
