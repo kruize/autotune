@@ -15,11 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
 import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -64,7 +65,8 @@ public class AnalyzerConstants {
     public static final String AGGREGATION_FUNCTIONS = "aggregation_functions";
     public static final String FUNCTION = "function";
     public static final String VERSIONS = "versions";
-    public static final String KUBERNETES_OBJECTS = "kubernetes_object";
+    public static final String KUBERNETES_OBJECT = "kubernetes_object";
+    public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
     public static final String AUTOTUNE_CONFIG_PLURALS = "autotuneconfigs";
     public static final String AUTOTUNE_CONFIG_RESOURCE_NAME = AUTOTUNE_CONFIG_PLURALS + GROUP;
     public static final String AUTOTUNE_VARIABLE_PLURALS = "autotunequeryvariables";
@@ -84,9 +86,11 @@ public class AnalyzerConstants {
     public static final String SLO = "sloInfo";
     public static final String NAMESPACE = "namespace";
     public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
-    public static final String DEPLOYMENT_NAME = "deployment_name";
+    public static final String DEPLOYMENT_NAME = "name";
     public static final String SELECTOR = "selectorInfo";
     public static final String NULL = "null";
+    public static final String BULKUPLOAD_CREATEEXPERIMENT_LIMIT = "bulkupload_createexperiment_limit";
+    public static final String PERSISTANCE_STORAGE = "persistance_storage";
 
 
     private AnalyzerConstants() {
@@ -115,17 +119,6 @@ public class AnalyzerConstants {
         FAILED;
     }
 
-    public enum AggregatorType {
-        cpuRequest,
-        cpuLimit,
-        cpuUsage,
-        cpuThrottle,
-        memoryRequest,
-        memoryLimit,
-        memoryUsage,
-        memoryRSS
-    }
-
     public enum RecommendationItem {
         cpu,
         memory
@@ -139,6 +132,12 @@ public class AnalyzerConstants {
     public enum ResourceSetting {
         requests,
         limits
+    }
+
+    public enum PersistenceType {
+        LOCAL,              //Store only local  , Default
+        HYBRID,             //Store data both in db and local
+        DB                  //Store only DB
     }
 
     public enum RecommendationCategory {
@@ -183,10 +182,10 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationNotificationTypes {
-        INFO ("info", 1),
-        WARN ("warning", 2),
-        ERROR ("error", 3),
-        CRITICAL ("critical", 4);
+        INFO("info", 1),
+        WARN("warning", 2),
+        ERROR("error", 3),
+        CRITICAL("critical", 4);
 
         private String name;
         private int severity;
@@ -214,6 +213,15 @@ public class AnalyzerConstants {
         memoryLimit,
         memoryUsage,
         memoryRSS
+    }
+
+    public enum K8S_OBJECT_TYPES {
+        DEPLOYMENT,
+        DEPLOYMENT_CONFIG,
+        STATEFULSET,
+        REPLICASET,
+        REPLICATION_CONTROLLER,
+        DAEMONSET,
     }
 
     /**
@@ -483,7 +491,7 @@ public class AnalyzerConstants {
 
         public static final String PERFORMANCE_PROFILE_PLURALS = "kruizeperformanceprofiles";
         public static final String PERFORMANCE_PROFILE_RESOURCE_NAME = PERFORMANCE_PROFILE_PLURALS + GROUP;
-        public static final String K8S_TYPE = "K8S_TYPE";
+        public static final String K8S_TYPE = "k8s_type";
         public static final String PERF_PROFILE = "performanceProfile";
         public static final String PERF_PROFILE_MAP = "performanceProfileMap";
         public static final String PERF_PROFILE_NAME = "name";
@@ -494,43 +502,38 @@ public class AnalyzerConstants {
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
 
-        public static final Map<String, String> PerfProfileNames = Map.of(
-                "resource-optimization-openshift", "ResourceOptimizationOpenshiftImpl"
-        );
-    }
+        // Perf profile names
+        public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
 
-    public enum K8S_OBJECT_TYPES {
-        DEPLOYMENT,
-        DEPLOYMENT_CONFIG,
-        STATEFULSET,
-        REPLICASET,
-        REPLICATION_CONTROLLER,
-        DAEMONSET,
+        public static final Map<String, String> PerfProfileNames = Map.of(
+                RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl"
+        );
+
+        public static final Map<String , Class> perfProfileInstances = Map.of(
+                DEFAULT_PROFILE, DefaultImpl.class,
+                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class
+        );
     }
 
     public static final class K8sObjectConstants {
         private K8sObjectConstants() {
 
         }
+
         public static final class Types {
-            private Types() {
-
-            }
-
             public static final String DEPLOYMENT = "deployment";
             public static final String DEPLOYMENT_CONFIG = "deploymentConfig";
             public static final String STATEFULSET = "statefulset";
             public static final String REPLICASET = "replicaset";
             public static final String REPLICATION_CONTROLLER = "replicationController";
             public static final String DAEMONSET = "daemonset";
+            private Types() {
+
+            }
         }
     }
 
     public static final class MetricNameConstants {
-        private MetricNameConstants() {
-
-        }
-
         public static final String CPU_REQUEST = "cpuRequest";
         public static final String CPU_LIMIT = "cpuLimit";
         public static final String CPU_USAGE = "cpuUsage";
@@ -539,30 +542,60 @@ public class AnalyzerConstants {
         public static final String MEMORY_LIMIT = "memoryLimit";
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
+        private MetricNameConstants() {
+
+        }
 
     }
 
     public static final class RecommendationNotificationMsgConstant {
+        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
+        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
         private RecommendationNotificationMsgConstant() {
 
         }
-
-        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
     }
 
     public static final class BooleanString {
-        private BooleanString() {
-
-        }
-
         public static final String TRUE_DEFAULT = "True";
         public static final String FALSE_DEFAULT = "False";
         public static final String TRUE_LOWER = TRUE_DEFAULT.toLowerCase();
+        public static final String TRUE = TRUE_LOWER;
         public static final String FALSE_LOWER = FALSE_DEFAULT.toLowerCase();
+        public static final String FALSE = FALSE_LOWER;
         public static final String TRUE_UPPER = TRUE_DEFAULT.toUpperCase();
         public static final String FALSE_UPPER = FALSE_DEFAULT.toUpperCase();
-        public static final String TRUE = TRUE_LOWER;
-        public static final String FALSE = FALSE_LOWER;
+        private BooleanString() {
+
+        }
+    }
+
+    public enum RegisterRecommendationEngineStatus {
+        SUCCESS,
+        ALREADY_EXISTS,
+        INVALID
+    }
+
+    public static class RecommendationEngine {
+        private RecommendationEngine() {
+
+        }
+        public static class EngineNames {
+            private EngineNames() {
+
+            }
+            public static String DEFAULT_NAME = "Default";
+            public static String DURATION_BASED = "Duration Based";
+            public static String PROFILE_BASED = "Profile Based";
+        }
+
+        public static class EngineKeys {
+            private EngineKeys() {
+
+            }
+
+            public static String DURATION_BASED_KEY = "duration_based";
+            public static String PROFILE_BASED_KEY = "profile_based";
+        }
     }
 }

@@ -15,35 +15,31 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-
-import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
-public class ContainerMetricsHelper {
-    public String name;
-    @SerializedName("results")
-    public MetricResults metricResults;
+import java.util.List;
 
-    public String getName() {
-        return name;
+public class ListRecommendationsAPIObject extends BaseSO{
+    @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
+    private String clusterName;
+
+    @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
+    private List<KubernetesAPIObject> kubernetesObjects;
+
+    public String getClusterName() {
+        return clusterName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
     }
 
-    public MetricResults getMetricResults() {
-        return metricResults;
+    public List<KubernetesAPIObject> getKubernetesObjects() {
+        return kubernetesObjects;
     }
 
-    public void setMetricResults(MetricResults metricResults) {
-        this.metricResults = metricResults;
-    }
-    @Override
-    public String toString() {
-        return "ContainerMetricsHelper{" +
-                "name='" + name + '\'' +
-                ", metricResults=" + metricResults +
-                '}';
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesObjects) {
+        this.kubernetesObjects = kubernetesObjects;
     }
 }

@@ -166,8 +166,8 @@ public class KruizeConstants {
         public static final String VERSION = "version";
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
-        public static final String START_TIMESTAMP = "start_timestamp";
-        public static final String END_TIMESTAMP = "end_timestamp";
+        public static final String INTERVAL_START_TIME = "interval_start_time";
+        public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
@@ -225,6 +225,7 @@ public class KruizeConstants {
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 12;
+        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 5;
 
         private TimeConv() {
         }
@@ -340,6 +341,10 @@ public class KruizeConstants {
         public static final String CONFIG_FILE = "CONFIG_FILE";
         public static final String CONFIG_FILE_DB_KEY = "database";
         public static final String DB_DRIVER = "DB_DRIVER";
+
+        // Error constants
+        public static final String MISSING_DB_CONFIGS = "Either CONFIG_FILE parameter or ENVs should be set to proceed!";
+
     }
 
     public static final class DateFormats {

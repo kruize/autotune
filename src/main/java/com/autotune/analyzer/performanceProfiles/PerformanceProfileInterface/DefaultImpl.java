@@ -15,10 +15,15 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,38 +43,20 @@ public class DefaultImpl extends PerfProfileImpl {
         return "";
     }
 
-    /**
-     * Calculates the objective function by calling the algebraic parser library. The result is then sent to HPO.
-     * @param performanceProfile
-     * @param experimentResultData
-     * @return
-     */
     @Override
-    public String recommend(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
+    public void recommend(KruizeObject kruizeObject) {
 
-        String objectiveFunction = performanceProfile.getSloInfo().getObjectiveFunction().getExpression();
-        Map<String, String> objFunctionMap = new HashMap<>();
-        String errorMsg = "";
+    }
 
-        // Get the metrics data from the Kruize Object
-        for (DeploymentResultData deploymentResultData : experimentResultData.getDeployments()) {
-            for (Containers containers : deploymentResultData.getContainers()) {
-                HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetricsMap =
-                        containers.getContainer_metrics();
-                List<String> kruizeFunctionVariablesList = containerMetricsMap.keySet().stream().toList().stream().map(Enum::name).toList();
-                for (HashMap<String, com.autotune.common.data.metrics.MetricResults> funcVar : containerMetricsMap.values()) {
-                    Map<String, Object> aggrInfoClassAsMap;
-                    try {
-                        // TODO: Need to update the below code
-                        aggrInfoClassAsMap = convertObjectToMap(funcVar.get("results").getAggregationInfoResult());
-                       LOGGER.info("aggrInfoClassAsMap: {}", aggrInfoClassAsMap);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
+    // TODO: Update these based on requirements, currently leaving Invalid as Default impl doesn't need engine
+    @Override
+    public AnalyzerConstants.RegisterRecommendationEngineStatus registerEngine(KruizeRecommendationEngine kruizeRecommendationEngine) {
+        return AnalyzerConstants.RegisterRecommendationEngineStatus.INVALID;
+    }
 
-        return "";
+
+    @Override
+    public List<KruizeRecommendationEngine> getEngines() {
+        return null;
     }
 }

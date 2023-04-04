@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.11_rm
+          image: kruize/autotune_operator:0.0.12_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -74,15 +74,15 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
-          livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 20
+      #          livenessProbe:
+      #            exec:
+      #              command:
+      #                - sh
+      #                - -c
+      #                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
+      #            initialDelaySeconds: 10
+      #            periodSeconds: 5
+      #            timeoutSeconds: 20
       volumes:
         - name: config-volume
           configMap:

@@ -16,15 +16,17 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.operator.KruizeOperator;
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.serviceObjects.CreateExperimentSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.utils.Utils;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.database.dao.ExperimentDAO;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.operator.KruizeOperator;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,24 +82,32 @@ public class CreateExperiment extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentSO> experimentSOList = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentSO[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             // check for bulk entries and respond accordingly
-            if (experimentSOList.size() > 1) {
+            if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
-                for (CreateExperimentSO createExperimentSO : experimentSOList) {
-                    KruizeObject kruizeObject = ServiceHelpers.Converters.KruizeObjectConverters.convertCreateExperimentSOToKruizeObject(createExperimentSO);
-                    if (null != kruizeObject) {
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
-                    }
                 }
                 new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    for (KruizeObject ko : kruizeExpList) {
+                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                        addedToDB = experimentDAO.addExperimentToDB(ko);
+                    }
+                    if (addedToDB.isSuccess())
+                        sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                    else {
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                    }
                 } else {
                     LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
                     sendErrorResponse(response, null, invalidKruizeObject.getValidationData().getErrorCode(), invalidKruizeObject.getValidationData().getMessage());
@@ -122,15 +132,23 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            KruizeObject[] kruizeExpList = new Gson().fromJson(inputData, KruizeObject[].class);
-            for (KruizeObject ko : kruizeExpList) {
-                mainKruizeExperimentMap.remove(ko.getExperimentName());
-                KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+            CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
+            for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                if (mainKruizeExperimentMap.containsKey(ko.getExperimentName())) {
+                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(ko.getExperimentName());
+                    if (validationOutputData.isSuccess()) {
+                        mainKruizeExperimentMap.remove(ko.getExperimentName());
+                        KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+                    }else{
+                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                    }
+                }
+                else
+                    throw new Exception("Experiment not found!");
             }
             sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

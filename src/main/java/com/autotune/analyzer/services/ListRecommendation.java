@@ -17,11 +17,13 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsSO;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
@@ -160,18 +162,17 @@ public class ListRecommendation extends HttpServlet {
             }
         }
         if (!error) {
-            List<ListRecommendationsSO> recommendationList = new ArrayList<ListRecommendationsSO>();
+            List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
             for (KruizeObject ko : kruizeObjectList) {
                 try {
-                    LOGGER.debug(ko.getDeployment_name());
-                    LOGGER.debug(ko.getDeployments().toString());
-                    ListRecommendationsSO listRecommendationsSO = ServiceHelpers.Converters.KruizeObjectConverters.
+                    LOGGER.debug(ko.getKubernetes_objects().toString());
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                                                                     convertKruizeObjectToListRecommendationSO(
                                                                         ko,
                                                                         getLatest,
                                                                         checkForTimestamp,
                                                                         monitoringTimestamp);
-                    recommendationList.add(listRecommendationsSO);
+                    recommendationList.add(listRecommendationsAPIObject);
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }
@@ -180,10 +181,8 @@ public class ListRecommendation extends HttpServlet {
             ExclusionStrategy strategy = new ExclusionStrategy() {
                 @Override
                 public boolean shouldSkipField(FieldAttributes field) {
-                    if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
-                        return true;
-                    }
-                    return false;
+                    return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
+                            || ( field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
                 }
 
                 @Override

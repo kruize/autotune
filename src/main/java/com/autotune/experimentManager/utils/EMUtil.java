@@ -22,6 +22,7 @@ import com.autotune.common.data.result.*;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
@@ -147,9 +148,9 @@ public class EMUtil {
         List<PodResultData> podResultDataList = new ArrayList<>();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+            if (null != podMetric.getMetricResult() && Float.MIN_VALUE != podMetric.getMetricResult().getAggregationInfoResult().getAvg()) {
                 MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
-                metricAggregationInfoResults.setAvg(podMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
+                metricAggregationInfoResults.setAvg(podMetric.getMetricResult().getAggregationInfoResult().getAvg());
                 HashMap<String, MetricAggregationInfoResults> generalInfoResultHashMap = new HashMap<>();
                 generalInfoResultHashMap.put("general_info", metricAggregationInfoResults);
                 PodResultData podResultData = new PodResultData();
@@ -159,31 +160,32 @@ public class EMUtil {
                 podResultDataList.add(podResultData);
             }
         }
-        List<Containers> containersList = new ArrayList<>();
+        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
-            Containers containers = new Containers();
-            containers.setContainer_name(containerMapEntry.getKey());
-            containers.setImage_name(null);
+            ContainerData containerData = new ContainerData();
+            containerData.setContainer_name(containerMapEntry.getKey());
+            containerData.setContainer_image_name(null);
 
-            HashMap<AnalyzerConstants.MetricName, HashMap<String, com.autotune.common.data.metrics.MetricResults>> containerMetrics = new HashMap<>();
+            HashMap<AnalyzerConstants.MetricName, Metric> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg()) {
+                Metric metric = new Metric();
+                if (null != containerMetric.getMetricResult() && Float.MIN_VALUE != containerMetric.getMetricResult().getAggregationInfoResult().getAvg()) {
                     MetricResults metricResults = new MetricResults();
                     MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
-                    metricAggregationInfoResults.setAvg(containerMetric.getEmMetricResult().getAggregationInfoResult().getAvg());
-                    metricAggregationInfoResults.setFormat(containerMetric.getEmMetricResult().getAggregationInfoResult().getFormat());
+                    metricAggregationInfoResults.setAvg(containerMetric.getMetricResult().getAggregationInfoResult().getAvg());
+                    metricAggregationInfoResults.setFormat(containerMetric.getMetricResult().getAggregationInfoResult().getFormat());
                     metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                    HashMap<String, MetricResults> resultsHashMap = new HashMap<>();
-                    resultsHashMap.put("results", metricResults);
-                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);
+                    metricResults.setName(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()).toString());
+                    metric.setMetricResult(metricResults);
+                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), metric);
                 }
             }
-            containers.setContainer_metrics(containerMetrics);
-            containersList.add(containers);
+            containerData.setMetrics(containerMetrics);
+            containerDataMap.put(containerData.getContainer_name(), containerData);
         }
         deploymentResultData.setPod_metrics(podResultDataList);
-        deploymentResultData.setContainers(containersList);
+        deploymentResultData.setContainerDataMap(containerDataMap);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
         experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));

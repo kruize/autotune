@@ -16,6 +16,7 @@ package com.autotune.common.data.metrics;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -31,27 +32,33 @@ import java.util.List;
  * value_type: "double"
  */
 public final class Metric {
-    private final String name;
-    private final String query;
-    private final String datasource;
+    private String name;
+    private String query;
+    private String datasource;
     @SerializedName("value_type")
-    private final String valueType;
+    private String valueType;
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
     private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
+    @SerializedName("results")
     private MetricResults metricResults;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")
-    private List<AggregationFunctions> aggregationFunctions;
+    private HashMap<String, AggregationFunctions> aggregationFunctionsMap;
 
     public Metric(String name,
                   String query,
                   String datasource,
-                  String valueType) {
+                  String valueType,
+                  String kubernetesObject) {
         this.name = name;
         this.query = query;
         this.datasource = datasource;
         this.valueType = valueType;
+        this.kubernetesObject = kubernetesObject;
+    }
+    public Metric() {
+
     }
     public String getName() {
         return name;
@@ -69,11 +76,11 @@ public final class Metric {
         return valueType;
     }
 
-    public MetricResults getEmMetricResult() {
+    public MetricResults getMetricResult() {
         return metricResults;
     }
 
-    public void setEmMetricResult(MetricResults metricResults) {
+    public void setMetricResult(MetricResults metricResults) {
         this.metricResults = metricResults;
     }
 
@@ -93,12 +100,12 @@ public final class Metric {
         this.kubernetesObject = kubernetesObject;
     }
 
-    public List<AggregationFunctions> getAggregationFunctions() {
-        return aggregationFunctions;
+    public HashMap<String, AggregationFunctions> getAggregationFunctionsMap() {
+        return aggregationFunctionsMap;
     }
 
-    public void setAggregationFunctions(List<AggregationFunctions> aggregationFunctions) {
-        this.aggregationFunctions = aggregationFunctions;
+    public void setAggregationFunctionsMap(HashMap<String, AggregationFunctions> aggregationFunctionsMap) {
+        this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 
     @Override
@@ -109,8 +116,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
-                ", emMetricResult=" + metricResults +
-                ", aggregationFunctions=" + aggregationFunctions +
+                ", aggregationFunctionsMap=" + aggregationFunctionsMap +
                 '}';
     }
 }

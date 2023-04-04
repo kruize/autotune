@@ -30,26 +30,17 @@ public class MetricAggregationInfoResults {
     private String format;
 
     public MetricAggregationInfoResults() {
-        avg = Double.MIN_VALUE;
-        count = Integer.MIN_VALUE;
-        max = Double.MIN_VALUE;
-        median = Double.MIN_VALUE;
-        min = Double.MIN_VALUE;
-        mode = Double.MIN_VALUE;
-        range = Double.MIN_VALUE;
-        sum = Double.MIN_VALUE;
-        format = "";
     }
 
     public MetricAggregationInfoResults(JSONObject jsonObject) {
-        this.avg = (jsonObject.has(KruizeConstants.JSONKeys.MEAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEAN) : Double.MIN_VALUE;
-        this.count = (jsonObject.has(KruizeConstants.JSONKeys.COUNT)) ? jsonObject.getInt(KruizeConstants.JSONKeys.COUNT) : Integer.MIN_VALUE;
-        this.max = (jsonObject.has(KruizeConstants.JSONKeys.MAX)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MAX) : Double.MIN_VALUE;
-        this.median = (jsonObject.has(KruizeConstants.JSONKeys.MEDIAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEDIAN) : Double.MIN_VALUE;
-        this.min = (jsonObject.has(KruizeConstants.JSONKeys.MIN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MIN) : Double.MIN_VALUE;
-        this.mode = (jsonObject.has(KruizeConstants.JSONKeys.MODE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MODE) : Double.MIN_VALUE;
-        this.range = (jsonObject.has(KruizeConstants.JSONKeys.RANGE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.RANGE) : Double.MIN_VALUE;
-        this.sum = (jsonObject.has(KruizeConstants.JSONKeys.SUM)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.SUM) : Double.MIN_VALUE;
+        this.avg = (jsonObject.has(KruizeConstants.JSONKeys.MEAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEAN) : null;
+        this.count = (jsonObject.has(KruizeConstants.JSONKeys.COUNT)) ? jsonObject.getInt(KruizeConstants.JSONKeys.COUNT) : null;
+        this.max = (jsonObject.has(KruizeConstants.JSONKeys.MAX)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MAX) : null;
+        this.median = (jsonObject.has(KruizeConstants.JSONKeys.MEDIAN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MEDIAN) : null;
+        this.min = (jsonObject.has(KruizeConstants.JSONKeys.MIN)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MIN) : null;
+        this.mode = (jsonObject.has(KruizeConstants.JSONKeys.MODE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.MODE) : null;
+        this.range = (jsonObject.has(KruizeConstants.JSONKeys.RANGE)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.RANGE) : null;
+        this.sum = (jsonObject.has(KruizeConstants.JSONKeys.SUM)) ? jsonObject.getDouble(KruizeConstants.JSONKeys.SUM) : null;
         this.format = (jsonObject.has(KruizeConstants.JSONKeys.FORMAT)) ? jsonObject.getString(KruizeConstants.JSONKeys.FORMAT) : "";
     }
 
@@ -124,6 +115,7 @@ public class MetricAggregationInfoResults {
     public void setRange(Double range) {
         this.range = range;
     }
+
     @Override
     public String toString() {
         return "MetricAggregationInfoResult{" +

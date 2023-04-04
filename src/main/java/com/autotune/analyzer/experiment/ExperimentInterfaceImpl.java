@@ -15,13 +15,16 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.result.*;
-import com.autotune.common.k8sObjects.ContainerObject;
-import com.autotune.common.k8sObjects.DeploymentObject;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.Utils;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +39,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
+                    LOGGER.debug("kruizeObject = {}", kruizeObject.toString());
                     kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     kruizeObject.setExperimentId(Utils.generateID(toString()));
                     mainKruizeExperimentMap.put(
@@ -45,13 +49,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
-        return true;
-    }
-
-    @Override
-    public boolean addExperimentToDB(KruizeObject kruizeObject) {
-        //TODO insert in to db
-        updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+        LOGGER.debug("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
         return true;
     }
 
@@ -68,79 +66,72 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 (resultData) -> {
                     resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
-                    Set<ExperimentResultData> results = null;
+                    Set<ExperimentResultData> results;
                     if (ko.getResultData() == null)
                         results = new HashSet<>();
                     else
                         results = ko.getResultData();
                     results.add(resultData);
                     ko.setResultData(results);
-                    HashMap<String, DeploymentObject> deploymentsMap = ko.getDeployments();
-                    if (null == deploymentsMap) {
-                        deploymentsMap = new HashMap<>();
-                    }
-                    List<DeploymentResultData> resultDeploymentList = resultData.getDeployments();
-                    for (DeploymentResultData deploymentResultData : resultDeploymentList) {
-                        String dName = deploymentResultData.getDeployment_name();
-                        DeploymentObject deploymentObject;
-                        HashMap<String, ContainerObject> containersMap;
-                        if (null == deploymentsMap.get(dName)) {
-                            deploymentObject = new DeploymentObject(dName);
-                            containersMap = new HashMap<>();
+                    // creating a temp map to store k8sdata
+                    HashMap<String, K8sObject> k8sObjectHashMap = new HashMap<>();
+                    for (K8sObject k8sObj : ko.getKubernetes_objects())
+                        k8sObjectHashMap.put(k8sObj.getName(), k8sObj);
+
+                    List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
+                    for (K8sObject resultK8sObject : resultK8sObjectList) {
+                        String dName = resultK8sObject.getName();
+                        String dType = resultK8sObject.getType();
+                        String dNamespace = resultK8sObject.getNamespace();
+                        K8sObject k8sObject;
+                        HashMap<String, ContainerData> containerDataMap;
+                        if (null == k8sObjectHashMap.get(dName)) {
+                            k8sObject = new K8sObject(dName, dType, dNamespace);
+                            containerDataMap = new HashMap<>();
                         } else {
-                            deploymentObject = deploymentsMap.get(dName);
-                            containersMap = deploymentObject.getContainers();
+                            k8sObject = k8sObjectHashMap.get(dName);
+                            containerDataMap = k8sObject.getContainerDataMap();
                         }
-                        List<Containers> resultContainerList = deploymentResultData.getContainers();
-                        for (Containers containers : resultContainerList) {
-                            String cName = containers.getContainer_name();
-                            String imgName = containers.getImage_name();
-                            ContainerObject containerObject;
-                            if (null == containersMap.get(cName)) {
-                                containerObject = new ContainerObject(cName, imgName);
+                        HashMap<String, ContainerData> resultContainerDataMap = resultK8sObject.getContainerDataMap();
+                        for (ContainerData resultContainerData : resultContainerDataMap.values()) {
+                            String cName = resultContainerData.getContainer_name();
+                            String imgName = resultContainerData.getContainer_image_name();
+                            HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = resultContainerData.getMetrics();
+                            ContainerData containerData;
+                            if (null == containerDataMap.get(cName)) {
+                                containerData = new ContainerData(cName, imgName, resultContainerData.getContainerRecommendations(), metricsMap);
                             } else {
-                                containerObject = containersMap.get(cName);
+                                containerData = containerDataMap.get(cName);
                             }
-                            HashMap<AnalyzerConstants.AggregatorType, MetricAggregationInfoResults> aggregatorHashMap = new HashMap<>();
-                            for (AnalyzerConstants.MetricName aggregationInfoName : containers.getContainer_metrics().keySet()) {
-                                MetricAggregationInfoResults aggregatorResult = containers.getContainer_metrics().get(aggregationInfoName).get("results").getAggregationInfoResult();
-                                aggregatorHashMap.put(AnalyzerConstants.AggregatorType.valueOf(aggregationInfoName.toString()), aggregatorResult);
+                            HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                            for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
+                                Collection<MetricResults> metricResultsList = intervalResults.getMetricResultsMap().values();
+                                for (MetricResults metricResults : metricResultsList)
+                                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
                             }
-                            HashMap<Timestamp, StartEndTimeStampResults> resultsAggregatorStartEndTimeStampMap = containerObject.getResults();
+                            HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
 
-                            if (null == resultsAggregatorStartEndTimeStampMap) {
-                                resultsAggregatorStartEndTimeStampMap = new HashMap<>();
+                            if (null == resultsIntervalMap) {
+                                resultsIntervalMap = new HashMap<>();
                             }
-                            StartEndTimeStampResults startEndTimeStampResults = new StartEndTimeStampResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
-                            startEndTimeStampResults.setMetrics(aggregatorHashMap);
-                            resultsAggregatorStartEndTimeStampMap.put(resultData.getEndtimestamp(), startEndTimeStampResults);
+                            IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                            intervalResults.setMetricResultsMap(metricResultsHashMap);
+                            resultsIntervalMap.put(resultData.getEndtimestamp(), intervalResults);
 
-                            containerObject.setResults(resultsAggregatorStartEndTimeStampMap);
-                            containersMap.put(cName, containerObject);
+                            containerData.setResults(resultsIntervalMap);
+                            containerDataMap.put(cName, containerData);
                         }
-                        deploymentObject.setContainers(containersMap);
-                        deploymentsMap.put(dName, deploymentObject);
+                        k8sObject.setContainerDataMap(containerDataMap);
+                        k8sObjectHashMap.put(dName, k8sObject);
                     }
-                    ko.setDeployments(deploymentsMap);
+                    List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
+                    ko.setKubernetes_objects(k8sObjectList);
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
                 }
         );
+        LOGGER.debug("{}", new Gson().toJson(experimentResultDataList));
         // TODO   Insert into database
         return true;
-    }
-
-    @Override
-    public boolean addResultsToDB(KruizeObject kruizeObject, ExperimentResultData resultData) {
-        // TODO   Insert into database
-        resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-        return false;
-    }
-
-
-    @Override
-    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) {
-        //TOdo load all experiments from DB
-        return false;
     }
 
 }

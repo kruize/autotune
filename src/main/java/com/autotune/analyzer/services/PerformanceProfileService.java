@@ -16,12 +16,14 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.google.gson.ExclusionStrategy;
@@ -79,8 +81,8 @@ public class PerformanceProfileService extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            PerformanceProfile performanceProfile = new Gson().fromJson(inputData, PerformanceProfile.class);
-            ValidationOutputData validationOutputData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
                 LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
                         performanceProfile.getName(), performanceProfile.getProfile_version());
@@ -90,6 +92,8 @@ public class PerformanceProfileService extends HttpServlet {
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Validation failed: " + e.getMessage());
+        } catch (InvalidValueException e) {
+            throw new RuntimeException(e);
         }
     }
 

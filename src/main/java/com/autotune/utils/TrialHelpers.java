@@ -108,7 +108,7 @@ public class TrialHelpers {
             MetricResults metricResults = new MetricResults(podMetric.getJSONObject(SUMMARY_RESULTS));
             String metricName = podMetric.getString(NAME);
             Metric metric = experimentTrial.getPodMetricsHashMap().get(metricName);
-            metric.setEmMetricResult(metricResults);
+            metric.setMetricResult(metricResults);
         }
         LOGGER.info("Successfully updated results for trialNum: " + trialNumber);
     }
@@ -222,7 +222,7 @@ public class TrialHelpers {
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
                         KruizeDeploymentInfo.getMonitoringAgent(),
-                        tunable.getValueType());
+                        tunable.getValueType(), null);
                 if (containerMetricsHashMap != null
                         && !containerMetricsHashMap.isEmpty()
                         && containerMetricsHashMap.containsKey(applicationServiceStack.getContainerName())) {

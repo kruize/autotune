@@ -15,20 +15,19 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-public class UpdateResultsSO extends BaseSO{
-    @SerializedName(KruizeConstants.JSONKeys.START_TIMESTAMP)
+public class UpdateResultsAPIObject extends BaseSO{
+    @SerializedName(KruizeConstants.JSONKeys.INTERVAL_START_TIME)
     public Timestamp startTimestamp;
-    @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
+    @SerializedName(KruizeConstants.JSONKeys.INTERVAL_END_TIME)
     public Timestamp endTimestamp;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
-    private List<K8sObject> kubernetesObjects;
+    private List<KubernetesAPIObject> kubernetesAPIObjects;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -46,11 +45,20 @@ public class UpdateResultsSO extends BaseSO{
         this.endTimestamp = endTimestamp;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
-        return kubernetesObjects;
+    public List<KubernetesAPIObject> getKubernetesObjects() {
+        return kubernetesAPIObjects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetesObjects) {
-        this.kubernetesObjects = kubernetesObjects;
+    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        this.kubernetesAPIObjects = kubernetesAPIObjects;
+    }
+
+    @Override
+    public String toString() {
+        return "UpdateResultsAPIObject{" +
+                "startTimestamp=" + startTimestamp +
+                ", endTimestamp=" + endTimestamp +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects +
+                '}';
     }
 }

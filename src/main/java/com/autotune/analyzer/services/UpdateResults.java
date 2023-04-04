@@ -17,15 +17,17 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.serviceObjects.UpdateResultsSO;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.utils.Utils;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.database.dao.ExperimentDAO;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,23 +70,47 @@ public class UpdateResults extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-            List<UpdateResultsSO> updateResultsSOList = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsSO[].class));
+            List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
             // check for bulk entries and respond accordingly
-            if (updateResultsSOList.size() > 1) {
+            if (updateResultsAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT );
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
-                for (UpdateResultsSO updateResultsSO : updateResultsSOList) {
-                    experimentResultDataList.add(ServiceHelpers.Converters.KruizeObjectConverters.convertUpdateResultsSOToExperimentResultData(updateResultsSO));
+                for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+                    experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
                 }
                 LOGGER.debug(experimentResultDataList.toString());
-                new ExperimentInitiator().validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
+                ExperimentInitiator experimentInitiator = new ExperimentInitiator();
+                ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKExperimentResultData) {
-                    sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    for (ExperimentResultData resultData : experimentResultDataList) {
+                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                        addedToDB = experimentDAO.addResultsToDB(resultData);
+                    }
+                    if (addedToDB.isSuccess())
+                        sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                    else {
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                    }
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
                     sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
+                }
+
+                if (validationOutputData.isSuccess()) {
+                    List<String> experimentList = new ArrayList<String>();
+                    for (ExperimentResultData experimentResultData : experimentResultDataList) {
+                        String experimentName = experimentResultData.getExperiment_name();
+                        if (mainKruizeExperimentMap.containsKey(experimentName))
+                            experimentList.add(experimentName);
+                    }
+                    if (!experimentList.isEmpty()) {
+                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
+                        if (!recommendationCheck)
+                            LOGGER.error("Failed to create recommendations");
+                    }
                 }
             }
         } catch (Exception e) {

@@ -38,6 +38,14 @@ public class InitializeDeployment
 		String monitoring_agent = System.getenv(AnalyzerConstants.MONITORING_AGENT);
 		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
 		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
+		int DEFAULT_BULKUPLOAD_LIMIT = 1;
+		AnalyzerConstants.PersistenceType DEFAULT_PERSISTENCE_TYPE = AnalyzerConstants.PersistenceType.LOCAL;
+		int bulkupload_createexperiment_limit = System.getenv(AnalyzerConstants.BULKUPLOAD_CREATEEXPERIMENT_LIMIT) != null ?
+				Integer.parseInt(System.getenv(AnalyzerConstants.BULKUPLOAD_CREATEEXPERIMENT_LIMIT)) :
+				DEFAULT_BULKUPLOAD_LIMIT;
+		AnalyzerConstants.PersistenceType PERSISTENCE_TYPE = System.getenv(AnalyzerConstants.PERSISTANCE_STORAGE) != null ?
+				AnalyzerConstants.PersistenceType.valueOf(System.getenv(AnalyzerConstants.PERSISTANCE_STORAGE)) :
+				DEFAULT_PERSISTENCE_TYPE;
 
 		KruizeDeploymentInfo.setClusterType(cluster_type);
 		KruizeDeploymentInfo.setKubernetesType(k8S_type);
@@ -64,5 +72,9 @@ public class InitializeDeployment
 		KruizeDeploymentInfo.initiateEventLogging();
 
 		KruizeDeploymentInfo.logDeploymentInfo();
+
+		KruizeDeploymentInfo.setBulkupload_createexperiment_limit(bulkupload_createexperiment_limit);
+		KruizeDeploymentInfo.setPersistence_type(PERSISTENCE_TYPE);
+
 	}
 }

@@ -93,21 +93,31 @@ def update_results(result_json_file):
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment input json
-def list_recommendations(experiment_name):
-
+def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None):
+    PARAMS = ""
     print("\nListing the recommendations...")
     url = URL + "/listRecommendations"
     print("URL = ", url)
 
-    if (experiment_name == ""):
-        response = requests.get(url)
+    if experiment_name == None:
+        if latest == None and monitoring_end_time == None:
+            response = requests.get(url)
+        elif latest != None:
+            PARAMS = {'latest' : latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'monitoring_end_time' : monitoring_end_time}
     else:
-        PARAMS = {'experiment_name': experiment_name}
-        print("PARAMS = ", PARAMS)
-        response = requests.get(url = url, params = PARAMS)
+        if latest == None and monitoring_end_time == None:
+            PARAMS = {'experiment_name': experiment_name}
+        elif latest != None:
+            PARAMS = {'experiment_name': experiment_name, 'latest' : latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time' : monitoring_end_time}
+        
+    print("PARAMS = ", PARAMS)
+    response = requests.get(url = url, params = PARAMS)
 
     print("Response status code = ", response.status_code)
-
     print("\n************************************************************")
     print(response.text)
     print("\n************************************************************")
@@ -123,13 +133,19 @@ def delete_experiment(input_json_file, invalid_header = False):
     print("\nDeleting the experiment...")
     url = URL + "/createExperiment"
     print("URL = ", url)
-    
+
+    experiment_name = input_json[0]['experiment_name']
+
+    delete_json = [{
+        "experiment_name": experiment_name
+    }]
+
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=input_json, headers=headers)
+        response = requests.delete(url, json=delete_json, headers=headers)
     else:
-        response = requests.delete(url, json=input_json)
+        response = requests.delete(url, json=delete_json)
         
     print(response)
     print("Response status code = ", response.status_code)

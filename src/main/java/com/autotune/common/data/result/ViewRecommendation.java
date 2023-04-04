@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.k8sObjects.ContainerObject;
-
 import java.util.HashMap;
 
 /**
@@ -26,9 +24,9 @@ public class ViewRecommendation {
     private String experiment_name;
     private String namespace;
     private String deployment_name;
-    private HashMap<String, ContainerObject> containers;
+    private HashMap<String, ContainerData> containers;
 
-    public ViewRecommendation(String experiment_name, String namespace, String deployment_name, HashMap<String, ContainerObject> containers) {
+    public ViewRecommendation(String experiment_name, String namespace, String deployment_name, HashMap<String, ContainerData> containers) {
         this.experiment_name = experiment_name;
         this.namespace = namespace;
         this.deployment_name = deployment_name;
@@ -59,11 +57,11 @@ public class ViewRecommendation {
         this.deployment_name = deployment_name;
     }
 
-    public HashMap<String, ContainerObject> getContainers() {
+    public HashMap<String, ContainerData> getContainers() {
         return containers;
     }
 
-    public void setContainers(HashMap<String, ContainerObject> containers) {
+    public void setContainers(HashMap<String, ContainerData> containers) {
         this.containers = containers;
     }
 }

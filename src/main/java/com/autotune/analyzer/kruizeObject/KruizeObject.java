@@ -16,10 +16,11 @@
 package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.k8sObjects.*;
+import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
@@ -55,13 +56,11 @@ public final class KruizeObject {
     private AnalyzerConstants.ExperimentStatus status;
     @SerializedName("performance_profile")
     private String performanceProfile;
-    private String deployment_name;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
-    private Set<ExperimentResultData> resultData;
+    private Set<ExperimentResultData> resultData;                   // TODO: Need to remove this
     private ValidationOutputData validationData;
-    private HashMap<String, DeploymentObject> deployments;
     private List<K8sObject> kubernetes_objects;
 
 
@@ -74,7 +73,7 @@ public final class KruizeObject {
                         SelectorInfo selectorInfo,
                         String performanceProfile,
                         ObjectReference objectReference
-                        ) throws InvalidValueException {
+    ) throws InvalidValueException {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put(AnalyzerConstants.AutotuneObjectConstants.NAME, experimentName);
@@ -180,14 +179,6 @@ public final class KruizeObject {
         this.performanceProfile = performanceProfile;
     }
 
-    public String getDeployment_name() {
-        return deployment_name;
-    }
-
-    public void setDeployment_name(String deployment_name) {
-        this.deployment_name = deployment_name;
-    }
-
     public TrialSettings getTrial_settings() {
         return trial_settings;
     }
@@ -228,14 +219,6 @@ public final class KruizeObject {
         this.validationData = validationData;
     }
 
-    public HashMap<String, DeploymentObject> getDeployments() {
-        return deployments;
-    }
-
-    public void setDeployments(HashMap<String, DeploymentObject> deployments) {
-        this.deployments = deployments;
-    }
-
     public String getHpoAlgoImpl() {
         return hpoAlgoImpl;
     }
@@ -256,11 +239,11 @@ public final class KruizeObject {
         this.apiVersion = apiVersion;
     }
 
-    public List<K8sObject> getKubernetesObjects() {
+    public List<K8sObject> getKubernetes_objects() {
         return kubernetes_objects;
     }
 
-    public void setKubernetesObjects(List<K8sObject> kubernetes_objects) {
+    public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
         this.kubernetes_objects = kubernetes_objects;
     }
 
@@ -271,6 +254,7 @@ public final class KruizeObject {
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
+
 
     @Override
     public String toString() {
@@ -290,12 +274,12 @@ public final class KruizeObject {
                 ", objectReference=" + objectReference +
                 ", status=" + status +
                 ", performanceProfile='" + performanceProfile + '\'' +
-                ", deployment_name='" + deployment_name + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experimentUseCaseType +
                 ", resultData=" + resultData +
                 ", validationData=" + validationData +
+                ", kubernetes_objects=" + kubernetes_objects +
                 '}';
     }
 }

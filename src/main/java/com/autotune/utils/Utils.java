@@ -18,13 +18,14 @@ package com.autotune.utils;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.k8sObjects.ContainerObject;
+import com.autotune.common.data.result.ContainerData;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
@@ -35,6 +36,7 @@ import java.util.*;
  */
 public class Utils
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 	private Utils() { }
 
 	public static String generateID(Object object) {
@@ -195,11 +197,11 @@ public class Utils
 	}
 
 	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
-		if (object instanceof ContainerObject) {
+		if (object instanceof ContainerData) {
 			ExclusionStrategy strategy = new ExclusionStrategy() {
 				@Override
 				public boolean shouldSkipField(FieldAttributes field) {
-					if (field.getDeclaringClass() == ContainerObject.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+					if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
 						return true;
 					}
 					return false;

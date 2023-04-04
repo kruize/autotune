@@ -1,8 +1,8 @@
 [
   {
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-    "start_timestamp": "2022-01-23T18:25:43.511Z",
-    "end_timestamp": "2022-01-23T18:25:43.511Z",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:25:43.511Z",
     "deployments": [
       {
         "deployment_name": "tfb-qrh-sample",

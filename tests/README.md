@@ -124,14 +124,16 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
   - Validates the trial result summary obtained from the listTrialStatus API once the experiment is completed.
 
 ### Remote monitoring tests
-  Here we test Kruize [Remote monitoring APIs](/design/MonitoringModeAPI.md). 
 
+  Here we test Kruize [Remote monitoring APIs](/design/MonitoringModeAPI.md). 
 
 #### API tests
 
   The tests does the following:
   - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
   - Validates the behaviour of createExperiment, updateResults and listRecommendations APIs in various scenarios covering both positive and negative usecases.
+
+  For details refer this [doc](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
 
 #### Stress test
 
@@ -144,7 +146,7 @@ To run the stress test refer the Stress test [README](/tests/scripts/remote_moni
 
 - Minikube setup 
 - Tools like docker, kubectl, and jq
-- python, pytest
+- python
 
 Clone the kruize/benchmarks repo using the below command:
 
@@ -194,7 +196,7 @@ For example,
 To run remote monitoring tests,
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests -r /home/benchmarks --resultsdir=/home/results
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -i kruize/autotune_operator:0.0.11_mvp --testsuite=remote_monitoring_tests --resultsdir=/home/results
 ```
 
 ## How to test a specific autotune module?

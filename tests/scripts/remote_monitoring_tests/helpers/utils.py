@@ -23,11 +23,17 @@ from datetime import datetime, timedelta
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
+ERROR_409_STATUS_CODE = 409
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
+
+NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
+EXP_EXISTS_MSG = "Experiment name already exists: "
+INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
+INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 5 seconds"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -46,12 +52,12 @@ create_exp_test_data = {
         "threshold": "\"0.1\""
 }
 
-# version, experiment_name,start_timestamp,end_timestamp,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
+# version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
         "version": "\"1.0\"",
         "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "start_timestamp": "\"2022-01-23T18:25:43.511Z\"",
-        "end_timestamp": "\"2022-01-23T18:40:43.511Z\"",
+        "interval_start_time": "\"2022-01-23T18:25:43.511Z\"",
+        "interval_end_time": "\"2022-01-23T18:40:43.511Z\"",
         "type": "\"deployment\"",
         "name": "\"tfb-qrh-sample\"",
         "namespace": "\"default\"",
@@ -114,7 +120,7 @@ def generate_test_data(csvfile, test_data):
 
             data_str = "\"" + test_name + "\"," + status_code
             for k in test_data:
-                data_str += "," 
+                data_str += ","
                 if  k != key :
                         data_str += test_data[k]
                 else:
@@ -154,7 +160,7 @@ def read_json_data_from_file(filename):
 
 def read_test_data_from_csv(csv_file):
     test_data = []
-    
+
     with open(csv_file, newline='') as csvfile:
         data = csv.reader(csvfile, delimiter=',')
         #next(data)  # skip header row
@@ -173,10 +179,10 @@ def generate_json(find_arr, json_file, filename, i, update_timestamps = False):
 
     if update_timestamps == True:
         find = "2022-01-23T18:25:43.511Z"
-        replace = increment_timestamp(find, i) 
+        replace = increment_timestamp(find, i)
         data = data.replace(find, replace)
 
-        find = "2022-01-23T18:55:43.511Z"
+        find = "2022-01-23T18:40:43.570Z"
         replace = increment_timestamp(find, i) 
         data = data.replace(find, replace)
 
@@ -191,6 +197,12 @@ def increment_timestamp(input_timestamp, step):
 
     return timestamp
 
+def increment_timestamp_by_given_mins(input_timestamp, minutes):
+    input_date = datetime.strptime(input_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    output_date = input_date + timedelta(minutes=minutes)
+    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+
+    return timestamp
 
 def get_datetime():
     my_datetime = datetime.today()
@@ -198,7 +210,7 @@ def get_datetime():
     time_str = time_str + "Z"
     return time_str
 
-def increment_date_time(input_date_str, term):
+def term_based_start_time(input_date_str, term):
     duration = {"short_term": 1, "medium_term": 7, "long_term": 15}
     input_date = datetime.strptime(input_date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -207,7 +219,7 @@ def increment_date_time(input_date_str, term):
 
     return output_date_str
 
-def validate_reco_json(create_exp_json, update_results_json, list_reco_json):
+def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours = None, test_name = None):
 
     # Validate experiment
     assert create_exp_json["version"] == list_reco_json["version"]
@@ -215,87 +227,123 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json):
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
     # Validate kubernetes objects
-    length = len(list_reco_json["kubernetes_objects"])
-    for i in range(length):
-        validate_kubernetes_obj(create_exp_json["kubernetes_objects"][i], update_results_json, list_reco_json["kubernetes_objects"][i])
+    if update_results_json != None:
+        length = len(update_results_json[0]["kubernetes_objects"])
+        for i in range(length):
+            update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
+            create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
+            list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+    else:
+            update_results_kubernetes_obj = None
+            create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
+            list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
-
-def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_json, list_reco_kubernetes_obj):
+def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
 
     # Validate type, name, namespace
-    assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
-    assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
-    assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
+    if update_results_kubernetes_obj == None:
+        assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
+        assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
+        assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-    # Validate the count of containers
-    assert len(list_reco_kubernetes_obj["containers"]) == len(create_exp_kubernetes_obj["containers"])
+        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
+        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
 
-    container_names = []
-    length = len(create_exp_kubernetes_obj["containers"])
-    for i in range(length):
-        container_names.append(create_exp_kubernetes_obj["containers"][i]["container_name"])
+    else:
+        assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
+        assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
+        assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
 
-    container_names.sort()
-    print(container_names)
+        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
+        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
+        if test_name == "valid_monitoring_end_time":
+            exp_containers_length = 1
+
+        # Validate the count of containers
+        assert list_reco_containers_length == exp_containers_length, \
+            f"list reco containers size not same as update results containers size - list_reco = {list_reco_containers_length} \
+              create_exp = {exp_containers_length}"
 
     # Validate if all the containers are present
-    for i in range(length):
+    for i in range(exp_containers_length):
         list_reco_container = None
-        update_results_container = None
-        for j in range(length):
-            if list_reco_kubernetes_obj["containers"][j]["container_name"] == create_exp_kubernetes_obj["containers"][i]["container_name"]:
-                create_exp_container = create_exp_kubernetes_obj["containers"][i]
-                list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(create_exp_container, update_results_json, list_reco_container)
 
-def validate_container(create_exp_container, update_results_json, list_reco_container):
+        for j in range(list_reco_containers_length):
+            if list_reco_kubernetes_obj["containers"][j]["container_name"] == create_exp_kubernetes_obj["containers"][i]["container_name"]:
+                update_results_container = create_exp_kubernetes_obj["containers"][i]
+                list_reco_container = list_reco_kubernetes_obj["containers"][j]
+                validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours)
+
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
     # Validate container image name and container name
-    if create_exp_container != None and list_reco_container != None:
-        assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"]
-        assert list_reco_container["container_name"] == create_exp_container["container_name"]
+    if update_results_container != None and list_reco_container != None:
+        assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
+            f"Container image names did not match! Actual -  {list_reco_container['container_image_name']} Expected - {update_results_container['container_image_name']}"
+
+        assert list_reco_container["container_name"] == update_results_container["container_name"],\
+            f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
     # Validate timestamps
-    end_timestamp = update_results_json["end_timestamp"]
-    start_timestamp = update_results_json["start_timestamp"]
-    duration_based_obj = list_reco_container["recommendations"][end_timestamp]["duration_based"]
+    if update_results_json != None:
+        if expected_duration_in_hours == None:
+            duration_in_hours = 0.0
+        else:
+            duration_in_hours = expected_duration_in_hours
+        for update_results in update_results_json:
+            interval_end_time = update_results["interval_end_time"]
+            interval_start_time = update_results["interval_start_time"]
+            print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
 
-    duration_terms = ["short_term", "medium_term", "long_term"]
-    for term in duration_terms:
-        if check_if_recommendations_are_present(duration_based_obj[term]):
+            if check_if_recommendations_are_present(list_reco_container["recommendations"]):
+                duration_based_obj = list_reco_container["recommendations"]["data"][interval_end_time]["duration_based"]
 
-            # Validate timestamps
-            assert duration_based_obj[term]["monitoring_end_time"] == end_timestamp
+                duration_terms = ["short_term", "medium_term", "long_term"]
+                for term in duration_terms:
+                    if check_if_recommendations_are_present(duration_based_obj[term]):
+                        # Validate timestamps
+                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time,\
+                            f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
-            monitoring_start_time = increment_date_time(end_timestamp, term)
-            print(f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}")
-            assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time
+                        monitoring_start_time = term_based_start_time(interval_end_time, term)
+                        assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time,\
+                            f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
-            # Validate duration in hrs
-            expected_duration_in_hours = time_diff_in_hours(start_timestamp, end_timestamp)
-            assert duration_based_obj[term]["duration_in_hours"] == expected_duration_in_hours
-            
-            # Validate recommendation config
-            validate_config(duration_based_obj[term]["config"])
+                        # Validate duration in hrs
+                        if expected_duration_in_hours == None:
+                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
+                            print(f"difference in hours = {diff}")
+                            duration_in_hours += diff
+                            print(f"duration in hours = {duration_in_hours}")
+                        assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours,\
+                            f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+
+                        # Validate recommendation config
+                        validate_config(duration_based_obj[term]["config"])
+    else:
+        print("Checking for recommendation notifications message...")
+        result = check_if_recommendations_are_present(list_reco_container["recommendations"])
+        assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
 def validate_config(reco_config):
     usage_list = ["requests", "limits"]
     for usage in usage_list:
-        assert reco_config[usage]["cpu"]["amount"] > 0
-        assert reco_config[usage]["cpu"]["format"] == "cores"
-        assert reco_config[usage]["memory"]["amount"] > 0
-        assert reco_config[usage]["memory"]["format"] == "MiB"
+        assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
+        assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
+        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
-    no_reco_msg = "There is not enough data available to generate a recommendation."
-
     for notification in duration_based_obj["notifications"]:
-        if notification["message"] == no_reco_msg:
+        if notification["message"] == NOT_ENOUGH_DATA_MSG:
             return False
     return True
 
-def time_diff_in_hours(start_timestamp, end_timestamp):
-    start_date = datetime.strptime(start_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
-    end_date = datetime.strptime(end_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+def time_diff_in_hours(interval_start_time, interval_end_time):
+    start_date = datetime.strptime(interval_start_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
-    return diff.total_seconds() / 3600
-
+    return round(diff.total_seconds() / 3600, 2)

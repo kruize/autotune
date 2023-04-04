@@ -61,8 +61,8 @@ public class EMInterface {
 
         // TODO: Need to parse all the obj function results and calculate the result
         try {
-            double reqSumMean = reqSum.getEmMetricResult().getAggregationInfoResult().getAvg();
-            double reqCountMean = reqCount.getEmMetricResult().getAggregationInfoResult().getAvg();
+            double reqSumMean = reqSum.getMetricResult().getAggregationInfoResult().getAvg();
+            double reqCountMean = reqCount.getMetricResult().getAggregationInfoResult().getAvg();
             double rspTime = reqSumMean / reqCountMean;
             LOGGER.info("Calculated rspTime (" + rspTime + ") = reqSumMean (" + reqSumMean + ") / reqCountMean (" + reqCountMean + ");");
             experimentTrial.getTrialDetails().get(String.valueOf(trialNumber)).setResult(String.valueOf(rspTime));

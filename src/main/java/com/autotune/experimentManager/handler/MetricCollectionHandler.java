@@ -229,7 +229,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                         MetricResults metricResults = new MetricResults();
                         metricResults.getAggregationInfoResult().setAvg(avgVal);
                         podMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), metricResults);
-                        podMetric.setEmMetricResult(metricResults);
+                        podMetric.setMetricResult(metricResults);
                     }
                 }
                 HashMap<String, HashMap<String, Metric>> containersMap = experimentTrial.getContainerMetricsHashMap();
@@ -265,7 +265,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             }
                             metricResults.getAggregationInfoResult().setAvg(avgVal);
                             containerMetric.getTrialSummaryResult().put(String.valueOf(trialDetails.getTrialNumber()), metricResults);
-                            containerMetric.setEmMetricResult(metricResults);
+                            containerMetric.setMetricResult(metricResults);
                         }
                     }
                 }
