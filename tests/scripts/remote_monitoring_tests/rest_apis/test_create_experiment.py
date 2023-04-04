@@ -105,6 +105,38 @@ def test_create_exp(cluster_type):
     print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
+@pytest.mark.parametrize("k8s_obj_type", ["deployment", "deploymentConfig", "statefulset", "daemonset", "replicaset", "replicationController"])
+def test_create_exp_for_supported_k8s_obj_type(k8s_obj_type, cluster_type):
+    """
+    Test Description: This test validates the response status code of createExperiment API by passing a
+    valid json with supported kuberenetes object type
+    """
+    input_json_file="../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    json_data = read_json_data_from_file(input_json_file)
+    json_data[0]['kubernetes_objects'][0]['type'] = k8s_obj_type
+    json_file = "/tmp/create_exp.json"
+
+    write_json_data_to_file(json_file, json_data)
+
+    response = delete_experiment(json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    response = delete_experiment(json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.sanity
 def test_create_duplicate_exp(cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API by specifying the

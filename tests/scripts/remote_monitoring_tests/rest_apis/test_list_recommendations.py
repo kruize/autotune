@@ -8,6 +8,7 @@ from helpers.kruize import *
 from helpers.fixtures import *
 import time
 import json
+import shutil
 
 @pytest.mark.sanity
 def test_list_recommendations_single_exp(cluster_type):
@@ -334,7 +335,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    num_exps = 2
+    num_exps = 10
     metrics_csv = "../csv_data/tfb_data.csv"
     exp_jsons_dir = "/tmp/exp_jsons"
     result_jsons_dir = "/tmp/result_jsons"
@@ -414,6 +415,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         response = delete_experiment(create_exp_json_file)
         print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 @pytest.mark.parametrize("latest", ["true", "false"])
 def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
@@ -455,8 +457,6 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-        time.sleep(5)
 
     time.sleep(20)
     # Get the experiment name
@@ -792,7 +792,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         if latest == "true":
             update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i])-1])
-            expected_duration_in_hours = 1.5
+            expected_duration_in_hours = 1.0
             print("#######################################")
             print(update_results_json)
             print("#######################################")

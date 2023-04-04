@@ -94,7 +94,7 @@ def update_results(result_json_file):
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment input json
 def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None):
-
+    PARAMS = ""
     print("\nListing the recommendations...")
     url = URL + "/listRecommendations"
     print("URL = ", url)

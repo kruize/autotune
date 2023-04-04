@@ -31,13 +31,6 @@
     },
     "recommendation_settings": {
       "threshold": "0.1"
-    },
-    "selector": {
-      "matchLabel": "app.kubernetes.io/name",
-      "matchLabelValue": "tfb-qrh-deployment",
-      "matchRoute": "",
-      "matchURI": "",
-      "matchService": ""
     }
   },
   {
@@ -60,7 +53,7 @@
       }
     ],
     "trial_settings": {
-      "measurement_duration": "5min"
+      "measurement_duration": "15min"
     },
     "recommendation_settings": {
       "threshold": "0.2"
