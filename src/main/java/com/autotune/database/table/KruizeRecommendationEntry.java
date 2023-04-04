@@ -8,7 +8,7 @@ import org.hibernate.type.SqlTypes;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "kruize_recommendation")
+@Table(name = "kruize_recommendations")
 public class KruizeRecommendationEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

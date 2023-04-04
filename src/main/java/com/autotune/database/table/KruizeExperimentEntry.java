@@ -41,7 +41,7 @@ import org.hibernate.type.SqlTypes;
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
-@Table(name = "kruize_experiment")
+@Table(name = "kruize_experiments")
 @IdClass(GenrateExperimentID.class)
 public class KruizeExperimentEntry {
     @Id
