@@ -51,12 +51,12 @@ create_exp_test_data = {
         "threshold": "\"0.1\""
 }
 
-# version, experiment_name,start_timestamp,end_timestamp,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
+# version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
         "version": "\"1.0\"",
         "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "start_timestamp": "\"2022-01-23T18:25:43.511Z\"",
-        "end_timestamp": "\"2022-01-23T18:40:43.511Z\"",
+        "interval_start_time": "\"2022-01-23T18:25:43.511Z\"",
+        "interval_end_time": "\"2022-01-23T18:40:43.511Z\"",
         "type": "\"deployment\"",
         "name": "\"tfb-qrh-sample\"",
         "namespace": "\"default\"",
@@ -119,7 +119,7 @@ def generate_test_data(csvfile, test_data):
 
             data_str = "\"" + test_name + "\"," + status_code
             for k in test_data:
-                data_str += "," 
+                data_str += ","
                 if  k != key :
                         data_str += test_data[k]
                 else:
@@ -159,7 +159,7 @@ def read_json_data_from_file(filename):
 
 def read_test_data_from_csv(csv_file):
     test_data = []
-    
+
     with open(csv_file, newline='') as csvfile:
         data = csv.reader(csvfile, delimiter=',')
         #next(data)  # skip header row
@@ -178,11 +178,11 @@ def generate_json(find_arr, json_file, filename, i, update_timestamps = False):
 
     if update_timestamps == True:
         find = "2022-01-23T18:25:43.511Z"
-        replace = increment_timestamp(find, i) 
+        replace = increment_timestamp(find, i)
         data = data.replace(find, replace)
 
         find = "2022-01-23T18:55:43.511Z"
-        replace = increment_timestamp(find, i) 
+        replace = increment_timestamp(find, i)
         data = data.replace(find, replace)
 
     with open(filename, 'w') as file:
@@ -256,7 +256,7 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
         assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
         assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
         assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
-    
+
         exp_containers_length = len(create_exp_kubernetes_obj["containers"])
         list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
         if test_name == "valid_monitoring_end_time":
@@ -270,10 +270,10 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
     # Validate if all the containers are present
     for i in range(exp_containers_length):
         list_reco_container = None
-            
+
         for j in range(list_reco_containers_length):
             if list_reco_kubernetes_obj["containers"][j]["container_name"] == create_exp_kubernetes_obj["containers"][i]["container_name"]:
-                update_results_container = create_exp_kubernetes_obj["containers"][i]  
+                update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
                 validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours)
 
@@ -293,33 +293,33 @@ def validate_container(update_results_container, update_results_json, list_reco_
         else:
             duration_in_hours = expected_duration_in_hours
         for update_results in update_results_json:
-            end_timestamp = update_results["end_timestamp"]
-            start_timestamp = update_results["start_timestamp"]
-            print(f"end_timestamp = {end_timestamp} start_timestamp = {start_timestamp}")
-        
+            interval_end_time = update_results["interval_end_time"]
+            interval_start_time = update_results["interval_start_time"]
+            print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
-                duration_based_obj = list_reco_container["recommendations"]["data"][end_timestamp]["duration_based"]
+                duration_based_obj = list_reco_container["recommendations"]["data"][interval_end_time]["duration_based"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
                     if check_if_recommendations_are_present(duration_based_obj[term]):
                         # Validate timestamps
-                        assert duration_based_obj[term]["monitoring_end_time"] == end_timestamp,\
-                            f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {end_timestamp}"
+                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time,\
+                            f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
-                        monitoring_start_time = term_based_start_time(end_timestamp, term)
+                        monitoring_start_time = term_based_start_time(interval_end_time, term)
                         assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time,\
                             f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
-                            diff = time_diff_in_hours(start_timestamp, end_timestamp)
+                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
                             print(f"difference in hours = {diff}")
                             duration_in_hours += diff
                             print(f"duration in hours = {duration_in_hours}")
                         assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours,\
                             f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-            
+
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
     else:
@@ -341,9 +341,8 @@ def check_if_recommendations_are_present(duration_based_obj):
             return False
     return True
 
-def time_diff_in_hours(start_timestamp, end_timestamp):
-    start_date = datetime.strptime(start_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
-    end_date = datetime.strptime(end_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+def time_diff_in_hours(interval_start_time, interval_end_time):
+    start_date = datetime.strptime(interval_start_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
-

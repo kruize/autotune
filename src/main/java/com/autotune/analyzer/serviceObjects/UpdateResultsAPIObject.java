@@ -22,9 +22,9 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public class UpdateResultsAPIObject extends BaseSO{
-    @SerializedName(KruizeConstants.JSONKeys.START_TIMESTAMP)
+    @SerializedName(KruizeConstants.JSONKeys.INTERVAL_START_TIME)
     public Timestamp startTimestamp;
-    @SerializedName(KruizeConstants.JSONKeys.END_TIMESTAMP)
+    @SerializedName(KruizeConstants.JSONKeys.INTERVAL_END_TIME)
     public Timestamp endTimestamp;
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesAPIObjects;
