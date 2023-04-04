@@ -9,9 +9,11 @@ import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.Utils;
+import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,6 +91,41 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return validationOutputData;
     }
+
+    @Override
+    public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery("DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName", null);
+                query.setParameter("experimentName", experimentName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
+                }else{
+                    Query KruizeResultsEntryquery = session.createQuery("DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName", null);
+                    KruizeResultsEntryquery.setParameter("experimentName", experimentName);
+                    KruizeResultsEntryquery.executeUpdate();
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to delete experiment due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to delete experiment due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
 
     @Override

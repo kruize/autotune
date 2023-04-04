@@ -24,4 +24,7 @@ public interface ExperimentDAO {
 
     //If Kruize object restarts load all experiment which are in inprogress
     public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap);
+
+    //Delete experiment
+    public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);
 }
