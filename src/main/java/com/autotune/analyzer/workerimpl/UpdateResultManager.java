@@ -15,14 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.experiment.RunExperiment;
-import com.autotune.analyzer.experiment.ExperimentInterface;
-import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
-import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.data.result.DeploymentResultData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -46,8 +44,6 @@ public class UpdateResultManager implements KruizeWorker {
     @Override
     public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
         ExperimentResultData resultData = (ExperimentResultData) o;
-        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-        experimentInterface.addResultsToDB(kruizeObject, resultData);
         if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
             String trialNumber = resultData.getTrialNumber();
             List<DeploymentResultData> deploymentResultDataList = resultData.getDeployments();

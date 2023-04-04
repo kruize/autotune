@@ -152,15 +152,15 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
-          livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 20
+      #          livenessProbe:
+      #            exec:
+      #              command:
+      #                - sh
+      #                - -c
+      #                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
+      #            initialDelaySeconds: 10
+      #            periodSeconds: 5
+      #            timeoutSeconds: 20
       volumes:
         - name: config-volume
           configMap:
