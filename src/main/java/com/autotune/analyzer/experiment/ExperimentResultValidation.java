@@ -16,20 +16,18 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +66,8 @@ public class ExperimentResultValidation {
                         } else {
                             Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3));
                             // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
-                            double lowerRange = (parsedMeasurementDuration * 60 - 5) / 60.0;
-                            double upperRange = (parsedMeasurementDuration * 60 + 5) / 60.0;
+                            double lowerRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE - KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+                            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
                             if (!(durationInMins >= lowerRange && durationInMins <= upperRange)) {
                                 errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
                                 resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));

@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
+import static com.autotune.utils.Utils.getApproriateK8sObjectType;
 
 /**
  * create Experiment input validation
@@ -223,11 +223,12 @@ public class ExperimentValidation {
                     // In case of RM, kubernetes_obj is mandatory
                     mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
                     // check for valid k8stype
-                    List<String> validK8sTypes = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
-                            .map(type -> type.name().toLowerCase())
-                            .collect(Collectors.toList());
                     for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                        if (!validK8sTypes.contains(k8sObject.getType())) {
+                       AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
+                               .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
+                               .findFirst()
+                               .orElse(null);
+                       if (type == null) {
                             depType = k8sObject.getType();
                             invalidType = true;
                             break;
