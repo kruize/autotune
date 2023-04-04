@@ -281,29 +281,8 @@ public class CommonUtils {
         return new Timestamp(cal.getTime().getTime());
     }
 
-    public static double percentile(double percentile, List<Double> values) {
-        // Check if values is null
-        if (null == values)
-            return Double.MIN_VALUE;
-        // Check if percentile is greater than 0
-        if (0 > percentile)
-            return Double.MIN_VALUE;
-        // Sort the array of values in ascending order
-        Collections.sort(values);
-
-        // Calculate the index of the value that corresponds to the given percentile
-        double index = (percentile / 100.0) * (values.size() - 1);
-
-        // Check if index is a rounded integer and send the appropriate value
-        if (index % 1 == 0) {
-            return values.get((int) index);
-        }
-
-        // Otherwise, we calculate the value which falls in between two values
-        int floor = (int) Math.floor(index);
-        int ceiling = (int) Math.ceil(index);
-        double valueFloor = values.get(floor).doubleValue();
-        double valueCeiling = values.get(ceiling).doubleValue();
-        return valueFloor + (index - floor) * (valueCeiling - valueFloor);
+    public static double percentile(double percentile, List<Double> items) {
+        Collections.sort(items);
+        return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
 }
