@@ -135,8 +135,13 @@ public class CreateExperiment extends HttpServlet {
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
             for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                 if (mainKruizeExperimentMap.containsKey(ko.getExperimentName())) {
-                    mainKruizeExperimentMap.remove(ko.getExperimentName());
-                    KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(ko.getExperimentName());
+                    if (validationOutputData.isSuccess()) {
+                        mainKruizeExperimentMap.remove(ko.getExperimentName());
+                        KruizeOperator.deploymentMap.remove(ko.getExperimentName());
+                    }else{
+                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                    }
                 }
                 else
                     throw new Exception("Experiment not found!");
