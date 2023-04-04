@@ -102,13 +102,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 Query query = session.createQuery("DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName", null);
                 query.setParameter("experimentName", experimentName);
                 int deletedCount = query.executeUpdate();
-                tx.commit();
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
                 }else{
+                    Query KruizeResultsEntryquery = session.createQuery("DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName", null);
+                    KruizeResultsEntryquery.setParameter("experimentName", experimentName);
+                    KruizeResultsEntryquery.executeUpdate();
                     validationOutputData.setSuccess(true);
                 }
+                tx.commit();
             } catch (HibernateException e) {
                 LOGGER.error("Not able to delete experiment due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
