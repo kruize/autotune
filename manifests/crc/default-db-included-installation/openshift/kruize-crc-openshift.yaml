@@ -85,7 +85,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kruize-postgres
+  name: postgres-deployment
   namespace: openshift-tuning
   labels:
     app: postgres
