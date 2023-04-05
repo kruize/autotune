@@ -327,7 +327,6 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                     single_row_json_data.append(update_results)
                     # Write the final JSON data to the output file
                     result_json_file = json_dir + "/result_" + str(exp_num) + "_" + str(j) + ".json"
-                    print(single_row_json_data)
                     with open(result_json_file, "w") as json_file:
                         json.dump(single_row_json_data, json_file, indent=4)
 

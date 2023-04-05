@@ -79,7 +79,7 @@ def main(argv):
     iterations = int(hours / 6)
     # 6 hour results of each result with 15mins duration, so no. of results 6 * 4
     num_res = 24 
-
+    debug_log = False
 
     for i in range(1, iterations+1):
         print("\n*************************")
@@ -100,25 +100,26 @@ def main(argv):
         for exp_num in range(num_exps):
             # create the experiment and post it
             create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
-            create_experiment(create_exp_json_file)
-   
-            json_data = json.load(open(create_exp_json_file))
+            create_experiment(create_exp_json_file, debug_log)
+            if i == 1:
+                json_data = json.load(open(create_exp_json_file))
 
-            experiment_name = json_data[0]['experiment_name']
-            exp_list.append(experiment_name)
+                experiment_name = json_data[0]['experiment_name']
+                exp_list.append(experiment_name)
 
             for res_num in range(num_res):
                 # update 6 hours result for the specified experiment
                 json_file = result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
-                update_results(json_file)
+                update_results(json_file, debug_log)
 
         # sleep for a while before fetching recommendations for the experiments
         time.sleep(60)
 
         # Fetch the recommendations for all the experiments
         for experiment_name in exp_list:
-            reco = list_recommendations(experiment_name)
-
+            latest = "false"
+            monitoring_end_time = None
+            reco = list_recommendations(experiment_name, latest, monitoring_end_time, debug_log)
             filename = reco_json_dir + '/reco_' + experiment_name + '.json'
             write_json_data_to_file(filename, reco.json())
 
@@ -128,7 +129,7 @@ def main(argv):
     for exp_num in range(num_exps):
         # create the experiment and post it
         create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
-        delete_experiment(create_exp_json_file)
+        delete_experiment(create_exp_json_file, debug_log)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

@@ -51,20 +51,25 @@ def form_kruize_url(cluster_type, SERVER_IP = None):
 
 
 # Description: This function validates the input json and posts the experiment using createExperiment API to Kruize Autotune
-# Input Parameters: experiment input json
-def create_experiment(input_json_file, invalid_header = False):
+# Input Parameters: experiment input json, flag to indicate if json data or file was sent, flag for turning off debug log
+def create_experiment(input_json_file, debug_log = True, is_json_file = True, invalid_header = False):
 
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    print("\n************************************************************")
-    print(input_json)
-    print("\n************************************************************")
+    if is_json_file == True:
+        json_file = open(input_json_file, "r")
+        input_json = json.loads(json_file.read())
+    else:
+        input_json = input_json_file
 
-    # read the json
-    print("\nCreating the experiment...")
-    
     url = URL + "/createExperiment"
-    print("URL = ", url)
+    if debug_log == True:
+        print("\n************************************************************")
+        print(input_json)
+        print("\n************************************************************")
+
+        # read the json
+        print("\nCreating the experiment...")
+    
+        print("URL = ", url)
     
     headers = {'content-type': 'application/xml'}
     if invalid_header:
@@ -72,38 +77,48 @@ def create_experiment(input_json_file, invalid_header = False):
         response = requests.post(url, json=input_json, headers=headers)
     else:
         response = requests.post(url, json=input_json)
-        
-    print(response)
-    print("Response status code = ", response.status_code)
+       
+    if debug_log == True:
+        print(response)
+        print("Response status code = ", response.status_code)
     return response
 
 # Description: This function validates the result json and posts the experiment results using updateResults API to Kruize Autotune
-# Input Parameters: experiment input json
-def update_results(result_json_file):
+# Input Parameters: experiment input json, flag to indicate if json data or file was sent, flag for turning off debug log
+def update_results(result_json_file, debug_log = True, is_json_file = True):
 
-    # read the json
-    json_file = open(result_json_file, "r")
-    result_json = json.loads(json_file.read())
-    print("\n************************************************************")
-    print(result_json)
-    print("\n************************************************************")
+    if is_json_file == True:
+        # read the json file
+        json_file = open(result_json_file, "r")
+        result_json = json.loads(json_file.read())
+    else:
+        result_json = result_json_file
 
-    print("\nUpdating the results...")
     url = URL + "/updateResults"
-    print("URL = ", url)
+    if debug_log == True:
+        print("\n************************************************************")
+        print(result_json)
+        print("\n************************************************************")
+
+        print("\nUpdating the results...")
+        print("URL = ", url)
 
     response = requests.post(url, json=result_json)
-    print("Response status code = ", response.status_code)
-    print(response.text)
+
+    if debug_log == True:
+        print("Response status code = ", response.status_code)
+        print(response.text)
     return response
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
-# Input Parameters: experiment input json
-def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None):
+# Input Parameters: experiment name, flag to indicate latest recommendation, monitoring end time, flag to turn off debug log
+def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None, debug_log = True):
     PARAMS = ""
-    print("\nListing the recommendations...")
+
     url = URL + "/listRecommendations"
-    print("URL = ", url)
+    if debug_log == True:
+        print("\nListing the recommendations...")
+        print("URL = ", url)
 
     if experiment_name == None:
         if latest == None and monitoring_end_time == None:
@@ -119,26 +134,29 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
             PARAMS = {'experiment_name': experiment_name, 'latest' : latest}
         elif monitoring_end_time != None:
             PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time' : monitoring_end_time}
-        
-    print("PARAMS = ", PARAMS)
+            
+        if debug_log == True:
+            print("PARAMS = ", PARAMS)
+
     response = requests.get(url = url, params = PARAMS)
 
-    print("Response status code = ", response.status_code)
-    print("\n************************************************************")
-    print(response.text)
-    print("\n************************************************************")
+    if debug_log == True:
+        print("Response status code = ", response.status_code)
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
     return response
 
 # Description: This function deletes the experiment and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
-def delete_experiment(input_json_file, invalid_header = False):
+def delete_experiment(input_json_file, debug_log = True, invalid_header = False):
 
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
-
-    print("\nDeleting the experiment...")
-    url = URL + "/createExperiment"
-    print("URL = ", url)
+    if debug_log == True:
+        print("\nDeleting the experiment...")
+        url = URL + "/createExperiment"
+        print("URL = ", url)
 
     experiment_name = input_json[0]['experiment_name']
 
@@ -152,9 +170,10 @@ def delete_experiment(input_json_file, invalid_header = False):
         response = requests.delete(url, json=delete_json, headers=headers)
     else:
         response = requests.delete(url, json=delete_json)
-        
-    print(response)
-    print("Response status code = ", response.status_code)
+    
+    if debug_log == True:
+        print(response)
+        print("Response status code = ", response.status_code)
     return response
 
 # Description: This function creates a performance profile using the Kruize createPerformanceProfile API

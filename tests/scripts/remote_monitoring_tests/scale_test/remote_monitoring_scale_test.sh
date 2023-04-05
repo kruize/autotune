@@ -113,11 +113,11 @@ KRUIZE_POD_LOG="${LOG_DIR}/kruize_pod.log"
 # Setup kruize
 echo "Setting up kruize..." | tee -a ${LOG}
 pushd ${KRUIZE_REPO} > /dev/null
-        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}"
+        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
 
         sleep 60
-        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG}"
+        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG} 2>&1
         sleep 20
 popd > /dev/null
@@ -136,7 +136,7 @@ case ${CLUSTER_TYPE} in
 				exit -1
 			fi
 			BENCHMARK_SERVER="localhost"
-			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER} port = ${port}"
+			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER} port = ${port}" | tee -a ${LOG}
 		fi
 		;;
 	openshift)
@@ -147,7 +147,7 @@ case ${CLUSTER_TYPE} in
 			SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
 			port=""
 			BENCHMARK_SERVER=$(echo ${SERVER_IP_ADDR} | cut -d "." -f3-)
-			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER}"
+			echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} BENCHMARK_SERVER = ${BENCHMARK_SERVER}" | tee -a ${LOG}
 		fi
 		;;
 	*)
@@ -157,13 +157,13 @@ esac
 
 # Start monitoring metrics
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo ""
-	echo "${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" 
+	echo "" | tee -a ${LOG}
+	echo "${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" | tee -a ${LOG}
 	${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} > ${LOG_DIR}/monitor-metrics.log 2>&1 &
 
 else
-	echo ""
-	echo "${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
+	echo "" | tee -a ${LOG}
+	echo "${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" | tee -a ${LOG}
 	${METRICS_SCRIPT_DIR}/monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
 fi
 
@@ -180,12 +180,10 @@ echo ""
 echo "Running scale demo for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
-	#python3 scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 
 else
 	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
-	#python3 scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 fi
 
