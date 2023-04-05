@@ -37,6 +37,8 @@ public class AnalyzerErrorConstants {
 		public static final String VALUE_TYPE_NULL = "value_type cannot be null";
 		public static final String ZERO_STEP = "Tunable step cannot be 0 or null";
 		public static final String INVALID_TUNABLE_CHOICE = "Invalid categorical choice for tunable ";
+		public static final String LAYER_PRESENCE_LABEL_VALUE_BLANK_NULL_MISSING = "layer presence label value cannot be blank/null/missing";
+		
 	}
 
 	public static final class AutotuneObjectErrors {

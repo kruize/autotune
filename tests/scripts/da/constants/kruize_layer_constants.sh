@@ -367,22 +367,23 @@ layer_presence_label_name_expected_log_msgs=([blank-layer-presence-label-name]='
 declare -A layer_presence_labelvalue_autotune_objects
 layer_presence_labelvalue_autotune_objects=([blank-layer-presence-labelvalue]='true'
 [invalid-layer-presence-labelvalue]='true'
-[no-layer-presence-labelvalue]='false'
-[no-layer-presence-labelvalue-value]='false'
-[null-layer-presence-labelvalue]='false'
+[no-layer-presence-labelvalue]='true' # These objects are expected to be created as validation at CRD level is not possible (due to the reason either one of presence/queries/label should be present and this is not a strict validation)
+[no-layer-presence-labelvalue-value]='true'
+[null-layer-presence-labelvalue]='true'
 [numerical-layer-presence-labelvalue]='false'
 [valid-layer-presence-labelvalue]='true')
 
 # Expected log message for layer-presence-labelvalue
 declare -A layer_presence_labelvalue_expected_log_msgs
 layer_presence_labelvalue_error=': layerPresence.label.value in body must be of type string:'
-layer_presence_labelvalue_expected_log_msgs=([blank-layer-presence-labelvalue]='Validation from da'
+layer_presence_labelvalue_expected_log_msgs=([blank-layer-presence-labelvalue]='layer presence label value cannot be blank/null/missing'
 [invalid-layer-presence-labelvalue]='validation from da'
-[no-layer-presence-labelvalue]='validation from crd'
-[no-layer-presence-labelvalue-value]='The KruizeLayer "no-layer-presence-labelvalue-value" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
-[null-layer-presence-labelvalue]='The KruizeLayer "null-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "null"'${layer_presence_labelvalue_error}' "null"'
-[numerical-layer-presence-labelvalue]='The KruizeLayer "numerical-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "integer"'${layer_presence_labelvalue_error}' "integer"'
-[valid-layer-presence-labelvalue]=''${kruize_layer_obj_create_msg}' valid-layer-presence-labelvalue')
+
+[no-layer-presence-labelvalue]='layer presence label value cannot be blank/null/missing'
+[no-layer-presence-labelvalue-value]='layer presence label value cannot be blank/null/missing'
+[null-layer-presence-labelvalue]='layer presence label value cannot be blank/null/missing'
+[numerical-layer-presence-labelvalue]='The AutotuneConfig "numerical-layer-presence-labelvalue" is invalid: layerPresence.label.value: Invalid value: "integer"'${layer_presence_labelvalue_error}' "integer"'
+[valid-layer-presence-labelvalue]=''${autotune_config_obj_create_msg}' valid-layer-presence-labelvalue')
 
 # Expected autotune object for layer presence
 declare -A layer_presence_autotune_objects

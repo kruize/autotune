@@ -16,12 +16,12 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-
+import com.autotune.utils.KruizeSupportedTypes;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
@@ -45,7 +45,7 @@ public class ValidateKruizeLayer
 				|| ((String)map.get(AnalyzerConstants.AutotuneConfigConstants.NAME)).isEmpty()) {
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.AUTOTUNE_CONFIG_NAME_NULL);
 		}
-
+        
 		// Check if either presence, layerPresenceQuery or layerPresenceLabel are set. presence field has highest priority.
 		if (map.get(AnalyzerConstants.AutotuneConfigConstants.PRESENCE) == null ||
 				!map.get(AnalyzerConstants.AutotuneConfigConstants.PRESENCE).equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
@@ -56,6 +56,14 @@ public class ValidateKruizeLayer
 					&& ((ArrayList<LayerPresenceQuery>)map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES)).isEmpty()))) {
 				errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.LAYER_PRESENCE_MISSING);
 			}
+		}
+        
+		// Check if Label Presence value is blank
+		String layer_presence_label_value = (String)map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE);
+		String layer_presence_label_name = (String)map.get(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL);
+
+		if (layer_presence_label_name != null && (layer_presence_label_value.isBlank() || layer_presence_label_value.isEmpty())) {
+			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.LAYER_PRESENCE_LABEL_VALUE_BLANK_NULL_MISSING);
 		}
 
 		// Check if both layerPresenceQuery and layerPresenceLabel are set
