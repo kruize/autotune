@@ -48,7 +48,7 @@ public class KruizeHibernateUtil {
             configuration.setProperty("hibernate.c3p0.timeout", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_TIMEOUT);
             configuration.setProperty("hibernate.c3p0.max_statements", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_MAX_STATEMENTS);
             configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.SETTINGS_HIBERNATE_HBM2DDL_AUTO);
-            configuration.setProperty("show_sql", KruizeDeploymentInfo.SETTINGS_HIBERNATE_SHOW_SQL);
+            configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.SETTINGS_HIBERNATE_SHOW_SQL);
             configuration.addAnnotatedClass(KruizeExperimentEntry.class);
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
