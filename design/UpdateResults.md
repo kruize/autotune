@@ -5,13 +5,13 @@ tuned.
 
 # Attributes
 
-* experiment_name \
+- **experiment_name** \
   A unique string name is specified for identifying individual experiments.
-* interval_start_time \
-  Stay tuned
-* interval_end_time \
-  Stay tuned
-* kubernetes_objects \
+- **interval_start_time** \
+  Timestamp sent by the client in which metrics collection started at remote cluster side.
+- **interval_end_time** \
+  Timestamp sent by the client in which metrics collection completed at remote cluster side.
+- **kubernetes_objects** \
   Stay tuned
 
 # Response

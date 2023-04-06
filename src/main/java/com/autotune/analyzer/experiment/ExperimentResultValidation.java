@@ -89,7 +89,7 @@ public class ExperimentResultValidation {
                             }
                         }
                         if (isExist) {
-                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getIntervalEndTime()));
+                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getIntervalEndTime().toInstant()));
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_CONFLICT));
                             break;
                         }

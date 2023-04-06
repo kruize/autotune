@@ -17,6 +17,7 @@ package com.autotune.utils;
 
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.google.gson.ExclusionStrategy;
@@ -28,7 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
@@ -193,6 +198,24 @@ public class Utils
 			} catch (Exception e) {
 				return null;
 			}
+		}
+
+		public static String isAValidTimestamp(String standardJsonDateFormat, Timestamp intervalStartTimeStamp, Timestamp intervalEndTimeStamp) {
+			String error = "";
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardJsonDateFormat);
+				TemporalAccessor temporalAccessor = formatter.parse(intervalStartTimeStamp.toInstant().toString());
+				if (!formatter.format(temporalAccessor).equals(intervalStartTimeStamp.toInstant().toString()))
+					error = String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStamp.toInstant());
+				else {
+					temporalAccessor = formatter.parse(intervalEndTimeStamp.toInstant().toString());
+					if (!formatter.format(temporalAccessor).equals(intervalEndTimeStamp.toInstant().toString()))
+						error = String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStamp.toInstant());
+				}
+			} catch (DateTimeParseException e) {
+				error = e.getMessage();
+			}
+			return error;
 		}
 	}
 
