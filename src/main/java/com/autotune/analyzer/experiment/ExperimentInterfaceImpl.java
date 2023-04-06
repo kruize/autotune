@@ -107,9 +107,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             if (null == resultsIntervalMap) {
                                 resultsIntervalMap = new HashMap<>();
                             }
-                            IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                            IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
                             intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsIntervalMap.put(resultData.getEndtimestamp(), intervalResults);
+                            resultsIntervalMap.put(resultData.getIntervalEndTime(), intervalResults);
 
                             containerData.setResults(resultsIntervalMap);
                             containerDataMap.put(cName, containerData);
@@ -119,7 +119,7 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     }
                     List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
                     ko.setKubernetes_objects(k8sObjectList);
-                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
+                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getIntervalEndTime());
                 }
         );
         LOGGER.debug("{}", new Gson().toJson(experimentResultDataList));

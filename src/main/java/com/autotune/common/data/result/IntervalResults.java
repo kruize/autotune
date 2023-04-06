@@ -28,31 +28,31 @@ import java.util.HashMap;
 public class IntervalResults {
     @SerializedName("metrics")
     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
-    private Timestamp intervalStart;
-    private Timestamp intervalEnd;
+    private Timestamp intervalStartTime;
+    private Timestamp intervalEndTime;
     private Double durationInMinutes;
 
-    public IntervalResults(Timestamp intervalStart, Timestamp intervalEnd) {
-        this.intervalStart = intervalStart;
-        this.intervalEnd = intervalEnd;
-        this.durationInMinutes = Double.valueOf((intervalEnd.getTime() - intervalStart.getTime()) / (60 * 1000));
+    public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
+        this.intervalStartTime = intervalStartTime;
+        this.intervalEndTime = intervalEndTime;
+        this.durationInMinutes = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / (60 * 1000));
     }
 
-    public Timestamp getIntervalStart() {
-        return intervalStart;
+    public Timestamp getIntervalStartTime() {
+        return intervalStartTime;
     }
 
-    public void setIntervalStart(Timestamp intervalStart) {
-        this.intervalStart = intervalStart;
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
     }
 
 
-    public Timestamp getIntervalEnd() {
-        return intervalEnd;
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
     }
 
-    public void setIntervalEnd(Timestamp intervalEnd) {
-        this.intervalEnd = intervalEnd;
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
     }
 
     public Double getDurationInMinutes() {
@@ -75,8 +75,8 @@ public class IntervalResults {
     public String toString() {
         return "IntervalResults{" +
                 "metricResultsMap=" + metricResultsMap +
-                ", intervalStart=" + intervalStart +
-                ", intervalEnd=" + intervalEnd +
+                ", intervalStartTime=" + intervalStartTime +
+                ", intervalEndTime=" + intervalEndTime +
                 ", durationInMinutes=" + durationInMinutes +
                 '}';
     }
