@@ -1,10 +1,8 @@
-# **Kruize Configuration Procedure**
+### **Kruize Configuration Procedure**
 
----
 The purpose of this document is to provide instructions on how to set up the Kruize configuration needed for deployment.
 It's important to note that this document only covers the procedure itself and does not go into detail about the
 significance of each environment variable. However, there will be separate documents created to address this.
----
 
 ### **Configure using Kruize Config Object**
 
