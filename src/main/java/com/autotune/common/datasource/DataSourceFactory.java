@@ -15,12 +15,12 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.api.model.Service;
 import org.json.JSONArray;
@@ -34,99 +34,99 @@ import java.util.List;
 /**
  * Creates and configures the datasource class for the specified datasource string
  */
-public class DataSourceFactory
-{
-	private DataSourceFactory() { }
+public class DataSourceFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceFactory.class);
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceFactory.class);
+    private DataSourceFactory() {
+    }
 
-	public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
-		String monitoringAgentEndpoint = null;
-		if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.getMonitoringAgent()))
-			monitoringAgentEndpoint = KruizeDeploymentInfo.getMonitoringAgentEndpoint();
+    public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
+        String monitoringAgentEndpoint = null;
+        if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.MONITORING_AGENT))
+            monitoringAgentEndpoint = KruizeDeploymentInfo.MONITORING_AGENT_ENDPOINT;
 
-		// Monitoring agent endpoint not set in the configmap
-		if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
-			monitoringAgentEndpoint = getMonitoringAgentEndpoint();
+        // Monitoring agent endpoint not set in the configmap
+        if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
+            monitoringAgentEndpoint = getMonitoringAgentEndpoint();
 
-		if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
-			return new PrometheusDataSource(monitoringAgentEndpoint);
+        if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
+            return new PrometheusDataSource(monitoringAgentEndpoint);
 
-		LOGGER.error("Datasource " + dataSource + " not supported");
-		return null;
-	}
+        LOGGER.error("Datasource " + dataSource + " not supported");
+        return null;
+    }
 
-	/**
-	 * Gets the monitoring agent endpoint for the datasource through the cluster IP
-	 * of the service.
-	 *
-	 * @return Endpoint of the monitoring agent.
-	 * @throws MonitoringAgentNotFoundException
-	 */
-	private static String getMonitoringAgentEndpoint() throws MonitoringAgentNotFoundException {
-		//No endpoint was provided in the configmap, find the endpoint from the service.
-		KubernetesServices kubernetesServices = new KubernetesServicesImpl();
-		List<Service> serviceList = kubernetesServices.getServicelist(null);
-		kubernetesServices.shutdownClient();
-		String monitoringAgentService = KruizeDeploymentInfo.getMonitoringAgentService();
+    /**
+     * Gets the monitoring agent endpoint for the datasource through the cluster IP
+     * of the service.
+     *
+     * @return Endpoint of the monitoring agent.
+     * @throws MonitoringAgentNotFoundException
+     */
+    private static String getMonitoringAgentEndpoint() throws MonitoringAgentNotFoundException {
+        //No endpoint was provided in the configmap, find the endpoint from the service.
+        KubernetesServices kubernetesServices = new KubernetesServicesImpl();
+        List<Service> serviceList = kubernetesServices.getServicelist(null);
+        kubernetesServices.shutdownClient();
+        String monitoringAgentService = KruizeDeploymentInfo.MONITORING_SERVICE;
 
-		if (monitoringAgentService == null)
-			throw new MonitoringAgentNotFoundException();
+        if (monitoringAgentService == null)
+            throw new MonitoringAgentNotFoundException();
 
-		for (Service service : serviceList) {
-			String serviceName = service.getMetadata().getName();
-			if (serviceName.toLowerCase().equals(monitoringAgentService)) {
-				try {
-					String clusterIP = service.getSpec().getClusterIP();
-					int port = service.getSpec().getPorts().get(0).getPort();
-					LOGGER.info(KruizeDeploymentInfo.getClusterType());
-					if (KruizeDeploymentInfo.getKubernetesType().equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
-						return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
-					}
-					if (KruizeDeploymentInfo.getKubernetesType().equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
-						return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
-					}
-				} catch (Exception e) {
-					throw new MonitoringAgentNotFoundException();
-				}
-			}
-		}
-		LOGGER.error("Monitoring agent endpoint not found");
-		return null;
-	}
+        for (Service service : serviceList) {
+            String serviceName = service.getMetadata().getName();
+            if (serviceName.toLowerCase().equals(monitoringAgentService)) {
+                try {
+                    String clusterIP = service.getSpec().getClusterIP();
+                    int port = service.getSpec().getPorts().get(0).getPort();
+                    LOGGER.info(KruizeDeploymentInfo.CLUSTER_TYPE);
+                    if (KruizeDeploymentInfo.K8S_TYPE.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
+                        return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+                    }
+                    if (KruizeDeploymentInfo.K8S_TYPE.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+                        return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
+                    }
+                } catch (Exception e) {
+                    throw new MonitoringAgentNotFoundException();
+                }
+            }
+        }
+        LOGGER.error("Monitoring agent endpoint not found");
+        return null;
+    }
 
-	/**
-	 * @param jsonObj The JSON that needs to be parsed
-	 * @param key The key to search in the JSON
-	 * @param values ArrayList to hold the key values in the JSON
-	 * @param level Level of recursion
-	 */
-	static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
-		level += 1;
+    /**
+     * @param jsonObj The JSON that needs to be parsed
+     * @param key     The key to search in the JSON
+     * @param values  ArrayList to hold the key values in the JSON
+     * @param level   Level of recursion
+     */
+    static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
+        level += 1;
 
-		if (level > 30)
-			throw new TooManyRecursiveCallsException();
+        if (level > 30)
+            throw new TooManyRecursiveCallsException();
 
-		for (String keyStr : jsonObj.keySet()) {
-			Object keyvalue = jsonObj.get(keyStr);
+        for (String keyStr : jsonObj.keySet()) {
+            Object keyvalue = jsonObj.get(keyStr);
 
-			if (keyStr.equals(key))
-				values.add(keyvalue.toString());
+            if (keyStr.equals(key))
+                values.add(keyvalue.toString());
 
-			//for nested objects
-			if (keyvalue instanceof JSONObject)
-				parseJsonForKey((JSONObject) keyvalue, key, values, level);
+            //for nested objects
+            if (keyvalue instanceof JSONObject)
+                parseJsonForKey((JSONObject) keyvalue, key, values, level);
 
-			//for json array, iterate and recursively get values
-			if (keyvalue instanceof JSONArray) {
-				JSONArray jsonArray = (JSONArray) keyvalue;
-				for (int index = 0; index < jsonArray.length(); index++) {
-					Object jsonObject = jsonArray.get(index);
-					if (jsonObject instanceof JSONObject) {
-						parseJsonForKey((JSONObject) jsonObject, key, values, level);
-					}
-				}
-			}
-		}
-	}
+            //for json array, iterate and recursively get values
+            if (keyvalue instanceof JSONArray) {
+                JSONArray jsonArray = (JSONArray) keyvalue;
+                for (int index = 0; index < jsonArray.length(); index++) {
+                    Object jsonObject = jsonArray.get(index);
+                    if (jsonObject instanceof JSONObject) {
+                        parseJsonForKey((JSONObject) jsonObject, key, values, level);
+                    }
+                }
+            }
+        }
+    }
 }

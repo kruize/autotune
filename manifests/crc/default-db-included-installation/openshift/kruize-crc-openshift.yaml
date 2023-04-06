@@ -68,7 +68,7 @@ metadata:
   name: kruizeconfig
   namespace: openshift-tuning
 data:
-  kruizeconfigjson: |
+  dbconfigjson: |
     {
       "database": {
         "adminPassword": "admin",
@@ -79,6 +79,27 @@ data:
         "port": 5432,
         "sslMode": "require",
         "username": "admin"
+      }
+    }
+  krizeconfigjson: |
+    {
+      "clustertype":"kubernetes",
+      "k8stype" : "openshift",
+      "authtype": "",
+      "monitoringagent":"prometheus",
+      "monitoringservice":"prometheus-k8s",
+      "monitoringendpoint":"prometheus-k8s",
+      "savetodb":"true",
+      "dbdriver":"jdbc:postgresql://",
+      "hibernate": {
+        "dialect": "org.hibernate.dialect.PostgreSQLDialect",
+        "driver": "org.postgresql.Driver",
+        "c3p0minsize": 2,
+        "c3p0maxsize": 5,
+        "c3p0timeout": 300,
+        "c3p0maxstatements": 50,
+        "hbm2ddlauto": "update",
+        "showsql": "true"
       }
     }
 ---
@@ -166,28 +187,14 @@ spec:
             - name: config-volume
               mountPath: /etc/config
           env:
-            - name: CLUSTER_TYPE
-              value: "kubernetes"
-            - name: K8S_TYPE
-              value: "openshift"
-            - name: AUTH_TYPE
-              value: ""
-            - name: AUTH_TOKEN
-              value: ""
-            - name: MONITORING_AGENT
-              value: "prometheus"
-            - name: MONITORING_SERVICE
-              value: "prometheus-k8s"
-            - name: MONITORING_AGENT_ENDPOINT
-              value: "prometheus-k8s"
             - name: LOGGING_LEVEL
               value: "info"
             - name: ROOT_LOGGING_LEVEL
               value: "info"
-            - name: CONFIG_FILE
-              value: "/etc/config/kruizeconfigjson"
-            - name: DB_DRIVER
-              value: "jdbc:postgresql://"
+            - name: DB_CONFIG_FILE
+              value: "/etc/config/dbconfigjson"
+            - name: KRUIZE_CONFIG_FILE
+              value: "/etc/config/krizeconfigjson"
           ports:
             - name: kruize-port
               containerPort: 8080

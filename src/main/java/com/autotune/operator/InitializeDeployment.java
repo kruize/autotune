@@ -15,66 +15,131 @@
  *******************************************************************************/
 package com.autotune.operator;
 
-import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.utils.KruizeConstants;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Get the deployment information from the config map and initialize
  */
-public class InitializeDeployment
-{
-	private InitializeDeployment() { }
+public class InitializeDeployment {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InitializeDeployment.class);
 
-	public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
-		String k8S_type = System.getenv(AnalyzerConstants.K8S_TYPE);
-		String auth_type = System.getenv(AnalyzerConstants.AUTH_TYPE);
-		String auth_token = System.getenv(AnalyzerConstants.AUTH_TOKEN);
-		String cluster_type = System.getenv(AnalyzerConstants.CLUSTER_TYPE);
-		String logging_level = System.getenv(AnalyzerConstants.LOGGING_LEVEL);
-		String root_logging_level = System.getenv(AnalyzerConstants.ROOT_LOGGING_LEVEL);
-		String monitoring_agent = System.getenv(AnalyzerConstants.MONITORING_AGENT);
-		String monitoring_agent_service = System.getenv(AnalyzerConstants.MONITORING_SERVICE);
-		String monitoring_agent_endpoint = System.getenv(AnalyzerConstants.MONITORING_AGENT_ENDPOINT);
-		int DEFAULT_BULKUPLOAD_LIMIT = 1;
-		AnalyzerConstants.PersistenceType DEFAULT_PERSISTENCE_TYPE = AnalyzerConstants.PersistenceType.LOCAL;
-		int bulkupload_createexperiment_limit = System.getenv(AnalyzerConstants.BULKUPLOAD_CREATEEXPERIMENT_LIMIT) != null ?
-				Integer.parseInt(System.getenv(AnalyzerConstants.BULKUPLOAD_CREATEEXPERIMENT_LIMIT)) :
-				DEFAULT_BULKUPLOAD_LIMIT;
-		AnalyzerConstants.PersistenceType PERSISTENCE_TYPE = System.getenv(AnalyzerConstants.PERSISTANCE_STORAGE) != null ?
-				AnalyzerConstants.PersistenceType.valueOf(System.getenv(AnalyzerConstants.PERSISTANCE_STORAGE)) :
-				DEFAULT_PERSISTENCE_TYPE;
+    private InitializeDeployment() {
 
-		KruizeDeploymentInfo.setClusterType(cluster_type);
-		KruizeDeploymentInfo.setKubernetesType(k8S_type);
-		KruizeDeploymentInfo.setAuthType(auth_type);
-		KruizeDeploymentInfo.setMonitoringAgent(monitoring_agent);
-		KruizeDeploymentInfo.setAuthToken(auth_token);
-		KruizeDeploymentInfo.setMonitoringAgentService(monitoring_agent_service);
-		KruizeDeploymentInfo.setLoggingLevel(logging_level);
-		KruizeDeploymentInfo.setRootLoggingLevel(root_logging_level);
+    }
 
-		//If no endpoint was specified in the configmap
-		if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
-			if (monitoring_agent == null || monitoring_agent_service == null) {
-				throw new MonitoringAgentNotFoundException();
-			} else {
-				// Fetch endpoint from service cluster IP
-				monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
-			}
-		}
-		KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
+    public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
+        setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
+        setConfigValues(KruizeConstants.DBConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
+        KruizeDeploymentInfo.setClusterType(KruizeDeploymentInfo.CLUSTER_TYPE);
+        KruizeDeploymentInfo.setKubernetesType(KruizeDeploymentInfo.K8S_TYPE);
+        KruizeDeploymentInfo.setAuthType(KruizeDeploymentInfo.AUTH_TYPE);
+        KruizeDeploymentInfo.setMonitoringAgent(KruizeDeploymentInfo.MONITORING_AGENT);
+        KruizeDeploymentInfo.setMonitoringAgentService(KruizeDeploymentInfo.MONITORING_SERVICE);
+        String monitoring_agent_endpoint = KruizeDeploymentInfo.MONITORING_AGENT_ENDPOINT;
+        String monitoring_agent = KruizeDeploymentInfo.MONITORING_AGENT;
+        String monitoring_agent_service = KruizeDeploymentInfo.MONITORING_SERVICE;
+        //If no endpoint was specified in the configmap
+        if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
+            if (monitoring_agent == null || monitoring_agent_service == null) {
+                throw new MonitoringAgentNotFoundException();
+            } else {
+                // Fetch endpoint from service cluster IP
+                monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
+            }
+        }
+        KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
 
-		KruizeDeploymentInfo.setLayerTable();
+        KruizeDeploymentInfo.setLayerTable();
 
-		KruizeDeploymentInfo.initiateEventLogging();
+        KruizeDeploymentInfo.initiateEventLogging();
 
-		KruizeDeploymentInfo.logDeploymentInfo();
+        KruizeDeploymentInfo.logDeploymentInfo();
 
-		KruizeDeploymentInfo.setBulkupload_createexperiment_limit(bulkupload_createexperiment_limit);
-		KruizeDeploymentInfo.setPersistence_type(PERSISTENCE_TYPE);
 
-	}
+    }
+
+    private static void setConfigValues(String configFileName, Class envClass) {
+        String configFile = System.getenv(configFileName);
+        JSONObject configObject = null;
+        if (null != configFile) {
+            try (InputStream is = new FileInputStream(configFile)) {
+                String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                configObject = new JSONObject(jsonTxt);
+            } catch (Exception exception) {
+                LOGGER.warn("Failed to set config using file {} due to {}. checking if corresponding environment variable is set.", configFile, exception.getMessage());
+            }
+        }
+        List<String> systemENVList = new ArrayList<>();
+        Field[] fields = envClass.getFields();
+        for (Field field : fields) {
+            if (field.getType() == String.class) {
+                try {
+                    KruizeDeploymentInfo.class.getDeclaredField(field.getName()).set(null,
+                            getKruizeConfigValue((String) field.get(null), configObject));
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    LOGGER.warn("Error while setting config variables :  {}", e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static String getKruizeConfigValue(String envName, JSONObject kruizeConfigObject) {
+        Object envValue = null;
+        String message = "Config variable : " + envName;
+        try {
+            if (null != kruizeConfigObject) {
+                //extract values from jsonObject
+                try {
+                    String[] parts = envName.split("_");
+                    JSONObject primaryObj = kruizeConfigObject;
+                    int i = 0;
+                    for (i = 0; i < parts.length - 1; i++) {
+                        primaryObj = primaryObj.getJSONObject(parts[i]);
+                    }
+                    envValue = primaryObj.get(parts[i]);
+                    message = message + "  :- found in mounted config file";
+                } catch (Exception e) {
+                    message = message + "  :- Not found in mounted config file";
+                }
+            } else {
+                message = message + "  :- No mount config file";
+            }
+            //Override if env value set outside kruizeConfigJson
+            String sysEnvValue = System.getenv(envName);
+            if (null == sysEnvValue && null == envValue) {
+                message = message + ", nor not able to set via environment variable and set to null.";
+            } else {
+                if (null != sysEnvValue && envValue == null) {
+                    envValue = sysEnvValue;
+                    message = message + ", but able to set via environment variable";
+                } else if (null != sysEnvValue && envValue != null) {
+                    envValue = sysEnvValue;
+                    message = message + ", and value override using environment variable";
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to set environment : {} due to {}", envName, e.getMessage());
+        }
+        LOGGER.info(message);
+        if (envValue == null)
+            return null;
+        else
+            return envValue.toString();
+    }
+
+
 }

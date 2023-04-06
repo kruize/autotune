@@ -15,19 +15,19 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
-import com.autotune.common.parallelengine.worker.KruizeWorker;
-import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.common.datasource.KruizeDataSourceOperator;
-import com.autotune.common.datasource.DataSourceOperator;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.trials.ExperimentTrial;
-import com.autotune.common.trials.TrialDetails;
-import com.autotune.common.k8sObjects.KubernetesContexts;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.datasource.DataSourceOperator;
+import com.autotune.common.datasource.KruizeDataSourceOperator;
+import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.CallableFactory;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.experimentManager.data.result.CycleMetaData;
 import com.autotune.experimentManager.data.result.StepsMetaData;
@@ -36,7 +36,7 @@ import com.autotune.experimentManager.handler.eminterface.EMHandlerInterface;
 import com.autotune.experimentManager.handler.util.EMStatusUpdateHandler;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 kubernetesServices = new KubernetesServicesImpl();
                 // Get the env variables map from kubernetes
                 // TODO: Move the constants to common constants or Autotune Constants
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", KruizeDeploymentInfo.getKubernetesType());
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", KruizeDeploymentInfo.K8S_TYPE);
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
                 LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
                 LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();

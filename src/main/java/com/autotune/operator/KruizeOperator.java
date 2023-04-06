@@ -20,25 +20,24 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.common.variables.Variables;
-import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.datasource.DataSource;
-import com.autotune.common.datasource.DataSourceFactory;
-import com.autotune.common.k8sObjects.*;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
-import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.datasource.DataSource;
+import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.k8sObjects.KubernetesContexts;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
+import com.autotune.common.variables.Variables;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
 import com.google.gson.Gson;
@@ -60,7 +59,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.POD_TEMPLATE_HASH;
@@ -358,8 +360,7 @@ public class KruizeOperator {
                 if (!perfProfileName.isEmpty()) {
                     if (!sloJson.isEmpty()) {
                         throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
-                    }
-                    else {
+                    } else {
                         // check if the Performance profile with the given name exist
                         if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(perfProfileName)) {
                             throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
@@ -368,8 +369,7 @@ public class KruizeOperator {
                 } else {
                     if (sloJson.isEmpty()) {
                         throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA);
-                    }
-                    else {
+                    } else {
                         // Only SLO is available so create a default Performance profile with SLO data
                         SloInfo sloInfo = new Gson().fromJson(String.valueOf(sloJson), SloInfo.class);
                         perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
@@ -416,10 +416,11 @@ public class KruizeOperator {
 
         } catch (InvalidValueException | NullPointerException | JSONException | SloClassNotSupportedException e) {
             LOGGER.error(e.getMessage());
-            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null,null, null);
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             return null;
         }
     }
+
     public static String setDefaultPerformanceProfile(SloInfo sloInfo, String mode, String targetCluster) {
         PerformanceProfile performanceProfile = null;
         try {
@@ -428,7 +429,7 @@ public class KruizeOperator {
             String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
             performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
-            if ( null != performanceProfile) {
+            if (null != performanceProfile) {
                 ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
                 if (validationOutputData.isSuccess()) {
                     LOGGER.info("Added Performance Profile : {} into the map with version: {}",
@@ -440,7 +441,7 @@ public class KruizeOperator {
                 new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create performance profile ", EventLogger.Type.Warning, null, null, null, null);
             }
         } catch (Exception e) {
-            LOGGER.debug("Exception while adding PP with message: {} ",e.getMessage());
+            LOGGER.debug("Exception while adding PP with message: {} ", e.getMessage());
             new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             return null;
         }
@@ -477,7 +478,7 @@ public class KruizeOperator {
             // Get the autotunequeryvariables for the current kubernetes environment
             ArrayList<Map<String, String>> queryVarList = null;
             try {
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.getKubernetesType());
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.K8S_TYPE);
                 queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
             } catch (Exception e) {
                 LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
@@ -492,7 +493,7 @@ public class KruizeOperator {
                 for (Object query : layerPresenceQueryJson) {
                     JSONObject queryJson = (JSONObject) query;
                     String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.getMonitoringAgent())) {
+                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.MONITORING_AGENT)) {
                         layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
                         layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
                         // Replace the queryvariables in the query
@@ -665,7 +666,7 @@ public class KruizeOperator {
             }
             DataSource autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.getMonitoringAgent());
+                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.MONITORING_AGENT);
             } catch (MonitoringAgentNotFoundException e) {
                 e.printStackTrace();
             }
@@ -804,7 +805,7 @@ public class KruizeOperator {
      * Add layer, queries and tunables info to the autotuneObject
      *
      * @param applicationServiceStack ApplicationServiceStack instance that contains the layer
-     * @param kruizeLayer          KruizeLayer object for the layer
+     * @param kruizeLayer             KruizeLayer object for the layer
      */
     private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, KruizeLayer kruizeLayer) {
         // Check if layer already exists
