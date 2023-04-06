@@ -78,7 +78,7 @@ env:
 Another way to configure Kruize is through environment variables. The naming convention for these variables must follow
 a pattern similar to the JSON configurations.
 
-For instance, if you want to configure the database using environment variables, it should be structured as follows:
+For instance, if you want to configure the database using environment variables, it should be structured as follows :
 
 ```
 env:
