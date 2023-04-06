@@ -59,7 +59,6 @@ public final class KruizeObject {
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
-    private Set<ExperimentResultData> resultData;                   // TODO: Need to remove this
     private ValidationOutputData validationData;
     private List<K8sObject> kubernetes_objects;
 
@@ -203,13 +202,6 @@ public final class KruizeObject {
         this.experimentUseCaseType = experimentUseCaseType;
     }
 
-    public Set<ExperimentResultData> getResultData() {
-        return resultData;
-    }
-
-    public void setResultData(Set<ExperimentResultData> resultData) {
-        this.resultData = resultData;
-    }
 
     public ValidationOutputData getValidationData() {
         return validationData;
@@ -277,7 +269,6 @@ public final class KruizeObject {
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experimentUseCaseType +
-                ", resultData=" + resultData +
                 ", validationData=" + validationData +
                 ", kubernetes_objects=" + kubernetes_objects +
                 '}';
