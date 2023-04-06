@@ -25,7 +25,7 @@ data:
   krizeconfigjson: |
     {
       "clustertype":"kubernetes",
-      "k8stype" : "minikube",
+      "k8stype" : "openshift",
       "authtype": "",
       "monitoringagent":"prometheus",
       "monitoringservice":"prometheus-k8s",
