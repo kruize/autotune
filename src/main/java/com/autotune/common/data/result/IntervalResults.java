@@ -22,14 +22,19 @@ import com.google.gson.annotations.SerializedName;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
+import static com.autotune.utils.KruizeConstants.JSONKeys.*;
+
 /**
  * Raw results are segregated and organized using IntervalResults
  */
 public class IntervalResults {
-    @SerializedName("metrics")
+    @SerializedName(METRICS)
     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
+    @SerializedName(INTERVAL_START_TIME)
     private Timestamp intervalStartTime;
+    @SerializedName(INTERVAL_END_TIME)
     private Timestamp intervalEndTime;
+    @SerializedName(DURATION_IN_MINUTES)
     private Double durationInMinutes;
 
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
