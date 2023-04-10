@@ -17,22 +17,30 @@
 package com.autotune.database.helper;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Timestamp;
 
 /**
  * Helper functions used by the DB to create entity objects.
  */
 public class DBHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBHelpers.class);
+
 
     private DBHelpers() {
     }
@@ -41,6 +49,7 @@ public class DBHelpers {
         private Converters() {
 
         }
+
 
         public static class KruizeObjectConverters {
             private KruizeObjectConverters() {
@@ -121,6 +130,48 @@ public class DBHelpers {
                 }
                 return kruizeResultsEntry;
             }
+
+            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject) {
+                KruizeRecommendationEntry kruizeRecommendationEntry = null;
+                try {
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.
+                            convertKruizeObjectToListRecommendationSO(
+                                    kruizeObject,
+                                    true,
+                                    false,
+                                    null);
+                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject).toString());
+                    kruizeRecommendationEntry = new KruizeRecommendationEntry();
+                    kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
+                    kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
+                    Timestamp endInterval = null;
+                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {  // todo : what happens if two k8 objects or Containers with different timestamp
+                        for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
+                            endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                            break;
+                        }
+                    }
+                    kruizeRecommendationEntry.setInterval_end_time(endInterval);
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        kruizeRecommendationEntry.setExtended_data(
+                                objectMapper.readTree(
+                                        jsonObject.toString()
+                                )
+                        );
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating Extended data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    kruizeRecommendationEntry = null;
+                    LOGGER.error("Error while converting KruizeObject to KruizeRecommendationEntry due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeRecommendationEntry;
+            }
         }
     }
 }
+

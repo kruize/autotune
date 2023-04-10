@@ -3,13 +3,10 @@ package com.autotune.database.dao;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
-import com.autotune.utils.Utils;
-import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -24,62 +21,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDAOImpl.class);
 
     @Override
-    public ValidationOutputData addExperimentToDB(KruizeObject kruizeObject) {
+    public ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        try {
-            updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-            KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertKruizeObjectToExperimentDBObj(kruizeObject);
-            String experiment_id = Utils.generateID(kruizeObject);
-            kruizeExperimentEntry.setExperiment_id(experiment_id);
-            Transaction tx = null;
-            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-                try {
-                    tx = session.beginTransaction();
-                    session.persist(kruizeExperimentEntry);
-                    tx.commit();
-                    validationOutputData.setSuccess(true);
-                } catch (HibernateException e) {
-                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-                    updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.FAILED);
-                    if (tx != null) tx.rollback();
-                    e.printStackTrace();
-                    validationOutputData.setSuccess(false);
-                    validationOutputData.setMessage(e.getMessage());
-                    //todo save error to API_ERROR_LOG
-                }
-            } catch (Exception e) {
-                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-        }
-
-        return validationOutputData;
-    }
-
-
-    @Override
-    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
-        kruizeObject.setStatus(status);
-        // TODO   update into database
-        return true;
-    }
-
-    @Override
-    public ValidationOutputData addResultsToDB(ExperimentResultData resultData) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        KruizeResultsEntry kruizeResultsEntry = DBHelpers.Converters.KruizeObjectConverters.convertExperimentResultToExperimentResultsTable(resultData);
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                session.persist(kruizeResultsEntry);
+                session.persist(kruizeExperimentEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
-                resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
             } catch (HibernateException e) {
                 LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-                resultData.setStatus(AnalyzerConstants.ExperimentStatus.FAILED);
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
@@ -90,6 +42,62 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
         return validationOutputData;
+    }
+
+    @Override
+    public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(resultsEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(recommendationEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+
+    @Override
+    public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
+        kruizeObject.setStatus(status);
+        // TODO   update into database
+        return true;
     }
 
     @Override
@@ -105,7 +113,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
-                }else{
+                } else {
                     Query KruizeResultsEntryquery = session.createQuery("DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName", null);
                     KruizeResultsEntryquery.setParameter("experimentName", experimentName);
                     KruizeResultsEntryquery.executeUpdate();
@@ -125,7 +133,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return validationOutputData;
     }
-
 
 
     @Override
