@@ -55,6 +55,7 @@ public class KruizeDeploymentInfo {
     public static String SETTINGS_HIBERNATE_C3P0_MAX_STATEMENTS;
     public static String SETTINGS_HIBERNATE_HBM2DDL_AUTO;
     public static String SETTINGS_HIBERNATE_SHOW_SQL;
+    public static String SETTINGS_HIBERNATE_TIME_ZONE;
     public static String AUTOTUNE_MODE;
     public static String MONITORING_AGENT;
     public static String MONITORING_SERVICE;

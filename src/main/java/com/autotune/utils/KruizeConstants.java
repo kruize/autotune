@@ -381,5 +381,6 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_C3P0_MAX_STATEMENTS = "hibernate_c3p0maxstatements";
         public static final String SETTINGS_HIBERNATE_HBM2DDL_AUTO = "hibernate_hbm2ddlauto";
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
+        public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
     }
 }
