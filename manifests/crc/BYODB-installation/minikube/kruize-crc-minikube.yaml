@@ -86,8 +86,8 @@ spec:
             httpGet:
               path: /dbhealth
               port: 8080
-            initialDelaySeconds: 45
-            periodSeconds: 300
+            initialDelaySeconds: 15
+            periodSeconds: 5
             timeoutSeconds: 50
             successThreshold: 1
             failureThreshold: 3
