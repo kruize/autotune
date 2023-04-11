@@ -83,20 +83,153 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                         .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
                 Recommendation recommendation = new Recommendation(monitorStartDate, monitoringEndTime);
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+                // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
-                requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPURequestRecommendation(filteredResultsMap));
-                requestsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryRequestRecommendation(filteredResultsMap));
+                // Get the Recommendation Items
+                RecommendationConfigItem cpuResquestItem = getCPURequestRecommendation(filteredResultsMap);
+                RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(filteredResultsMap);
+                // Initiate generated value holders with min values constants to compare later
+                Double generatedCpuRequest = null;
+                String generatedCpuRequestFormat = null;
+                Double generatedMemRequest = null;
+                String generatedMemRequestFormat = null;
+
+                // Check for null
+                if (null != cpuResquestItem) {
+                    generatedCpuRequest = cpuResquestItem.getAmount();
+                    generatedCpuRequestFormat = cpuResquestItem.getFormat();
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuResquestItem);
+                }
+                // Check for null
+                if (null != memRequestItem) {
+                    generatedMemRequest = memRequestItem.getAmount();
+                    generatedMemRequestFormat = memRequestItem.getFormat();
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, memRequestItem);
+                }
+
+                // Set Request Map
                 config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+
+                // Create Limits Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
-                limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, getCPULimitRecommendation(filteredResultsMap));
-                limitsMap.put(AnalyzerConstants.RecommendationItem.memory, getMemoryLimitRecommendation(filteredResultsMap));
+                // Get the Recommendation Items
+                // Calling requests on limits as we are maintaining limits and requests as same
+                // Maintaining different flow for both of them even though if they are same as in future we might have
+                // a different implementation for both and this avoids confusion
+                RecommendationConfigItem cpuLimitsItem =  cpuResquestItem;
+                RecommendationConfigItem memLimitsItem = memRequestItem;
+                // Initiate generated value holders with min values constants to compare later
+                Double generatedCpuLimit = null;
+                String generatedCpuLimitFormat = null;
+                Double generatedMemLimit = null;
+                String generatedMemLimitFormat = null;
+
+                // Check for null
+                if (null != cpuLimitsItem) {
+                    generatedCpuLimit = cpuLimitsItem.getAmount();
+                    generatedCpuLimitFormat = cpuLimitsItem.getFormat();
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuLimitsItem);
+                }
+
+                // Check for null
+                if (null != memLimitsItem) {
+                    generatedMemLimit = memLimitsItem.getAmount();
+                    generatedMemLimitFormat = memLimitsItem.getFormat();
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, memLimitsItem);
+                }
+
+                // Set Limits Map
                 config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+
+                // Calculate the duration in hours
                 Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
                         .collect(Collectors.toList())
                         .stream()
                         .mapToDouble(f -> f.doubleValue()).sum() / 60;
+
+                // Set Duration in hours
                 recommendation.setDuration_in_hours(hours);
+                // Set Config
                 recommendation.setConfig(config);
+
+                Timestamp timestampToExtract = monitoringEndTime;
+                // Create variation map
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation = new HashMap<>();
+                // Create a new map for storing variation in requests
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsVariationMap = new HashMap<>();
+                Double currentCpuRequest = getCurrentValue( filteredResultsMap,
+                                                            timestampToExtract,
+                                                            AnalyzerConstants.ResourceSetting.requests,
+                                                            AnalyzerConstants.RecommendationItem.cpu);
+                Double currentMemRequest = getCurrentValue( filteredResultsMap,
+                                                            timestampToExtract,
+                                                            AnalyzerConstants.ResourceSetting.requests,
+                                                            AnalyzerConstants.RecommendationItem.memory);
+
+                if (null == currentCpuRequest) {
+                    RecommendationNotification notification = new RecommendationNotification(
+                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
+                            AnalyzerConstants.RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET);
+                    recommendation.addNotification(notification);
+                } else if (null != generatedCpuRequest
+                            && null != generatedCpuRequestFormat) {
+                    double diff = generatedCpuRequest - currentCpuRequest;
+                    // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
+                    RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
+                }
+
+                if (null == currentMemRequest) {
+                    RecommendationNotification notification = new RecommendationNotification(
+                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
+                            AnalyzerConstants.RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET);
+                    recommendation.addNotification(notification);
+                } else if (null != generatedMemRequest
+                            && null != generatedMemRequestFormat) {
+                    double diff = generatedMemRequest - currentMemRequest;
+                    // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
+                    RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemRequestFormat);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
+                }
+
+                // Set Request variation map
+                variation.put(AnalyzerConstants.ResourceSetting.requests, requestsVariationMap);
+
+                // Create a new map for storing variation in limits
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsVariationMap = new HashMap<>();
+
+                // Calling requests on limits as we are maintaining limits and requests as same
+                // Maintaining different flow for both of them even though if they are same as in future we might have
+                // a different implementation for both and this avoids confusion
+                Double currentCpuLimit = currentCpuRequest;
+                Double currentMemLimit = currentMemRequest;
+
+                if (null != currentCpuLimit
+                        && null != generatedCpuLimit
+                        && null != generatedCpuLimitFormat) {
+                    double diff = generatedCpuLimit - currentCpuLimit;
+                    RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
+                }
+
+                if (null == currentMemLimit) {
+                    RecommendationNotification notification = new RecommendationNotification(
+                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
+                            AnalyzerConstants.RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET);
+                    recommendation.addNotification(notification);
+                } else if (null != generatedMemLimit
+                        && null != generatedMemLimitFormat) {
+                    double diff = generatedMemLimit - currentMemLimit;
+                    RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemLimitFormat);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
+                }
+
+                // Set Limits variation map
+                variation.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+
+                recommendation.setVariation(variation);
+
+                // Set Recommendations
                 resultRecommendation.put(recPeriod, recommendation);
             } else {
                 RecommendationNotification notification = new RecommendationNotification(
@@ -206,5 +339,36 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
         return recommendationConfigItem;
+    }
+
+    private static Double getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                          Timestamp timestampToExtract,
+                                          AnalyzerConstants.ResourceSetting resourceSetting,
+                                          AnalyzerConstants.RecommendationItem recommendationItem) {
+        Double currentValue = null;
+        AnalyzerConstants.MetricName metricName = null;
+        for (Timestamp timestamp : filteredResultsMap.keySet()) {
+            if (!timestamp.equals(timestampToExtract))
+                continue;
+            IntervalResults intervalResults = filteredResultsMap.get(timestamp);
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                    metricName = AnalyzerConstants.MetricName.cpuRequest;
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                    metricName = AnalyzerConstants.MetricName.memoryRequest;
+            }
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                    metricName = AnalyzerConstants.MetricName.cpuLimit;
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                    metricName = AnalyzerConstants.MetricName.memoryLimit;
+            }
+            if (null != metricName) {
+                if (intervalResults.getMetricResultsMap().containsKey(metricName))
+                    currentValue = intervalResults.getMetricResultsMap().get(metricName).getAggregationInfoResult().getAvg();
+                return currentValue;
+            }
+        }
+        return currentValue;
     }
 }

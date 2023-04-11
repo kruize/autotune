@@ -552,6 +552,9 @@ public class AnalyzerConstants {
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
+        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
+        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
 
         private RecommendationNotificationMsgConstant() {
 
