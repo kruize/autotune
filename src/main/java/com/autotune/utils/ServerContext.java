@@ -27,6 +27,7 @@ public class ServerContext {
     // AnalyzerConstants end points
     public static final String ROOT_CONTEXT = "/";
     public static final String HEALTH_SERVICE = ROOT_CONTEXT + "health";
+    public static final String DB_SERVICE = ROOT_CONTEXT + "dbhealth";
     public static final String METRICS_SERVICE = ROOT_CONTEXT + "metrics";
     public static final String LIST_KRUIZE_TUNABLES = ROOT_CONTEXT + "listKruizeTunables";
     public static final String LIST_STACKS = ROOT_CONTEXT + "listStacks";
