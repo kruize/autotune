@@ -20,14 +20,21 @@ import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.TrialHelpers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -43,7 +50,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -70,6 +77,15 @@ public class ListExperiments extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
+
+        String results = request.getParameter(KruizeConstants.JSONKeys.RESULTS);
+        String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
+
+        results = (results == null || results.isEmpty()) ? AnalyzerConstants.BooleanString.FALSE: results;
+        recommendations = (recommendations == null || recommendations.isEmpty()) ? AnalyzerConstants.BooleanString.FALSE: recommendations;
+        latest = (latest == null || latest.isEmpty()) ? AnalyzerConstants.BooleanString.FALSE: latest;
+
         String gsonStr = "[]";
         if (this.mainKruizeExperimentMap.size() > 0) {
             Gson gsonObj = new GsonBuilder()
@@ -95,6 +111,8 @@ public class ListExperiments extends HttpServlet {
                     })
                     .create();
             gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
+            // Modify the JSON response here based on query params.
+            gsonStr = buildResponseBasedOnQuery(gsonStr,gsonObj, latest, results, recommendations);
         } else {
             JSONArray experimentTrialJSONArray = new JSONArray();
             for (String deploymentName : experimentsMap.keySet()) {
@@ -109,6 +127,93 @@ public class ListExperiments extends HttpServlet {
         }
         response.getWriter().println(gsonStr);
         response.getWriter().close();
+    }
+    private String buildResponseBasedOnQuery(String gsonStr, Gson gsonObj, String latest, String results, String recommendations) throws JsonProcessingException {
+        // Case : default
+        // return the response without results or recommendations
+        if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
+            // remove 'results' from the json
+            gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
+            // remove 'recommendations' from the json
+            gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
+        } else {
+            if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
+                    // Case 1: results=true , recommendations=false, latest=false
+                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE))
+                        // return all results and no recommendations.
+                        gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
+                    // Case 2: results=true , recommendations=false, latest=true
+                    else {
+                        // return the latest result and no recommendations.
+                        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+                        for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
+                            List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
+                            for (K8sObject k8sObject : k8sObjectList) {
+                                for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                                    containerData = Converters.KruizeObjectConverters.getLatestResults(containerData);
+                                    containerDataMap.put(containerData.getContainer_name(), containerData);
+                                }
+                                k8sObject.setContainerDataMap(containerDataMap);
+                            }
+                            entry.getValue().setKubernetes_objects(k8sObjectList);
+                        }
+                        gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
+                        gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
+                    }
+                } else {
+                    // Case 3 : results=true, recommendations=true, latest=false
+                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE))
+                        // return everything
+                        return gsonStr;
+                    // Case 4: results=true , recommendations=true, latest=true
+                    else {
+                        // return latest results and latest recommendation
+                    }
+                }
+            } else {
+                if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                    // Case 5 : result=false, recommendations=true, latest=false
+                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE))
+                        // Response : return all recommendations and no results.
+                        gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
+                    // Case 6 : result=false, recommendations=true, latest=true
+                    else {
+                        // Response : return the latest recommendation and no results.
+                        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+                        for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
+                            List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
+                            for (K8sObject k8sObject : k8sObjectList) {
+                                for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                                    containerData = Converters.KruizeObjectConverters.getLatestRecommendations(containerData);
+                                    containerDataMap.put(containerData.getContainer_name(), containerData);
+                                }
+                                k8sObject.setContainerDataMap(containerDataMap);
+                            }
+                            entry.getValue().setKubernetes_objects(k8sObjectList);
+                        }
+                        gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
+                        gsonStr = manipulateResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
+                    }
+                }
+            }
+        }
+        return gsonStr;
+    }
+
+    private String manipulateResponse(String gsonStr, String objectTobeRemoved) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(gsonStr);
+
+        // Find the corresponding object and remove it
+        rootNode.findParents(objectTobeRemoved).forEach(parent -> {
+            if (parent instanceof ObjectNode) {
+                ((ObjectNode) parent).remove(objectTobeRemoved);
+            }
+        });
+
+        // Convert the modified JsonNode back to a JSON string and return it
+        return mapper.writeValueAsString(rootNode);
     }
 
     //TODO this function no more used.
