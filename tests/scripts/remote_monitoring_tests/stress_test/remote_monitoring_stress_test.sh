@@ -25,7 +25,7 @@ KRUIZE_REPO="${CURRENT_DIR}/../../../../"
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
 ITER=1
-TIMEOUT=1200
+TIMEOUT=1800
 RESULTS_DIR=/tmp/kruize_scale_test_results
 BENCHMARK_SERVER=localhost
 APP_NAME=kruize
@@ -34,7 +34,7 @@ DEPLOYMENT_NAME=kruize
 CONTAINER_NAME=kruize
 NAMESPACE=monitoring
 users=1000
-rampup=120
+rampup=200
 loop=1
 
 RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
