@@ -200,23 +200,6 @@ public class Utils
 			}
 		}
 
-		public static String isAValidTimestamp(String standardJsonDateFormat, Timestamp intervalStartTimeStamp, Timestamp intervalEndTimeStamp) {
-			String error = "";
-			try {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardJsonDateFormat);
-				TemporalAccessor temporalAccessor = formatter.parse(intervalStartTimeStamp.toInstant().toString());
-				if (!formatter.format(temporalAccessor).equals(intervalStartTimeStamp.toInstant().toString()))
-					error = String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStamp.toInstant());
-				else {
-					temporalAccessor = formatter.parse(intervalEndTimeStamp.toInstant().toString());
-					if (!formatter.format(temporalAccessor).equals(intervalEndTimeStamp.toInstant().toString()))
-						error = String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStamp.toInstant());
-				}
-			} catch (DateTimeParseException e) {
-				error = e.getMessage();
-			}
-			return error;
-		}
 	}
 
 	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
