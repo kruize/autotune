@@ -22,37 +22,42 @@ import com.google.gson.annotations.SerializedName;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
+import static com.autotune.utils.KruizeConstants.JSONKeys.*;
+
 /**
  * Raw results are segregated and organized using IntervalResults
  */
 public class IntervalResults {
-    @SerializedName("metrics")
+    @SerializedName(METRICS)
     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
-    private Timestamp intervalStart;
-    private Timestamp intervalEnd;
+    @SerializedName(INTERVAL_START_TIME)
+    private Timestamp intervalStartTime;
+    @SerializedName(INTERVAL_END_TIME)
+    private Timestamp intervalEndTime;
+    @SerializedName(DURATION_IN_MINUTES)
     private Double durationInMinutes;
 
-    public IntervalResults(Timestamp intervalStart, Timestamp intervalEnd) {
-        this.intervalStart = intervalStart;
-        this.intervalEnd = intervalEnd;
-        this.durationInMinutes = Double.valueOf((intervalEnd.getTime() - intervalStart.getTime()) / (60 * 1000));
+    public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
+        this.intervalStartTime = intervalStartTime;
+        this.intervalEndTime = intervalEndTime;
+        this.durationInMinutes = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / (60 * 1000));
     }
 
-    public Timestamp getIntervalStart() {
-        return intervalStart;
+    public Timestamp getIntervalStartTime() {
+        return intervalStartTime;
     }
 
-    public void setIntervalStart(Timestamp intervalStart) {
-        this.intervalStart = intervalStart;
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
     }
 
 
-    public Timestamp getIntervalEnd() {
-        return intervalEnd;
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
     }
 
-    public void setIntervalEnd(Timestamp intervalEnd) {
-        this.intervalEnd = intervalEnd;
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
     }
 
     public Double getDurationInMinutes() {
@@ -75,8 +80,8 @@ public class IntervalResults {
     public String toString() {
         return "IntervalResults{" +
                 "metricResultsMap=" + metricResultsMap +
-                ", intervalStart=" + intervalStart +
-                ", intervalEnd=" + intervalEnd +
+                ", intervalStartTime=" + intervalStartTime +
+                ", intervalEndTime=" + intervalEndTime +
                 ", durationInMinutes=" + durationInMinutes +
                 '}';
     }

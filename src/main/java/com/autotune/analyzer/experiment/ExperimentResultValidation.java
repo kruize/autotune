@@ -53,11 +53,11 @@ public class ExperimentResultValidation {
             boolean proceed = false;
             String errorMsg = "";
             for (ExperimentResultData resultData : experimentResultDataList) {
-                if (null != resultData.getExperiment_name() && null != resultData.getEndtimestamp() && null != resultData.getStarttimestamp()) {
+                if (null != resultData.getExperiment_name() && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
                     if (mainKruizeExperimentMAP.containsKey(resultData.getExperiment_name())) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
-                        // check if the intervalEnd is greater than intervalStart and interval duration is greater than measurement duration
-                        IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                        // check if the intervalEndTime is greater than intervalStartTime and interval duration is greater than measurement duration
+                        IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
                         Double durationInMins = intervalResults.getDurationInMinutes();
                         String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
                         LOGGER.debug("Duration in mins = {}", intervalResults.getDurationInMinutes());
@@ -81,7 +81,7 @@ public class ExperimentResultValidation {
                         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                             for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                                 if (null != containerData.getResults()) {
-                                    if (null != containerData.getResults().get(resultData.getEndtimestamp())) {
+                                    if (null != containerData.getResults().get(resultData.getIntervalEndTime())) {
                                         isExist = true;
                                         break;
                                     }
@@ -89,7 +89,7 @@ public class ExperimentResultValidation {
                             }
                         }
                         if (isExist) {
-                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getEndtimestamp()));
+                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getIntervalEndTime()));
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_CONFLICT));
                             break;
                         }

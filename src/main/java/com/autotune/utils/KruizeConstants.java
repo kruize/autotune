@@ -106,6 +106,7 @@ public class KruizeConstants {
         public static final String NAMESPACE = "namespace";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
+        public static final String METRICS = "metrics";
         public static final String CONFIG = "config";
         public static final String NAME = "name";
         public static final String QUERY = "query";
@@ -168,6 +169,7 @@ public class KruizeConstants {
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String INTERVAL_START_TIME = "interval_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
+        public static final String DURATION_IN_MINUTES = "duration_in_minutes";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
