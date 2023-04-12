@@ -69,6 +69,7 @@ public class KruizeDeploymentInfo {
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
+    private static boolean saveToDB = true;
 
 
     private KruizeDeploymentInfo() {
@@ -158,6 +159,14 @@ public class KruizeDeploymentInfo {
     public static void setMonitoringAgentService(String monitoringAgentService) {
         if (monitoringAgentService != null)
             KruizeDeploymentInfo.monitoring_service = monitoringAgentService.toLowerCase();
+    }
+
+    public static boolean isSaveToDB() {
+        return saveToDB;
+    }
+
+    public static void setSaveToDB(boolean saveToDB) {
+        KruizeDeploymentInfo.saveToDB = saveToDB;
     }
 
     public static void logDeploymentInfo() {

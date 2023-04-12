@@ -55,7 +55,6 @@ public class CheckDBStatus extends HttpServlet {
                 }
             }
         }
-
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         if (isDBConnectSuccess) {

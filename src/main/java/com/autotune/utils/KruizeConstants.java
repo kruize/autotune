@@ -24,6 +24,7 @@ public class KruizeConstants {
     public static final String MINIKUBE = "minikube";
     public static final String OPENSHIFT = "openshift";
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
+    public static final String SQL_DB_TEST_QUERY = "SELECT 1";
 
     private KruizeConstants() {
     }
