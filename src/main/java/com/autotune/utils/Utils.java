@@ -17,7 +17,6 @@ package com.autotune.utils;
 
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.google.gson.ExclusionStrategy;
@@ -29,12 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.Date;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -199,7 +194,6 @@ public class Utils
 				return null;
 			}
 		}
-
 	}
 
 	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
