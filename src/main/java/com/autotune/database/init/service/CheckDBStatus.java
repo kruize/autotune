@@ -40,7 +40,7 @@ public class CheckDBStatus extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         boolean isDBConnectSuccess = false;
-        if (KruizeDeploymentInfo.isSaveToDB()) {
+        if (KruizeDeploymentInfo.settings_save_to_db) {
             if (null != KruizeHibernateUtil.getSessionFactory()) {
                 Session session = null;
                 try {

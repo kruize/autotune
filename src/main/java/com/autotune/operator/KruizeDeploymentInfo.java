@@ -63,13 +63,12 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-    public static String settings_save_to_db;
+    public static Boolean settings_save_to_db;
     public static String em_only_mode;
 
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
-    private static boolean saveToDB = true;
 
 
     private KruizeDeploymentInfo() {
@@ -159,14 +158,6 @@ public class KruizeDeploymentInfo {
     public static void setMonitoringAgentService(String monitoringAgentService) {
         if (monitoringAgentService != null)
             KruizeDeploymentInfo.monitoring_service = monitoringAgentService.toLowerCase();
-    }
-
-    public static boolean isSaveToDB() {
-        return saveToDB;
-    }
-
-    public static void setSaveToDB(boolean saveToDB) {
-        KruizeDeploymentInfo.saveToDB = saveToDB;
     }
 
     public static void logDeploymentInfo() {

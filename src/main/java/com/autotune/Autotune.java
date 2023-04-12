@@ -78,7 +78,7 @@ public class Autotune {
 
         try {
             server.start();
-            if (KruizeDeploymentInfo.isSaveToDB()) {
+            if (KruizeDeploymentInfo.settings_save_to_db) {
                 LOGGER.info("Checking DB connection...");
                 KruizeHibernateUtil.getSessionFactory();
             }
