@@ -22,7 +22,6 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import org.slf4j.Logger;
@@ -38,20 +37,38 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConsta
  */
 public class KruizeDeploymentInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeDeploymentInfo.class);
-    private static String clusterType;
-    private static String kubernetesType;
-    private static String authType;
-    private static String authToken;
-    private static String monitoringAgent;
-    private static String monitoringAgentService;
-    private static String monitoringAgentEndpoint;
-    private static String loggingLevel;
-    private static String rootLoggingLevel;
+    public static String database_username;
+    public static String database_password;
+    public static String database_hostname;
+    public static String database_dbname;
+    public static String database_port;
+    public static String settings_db_driver;
+    public static String settings_hibernate_dialect;
+    public static String settings_hibernate_connection_driver_class;
+    public static String settings_hibernate_c3p0_min_size;
+    public static String settings_hibernate_c3p0_max_size;
+    public static String settings_hibernate_c3p0_timeout;
+    public static String settings_hibernate_c3p0_max_statements;
+    public static String settings_hibernate_hbm2ddl_auto;
+    public static String settings_hibernate_show_sql;
+    public static String settings_hibernate_time_zone;
+    public static String autotune_mode;
+    public static String monitoring_agent;
+    public static String monitoring_service;
+    public static String monitoring_agent_endpoint;
+    public static String cluster_type;
+    public static String k8s_type;       // ABC
+    public static String auth_type;
+    public static String auth_token;
+    public static String database_admin_username;
+    public static String database_admin_password;
+    public static String database_ssl_mode;
+    public static String settings_save_to_db;
+    public static String em_only_mode;
+
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
-    private static int bulkupload_createexperiment_limit;
-    private static AnalyzerConstants.PersistenceType persistence_type;
 
 
     private KruizeDeploymentInfo() {
@@ -70,45 +87,36 @@ public class KruizeDeploymentInfo {
         return tunableLayerPair.get(layerName);
     }
 
-    public static String getMonitoringAgentEndpoint() {
-        return monitoringAgentEndpoint;
-    }
 
-    public static void setMonitoringAgentEndpoint(String monitoringAgentEndpoint) {
-        if (monitoringAgentEndpoint.endsWith("/")) {
-            KruizeDeploymentInfo.monitoringAgentEndpoint =
-                    monitoringAgentEndpoint.substring(0, monitoringAgentEndpoint.length() - 1);
+    public static void setMonitoring_agent_endpoint(String monitoring_agent_endpoint) {
+        if (monitoring_agent_endpoint.endsWith("/")) {
+            KruizeDeploymentInfo.monitoring_agent_endpoint =
+                    monitoring_agent_endpoint.substring(0, monitoring_agent_endpoint.length() - 1);
         } else {
-            KruizeDeploymentInfo.monitoringAgentEndpoint = monitoringAgentEndpoint;
+            KruizeDeploymentInfo.monitoring_agent_endpoint = monitoring_agent_endpoint;
         }
     }
 
-    public static String getClusterType() {
-        return clusterType;
-    }
 
-    public static void setClusterType(String clusterType) throws ClusterTypeNotSupportedException {
-        if (clusterType != null)
-            clusterType = clusterType.toLowerCase();
+    public static void setCluster_type(String cluster_type) throws ClusterTypeNotSupportedException {
+        if (cluster_type != null)
+            cluster_type = cluster_type.toLowerCase();
 
-        if (KruizeSupportedTypes.CLUSTER_TYPES_SUPPORTED.contains(clusterType)) {
-            KruizeDeploymentInfo.clusterType = clusterType;
+        if (KruizeSupportedTypes.CLUSTER_TYPES_SUPPORTED.contains(cluster_type)) {
+            KruizeDeploymentInfo.cluster_type = cluster_type;
         } else {
-            LOGGER.error("Cluster type {} is not supported", clusterType);
+            LOGGER.error("Cluster type {} is not supported", cluster_type);
             throw new ClusterTypeNotSupportedException();
         }
     }
 
-    public static String getKubernetesType() {
-        return kubernetesType;
-    }
 
     public static void setKubernetesType(String kubernetesType) throws K8sTypeNotSupportedException {
         if (kubernetesType != null)
             kubernetesType = kubernetesType.toLowerCase();
 
         if (KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(kubernetesType)) {
-            KruizeDeploymentInfo.kubernetesType = kubernetesType;
+            KruizeDeploymentInfo.k8s_type = kubernetesType;
         } else {
             LOGGER.error("k8s type {} is not suppported", kubernetesType);
             throw new K8sTypeNotSupportedException();
@@ -123,102 +131,43 @@ public class KruizeDeploymentInfo {
         return kubeEventLogger;
     }
 
-    public static String getAuthType() {
-        return authType;
-    }
 
-    public static void setAuthType(String authType) {
-        if (authType != null)
-            authType = authType.toLowerCase();
+    public static void setAuth_type(String auth_type) {
+        if (auth_type != null)
+            auth_type = auth_type.toLowerCase();
 
-        if (KruizeSupportedTypes.AUTH_TYPES_SUPPORTED.contains(authType)) {
-            KruizeDeploymentInfo.authType = authType;
+        if (KruizeSupportedTypes.AUTH_TYPES_SUPPORTED.contains(auth_type)) {
+            KruizeDeploymentInfo.auth_type = auth_type;
         }
     }
 
-    public static String getAuthToken() {
-        return authToken;
-    }
 
-    public static void setAuthToken(String authToken) {
-        KruizeDeploymentInfo.authToken = (authToken == null) ? "" : authToken;
-    }
+    public static void setMonitoring_agent(String monitoring_agent) throws MonitoringAgentNotSupportedException {
+        if (monitoring_agent != null)
+            monitoring_agent = monitoring_agent.toLowerCase();
 
-    public static String getMonitoringAgent() {
-        return monitoringAgent;
-    }
-
-    public static void setMonitoringAgent(String monitoringAgent) throws MonitoringAgentNotSupportedException {
-        if (monitoringAgent != null)
-            monitoringAgent = monitoringAgent.toLowerCase();
-
-        if (KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoringAgent)) {
-            KruizeDeploymentInfo.monitoringAgent = monitoringAgent;
+        if (KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoring_agent)) {
+            KruizeDeploymentInfo.monitoring_agent = monitoring_agent;
         } else {
-            LOGGER.error("Monitoring agent {}  is not supported", monitoringAgent);
+            LOGGER.error("Monitoring agent {}  is not supported", monitoring_agent);
             throw new MonitoringAgentNotSupportedException();
         }
     }
 
-    public static String getMonitoringAgentService() {
-        return monitoringAgentService;
-    }
 
     public static void setMonitoringAgentService(String monitoringAgentService) {
         if (monitoringAgentService != null)
-            KruizeDeploymentInfo.monitoringAgentService = monitoringAgentService.toLowerCase();
-    }
-
-    public static String getLoggingLevel() {
-        return loggingLevel;
-    }
-
-    public static void setLoggingLevel(String loggingLevel) {
-        if (loggingLevel != null)
-            loggingLevel = loggingLevel.toLowerCase();
-
-        if (KruizeSupportedTypes.LOGGING_TYPES_SUPPORTED.contains(loggingLevel))
-            KruizeDeploymentInfo.loggingLevel = loggingLevel;
-        else
-            KruizeDeploymentInfo.loggingLevel = "info";
-    }
-
-    public static String getRootLoggingLevel() {
-        return rootLoggingLevel;
-    }
-
-    public static void setRootLoggingLevel(String rootLoggingLevel) {
-        if (rootLoggingLevel != null)
-            rootLoggingLevel = rootLoggingLevel.toLowerCase();
-
-        if (KruizeSupportedTypes.LOGGING_TYPES_SUPPORTED.contains(rootLoggingLevel))
-            KruizeDeploymentInfo.rootLoggingLevel = rootLoggingLevel;
-        else
-            KruizeDeploymentInfo.rootLoggingLevel = "error";
+            KruizeDeploymentInfo.monitoring_service = monitoringAgentService.toLowerCase();
     }
 
     public static void logDeploymentInfo() {
-        LOGGER.info("Cluster Type: {}", getClusterType());
-        LOGGER.info("Kubernetes Type: {}", getKubernetesType());
-        LOGGER.info("Auth Type: {}", getAuthType());
-        LOGGER.info("Monitoring Agent: {}", getMonitoringAgent());
-        LOGGER.info("Monitoring Agent URL: {}", getMonitoringAgentEndpoint());
-        LOGGER.info("Monitoring agent service: {}\n\n", getMonitoringAgentService());
+        LOGGER.info("Cluster Type: {}", KruizeDeploymentInfo.cluster_type);
+        LOGGER.info("Kubernetes Type: {}", KruizeDeploymentInfo.k8s_type);
+        LOGGER.info("Auth Type: {}", KruizeDeploymentInfo.auth_type);
+        LOGGER.info("Monitoring Agent: {}", KruizeDeploymentInfo.monitoring_agent);
+        LOGGER.info("Monitoring Agent URL: {}", KruizeDeploymentInfo.monitoring_agent_endpoint);
+        LOGGER.info("Monitoring agent service: {}\n\n", KruizeDeploymentInfo.monitoring_service);
     }
 
-    public static int getBulkupload_createexperiment_limit() {
-        return bulkupload_createexperiment_limit;
-    }
 
-    public static void setBulkupload_createexperiment_limit(int bulkupload_createexperiment_limit) {
-        KruizeDeploymentInfo.bulkupload_createexperiment_limit = bulkupload_createexperiment_limit;
-    }
-
-    public static AnalyzerConstants.PersistenceType getPersistence_type() {
-        return persistence_type;
-    }
-
-    public static void setPersistence_type(AnalyzerConstants.PersistenceType persistence_type) {
-        KruizeDeploymentInfo.persistence_type = persistence_type;
-    }
 }

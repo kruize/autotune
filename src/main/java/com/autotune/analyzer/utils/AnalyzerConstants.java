@@ -38,15 +38,8 @@ public class AnalyzerConstants {
 
 
     // Used to parse autotune configmaps
-    public static final String K8S_TYPE = "K8S_TYPE";
-    public static final String AUTH_TYPE = "AUTH_TYPE";
-    public static final String AUTH_TOKEN = "AUTH_TOKEN";
-    public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
-    public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
-    public static final String ROOT_LOGGING_LEVEL = "ROOT_LOGGING_LEVEL";
-    public static final String MONITORING_AGENT = "MONITORING_AGENT";
-    public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
-    public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
+
+
     public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
     public static final String PROMETHEUS_API = "/api/v1/query?query=";
     public static final String HTTP_PROTOCOL = "http";
@@ -222,6 +215,12 @@ public class AnalyzerConstants {
         REPLICASET,
         REPLICATION_CONTROLLER,
         DAEMONSET,
+    }
+
+    public enum RegisterRecommendationEngineStatus {
+        SUCCESS,
+        ALREADY_EXISTS,
+        INVALID
     }
 
     /**
@@ -509,7 +508,7 @@ public class AnalyzerConstants {
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
 
-        public static final Map<String , Class> perfProfileInstances = Map.of(
+        public static final Map<String, Class> perfProfileInstances = Map.of(
                 DEFAULT_PROFILE, DefaultImpl.class,
                 RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class
         );
@@ -527,6 +526,7 @@ public class AnalyzerConstants {
             public static final String REPLICASET = "replicaset";
             public static final String REPLICATION_CONTROLLER = "replicationController";
             public static final String DAEMONSET = "daemonset";
+
             private Types() {
 
             }
@@ -542,6 +542,7 @@ public class AnalyzerConstants {
         public static final String MEMORY_LIMIT = "memoryLimit";
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
+
         private MetricNameConstants() {
 
         }
@@ -551,6 +552,7 @@ public class AnalyzerConstants {
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
+
         private RecommendationNotificationMsgConstant() {
 
         }
@@ -565,37 +567,36 @@ public class AnalyzerConstants {
         public static final String FALSE = FALSE_LOWER;
         public static final String TRUE_UPPER = TRUE_DEFAULT.toUpperCase();
         public static final String FALSE_UPPER = FALSE_DEFAULT.toUpperCase();
+
         private BooleanString() {
 
         }
-    }
-
-    public enum RegisterRecommendationEngineStatus {
-        SUCCESS,
-        ALREADY_EXISTS,
-        INVALID
     }
 
     public static class RecommendationEngine {
         private RecommendationEngine() {
 
         }
-        public static class EngineNames {
-            private EngineNames() {
 
-            }
+        public static class EngineNames {
             public static String DEFAULT_NAME = "Default";
             public static String DURATION_BASED = "Duration Based";
             public static String PROFILE_BASED = "Profile Based";
+
+            private EngineNames() {
+
+            }
         }
 
         public static class EngineKeys {
+            public static String DURATION_BASED_KEY = "duration_based";
+            public static String PROFILE_BASED_KEY = "profile_based";
+
             private EngineKeys() {
 
             }
-
-            public static String DURATION_BASED_KEY = "duration_based";
-            public static String PROFILE_BASED_KEY = "profile_based";
         }
     }
+
+
 }
