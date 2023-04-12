@@ -69,6 +69,10 @@ public class MetricResults {
         this.metricAggregationInfoResults = metricAggregationInfoResults;
     }
 
+    public void setMetricPercentileResults(MetricPercentileResults metricPercentileResults) {
+        this.metricPercentileResults = metricPercentileResults;
+    }
+
     public Double getValue() {
         return value;
     }
