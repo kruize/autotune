@@ -143,7 +143,7 @@ public class ServiceHelpers {
             if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
                 JSONObject tunableJson = new JSONObject();
                 addTunable(tunableJson, tunable);
-                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.MONITORING_AGENT);
+                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
                 String query = AnalyzerConstants.NONE;
                 if (tunableQuery != null && !tunableQuery.isEmpty()) {
                     query = tunableQuery;

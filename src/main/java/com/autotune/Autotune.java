@@ -65,7 +65,7 @@ public class Autotune {
         server.setHandler(context);
         server.addBean(new KruizeErrorHandler());
         addAutotuneServlets(context);
-        String autotuneMode = KruizeDeploymentInfo.AUTOTUNE_MODE;
+        String autotuneMode = KruizeDeploymentInfo.autotune_mode;
 
         if (null != autotuneMode) {
             if (autotuneMode.equalsIgnoreCase(KruizeConstants.StartUpMode.EM_ONLY_MODE)) {

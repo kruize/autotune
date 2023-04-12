@@ -30,6 +30,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Get the deployment information from the config map and initialize
@@ -44,14 +45,14 @@ public class InitializeDeployment {
     public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
         setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
         setConfigValues(KruizeConstants.DBConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
-        KruizeDeploymentInfo.setClusterType(KruizeDeploymentInfo.CLUSTER_TYPE);
-        KruizeDeploymentInfo.setKubernetesType(KruizeDeploymentInfo.K8S_TYPE);
-        KruizeDeploymentInfo.setAuthType(KruizeDeploymentInfo.AUTH_TYPE);
-        KruizeDeploymentInfo.setMonitoringAgent(KruizeDeploymentInfo.MONITORING_AGENT);
-        KruizeDeploymentInfo.setMonitoringAgentService(KruizeDeploymentInfo.MONITORING_SERVICE);
-        String monitoring_agent_endpoint = KruizeDeploymentInfo.MONITORING_AGENT_ENDPOINT;
-        String monitoring_agent = KruizeDeploymentInfo.MONITORING_AGENT;
-        String monitoring_agent_service = KruizeDeploymentInfo.MONITORING_SERVICE;
+        KruizeDeploymentInfo.setCluster_type(KruizeDeploymentInfo.cluster_type);
+        KruizeDeploymentInfo.setKubernetesType(KruizeDeploymentInfo.k8s_type);
+        KruizeDeploymentInfo.setAuth_type(KruizeDeploymentInfo.auth_type);
+        KruizeDeploymentInfo.setMonitoring_agent(KruizeDeploymentInfo.monitoring_agent);
+        KruizeDeploymentInfo.setMonitoringAgentService(KruizeDeploymentInfo.monitoring_service);
+        String monitoring_agent_endpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
+        String monitoring_agent = KruizeDeploymentInfo.monitoring_agent;
+        String monitoring_agent_service = KruizeDeploymentInfo.monitoring_service;
         //If no endpoint was specified in the configmap
         if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
             if (monitoring_agent == null || monitoring_agent_service == null) {
@@ -61,7 +62,7 @@ public class InitializeDeployment {
                 monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
             }
         }
-        KruizeDeploymentInfo.setMonitoringAgentEndpoint(monitoring_agent_endpoint);
+        KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);
 
         KruizeDeploymentInfo.setLayerTable();
 
@@ -72,6 +73,17 @@ public class InitializeDeployment {
 
     }
 
+    /**
+     * This code sets configuration values based on the provided config file name and the given environment class.
+     * First, it tries to retrieve the configuration file path from the corresponding environment variable and parses it into a JSON object.
+     * If that fails, it logs a warning message and proceeds to check if the environment variable is set.
+     * Next, it retrieves all the String type fields from the given environment class using Java reflection
+     * and iterates through them. For each field,
+     * it sets the corresponding static variable in the KruizeDeploymentInfo class using its
+     * lowercase name as the key and the value obtained from the configuration object or
+     * the environment variable, if available.
+     * Any errors encountered during this process are logged as warnings.
+     */
     private static void setConfigValues(String configFileName, Class envClass) {
         String configFile = System.getenv(configFileName);
         JSONObject configObject = null;
@@ -88,9 +100,10 @@ public class InitializeDeployment {
         for (Field field : fields) {
             if (field.getType() == String.class) {
                 try {
-                    KruizeDeploymentInfo.class.getDeclaredField(field.getName()).set(null,
+                    KruizeDeploymentInfo.class.getDeclaredField(field.getName().toLowerCase(Locale.ROOT)).set(null,
                             getKruizeConfigValue((String) field.get(null), configObject));
                 } catch (IllegalAccessException | NoSuchFieldException e) {
+                    e.printStackTrace();
                     LOGGER.warn("Error while setting config variables :  {}", e.getMessage());
                 }
             }

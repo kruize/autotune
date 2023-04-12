@@ -34,22 +34,22 @@ public class KruizeHibernateUtil {
         SessionFactory sfTemp = null;
         try {
             Configuration configuration = new Configuration();
-            String connectionURL = KruizeDeploymentInfo.SETTINGS_DB_DRIVER +
-                    KruizeDeploymentInfo.DATABASE_HOSTNAME +
-                    ":" + Integer.parseInt(KruizeDeploymentInfo.DATABASE_PORT) +
-                    "/" + KruizeDeploymentInfo.DATABASE_DBNAME;
+            String connectionURL = KruizeDeploymentInfo.settings_db_driver +
+                    KruizeDeploymentInfo.database_hostname +
+                    ":" + Integer.parseInt(KruizeDeploymentInfo.database_port) +
+                    "/" + KruizeDeploymentInfo.database_dbname;
             configuration.setProperty("hibernate.connection.url", connectionURL);
-            configuration.setProperty("hibernate.connection.username", KruizeDeploymentInfo.DATABASE_USERNAME);
-            configuration.setProperty("hibernate.connection.password", KruizeDeploymentInfo.DATABASE_PASSWORD);
-            configuration.setProperty("hibernate.dialect", KruizeDeploymentInfo.SETTINGS_HIBERNATE_DIALECT);
-            configuration.setProperty("hibernate.connection.driver_class", KruizeDeploymentInfo.SETTINGS_HIBERNATE_CONNECTION_DRIVER_CLASS);
-            configuration.setProperty("hibernate.c3p0.min_size", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_MIN_SIZE);
-            configuration.setProperty("hibernate.c3p0.max_size", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_MAX_SIZE);
-            configuration.setProperty("hibernate.c3p0.timeout", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_TIMEOUT);
-            configuration.setProperty("hibernate.c3p0.max_statements", KruizeDeploymentInfo.SETTINGS_HIBERNATE_C3P0_MAX_STATEMENTS);
-            configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.SETTINGS_HIBERNATE_HBM2DDL_AUTO);
-            configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.SETTINGS_HIBERNATE_SHOW_SQL);
-            configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.SETTINGS_HIBERNATE_TIME_ZONE);
+            configuration.setProperty("hibernate.connection.username", KruizeDeploymentInfo.database_username);
+            configuration.setProperty("hibernate.connection.password", KruizeDeploymentInfo.database_password);
+            configuration.setProperty("hibernate.dialect", KruizeDeploymentInfo.settings_hibernate_dialect);
+            configuration.setProperty("hibernate.connection.driver_class", KruizeDeploymentInfo.settings_hibernate_connection_driver_class);
+            configuration.setProperty("hibernate.c3p0.min_size", KruizeDeploymentInfo.settings_hibernate_c3p0_min_size);
+            configuration.setProperty("hibernate.c3p0.max_size", KruizeDeploymentInfo.settings_hibernate_c3p0_max_size);
+            configuration.setProperty("hibernate.c3p0.timeout", KruizeDeploymentInfo.settings_hibernate_c3p0_timeout);
+            configuration.setProperty("hibernate.c3p0.max_statements", KruizeDeploymentInfo.settings_hibernate_c3p0_max_statements);
+            configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.settings_hibernate_hbm2ddl_auto);
+            configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.settings_hibernate_show_sql);
+            configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.settings_hibernate_time_zone);
             configuration.addAnnotatedClass(KruizeExperimentEntry.class);
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);

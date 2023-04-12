@@ -79,7 +79,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                 kubernetesServices = new KubernetesServicesImpl();
                 // Get the env variables map from kubernetes
                 // TODO: Move the constants to common constants or Autotune Constants
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", KruizeDeploymentInfo.K8S_TYPE);
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneQueryVariableCRD, "monitoring", KruizeDeploymentInfo.k8s_type);
                 ArrayList<Map<String, String>> queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
                 LinkedHashMap<String, LinkedHashMap<Integer, CycleMetaData>> cycleMetaDataMap = new LinkedHashMap<>();
                 LinkedHashMap<String, Integer> cycles = new LinkedHashMap<>();

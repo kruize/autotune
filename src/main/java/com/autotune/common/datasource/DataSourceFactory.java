@@ -42,8 +42,8 @@ public class DataSourceFactory {
 
     public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
         String monitoringAgentEndpoint = null;
-        if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.MONITORING_AGENT))
-            monitoringAgentEndpoint = KruizeDeploymentInfo.MONITORING_AGENT_ENDPOINT;
+        if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent))
+            monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
 
         // Monitoring agent endpoint not set in the configmap
         if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
@@ -68,7 +68,7 @@ public class DataSourceFactory {
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
         List<Service> serviceList = kubernetesServices.getServicelist(null);
         kubernetesServices.shutdownClient();
-        String monitoringAgentService = KruizeDeploymentInfo.MONITORING_SERVICE;
+        String monitoringAgentService = KruizeDeploymentInfo.monitoring_service;
 
         if (monitoringAgentService == null)
             throw new MonitoringAgentNotFoundException();
@@ -79,11 +79,11 @@ public class DataSourceFactory {
                 try {
                     String clusterIP = service.getSpec().getClusterIP();
                     int port = service.getSpec().getPorts().get(0).getPort();
-                    LOGGER.info(KruizeDeploymentInfo.CLUSTER_TYPE);
-                    if (KruizeDeploymentInfo.K8S_TYPE.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
+                    LOGGER.info(KruizeDeploymentInfo.cluster_type);
+                    if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
                         return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
-                    if (KruizeDeploymentInfo.K8S_TYPE.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+                    if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
                         return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
                 } catch (Exception e) {

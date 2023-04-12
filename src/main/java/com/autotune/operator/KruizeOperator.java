@@ -478,7 +478,7 @@ public class KruizeOperator {
             // Get the autotunequeryvariables for the current kubernetes environment
             ArrayList<Map<String, String>> queryVarList = null;
             try {
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.K8S_TYPE);
+                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.k8s_type);
                 queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
             } catch (Exception e) {
                 LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
@@ -493,7 +493,7 @@ public class KruizeOperator {
                 for (Object query : layerPresenceQueryJson) {
                     JSONObject queryJson = (JSONObject) query;
                     String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.MONITORING_AGENT)) {
+                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.monitoring_agent)) {
                         layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
                         layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
                         // Replace the queryvariables in the query
@@ -666,7 +666,7 @@ public class KruizeOperator {
             }
             DataSource autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.MONITORING_AGENT);
+                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.monitoring_agent);
             } catch (MonitoringAgentNotFoundException e) {
                 e.printStackTrace();
             }

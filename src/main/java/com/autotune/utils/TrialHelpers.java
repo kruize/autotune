@@ -145,10 +145,10 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.MONITORING_AGENT,
-                new URL(KruizeDeploymentInfo.MONITORING_AGENT_ENDPOINT));
+        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent,
+                new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
-        datasourceInfoHashMap.put(KruizeDeploymentInfo.MONITORING_AGENT, datasourceInfo);  //Change key value as per YAML input
+        datasourceInfoHashMap.put(KruizeDeploymentInfo.monitoring_agent, datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
@@ -202,7 +202,7 @@ public class TrialHelpers {
                 LOGGER.error("ERROR: tunable is null for tunableName: " + tunableName);
             }
             ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
-            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.MONITORING_AGENT);
+            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
             Class<Layer> classRef = KruizeDeploymentInfo.getLayer(tunable.getLayerName());
             try {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
@@ -221,7 +221,7 @@ public class TrialHelpers {
             if (tunableQuery != null && !tunableQuery.isEmpty()) {
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
-                        KruizeDeploymentInfo.MONITORING_AGENT,
+                        KruizeDeploymentInfo.monitoring_agent,
                         tunable.getValueType(), null);
                 if (containerMetricsHashMap != null
                         && !containerMetricsHashMap.isEmpty()

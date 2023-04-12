@@ -350,6 +350,11 @@ public class KruizeConstants {
         }
     }
 
+    /**
+     * In order to assign values to the static variables of KruizeDeploymentInfo
+     * using Java reflection, the class variables are utilized, and therefore,
+     * if any new variables are added, their corresponding declaration is necessary.
+     */
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
         public static final String DATABASE_ADMIN_PASSWORD = "database_adminpassword";
@@ -361,6 +366,11 @@ public class KruizeConstants {
         public static final String DATABASE_SSL_MODE = "database_sslmode";
     }
 
+    /**
+     * In order to assign values to the static variables of KruizeDeploymentInfo
+     * using Java reflection, the class variables are utilized, and therefore,
+     * if any new variables are added, their corresponding declaration is necessary.
+     */
     public static final class KRUIZE_CONFIG_ENV_NAME {
         public static final String K8S_TYPE = "k8stype";
         public static final String AUTH_TYPE = "authtype";
