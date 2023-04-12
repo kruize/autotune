@@ -142,7 +142,6 @@ public class Tunable {
                    String lowerBound
     ) throws InvalidBoundsException {
         setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
-        this.step = Objects.requireNonNull(step, ZERO_STEP);
         /* Parse the value for the bounds from the strings passed in */
         Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
         Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
