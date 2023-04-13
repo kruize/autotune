@@ -335,7 +335,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    num_exps = 10
+    num_exps = 1000
     metrics_csv = "../csv_data/tfb_data.csv"
     exp_jsons_dir = "/tmp/exp_jsons"
     result_jsons_dir = "/tmp/result_jsons"
@@ -385,9 +385,9 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
             print("message = ", data['message'])
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
-            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
 
-            time.sleep(20)
+            time.sleep(5)
 
             # Get the experiment name
             json_data = json.load(open(create_exp_json_file))
@@ -458,7 +458,9 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(20)
+        time.sleep(1)
+
+    time.sleep(5)
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -471,10 +473,11 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     update_results_json = []
     if latest == "true":
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
-        expected_duration_in_hours = 9.25
+        expected_duration_in_hours = len(result_json_arr) * 15 / 60
         expected_num_recos = 1
     elif latest == "false":
         update_results_json = result_json_arr
+        print(f"*********** len update results json {len(update_results_json)}")
         expected_duration_in_hours = None
         expected_num_recos = len(result_json_arr)
 
@@ -540,7 +543,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time_invalid(monitorin
 
 @pytest.mark.sanity
 @pytest.mark.parametrize("test_name, monitoring_end_time", \
-            [("valid_monitoring_end_time", "2022-12-20T23:40:15.000Z"), ("invalid_monitoring_end_time","2018-12-20T23:40:15.000Z")])
+            [("valid_monitoring_end_time", "2023-04-14T22:59:20.982Z"), ("invalid_monitoring_end_time","2018-12-20T23:40:15.000Z")])
 def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monitoring_end_time, cluster_type):
     """
     Test Description: This test validates listRecommendations by passing a valid experiment name
@@ -599,7 +602,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
         for result in result_json_arr:
             if result['interval_end_time'] == monitoring_end_time:
                 update_results_json.append(result)
-                expected_duration_in_hours = 8.0
+                expected_duration_in_hours = 24.0
         # Validate the json against the json schema
         errorMsg = validate_list_reco_json(list_reco_json)
         assert errorMsg == ""
@@ -722,6 +725,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
     # Create experiment using the specified json
     num_exps = 3
+    num_res = 100
     list_of_result_json_arr = []
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
@@ -742,7 +746,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
-        for j in range(4):
+        for j in range(num_res):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
@@ -759,7 +763,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-            time.sleep(20)
+            time.sleep(2)
 
             # Get the experiment name
             json_data = json.load(open(create_exp_json_file))
@@ -770,7 +774,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         list_of_result_json_arr.append(result_json_arr)
 
-    time.sleep(30)
+    time.sleep(10)
 
     experiment_name = None
     response = list_recommendations(experiment_name, latest)
@@ -792,7 +796,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         if latest == "true":
             update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i])-1])
-            expected_duration_in_hours = 1.0
+            expected_duration_in_hours = 15 * num_res / 60
             print("#######################################")
             print(update_results_json)
             print("#######################################")
