@@ -79,7 +79,7 @@ def main(argv):
     iterations = int(hours / 6)
     # 6 hour results of each result with 15mins duration, so no. of results 6 * 4
     num_res = 24 
-    debug_log = False
+    debug_log = True
 
     for i in range(1, iterations+1):
         print("\n*************************")
@@ -93,43 +93,49 @@ def main(argv):
             start_ts = get_datetime()
         else:
             # Increment the time by 365 mins or 6 hrs 6 mins for the next set of data timestamps
-            new_timestamp = increment_timestamp(start_ts, 365)
+            new_timestamp = increment_timestamp_by_given_mins(start_ts, 365)
             start_ts = new_timestamp
             create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
 
-        for exp_num in range(num_exps):
-            # create the experiment and post it
-            create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
-            create_experiment(create_exp_json_file, debug_log)
-            if i == 1:
+        for res_num in range(num_res):
+            for exp_num in range(num_exps):
+                # create the experiment and post it
+                create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
+                create_experiment(create_exp_json_file, debug_log)
+                
+                # Obtain the experiment name
                 json_data = json.load(open(create_exp_json_file))
 
                 experiment_name = json_data[0]['experiment_name']
-                exp_list.append(experiment_name)
+                print(f"experiment_name = {experiment_name}")
 
-            for res_num in range(num_res):
                 # update 6 hours result for the specified experiment
                 json_file = result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
+
                 update_results(json_file, debug_log)
 
-        # sleep for a while before fetching recommendations for the experiments
-        time.sleep(60)
+                # Obtain the monitoring end time
+                json_data = json.load(open(json_file))
+                interval_end_time = json_data[0]['interval_end_time']
 
-        # Fetch the recommendations for all the experiments
-        for experiment_name in exp_list:
-            latest = "false"
-            monitoring_end_time = None
-            reco = list_recommendations(experiment_name, latest, monitoring_end_time, debug_log)
-            filename = reco_json_dir + '/reco_' + experiment_name + '.json'
-            write_json_data_to_file(filename, reco.json())
+                # sleep for a while before fetching recommendations for the experiments
+                time.sleep(5)
+
+                # Fetch the recommendations for all the experiments
+                latest = None
+                reco = list_recommendations(experiment_name, latest, interval_end_time, debug_log)
+                filename = reco_json_dir + '/reco_' + experiment_name + '.json'
+                write_json_data_to_file(filename, reco.json())
 
         # sleep for a while to mimic the availability of next set of results
         time.sleep(1)
 
     for exp_num in range(num_exps):
-        # create the experiment and post it
+        # Delete the experiment
         create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
         delete_experiment(create_exp_json_file, debug_log)
+
+    find_min_max_time_taken(results_dir)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

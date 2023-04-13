@@ -179,11 +179,11 @@ SCALE_LOG="${LOG_DIR}/scale_demo.log"
 echo ""
 echo "Running scale demo for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
+	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r ${LOG_DIR} | tee -a  ${SCALE_LOG}" | tee -a ${LOG}
 	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 
 else
-	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG}" | tee -a ${LOG}
+	echo "python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r ${LOG_DIR} > ${SCALE_LOG} | tee -a ${SCALE_LOG}" | tee -a ${LOG}
 	python3 rm_scale_demo.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${SCALE_LOG}
 fi
 

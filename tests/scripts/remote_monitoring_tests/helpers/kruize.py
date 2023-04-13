@@ -19,6 +19,7 @@ import requests
 import json
 import os
 import time
+from helpers.utils import *
 
 def form_kruize_url(cluster_type, SERVER_IP = None):
     global URL
@@ -72,12 +73,19 @@ def create_experiment(input_json_file, debug_log = True, is_json_file = True, in
         print("URL = ", url)
     
     headers = {'content-type': 'application/xml'}
+
+    start_time = time.time()
     if invalid_header:
         print("Invalid header")
         response = requests.post(url, json=input_json, headers=headers)
     else:
         response = requests.post(url, json=input_json)
        
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"createExperiment elapsed_time = {elapsed_time}")
+    log_time_taken('createExperiment', elapsed_time)
+
     if debug_log == True:
         print(response)
         print("Response status code = ", response.status_code)
@@ -89,12 +97,16 @@ def update_results(result_json_file, debug_log = True, is_json_file = True):
 
     if is_json_file == True:
         # read the json file
+        print("opening result json ")
         json_file = open(result_json_file, "r")
+        print("loading result json...")
         result_json = json.loads(json_file.read())
+        print("loading result json...done")
     else:
         result_json = result_json_file
 
     url = URL + "/updateResults"
+    print("**** URL = ", url)
     if debug_log == True:
         print("\n************************************************************")
         print(result_json)
@@ -103,7 +115,16 @@ def update_results(result_json_file, debug_log = True, is_json_file = True):
         print("\nUpdating the results...")
         print("URL = ", url)
 
+    print("Posting request...")
+    start_time = time.time()
+
     response = requests.post(url, json=result_json)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"updateResults elapsed_time = {elapsed_time}")
+    log_time_taken('updateResults', elapsed_time)
+    print("Posting request...done")
 
     if debug_log == True:
         print("Response status code = ", response.status_code)
@@ -138,7 +159,12 @@ def list_recommendations(experiment_name = None, latest = None, monitoring_end_t
         if debug_log == True:
             print("PARAMS = ", PARAMS)
 
+    start_time = time.time()
     response = requests.get(url = url, params = PARAMS)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"listRecommendations elapsed_time = {elapsed_time}")
+    log_time_taken('listRecommendations', elapsed_time)
 
     if debug_log == True:
         print("Response status code = ", response.status_code)
@@ -153,9 +179,9 @@ def delete_experiment(input_json_file, debug_log = True, invalid_header = False)
 
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
+    url = URL + "/createExperiment"
     if debug_log == True:
         print("\nDeleting the experiment...")
-        url = URL + "/createExperiment"
         print("URL = ", url)
 
     experiment_name = input_json[0]['experiment_name']

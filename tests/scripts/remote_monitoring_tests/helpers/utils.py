@@ -18,6 +18,7 @@ import csv
 import json
 import os
 import re
+import shutil
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -41,6 +42,8 @@ time_log_csv = "/tmp/time_log.csv"
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
+
+time_log_csv = "/tmp/time_log.csv"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -371,4 +374,30 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+
+def log_time_taken(function_name, elapsed_time):
+    with open(time_log_csv, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([function_name, elapsed_time])
+
+def find_min_max_time_taken(results_dir):
+    # Find the minimum and maximum time taken for each function
+    with open(time_log_csv, 'r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip the header row
+        time_dict = {}
+        for row in reader:
+            function_name = row[0]
+            elapsed_time = float(row[1])
+            if function_name not in time_dict:
+                time_dict[function_name] = [elapsed_time]
+            else:
+                time_dict[function_name].append(elapsed_time)
+
+    for function_name in time_dict:
+        min_time = min(time_dict[function_name])
+        max_time = max(time_dict[function_name])
+        print(f"{function_name}: min = {min_time:.4f} sec, max = {max_time:.4f} sec")
+
+    shutil.copy(time_log_csv, results_dir)
 
