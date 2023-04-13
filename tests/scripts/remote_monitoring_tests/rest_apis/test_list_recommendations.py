@@ -39,7 +39,7 @@ def test_list_recommendations_single_result(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(10)
+    time.sleep(1)
 
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -98,7 +98,7 @@ def test_list_recommendations_without_parameters(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(10)
+    time.sleep(1)
 
     # Get the experiment name
     experiment_name = None
@@ -186,7 +186,7 @@ def test_list_recommendations_without_results(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    time.sleep(10)
+    time.sleep(1)
 
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -236,7 +236,7 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     assert data['status'] == ERROR_STATUS
     assert data['message'] == "Bulk entries are currently unsupported!"
 
-    time.sleep(10)
+    time.sleep(1)
 
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -327,8 +327,6 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
             result_json_data = read_json_data_from_file(result_json_file)
             result_json_arr.append(result_json_data[0])
 
-        time.sleep(20)
-
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
@@ -401,7 +399,7 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(5)
+    time.sleep(1)
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -476,8 +474,6 @@ def test_list_recommendations_exp_name_and_monitoring_end_time_invalid(monitorin
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(10)
-
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -534,9 +530,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        time.sleep(5)
-
-    time.sleep(20)
+    time.sleep(1)
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -626,7 +620,7 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        time.sleep(20)
+        time.sleep(2)
 
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))

@@ -277,7 +277,8 @@ function autotune_cleanup() {
 	echo "CMD = ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
-	prometheus_cleanup
+	# Uncomment this line if prometheus setup also needs to be cleaned up
+	# prometheus_cleanup
 	popd > /dev/null
 	echo "done"
 }
