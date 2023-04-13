@@ -85,7 +85,7 @@ kruize_crc_start() {
 	CRC_MANIFEST_FILE_OLD="/tmp/kruize.yaml"
 
 	cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
-	sed -e "s/image: kruize\/autotune_operator:.*/image: ${AUTOTUNE_DOCKER_IMAGE//\//\\\/}/g" ${CRC_MANIFEST_FILE_OLD} > ${CRC_MANIFEST_FILE}
+	sed -e "s/image:.*/image: ${AUTOTUNE_DOCKER_IMAGE//\//\\\/}/g" ${CRC_MANIFEST_FILE_OLD} > ${CRC_MANIFEST_FILE}
 	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
 	check_running kruize ${autotune_ns}
 	if [ "${err}" != "0" ]; then
