@@ -81,7 +81,7 @@ data:
         "username": "admin"
       }
     }
-  krizeconfigjson: |
+  kruizeconfigjson: |
     {
       "clustertype":"kubernetes",
       "k8stype" : "openshift",
@@ -195,7 +195,7 @@ spec:
             - name: DB_CONFIG_FILE
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
-              value: "/etc/config/krizeconfigjson"
+              value: "/etc/config/kruizeconfigjson"
           ports:
             - name: kruize-port
               containerPort: 8080
