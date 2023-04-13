@@ -60,7 +60,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
             return AnalyzerConstants.RegisterRecommendationEngineStatus.INVALID;
         }
         for (KruizeRecommendationEngine engine : getEngines()) {
-            if (engine.getEngineName().equalsIgnoreCase(kruizeRecommendationEngine.getEngineName()))
+            if (engine.getEngineKey().equalsIgnoreCase(kruizeRecommendationEngine.getEngineKey()))
                 return AnalyzerConstants.RegisterRecommendationEngineStatus.ALREADY_EXISTS;
         }
         // Add engines

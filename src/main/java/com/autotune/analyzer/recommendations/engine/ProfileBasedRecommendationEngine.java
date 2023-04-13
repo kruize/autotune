@@ -30,6 +30,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     public ProfileBasedRecommendationEngine() {
         this.name = AnalyzerConstants.RecommendationEngine.EngineNames.PROFILE_BASED;
         this.key = AnalyzerConstants.RecommendationEngine.EngineKeys.PROFILE_BASED_KEY;
+        this.category = AnalyzerConstants.RecommendationCategory.PROFILE_BASED;
     }
 
     public ProfileBasedRecommendationEngine(String name) {
