@@ -29,7 +29,7 @@ data:
         "username": "admin"
       }
     }
-  krizeconfigjson: |
+  kruizeconfigjson: |
     {
       "clustertype":"kubernetes",
       "k8stype" : "minikube",
@@ -55,7 +55,7 @@ data:
 As shown in the previous example, two JSON configurations are created:
 
 * dbconfigjson: Configuration related to the database
-* krizeconfigjson: Configuration related to Kruize
+* kruizeconfigjson: Configuration related to Kruize
 
 These Kubernetes configurations are volume-mounted with the Kruize deployment.
 
@@ -68,7 +68,7 @@ env:
   - name: DB_CONFIG_FILE
     value: "/etc/config/dbconfigjson"
   - name: KRUIZE_CONFIG_FILE
-    value: "/etc/config/krizeconfigjson"
+    value: "/etc/config/kruizeconfigjson"
 ```
 
 ### **Configure using Environment Variables**
@@ -87,7 +87,7 @@ env:
 - name: DB_CONFIG_FILE 
   value: "/etc/config/dbconfigjson"
 - name: KRUIZE_CONFIG_FILE 
-  value: "/etc/config/krizeconfigjson"
+  value: "/etc/config/kruizeconfigjson"
 - name: database_username 
   value: newadmin
 - name: database_hostname 
