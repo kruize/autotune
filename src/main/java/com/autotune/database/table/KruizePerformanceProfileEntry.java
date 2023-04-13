@@ -74,4 +74,14 @@ public class KruizePerformanceProfileEntry {
     public void setSlo(JsonNode slo) {
         this.slo = slo;
     }
+
+    @Override
+    public String toString() {
+        return "KruizePerformanceProfileEntry{" +
+                "name='" + name + '\'' +
+                ", profile_version=" + profile_version +
+                ", k8s_type='" + k8s_type + '\'' +
+                ", slo=" + slo +
+                '}';
+    }
 }

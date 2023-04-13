@@ -421,6 +421,7 @@ public class KruizeOperator {
         }
     }
 
+// TODO: Need to make a common method for setting this for both autotune and other use cases
     public static String setDefaultPerformanceProfile(SloInfo sloInfo, String mode, String targetCluster) {
         PerformanceProfile performanceProfile = null;
         try {
@@ -429,16 +430,12 @@ public class KruizeOperator {
             String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
             performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
-            if (null != performanceProfile) {
-                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
-                if (validationOutputData.isSuccess()) {
-                    LOGGER.info("Added Performance Profile : {} into the map with version: {}",
-                            performanceProfile.getName(), performanceProfile.getProfile_version());
-                } else {
-                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
-                }
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
+            if (validationOutputData.isSuccess()) {
+                LOGGER.info("Added Performance Profile : {} into the map with version: {}",
+                        performanceProfile.getName(), performanceProfile.getProfile_version());
             } else {
-                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create performance profile ", EventLogger.Type.Warning, null, null, null, null);
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             }
         } catch (Exception e) {
             LOGGER.error("Exception while adding PP with message: {} ", e.getMessage());

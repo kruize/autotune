@@ -16,6 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -24,6 +25,8 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.SELECTOR;
 
 /**
  * Simulating the KruizeObject class for the CreateExperiment API
@@ -45,6 +48,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
+    @SerializedName(SELECTOR)
+    private SelectorInfo selectorInfo;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -73,36 +78,20 @@ public class CreateExperimentAPIObject extends BaseSO {
         this.mode = mode;
     }
 
-    public String getTargetCluster() {
+    public String getTarget_cluster() {
         return targetCluster;
     }
 
-    public void setTargetCluster(String targetCluster) {
-        this.targetCluster = targetCluster;
-    }
-
-    public List<KubernetesAPIObject> getKubernetesObjects() {
+    public List<KubernetesAPIObject> getKubernetes_objects() {
         return kubernetesAPIObjects;
     }
 
-    public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesAPIObjects) {
-        this.kubernetesAPIObjects = kubernetesAPIObjects;
-    }
-
-    public TrialSettings getTrialSettings() {
+    public TrialSettings getTrial_settings() {
         return trialSettings;
     }
 
-    public void setTrialSettings(TrialSettings trialSettings) {
-        this.trialSettings = trialSettings;
-    }
-
-    public RecommendationSettings getRecommendationSettings() {
+    public RecommendationSettings getRecommendation_settings() {
         return recommendationSettings;
-    }
-
-    public void setRecommendationSettings(RecommendationSettings recommendationSettings) {
-        this.recommendationSettings = recommendationSettings;
     }
 
     public SloInfo getSloInfo() {
@@ -135,6 +124,9 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     public void setValidationData(ValidationOutputData validationData) {
         this.validationData = validationData;
+    }
+    public SelectorInfo getSelectorInfo() {
+        return selectorInfo;
     }
 
     @Override

@@ -93,6 +93,7 @@ NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommen
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
 INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 30 seconds"
+NOT_EMPTY_OR_NULL = " cannot be empty or null"
 
 time_log_csv = "/tmp/time_log.csv"
 

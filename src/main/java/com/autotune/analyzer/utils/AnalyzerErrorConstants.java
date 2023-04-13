@@ -91,6 +91,7 @@ public class AnalyzerErrorConstants {
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
+        public static final String MISSING_MANDATORY_PARAMETERS = "Following mandatory parameters are either missing or have null or empty values: ";
 
 
         private AutotuneObjectErrors() {
