@@ -36,4 +36,12 @@ public class RecommendationConfigItem {
     public void setErrorMsg(String errorMsg) {
         this.errorMsg = errorMsg;
     }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public String getFormat() {
+        return format;
+    }
 }
