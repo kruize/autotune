@@ -18,6 +18,7 @@ package com.autotune;
 import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.database.init.KruizeHibernateUtil;
+import com.autotune.database.init.service.CheckDBStatus;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
@@ -30,8 +31,6 @@ import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,15 +78,9 @@ public class Autotune {
 
         try {
             server.start();
-            try {
+            if (KruizeDeploymentInfo.settings_save_to_db) {
                 LOGGER.info("Checking DB connection...");
-                SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-                Session session = factory.openSession();
-                session.close();
-                LOGGER.info("DB connection successful!");
-            } catch (Exception e) {
-                LOGGER.error("DB connection failed! : {}", e.getMessage());
-                e.printStackTrace();
+                KruizeHibernateUtil.getSessionFactory();
             }
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");
@@ -97,6 +90,7 @@ public class Autotune {
 
     private static void addAutotuneServlets(ServletContextHandler context) {
         context.addServlet(HealthService.class, HEALTH_SERVICE);
+        context.addServlet(CheckDBStatus.class, DB_SERVICE);
         // Start the Prometheus end point (/metrics) for Autotune
         context.addServlet(new ServletHolder(new MetricsServlet()), METRICS_SERVICE);
         DefaultExports.initialize();

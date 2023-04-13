@@ -169,10 +169,6 @@
                             <mainClass>com.autotune.Autotune</mainClass>
                             <name>Autotune</name>
                         </program>
-                        <program>
-                            <mainClass>com.autotune.database.livenessProbe.TestDBConnection</mainClass>
-                            <name>TestDBConnection</name>
-                        </program>
                     </programs>
                 </configuration>
                 <executions>
