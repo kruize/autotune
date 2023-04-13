@@ -85,7 +85,15 @@ kruize_crc_start() {
 	CRC_MANIFEST_FILE_OLD="/tmp/kruize.yaml"
 
 	cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
-	sed -e "s/image:.*/image: ${AUTOTUNE_DOCKER_IMAGE//\//\\\/}/g" ${CRC_MANIFEST_FILE_OLD} > ${CRC_MANIFEST_FILE}
+	awk -v image_name=${AUTOTUNE_DOCKER_IMAGE} '{
+			if ($2=="name:") {
+				prev=$3;
+				print
+			} else if ($1=="image:" && prev=="kruize") {
+				$2=image_name;
+				printf"          %s %s\n", $1, $2;
+			} else { print }
+		 }' ${CRC_MANIFEST_FILE_OLD} > ${CRC_MANIFEST_FILE}
 	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
 	check_running kruize ${autotune_ns}
 	if [ "${err}" != "0" ]; then
