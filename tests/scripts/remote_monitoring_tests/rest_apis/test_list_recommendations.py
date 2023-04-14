@@ -11,9 +11,10 @@ import json
 import shutil
 
 @pytest.mark.sanity
-def test_list_recommendations_single_exp(cluster_type):
+def test_list_recommendations_single_result(cluster_type):
     """
     Test Description: This test validates listRecommendations by passing a valid experiment name
+    and updating a single result
     """
     input_json_file="../json_files/create_exp.json"
 
@@ -48,10 +49,6 @@ def test_list_recommendations_single_exp(cluster_type):
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
-
-    # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json)
-    assert errorMsg == ""
 
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)

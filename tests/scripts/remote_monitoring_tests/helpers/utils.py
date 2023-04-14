@@ -300,9 +300,6 @@ def validate_container(update_results_container, update_results_json, list_reco_
         else:
             duration_in_hours = expected_duration_in_hours
 
-        print(f"*********** In utils length = {len(update_results_json)}")
-        counter = 1
-
         for update_results in update_results_json:
             interval_end_time = update_results["interval_end_time"]
             interval_start_time = update_results["interval_start_time"]
@@ -335,8 +332,6 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
-                        print(f"***************term = {term}  counter = {counter}")
-                        counter += 1
 
     else:
         print("Checking for recommendation notifications message...")
