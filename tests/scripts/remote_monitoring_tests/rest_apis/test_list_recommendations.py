@@ -82,14 +82,24 @@ def test_list_recommendations_without_parameters(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Update results for the experiment
-    result_json_file="../json_files/update_results.json"
-    response = update_results(result_json_file)
+    # Update results for the same experiment
+    result_json_file="../json_files/multiple_results_single_exp.json"
 
-    data = response.json()
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+    result_json_arr = read_json_data_from_file(result_json_file)
+    for result_json in result_json_arr:
+        single_json_arr = []
+        json_file = "/tmp/update_results.json"
+        single_json_arr.append(result_json)
+        write_json_data_to_file(json_file, single_json_arr)
+
+        response = update_results(json_file)
+
+        data = response.json()
+        print(data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     time.sleep(10)
 
@@ -106,9 +116,11 @@ def test_list_recommendations_without_parameters(cluster_type):
 
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)
-    update_results_json = read_json_data_from_file(result_json_file)
+    update_results_json = []
+    update_results_json.append(result_json_arr[len(result_json_arr)-1])
 
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+    expected_duration_in_hours = len(result_json_arr) * 15 / 60
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
@@ -335,16 +347,21 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    num_exps = 1000
+    num_exps = 6
+    num_res = 120
+
+    split = False
+    split_count = 1
+
     metrics_csv = "../csv_data/tfb_data.csv"
     exp_jsons_dir = "/tmp/exp_jsons"
     result_jsons_dir = "/tmp/result_jsons"
 
     # Create the create experiment jsons
-    create_exp_jsons()
+    create_exp_jsons(split, split_count, exp_jsons_dir, num_exps)
 
     # Create the update result jsons
-    create_update_results_jsons(metrics_csv)
+    create_update_results_jsons(metrics_csv, split, split_count, result_jsons_dir, num_exps, num_res)
 
     # Form the Kruize service URL
     form_kruize_url(cluster_type)
@@ -367,17 +384,14 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
 
         print("message = ", data['message'])
 
-        if obj_type == "xyz":
-            assert response.status_code == ERROR_STATUS_CODE
-            assert data['status'] == ERROR_STATUS
-            assert data['message'] == INVALID_DEPLOYMENT_TYPE_MSG
-        else:
-            assert response.status_code == SUCCESS_STATUS_CODE
-            assert data['status'] == SUCCESS_STATUS
-            assert data['message'] == CREATE_EXP_SUCCESS_MSG
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
+        result_json_arr = []
+        for j in range(num_res):
             # Update results for the experiment
-            result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
+            result_json_file = result_jsons_dir + "/result_" + str(i) + "_" + str(j) + ".json"
 
             response = update_results(result_json_file)
             data = response.json()
@@ -387,26 +401,31 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
 
-            time.sleep(5)
+            result_json_data = read_json_data_from_file(result_json_file)
+            result_json_arr.append(result_json_data[0])
 
-            # Get the experiment name
-            json_data = json.load(open(create_exp_json_file))
-            experiment_name = json_data[0]['experiment_name']
+        time.sleep(20)
 
-            # Invoke list recommendations for the specified experiment
-            response = list_recommendations(experiment_name)
-            assert response.status_code == SUCCESS_200_STATUS_CODE
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
 
-            list_reco_json = response.json()
+        # Invoke list recommendations for the specified experiment
+        response = list_recommendations(experiment_name)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
 
-            # Validate the json against the json schema
-            errorMsg = validate_list_reco_json(list_reco_json)
-            assert errorMsg == ""
+        list_reco_json = response.json()
 
-            create_exp_json = read_json_data_from_file(create_exp_json_file)
-            update_results_json = read_json_data_from_file(result_json_file)
+        # Validate the json against the json schema
+        errorMsg = validate_list_reco_json(list_reco_json)
+        assert errorMsg == ""
 
-            validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        update_results_json = []
+        update_results_json.append(result_json_arr[len(result_json_arr)-1])
+
+        expected_duration_in_hours = num_res * 15 / 60
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiments
     for i in range(num_exps):
