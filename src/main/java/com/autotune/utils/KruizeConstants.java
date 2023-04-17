@@ -229,7 +229,7 @@ public class KruizeConstants {
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 12;
-        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 5;
+        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
 
         private TimeConv() {
         }

@@ -60,8 +60,7 @@ public class ExperimentResultValidation {
                         IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
                         Double durationInSeconds = intervalResults.getDurationInSeconds();
                         String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
-                        LOGGER.info("Duration in mins = {}", intervalResults.getDurationInMinutes());
-                        LOGGER.info("Duration in seconds = {}", intervalResults.getDurationInSeconds());
+                        LOGGER.debug("Duration in seconds = {}", intervalResults.getDurationInSeconds());
                         if ( durationInSeconds < 0) {
                             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
