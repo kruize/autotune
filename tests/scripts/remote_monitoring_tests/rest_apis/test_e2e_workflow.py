@@ -94,8 +94,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         create_exp_json = read_json_data_from_file(create_exp_json_file)
         update_results_json = []
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
-        expected_duration_in_hours = num_res * 15 / 60
 
+        expected_duration_in_hours = 24.0
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
         
     # Invoke list recommendations for a non-existing experiment

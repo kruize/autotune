@@ -116,7 +116,8 @@ def test_list_recommendations_without_parameters(cluster_type):
     update_results_json = []
     update_results_json.append(result_json_arr[len(result_json_arr)-1])
 
-    expected_duration_in_hours = len(result_json_arr) * 15 / 60
+    # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
+    expected_duration_in_hours = 24.0
     validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiment
@@ -346,7 +347,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         update_results_json = []
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
 
-        expected_duration_in_hours = num_res * 15 / 60
+        # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
+        expected_duration_in_hours = 24.0
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiments
@@ -414,7 +416,8 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     update_results_json = []
     if latest == "true":
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
-        expected_duration_in_hours = len(result_json_arr) * 15 / 60
+        # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
+        expected_duration_in_hours = 24.0
         expected_num_recos = 1
     elif latest == "false":
         update_results_json = result_json_arr
@@ -691,8 +694,14 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
-            result_json[0]['interval_start_time'] = increment_timestamp(result_json[0]['interval_start_time'], j*5)
-            result_json[0]['interval_end_time'] = increment_timestamp(result_json[0]['interval_end_time'], j*5)
+            if j == 0:
+                start_time = get_datetime()
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
@@ -737,15 +746,10 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         if latest == "true":
             update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i])-1])
-            expected_duration_in_hours = 15 * num_res / 60
-            print("#######################################")
-            print(update_results_json)
-            print("#######################################")
+            # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
+            expected_duration_in_hours = 24.0
         elif latest == "false":
             update_results_json = list_of_result_json_arr[i]
-            print("#######################################")
-            print(update_results_json)
-            print("#######################################")
             expected_duration_in_hours = None
 
         for list_reco in list_reco_json:
