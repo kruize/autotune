@@ -38,16 +38,18 @@ public class IntervalResults {
     @SerializedName(INTERVAL_END_TIME)
     private Timestamp intervalEndTime;
     @SerializedName(DURATION_IN_MINUTES)
+    private Double durationInMinutes;
     private Double durationInSeconds;
 
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
         this.intervalStartTime = intervalStartTime;
         this.intervalEndTime = intervalEndTime;
         this.durationInSeconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
+        this.durationInMinutes = Double.valueOf(intervalEndTime.getTime() - intervalStartTime.getTime()) / (NO_OF_MSECS_IN_SEC * NO_OF_SECONDS_PER_MINUTE);
     }
 
     public Double getDurationInMinutes() {
-        return durationInSeconds * NO_OF_SECONDS_PER_MINUTE;
+        return durationInMinutes;
     }
 
     public Double getDurationInSeconds() {
@@ -68,7 +70,8 @@ public class IntervalResults {
                 "metricResultsMap=" + metricResultsMap +
                 ", intervalStartTime=" + intervalStartTime +
                 ", intervalEndTime=" + intervalEndTime +
-                ", durationInMinutes=" + durationInSeconds * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE +
+                ", durationInMinutes=" + durationInMinutes +
+                ", durationInSeconds=" + durationInSeconds +
                 '}';
     }
 }
