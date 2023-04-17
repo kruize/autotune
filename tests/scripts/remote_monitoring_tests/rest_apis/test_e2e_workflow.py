@@ -29,6 +29,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
     # Create experiment using the specified json
     num_exps = 10
+    num_res = 100
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
         generate_json(find, input_json_file, create_exp_json_file, i)
@@ -48,15 +49,30 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
         # Update results for the experiment
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
-        update_timestamps = True
-        generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
-        response = update_results(update_results_json_file)
 
-        data = response.json()
-        print("message = ", data['message'])
-        assert response.status_code == SUCCESS_STATUS_CODE
-        assert data['status'] == SUCCESS_STATUS
-        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+        result_json_arr = []
+        for j in range(num_res):
+            update_timestamps = True
+            generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = get_datetime()
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            write_json_data_to_file(update_results_json_file, result_json)
+            result_json_arr.append(result_json[0])
+            response = update_results(update_results_json_file)
+
+            data = response.json()
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
         # sleep for a while before fetching recommendations
         time.sleep(20)
@@ -76,9 +92,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
         # Validate the json values
         create_exp_json = read_json_data_from_file(create_exp_json_file)
-        update_results_json = read_json_data_from_file(update_results_json_file)
+        update_results_json = []
+        update_results_json.append(result_json_arr[len(result_json_arr)-1])
+        expected_duration_in_hours = num_res * 15 / 60
 
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
         
     # Invoke list recommendations for a non-existing experiment
     experiment_name = "Non-existing-exp"
