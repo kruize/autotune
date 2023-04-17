@@ -17,12 +17,15 @@ package com.autotune.common.data.result;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
+import static com.autotune.utils.KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+import static com.autotune.utils.KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
 
 /**
  * Raw results are segregated and organized using IntervalResults
@@ -35,37 +38,20 @@ public class IntervalResults {
     @SerializedName(INTERVAL_END_TIME)
     private Timestamp intervalEndTime;
     @SerializedName(DURATION_IN_MINUTES)
-    private Double durationInMinutes;
+    private Double durationInSeconds;
 
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
         this.intervalStartTime = intervalStartTime;
         this.intervalEndTime = intervalEndTime;
-        this.durationInMinutes = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / (60 * 1000));
-    }
-
-    public Timestamp getIntervalStartTime() {
-        return intervalStartTime;
-    }
-
-    public void setIntervalStartTime(Timestamp intervalStartTime) {
-        this.intervalStartTime = intervalStartTime;
-    }
-
-
-    public Timestamp getIntervalEndTime() {
-        return intervalEndTime;
-    }
-
-    public void setIntervalEndTime(Timestamp intervalEndTime) {
-        this.intervalEndTime = intervalEndTime;
+        this.durationInSeconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
     }
 
     public Double getDurationInMinutes() {
-        return durationInMinutes;
+        return durationInSeconds * NO_OF_SECONDS_PER_MINUTE;
     }
 
-    public void setDurationInMinutes(Double durationInMinutes) {
-        this.durationInMinutes = durationInMinutes;
+    public Double getDurationInSeconds() {
+        return durationInSeconds;
     }
 
     public HashMap<AnalyzerConstants.MetricName, MetricResults> getMetricResultsMap() {
@@ -82,7 +68,7 @@ public class IntervalResults {
                 "metricResultsMap=" + metricResultsMap +
                 ", intervalStartTime=" + intervalStartTime +
                 ", intervalEndTime=" + intervalEndTime +
-                ", durationInMinutes=" + durationInMinutes +
+                ", durationInMinutes=" + durationInSeconds * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE +
                 '}';
     }
 }

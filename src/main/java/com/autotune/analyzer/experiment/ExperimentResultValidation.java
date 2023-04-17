@@ -58,19 +58,20 @@ public class ExperimentResultValidation {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         // check if the intervalEndTime is greater than intervalStartTime and interval duration is greater than measurement duration
                         IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
-                        Double durationInMins = intervalResults.getDurationInMinutes();
+                        Double durationInSeconds = intervalResults.getDurationInSeconds();
                         String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
-                        LOGGER.debug("Duration in mins = {}", intervalResults.getDurationInMinutes());
-                        if ( durationInMins < 0) {
+                        LOGGER.info("Duration in mins = {}", intervalResults.getDurationInMinutes());
+                        LOGGER.info("Duration in seconds = {}", intervalResults.getDurationInSeconds());
+                        if ( durationInSeconds < 0) {
                             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
                         } else {
-                            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0,measurementDurationInMins.length()-3));
+                            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length()-3));
                             // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
-                            double lowerRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE - KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
-                            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS) / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
-                            if (!(durationInMins >= lowerRange && durationInMins <= upperRange)) {
+                            double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
+                            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
+                            if (!(durationInSeconds >= lowerRange && durationInSeconds <= upperRange)) {
                                 errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR);
                                 resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                                 break;
