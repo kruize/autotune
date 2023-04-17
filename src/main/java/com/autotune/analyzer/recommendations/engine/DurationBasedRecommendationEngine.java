@@ -24,10 +24,12 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +76,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
             String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
             int days = durationBasedRecommendationSubCategory.getDuration();
-            Timestamp monitorStartDate = CommonUtils.addDays(monitoringEndTime, -1 * days);
-            if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
+            Timestamp monitorStartDate = getMonitoringStartDate(resultsMap,
+                                                                durationBasedRecommendationSubCategory,
+                                                                monitoringEndTime);
+            if (null != monitorStartDate) {
                 Timestamp finalMonitorStartDate = monitorStartDate;
                 Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                         .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
@@ -370,5 +374,28 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
         return currentValue;
+    }
+
+    private static Timestamp getMonitoringStartDate(HashMap<Timestamp, IntervalResults> resultsHashMap,
+                                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
+                                                    Timestamp endTime) {
+        double sum = 0.0;
+        // As we cannot sort HashSet
+        List<Timestamp> timestampList = new ArrayList<Timestamp>(resultsHashMap.keySet());
+        // Sort the time stamps in descending order
+        timestampList.sort((t1, t2) -> t2.compareTo(t1));
+        for (Timestamp timestamp: timestampList) {
+            if (timestamp.equals(endTime) || timestamp.before(endTime)) {
+                if (resultsHashMap.containsKey(timestamp)) {
+                    System.out.println("Can detect timestamp key - " + timestamp.toString());
+                    sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
+                }
+            }
+            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()
+                    && sum <= durationBasedRecommendationSubCategory.getDurationUpperBound()) {
+                return timestamp;
+            }
+        }
+        return null;
     }
 }

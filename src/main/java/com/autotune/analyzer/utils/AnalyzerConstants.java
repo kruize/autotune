@@ -140,17 +140,23 @@ public class AnalyzerConstants {
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
                                 1,
-                                TimeUnit.DAYS
+                                TimeUnit.DAYS,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.SHORT_TERM_TOTAL_DURATION_UPPER_BOUND,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.SHORT_TERM_TOTAL_DURATION_LOWER_BOUND
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
                                 7,
-                                TimeUnit.DAYS
+                                TimeUnit.DAYS,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
                                 15,
-                                TimeUnit.DAYS
+                                TimeUnit.DAYS,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.LONG_TERM_TOTAL_DURATION_UPPER_BOUND,
+                                KruizeConstants.Ranges.RecommendationDurationRanges.LONG_TERM_TOTAL_DURATION_LOWER_BOUND
                         ),
                 }
         ),

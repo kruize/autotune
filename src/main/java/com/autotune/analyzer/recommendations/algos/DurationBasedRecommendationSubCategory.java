@@ -24,11 +24,19 @@ public class DurationBasedRecommendationSubCategory implements RecommendationSub
     private String name;
     private int duration;
     private TimeUnit recommendationDurationUnits;
+    private int durationUpperBound;
+    private int durationLowerBound;
 
-    public DurationBasedRecommendationSubCategory(String name, int duration, TimeUnit recommendationDurationUnits) {
+    public DurationBasedRecommendationSubCategory(String name,
+                                                  int duration,
+                                                  TimeUnit recommendationDurationUnits,
+                                                  int durationUpperBound,
+                                                  int durationLowerBound) {
         this.name = name;
         this.duration = duration;
         this.recommendationDurationUnits = recommendationDurationUnits;
+        this.durationUpperBound = durationUpperBound;
+        this.durationLowerBound = durationLowerBound;
     }
 
     // Adding private constructor to avoid object creation without passing any attributes
@@ -47,5 +55,17 @@ public class DurationBasedRecommendationSubCategory implements RecommendationSub
     @Override
     public String getSubCategory() {
         return this.name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getDurationUpperBound() {
+        return durationUpperBound;
+    }
+
+    public int getGetDurationLowerBound() {
+        return durationLowerBound;
     }
 }
