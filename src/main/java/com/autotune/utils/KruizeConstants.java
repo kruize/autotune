@@ -395,4 +395,26 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
     }
+
+    public static final class Ranges {
+        private Ranges() {
+
+        }
+
+        public static final class RecommendationDurationRanges {
+            private RecommendationDurationRanges() {
+
+            }
+            /* SHORT TERM */
+            public static final int SHORT_TERM_TOTAL_DURATION_UPPER_BOUND = 1488;
+            public static final int SHORT_TERM_TOTAL_DURATION_LOWER_BOUND = 1392;
+            /* MEDIUM TERM */
+            public static final int MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND = 7 * SHORT_TERM_TOTAL_DURATION_UPPER_BOUND;
+            public static final int MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND = 7 * SHORT_TERM_TOTAL_DURATION_LOWER_BOUND;
+            /* LONG TERM */
+            public static final int LONG_TERM_TOTAL_DURATION_UPPER_BOUND = 15 * SHORT_TERM_TOTAL_DURATION_UPPER_BOUND;
+            public static final int LONG_TERM_TOTAL_DURATION_LOWER_BOUND = 15 * SHORT_TERM_TOTAL_DURATION_LOWER_BOUND;
+
+        }
+    }
 }
