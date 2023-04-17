@@ -99,7 +99,7 @@ data:
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "update",
-        "showsql": "true",
+        "showsql": "false",
         "timezone":"UTC"
       }
     }
@@ -191,7 +191,7 @@ spec:
             - name: LOGGING_LEVEL
               value: "info"
             - name: ROOT_LOGGING_LEVEL
-              value: "info"
+              value: "error"
             - name: DB_CONFIG_FILE
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
