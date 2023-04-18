@@ -66,6 +66,7 @@ public class DBHelpers {
                 try {
                     kruizeExperimentEntry = new KruizeExperimentEntry();
                     kruizeExperimentEntry.setExperiment_name(kruizeObject.getExperimentName());
+                    kruizeExperimentEntry.setExperiment_id(kruizeObject.getExperimentId());
                     kruizeExperimentEntry.setCluster_name(kruizeObject.getClusterName());
                     kruizeExperimentEntry.setMode(kruizeObject.getMode());
                     kruizeExperimentEntry.setPerformance_profile(kruizeObject.getPerformanceProfile());
@@ -174,4 +175,3 @@ public class DBHelpers {
         }
     }
 }
-

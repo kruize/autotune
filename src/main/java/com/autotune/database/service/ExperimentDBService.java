@@ -46,8 +46,6 @@ public class ExperimentDBService {
         try {
             updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
             KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertKruizeObjectToExperimentDBObj(kruizeObject);
-            String experiment_id = Utils.generateID(kruizeObject);
-            kruizeExperimentEntry.setExperiment_id(experiment_id);
             validationOutputData = this.experimentDAO.addExperimentToDB(kruizeExperimentEntry);
             if (!validationOutputData.isSuccess())
                 updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.FAILED);
