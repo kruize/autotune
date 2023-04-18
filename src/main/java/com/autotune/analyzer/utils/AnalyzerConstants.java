@@ -139,24 +139,39 @@ public class AnalyzerConstants {
                 new DurationBasedRecommendationSubCategory[]{
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
-                                1,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION,
                                 TimeUnit.DAYS,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.SHORT_TERM_TOTAL_DURATION_UPPER_BOUND,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.SHORT_TERM_TOTAL_DURATION_LOWER_BOUND
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
-                                7,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION,
                                 TimeUnit.DAYS,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
-                                15,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION,
                                 TimeUnit.DAYS,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.LONG_TERM_TOTAL_DURATION_UPPER_BOUND,
-                                KruizeConstants.Ranges.RecommendationDurationRanges.LONG_TERM_TOTAL_DURATION_LOWER_BOUND
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                 }
         ),

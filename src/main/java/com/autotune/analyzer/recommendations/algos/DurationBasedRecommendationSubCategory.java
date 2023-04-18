@@ -16,22 +16,20 @@
 
 package com.autotune.analyzer.recommendations.algos;
 
-import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
-
 import java.util.concurrent.TimeUnit;
 
 public class DurationBasedRecommendationSubCategory implements RecommendationSubCategory {
     private String name;
     private int duration;
     private TimeUnit recommendationDurationUnits;
-    private int durationUpperBound;
-    private int durationLowerBound;
+    private double durationUpperBound;
+    private double durationLowerBound;
 
     public DurationBasedRecommendationSubCategory(String name,
                                                   int duration,
                                                   TimeUnit recommendationDurationUnits,
-                                                  int durationUpperBound,
-                                                  int durationLowerBound) {
+                                                  double durationUpperBound,
+                                                  double durationLowerBound) {
         this.name = name;
         this.duration = duration;
         this.recommendationDurationUnits = recommendationDurationUnits;
@@ -61,11 +59,11 @@ public class DurationBasedRecommendationSubCategory implements RecommendationSub
         return name;
     }
 
-    public int getDurationUpperBound() {
+    public double getDurationUpperBound() {
         return durationUpperBound;
     }
 
-    public int getGetDurationLowerBound() {
+    public double getGetDurationLowerBound() {
         return durationLowerBound;
     }
 }

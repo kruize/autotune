@@ -396,25 +396,54 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
     }
 
-    public static final class Ranges {
-        private Ranges() {
+    public static final class RecommendationEngineConstants {
+        private RecommendationEngineConstants() {
 
         }
 
-        public static final class RecommendationDurationRanges {
-            private RecommendationDurationRanges() {
+        public static final class DurationBasedEngine {
+            private DurationBasedEngine() {
 
             }
-            /* SHORT TERM */
-            public static final int SHORT_TERM_TOTAL_DURATION_UPPER_BOUND = 1488;
-            public static final int SHORT_TERM_TOTAL_DURATION_LOWER_BOUND = 1392;
-            /* MEDIUM TERM */
-            public static final int MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND = 7 * SHORT_TERM_TOTAL_DURATION_UPPER_BOUND;
-            public static final int MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND = 7 * SHORT_TERM_TOTAL_DURATION_LOWER_BOUND;
-            /* LONG TERM */
-            public static final int LONG_TERM_TOTAL_DURATION_UPPER_BOUND = 15 * SHORT_TERM_TOTAL_DURATION_UPPER_BOUND;
-            public static final int LONG_TERM_TOTAL_DURATION_LOWER_BOUND = 15 * SHORT_TERM_TOTAL_DURATION_LOWER_BOUND;
 
+            public static final class DurationAmount {
+                private DurationAmount() {
+
+                }
+
+                public static final int SHORT_TERM_DURATION = 1;
+                public static final int MEDIUM_TERM_DURATION = 7;
+                public static final int LONG_TERM_DURATION = 15;
+            }
+
+            public static final class RecommendationDurationRanges {
+                private RecommendationDurationRanges() {
+
+                }
+
+                private static final double BUFFER_VALUE_IN_MINS = 0.5;
+                /* SHORT TERM */
+                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                        (DurationAmount.SHORT_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+
+                public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
+                        (DurationAmount.SHORT_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
+
+                /* MEDIUM TERM */
+                public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                        (DurationAmount.MEDIUM_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+                public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
+                        (DurationAmount.MEDIUM_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
+
+                /* LONG TERM */
+                public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                        (DurationAmount.LONG_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+                public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
+                        (DurationAmount.LONG_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+
+            }
         }
+
+
     }
 }

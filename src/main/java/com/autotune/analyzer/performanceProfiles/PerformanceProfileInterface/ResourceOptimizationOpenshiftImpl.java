@@ -86,6 +86,10 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         continue;
                     Timestamp monitorEndTimestamp = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                     for (KruizeRecommendationEngine engine : getEngines()) {
+                        // Check if minimum data available to generate recommendation
+                        if (!engine.checKIfMinDataAvailable(containerData))
+                            continue;
+
                         HashMap<String, Recommendation> recommendationHashMap = engine.getRecommendations(containerData, monitorEndTimestamp);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
