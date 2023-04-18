@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.utils.KruizeConstants;
+
 /**
  * Contains strings describing the errors encountered
  */
@@ -76,7 +78,7 @@ public class AnalyzerErrorConstants {
 		public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
 		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
 		public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
-		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + seconds";
+		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than "+ KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS +" seconds";
 
 	}
 
