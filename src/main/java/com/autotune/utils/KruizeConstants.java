@@ -411,9 +411,9 @@ public class KruizeConstants {
 
                 }
 
-                public static final int SHORT_TERM_DURATION = 1;
-                public static final int MEDIUM_TERM_DURATION = 7;
-                public static final int LONG_TERM_DURATION = 15;
+                public static final int SHORT_TERM_DURATION_DAYS = 1;
+                public static final int MEDIUM_TERM_DURATION_DAYS = 7;
+                public static final int LONG_TERM_DURATION_DAYS = 15;
             }
 
             public static final class RecommendationDurationRanges {
@@ -424,22 +424,22 @@ public class KruizeConstants {
                 private static final double BUFFER_VALUE_IN_MINS = 0.5;
                 /* SHORT TERM */
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
-                        (DurationAmount.SHORT_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+                        (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
 
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
-                        (DurationAmount.SHORT_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
+                        (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
 
                 /* MEDIUM TERM */
                 public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
-                        (DurationAmount.MEDIUM_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+                        (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
-                        (DurationAmount.MEDIUM_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
+                        (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;;
 
                 /* LONG TERM */
                 public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
-                        (DurationAmount.LONG_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
+                        (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
-                        (DurationAmount.LONG_TERM_DURATION * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+                        (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
 
             }
         }

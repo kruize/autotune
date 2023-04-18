@@ -140,7 +140,7 @@ public class AnalyzerConstants {
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
                                 KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION,
+                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
                                 TimeUnit.DAYS,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.RecommendationDurationRanges
@@ -152,7 +152,7 @@ public class AnalyzerConstants {
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
                                 KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION,
+                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
                                 TimeUnit.DAYS,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.RecommendationDurationRanges
@@ -164,7 +164,7 @@ public class AnalyzerConstants {
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
                                 KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION,
+                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
                                 TimeUnit.DAYS,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.RecommendationDurationRanges

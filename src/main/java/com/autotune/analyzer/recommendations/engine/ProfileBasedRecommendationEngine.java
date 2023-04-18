@@ -58,7 +58,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public boolean checKIfMinDataAvailable(ContainerData containerData) {
+    public boolean checkIfMinDataAvailable(ContainerData containerData) {
         // TODO: Needs to be implemented
         return false;
     }
