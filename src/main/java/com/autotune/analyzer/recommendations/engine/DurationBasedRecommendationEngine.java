@@ -25,7 +25,6 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,22 +70,22 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
         // Get the results
         HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
-        // Create a
+        // Create a new map for returning the result
         HashMap<String, Recommendation> resultRecommendation = new HashMap<String, Recommendation>();
         for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
             DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
             String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
             int days = durationBasedRecommendationSubCategory.getDuration();
-            Timestamp monitorStartDate = getMonitoringStartDate(resultsMap,
+            Timestamp monitorStartTime = getMonitoringStartTime(resultsMap,
                                                                 durationBasedRecommendationSubCategory,
                                                                 monitoringEndTime);
-            if (null != monitorStartDate) {
-                Timestamp finalMonitorStartDate = monitorStartDate;
+            if (null != monitorStartTime) {
+                Timestamp finalMonitorStartDate = monitorStartTime;
                 Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                         .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
                                 && (x.getKey().compareTo(monitoringEndTime) <= 0))))
                         .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-                Recommendation recommendation = new Recommendation(monitorStartDate, monitoringEndTime);
+                Recommendation recommendation = new Recommendation(monitorStartTime, monitoringEndTime);
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
                 // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
@@ -145,13 +144,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Set Limits Map
                 config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-
-                // Calculate the duration in hours
-                Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
-                        .collect(Collectors.toList())
-                        .stream()
-                        .mapToDouble(f -> f.doubleValue()).sum() / 60;
-
+                double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 // Set Duration in hours
                 recommendation.setDuration_in_hours(hours);
                 // Set Config
@@ -247,7 +240,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     }
 
     @Override
-    public boolean checKIfMinDataAvailable(ContainerData containerData) {
+    public boolean checkIfMinDataAvailable(ContainerData containerData) {
         // Initiate to the first sub category available
         DurationBasedRecommendationSubCategory categoryToConsider = (DurationBasedRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
         // Loop over categories to set the least category
@@ -270,7 +263,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return false;
     }
 
-    private static Timestamp getMonitoringStartDate(HashMap<Timestamp, IntervalResults> resultsHashMap,
+    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
                                                     DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
                                                     Timestamp endTime) {
         double sum = 0.0;
@@ -281,7 +274,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         for (Timestamp timestamp: timestampList) {
             if (timestamp.equals(endTime) || timestamp.before(endTime)) {
                 if (resultsHashMap.containsKey(timestamp)) {
-                    System.out.println("Can detect timestamp key - " + timestamp.toString());
                     sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
                 }
             }
