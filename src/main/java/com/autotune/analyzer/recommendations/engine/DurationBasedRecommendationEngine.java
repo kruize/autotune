@@ -24,10 +24,12 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +42,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private AnalyzerConstants.RecommendationCategory category;
 
     public DurationBasedRecommendationEngine() {
-        this.name = AnalyzerConstants.RecommendationEngine.EngineNames.DURATION_BASED;
-        this.key = AnalyzerConstants.RecommendationEngine.EngineKeys.DURATION_BASED_KEY;
+        this.name           = AnalyzerConstants.RecommendationEngine.EngineNames.DURATION_BASED;
+        this.key            = AnalyzerConstants.RecommendationEngine.EngineKeys.DURATION_BASED_KEY;
+        this.category       = AnalyzerConstants.RecommendationCategory.DURATION_BASED;
     }
 
     public DurationBasedRecommendationEngine(String name) {
@@ -65,23 +68,24 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
     @Override
     public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
-        // TODO: Needs to be implemented
-        AnalyzerConstants.RecommendationCategory recommendationCategory = AnalyzerConstants.RecommendationCategory.DURATION_BASED;
+        // Get the results
         HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
-        Timestamp minDate = resultsMap.keySet().stream().min(Timestamp::compareTo).get();
+        // Create a new map for returning the result
         HashMap<String, Recommendation> resultRecommendation = new HashMap<String, Recommendation>();
-        for (RecommendationSubCategory recommendationSubCategory : recommendationCategory.getRecommendationSubCategories()) {
+        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
             DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
             String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
             int days = durationBasedRecommendationSubCategory.getDuration();
-            Timestamp monitorStartDate = CommonUtils.addDays(monitoringEndTime, -1 * days);
-            if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
-                Timestamp finalMonitorStartDate = monitorStartDate;
+            Timestamp monitorStartTime = getMonitoringStartTime(resultsMap,
+                                                                durationBasedRecommendationSubCategory,
+                                                                monitoringEndTime);
+            if (null != monitorStartTime) {
+                Timestamp finalMonitorStartDate = monitorStartTime;
                 Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                         .filter((x -> ((x.getKey().compareTo(finalMonitorStartDate) >= 0)
                                 && (x.getKey().compareTo(monitoringEndTime) <= 0))))
                         .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-                Recommendation recommendation = new Recommendation(monitorStartDate, monitoringEndTime);
+                Recommendation recommendation = new Recommendation(monitorStartTime, monitoringEndTime);
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
                 // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
@@ -140,13 +144,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Set Limits Map
                 config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-
-                // Calculate the duration in hours
-                Double hours = filteredResultsMap.values().stream().map((x) -> (x.getDurationInMinutes()))
-                        .collect(Collectors.toList())
-                        .stream()
-                        .mapToDouble(f -> f.doubleValue()).sum() / 60;
-
+                double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 // Set Duration in hours
                 recommendation.setDuration_in_hours(hours);
                 // Set Config
@@ -239,6 +237,51 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
         return resultRecommendation;
+    }
+
+    @Override
+    public boolean checkIfMinDataAvailable(ContainerData containerData) {
+        // Initiate to the first sub category available
+        DurationBasedRecommendationSubCategory categoryToConsider = (DurationBasedRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
+        // Loop over categories to set the least category
+        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
+            DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
+            if (durationBasedRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
+                categoryToConsider = durationBasedRecommendationSubCategory;
+            }
+        }
+        // Set bounds to check if we get minimum requirement satisfied
+        double lowerBound = categoryToConsider.getGetDurationLowerBound();
+        double sum = 0.0;
+        // Loop over the data to check if there is
+        for (IntervalResults intervalResults: containerData.getResults().values()) {
+            sum = sum + intervalResults.getDurationInMinutes();
+            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
+            if (sum >= lowerBound)
+                return true;
+        }
+        return false;
+    }
+
+    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
+                                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
+                                                    Timestamp endTime) {
+        double sum = 0.0;
+        // As we cannot sort HashSet
+        List<Timestamp> timestampList = new ArrayList<Timestamp>(resultsHashMap.keySet());
+        // Sort the time stamps in descending order
+        timestampList.sort((t1, t2) -> t2.compareTo(t1));
+        for (Timestamp timestamp: timestampList) {
+            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                return timestamp;
+            }
+            if (timestamp.equals(endTime) || timestamp.before(endTime)) {
+                if (resultsHashMap.containsKey(timestamp)) {
+                    sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
+                }
+            }
+        }
+        return null;
     }
 
     private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
