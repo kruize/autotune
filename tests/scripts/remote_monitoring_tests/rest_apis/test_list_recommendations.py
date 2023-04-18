@@ -117,7 +117,7 @@ def test_list_recommendations_without_parameters(cluster_type):
     update_results_json.append(result_json_arr[len(result_json_arr)-1])
 
     # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
-    expected_duration_in_hours = 24.0
+    expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
     validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiment
@@ -348,7 +348,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
 
         # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
-        expected_duration_in_hours = 24.0
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiments
@@ -401,8 +401,6 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        time.sleep(1)
-
     time.sleep(5)
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -417,13 +415,21 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     if latest == "true":
         update_results_json.append(result_json_arr[len(result_json_arr)-1])
         # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
-        expected_duration_in_hours = 24.0
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+
+        # Expected no. of recommendations is 1 as there would be only one recommendation with latest = true
         expected_num_recos = 1
     elif latest == "false":
-        update_results_json = result_json_arr
-        print(f"*********** len update results json {len(update_results_json)}")
-        expected_duration_in_hours = None
-        expected_num_recos = len(result_json_arr)
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+        print(f"len update results json {len(update_results_json)}")
+        # Recommendations are generated only when 24h results are present
+        total_num_results = len(result_json_arr)
+        num_results_without_recos = int(SHORT_TERM_DURATION_IN_HRS_MAX * 4 - 1)
+        expected_num_recos = total_num_results - num_results_without_recos
+
+        # Fetch only the results corresponding to the recommendations generated 
+        for i in range(num_results_without_recos, total_num_results):
+            update_results_json.append(result_json_arr[i])
 
     data = list_reco_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]["data"]
     actual_num_recos = len(data)
@@ -546,7 +552,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
         for result in result_json_arr:
             if result['interval_end_time'] == monitoring_end_time:
                 update_results_json.append(result)
-                expected_duration_in_hours = 24.0
+                expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
         # Validate the json against the json schema
         errorMsg = validate_list_reco_json(list_reco_json)
         assert errorMsg == ""
@@ -747,15 +753,24 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
         if latest == "true":
             update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i])-1])
             # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
-            expected_duration_in_hours = 24.0
+            expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
         elif latest == "false":
-            update_results_json = list_of_result_json_arr[i]
-            expected_duration_in_hours = None
+            expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+            total_num_results = len(list_of_result_json_arr[i])
 
+            # Recommendations will be generated when 24h results is available
+            num_results_without_recos = int(SHORT_TERM_DURATION_IN_HRS_MAX * 4 - 1)
+            for j in range(num_results_without_recos, total_num_results):
+                update_results_json.append(list_of_result_json_arr[i][j])
+
+        exp_found = False
         for list_reco in list_reco_json:
             if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                 validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours)
+                exp_found = True
             continue
+
+        assert exp_found == True, f"Experiment name {create_exp_json[0]['experiment_name']} not found in listRecommendations!"
 
     # Delete the experiments
     for i in range(num_exps):

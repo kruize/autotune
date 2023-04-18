@@ -344,9 +344,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
             else:
-                duration_terms = ["short_term", "medium_term", "long_term"]
-                for term in duration_terms:
-                    assert check_if_recommendations_are_present(duration_based_obj[term]) == False
+                data = list_reco_container["recommendations"]["data"]
+                assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
     else:
         print("Checking for recommendation notifications message...")
