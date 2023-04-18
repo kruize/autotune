@@ -272,14 +272,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Sort the time stamps in descending order
         timestampList.sort((t1, t2) -> t2.compareTo(t1));
         for (Timestamp timestamp: timestampList) {
+            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                return timestamp;
+            }
             if (timestamp.equals(endTime) || timestamp.before(endTime)) {
                 if (resultsHashMap.containsKey(timestamp)) {
                     sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
                 }
-            }
-            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()
-                    && sum <= durationBasedRecommendationSubCategory.getDurationUpperBound()) {
-                return timestamp;
             }
         }
         return null;
