@@ -648,15 +648,15 @@ tree stored in the extended_data column, where the recommendations are stored on
    </td>
    <td>string
    </td>
-   <td>monitoring start time to gather the query results for metrics
+   <td>The name of the Kubernetes cluster on which the experiment is executed.
    </td>
   </tr>
   <tr>
-   <td>interval_end
+   <td>interval_end_time
    </td>
    <td>timestamp
    </td>
-   <td>monitoring end time. 
+   <td>The end of the monitoring period for this recommendation.
    </td>
   </tr>
   <tr>
@@ -693,7 +693,7 @@ container_name=& from_date>   to to_date<
 SELECT * FROM kruize_recommendations
 WHERE 
 experiment_name = 'xyz' & 
-interval_end>data & interval_end<date &
+interval_end_time>time & interval_end_time<time &
 EXISTS (
     SELECT 1 FROM jsonb_array_elements(extended_data->'kubernetes_objects') kubernetes_object
     WHERE EXISTS (

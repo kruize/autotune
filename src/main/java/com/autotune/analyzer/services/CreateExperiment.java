@@ -26,6 +26,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -101,7 +102,7 @@ public class CreateExperiment extends HttpServlet {
                     ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
                     for (KruizeObject ko : kruizeExpList) {
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = experimentDAO.addExperimentToDB(ko);
+                        addedToDB = new ExperimentDBService().addExperimentToDB(ko);
                     }
                     if (addedToDB.isSuccess())
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
@@ -139,11 +140,10 @@ public class CreateExperiment extends HttpServlet {
                     if (validationOutputData.isSuccess()) {
                         mainKruizeExperimentMap.remove(ko.getExperimentName());
                         KruizeOperator.deploymentMap.remove(ko.getExperimentName());
-                    }else{
+                    } else {
                         throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
                     }
-                }
-                else
+                } else
                     throw new Exception("Experiment not found!");
             }
             sendSuccessResponse(response, "Experiment deleted successfully.");

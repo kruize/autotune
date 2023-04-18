@@ -25,13 +25,13 @@ data:
   kruizeconfigjson: |
     {
       "clustertype":"kubernetes",
-      "k8stype" : "openshift",
+      "k8stype": "openshift",
       "authtype": "",
-      "monitoringagent":"prometheus",
-      "monitoringservice":"prometheus-k8s",
-      "monitoringendpoint":"prometheus-k8s",
-      "savetodb":"true",
-      "dbdriver":"jdbc:postgresql://",
+      "monitoringagent": "prometheus",
+      "monitoringservice": "prometheus-k8s",
+      "monitoringendpoint": "prometheus-k8s",
+      "savetodb": "true",
+      "dbdriver": "jdbc:postgresql://",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -41,7 +41,7 @@ data:
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "update",
         "showsql": "false",
-        "timezone":"UTC"
+        "timezone": "UTC"
       }
     }
 ---

@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -118,55 +118,6 @@ public class CreateExperimentAPIObject extends BaseSO {
                 ", kubernetesObjects=" + kubernetesAPIObjects +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
-                '}';
-    }
-}
-
-/**
- * Simulating the K8sObject class for the create experiment API
- */
-class KubernetesAPIObject {
-    private String type;
-    private String name;
-    private String namespace;
-    @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
-    private List<ContainerAPIObject> containerAPIObjects;
-
-    public KubernetesAPIObject(String name, String type, String namespace) {
-        this.name = name;
-        this.type = type;
-        this.namespace = namespace;
-    }
-
-    // getters and setters
-
-    public String getType() {
-        return type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public List<ContainerAPIObject> getContainerAPIObjects() {
-        return containerAPIObjects;
-    }
-
-    public void setContainerAPIObjects(List<ContainerAPIObject> containerAPIObjects) {
-        this.containerAPIObjects = containerAPIObjects;
-    }
-
-    @Override
-    public String toString() {
-        return "KubernetesObject{" +
-                "type='" + type + '\'' +
-                ", name='" + name + '\'' +
-                ", namespace='" + namespace + '\'' +
-                ", containers=" + containerAPIObjects +
                 '}';
     }
 }
