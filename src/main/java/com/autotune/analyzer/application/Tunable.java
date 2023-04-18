@@ -17,11 +17,11 @@ package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.utils.KruizeSupportedTypes;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneConfigErrors.*;
@@ -86,6 +86,7 @@ public class Tunable {
          * upperBound has to be greater than lowerBound.
          * step has to be lesser than or equal to the difference between the two bounds.
          */
+
         if (upperBoundValue < 0 ||
                 lowerBoundValue < 0 ||
                 lowerBoundValue >= upperBoundValue ||
@@ -143,10 +144,20 @@ public class Tunable {
     ) throws InvalidBoundsException {
         setCommonTunableParameters(queries, name, valueType, sloClassList, layerName);
         this.step = Objects.requireNonNull(step, ZERO_STEP);
-        /* Parse the value for the bounds from the strings passed in */
-        Double upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
-        Double lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
+        Double upperBoundValue;
+        Double lowerBoundValue;
 
+        /* Parse the value for the bounds from the strings passed in */
+        try {
+            upperBoundValue = Double.parseDouble(BOUND_CHARS.matcher(upperBound).replaceAll(""));
+        } catch (Exception e) {
+            throw new InvalidBoundsException("Error: Upper bound value is not a valid number");
+        }
+        try {
+            lowerBoundValue = Double.parseDouble(BOUND_CHARS.matcher(lowerBound).replaceAll(""));
+        } catch (Exception e) {
+            throw new InvalidBoundsException("Error: Lower bound value is not a valid number");
+        }
         /* Parse the bound units from the strings passed in and make sure they are the same */
         String upperBoundUnits = BOUND_DIGITS.matcher(upperBound).replaceAll("");
         String lowerBoundUnits = BOUND_DIGITS.matcher(lowerBound).replaceAll("");

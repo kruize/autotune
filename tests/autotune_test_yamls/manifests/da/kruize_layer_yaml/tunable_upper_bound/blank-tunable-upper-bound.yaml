@@ -11,8 +11,8 @@ layer_presence:
 tunables:
   - name: memoryRequest
     value_type: double
-    upper_bound: ' '
-    lower_bound: '150 Mi'
+    upper_bound: ''
+    lower_bound: '160 Mi'
     queries:
     - datasource: 'prometheus'
       query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'

@@ -570,6 +570,10 @@ public class KruizeOperator {
                     } else {
                         upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
                         lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+                        if (upperBound.isEmpty() && tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND) || upperBound.isBlank() && tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND) || lowerBound.isEmpty() && tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND) || lowerBound.isBlank()  && tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND))
+                            throw new InvalidBoundsException("Bounds value(s) cannot be null");
+                        if (upperBound.isEmpty() && !tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND) || upperBound.isBlank() && !tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND) || lowerBound.isEmpty() && !tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND) || lowerBound.isBlank()  && !tunableJson.isNull(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND))
+                            throw new InvalidBoundsException("Bounds value(s) are empty");
                         // Read in step from the tunable, set it to '1' if not specified.
                         step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
                         tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
