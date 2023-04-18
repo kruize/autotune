@@ -16,24 +16,33 @@
 
 package com.autotune.database.helper;
 
+import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -171,6 +180,46 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeRecommendationEntry;
+            }
+
+            /**
+             *
+             * @param kruizeResultsEntry
+             * @param mainKruizeExperimentMap
+             * This method fetches the result data from DB and adds it into the ExperimentResultData object.
+             */
+            public static void convertDBResultsDataToLocalStorage(KruizeResultsEntry kruizeResultsEntry, Map<String, KruizeObject> mainKruizeExperimentMap) {
+                ExperimentResultData experimentResultData = new ExperimentResultData();
+                try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                    String hql = "FROM KruizeResultsEntry WHERE experimentName = :experimentName " +
+                            "AND intervalStartTime = :intervalStartTime " +
+                            "AND intervalEndTime = :intervalEndTime";
+                    Query<KruizeResultsEntry> query = session.createQuery(hql, KruizeResultsEntry.class);
+                    query.setParameter("experimentName", kruizeResultsEntry.getExperiment_name());
+                    query.setParameter("intervalStartTime", kruizeResultsEntry.getInterval_start_time());
+                    query.setParameter("intervalEndTime", kruizeResultsEntry.getInterval_end_time());
+                    List<KruizeResultsEntry> results = query.getResultList();
+                    List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
+                    ObjectMapper mapper = new ObjectMapper();
+                    if (!results.isEmpty()) {
+                        for (KruizeResultsEntry result : results) {
+                            ExperimentResultData resultData = new ExperimentResultData();
+                            resultData.setExperiment_name(result.getExperiment_name());
+                            resultData.setIntervalStartTime(result.getInterval_start_time());
+                            resultData.setIntervalEndTime(result.getInterval_end_time());
+                            List<K8sObject> kubernetesObjects = mapper.readValue(
+                                    result.getExtended_data().toString(), new TypeReference<>() {}
+                            );
+                            resultData.setKubernetes_objects(kubernetesObjects);
+                            // Add the populated ExperimentResultData object to the list
+                            experimentResultDataList.add(resultData);
+                        }
+                    }
+                    new ExperimentInterfaceImpl().addResultsToLocalStorage(mainKruizeExperimentMap, experimentResultDataList);
+
+                } catch (Exception e) {
+                    e.getMessage();
+                }
             }
         }
     }
