@@ -490,7 +490,8 @@
           <stringProp name="script">import org.apache.commons.io.FileUtils;
 import java.io.File;
 int threadNum = ctx.getThreadNum();
-FileUtils.writeStringToFile(new File(&quot;/tmp/results/reco_jsons/reco&quot; + String.valueOf(threadNum) + &quot;.json&quot;), vars.get(&quot;myResponse&quot;));
+String logdir = vars.get(&quot;logdir&quot;);
+FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons/reco&quot; + String.valueOf(threadNum) + &quot;.json&quot;), vars.get(&quot;myResponse&quot;));
 </stringProp>
           <stringProp name="scriptLanguage">java</stringProp>
         </JSR223Sampler>
@@ -518,8 +519,9 @@ FileUtils.writeStringToFile(new File(&quot;/tmp/results/reco_jsons/reco&quot; + 
 import java.io.File;
 
 String loop = vars.get(&quot;repeat&quot;);
+String logdir = vars.get(&quot;logdir&quot;);
 int threadNum = ctx.getThreadNum();
-FileUtils.writeStringToFile(new File(&quot;/tmp/results/reco_jsons_&quot; + loop + &quot;/reco&quot; + String.valueOf(threadNum) + &quot;.json&quot;), vars.get(&quot;myResponse&quot;));
+FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons_&quot; + loop + &quot;/reco&quot; + String.valueOf(threadNum) + &quot;.json&quot;), vars.get(&quot;myResponse&quot;));
 </stringProp>
           <stringProp name="scriptLanguage">java</stringProp>
         </JSR223Sampler>

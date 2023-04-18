@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-### Script to run scale test with Kruize in remote monitoring mode ##
+### Script to run stress test with Kruize in remote monitoring mode ##
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
@@ -25,8 +25,8 @@ KRUIZE_REPO="${CURRENT_DIR}/../../../../"
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
 ITER=1
-TIMEOUT=1800
-RESULTS_DIR=/tmp/kruize_scale_test_results
+TIMEOUT=2000
+RESULTS_DIR=/tmp/kruize_stress_test_results
 BENCHMARK_SERVER=localhost
 APP_NAME=kruize
 CLUSTER_TYPE=minikube
