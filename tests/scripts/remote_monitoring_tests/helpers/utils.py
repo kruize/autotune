@@ -33,7 +33,9 @@ CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View r
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
-INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 5 seconds"
+INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 30 seconds"
+
+time_log_csv = "/tmp/time_log.csv"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -135,6 +137,12 @@ def generate_test_data(csvfile, test_data):
     f.close()
     test_data = read_test_data_from_csv(csvfile)
     return test_data
+
+def get_num_lines_in_csv(csv_filename):
+    reader = csv.reader(open(csv_filename))
+    num_lines= len(list(reader))
+    print(num_lines)
+    return num_lines
 
 def write_json_data_to_file(filename, data):
     """
@@ -260,8 +268,6 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
 
         exp_containers_length = len(create_exp_kubernetes_obj["containers"])
         list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
-        if test_name == "valid_monitoring_end_time":
-            exp_containers_length = 1
 
         # Validate the count of containers
         assert list_reco_containers_length == exp_containers_length, \
@@ -293,6 +299,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
             duration_in_hours = 0.0
         else:
             duration_in_hours = expected_duration_in_hours
+
         for update_results in update_results_json:
             interval_end_time = update_results["interval_end_time"]
             interval_start_time = update_results["interval_start_time"]
@@ -318,11 +325,14 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             print(f"difference in hours = {diff}")
                             duration_in_hours += diff
                             print(f"duration in hours = {duration_in_hours}")
+
+                        print(f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
                         assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours,\
                             f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-
+                        
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
+
     else:
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
@@ -347,3 +357,4 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+

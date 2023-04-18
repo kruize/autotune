@@ -19,6 +19,7 @@ import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
 import com.autotune.utils.KruizeConstants;
@@ -64,7 +65,7 @@ public class Autotune {
         server.setHandler(context);
         server.addBean(new KruizeErrorHandler());
         addAutotuneServlets(context);
-        String autotuneMode = System.getenv(KruizeConstants.StartUpMode.AUTOTUNE_MODE);
+        String autotuneMode = KruizeDeploymentInfo.autotune_mode;
 
         if (null != autotuneMode) {
             if (autotuneMode.equalsIgnoreCase(KruizeConstants.StartUpMode.EM_ONLY_MODE)) {

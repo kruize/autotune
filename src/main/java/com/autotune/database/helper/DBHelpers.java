@@ -106,10 +106,10 @@ public class DBHelpers {
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
-                    kruizeResultsEntry.setInterval_start_time(experimentResultData.getStarttimestamp());
-                    kruizeResultsEntry.setInterval_end_time(experimentResultData.getEndtimestamp());
+                    kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
+                    kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
                     kruizeResultsEntry.setDuration_minutes(
-                            Double.valueOf((experimentResultData.getEndtimestamp().getTime() - experimentResultData.getStarttimestamp().getTime()) / (60 * 1000))
+                            Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());

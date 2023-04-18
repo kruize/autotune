@@ -23,6 +23,7 @@ public class KruizeConstants {
     public static final String AUTH_MOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/";
     public static final String MINIKUBE = "minikube";
     public static final String OPENSHIFT = "openshift";
+    public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
 
     private KruizeConstants() {
     }
@@ -106,6 +107,7 @@ public class KruizeConstants {
         public static final String NAMESPACE = "namespace";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
+        public static final String METRICS = "metrics";
         public static final String CONFIG = "config";
         public static final String NAME = "name";
         public static final String QUERY = "query";
@@ -168,6 +170,7 @@ public class KruizeConstants {
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String INTERVAL_START_TIME = "interval_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
+        public static final String DURATION_IN_MINUTES = "duration_in_minutes";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
@@ -180,6 +183,7 @@ public class KruizeConstants {
         public static final String NOTIFICATIONS = "notifications";
         public static final String DURATION_BASED = "duration_based";
         public static final String PROFILE_BASED = "profile_based";
+
         private JSONKeys() {
         }
     }
@@ -225,7 +229,7 @@ public class KruizeConstants {
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 12;
-        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 5;
+        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
 
         private TimeConv() {
         }
@@ -297,14 +301,20 @@ public class KruizeConstants {
     }
 
     public static class ErrorMsgs {
-        private ErrorMsgs() { }
+        private ErrorMsgs() {
+        }
+
         public static class APIErrorMsgs {
-            private APIErrorMsgs() { }
+            private APIErrorMsgs() {
+            }
+
             public static class ListDeploymentsInNamespace {
-                private ListDeploymentsInNamespace() { }
                 public static final String INVALID_NAMESPACE = "Given Namespace is invalid";
                 public static final String NO_NAMESPACE_SENT = "Please pass a namespace to get the deployments";
                 public static final String EMPTY_NAMESPACE = "Namespace cannot be empty";
+
+                private ListDeploymentsInNamespace() {
+                }
             }
         }
     }
@@ -313,45 +323,76 @@ public class KruizeConstants {
      * This class contains Constants used for CORS
      */
     public static class CORSConstants {
-        private CORSConstants() {
-
-        }
-
         /**
          * Wildcard to match all the Paths (Endpoints)
          */
         public static final String PATH_WILDCARD = "/*";
+        public static final String ALLOWED_ORIGINS = "*";
+        public static final String ALLOWED_METHODS = "POST, GET";
+        public static final String ALLOWED_HEADERS = "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept";
+        public static final String MAX_AGE = "1728000";
 
-        public static final String ALLOWED_ORIGINS  = "*";
-        public static final String ALLOWED_METHODS  = "POST, GET";
-        public static final String ALLOWED_HEADERS  = "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept";
-        public static final String MAX_AGE          = "1728000";
+        private CORSConstants() {
+
+        }
     }
 
     public static final class DBConstants {
+        public static final String CONFIG_FILE = "DB_CONFIG_FILE";
+
         private DBConstants() {
-
         }
-
-        public static final String HOSTNAME = "hostname";
-        public static final String PORT = "port";
-        public static final String NAME = "name";
-        public static final String USERNAME = "username";
-        public static final String PASSWORD = "password";
-        public static final String CONFIG_FILE = "CONFIG_FILE";
-        public static final String CONFIG_FILE_DB_KEY = "database";
-        public static final String DB_DRIVER = "DB_DRIVER";
-
-        // Error constants
-        public static final String MISSING_DB_CONFIGS = "Either CONFIG_FILE parameter or ENVs should be set to proceed!";
-
     }
 
     public static final class DateFormats {
+        public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
         private DateFormats() {
 
         }
+    }
 
-        public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    /**
+     * In order to assign values to the static variables of KruizeDeploymentInfo
+     * using Java reflection, the class variables are utilized, and therefore,
+     * if any new variables are added, their corresponding declaration is necessary.
+     */
+    public static final class DATABASE_ENV_NAME {
+        public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
+        public static final String DATABASE_ADMIN_PASSWORD = "database_adminpassword";
+        public static final String DATABASE_USERNAME = "database_username";
+        public static final String DATABASE_PASSWORD = "database_password";
+        public static final String DATABASE_HOSTNAME = "database_hostname";
+        public static final String DATABASE_DBNAME = "database_name";
+        public static final String DATABASE_PORT = "database_port";
+        public static final String DATABASE_SSL_MODE = "database_sslmode";
+    }
+
+    /**
+     * In order to assign values to the static variables of KruizeDeploymentInfo
+     * using Java reflection, the class variables are utilized, and therefore,
+     * if any new variables are added, their corresponding declaration is necessary.
+     */
+    public static final class KRUIZE_CONFIG_ENV_NAME {
+        public static final String K8S_TYPE = "k8stype";
+        public static final String AUTH_TYPE = "authtype";
+        public static final String AUTH_TOKEN = "authtoken";
+        public static final String MONITORING_AGENT = "monitoringagent";
+        public static final String MONITORING_SERVICE = "monitoringservice";
+        public static final String MONITORING_AGENT_ENDPOINT = "monitoringendpoint";
+        public static final String CLUSTER_TYPE = "clustertype";
+        public static final String AUTOTUNE_MODE = "autotunemode";
+        public static final String EM_ONLY_MODE = "emonly";
+        public static final String SETTINGS_SAVE_TO_DB = "savetodb";
+        public static final String SETTINGS_DB_DRIVER = "dbdriver";
+        public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
+        public static final String SETTINGS_HIBERNATE_CONNECTION_DRIVER_CLASS = "hibernate_driver";
+        public static final String SETTINGS_HIBERNATE_C3P0_MIN_SIZE = "hibernate_c3p0minsize";
+        public static final String SETTINGS_HIBERNATE_C3P0_MAX_SIZE = "hibernate_c3p0maxsize";
+        public static final String SETTINGS_HIBERNATE_C3P0_TIMEOUT = "hibernate_c3p0timeout";
+        public static final String SETTINGS_HIBERNATE_C3P0_MAX_STATEMENTS = "hibernate_c3p0maxstatements";
+        public static final String SETTINGS_HIBERNATE_HBM2DDL_AUTO = "hibernate_hbm2ddlauto";
+        public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
+        public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
     }
 }

@@ -20,13 +20,13 @@ import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.json.JSONArray;
@@ -35,8 +35,8 @@ import org.json.JSONObject;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import static com.autotune.operator.KruizeOperator.deploymentMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+import static com.autotune.operator.KruizeOperator.deploymentMap;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object
@@ -143,7 +143,7 @@ public class ServiceHelpers {
             if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
                 JSONObject tunableJson = new JSONObject();
                 addTunable(tunableJson, tunable);
-                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.getMonitoringAgent());
+                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
                 String query = AnalyzerConstants.NONE;
                 if (tunableQuery != null && !tunableQuery.isEmpty()) {
                     query = tunableQuery;
@@ -230,16 +230,16 @@ public class ServiceHelpers {
         public static boolean checkRecommendationTimestampExists(KruizeObject kruizeObject, String timestamp) {
             boolean timestampExists = false;
             try {
-                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,timestamp)) {
+                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, timestamp)) {
                     return false;
                 }
-                Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,timestamp);
+                Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, timestamp);
                 if (null == medDate) {
                     return false;
                 }
                 Timestamp givenTimestamp = new Timestamp(medDate.getTime());
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-                    for (ContainerData containerData: k8sObject.getContainerDataMap().values()) {
+                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                         for (Timestamp key : containerData.getContainerRecommendations().getData().keySet()) {
                             if (key.equals(givenTimestamp)) {
                                 timestampExists = true;
