@@ -37,6 +37,11 @@ INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greate
 
 time_log_csv = "/tmp/time_log.csv"
 
+# DURATION - No. of days * 24.0 hrs
+SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
+MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
+LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
+
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
         "version": "\"1.0\"",
@@ -304,7 +309,6 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_end_time = update_results["interval_end_time"]
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
-
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 duration_based_obj = list_reco_container["recommendations"]["data"][interval_end_time]["duration_based"]
 
@@ -326,12 +330,22 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             duration_in_hours += diff
                             print(f"duration in hours = {duration_in_hours}")
 
+                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+
                         print(f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
                         assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours,\
                             f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
                         
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
+            else:
+                data = list_reco_container["recommendations"]["data"]
+                assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
     else:
         print("Checking for recommendation notifications message...")
