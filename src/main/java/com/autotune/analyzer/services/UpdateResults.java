@@ -83,14 +83,14 @@ public class UpdateResults extends HttpServlet {
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
                 if (null == invalidKExperimentResultData) {
-                    //  // TODO savetoDB should move to queue and bulk upload not considered here
+                    //  TODO savetoDB should move to queue and bulk upload not considered here
                     for (ExperimentResultData resultData : experimentResultDataList) {
                         addedToDB = new ExperimentDBService().addResultsToDB(resultData);
-                    }
-                    if (addedToDB.isSuccess())
-                        sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
-                    else {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        if (addedToDB.isSuccess()) {
+                            sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                        } else {
+                            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        }
                     }
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
@@ -98,19 +98,11 @@ public class UpdateResults extends HttpServlet {
                 }
 
                 if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
-                    List<String> experimentList = new ArrayList<String>();
-                    for (ExperimentResultData experimentResultData : experimentResultDataList) {
-                        String experimentName = experimentResultData.getExperiment_name();
-                        if (mainKruizeExperimentMap.containsKey(experimentName))
-                            experimentList.add(experimentName);
-                    }
-                    if (!experimentList.isEmpty()) {
-                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
-                        if (!recommendationCheck)
-                            LOGGER.error("Failed to create recommendations");
-                        else {
-                            new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentList);
-                        }
+                    boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentResultDataList);
+                    if (!recommendationCheck)
+                        LOGGER.error("Failed to create recommendations");
+                    else {
+                        new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentResultDataList);
                     }
                 }
             }

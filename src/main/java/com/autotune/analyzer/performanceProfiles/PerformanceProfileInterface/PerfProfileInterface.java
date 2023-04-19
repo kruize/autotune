@@ -28,5 +28,5 @@ import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 public interface PerfProfileInterface {
 // name, validateResults, validateProfile, recommend
     String getName(PerformanceProfile profile);
-    void recommend(KruizeObject kruizeObject);
+    void recommend(KruizeObject kruizeObject, ExperimentResultData experimentResultData);
 }

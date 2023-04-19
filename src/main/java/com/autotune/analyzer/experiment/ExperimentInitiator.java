@@ -99,32 +99,29 @@ public class ExperimentInitiator {
     }
 
     // Generate recommendations and add it to the kruize object
-    public boolean generateAndAddRecommendations(Map<String, KruizeObject> experimentsMap, List<String> experimentNameList) {
-        if (null == experimentNameList)
+    public boolean generateAndAddRecommendations(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
+        if (null == experimentResultDataList)
             return false;
-        if (experimentNameList.size() == 0)
+        if (experimentResultDataList.size() == 0)
             return false;
-        for (String experimentName: experimentNameList) {
+        for (ExperimentResultData experimentResultData: experimentResultDataList) {
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
-            if (!experimentsMap.containsKey(experimentName))
-                return false;
-        }
-        // Generate recommendations for valid experiments
-        for (String experimentName : experimentNameList) {
-            KruizeObject kruizeObject = experimentsMap.get(experimentName);
+            if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
+                LOGGER.error("");
+                continue;
+            }
+            KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());
             if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
                 try {
                     PerfProfileInterface perfProfileInstance =
                             (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
                                     .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
                                     .getDeclaredConstructor().newInstance();
-                    perfProfileInstance.recommend(kruizeObject);
+                    perfProfileInstance.recommend(kruizeObject, experimentResultData);
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
                     e.printStackTrace();
                 }
             }
-
-
         }
         return true;
     }
