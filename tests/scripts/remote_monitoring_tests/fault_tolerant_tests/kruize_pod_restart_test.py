@@ -127,7 +127,6 @@ def main(argv):
                 filename = reco_json_dir + '/reco_' + experiment_name + '.json'
                 write_json_data_to_file(filename, reco.json())
 
-        time.sleep(10)
         # Fetch listExperiments
         list_exp_json_file_before = results_dir + "/list_exp_json_before_" + str(i) + ".json"
         response = list_experiments()
@@ -153,6 +152,9 @@ def main(argv):
             sys.exit(failed)
 
         # Fetch listExperiments
+        # Sleep for a while for data to be restored
+        time.sleep(10)
+
         list_exp_json_file_after = results_dir + "/list_exp_json_after_" + str(i) + ".json"
         response = list_experiments()
         list_exp_json = response.json()
@@ -168,7 +170,7 @@ def main(argv):
             print("Test Failed! listExperiments before and after kruize pod restart are not same!")
 
         # sleep for a while to mimic the availability of next set of results
-        time.sleep(60)
+        time.sleep(5)
 
     for exp_num in range(num_exps):
         # Delete the experiment
