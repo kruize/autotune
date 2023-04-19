@@ -124,4 +124,21 @@ public class AnalyzerErrorConstants {
 			public static final String INVALID_EXPERIMENT_NAME_MSG = "Given experiment name - \" %s \" is not valid";
 		}
 	}
+
+	public static final class ConversionErrors {
+		private ConversionErrors() {
+
+		}
+
+		public static final class KruizeRecommendationError {
+			private KruizeRecommendationError() {
+
+			}
+
+			public static final String NOT_NULL = "{} Cannot be null";
+			public static final String NOT_EQUAL = "{} - {} of {} is not equal to {} - {} of {}";
+			public static final String NOT_EMPTY = "{} Cannot be empty";
+			public static final String INVALID_JSON_STRUCTURE_MAPPING_TO_CLASS = "The JSON Structure in the JSON NODE is invalid to be mapped with class - {}";
+		}
+	}
 }

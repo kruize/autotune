@@ -162,4 +162,31 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
+
+    @Override
+    public List<KruizeRecommendationEntry> loadRecommendationsByExperiment(String experimentName) throws Exception {
+        List<KruizeRecommendationEntry> recommendationEntries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+            recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
+                    .setParameter("experimentName", experimentName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        }
+        return recommendationEntries;
+    }
+
+    @Override
+    public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
+        List<KruizeRecommendationEntry> recommendationEntries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+            recommendationEntries = session.createQuery(
+                                        DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
+                                        KruizeRecommendationEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        }
+        return recommendationEntries;
+    }
 }

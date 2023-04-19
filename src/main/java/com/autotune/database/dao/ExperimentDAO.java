@@ -37,4 +37,10 @@ public interface ExperimentDAO {
 
     // If Kruize object restarts load all results from the experiments which are in inprogress
     List<KruizeResultsEntry> loadAllResults() throws Exception;
+
+    // If Kruize restarts load recommendations of a particular experiment
+    List<KruizeRecommendationEntry> loadRecommendationsByExperiment(String experimentName) throws Exception;
+
+    // If Kruize restarts load all recommendations
+    List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception;
 }

@@ -15,12 +15,14 @@
  *******************************************************************************/
 package com.autotune.database.service;
 
+import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -110,8 +112,7 @@ public class ExperimentDBService {
             KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
             if (null != kruizeObject) {
                 kruizeExpList.add(kruizeObject);
-            }
-            else {
+            } else {
                 failureCount++;
             }
         }
@@ -138,6 +139,24 @@ public class ExperimentDBService {
             }
         }
         experimentInterface.addResultsToLocalStorage(KruizeOperator.autotuneObjectMap, resultDataList);
+
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadAllRecommendations();
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                    .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(   KruizeOperator.autotuneObjectMap,
+                                                                        recommendationsAPIObjects,
+                                                                        true);
+            }
+        }
         LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
     }
 

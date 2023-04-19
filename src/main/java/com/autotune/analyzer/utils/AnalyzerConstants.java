@@ -629,6 +629,4 @@ public class AnalyzerConstants {
             }
         }
     }
-
-
 }
