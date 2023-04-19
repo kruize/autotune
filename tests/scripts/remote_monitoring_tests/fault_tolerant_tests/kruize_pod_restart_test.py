@@ -79,7 +79,7 @@ def main(argv):
 
     iterations = int(hours / 6)
     # 6 hour results of each result with 15mins duration, so no. of results 6 * 4
-    num_res = 24 
+    num_res = 100
 
     for i in range(1, iterations+1):
         print("\n*************************")
