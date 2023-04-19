@@ -18,6 +18,7 @@ package com.autotune.database.helper;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -26,6 +27,7 @@ import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -171,6 +174,19 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeRecommendationEntry;
+            }
+
+            public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) {
+                List<CreateExperimentAPIObject> createExperimentAPIObjects = null;
+                for (KruizeExperimentEntry entry : entries) {
+                    JsonNode extended_data = entry.getExtended_data();
+                    //LOGGER.debug(extended_data.toPrettyString());
+                    String extended_data_rawJson = extended_data.toString();
+                    CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
+
+                }
+                return createExperimentAPIObjects;
             }
         }
     }

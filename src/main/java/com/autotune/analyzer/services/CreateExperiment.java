@@ -99,7 +99,7 @@ public class CreateExperiment extends HttpServlet {
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
                     for (KruizeObject ko : kruizeExpList) {
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(ko);

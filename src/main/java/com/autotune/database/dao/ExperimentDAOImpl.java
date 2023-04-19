@@ -3,6 +3,7 @@ package com.autotune.database.dao;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
@@ -14,7 +15,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.List;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -78,7 +79,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 session.persist(recommendationEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
-            } catch (HibernateException e) {
+            } catch (Exception e) {
                 LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
@@ -136,8 +137,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
 
     @Override
-    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) {
-        //TOdo load all experiments from DB
-        return false;
+    public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS, KruizeExperimentEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading exsisting experiments from database due to : " + e.getMessage());
+        }
+        return entries;
     }
 }

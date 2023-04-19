@@ -16,6 +16,7 @@
 package com.autotune.database.service;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -85,6 +86,15 @@ public class ExperimentDBService {
             new ExperimentDAOImpl().addRecommendationToDB(kr);
         }
         return true;
+    }
+
+    public void loadAllExperiments() throws Exception {
+        List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
+        List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+        //TODO Get KruizeObject using CreateExperimentAPIObject -> vinay
+        //TODO get KruizeResultsEntry to KruizeObject.kubernetes_objects.containerDataMap.results -> Saad
+        //TODO get KruizeRecommendationEntry to KruizeObject.kubernetes_objects.containerDataMap.containerRecommendations -> Bharath
+        //TODO Populate to KruizeOperator.autotuneObjectMap -> vinay
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
