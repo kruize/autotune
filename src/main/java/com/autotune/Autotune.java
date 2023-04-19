@@ -85,6 +85,14 @@ public class Autotune {
                 //System.exit(1); // todo remove this
                 //todo set KruizeDeploymentInfo.settings_save_to_db = false and add log
             }
+
+            // Load results from the DB and save to local
+            try {
+                LOGGER.info("Loading saved results from the DB ...");
+                new ExperimentDBService().loadAllResults();
+            } catch (Exception e) {
+                LOGGER.error("Failed to fetch results from the DB! : " + e.getMessage());
+            }
         }
 
 

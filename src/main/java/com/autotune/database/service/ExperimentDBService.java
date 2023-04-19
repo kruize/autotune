@@ -20,6 +20,7 @@ import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -101,8 +102,19 @@ public class ExperimentDBService {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         experimentInterface.addExperimentToLocalStorage(KruizeOperator.autotuneObjectMap, kruizeExpList);
         LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
-        //TODO get KruizeResultsEntry to KruizeObject.kubernetes_objects.containerDataMap.results -> Saad
-        //TODO get KruizeRecommendationEntry to KruizeObject.kubernetes_objects.containerDataMap.containerRecommendations -> Bharath
+    }
+
+    public void loadAllResults() throws Exception {
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadAllResults();
+        List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
+        List<ExperimentResultData> resultDataList = new ArrayList<>();
+        for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+            ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+            resultDataList.add(experimentResultData);
+        }
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        experimentInterface.addResultsToLocalStorage(KruizeOperator.autotuneObjectMap, resultDataList);
+        LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
