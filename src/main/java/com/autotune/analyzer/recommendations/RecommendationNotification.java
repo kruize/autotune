@@ -23,6 +23,8 @@ public class RecommendationNotification {
         this.type = type;
         this.message = message;
     }
+    public RecommendationNotification() {
+    }
 
     public String getType() {
         return type;
