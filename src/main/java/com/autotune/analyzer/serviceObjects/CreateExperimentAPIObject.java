@@ -129,12 +129,15 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     @Override
     public String toString() {
-        return "CreateExperimentSO{" +
+        return "CreateExperimentAPIObject{" +
+                "experimentName='" + getExperimentName() + '\'' +
+                "apiVersion='" + getApiVersion() + '\'' +
                 "clusterName='" + clusterName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", sloInfo=" + sloInfo +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", kubernetesObjects=" + kubernetesAPIObjects +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects.toString() +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';
