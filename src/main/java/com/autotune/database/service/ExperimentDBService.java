@@ -15,7 +15,11 @@
  *******************************************************************************/
 package com.autotune.database.service;
 
+import com.autotune.analyzer.experiment.ExperimentInterface;
+import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -25,10 +29,11 @@ import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
-import com.autotune.utils.Utils;
+import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,14 +46,11 @@ public class ExperimentDBService {
         this.experimentDAO = new ExperimentDAOImpl();
     }
 
-    public ValidationOutputData addExperimentToDB(KruizeObject kruizeObject) {
+    public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
-            updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-            KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertKruizeObjectToExperimentDBObj(kruizeObject);
+            KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
             validationOutputData = this.experimentDAO.addExperimentToDB(kruizeExperimentEntry);
-            if (!validationOutputData.isSuccess())
-                updateExperimentStatus(kruizeObject, AnalyzerConstants.ExperimentStatus.FAILED);
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
@@ -85,6 +87,22 @@ public class ExperimentDBService {
             new ExperimentDAOImpl().addRecommendationToDB(kr);
         }
         return true;
+    }
+
+    public void loadAllExperiments() throws Exception {
+        List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
+        List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+        List<KruizeObject> kruizeExpList = new ArrayList<>();
+        for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+            KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+            if (null != kruizeObject)
+                kruizeExpList.add(kruizeObject);
+        }
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        experimentInterface.addExperimentToLocalStorage(KruizeOperator.autotuneObjectMap, kruizeExpList);
+        LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
+        //TODO get KruizeResultsEntry to KruizeObject.kubernetes_objects.containerDataMap.results -> Saad
+        //TODO get KruizeRecommendationEntry to KruizeObject.kubernetes_objects.containerDataMap.containerRecommendations -> Bharath
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

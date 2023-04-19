@@ -19,8 +19,10 @@ package com.autotune.database.helper;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.init.KruizeHibernateUtil;
@@ -28,7 +30,9 @@ import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -40,6 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,33 +72,27 @@ public class DBHelpers {
             }
 
             /**
-             * @param kruizeObject
+             * @param apiObject
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
              */
-            public static KruizeExperimentEntry convertKruizeObjectToExperimentDBObj(KruizeObject kruizeObject) {
+            public static KruizeExperimentEntry convertCreateAPIObjToExperimentDBObj(CreateExperimentAPIObject apiObject) {
                 KruizeExperimentEntry kruizeExperimentEntry = null;
                 try {
                     kruizeExperimentEntry = new KruizeExperimentEntry();
-                    kruizeExperimentEntry.setExperiment_name(kruizeObject.getExperimentName());
-                    kruizeExperimentEntry.setExperiment_id(kruizeObject.getExperimentId());
-                    kruizeExperimentEntry.setCluster_name(kruizeObject.getClusterName());
-                    kruizeExperimentEntry.setMode(kruizeObject.getMode());
-                    kruizeExperimentEntry.setPerformance_profile(kruizeObject.getPerformanceProfile());
-                    kruizeExperimentEntry.setVersion(kruizeObject.getApiVersion());
-                    kruizeExperimentEntry.setTarget_cluster(kruizeObject.getTarget_cluster());
-                    kruizeExperimentEntry.setStatus(kruizeObject.getStatus());
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, kruizeObject.getKubernetes_objects());
-                    jsonObject.put(KruizeConstants.JSONKeys.TRIAL_SETTINGS, new JSONObject(
-                            new Gson().toJson(kruizeObject.getTrial_settings())));
-                    jsonObject.put(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS, new JSONObject(
-                            new Gson().toJson(kruizeObject.getRecommendation_settings())));
+                    kruizeExperimentEntry.setExperiment_name(apiObject.getExperimentName());
+                    kruizeExperimentEntry.setExperiment_id(Utils.generateID(apiObject));
+                    kruizeExperimentEntry.setCluster_name(apiObject.getClusterName());
+                    kruizeExperimentEntry.setMode(apiObject.getMode());
+                    kruizeExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
+                    kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
+                    kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        new Gson().toJson(apiObject)
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -121,13 +121,13 @@ public class DBHelpers {
                     kruizeResultsEntry.setDuration_minutes(
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    //JSONObject jsonObject = new JSONObject();
+                    //jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        new Gson().toJson(experimentResultData.getUpdateResultsAPIObject())
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -180,6 +180,20 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeRecommendationEntry;
+            }
+
+            public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) {
+                List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
+                for (KruizeExperimentEntry entry : entries) {
+                    JsonNode extended_data = entry.getExtended_data();
+                    String extended_data_rawJson = extended_data.toString();
+                    CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                    apiObj.setExperiment_id(entry.getExperiment_id());
+                    apiObj.setStatus(entry.getStatus());
+                    createExperimentAPIObjects.add(apiObj);
+                    //LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
+                }
+                return createExperimentAPIObjects;
             }
 
             /**

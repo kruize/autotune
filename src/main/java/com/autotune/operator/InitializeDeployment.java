@@ -98,14 +98,17 @@ public class InitializeDeployment {
         List<String> systemENVList = new ArrayList<>();
         Field[] fields = envClass.getFields();
         for (Field field : fields) {
-            if (field.getType() == String.class) {
-                try {
-                    KruizeDeploymentInfo.class.getDeclaredField(field.getName().toLowerCase(Locale.ROOT)).set(null,
-                            getKruizeConfigValue((String) field.get(null), configObject));
-                } catch (IllegalAccessException | NoSuchFieldException e) {
-                    e.printStackTrace();
-                    LOGGER.warn("Error while setting config variables :  {}", e.getMessage());
-                }
+            try {
+                Field deploymentInfoField = KruizeDeploymentInfo.class.getDeclaredField(field.getName().toLowerCase(Locale.ROOT));
+                String deploymentInfoFieldValue = getKruizeConfigValue((String) field.get(null), configObject);
+                if (deploymentInfoField.getType() == String.class)
+                    deploymentInfoField.set(null, deploymentInfoFieldValue);
+                else if (deploymentInfoField.getType() == Boolean.class)
+                    deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
+                else
+                    throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
+            } catch (Exception e) {
+                LOGGER.warn("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
             }
         }
     }

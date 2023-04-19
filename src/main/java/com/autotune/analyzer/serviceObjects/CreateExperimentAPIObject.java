@@ -17,6 +17,7 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -43,6 +44,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
+    private AnalyzerConstants.ExperimentStatus status;
+    private String experiment_id;
 
     public String getClusterName() {
         return clusterName;
@@ -106,6 +109,22 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     public void setSloInfo(SloInfo sloInfo) {
         this.sloInfo = sloInfo;
+    }
+
+    public AnalyzerConstants.ExperimentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AnalyzerConstants.ExperimentStatus status) {
+        this.status = status;
+    }
+
+    public String getExperiment_id() {
+        return experiment_id;
+    }
+
+    public void setExperiment_id(String experiment_id) {
+        this.experiment_id = experiment_id;
     }
 
     @Override
