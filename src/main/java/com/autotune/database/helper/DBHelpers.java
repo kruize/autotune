@@ -109,13 +109,13 @@ public class DBHelpers {
                     kruizeResultsEntry.setDuration_minutes(
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    //JSONObject jsonObject = new JSONObject();
-                    //jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        new Gson().toJson(experimentResultData.getUpdateResultsAPIObject())
+                                        jsonObject.toString()
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -170,17 +170,27 @@ public class DBHelpers {
                 return kruizeRecommendationEntry;
             }
 
-            public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) {
+            public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) throws Exception {
                 List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
                 for (KruizeExperimentEntry entry : entries) {
-                    JsonNode extended_data = entry.getExtended_data();
-                    String extended_data_rawJson = extended_data.toString();
-                    CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
-                    apiObj.setExperiment_id(entry.getExperiment_id());
-                    apiObj.setStatus(entry.getStatus());
-                    createExperimentAPIObjects.add(apiObj);
-                    //LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
+                    try {
+                        JsonNode extended_data = entry.getExtended_data();
+                        String extended_data_rawJson = extended_data.toString();
+                        CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                        apiObj.setExperiment_id(entry.getExperiment_id());
+                        apiObj.setStatus(entry.getStatus());
+                        createExperimentAPIObjects.add(apiObj);
+                    } catch (Exception e) {
+                        LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
                 }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the experiments are able to load from DB.");
+
                 return createExperimentAPIObjects;
             }
             public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) {

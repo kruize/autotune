@@ -45,7 +45,7 @@ public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
     private AnalyzerConstants.ExperimentStatus status;
-    private String experiment_id;
+    private String experiment_id;   // todo add comment genrated field
 
     public String getClusterName() {
         return clusterName;
@@ -129,12 +129,15 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     @Override
     public String toString() {
-        return "CreateExperimentSO{" +
+        return "CreateExperimentAPIObject{" +
+                "experimentName='" + getExperimentName() + '\'' +
+                "apiVersion='" + getApiVersion() + '\'' +
                 "clusterName='" + clusterName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", sloInfo=" + sloInfo +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", kubernetesObjects=" + kubernetesAPIObjects +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects.toString() +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';

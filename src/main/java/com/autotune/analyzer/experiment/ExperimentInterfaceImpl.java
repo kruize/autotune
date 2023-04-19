@@ -38,7 +38,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
-                    LOGGER.debug("kruizeObject = {}", kruizeObject.toString());
                     mainKruizeExperimentMap.put(
                             kruizeObject.getExperimentName(),
                             kruizeObject
@@ -46,7 +45,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
-        LOGGER.debug("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
         return true;
     }
 
