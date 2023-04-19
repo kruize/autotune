@@ -177,6 +177,7 @@ public class Converters {
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
             experimentResultData.setExperiment_name(updateResultsAPIObject.getExperimentName());
+            experimentResultData.setUpdateResultsAPIObject(updateResultsAPIObject);
             List<KubernetesAPIObject> kubernetesAPIObjectList = updateResultsAPIObject.getKubernetesObjects();
             List<K8sObject> k8sObjectList = new ArrayList<>();
             for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectList) {

@@ -77,17 +77,11 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(kruizeObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(kruizeObject.getTarget_cluster());
                     kruizeExperimentEntry.setStatus(kruizeObject.getStatus());
-             /*       JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, kruizeObject.getKubernetes_objects());
-                    jsonObject.put(KruizeConstants.JSONKeys.TRIAL_SETTINGS, new JSONObject(
-                            new Gson().toJson(kruizeObject.getTrial_settings())));
-                    jsonObject.put(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS, new JSONObject(
-                            new Gson().toJson(kruizeObject.getRecommendation_settings())));*/
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        new Gson().toJson(kruizeObject.getCreateExperimentAPIObject())         //jsonObject.toString()
+                                        new Gson().toJson(kruizeObject.getCreateExperimentAPIObject())
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -116,13 +110,13 @@ public class DBHelpers {
                     kruizeResultsEntry.setDuration_minutes(
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    //JSONObject jsonObject = new JSONObject();
+                    //jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        new Gson().toJson(experimentResultData.getUpdateResultsAPIObject())
                                 )
                         );
                     } catch (JsonProcessingException e) {
