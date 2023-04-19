@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.InitializeDeployment;
@@ -34,6 +35,7 @@ import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,18 +78,25 @@ public class Autotune {
             System.exit(1);
         }
         if (KruizeDeploymentInfo.settings_save_to_db) {
+            Session session = null;
             try {
-                LOGGER.info("Loading saved experiments from db ...");
-                new ExperimentDBService().loadAllExperiments();   // todo this is temporary solution for playback implemented without primary cache
-                LOGGER.info("Loading experiments successful!");
+                session = KruizeHibernateUtil.getSessionFactory().openSession();
+                session.close();
+                try {
+                    LOGGER.info("Loading saved experiments from db ...");
+                    new ExperimentDBService().loadAllExperiments();   // todo this is temporary solution for playback implemented without primary cache
+                    LOGGER.info("Experiments loaded successfully!");
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved experiments failed! : " + e.getMessage());
+                    System.exit(1);
+                }
             } catch (Exception e) {
-                LOGGER.error("Loading saved experiments failed! : " + e.getMessage());
-                //System.exit(1); // todo remove this
-                //todo set KruizeDeploymentInfo.settings_save_to_db = false and add log
+                LOGGER.error("DB connection failed! : " + e.getMessage());
+                System.exit(1);
+            } finally {
+                if (null != session) session.close();
             }
         }
-
-
         addAutotuneServlets(context);
         String autotuneMode = KruizeDeploymentInfo.autotune_mode;
 

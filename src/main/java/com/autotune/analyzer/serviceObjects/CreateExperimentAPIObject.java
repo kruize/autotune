@@ -45,7 +45,7 @@ public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
     private AnalyzerConstants.ExperimentStatus status;
-    private String experiment_id;
+    private String experiment_id;   // todo add comment genrated field
 
     public String getClusterName() {
         return clusterName;
