@@ -16,9 +16,9 @@
 package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -28,7 +28,6 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -61,6 +60,7 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private ValidationOutputData validationData;
     private List<K8sObject> kubernetes_objects;
+    private CreateExperimentAPIObject createExperimentAPIObject;
 
 
     public KruizeObject(String experimentName,
@@ -247,6 +247,13 @@ public final class KruizeObject {
         this.namespace = namespace;
     }
 
+    public CreateExperimentAPIObject getCreateExperimentAPIObject() {
+        return createExperimentAPIObject;
+    }
+
+    public void setCreateExperimentAPIObject(CreateExperimentAPIObject createExperimentAPIObject) {
+        this.createExperimentAPIObject = createExperimentAPIObject;
+    }
 
     @Override
     public String toString() {

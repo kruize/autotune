@@ -104,7 +104,6 @@ public class Autotune {
 
         try {
             server.start();
-
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");
             e.printStackTrace();

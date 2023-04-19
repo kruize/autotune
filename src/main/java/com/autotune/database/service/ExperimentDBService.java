@@ -16,6 +16,7 @@
 package com.autotune.database.service;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -26,7 +27,7 @@ import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
-import com.autotune.utils.Utils;
+import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,10 +92,16 @@ public class ExperimentDBService {
     public void loadAllExperiments() throws Exception {
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
         List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
-        //TODO Get KruizeObject using CreateExperimentAPIObject -> vinay
+        for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+            KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+            if (null != kruizeObject)
+                KruizeOperator.autotuneObjectMap.put(kruizeObject.getExperimentName(), kruizeObject);
+        }
+        LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
+        // Get KruizeObject using CreateExperimentAPIObject -> vinay -> done
         //TODO get KruizeResultsEntry to KruizeObject.kubernetes_objects.containerDataMap.results -> Saad
         //TODO get KruizeRecommendationEntry to KruizeObject.kubernetes_objects.containerDataMap.containerRecommendations -> Bharath
-        //TODO Populate to KruizeOperator.autotuneObjectMap -> vinay
+        //Populate to KruizeOperator.autotuneObjectMap -> vinay -> done
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

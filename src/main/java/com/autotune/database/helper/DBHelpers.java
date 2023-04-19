@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -76,17 +77,17 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(kruizeObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(kruizeObject.getTarget_cluster());
                     kruizeExperimentEntry.setStatus(kruizeObject.getStatus());
-                    JSONObject jsonObject = new JSONObject();
+             /*       JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, kruizeObject.getKubernetes_objects());
                     jsonObject.put(KruizeConstants.JSONKeys.TRIAL_SETTINGS, new JSONObject(
                             new Gson().toJson(kruizeObject.getTrial_settings())));
                     jsonObject.put(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS, new JSONObject(
-                            new Gson().toJson(kruizeObject.getRecommendation_settings())));
+                            new Gson().toJson(kruizeObject.getRecommendation_settings())));*/
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        new Gson().toJson(kruizeObject.getCreateExperimentAPIObject())         //jsonObject.toString()
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -177,14 +178,13 @@ public class DBHelpers {
             }
 
             public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) {
-                List<CreateExperimentAPIObject> createExperimentAPIObjects = null;
+                List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
                 for (KruizeExperimentEntry entry : entries) {
                     JsonNode extended_data = entry.getExtended_data();
-                    //LOGGER.debug(extended_data.toPrettyString());
                     String extended_data_rawJson = extended_data.toString();
                     CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
-                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
-
+                    createExperimentAPIObjects.add(apiObj);
+                    //LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
                 }
                 return createExperimentAPIObjects;
             }
