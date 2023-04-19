@@ -73,11 +73,8 @@ public class Converters {
             kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
             kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
             kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
-            kruizeObject.setCreateExperimentAPIObject(createExperimentAPIObject);
-
-            // Generate a unique id for this experiment after all data has been filled in
-            String experiment_id = Utils.generateID(kruizeObject);
-            kruizeObject.setExperimentId(experiment_id);
+            kruizeObject.setExperimentId(createExperimentAPIObject.getExperiment_id());
+            kruizeObject.setStatus(createExperimentAPIObject.getStatus());
             return kruizeObject;
         }
 

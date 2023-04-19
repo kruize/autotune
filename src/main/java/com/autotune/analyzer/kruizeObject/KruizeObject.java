@@ -16,7 +16,6 @@
 package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -60,7 +59,6 @@ public final class KruizeObject {
     private ExperimentUseCaseType experimentUseCaseType;
     private ValidationOutputData validationData;
     private List<K8sObject> kubernetes_objects;
-    private CreateExperimentAPIObject createExperimentAPIObject;
 
 
     public KruizeObject(String experimentName,
@@ -245,14 +243,6 @@ public final class KruizeObject {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
-    }
-
-    public CreateExperimentAPIObject getCreateExperimentAPIObject() {
-        return createExperimentAPIObject;
-    }
-
-    public void setCreateExperimentAPIObject(CreateExperimentAPIObject createExperimentAPIObject) {
-        this.createExperimentAPIObject = createExperimentAPIObject;
     }
 
     @Override

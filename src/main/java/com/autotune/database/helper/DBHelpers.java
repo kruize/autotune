@@ -21,11 +21,13 @@ import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,27 +63,27 @@ public class DBHelpers {
             }
 
             /**
-             * @param kruizeObject
+             * @param apiObject
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
              */
-            public static KruizeExperimentEntry convertKruizeObjectToExperimentDBObj(KruizeObject kruizeObject) {
+            public static KruizeExperimentEntry convertCreateAPIObjToExperimentDBObj(CreateExperimentAPIObject apiObject) {
                 KruizeExperimentEntry kruizeExperimentEntry = null;
                 try {
                     kruizeExperimentEntry = new KruizeExperimentEntry();
-                    kruizeExperimentEntry.setExperiment_name(kruizeObject.getExperimentName());
-                    kruizeExperimentEntry.setExperiment_id(kruizeObject.getExperimentId());
-                    kruizeExperimentEntry.setCluster_name(kruizeObject.getClusterName());
-                    kruizeExperimentEntry.setMode(kruizeObject.getMode());
-                    kruizeExperimentEntry.setPerformance_profile(kruizeObject.getPerformanceProfile());
-                    kruizeExperimentEntry.setVersion(kruizeObject.getApiVersion());
-                    kruizeExperimentEntry.setTarget_cluster(kruizeObject.getTarget_cluster());
-                    kruizeExperimentEntry.setStatus(kruizeObject.getStatus());
+                    kruizeExperimentEntry.setExperiment_name(apiObject.getExperimentName());
+                    kruizeExperimentEntry.setExperiment_id(Utils.generateID(apiObject));
+                    kruizeExperimentEntry.setCluster_name(apiObject.getClusterName());
+                    kruizeExperimentEntry.setMode(apiObject.getMode());
+                    kruizeExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
+                    kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
+                    kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        new Gson().toJson(kruizeObject.getCreateExperimentAPIObject())
+                                        new Gson().toJson(apiObject)
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -177,6 +179,8 @@ public class DBHelpers {
                     JsonNode extended_data = entry.getExtended_data();
                     String extended_data_rawJson = extended_data.toString();
                     CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                    apiObj.setExperiment_id(entry.getExperiment_id());
+                    apiObj.setStatus(entry.getStatus());
                     createExperimentAPIObjects.add(apiObj);
                     //LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(apiObj));
                 }

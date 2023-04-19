@@ -28,6 +28,7 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +92,8 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject));
+                    createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
@@ -101,8 +104,12 @@ public class CreateExperiment extends HttpServlet {
                 if (null == invalidKruizeObject) {
                     ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
                     for (KruizeObject ko : kruizeExpList) {
+                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                                .findAny()
+                                .orElse(null);
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = new ExperimentDBService().addExperimentToDB(ko);
+                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess())
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");

@@ -41,6 +41,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
         }
         return validationOutputData;
     }

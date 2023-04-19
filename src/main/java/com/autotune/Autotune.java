@@ -71,10 +71,8 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
-
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
             e.printStackTrace();
-            // Current deployment not supported. Exit
             System.exit(1);
         }
         if (KruizeDeploymentInfo.settings_save_to_db) {
@@ -84,7 +82,8 @@ public class Autotune {
                 LOGGER.info("Loading experiments successful!");
             } catch (Exception e) {
                 LOGGER.error("Loading saved experiments failed! : " + e.getMessage());
-                System.exit(1);
+                //System.exit(1); // todo remove this
+                //todo set KruizeDeploymentInfo.settings_save_to_db = false and add log
             }
         }
 
