@@ -78,13 +78,12 @@ public class UpdateResults extends HttpServlet {
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
                     experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
                 }
-                LOGGER.debug(experimentResultDataList.toString());
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
                 ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
                 if (null == invalidKExperimentResultData) {
-                    // TODO bulk upload not considered here
+                    //  // TODO savetoDB should move to queue and bulk upload not considered here
                     for (ExperimentResultData resultData : experimentResultDataList) {
                         addedToDB = new ExperimentDBService().addResultsToDB(resultData);
                     }

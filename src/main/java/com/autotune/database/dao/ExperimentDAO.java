@@ -7,7 +7,7 @@ import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 
-import java.util.Map;
+import java.util.List;
 
 public interface ExperimentDAO {
 
@@ -30,7 +30,7 @@ public interface ExperimentDAO {
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
 
     //If Kruize object restarts load all experiment which are in inprogress
-    public boolean loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap);
+    public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
 
     //Delete experiment
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);

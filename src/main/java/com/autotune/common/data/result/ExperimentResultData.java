@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.google.gson.annotations.SerializedName;
 
@@ -38,6 +38,7 @@ public class ExperimentResultData {
     private AnalyzerConstants.ExperimentStatus status;
     private ValidationOutputData validationOutputData;
     private List<K8sObject> kubernetes_objects;
+
 
     public String getExperiment_name() {
         return experiment_name;
@@ -95,6 +96,7 @@ public class ExperimentResultData {
     public void setIntervalEndTime(Timestamp intervalEndTime) {
         this.intervalEndTime = intervalEndTime;
     }
+
     public List<K8sObject> getKubernetes_objects() {
         return kubernetes_objects;
     }

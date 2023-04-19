@@ -18,7 +18,6 @@ package com.autotune.analyzer.kruizeObject;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -28,7 +27,6 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -246,7 +244,6 @@ public final class KruizeObject {
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
-
 
     @Override
     public String toString() {
