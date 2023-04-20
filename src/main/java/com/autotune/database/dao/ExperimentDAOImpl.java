@@ -136,6 +136,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    @Override
+    public List<KruizeResultsEntry> loadAllResults() throws Exception {
+        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
+        List<KruizeResultsEntry> kruizeResultsEntries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS, KruizeResultsEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        }
+        return kruizeResultsEntries;
+    }
+
 
     @Override
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {

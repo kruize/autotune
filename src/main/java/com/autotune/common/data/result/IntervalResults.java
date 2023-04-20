@@ -47,6 +47,8 @@ public class IntervalResults {
         this.durationInSeconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
         this.durationInMinutes = Double.valueOf(intervalEndTime.getTime() - intervalStartTime.getTime()) / (NO_OF_MSECS_IN_SEC * NO_OF_SECONDS_PER_MINUTE);
     }
+    public IntervalResults() {
+    }
 
     public Double getDurationInMinutes() {
         return durationInMinutes;

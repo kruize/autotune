@@ -17,18 +17,18 @@
 package com.autotune.database.helper;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
-import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -195,6 +196,56 @@ public class DBHelpers {
                     throw new Exception("None of the experiments are able to load from DB.");
 
                 return createExperimentAPIObjects;
+            }
+            public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) throws JsonProcessingException {
+                ObjectMapper mapper = new ObjectMapper();
+                List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
+                for (KruizeResultsEntry kruizeResultsEntry : kruizeResultsEntries) {
+                    try {
+                        UpdateResultsAPIObject updateResultsAPIObject = new UpdateResultsAPIObject();
+                        updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
+                        updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
+                        updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
+                        kruizeResultsEntry.getMeta_data();
+                        JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
+                        JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                        List<K8sObject> k8sObjectList = mapper.readValue(k8sObjectsNode.toString(), new TypeReference<>() {
+                        });
+                        List<KubernetesAPIObject> kubernetesAPIObjectList = convertK8sObjectListToKubernetesAPIObjectList(k8sObjectList);
+                        updateResultsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                        updateResultsAPIObjects.add(updateResultsAPIObject);
+                    } catch (Exception e) {
+                        LOGGER.error("Exception occurred while updating local storage: {}", e.getMessage());
+                    }
+                }
+                LOGGER.debug("updateResultsAPI = {}", new GsonBuilder().setPrettyPrinting().create().toJson(updateResultsAPIObjects));
+                return updateResultsAPIObjects;
+            }
+
+            private static List<KubernetesAPIObject> convertK8sObjectListToKubernetesAPIObjectList(List<K8sObject> k8sObjectList) {
+                List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
+
+                for (K8sObject k8sObject : k8sObjectList) {
+                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(
+                            k8sObject.getName(),
+                            k8sObject.getType(),
+                            k8sObject.getNamespace()
+                    );
+
+                    List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
+                    for (Map.Entry<String, ContainerData> entry : k8sObject.getContainerDataMap().entrySet()) {
+                        containerAPIObjects.add(new ContainerAPIObject(
+                                entry.getKey(),
+                                entry.getValue().getContainer_image_name(),
+                                entry.getValue().getContainerRecommendations(),
+                                new ArrayList<>(entry.getValue().getMetrics().values())
+                        ));
+                    }
+                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+
+                    kubernetesAPIObjects.add(kubernetesAPIObject);
+                }
+                return kubernetesAPIObjects;
             }
         }
     }

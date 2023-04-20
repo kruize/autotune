@@ -84,7 +84,7 @@ public class Autotune {
                 session.close();
                 try {
                     LOGGER.info("Loading saved experiments from db ...");
-                    new ExperimentDBService().loadAllExperiments();   // todo this is temporary solution for playback implemented without primary cache
+                    new ExperimentDBService().loadAllExperimentsData();   // todo this is temporary solution for playback implemented without primary cache
                     LOGGER.info("Experiments loaded successfully!");
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiments failed! : " + e.getMessage());
