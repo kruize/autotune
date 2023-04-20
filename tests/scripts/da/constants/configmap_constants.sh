@@ -22,7 +22,7 @@ CURRENT_DIR="$(dirname "$(realpath "$0")")"
 
 testcase_matched=0
 
-# testcases for configmap yaml 
+# testcases for configmap yaml
 configmap_tests=("configmap_minikube")
 
 # tests on minikube
@@ -54,8 +54,8 @@ configmap_minikube_replace=([minikube-invalid-cluster-type]='kube8'
 
 # Expected autotune object for minikube configmap
 declare -A configmap_minikube_autotune_objects
-configmap_minikube_autotune_objects=([minikube-invalid-cluster-type]='true' 
-[minikube-invalid-k8s-type]='true'  
+configmap_minikube_autotune_objects=([minikube-invalid-cluster-type]='true'
+[minikube-invalid-k8s-type]='true'
 [minikube-invalid-monitoring-agent]='true'
 [minikube-invalid-monitoring-service]='true'
 [minikube-debug-config]='true'
@@ -63,7 +63,7 @@ configmap_minikube_autotune_objects=([minikube-invalid-cluster-type]='true'
 
 # Expected log message for minikube configmap
 declare -A configmap_minikube_expected_log_msgs
-deployment_info='[AutotuneDeploymentInfo.java([0-9]*)]'
+deployment_info='[KruizeDeploymentInfo.java([0-9]*)]'
 configmap_minikube_expected_log_msgs=([minikube-invalid-cluster-type]=''${deployment_info}'-Cluster type kube8 is not supported'
 [minikube-invalid-k8s-type]=''${deployment_info}'-k8s type docker is not suppported'
 [minikube-invalid-monitoring-agent]=''${deployment_info}'-Monitoring agent promo  is not supported'

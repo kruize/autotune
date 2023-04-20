@@ -16,8 +16,8 @@
 
 package com.autotune.experimentManager.handler.util;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
 import com.autotune.experimentManager.data.result.TrialIterationMetaData;
 import com.autotune.experimentManager.handler.PreValidationHandler;
 import com.autotune.experimentManager.utils.EMUtil;

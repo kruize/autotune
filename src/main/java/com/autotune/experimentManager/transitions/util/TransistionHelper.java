@@ -2,8 +2,7 @@ package com.autotune.experimentManager.transitions.util;
 
 import com.autotune.experimentManager.data.EMMapper;
 import com.autotune.experimentManager.data.ExperimentTrialData;
-import com.autotune.experimentManager.utils.EMConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.utils.KruizeConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -11,10 +10,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class TransistionHelper {
     public static class LoadAnalyser {
@@ -31,8 +26,8 @@ public class TransistionHelper {
         public static JSONArray getContainerConfig(String containerName, JSONArray containersConfig) {
             for (Object obj : containersConfig) {
                 JSONObject containerObj = (JSONObject) obj;
-                if (containerObj.getString(AutotuneConstants.JSONKeys.CONTAINER_NAME).equalsIgnoreCase(containerName)) {
-                    return containerObj.getJSONArray(AutotuneConstants.JSONKeys.CONFIG);
+                if (containerObj.getString(KruizeConstants.JSONKeys.CONTAINER_NAME).equalsIgnoreCase(containerName)) {
+                    return containerObj.getJSONArray(KruizeConstants.JSONKeys.CONFIG);
                 }
             }
             return null;

@@ -99,7 +99,7 @@ function openshift_deploy() {
 	# Get the Autotune application port in openshift
 	OPENSHIFT_IP=$(${kubectl_cmd} get pods -l=app=autotune -o wide -n ${autotune_ns} -o=custom-columns=NODE:.spec.nodeName --no-headers)
 	AUTOTUNE_PORT=$(${kubectl_cmd} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-	echo "Info: Access Autotune at http://$OPENSHIFT_IP:${AUTOTUNE_PORT}/listAutotuneTunables"
+	echo "Info: Access Autotune at http://$OPENSHIFT_IP:${AUTOTUNE_PORT}/listKruizeTunables"
 	echo
 }
 
@@ -181,9 +181,28 @@ function openshift_terminate() {
 	kubectl delete ns ${autotune_ns}
 }
 
+function openshift_crc_start() {
+	echo
+	echo "###   Installing kruize for openshift"
+	echo
+	# If autotune_ns was not set by the user
+	if [ -z "$autotune_ns" ]; then
+		autotune_ns=${AUTOTUNE_OPENSHIFT_NAMESPACE}
+	fi
+	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+
+	kruize_crc_start
+}
+
 function openshift_crc_terminate() {
+	# If autotune_ns was not set by the user
+	if [ -z "$autotune_ns" ]; then
+		autotune_ns=${AUTOTUNE_OPENSHIFT_NAMESPACE}
+	fi
+	kubectl_cmd="kubectl -n ${autotune_ns}"
+	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+
 	echo -n "###   Removing Kruize for openshift"
 	echo
-	kubectl -n openshift-tuning delete svc kruize
-	kubectl -n openshift-tuning delete deployment kruize
+	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
 }

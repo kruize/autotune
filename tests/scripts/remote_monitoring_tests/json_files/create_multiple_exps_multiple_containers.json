@@ -1,0 +1,92 @@
+[
+  {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
+    "mode": "monitor",
+    "performance_profile": "resource-optimization-openshift",
+    "target_cluster": "remote",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample-1",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et15",
+            "container_name": "tfb-server-1"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et19",
+            "container_name": "tfb-server-2"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1"
+    }
+  },
+  {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample-2",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.2"
+    }
+  },
+  {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample-3",
+        "namespace": "default-3",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et19",
+            "container_name": "tfb-server-2"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1"
+    }
+  }
+]

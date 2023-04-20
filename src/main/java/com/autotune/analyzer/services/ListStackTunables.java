@@ -17,10 +17,10 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.deployment.KruizeDeployment;
-import com.autotune.common.k8sObjects.AutotuneConfig;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -29,10 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.autotune.analyzer.deployment.KruizeDeployment.deploymentMap;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
+import static com.autotune.operator.KruizeOperator.deploymentMap;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneServiceMessages.*;
 import static com.autotune.analyzer.utils.ServiceHelpers.*;
 
 public class ListStackTunables extends HttpServlet {
@@ -161,7 +161,7 @@ public class ListStackTunables extends HttpServlet {
 
         JSONArray outputJsonArray = new JSONArray();
         // Check if there are any experiments running at all ?
-        if (KruizeDeployment.autotuneObjectMap.isEmpty()) {
+        if (KruizeOperator.autotuneObjectMap.isEmpty()) {
             outputJsonArray.put(AUTOTUNE_OBJECTS_NOT_FOUND);
             response.getWriter().println(outputJsonArray.toString(4));
             return;
@@ -173,14 +173,14 @@ public class ListStackTunables extends HttpServlet {
 
         // If experiment name is not null, try to find it in the hashmap
         if (experimentName != null) {
-            KruizeObject kruizeObject = KruizeDeployment.autotuneObjectMap.get(experimentName);
+            KruizeObject kruizeObject = KruizeOperator.autotuneObjectMap.get(experimentName);
             if (kruizeObject != null) {
                 addAppLayersToResponse(outputJsonArray, experimentName, kruizeObject, layerName, sloClass);
             }
         } else {
             // Print all the experiments
-            for (String autotuneObjectKey : KruizeDeployment.autotuneObjectMap.keySet()) {
-                KruizeObject kruizeObject = KruizeDeployment.autotuneObjectMap.get(autotuneObjectKey);
+            for (String autotuneObjectKey : KruizeOperator.autotuneObjectMap.keySet()) {
+                KruizeObject kruizeObject = KruizeOperator.autotuneObjectMap.get(autotuneObjectKey);
                 addAppLayersToResponse(outputJsonArray, autotuneObjectKey, kruizeObject, layerName, sloClass);
             }
         }
@@ -198,8 +198,8 @@ public class ListStackTunables extends HttpServlet {
         addFunctionVariablesDetails(experimentJson, kruizeObject);
 
         JSONArray deploymentArray = new JSONArray();
-        if (KruizeDeployment.autotuneObjectMap.isEmpty()
-                || KruizeDeployment.autotuneObjectMap.get(autotuneObjectKey) == null) {
+        if (KruizeOperator.autotuneObjectMap.isEmpty()
+                || KruizeOperator.autotuneObjectMap.get(autotuneObjectKey) == null) {
             experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
             outputJsonArray.put(experimentJson);
             return;
@@ -242,10 +242,10 @@ public class ListStackTunables extends HttpServlet {
 
     private void addLayersAndTunablesToResponse(JSONArray layersArray, ApplicationServiceStack applicationServiceStack, String layerName, String sloClass) {
         JSONObject layerJson = new JSONObject();
-        AutotuneConfig autotuneConfig = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
-        addLayerDetails(layerJson, autotuneConfig);
+        KruizeLayer kruizeLayer = applicationServiceStack.getApplicationServiceStackLayers().get(layerName);
+        addLayerDetails(layerJson, kruizeLayer);
         JSONArray tunablesArray = new JSONArray();
-        addLayerTunableDetails(tunablesArray, autotuneConfig, sloClass);
+        addLayerTunableDetails(tunablesArray, kruizeLayer, sloClass);
         if (!tunablesArray.isEmpty()) {
             layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
             layersArray.put(layerJson);

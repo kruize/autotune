@@ -15,18 +15,20 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
-import com.autotune.common.annotations.json.AutotuneJSONExclusionStrategy;
-import com.autotune.common.data.metrics.EMMetricResult;
+import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.*;
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.Metric;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.data.input.EMMetricInput;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AutotuneConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -146,11 +148,11 @@ public class EMUtil {
         List<PodResultData> podResultDataList = new ArrayList<>();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            if (null != podMetric.getEmMetricResult() && Float.MIN_VALUE != podMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                aggregationInfoResult.setAvg(podMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                HashMap<String, AggregationInfoResult> generalInfoResultHashMap = new HashMap<>();
-                generalInfoResultHashMap.put("general_info", aggregationInfoResult);
+            if (null != podMetric.getMetricResult() && Float.MIN_VALUE != podMetric.getMetricResult().getAggregationInfoResult().getAvg()) {
+                MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+                metricAggregationInfoResults.setAvg(podMetric.getMetricResult().getAggregationInfoResult().getAvg());
+                HashMap<String, MetricAggregationInfoResults> generalInfoResultHashMap = new HashMap<>();
+                generalInfoResultHashMap.put("general_info", metricAggregationInfoResults);
                 PodResultData podResultData = new PodResultData();
                 podResultData.setName(podMetric.getName());
                 podResultData.setDatasource(podMetric.getDatasource());
@@ -158,31 +160,32 @@ public class EMUtil {
                 podResultDataList.add(podResultData);
             }
         }
-        List<Containers> containersList = new ArrayList<>();
+        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         for (Map.Entry<String, HashMap<String, Metric>> containerMapEntry : containersMap.entrySet()) {
-            Containers containers = new Containers();
-            containers.setContainer_name(containerMapEntry.getKey());
-            containers.setImage_name(null);
+            ContainerData containerData = new ContainerData();
+            containerData.setContainer_name(containerMapEntry.getKey());
+            containerData.setContainer_image_name(null);
 
-            HashMap<AnalyzerConstants.MetricName, HashMap<String, Results>> containerMetrics = new HashMap<>();
+            HashMap<AnalyzerConstants.MetricName, Metric> containerMetrics = new HashMap<>();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                if (null != containerMetric.getEmMetricResult() && Float.MIN_VALUE != containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean()) {
-                    Results results = new Results();
-                    AggregationInfoResult aggregationInfoResult = new AggregationInfoResult();
-                    aggregationInfoResult.setAvg(containerMetric.getEmMetricResult().getEmMetricGenericResults().getMean());
-                    aggregationInfoResult.setUnits(containerMetric.getEmMetricResult().getEmMetricGenericResults().getUnits());
-                    results.setAggregation_info(aggregationInfoResult);
-                    HashMap<String, Results> resultsHashMap = new HashMap<>();
-                    resultsHashMap.put("results", results);
-                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), resultsHashMap);
+                Metric metric = new Metric();
+                if (null != containerMetric.getMetricResult() && Float.MIN_VALUE != containerMetric.getMetricResult().getAggregationInfoResult().getAvg()) {
+                    MetricResults metricResults = new MetricResults();
+                    MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+                    metricAggregationInfoResults.setAvg(containerMetric.getMetricResult().getAggregationInfoResult().getAvg());
+                    metricAggregationInfoResults.setFormat(containerMetric.getMetricResult().getAggregationInfoResult().getFormat());
+                    metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                    metricResults.setName(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()).toString());
+                    metric.setMetricResult(metricResults);
+                    containerMetrics.put(AnalyzerConstants.MetricName.valueOf(containerMetric.getName()), metric);
                 }
             }
-            containers.setContainer_metrics(containerMetrics);
-            containersList.add(containers);
+            containerData.setMetrics(containerMetrics);
+            containerDataMap.put(containerData.getContainer_name(), containerData);
         }
         deploymentResultData.setPod_metrics(podResultDataList);
-        deploymentResultData.setContainers(containersList);
+        deploymentResultData.setContainerDataMap(containerDataMap);
         ExperimentResultData experimentResultData = new ExperimentResultData();
         experimentResultData.setExperiment_name(experimentTrial.getExperimentName());
         experimentResultData.setEndtimestamp(new Timestamp(System.currentTimeMillis()));
@@ -203,7 +206,7 @@ public class EMUtil {
         HashMap<String, Metric> podMetricsMap = experimentTrial.getPodMetricsHashMap();
         for (Map.Entry<String, Metric> podMetricEntry : podMetricsMap.entrySet()) {
             Metric podMetric = podMetricEntry.getValue();
-            LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
+            LinkedHashMap<String, LinkedHashMap<Integer, com.autotune.common.data.metrics.MetricResults>> iterationDataMap = podMetric.getCycleDataMap().get(trialNum);
             try {
                 if (null != iterationDataMap) {
                     LOGGER.debug(iterationDataMap.toString());
@@ -225,7 +228,7 @@ public class EMUtil {
             JSONArray containerMetrics = new JSONArray();
             for (Map.Entry<String, Metric> containerMetricEntry : containerMapEntry.getValue().entrySet()) {
                 Metric containerMetric = containerMetricEntry.getValue();
-                LinkedHashMap<String, LinkedHashMap<Integer, EMMetricResult>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
+                LinkedHashMap<String, LinkedHashMap<Integer, com.autotune.common.data.metrics.MetricResults>> iterationDataMap = containerMetric.getCycleDataMap().get(trialNum);
                 if (null != iterationDataMap) {
                     JSONObject iteration_results = new JSONObject((new Gson()).toJson(iterationDataMap));
                     JSONObject containerMetricJSON = new JSONObject();
@@ -259,7 +262,7 @@ public class EMUtil {
             retJson.put("info", new JSONObject().put("trial_info",
                     new JSONObject(
                             new GsonBuilder()
-                                    .setExclusionStrategies(new AutotuneJSONExclusionStrategy())
+                                    .setExclusionStrategies(new KruizeJSONExclusionStrategy())
                                     .create()
                                     .toJson(experimentTrial.getTrialInfo())
                     )
@@ -273,14 +276,14 @@ public class EMUtil {
         if (value <= 0)
             return 0;
         if (memoryUnits == MemoryUnits.BYTES) {
-            LOGGER.debug("Calcuclated val - " + value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
-            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+            LOGGER.debug("Calcuclated val - " + value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES);
+            return value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
         } else if (memoryUnits == MemoryUnits.KIBIBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
+            return value * KruizeConstants.ConvUnits.Memory.KIBIBYTES_TO_MEBIBYTES;
         } else if (memoryUnits == MemoryUnits.MEBIBYTES) {
             return value;
         } else if (memoryUnits == MemoryUnits.GIBIBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
+            return value * KruizeConstants.ConvUnits.Memory.MEBIBYTES_IN_GIBIBYTES;
         }
         return 0.0;
     }
@@ -289,13 +292,13 @@ public class EMUtil {
         if (value <= 0)
             return 0;
         if (memoryUnits == MemoryUnits.BYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * AutotuneConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KILOBYTES * KruizeConstants.ConvUnits.Memory.KILOBYTES_IN_MEGABYTES;
         } else if (memoryUnits == MemoryUnits.KILOBYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.KILOBYTES_TO_MEGABYTES;
         } else if (memoryUnits == MemoryUnits.MEGABYTES) {
             return value;
         } else if (memoryUnits == MemoryUnits.GIGABYTES) {
-            return value * AutotuneConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
+            return value * KruizeConstants.ConvUnits.Memory.MEGABYTES_IN_GIGABYTES;
         }
         return 0.0;
     }

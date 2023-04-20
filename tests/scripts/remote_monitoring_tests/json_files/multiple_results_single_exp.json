@@ -1,0 +1,3998 @@
+[
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T15:40:02.000Z",
+        "interval_end_time": "2022-12-20T15:55:03.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 0.000361107147235,
+                                        "max": 0.003050324185815,
+                                        "sum": 0.008612013913388,
+                                        "avg": 0.001435335652231,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 0.0,
+                                        "max": 1330.0234375,
+                                        "sum": 3606.66143465909,
+                                        "avg": 601.110239109849,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 0.0,
+                                        "max": 1320.109375,
+                                        "sum": 3502.236328125,
+                                        "avg": 583.7060546875,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T15:55:03.000Z",
+        "interval_end_time": "2022-12-20T16:10:03.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 0.122641301400588,
+                                        "max": 4.05884393815185,
+                                        "sum": 9.23642774156611,
+                                        "avg": 3.0788092471887,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.00125369576092,
+                                        "max": 0.00125369576092,
+                                        "avg": 0.000417898586973,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 194.62890625,
+                                        "max": 290.046875,
+                                        "sum": 730.8758820564518,
+                                        "avg": 243.62529401881696,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 187.2265625,
+                                        "max": 281.9921875,
+                                        "sum": 701.5254536290321,
+                                        "avg": 233.84181787634373,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T16:10:03.000Z",
+        "interval_end_time": "2022-12-20T16:25:03.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.34309635937407,
+                                        "max": 3.88964089192222,
+                                        "sum": 9.04609118991037,
+                                        "avg": 3.01536372997012,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 229.984375,
+                                        "max": 314.703125,
+                                        "sum": 828.3160282258062,
+                                        "avg": 276.1053427419357,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 225.0703125,
+                                        "max": 307.4921875,
+                                        "sum": 799.6636844758062,
+                                        "avg": 266.5545614919357,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T16:25:03.000Z",
+        "interval_end_time": "2022-12-20T16:40:04.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.30112868885926,
+                                        "max": 4.58010182155185,
+                                        "sum": 8.46914730046654,
+                                        "avg": 2.82304910015551,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.112328922496552,
+                                        "max": 0.085147492862069,
+                                        "avg": 0.037442974165517,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 251.234375,
+                                        "max": 346.984375,
+                                        "sum": 890.1745211693544,
+                                        "avg": 296.7248403897848,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 246.47265625,
+                                        "max": 335.62109375,
+                                        "sum": 859.1034526209679,
+                                        "avg": 286.3678175403223,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T16:40:04.000Z",
+        "interval_end_time": "2022-12-20T16:55:04.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.91502781582593,
+                                        "max": 4.85605234033704,
+                                        "sum": 13.2376485156556,
+                                        "avg": 4.41254950521852,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 271.42578125,
+                                        "max": 347.83984375,
+                                        "sum": 952.2685231854839,
+                                        "avg": 317.4228410618277,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 265.5390625,
+                                        "max": 338.46875,
+                                        "sum": 918.4469506048393,
+                                        "avg": 306.14898353494647,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T16:55:04.000Z",
+        "interval_end_time": "2022-12-20T17:10:04.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.33503295274444,
+                                        "max": 4.81386723182222,
+                                        "sum": 11.3112178759358,
+                                        "avg": 3.77040595864527,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 271.59375,
+                                        "max": 356.5390625,
+                                        "sum": 989.438004032259,
+                                        "avg": 329.8126680107527,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 265.66796875,
+                                        "max": 348.39453125,
+                                        "sum": 956.612777217741,
+                                        "avg": 318.8709257392473,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T17:10:04.000Z",
+        "interval_end_time": "2022-12-20T17:25:05.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.23026164174074,
+                                        "max": 3.92129674667037,
+                                        "sum": 9.23973705240321,
+                                        "avg": 3.07991235080107,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 290.625,
+                                        "max": 359.1015625,
+                                        "sum": 1001.7091733870983,
+                                        "avg": 333.9030577956991,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 286.27734375,
+                                        "max": 350.00390625,
+                                        "sum": 970.1455393145179,
+                                        "avg": 323.3818464381723,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T17:25:05.000Z",
+        "interval_end_time": "2022-12-20T17:40:05.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.21689067767037,
+                                        "max": 3.59979932507037,
+                                        "sum": 7.87229159665284,
+                                        "avg": 2.62409719888428,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.004116689491954,
+                                        "max": 0.002598697606897,
+                                        "avg": 0.001372229830651,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 295.34765625,
+                                        "max": 398.4921875,
+                                        "sum": 1034.1706149193574,
+                                        "avg": 344.7235383064518,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 291.51953125,
+                                        "max": 380.515625,
+                                        "sum": 1001.016129032259,
+                                        "avg": 333.6720430107527,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T17:40:05.000Z",
+        "interval_end_time": "2022-12-20T17:55:05.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.21516195458148,
+                                        "max": 3.92478116602223,
+                                        "sum": 10.6005743048741,
+                                        "avg": 3.53352476829136,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 329.65625,
+                                        "max": 390.6953125,
+                                        "sum": 1104.1881300403213,
+                                        "avg": 368.06271001344106,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 322.6484375,
+                                        "max": 382.08203125,
+                                        "sum": 1068.776839717741,
+                                        "avg": 356.2589465725803,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T17:55:05.000Z",
+        "interval_end_time": "2022-12-20T18:10:06.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.18957297767777,
+                                        "max": 4.02861094841482,
+                                        "sum": 10.9410424960665,
+                                        "avg": 3.64701416535551,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 329.8359375,
+                                        "max": 446.5625,
+                                        "sum": 1225.6387348790358,
+                                        "avg": 408.5462449596777,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 323.28125,
+                                        "max": 431.42578125,
+                                        "sum": 1183.387726814518,
+                                        "avg": 394.4625756048384,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T18:10:06.000Z",
+        "interval_end_time": "2022-12-20T18:25:06.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.23911712425925,
+                                        "max": 3.99740168404445,
+                                        "sum": 8.18851521172901,
+                                        "avg": 2.72950507057634,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 417.515625,
+                                        "max": 472.35546875,
+                                        "sum": 1332.7711693548392,
+                                        "avg": 444.25705645161344,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 410.34765625,
+                                        "max": 461.05078125,
+                                        "sum": 1294.0414566532231,
+                                        "avg": 431.34715221774195,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T18:25:06.000Z",
+        "interval_end_time": "2022-12-20T18:40:07.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.32747479522221,
+                                        "max": 5.24432858166296,
+                                        "sum": 12.5538705072991,
+                                        "avg": 4.18462350243305,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 447.375,
+                                        "max": 521.5546875,
+                                        "sum": 1467.8884828629016,
+                                        "avg": 489.2961609543009,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 438.125,
+                                        "max": 510.3046875,
+                                        "sum": 1426.0090725806426,
+                                        "avg": 475.3363575268822,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T18:40:07.000Z",
+        "interval_end_time": "2022-12-20T18:55:07.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.50427849813703,
+                                        "max": 5.33515178196666,
+                                        "sum": 13.0997042618841,
+                                        "avg": 4.36656808729469,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 481.91796875,
+                                        "max": 559.76953125,
+                                        "sum": 1563.6571320564556,
+                                        "avg": 521.2190440188169,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 475.24609375,
+                                        "max": 540.44140625,
+                                        "sum": 1520.0132308467769,
+                                        "avg": 506.671076948925,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T18:55:07.000Z",
+        "interval_end_time": "2022-12-20T19:10:08.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.66358841466294,
+                                        "max": 4.19660716037036,
+                                        "sum": 11.0524067195789,
+                                        "avg": 3.68413557319296,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 483.8046875,
+                                        "max": 557.84765625,
+                                        "sum": 1591.0030241935444,
+                                        "avg": 530.3343413978491,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 478.68359375,
+                                        "max": 540.7109375,
+                                        "sum": 1553.057207661295,
+                                        "avg": 517.6857358870964,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T19:10:08.000Z",
+        "interval_end_time": "2022-12-20T19:25:09.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.13855924275925,
+                                        "max": 2.74692213271852,
+                                        "sum": 7.11427328335358,
+                                        "avg": 2.37142442778453,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 483.82421875,
+                                        "max": 546.765625,
+                                        "sum": 1567.1585181451608,
+                                        "avg": 522.3861727150536,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 477.94140625,
+                                        "max": 533.4296875,
+                                        "sum": 1537.9644657258034,
+                                        "avg": 512.6548219086018,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T19:25:09.000Z",
+        "interval_end_time": "2022-12-20T19:40:09.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.17771477021481,
+                                        "max": 3.22089857927408,
+                                        "sum": 7.40207558177333,
+                                        "avg": 2.46735852725778,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 484.3359375,
+                                        "max": 630.69140625,
+                                        "sum": 1610.2723034274197,
+                                        "avg": 536.7574344758062,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 478.125,
+                                        "max": 615.4375,
+                                        "sum": 1576.3912550403213,
+                                        "avg": 525.4637516801071,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T19:40:09.000Z",
+        "interval_end_time": "2022-12-20T19:55:09.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.06415491851111,
+                                        "max": 3.97339506212593,
+                                        "sum": 10.8811287533044,
+                                        "avg": 3.62704291776815,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 501.6328125,
+                                        "max": 630.84765625,
+                                        "sum": 1724.2982610887145,
+                                        "avg": 574.7660870295696,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 492.3828125,
+                                        "max": 616.39453125,
+                                        "sum": 1684.5724546370984,
+                                        "avg": 561.5241515456992,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T19:55:09.000Z",
+        "interval_end_time": "2022-12-20T20:10:10.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.01007331396298,
+                                        "max": 3.90357787986297,
+                                        "sum": 10.4764962408307,
+                                        "avg": 3.49216541361025,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 486.8984375,
+                                        "max": 627.91015625,
+                                        "sum": 1686.097152217741,
+                                        "avg": 562.0323840725804,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 481.13671875,
+                                        "max": 615.5625,
+                                        "sum": 1656.9078881048392,
+                                        "avg": 552.3026293682794,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T20:10:10.000Z",
+        "interval_end_time": "2022-12-20T20:25:10.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.1600138799926,
+                                        "max": 3.76924492766295,
+                                        "sum": 9.21048489802543,
+                                        "avg": 3.07016163267514,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 486.4453125,
+                                        "max": 614.93359375,
+                                        "sum": 1675.7011088709642,
+                                        "avg": 558.5670362903223,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 481.06640625,
+                                        "max": 605.23046875,
+                                        "sum": 1647.626386088705,
+                                        "avg": 549.2087953629036,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T20:25:10.000Z",
+        "interval_end_time": "2022-12-20T20:40:10.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.16799914465185,
+                                        "max": 3.54586913627777,
+                                        "sum": 7.74138200375716,
+                                        "avg": 2.58046066791905,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 486.5078125,
+                                        "max": 637.21484375,
+                                        "sum": 1694.0756048387145,
+                                        "avg": 564.6918682795696,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 480.9765625,
+                                        "max": 626.53125,
+                                        "sum": 1664.540070564518,
+                                        "avg": 554.8466901881724,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T20:40:10.000Z",
+        "interval_end_time": "2022-12-20T20:55:11.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.23395848808149,
+                                        "max": 4.77055224205558,
+                                        "sum": 12.8251170955222,
+                                        "avg": 4.27503903184074,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 494.55078125,
+                                        "max": 650.2578125,
+                                        "sum": 1736.034652217741,
+                                        "avg": 578.6782174059143,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 488.2265625,
+                                        "max": 640.46875,
+                                        "sum": 1704.3125,
+                                        "avg": 568.104166666667,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T20:55:11.000Z",
+        "interval_end_time": "2022-12-20T21:10:11.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.16656801385557,
+                                        "max": 4.66166533206296,
+                                        "sum": 11.3903337685619,
+                                        "avg": 3.79677792285395,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 494.70703125,
+                                        "max": 659.1328125,
+                                        "sum": 1749.0136088709642,
+                                        "avg": 583.0045362903223,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 488.70703125,
+                                        "max": 649.44921875,
+                                        "sum": 1718.802167338705,
+                                        "avg": 572.9340557795696,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T21:10:11.000Z",
+        "interval_end_time": "2022-12-20T21:25:11.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.23111050125557,
+                                        "max": 3.90711991666672,
+                                        "sum": 9.5014342027542,
+                                        "avg": 3.1671447342514,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 493.90234375,
+                                        "max": 664.98046875,
+                                        "sum": 1755.2971270161247,
+                                        "avg": 585.0990423387099,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 488.5078125,
+                                        "max": 655.546875,
+                                        "sum": 1726.4992439516163,
+                                        "avg": 575.4997479838714,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T21:25:11.000Z",
+        "interval_end_time": "2022-12-20T21:40:12.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.07185424824816,
+                                        "max": 3.06512188040366,
+                                        "sum": 7.43306912187407,
+                                        "avg": 2.47768970729136,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 494.13671875,
+                                        "max": 676.08203125,
+                                        "sum": 1764.3756300403213,
+                                        "avg": 588.1252100134411,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 488.59765625,
+                                        "max": 665.80859375,
+                                        "sum": 1735.278351814518,
+                                        "avg": 578.4261172715054,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T21:40:12.000Z",
+        "interval_end_time": "2022-12-20T21:55:12.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.66977707079261,
+                                        "max": 3.78942297675185,
+                                        "sum": 10.1357935901567,
+                                        "avg": 3.37859786338556,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 503.1796875,
+                                        "max": 676.015625,
+                                        "sum": 1782.6373487903213,
+                                        "avg": 594.2124495967741,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 496.76171875,
+                                        "max": 666.15234375,
+                                        "sum": 1752.6008064516163,
+                                        "avg": 584.2002688172045,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T21:55:12.000Z",
+        "interval_end_time": "2022-12-20T22:10:12.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.74066107575183,
+                                        "max": 3.66097612442962,
+                                        "sum": 9.55468554314938,
+                                        "avg": 3.18489518104979,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 510.5390625,
+                                        "max": 676.0078125,
+                                        "sum": 1790.8097278225803,
+                                        "avg": 596.9365759408598,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 504.8125,
+                                        "max": 666.078125,
+                                        "sum": 1760.911542338705,
+                                        "avg": 586.9705141129036,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T22:10:12.000Z",
+        "interval_end_time": "2022-12-20T22:25:13.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.23248651319257,
+                                        "max": 3.29872863727775,
+                                        "sum": 8.07138111892988,
+                                        "avg": 2.69046037297663,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 516.2109375,
+                                        "max": 675.546875,
+                                        "sum": 1792.684097782259,
+                                        "avg": 597.5613659274196,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 510.23828125,
+                                        "max": 665.9296875,
+                                        "sum": 1763.5529233870984,
+                                        "avg": 587.8509744623651,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T22:25:13.000Z",
+        "interval_end_time": "2022-12-20T22:40:13.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.27507910785185,
+                                        "max": 5.21721080437036,
+                                        "sum": 11.4579040636927,
+                                        "avg": 3.81930135456424,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 516.3515625,
+                                        "max": 680.54296875,
+                                        "sum": 1805.8592489919376,
+                                        "avg": 601.9530829973116,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 510.53125,
+                                        "max": 668.9296875,
+                                        "sum": 1772.4647177419376,
+                                        "avg": 590.8215725806446,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T22:40:13.000Z",
+        "interval_end_time": "2022-12-20T22:55:13.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.25358324688886,
+                                        "max": 5.20446525337778,
+                                        "sum": 12.1769354107975,
+                                        "avg": 4.05897847026584,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 525.13671875,
+                                        "max": 684.7109375,
+                                        "sum": 1818.7581905241966,
+                                        "avg": 606.2527301747313,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 518.140625,
+                                        "max": 671.2890625,
+                                        "sum": 1779.1058467741966,
+                                        "avg": 593.0352822580643,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T22:55:13.000Z",
+        "interval_end_time": "2022-12-20T23:10:14.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.14165028458147,
+                                        "max": 3.99961398575925,
+                                        "sum": 8.73707889392692,
+                                        "avg": 2.91235963130897,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 523.6953125,
+                                        "max": 684.37890625,
+                                        "sum": 1812.4635836693574,
+                                        "avg": 604.1545278897848,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 517.6015625,
+                                        "max": 671.7265625,
+                                        "sum": 1779.0907258064556,
+                                        "avg": 593.0302419354839,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T23:10:14.000Z",
+        "interval_end_time": "2022-12-20T23:25:14.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.21280712303705,
+                                        "max": 3.70458764186667,
+                                        "sum": 8.9635417955321,
+                                        "avg": 2.98784726517737,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 523.375,
+                                        "max": 681.06640625,
+                                        "sum": 1809.6016213037585,
+                                        "avg": 603.2005404345874,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 517.6015625,
+                                        "max": 670.62890625,
+                                        "sum": 1778.884551411295,
+                                        "avg": 592.9615171370964,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T23:25:14.000Z",
+        "interval_end_time": "2022-12-20T23:40:15.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.47049967477409,
+                                        "max": 3.71793174642592,
+                                        "sum": 9.22226443660519,
+                                        "avg": 3.07408814553506,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 522.8359375,
+                                        "max": 680.8046875,
+                                        "sum": 1807.053301411295,
+                                        "avg": 602.3511004704304,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 517.3671875,
+                                        "max": 670.48046875,
+                                        "sum": 1778.7809979838753,
+                                        "avg": 592.9269993279571,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T23:40:15.000Z",
+        "interval_end_time": "2022-12-20T23:55:15.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 2.46702676600738,
+                                        "max": 3.79059665009258,
+                                        "sum": 9.05406900328592,
+                                        "avg": 3.01802300109531,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 523.20703125,
+                                        "max": 686.9296875,
+                                        "sum": 1812.3484122983837,
+                                        "avg": 604.1161374327955,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 517.2734375,
+                                        "max": 673.3125,
+                                        "sum": 1780.4061239919376,
+                                        "avg": 593.4687079973116,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-20T23:55:15.000Z",
+        "interval_end_time": "2022-12-21T00:10:16.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.13011860182963,
+                                        "max": 3.97355685707039,
+                                        "sum": 10.748921211987,
+                                        "avg": 3.58297373732901,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 529.19921875,
+                                        "max": 689.15625,
+                                        "sum": 1825.0662802419376,
+                                        "avg": 608.3554267473116,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 521.55859375,
+                                        "max": 675.6953125,
+                                        "sum": 1788.46875,
+                                        "avg": 596.15625,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-21T00:10:16.000Z",
+        "interval_end_time": "2022-12-21T00:25:16.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.10204645853336,
+                                        "max": 3.9707105071963,
+                                        "sum": 10.6526740209126,
+                                        "avg": 3.5508913403042,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 529.12109375,
+                                        "max": 691.828125,
+                                        "sum": 1828.6769153225803,
+                                        "avg": 609.5589717741938,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 521.30078125,
+                                        "max": 677.484375,
+                                        "sum": 1792.1616683467769,
+                                        "avg": 597.387222782258,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-21T00:25:16.000Z",
+        "interval_end_time": "2022-12-21T00:40:17.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.18491469815555,
+                                        "max": 3.99021273118889,
+                                        "sum": 10.7631599491053,
+                                        "avg": 3.5877199830351,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 531.23046875,
+                                        "max": 690.40234375,
+                                        "sum": 1829.9347278225803,
+                                        "avg": 609.9782426075268,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 523.36328125,
+                                        "max": 678.2890625,
+                                        "sum": 1794.4102822580624,
+                                        "avg": 598.1367607526884,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-12-21T00:40:17.000Z",
+        "interval_end_time": "2022-12-21T00:55:17.000Z",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": [
+                    {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "metrics": [
+                            {
+                                "name": "cpuRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 16.11,
+                                        "avg": 5.37,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 24.0,
+                                        "avg": 8.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 3.13325848021853,
+                                        "max": 3.96387228262223,
+                                        "sum": 10.7310224917078,
+                                        "avg": 3.57700749723593,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "cpuThrottle",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 0.0,
+                                        "max": 0.0,
+                                        "avg": 0.0,
+                                        "format": "cores"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRequest",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 3413.2003784179688,
+                                        "avg": 1137.7334594726562,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryLimit",
+                                "results": {
+                                    "aggregation_info": {
+                                        "sum": 4291.534423828125,
+                                        "avg": 1430.511474609375,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryUsage",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 531.50390625,
+                                        "max": 696.03515625,
+                                        "sum": 1838.799395161295,
+                                        "avg": 612.9331317204304,
+                                        "format": "MiB"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "memoryRSS",
+                                "results": {
+                                    "aggregation_info": {
+                                        "min": 523.4921875,
+                                        "max": 679.8125,
+                                        "sum": 1802.1993447580624,
+                                        "avg": 600.7331149193554,
+                                        "format": "MiB"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

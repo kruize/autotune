@@ -61,19 +61,28 @@ tuned.
     * Duplicate Performance Profile name.
   ```
   {
-  "message": "Performance Profile already exsist with Kruize. View all profiles at /listPerformanceProfiles",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "Performance Profile already exists",
+      "httpcode": 409,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
-    * Mandatory attribute value are missing.
+    * Mandatory parameters are missing.
   ```
   {
-  "message": "Mandatory attributes value missing.",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "FAILED"
+      "message": "Missing mandatory parameters",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
+  }
+  ```
+  * Any unknown exception on server side
+  ```
+  {
+      "message": "Internal Server Error",
+      "httpcode": 500,
+      "documentationLink": "",
+      "status": "ERROR"
   }
   ```
 * #####  You can get the API details [here](/design/PerformanceProfileAPI.md)

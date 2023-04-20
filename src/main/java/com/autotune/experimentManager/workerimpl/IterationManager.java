@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.autotune.experimentManager.workerimpl;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.common.experiments.TrialDetails;
-import com.autotune.common.k8sObjects.KruizeObject;
-import com.autotune.common.parallelengine.executor.AutotuneExecutor;
-import com.autotune.common.parallelengine.worker.AutotuneWorker;
+import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.common.trials.TrialDetails;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.common.parallelengine.executor.KruizeExecutor;
+import com.autotune.common.parallelengine.worker.KruizeWorker;
 import com.autotune.common.parallelengine.worker.CallableFactory;
 import com.autotune.experimentManager.data.result.*;
 import com.autotune.experimentManager.handler.eminterface.EMHandlerFactory;
@@ -38,29 +38,29 @@ import java.util.stream.IntStream;
 /**
  * This is worker to execute experiments  in several steps sequentially.
  */
-public class IterationManager implements AutotuneWorker {
+public class IterationManager implements KruizeWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(IterationManager.class);
 
     public IterationManager() {
     }
 
     @Override
-    public void execute(KruizeObject kruizeObject, Object o, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
         ExperimentTrial experimentTrial = (ExperimentTrial) o;
         if (experimentTrial.getStatus().equals(EMUtil.EMExpStatus.QUEUED)) {
             LOGGER.debug("Experiment name {} started processing", experimentTrial.getExperimentName());
             initWorkflow(experimentTrial);
-            autotuneExecutor.submit(
+            kruizeExecutor.submit(
                     new Runnable() {
                         @Override
                         public void run() {
-                            AutotuneWorker theWorker = new CallableFactory().create(autotuneExecutor.getWorker());
-                            theWorker.execute(null, experimentTrial, autotuneExecutor, context);
+                            KruizeWorker theWorker = new CallableFactory().create(kruizeExecutor.getWorker());
+                            theWorker.execute(null, experimentTrial, kruizeExecutor, context);
                         }
                     }
             );
         } else {
-            findAndSubmitTask(experimentTrial, autotuneExecutor, context);
+            findAndSubmitTask(experimentTrial, kruizeExecutor, context);
         }
     }
 
@@ -69,10 +69,10 @@ public class IterationManager implements AutotuneWorker {
      * Experiment,Trial,Iteration status
      *
      * @param experimentTrial
-     * @param autotuneExecutor
+     * @param kruizeExecutor
      * @param context
      */
-    private void findAndSubmitTask(ExperimentTrial experimentTrial, AutotuneExecutor autotuneExecutor, ServletContext context) {
+    private void findAndSubmitTask(ExperimentTrial experimentTrial, KruizeExecutor kruizeExecutor, ServletContext context) {
         AtomicBoolean taskSubmitted = new AtomicBoolean(false);
         if (experimentTrial.getStatus().equals(EMUtil.EMExpStatus.IN_PROGRESS)) {
             experimentTrial.getTrialDetails().forEach((trialNum, trialDetails) -> {
@@ -94,7 +94,7 @@ public class IterationManager implements AutotuneWorker {
                                                 trialDetails,
                                                 iterationTrialMetaDetails,
                                                 stepMetadata,
-                                                autotuneExecutor,
+												kruizeExecutor,
                                                 context);
                                     } else {
                                         LOGGER.error("Class : {} implementation not found ", stepClassName);
@@ -118,7 +118,7 @@ public class IterationManager implements AutotuneWorker {
                                         trialDetails,
                                         null,
                                         stepsMetaData,
-                                        autotuneExecutor,
+										kruizeExecutor,
                                         context);
                             } else {
                                 LOGGER.error("Class : {} implementation not found ", stepClassName);
@@ -140,13 +140,13 @@ public class IterationManager implements AutotuneWorker {
         try {
             //Update experiment level metadata
             ExperimentMetaData experimentMetaData = experimentTrial.getExperimentMetaData();
-            AutoTuneWorkFlow autoTuneWorkFlow = experimentMetaData.getAutoTuneWorkFlow();
-            if (null == autoTuneWorkFlow) {
-                autoTuneWorkFlow = new AutoTuneWorkFlow(experimentTrial.getExperimentSettings().isDo_experiment(),
+            KruizeWorkFlow kruizeWorkFlow = experimentMetaData.getAutoTuneWorkFlow();
+            if (null == kruizeWorkFlow) {
+                kruizeWorkFlow = new KruizeWorkFlow(experimentTrial.getExperimentSettings().isDo_experiment(),
                         experimentTrial.getExperimentSettings().isDo_monitoring(),
                         experimentTrial.getExperimentSettings().isWait_for_load(),
                         experimentTrial.getTrialResultURL());     //Check Workflow is Experiment or Monitoring Workflow
-                experimentMetaData.setAutoTuneWorkFlow(autoTuneWorkFlow);
+                experimentMetaData.setAutoTuneWorkFlow(kruizeWorkFlow);
                 experimentTrial.setExperimentMetaData(experimentMetaData);
             }
 

@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.utils.auth_models.APIKeysAuthentication;
-import com.autotune.utils.auth_models.BasicAuthentication;
-import com.autotune.utils.auth_models.BearerAccessToken;
-import com.autotune.utils.auth_models.OAuth2Config;
+import com.autotune.utils.authModels.APIKeysAuthentication;
+import com.autotune.utils.authModels.BasicAuthentication;
+import com.autotune.utils.authModels.BearerAccessToken;
+import com.autotune.utils.authModels.OAuth2Config;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;

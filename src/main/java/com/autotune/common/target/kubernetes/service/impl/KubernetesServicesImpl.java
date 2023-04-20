@@ -16,7 +16,7 @@
 
 package com.autotune.common.target.kubernetes.service.impl;
 
-import com.autotune.common.experiments.ContainerConfigData;
+import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;

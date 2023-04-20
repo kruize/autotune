@@ -15,8 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.data;
 
-import com.autotune.common.experiments.ExperimentTrial;
-import com.autotune.experimentManager.data.ExperimentDetailsMap;
+import com.autotune.common.trials.ExperimentTrial;
 
 import java.util.List;
 

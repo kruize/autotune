@@ -16,14 +16,16 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.ValidationResultData;
-import com.autotune.common.k8sObjects.Metric;
-import com.autotune.common.performanceProfiles.PerformanceProfile;
-import com.autotune.common.performanceProfiles.PerformanceProfileInterface.PerfProfileImpl;
-import com.autotune.utils.AnalyzerConstants;
-import com.autotune.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -46,8 +48,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API to create performance profile .
@@ -79,17 +81,19 @@ public class PerformanceProfileService extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            PerformanceProfile performanceProfile = new Gson().fromJson(inputData, PerformanceProfile.class);
-            ValidationResultData validationResultData = new PerfProfileImpl().validateAndAddProfile(performanceProfilesMap, performanceProfile);
-            if (validationResultData.isSuccess()) {
+            PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            if (validationOutputData.isSuccess()) {
                 LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
                         performanceProfile.getName(), performanceProfile.getProfile_version());
                 sendSuccessResponse(response, "Performance Profile : "+performanceProfile.getName()+" created successfully.");
             }
             else
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,validationResultData.getMessage());
+                sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,"Validation failed due to " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Validation failed: " + e.getMessage());
+        } catch (InvalidValueException e) {
+            throw new RuntimeException(e);
         }
     }
 

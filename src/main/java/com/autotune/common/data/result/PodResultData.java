@@ -15,13 +15,15 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+
 import java.util.HashMap;
 
 public class PodResultData {
 
     private String name;
     private String datasource;
-    private HashMap<String, AggregationInfoResult> summary_results;
+    private HashMap<String, MetricAggregationInfoResults> summary_results;
 
     public String getName() {
         return name;
@@ -39,11 +41,11 @@ public class PodResultData {
         this.datasource = datasource;
     }
 
-    public HashMap<String, AggregationInfoResult> getSummary_results() {
+    public HashMap<String, MetricAggregationInfoResults> getSummary_results() {
         return summary_results;
     }
 
-    public void setSummary_results(HashMap<String, AggregationInfoResult> summary_results) {
+    public void setSummary_results(HashMap<String, MetricAggregationInfoResults> summary_results) {
         this.summary_results = summary_results;
     }
 

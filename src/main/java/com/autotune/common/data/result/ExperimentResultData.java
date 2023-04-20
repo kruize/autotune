@@ -15,8 +15,9 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.data.ValidationResultData;
-import com.autotune.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -29,13 +30,14 @@ import java.util.Objects;
 public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
-    @SerializedName("start_timestamp")
+    @SerializedName("interval_start_time")
     private Timestamp starttimestamp;
-    @SerializedName("end_timestamp")
+    @SerializedName("interval_end_time")
     private Timestamp endtimestamp;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
-    private ValidationResultData validationResultData;
+    private ValidationOutputData validationOutputData;
+    private List<K8sObject> kubernetes_objects;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -70,12 +72,12 @@ public class ExperimentResultData {
         this.status = status;
     }
 
-    public ValidationResultData getValidationResultData() {
-        return validationResultData;
+    public ValidationOutputData getValidationOutputData() {
+        return validationOutputData;
     }
 
-    public void setValidationResultData(ValidationResultData validationResultData) {
-        this.validationResultData = validationResultData;
+    public void setValidationOutputData(ValidationOutputData validationOutputData) {
+        this.validationOutputData = validationOutputData;
     }
 
     public Timestamp getStarttimestamp() {
@@ -93,6 +95,13 @@ public class ExperimentResultData {
     public void setEndtimestamp(Timestamp endtimestamp) {
         this.endtimestamp = endtimestamp;
     }
+    public List<K8sObject> getKubernetes_objects() {
+        return kubernetes_objects;
+    }
+
+    public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
+        this.kubernetes_objects = kubernetes_objects;
+    }
 
     @Override
     public String toString() {
@@ -103,7 +112,8 @@ public class ExperimentResultData {
                 ", endTimestamp='" + endtimestamp + '\'' +
                 ", deployments=" + deployments +
                 ", status=" + status +
-                ", validationResultData=" + validationResultData +
+                ", validationOutputData=" + validationOutputData +
+                ", kubernetes_objects=" + kubernetes_objects +
                 '}';
     }
 

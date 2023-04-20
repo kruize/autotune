@@ -20,7 +20,7 @@ SCRIPTS_DIR="${ROOT_DIR}/scripts"
 
 AUTOTUNE_DIR="./manifests/autotune"
 PERF_PROFILE_CRD="${AUTOTUNE_DIR}/performance-profiles"
-CRC_DIR="./manifests/crc"
+CRC_DIR="./manifests/crc/default-db-included-installation"
 
 AUTOTUNE_OPERATOR_CRD="${AUTOTUNE_DIR}/autotune-operator-crd.yaml"
 AUTOTUNE_CONFIG_CRD="${AUTOTUNE_DIR}/autotune-config-crd.yaml"
@@ -41,8 +41,8 @@ AUTOTUNE_CONFIGMAPS="${AUTOTUNE_DIR}/configmaps"
 AUTOTUNE_CONFIGS="${AUTOTUNE_DIR}/autotune-configs"
 AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml_template"
 AUTOTUNE_QUERY_VARIABLES_MANIFEST="${AUTOTUNE_DIR}/autotune-query-variables/query-variable.yaml"
-KRUIZE_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/kruize-crc-openshift.yaml"
-KRUIZE_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/kruize-crc-minikube.yaml"
+KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
@@ -55,9 +55,9 @@ HPO_VERSION=0.0.2
 HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}
 
 # source all the helpers scripts
-. ${SCRIPTS_DIR}/minikube-helpers.sh
-. ${SCRIPTS_DIR}/openshift-helpers.sh
-. ${SCRIPTS_DIR}/common_utils.sh
+. "${SCRIPTS_DIR}"/minikube-helpers.sh
+. "${SCRIPTS_DIR}"/openshift-helpers.sh
+. "${SCRIPTS_DIR}"/common_utils.sh
 
 # Defaults for the script
 # minikube is the default cluster type
@@ -170,8 +170,7 @@ done
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
 		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ]; then
-			MANIFEST_FILE="KRUIZE_DEPLOY_MANIFEST_${cluster_type^^}"
-			kubectl apply -f ${!MANIFEST_FILE}
+			${cluster_type}_crc_start
 		else
 			echo "Unsupported cluster!"
 		fi
