@@ -150,6 +150,10 @@ def main(argv):
             print("Restarting kruize failed!")
             failed = 1
             sys.exit(failed)
+        else:
+            # Create the performance profile as Kruize is restarted
+            perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
+            create_performance_profile(perf_profile_json_file)
 
         # Fetch listExperiments
         # Sleep for a while for data to be restored
@@ -164,10 +168,10 @@ def main(argv):
         # Compare the listExperiments before and after kruize pod restart
         result = compare_json_files(list_exp_json_file_before, list_exp_json_file_after)
         if result == True:
-            print("Test Passed! listExperiments before and after kruize pod restart are same!")
+            print("Passed! listExperiments before and after kruize pod restart are same!")
         else:
             failed = 1
-            print("Test Failed! listExperiments before and after kruize pod restart are not same!")
+            print("Failed! listExperiments before and after kruize pod restart are not same!")
 
         # sleep for a while to mimic the availability of next set of results
         time.sleep(5)
@@ -177,6 +181,10 @@ def main(argv):
         create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
         delete_experiment(create_exp_json_file)
 
+    if failed == 1:
+        print("Test Failed! Check the logs for test failures")
+    else:
+        print("Test Passed! Check the logs for test failures")
     sys.exit(failed)
 
 if __name__ == '__main__':
