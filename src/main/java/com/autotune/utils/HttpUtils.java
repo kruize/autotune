@@ -65,7 +65,7 @@ public class HttpUtils
 					LOGGER.error("Please refresh your auth token");
 					System.exit(1);
 				}
-				LOGGER.debug("{} Response Failure for {}", connection.getResponseCode(),
+				LOGGER.error("{} Response Failure for {}", connection.getResponseCode(),
 						url.toString());
 			}
 		} catch (IOException e) {

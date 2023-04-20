@@ -79,7 +79,7 @@ public class DataSourceFactory {
                 try {
                     String clusterIP = service.getSpec().getClusterIP();
                     int port = service.getSpec().getPorts().get(0).getPort();
-                    LOGGER.info(KruizeDeploymentInfo.cluster_type);
+                    LOGGER.debug(KruizeDeploymentInfo.cluster_type);
                     if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
                         return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
                     }

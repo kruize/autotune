@@ -142,7 +142,6 @@ public class DBHelpers {
                                     true,
                                     false,
                                     null);
-                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject).toString());
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
@@ -218,7 +217,6 @@ public class DBHelpers {
                         LOGGER.error("Exception occurred while updating local storage: {}", e.getMessage());
                     }
                 }
-                LOGGER.debug("updateResultsAPI = {}", new GsonBuilder().setPrettyPrinting().create().toJson(updateResultsAPIObjects));
                 return updateResultsAPIObjects;
             }
 
