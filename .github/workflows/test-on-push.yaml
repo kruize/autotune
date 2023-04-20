@@ -65,6 +65,8 @@ jobs:
           echo Deploy Kruize in experiment mode
           ./deploy.sh -c minikube -i kruize/autotune_operator:test      
           sleep 20
+      - name: Capture ffdc logs
+        run: |
           ./scripts/ffdc.sh -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
@@ -111,7 +113,8 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
           ./test_autotune.sh -c minikube -i kruize/autotune_operator:test --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
-          cd ..
+      - name: Capture ffdc logs
+        run: |
           ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
       - name: Archive results
         if: always()
