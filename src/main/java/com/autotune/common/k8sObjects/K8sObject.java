@@ -18,6 +18,8 @@ public class K8sObject {
         this.type = type;
         this.namespace = namespace;
     }
+    public K8sObject() {
+    }
 
     public String getType() {
         return type;

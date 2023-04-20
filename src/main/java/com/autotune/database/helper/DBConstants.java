@@ -4,5 +4,6 @@ public class DBConstants {
 
     public static final class SQLQUERY {
         public static final String SELECT_FROM_EXPERIMENTS = "from KruizeExperimentEntry";
+        public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
     }
 }

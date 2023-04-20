@@ -20,6 +20,7 @@ import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -97,16 +98,19 @@ public class ExperimentDBService {
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
      * and sends it to the ExperimentInterface implementation to store the objects.
      */
-    public void loadAllExperiments() throws Exception {
+    public void loadAllExperimentsData() throws Exception {
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
         List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
         List<KruizeObject> kruizeExpList = new ArrayList<>();
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+
         int failureThreshHold = createExperimentAPIObjects.size();
         int failureCount = 0;
         for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
             KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
-            if (null != kruizeObject)
+            if (null != kruizeObject) {
                 kruizeExpList.add(kruizeObject);
+            }
             else {
                 failureCount++;
             }
@@ -114,10 +118,27 @@ public class ExperimentDBService {
         if (failureThreshHold > 0 && failureCount == failureThreshHold) {
             throw new Exception("None of the experiments are able to load from DB.");
         }
-        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         experimentInterface.addExperimentToLocalStorage(KruizeOperator.autotuneObjectMap, kruizeExpList);
-        //TODO get KruizeResultsEntry to KruizeObject.kubernetes_objects.containerDataMap.results -> Saad
-        //TODO get KruizeRecommendationEntry to KruizeObject.kubernetes_objects.containerDataMap.containerRecommendations -> Bharath
+
+        // Load results from the DB and save to local
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadAllResults();
+        List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
+        List<ExperimentResultData> resultDataList = new ArrayList<>();
+        for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+            try {
+                ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                if (experimentResultData != null)
+                    resultDataList.add(experimentResultData);
+                else
+                    LOGGER.warn("Converted experimentResultData is null");
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+            } catch (Exception e) {
+                LOGGER.error("Unexpected error: {}", e.getMessage());
+            }
+        }
+        experimentInterface.addResultsToLocalStorage(KruizeOperator.autotuneObjectMap, resultDataList);
+        LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

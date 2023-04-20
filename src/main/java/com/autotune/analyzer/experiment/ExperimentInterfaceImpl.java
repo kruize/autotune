@@ -117,8 +117,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getIntervalEndTime());
                 }
         );
-        LOGGER.debug("{}", new Gson().toJson(experimentResultDataList));
-        // TODO   Insert into database
         return true;
     }
 
