@@ -88,7 +88,7 @@ public class Converters {
                 KruizeObject kruizeObject,
                 boolean getLatest,
                 boolean checkForTimestamp,
-                String monitoringEndTimestamp) {
+                Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
                 listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
@@ -96,6 +96,7 @@ public class Converters {
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
                 KubernetesAPIObject kubernetesAPIObject;
+
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     HashMap<String, ContainerData> containerDataMap = new HashMap<>();
@@ -108,12 +109,10 @@ public class Converters {
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
                                 HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
-                                Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTimestamp);
-                                Timestamp givenTimestamp = new Timestamp(medDate.getTime());
-                                if (recommendations.containsKey(givenTimestamp)) {
+                                if (recommendations.containsKey(monitoringEndTime)) {
                                     List<Timestamp> tempList = new ArrayList<>();
                                     for (Timestamp timestamp : recommendations.keySet()) {
-                                        if (!timestamp.equals(givenTimestamp))
+                                        if (!timestamp.equals(monitoringEndTime))
                                             tempList.add(timestamp);
                                     }
                                     for (Timestamp timestamp : tempList) {

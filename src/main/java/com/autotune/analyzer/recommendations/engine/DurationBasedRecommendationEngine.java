@@ -303,27 +303,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 .stream()
                 .map(e -> {
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(1.0);
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(1.0);
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
                     if (0 != cpuUsageAvg) {
                         return cpuUsageSum / cpuUsageAvg;
                     }
-                    return 1.0;
+                    return 0.0;
                 })
                 .max(Double::compareTo).get();
-        Double max_pods_mem = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> memUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    double memUsageSum = memUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(1.0);
-                    double memUsageAvg = memUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(1.0);
-                    if (0 != memUsageAvg) {
-                        return memUsageSum / memUsageAvg;
-                    }
-                    return 1.0;
-                })
-                .max(Double::compareTo).get();
-        return (int) Math.max(Math.ceil(max_pods_cpu), Math.ceil(max_pods_mem));
+
+        return (int) Math.ceil(max_pods_cpu);
     }
 
     private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -337,10 +326,14 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
                     double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    int numPods = 0;
                     if (0 != cpuUsageAvg) {
-                        return (cpuUsageSum + cpuThrottleSum) / cpuUsageAvg;
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
-                    return (cpuUsageSum + cpuThrottleSum);
+                    if (numPods > 0) {
+                        return (cpuUsageSum + cpuThrottleSum) / numPods;
+                    }
+                    return 0.0;
                 })
                 .collect(Collectors.toList());
 
@@ -372,15 +365,20 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         List<Double> doubleList = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
-                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    Optional<MetricResults> memoryRSSResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS));
-                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double memRSSSum = memoryRSSResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(1.0);
-                    if (0 != memUsageAvg) {
-                        return Math.ceil((memUsageSum + memRSSSum) / memUsageAvg);
+                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    int numPods = 0;
+                    if (0 != cpuUsageAvg) {
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
-                    return Math.ceil(memUsageSum + memRSSSum);
+
+                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    if (numPods > 0) {
+                        return (memUsageSum / numPods);
+                    }
+                    return 0.0;
                 })
                 .collect(Collectors.toList());
 
@@ -414,9 +412,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
-            MetricResults memoryRSSResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS);
-            if (memoryRSSResults != null) {
-                MetricAggregationInfoResults aggregationInfoResult = memoryRSSResults.getAggregationInfoResult();
+            MetricResults memoryUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
+            if (memoryUsageResults != null) {
+                MetricAggregationInfoResults aggregationInfoResult = memoryUsageResults.getAggregationInfoResult();
                 if (aggregationInfoResult != null) {
                     format = aggregationInfoResult.getFormat();
                     if (format != null && !format.isEmpty()) {

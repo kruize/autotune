@@ -21,6 +21,7 @@ import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import static com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.table.KruizeExperimentEntry;
@@ -40,6 +41,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -110,7 +113,8 @@ public class DBHelpers {
                     kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
                     kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
                     kruizeResultsEntry.setDuration_minutes(
-                            Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
+                            Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
+                                    experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
@@ -143,12 +147,11 @@ public class DBHelpers {
                         checkForTimestamp = true;
                         getLatest = false;
                     }
-                    ListRecommendationsAPIObject listRecommendationsAPIObject = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.
-                            convertKruizeObjectToListRecommendationSO(
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = convertKruizeObjectToListRecommendationSO(
                                     kruizeObject,
                                     getLatest,
                                     checkForTimestamp,
-                                    monitoringEndTime.toString());
+                                    monitoringEndTime);
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
@@ -157,7 +160,8 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
                     Timestamp endInterval = null;
-                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {  // todo : what happens if two k8 objects or Containers with different timestamp
+                    // todo : what happens if two k8 objects or Containers with different timestamp
+                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
                         for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
                             endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                             break;
