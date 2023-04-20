@@ -84,7 +84,7 @@ public class Converters {
                 }
             } catch (Exception e) {
                 LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
-                LOGGER.error(createExperimentAPIObject.toString());
+                LOGGER.debug(createExperimentAPIObject.toString());
                 kruizeObject = null;
             }
             return kruizeObject;

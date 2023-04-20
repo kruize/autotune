@@ -441,7 +441,7 @@ public class KruizeOperator {
                 new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create performance profile ", EventLogger.Type.Warning, null, null, null, null);
             }
         } catch (Exception e) {
-            LOGGER.debug("Exception while adding PP with message: {} ", e.getMessage());
+            LOGGER.error("Exception while adding PP with message: {} ", e.getMessage());
             new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             return null;
         }
