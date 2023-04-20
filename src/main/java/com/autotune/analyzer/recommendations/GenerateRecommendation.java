@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -33,6 +33,13 @@ import java.util.stream.Collectors;
  * TODO Aggregate Function should be inline with perf profile class
  */
 
+/**
+ * ##################################################################################3
+ *
+ *                 DEPRECATED CLASS - Will be removed
+ *
+ * ###################################################################################
+ */
 public class GenerateRecommendation {
     private static final Logger LOGGER = LoggerFactory.getLogger(GenerateRecommendation.class);
 

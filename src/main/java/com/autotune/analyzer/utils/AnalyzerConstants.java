@@ -17,8 +17,8 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
-import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
@@ -568,6 +568,14 @@ public class AnalyzerConstants {
 
         }
 
+    }
+
+    public static final class RecommendationConstants {
+        public static final Integer CPU_USAGE_PERCENTILE = 98;
+        public static final Integer MEM_USAGE_PERCENTILE = 100;
+
+        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
+        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
     }
 
     public static final class RecommendationNotificationMsgConstant {

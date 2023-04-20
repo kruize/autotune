@@ -18,8 +18,8 @@ package com.autotune.analyzer.recommendations.engine;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -34,7 +34,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.ceil;
+import static com.autotune.analyzer.utils.AnalyzerConstants.RecommendationConstants.*;
 
 public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine{
     private static final Logger LOGGER = LoggerFactory.getLogger(DurationBasedRecommendationEngine.class);
@@ -68,7 +68,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     }
 
     @Override
-    public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
+    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime) {
         // Get the results
         HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
         // Create a new map for returning the result
@@ -145,16 +145,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Set Limits Map
                 config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+                // Set Config
+                recommendation.setConfig(config);
 
                 // Set number of pods
                 int numPods = getNumPods(filteredResultsMap);
                 recommendation.setPodsCount(numPods);
 
-                double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 // Set Duration in hours
+                double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 recommendation.setDuration_in_hours(hours);
-                // Set Config
-                recommendation.setConfig(config);
 
                 Timestamp timestampToExtract = monitoringEndTime;
                 // Create variation map
@@ -335,8 +335,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
                     Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
                     double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
                     double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    return cpuUsageSum + cpuThrottleSum;
+                    if (0 != cpuUsageAvg) {
+                        return (cpuUsageSum + cpuThrottleSum) / cpuUsageAvg;
+                    }
+                    return (cpuUsageSum + cpuThrottleSum);
                 })
                 .collect(Collectors.toList());
 
@@ -353,8 +357,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
 
-        recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(98, doubleList), format);
-
+        recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(CPU_USAGE_PERCENTILE, doubleList), format);
         return recommendationConfigItem;
     }
 
@@ -371,26 +374,59 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 .map(e -> {
                     Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
                     Optional<MetricResults> memoryRSSResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS));
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    return cpuUsageSum + cpuThrottleSum;
+                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double memRSSSum = memoryRSSResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(1.0);
+                    if (0 != memUsageAvg) {
+                        return Math.ceil((memUsageSum + memRSSSum) / memUsageAvg);
+                    }
+                    return Math.ceil(memUsageSum + memRSSSum);
                 })
                 .collect(Collectors.toList());
-        try {
-            List<Double> doubleList = filteredResultsMap.values()
-                    .stream()
-                    .map(e -> e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getAggregationInfoResult().getSum())
-                    .collect(Collectors.toList());
-            for (IntervalResults intervalResults: filteredResultsMap.values()) {
-                format = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS).getAggregationInfoResult().getFormat();
-                if (null != format && !format.isEmpty())
-                    break;
+
+        // spikeList is the max spike observed in each measurementDuration
+        List<Double> spikeList = filteredResultsMap.values()
+                .stream()
+                .map(e -> {
+                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+                    Optional<MetricResults> memoryRSSResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS));
+                    double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+                    double memRSSMax = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double memRSSMin = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+                    // Calculate the spike in each interval
+                    double intervalSpike = Math.max(Math.ceil(memUsageMax - memUsageMin), Math.ceil(memRSSMax - memRSSMin));
+
+                    return intervalSpike;
+                })
+                .collect(Collectors.toList());
+
+        // Add a buffer to the current usage max
+        Double memRecUsage = CommonUtils.percentile(MEM_USAGE_PERCENTILE, doubleList);
+        Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
+
+        // Add a small buffer to the current usage spike max and add it to the current usage max
+        Double memRecSpike = CommonUtils.percentile(MEM_USAGE_PERCENTILE, spikeList);
+        memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
+        Double memRecSpikeBuf = memRecUsage + memRecSpike;
+
+        // We'll use the minimum of the above two values
+        Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
+
+        for (IntervalResults intervalResults: filteredResultsMap.values()) {
+            MetricResults memoryRSSResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS);
+            if (memoryRSSResults != null) {
+                MetricAggregationInfoResults aggregationInfoResult = memoryRSSResults.getAggregationInfoResult();
+                if (aggregationInfoResult != null) {
+                    format = aggregationInfoResult.getFormat();
+                    if (format != null && !format.isEmpty()) {
+                        break;
+                    }
+                }
             }
-            recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(100, doubleList), format);
-        } catch (Exception e) {
-            LOGGER.error("Not able to get getMemoryCapacityRecommendation: " + e.getMessage());
-            recommendationConfigItem = new RecommendationConfigItem(e.getMessage());
         }
+
+        recommendationConfigItem = new RecommendationConfigItem(memRec, format);
         return recommendationConfigItem;
     }
 
@@ -422,8 +458,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     metricName = AnalyzerConstants.MetricName.memoryLimit;
             }
             if (null != metricName) {
-                if (intervalResults.getMetricResultsMap().containsKey(metricName))
-                    currentValue = intervalResults.getMetricResultsMap().get(metricName).getAggregationInfoResult().getAvg();
+                if (intervalResults.getMetricResultsMap().containsKey(metricName)) {
+                    Optional<MetricResults>  metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
+                    currentValue = metricResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(null);
+                }
                 return currentValue;
             }
         }

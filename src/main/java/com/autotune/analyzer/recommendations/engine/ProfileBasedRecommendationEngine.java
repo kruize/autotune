@@ -52,7 +52,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public HashMap<String, Recommendation> getRecommendations(ContainerData containerData, Timestamp monitoringEndTime) {
+    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime) {
         // TODO: Needs to be implemented
         return null;
     }

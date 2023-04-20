@@ -132,15 +132,26 @@ public class DBHelpers {
                 return kruizeResultsEntry;
             }
 
-            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject) {
+            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
+                Timestamp monitoringEndTime = null;
+                Boolean checkForTimestamp = false;
+                Boolean getLatest = true;
                 try {
+                    if (null != experimentResultData) {
+                        monitoringEndTime = experimentResultData.getIntervalEndTime();
+                        checkForTimestamp = true;
+                        getLatest = false;
+                    }
                     ListRecommendationsAPIObject listRecommendationsAPIObject = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.
                             convertKruizeObjectToListRecommendationSO(
                                     kruizeObject,
-                                    true,
-                                    false,
-                                    null);
+                                    getLatest,
+                                    checkForTimestamp,
+                                    monitoringEndTime.toString());
+                    if (null == listRecommendationsAPIObject) {
+                        return null;
+                    }
                     LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject).toString());
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());

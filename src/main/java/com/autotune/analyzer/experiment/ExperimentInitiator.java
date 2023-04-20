@@ -117,7 +117,7 @@ public class ExperimentInitiator {
                             (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
                                     .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
                                     .getDeclaredConstructor().newInstance();
-                    perfProfileInstance.recommend(kruizeObject, experimentResultData);
+                    perfProfileInstance.generateRecommendation(kruizeObject, experimentResultData);
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
                     e.printStackTrace();
                 }

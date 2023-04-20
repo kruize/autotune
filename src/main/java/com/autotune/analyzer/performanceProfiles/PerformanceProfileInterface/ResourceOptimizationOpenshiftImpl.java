@@ -75,7 +75,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     }
 
     @Override
-    public void recommend(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
+    public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
         //TODO: Will be updated once algo is completed
         if (null != kruizeObject && null != experimentResultData) {
             for (K8sObject k8sObjectResultData : experimentResultData.getKubernetes_objects()) {
@@ -96,7 +96,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
                             continue;
 
-                        HashMap<String, Recommendation> recommendationHashMap = engine.getRecommendations(containerDataKruizeObject, monitoringEndTime);
+                        HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
                         ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();

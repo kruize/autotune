@@ -69,22 +69,24 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-    public boolean getRecommendationToSave(Map<String, KruizeObject> experimentsMap, List<String> experimentNameList) {
-        if (null == experimentNameList)
+    public boolean getRecommendationToSave(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
+        if (null == experimentResultDataList)
             return false;
-        if (experimentNameList.size() == 0)
+        if (experimentResultDataList.size() == 0)
             return false;
-        for (String experimentName : experimentNameList) {
+        for (ExperimentResultData experimentResultData: experimentResultDataList) {
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
-            if (!experimentsMap.containsKey(experimentName))
-                return false;
-        }
-        // Generate recommendations for valid experiments
-        for (String experimentName : experimentNameList) {
-            KruizeObject kruizeObject = experimentsMap.get(experimentName);
+            if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
+                LOGGER.error("");
+                continue;
+            }
+
+            KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
-                    convertKruizeObjectTORecommendation(kruizeObject);
-            new ExperimentDAOImpl().addRecommendationToDB(kr);
+                    convertKruizeObjectTORecommendation(kruizeObject, experimentResultData);
+            if (null != kr) {
+                new ExperimentDAOImpl().addRecommendationToDB(kr);
+            }
         }
         return true;
     }

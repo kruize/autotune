@@ -100,7 +100,9 @@ public class UpdateResults extends HttpServlet {
                 if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
                     boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentResultDataList);
                     if (!recommendationCheck)
-                        LOGGER.error("Failed to create recommendations");
+                        LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
+                                experimentResultDataList.get(0).getExperiment_name(),
+                                experimentResultDataList.get(0).getIntervalEndTime());
                     else {
                         new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentResultDataList);
                     }
