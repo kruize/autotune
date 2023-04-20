@@ -16,10 +16,10 @@
 
 package com.autotune.common.target.kubernetes.service.impl;
 
-import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.common.target.common.exception.TargetHandlerConnectException;
 import com.autotune.common.target.common.exception.TargetHandlerException;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.trials.ContainerConfigData;
 import com.autotune.common.utils.ExponentialBackOff;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,6 +275,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
 
     /**
      * Get list of deployments in the namespace
+     *
      * @param namespace
      * @return
      */
@@ -355,7 +357,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
                     deployed = true;
                 }
             } else {
-                throw new Exception("Deployment with name: " + deploymentName + " under namespace: " + namespace +" does not exist.");
+                throw new Exception("Deployment with name: " + deploymentName + " under namespace: " + namespace + " does not exist.");
             }
         } catch (Exception e) {
             new TargetHandlerException(e, "deployDeployment failed!");
@@ -399,7 +401,8 @@ public class KubernetesServicesImpl implements KubernetesServices {
                                 }
                             }
                     );
-            if (foundErrorInConfig.get()) throw new Exception("Container Name: " + containerConfigData.getContainerName() + " not found in config");
+            if (foundErrorInConfig.get())
+                throw new Exception("Container Name: " + containerConfigData.getContainerName() + " not found in config");
         } catch (Exception e) {
             new TargetHandlerException(e, "getAmendedDeployment failed!");
         }
@@ -415,7 +418,9 @@ public class KubernetesServicesImpl implements KubernetesServices {
     @Override
     public void addWatcher(CustomResourceDefinitionContext crd, Watcher watcher) {
         try {
-            kubernetesClient.customResource(crd).watch(watcher);
+            RawCustomResourceOperationsImpl rawCustomResourceOperations = kubernetesClient.customResource(crd);
+            if (null != rawCustomResourceOperations.list())
+                rawCustomResourceOperations.watch(watcher);
         } catch (Exception e) {
             LOGGER.warn("Watcher not added! Only REST API access is enabled.");
         }
