@@ -27,6 +27,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
@@ -102,15 +103,21 @@ public class CreateExperiment extends HttpServlet {
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
-                    for (KruizeObject ko : kruizeExpList) {
-                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
-                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
-                                .findAny()
-                                .orElse(null);
-                        validAPIObj.setValidationData(ko.getValidationData());
-                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                    ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
+                    ;  // TODO savetoDB should move to queue and bulk upload not considered here
+                    if (KruizeDeploymentInfo.settings_save_to_db) {
+                        for (KruizeObject ko : kruizeExpList) {
+                            CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                                    .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                                    .findAny()
+                                    .orElse(null);
+                            validAPIObj.setValidationData(ko.getValidationData());
+                            ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                            addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);   // TODO caution addtodb inside loop and getting override , since we disabled bulk upload it should work fine
+                        }
+                    } else {
+                        LOGGER.debug("Will skip saving to DB.");
+                        addedToDB = new ValidationOutputData(true, null, null);
                     }
                     if (addedToDB.isSuccess())
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
