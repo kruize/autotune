@@ -108,6 +108,7 @@ public class CreateExperiment extends HttpServlet {
                                 .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
                                 .findAny()
                                 .orElse(null);
+                        validAPIObj.setValidationData(ko.getValidationData());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }

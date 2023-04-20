@@ -198,7 +198,6 @@ public class ExperimentValidation {
         );
         if (missingMandatoryFields.size() == 0) {
             try {
-                expObj.setExperimentUseCaseType(new ExperimentUseCaseType(expObj));
                 if (expObj.getExperimentUseCaseType().isRemoteMonitoring() || expObj.getExperimentUseCaseType().isLocalMonitoring()) {
                     mandatoryFieldsForLocalRemoteMonitoring.forEach(
                             mField -> {
