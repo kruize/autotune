@@ -201,17 +201,22 @@ public class DBHelpers {
                 ObjectMapper mapper = new ObjectMapper();
                 List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
                 for (KruizeResultsEntry kruizeResultsEntry : kruizeResultsEntries) {
-                    UpdateResultsAPIObject updateResultsAPIObject = new UpdateResultsAPIObject();
-                    updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
-                    updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
-                    updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
-                    kruizeResultsEntry.getMeta_data();
-                    JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
-                    JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
-                    List<K8sObject> k8sObjectList = mapper.readValue(k8sObjectsNode.toString(), new TypeReference<>() {});
-                    List<KubernetesAPIObject> kubernetesAPIObjectList = convertK8sObjectListToKubernetesAPIObjectList(k8sObjectList);
-                    updateResultsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                    updateResultsAPIObjects.add(updateResultsAPIObject);
+                    try {
+                        UpdateResultsAPIObject updateResultsAPIObject = new UpdateResultsAPIObject();
+                        updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
+                        updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
+                        updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
+                        kruizeResultsEntry.getMeta_data();
+                        JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
+                        JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                        List<K8sObject> k8sObjectList = mapper.readValue(k8sObjectsNode.toString(), new TypeReference<>() {
+                        });
+                        List<KubernetesAPIObject> kubernetesAPIObjectList = convertK8sObjectListToKubernetesAPIObjectList(k8sObjectList);
+                        updateResultsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                        updateResultsAPIObjects.add(updateResultsAPIObject);
+                    } catch (Exception e) {
+                        LOGGER.error("Exception occurred while updating local storage: {}", e.getMessage());
+                    }
                 }
                 LOGGER.debug("updateResultsAPI = {}", new GsonBuilder().setPrettyPrinting().create().toJson(updateResultsAPIObjects));
                 return updateResultsAPIObjects;

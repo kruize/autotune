@@ -99,9 +99,6 @@ public class ExperimentDBService {
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
         List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
         List<KruizeObject> kruizeExpList = new ArrayList<>();
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadAllResults();
-        List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
-        List<ExperimentResultData> resultDataList = new ArrayList<>();
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
 
         int failureThreshHold = createExperimentAPIObjects.size();
@@ -121,9 +118,23 @@ public class ExperimentDBService {
         experimentInterface.addExperimentToLocalStorage(KruizeOperator.autotuneObjectMap, kruizeExpList);
 
         // Load results from the DB and save to local
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadAllResults();
+        List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
+        List<ExperimentResultData> resultDataList = new ArrayList<>();
         for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
-            ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
-            resultDataList.add(experimentResultData);
+            try {
+                ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                if (experimentResultData != null)
+                    resultDataList.add(experimentResultData);
+                else
+                    LOGGER.warn("Converted experimentResultData is null");
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+                throw e;
+            } catch (Exception e) {
+                LOGGER.error("Unexpected error: {}", e.getMessage());
+                throw e;
+            }
         }
         experimentInterface.addResultsToLocalStorage(KruizeOperator.autotuneObjectMap, resultDataList);
         LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
