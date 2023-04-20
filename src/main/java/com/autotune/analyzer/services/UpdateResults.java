@@ -27,6 +27,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +84,14 @@ public class UpdateResults extends HttpServlet {
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                 ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
                 if (null == invalidKExperimentResultData) {
-                    //  // TODO savetoDB should move to queue and bulk upload not considered here
-                    for (ExperimentResultData resultData : experimentResultDataList) {
-                        addedToDB = new ExperimentDBService().addResultsToDB(resultData);
+                    if(KruizeDeploymentInfo.settings_save_to_db) {
+                        //  // TODO savetoDB should move to queue and bulk upload not considered here
+                        for (ExperimentResultData resultData : experimentResultDataList) {
+                            addedToDB = new ExperimentDBService().addResultsToDB(resultData);
+                        }
+                    }else{
+                        LOGGER.debug("Will skip saving to DB.");
+                        addedToDB = new ValidationOutputData(true,null,null);
                     }
                     if (addedToDB.isSuccess())
                         sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
@@ -109,7 +115,9 @@ public class UpdateResults extends HttpServlet {
                         if (!recommendationCheck)
                             LOGGER.error("Failed to create recommendations");
                         else {
-                            new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentList);
+                            if(KruizeDeploymentInfo.settings_save_to_db) {
+                                new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentList);
+                            }
                         }
                     }
                 }
