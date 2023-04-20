@@ -130,10 +130,8 @@ public class ExperimentDBService {
                     LOGGER.warn("Converted experimentResultData is null");
             } catch (IllegalArgumentException e) {
                 LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
-                throw e;
             } catch (Exception e) {
                 LOGGER.error("Unexpected error: {}", e.getMessage());
-                throw e;
             }
         }
         experimentInterface.addResultsToLocalStorage(KruizeOperator.autotuneObjectMap, resultDataList);
