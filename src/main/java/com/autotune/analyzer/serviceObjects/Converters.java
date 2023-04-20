@@ -1,6 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -76,6 +77,11 @@ public class Converters {
                 kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
                 kruizeObject.setExperimentId(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
+                kruizeObject.setExperimentUseCaseType(new ExperimentUseCaseType(kruizeObject));
+                if(null != createExperimentAPIObject.getValidationData()){
+                    //Validation already done and it is getting loaded back from db
+                    kruizeObject.setValidationData(createExperimentAPIObject.getValidationData());
+                }
             } catch (Exception e) {
                 LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
                 LOGGER.error(createExperimentAPIObject.toString());

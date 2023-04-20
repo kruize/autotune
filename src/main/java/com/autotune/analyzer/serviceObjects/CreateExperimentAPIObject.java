@@ -18,6 +18,7 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -45,7 +46,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
     private AnalyzerConstants.ExperimentStatus status;
-    private String experiment_id;   // todo add comment genrated field
+    private String experiment_id;   // this id is UUID and getting set at createExperiment API
+    private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
 
     public String getClusterName() {
         return clusterName;
@@ -125,6 +127,14 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     public void setExperiment_id(String experiment_id) {
         this.experiment_id = experiment_id;
+    }
+
+    public ValidationOutputData getValidationData() {
+        return validationData;
+    }
+
+    public void setValidationData(ValidationOutputData validationData) {
+        this.validationData = validationData;
     }
 
     @Override
