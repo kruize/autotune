@@ -572,8 +572,10 @@ public class AnalyzerConstants {
 
     public static final class RecommendationConstants {
         public static final Integer CPU_USAGE_PERCENTILE = 98;
+        public static final Integer NUM_PODS_PERCENTILE = 100;
         public static final Integer MEM_USAGE_PERCENTILE = 100;
 
+        public static final Integer ONE_CPU_CORE = 1;
         public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
     }
