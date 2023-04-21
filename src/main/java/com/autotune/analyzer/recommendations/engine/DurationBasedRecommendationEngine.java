@@ -34,6 +34,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.HUNDREDTH_PERCENTILE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.NINETY_EIGHTH_PERCENTILE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.RecommendationConstants.*;
 
 public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine{
@@ -331,7 +333,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
                     double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
                     double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuRequest = 0.0;
+                    double cpuRequestInterval = 0.0;
                     double cpuUsagePod = 0;
                     int numPods = 0;
 
@@ -341,8 +343,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     double cpuUsageTotal = cpuUsage + cpuThrottle;
 
                     // Usage is less than 1 core, set it to the observed value.
-                    if (ONE_CPU_CORE > cpuUsageTotal) {
-                        cpuRequest = cpuUsageTotal;
+                    if (CPU_ONE_CORE > cpuUsageTotal) {
+                        cpuRequestInterval = cpuUsageTotal;
                     } else {
                         // Sum/Avg should give us the number of pods
                         if (0 != cpuUsageAvg) {
@@ -351,11 +353,19 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                 cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
                             }
                         }
-                        cpuRequest = Math.max(cpuUsagePod, cpuUsageTotal);
+                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
                     }
-                    return cpuRequest;
+                    return cpuRequestInterval;
                 })
                 .collect(Collectors.toList());
+
+        double cpuRequest = 0.0;
+        double cpuRequestMax = Collections.max(cpuUsageList);
+        if (CPU_ONE_CORE > cpuRequestMax) {
+            cpuRequest = cpuRequestMax;
+        } else {
+            cpuRequest = CommonUtils.percentile(NINETY_EIGHTH_PERCENTILE, cpuUsageList);
+        }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
@@ -370,7 +380,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
 
-        recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(CPU_USAGE_PERCENTILE, cpuUsageList), format);
+        recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
         return recommendationConfigItem;
     }
 
@@ -382,7 +392,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> doubleList = filteredResultsMap.values()
+        List<Double> memUsageList = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
@@ -433,11 +443,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(MEM_USAGE_PERCENTILE, doubleList);
+        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(MEM_USAGE_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
