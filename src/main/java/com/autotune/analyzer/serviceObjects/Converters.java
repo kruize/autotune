@@ -114,8 +114,9 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
-                                if (recommendations.containsKey(monitoringEndTime)) {
+                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                        = clonedContainerData.getContainerRecommendations().getData();
+                                if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
                                     List<Timestamp> tempList = new ArrayList<>();
                                     for (Timestamp timestamp : recommendations.keySet()) {
                                         if (!timestamp.equals(monitoringEndTime))
@@ -136,7 +137,8 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                        = clonedContainerData.getContainerRecommendations().getData();
                                 Timestamp latestTimestamp = null;
                                 List<Timestamp> tempList = new ArrayList<>();
                                 for (Timestamp timestamp : recommendations.keySet()) {

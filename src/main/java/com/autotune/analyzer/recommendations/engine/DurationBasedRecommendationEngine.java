@@ -368,13 +368,22 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
                     double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
                     int numPods = 0;
                     if (0 != cpuUsageAvg) {
                         numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
+                    // If numPods is still zero, could be because there is no CPU info
+                    // We can use mem data to calculate pods, this is not as reliable as cpu
+                    // but better than nothing!
+                    if (0 == numPods) {
+                        if (0 != memUsageAvg) {
+                            numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+                        }
+                    }
 
-                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     if (numPods > 0) {
                         return (memUsageSum / numPods);
                     }

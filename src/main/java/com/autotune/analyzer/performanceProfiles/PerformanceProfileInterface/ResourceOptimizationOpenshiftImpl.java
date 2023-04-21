@@ -96,6 +96,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
                             continue;
 
+                        // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                         HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
