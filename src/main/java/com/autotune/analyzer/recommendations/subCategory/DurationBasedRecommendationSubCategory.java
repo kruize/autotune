@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.algos;
+package com.autotune.analyzer.recommendations.subCategory;
 
 import java.util.concurrent.TimeUnit;
 

@@ -42,6 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO;
+
 /**
  * Helper functions used by the DB to create entity objects.
  */
@@ -111,7 +113,8 @@ public class DBHelpers {
                     kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
                     kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
                     kruizeResultsEntry.setDuration_minutes(
-                            Double.valueOf((experimentResultData.getIntervalEndTime().getTime() - experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
+                            Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
+                                    experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
@@ -133,20 +136,32 @@ public class DBHelpers {
                 return kruizeResultsEntry;
             }
 
-            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject) {
+            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
+                Timestamp monitoringEndTime = null;
+                Boolean checkForTimestamp = false;
+                Boolean getLatest = true;
                 try {
-                    ListRecommendationsAPIObject listRecommendationsAPIObject = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.
-                            convertKruizeObjectToListRecommendationSO(
+                    if (null != experimentResultData) {
+                        monitoringEndTime = experimentResultData.getIntervalEndTime();
+                        checkForTimestamp = true;
+                        getLatest = false;
+                    }
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = convertKruizeObjectToListRecommendationSO(
                                     kruizeObject,
-                                    true,
-                                    false,
-                                    null);
+                                    getLatest,
+                                    checkForTimestamp,
+                                    monitoringEndTime);
+                    if (null == listRecommendationsAPIObject) {
+                        return null;
+                    }
+                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject).toString());
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
                     Timestamp endInterval = null;
-                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {  // todo : what happens if two k8 objects or Containers with different timestamp
+                    // todo : what happens if two k8 objects or Containers with different timestamp
+                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
                         for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
                             endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                             break;

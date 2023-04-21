@@ -44,7 +44,7 @@ public class DefaultImpl extends PerfProfileImpl {
     }
 
     @Override
-    public void recommend(KruizeObject kruizeObject) {
+    public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
 
     }
 
