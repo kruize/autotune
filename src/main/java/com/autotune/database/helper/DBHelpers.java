@@ -18,6 +18,7 @@ package com.autotune.database.helper;
 
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -532,8 +533,24 @@ public class DBHelpers {
 
                             ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
                             // Set container recommendations
-                            if (null != containerAPIObject.getContainerRecommendations())
-                                containerData.setContainerRecommendations(containerAPIObject.getContainerRecommendations());
+                            if (null == containerAPIObject.getContainerRecommendations())
+                                continue;
+                            if (null == containerAPIObject.getContainerRecommendations().getData())
+                                continue;
+                            if (null == containerData.getContainerRecommendations()){
+                                containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
+                            } else {
+                                ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+                                if (null == containerRecommendations.getData()) {
+                                    containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
+                                } else {
+                                    containerRecommendations.getNotifications().clear();
+                                    containerRecommendations.getNotifications().addAll(containerAPIObject.getContainerRecommendations().getNotifications());
+                                    HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data = containerRecommendations.getData();
+                                    data.putAll(containerAPIObject.getContainerRecommendations().getData());
+                                }
+                            }
+
                         }
                     }
                 }
