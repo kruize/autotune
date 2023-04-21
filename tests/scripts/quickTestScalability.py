@@ -42,6 +42,7 @@ minutesjump = args.minutesjump
 headers = {
     'Content-Type': 'application/json'
 }
+timeout = (60, 60)
 
 print(createExpURL)
 print(updateExpURL)
@@ -325,39 +326,49 @@ data = {
 
 
 for i in range(expcount):
-    experiment_name = "%s_%s" %(expnameprfix,i)
-    createdata['experiment_name'] = experiment_name
-    create_json_payload = json.dumps([createdata])
-    # Send the request with the payload
-    response = requests.post(createExpURL, data=create_json_payload, headers=headers)
-    # Check the response
-    if response.status_code == 201:
-        print('Request successful!')
-    else:
-       print(f'Request failed with status code {response.status_code}: {response.text}')
-
-    data['experiment_name'] = experiment_name
-    for j in range(rescount):
-        # calculate the new interval start and end times
-        interval_start_time = datetime.datetime.strptime(data['interval_end_time'] ,  '%Y-%m-%dT%H:%M:%S.%fZ')
-        interval_end_time = datetime.datetime.strptime(data['interval_end_time'] , '%Y-%m-%dT%H:%M:%S.%fZ' ) + datetime.timedelta(minutes=minutesjump)
-
-        # update the JSON data with the new interval times
-        data['interval_start_time'] = interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data['interval_end_time'] = interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-
-
-        # Convert payload to JSON string
-        json_payload = json.dumps([data])
-
+    try:
+        experiment_name = "%s_%s" %(expnameprfix,i)
+        createdata['experiment_name'] = experiment_name
+        create_json_payload = json.dumps([createdata])
         # Send the request with the payload
-        response = requests.post(updateExpURL, data=json_payload, headers=headers)
-
+        response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
         # Check the response
         if response.status_code == 201:
-            pass
+            print('Request successful!')
         else:
-            print(f'Request failed with status code {response.status_code}: {response.text}')
+           print(f'Request failed with status code {response.status_code}: {response.text}')
+
+        data['experiment_name'] = experiment_name
+        for j in range(rescount):
+            try:
+                # calculate the new interval start and end times
+                interval_start_time = datetime.datetime.strptime(data['interval_end_time'] ,  '%Y-%m-%dT%H:%M:%S.%fZ')
+                interval_end_time = datetime.datetime.strptime(data['interval_end_time'] , '%Y-%m-%dT%H:%M:%S.%fZ' ) + datetime.timedelta(minutes=minutesjump)
+
+                # update the JSON data with the new interval times
+                data['interval_start_time'] = interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                data['interval_end_time'] = interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+                # Convert payload to JSON string
+                json_payload = json.dumps([data])
+
+                # Send the request with the payload
+                response = requests.post(updateExpURL, data=json_payload, headers=headers, timeout=timeout)
+
+                # Check the response
+                if response.status_code == 201:
+                    pass
+                else:
+                    print(f'Request failed with status code {response.status_code}: {response.text}')
+            except requests.exceptions.Timeout:
+                print('Timeout occurred while connecting to')
+            except requests.exceptions.RequestException as e:
+                print('An error occurred while connecting to',  e)
+    except requests.exceptions.Timeout:
+        print('Timeout occurred while connecting to')
+    except requests.exceptions.RequestException as e:
+        print('An error occurred while connecting to', e)
 
     print('Request successful!  completed  :  %s/%s  %s/%s '  %(i,expcount,j,rescount ))
 
