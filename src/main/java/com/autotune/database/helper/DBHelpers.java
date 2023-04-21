@@ -45,6 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -199,6 +201,8 @@ public class DBHelpers {
                 ListRecommendationsAPIObject listRecommendationsAPIObject = null;
                 if (!kubernetesAPIObjectList.isEmpty()) {
                     listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+                    listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
+                    listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                     listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
                 }
                 return listRecommendationsAPIObject;
@@ -345,9 +349,13 @@ public class DBHelpers {
                     }
                     // Create an Object Mapper to extract value from JSON Node
                     ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    objectMapper.setDateFormat(df);
                     // Create a holder for recommendation object to save the result from object mapper
                     ListRecommendationsAPIObject listRecommendationsAPIObject = null;
-                    JsonNode extendedData = kruizeRecommendationEntry.getExtended_data();
+                    JsonNode extendedData = kruizeRecommendationEntry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                    if (null == extendedData)
+                        continue;
                     try {
                         // If successful, the object mapper returns the list recommendation API Object
                         List<KubernetesAPIObject> kubernetesAPIObjectList = objectMapper.readValue(extendedData.toString(),
@@ -355,13 +363,18 @@ public class DBHelpers {
                         if (null != kubernetesAPIObjectList) {
                             listRecommendationsAPIObject = new ListRecommendationsAPIObject();
                             listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                            listRecommendationsAPIObject.setExperimentName(kruizeRecommendationEntry.getExperiment_name());
+                            listRecommendationsAPIObject.setClusterName(kruizeRecommendationEntry.getCluster_name());
                         }
                     } catch (JsonProcessingException e) {
+                        e.printStackTrace();
                         LOGGER.debug(e.getMessage());
                     }
                     if (null != listRecommendationsAPIObject)
                         listRecommendationsAPIObjectList.add(listRecommendationsAPIObject);
                 }
+                if (listRecommendationsAPIObjectList.isEmpty())
+                    return null;
                 return listRecommendationsAPIObjectList;
             }
         }
@@ -484,35 +497,6 @@ public class DBHelpers {
                 );
             }
 
-            // validate if the kruize object is same as of Entry
-            if (kruizeObject.getClusterName() != listRecommendationsAPIObject.getClusterName()) {
-                throw new InvalidConversionOfRecommendationEntryException(
-                        String.format(
-                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EQUAL,
-                                "Cluster Name",
-                                kruizeObject.getClusterName(),
-                                KruizeObject.class.getSimpleName(),
-                                "Cluster Name",
-                                listRecommendationsAPIObject.getClusterName(),
-                                ListRecommendationsAPIObject.class.getSimpleName()
-                        )
-                );
-            }
-
-            if (kruizeObject.getExperimentName() != listRecommendationsAPIObject.getExperimentName()) {
-                throw new InvalidConversionOfRecommendationEntryException(
-                        String.format(
-                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EQUAL,
-                                "Experiment Name",
-                                kruizeObject.getExperimentName(),
-                                KruizeObject.class.getSimpleName(),
-                                "Experiment Name",
-                                listRecommendationsAPIObject.getExperimentName(),
-                                ListRecommendationsAPIObject.class.getSimpleName()
-                        )
-                );
-            }
-
             // Store the obtained list of kubernetes API Objects in a local list
             List<KubernetesAPIObject> kubernetesAPIObjectList = listRecommendationsAPIObject.getKubernetesObjects();
 
@@ -538,8 +522,8 @@ public class DBHelpers {
 
 
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-                    if (kubernetesAPIObject.getName() == k8sObject.getName()
-                            && kubernetesAPIObject.getType() == k8sObject.getType()) {
+                    if (kubernetesAPIObject.getName().equalsIgnoreCase(k8sObject.getName())
+                            && kubernetesAPIObject.getType().equalsIgnoreCase(k8sObject.getType())) {
                         for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                             String containerName = containerAPIObject.getContainer_name();
                             // Skip the record if the data map doesn't have the container

@@ -138,11 +138,13 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
                 List<ListRecommendationsAPIObject> experimentListRecObjs = new ArrayList<>();
                 for (ListRecommendationsAPIObject apiObject : listRecommendationsAPIObjectList) {
-                    if (null != apiObject.getExperimentName() && apiObject.getExperimentName() == experimentName)
+                    if (null != apiObject.getExperimentName() && apiObject.getExperimentName().equals(experimentName))
                         experimentListRecObjs.add(apiObject);
                 }
                 try {
-                    DBHelpers.setRecommendationsToKruizeObject(experimentListRecObjs, kruizeObject);
+                    if (!experimentListRecObjs.isEmpty()) {
+                        DBHelpers.setRecommendationsToKruizeObject(experimentListRecObjs, kruizeObject);
+                    }
                 } catch (InvalidConversionOfRecommendationEntryException e) {
                     e.printStackTrace();
                 }

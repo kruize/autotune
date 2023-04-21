@@ -63,6 +63,10 @@ public class Recommendation {
             notifications.add(notification);
     }
 
+    public Recommendation() {
+
+    }
+
     public Timestamp getMonitoringStartTime() {
         return monitoringStartTime;
     }

@@ -29,6 +29,10 @@ public class RecommendationConfigItem {
         this.format = format;
     }
 
+    public RecommendationConfigItem() {
+
+    }
+
     public String getErrorMsg() {
         return errorMsg;
     }
