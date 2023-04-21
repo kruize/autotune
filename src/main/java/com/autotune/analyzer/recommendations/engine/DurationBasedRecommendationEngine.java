@@ -310,7 +310,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     double numPods = 0;
 
                     if (0 != cpuUsageAvg) {
-                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                        numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
                     return numPods;
                 })
@@ -348,8 +348,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     } else {
                         // Sum/Avg should give us the number of pods
                         if (0 != cpuUsageAvg) {
-                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                            if (numPods > 0) {
+                            numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                            if (0 < numPods) {
                                 cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
                             }
                         }
@@ -406,7 +406,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     int numPods = 0;
 
                     if (0 != cpuUsageAvg) {
-                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                        numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
                     // If numPods is still zero, could be because there is no CPU info
                     // We can use mem data to calculate pods, this is not as reliable as cpu
