@@ -84,6 +84,8 @@ public class AnalyzerConstants {
     public static final String NULL = "null";
     public static final String BULKUPLOAD_CREATEEXPERIMENT_LIMIT = "bulkupload_createexperiment_limit";
     public static final String PERSISTANCE_STORAGE = "persistance_storage";
+    public static final String RESULTS_COUNT = "results_count";
+    public static final int GC_THRESHOLD_COUNT = 100;
 
 
     private AnalyzerConstants() {
