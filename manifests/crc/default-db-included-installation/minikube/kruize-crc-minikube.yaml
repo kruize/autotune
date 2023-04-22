@@ -159,12 +159,6 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_OPTIONS
               value: " -server -XX:MaxRAMPercentage=90"
-          resources:
-            requests:
-              memory: "500m"
-              cpu: "0.5"
-            limits:
-              memory: "500m"
           ports:
             - name: kruize-port
               containerPort: 8080

@@ -1,6 +1,6 @@
 name: Test on Pull Request
 
-# Controls when the action will run.
+# Controls when the action will run. 
 on:
   pull_request:
     paths-ignore:
@@ -22,18 +22,15 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
       - name: Setup Minikube
-        id: minikube
-        uses: medyagh/setup-minikube@latest
+        uses: manusa/actions-setup-minikube@v2.3.0
         with:
-          minikube-version: 1.16.0
-          kubernetes-version: v1.19.2
-          cpus: 4
-          memory: 6000m
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
       - name: Build autotune
         run: |
           echo Build autotune
           ./build.sh -i autotune_operator:test
-          docker images | grep autotune
+          docker images | grep autotune     
       - name: Check cluster info on minikube
         run: |
           kubectl cluster-info
@@ -79,13 +76,10 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
       - name: Setup Minikube
-        id: minikube
-        uses: medyagh/setup-minikube@latest
+        uses: manusa/actions-setup-minikube@v2.3.0
         with:
-          minikube-version: 1.16.0
-          kubernetes-version: v1.19.2
-          cpus: 4
-          memory: 6000m
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
       - name: Build crc
         run: |
           echo Build crc
@@ -126,3 +120,4 @@ jobs:
           name: crc-results
           path: ./crc_results.tar
           retention-days: 2
+
