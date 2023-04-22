@@ -28,7 +28,7 @@ Kruize Remote monitoring fault tolerant test validates the behaviour of [Kruize 
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u No. of experiments ] [ -d Number of hours of metrics data available] 
+<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u No. of experiments ] [ -d Number of iterations of 100 results to be posted] 
 ```
 
 Where values for remote_monitoring_fault_tolerant_tests.sh are:
@@ -40,13 +40,13 @@ usage: remote_monitoring_fault_tolerant_tests.sh
                  default - kruize/autotune_operator:test
 	[ -r ] : Results directory path
 	[ -u ] : Number of experiments
-	[ -d ] : Number of hours of metrics data available
+	[ -d ] : Number of iterations of 100 results to be posted
 ```
 
 For example,
 
 ```
-<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -r /tmp/fault-tolerant-test-results -i kruize/autotune_operator:0.0.12_mvp -u 3 -d 12
+<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -r /tmp/fault-tolerant-test-results -i kruize/autotune_operator:0.0.12_mvp -u 3 -d 2
 ```
 
 Once the tests are complete, manually check the logs for any exceptions or errors or crashes.  

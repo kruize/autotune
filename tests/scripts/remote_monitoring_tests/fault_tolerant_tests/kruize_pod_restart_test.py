@@ -26,18 +26,18 @@ from helpers.generate_rm_jsons import *
 def main(argv):
     cluster_type = "minikube"
     results_dir = "."
-    hours = 6
+    iterations = 1
     num_exps = 3
     failed = 0
     try:
         opts, args = getopt.getopt(argv,"h:c:a:u:r:d:")
     except getopt.GetoptError:
-        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <hours of data available> -r <results dir>")
+        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations of 100 results> -r <results dir>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <hours of data available> -r <results dir>")
+            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations of 100 results> -r <results dir>")
             sys.exit(0)
         elif opt == '-c':
             cluster_type = arg
@@ -48,7 +48,7 @@ def main(argv):
         elif opt == '-r':
             results_dir = arg
         elif opt == '-d':
-            hours = int(arg)
+            iterations = int(arg)
         
 
     print(f"Cluster type = {cluster_type}")
@@ -58,8 +58,10 @@ def main(argv):
     # Form the kruize url
     if cluster_type == "minikube":
         form_kruize_url(cluster_type)
+        namespace = "monitoring"
     else:
         form_kruize_url(cluster_type, server_ip_addr)
+        namespace = "openshift-tuning"
 
     # Create the performance profile
     perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
@@ -72,13 +74,12 @@ def main(argv):
 
     exp_json_dir = results_dir + "/exp_jsons" + "_" + str(num_exps)
     result_json_dir = results_dir + "/result_jsons" + "_" + str(num_exps)
-    reco_json_dir = results_dir + "/reco_jsons_" + str(num_exps)
-    os.mkdir(reco_json_dir)
+    list_reco_json_dir = results_dir + "/list_reco_jsons"
+    list_exp_json_dir = results_dir + "/list_exp_jsons"
+    os.mkdir(list_exp_json_dir)
+    os.mkdir(list_reco_json_dir)
 
-    exp_list = []
-
-    iterations = int(hours / 6)
-    # 6 hour results of each result with 15mins duration, so no. of results 6 * 4
+    # Post 100 results
     num_res = 100
 
     for i in range(1, iterations+1):
@@ -92,11 +93,13 @@ def main(argv):
             create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
             start_ts = get_datetime()
         else:
-            # Increment the time by 365 mins or 6 hrs 6 mins for the next set of data timestamps
-            new_timestamp = increment_timestamp_by_given_mins(start_ts, 365)
+            # Increment the time by 1505 mins for the next set of data timestamps
+            new_timestamp = increment_timestamp_by_given_mins(start_ts, 1505)
             start_ts = new_timestamp
             create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
 
+        reco_json_dir = results_dir + "/reco_jsons" + "_" + str(i)
+        os.mkdir(reco_json_dir)
         for res_num in range(num_res):
             for exp_num in range(num_exps):
                 # create the experiment and post it
@@ -109,7 +112,6 @@ def main(argv):
                 experiment_name = json_data[0]['experiment_name']
                 print(f"experiment_name = {experiment_name}")
 
-                # update 6 hours result for the specified experiment
                 json_file = result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
 
                 update_results(json_file)
@@ -124,20 +126,23 @@ def main(argv):
                 # Fetch the recommendations for all the experiments
                 latest = None
                 reco = list_recommendations(experiment_name, latest, interval_end_time)
-                filename = reco_json_dir + '/reco_' + experiment_name + '.json'
+                filename = reco_json_dir + '/reco_' + str(res_num) + '_' +  str(exp_num) + '.json'
                 write_json_data_to_file(filename, reco.json())
 
         # Fetch listExperiments
-        list_exp_json_file_before = results_dir + "/list_exp_json_before_" + str(i) + ".json"
+        list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before_" + str(i) + ".json"
         response = list_experiments()
         list_exp_json = response.json()
 
         write_json_data_to_file(list_exp_json_file_before, list_exp_json)
 
-        if cluster_type == "minikube":
-            namespace = "monitoring"
-        elif cluster_type == "openshift":
-            namespace = "openshift-tuning"
+        # Fetch the recommendations for all the experiments
+        latest = "false"
+        interval_end_time = None
+        response = list_recommendations(experiment_name, latest, interval_end_time)
+        list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before_' + str(i) + '.json'
+        write_json_data_to_file(list_reco_json_file_before, response.json())
+
 
         # Delete the kruize pod
         delete_kruize_pod(namespace)
@@ -145,6 +150,9 @@ def main(argv):
         # Check if the kruize pod is running
         pod_name = get_kruize_pod(namespace)
         result = check_pod_running(namespace, pod_name)
+
+        # Sleep for a while 
+        time.sleep(5)
 
         if result == False:
             print("Restarting kruize failed!")
@@ -156,14 +164,18 @@ def main(argv):
             create_performance_profile(perf_profile_json_file)
 
         # Fetch listExperiments
-        # Sleep for a while for data to be restored
-        time.sleep(10)
-
-        list_exp_json_file_after = results_dir + "/list_exp_json_after_" + str(i) + ".json"
+        list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after_" + str(i) + ".json"
         response = list_experiments()
         list_exp_json = response.json()
 
         write_json_data_to_file(list_exp_json_file_after, list_exp_json)
+
+        # Fetch the recommendations for all the experiments
+        latest = "false"
+        interval_end_time = None
+        response = list_recommendations(experiment_name, latest, interval_end_time)
+        list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after_' + str(i) + '.json'
+        write_json_data_to_file(list_reco_json_file_after, response.json())
 
         # Compare the listExperiments before and after kruize pod restart
         result = compare_json_files(list_exp_json_file_before, list_exp_json_file_after)
@@ -173,8 +185,16 @@ def main(argv):
             failed = 1
             print("Failed! listExperiments before and after kruize pod restart are not same!")
 
+        # Compare the listRecommendations before and after kruize pod restart
+        result = compare_json_files(list_reco_json_file_before, list_exp_json_file_after)
+        if result == True:
+            print("Passed! listRecommendations before and after kruize pod restart are same!")
+        else:
+            failed = 1
+            print("Failed! listRecommendations before and after kruize pod restart are not same!")
+
         # sleep for a while to mimic the availability of next set of results
-        time.sleep(5)
+        time.sleep(1)
 
     for exp_num in range(num_exps):
         # Delete the experiment
