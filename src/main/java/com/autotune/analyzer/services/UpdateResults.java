@@ -62,6 +62,8 @@ public class UpdateResults extends HttpServlet {
         this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
         this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
                 .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
+        int totalResultsCount = 0;
+        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT,totalResultsCount);
     }
 
     @Override
@@ -88,6 +90,16 @@ public class UpdateResults extends HttpServlet {
                         addedToDB = new ExperimentDBService().addResultsToDB(resultData);
                         if (addedToDB.isSuccess()) {
                             sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                            //ToDO add temp code and call system.gc for every 100 results
+                            int count = (int)getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
+                            count++;
+                            LOGGER.debug("totalResultsCount so far : {}",count);
+                            if ( count >= AnalyzerConstants.GC_THRESHOLD_COUNT){
+                                LOGGER.debug("calling System GC");
+                                System.gc();
+                                count = 0;
+                            }
+                            getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT,count);
                         } else {
                             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                         }
