@@ -83,10 +83,10 @@ spec:
               value: " -server -XX:MaxRAMPercentage=90"
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "1"
+              memory: "500m"
+              cpu: "0.5"
             limits:
-              memory: "2Gi"
+              memory: "500m"
           ports:
             - name: kruize-port
               containerPort: 8080
