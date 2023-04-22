@@ -232,7 +232,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Set Limits variation map
                 variation.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-
                 recommendation.setVariation(variation);
 
                 // Set Recommendations
@@ -310,7 +309,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     double numPods = 0;
 
                     if (0 != cpuUsageAvg) {
-                        numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
                     return numPods;
                 })
@@ -348,7 +347,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     } else {
                         // Sum/Avg should give us the number of pods
                         if (0 != cpuUsageAvg) {
-                            numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                             if (0 < numPods) {
                                 cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
                             }
@@ -406,7 +405,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     int numPods = 0;
 
                     if (0 != cpuUsageAvg) {
-                        numPods = (CPU_ONE_CORE > cpuUsageAvg)?1:(int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
                     // If numPods is still zero, could be because there is no CPU info
                     // We can use mem data to calculate pods, this is not as reliable as cpu
@@ -416,7 +415,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                             numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
                         }
                     }
-                    if (numPods > 0) {
+                    if (0 < numPods) {
                         memUsage = (memUsageSum / numPods);
                     }
                     memUsage = Math.max(memUsage, memUsageMax);
