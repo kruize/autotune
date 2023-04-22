@@ -570,10 +570,23 @@ public class AnalyzerConstants {
 
     }
 
-    public static final class RecommendationConstants {
-        public static final Integer CPU_USAGE_PERCENTILE = 98;
-        public static final Integer MEM_USAGE_PERCENTILE = 100;
+    public static final class PercentileConstants {
+        public static final Integer FIFTIETH_PERCENTILE = 50;
+        public static final Integer NINETIETH_PERCENTILE = 90;
+        public static final Integer NINETY_FIFTH_PERCENTILE = 95;
+        public static final Integer NINETY_SIXTH_PERCENTILE = 96;
+        public static final Integer NINETY_SEVENTH_PERCENTILE = 97;
+        public static final Integer NINETY_EIGHTH_PERCENTILE = 98;
+        public static final Integer NINETY_NINTH_PERCENTILE = 99;
+        public static final Integer HUNDREDTH_PERCENTILE = 100;
+    }
 
+    public static final class RecommendationConstants {
+        public static final Double CPU_ONE_MILLICORE = 0.001;
+        public static final Double CPU_TEN_MILLICORE = 0.01;
+        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
+        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
+        public static final Double CPU_ONE_CORE = 1.0;
         public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
     }

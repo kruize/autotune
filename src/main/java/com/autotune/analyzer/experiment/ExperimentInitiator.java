@@ -107,7 +107,8 @@ public class ExperimentInitiator {
         for (ExperimentResultData experimentResultData: experimentResultDataList) {
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
-                LOGGER.error("");
+                LOGGER.error("Trying to locate Recommendation for non existent experiment: " +
+                        experimentResultData.getExperiment_name());
                 continue;
             }
             KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());

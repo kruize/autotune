@@ -34,6 +34,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.HUNDREDTH_PERCENTILE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.NINETY_EIGHTH_PERCENTILE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.RecommendationConstants.*;
 
 public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine{
@@ -230,7 +232,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Set Limits variation map
                 variation.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-
                 recommendation.setVariation(variation);
 
                 // Set Recommendations
@@ -305,10 +306,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
                     double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double numPods = 0;
+
                     if (0 != cpuUsageAvg) {
-                        return cpuUsageSum / cpuUsageAvg;
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
-                    return 0.0;
+                    return numPods;
                 })
                 .max(Double::compareTo).get();
 
@@ -318,24 +321,50 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> doubleList = filteredResultsMap.values()
+        List<Double> cpuUsageList = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
                     Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
                     double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuRequestInterval = 0.0;
+                    double cpuUsagePod = 0;
                     int numPods = 0;
-                    if (0 != cpuUsageAvg) {
-                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+
+                    // Use the Max value when available, if not use the Avg
+                    double cpuUsage = (cpuUsageMax>0)?cpuUsageMax:cpuUsageAvg;
+                    double cpuThrottle = (cpuThrottleMax>0)?cpuThrottleMax:cpuThrottleAvg;
+                    double cpuUsageTotal = cpuUsage + cpuThrottle;
+
+                    // Usage is less than 1 core, set it to the observed value.
+                    if (CPU_ONE_CORE > cpuUsageTotal) {
+                        cpuRequestInterval = cpuUsageTotal;
+                    } else {
+                        // Sum/Avg should give us the number of pods
+                        if (0 != cpuUsageAvg) {
+                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                            if (0 < numPods) {
+                                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
+                            }
+                        }
+                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
                     }
-                    if (numPods > 0) {
-                        return (cpuUsageSum + cpuThrottleSum) / numPods;
-                    }
-                    return 0.0;
+                    return cpuRequestInterval;
                 })
                 .collect(Collectors.toList());
+
+        double cpuRequest = 0.0;
+        double cpuRequestMax = Collections.max(cpuUsageList);
+        if (CPU_ONE_CORE > cpuRequestMax) {
+            cpuRequest = cpuRequestMax;
+        } else {
+            cpuRequest = CommonUtils.percentile(NINETY_EIGHTH_PERCENTILE, cpuUsageList);
+        }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
@@ -350,7 +379,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
 
-        recommendationConfigItem = new RecommendationConfigItem(CommonUtils.percentile(CPU_USAGE_PERCENTILE, doubleList), format);
+        recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
         return recommendationConfigItem;
     }
 
@@ -362,16 +391,19 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> doubleList = filteredResultsMap.values()
+        List<Double> memUsageList = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
                     Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double memUsage = 0;
                     int numPods = 0;
+
                     if (0 != cpuUsageAvg) {
                         numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
                     }
@@ -383,11 +415,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                             numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
                         }
                     }
-
-                    if (numPods > 0) {
-                        return (memUsageSum / numPods);
+                    if (0 < numPods) {
+                        memUsage = (memUsageSum / numPods);
                     }
-                    return 0.0;
+                    memUsage = Math.max(memUsage, memUsageMax);
+
+                    return memUsage;
                 })
                 .collect(Collectors.toList());
 
@@ -409,11 +442,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(MEM_USAGE_PERCENTILE, doubleList);
+        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(MEM_USAGE_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
