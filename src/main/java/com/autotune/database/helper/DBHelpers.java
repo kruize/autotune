@@ -239,6 +239,8 @@ public class DBHelpers {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
                     ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                    objectMapper.setDateFormat(df);
                     try {
                         kruizeRecommendationEntry.setExtended_data(
                                 objectMapper.readTree(
@@ -350,7 +352,7 @@ public class DBHelpers {
                     }
                     // Create an Object Mapper to extract value from JSON Node
                     ObjectMapper objectMapper = new ObjectMapper();
-                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.DB_EXTRACTION_FORMAT);
                     objectMapper.setDateFormat(df);
                     // Create a holder for recommendation object to save the result from object mapper
                     ListRecommendationsAPIObject listRecommendationsAPIObject = null;

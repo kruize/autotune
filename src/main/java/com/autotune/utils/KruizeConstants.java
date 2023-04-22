@@ -346,6 +346,7 @@ public class KruizeConstants {
 
     public static final class DateFormats {
         public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+        public static final String DB_EXTRACTION_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
         private DateFormats() {
 
