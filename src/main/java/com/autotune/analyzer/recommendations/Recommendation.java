@@ -63,6 +63,10 @@ public class Recommendation {
             notifications.add(notification);
     }
 
+    public Recommendation() {
+
+    }
+
     public Timestamp getMonitoringStartTime() {
         return monitoringStartTime;
     }
@@ -122,6 +126,14 @@ public class Recommendation {
     public void addNotification(RecommendationNotification notification) {
         if (null != notification)
             this.notifications.add(notification);
+    }
+
+    public List<RecommendationNotification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<RecommendationNotification> notifications) {
+        this.notifications = notifications;
     }
 
     @Override

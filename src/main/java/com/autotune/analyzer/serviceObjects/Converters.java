@@ -129,7 +129,7 @@ public class Converters {
                                     containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
                                             clonedContainerData.getContainer_image_name(),
                                             clonedContainerData.getContainerRecommendations(),
-                                            new ArrayList<>(clonedContainerData.getMetrics().values()));
+                                            null);
                                     containerAPIObjects.add(containerAPIObject);
                                 }
                             }
@@ -160,14 +160,14 @@ public class Converters {
                                 containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
                                         clonedContainerData.getContainer_image_name(),
                                         clonedContainerData.getContainerRecommendations(),
-                                        new ArrayList<>(clonedContainerData.getMetrics().values()));
+                                        null);
                                 containerAPIObjects.add(containerAPIObject);
                             }
                         } else {
                             containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
                                     containerData.getContainer_image_name(),
                                     containerData.getContainerRecommendations(),
-                                    new ArrayList<>(containerData.getMetrics().values()));
+                                    null);
                             containerAPIObjects.add(containerAPIObject);
                             containerDataMap.put(containerData.getContainer_name(), containerData);
                         }
@@ -265,6 +265,5 @@ public class Converters {
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
         }
-
     }
 }

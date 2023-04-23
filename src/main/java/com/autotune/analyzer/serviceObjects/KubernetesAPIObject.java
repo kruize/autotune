@@ -36,6 +36,10 @@ public class KubernetesAPIObject {
         this.namespace = namespace;
     }
 
+    public KubernetesAPIObject() {
+
+    }
+
     // getters and setters
 
     public String getType() {

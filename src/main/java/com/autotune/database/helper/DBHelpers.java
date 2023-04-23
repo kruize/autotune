@@ -16,10 +16,18 @@
 
 package com.autotune.database.helper;
 
+import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
@@ -38,11 +46,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -136,6 +145,70 @@ public class DBHelpers {
                 return kruizeResultsEntry;
             }
 
+            public static ListRecommendationsAPIObject getListRecommendationAPIObjectForDB (KruizeObject kruizeObject, Timestamp monitoringEndTime) {
+                if (null == kruizeObject)
+                    return null;
+                if (null == monitoringEndTime)
+                    return null;
+                if (null == kruizeObject.getKubernetes_objects())
+                    return null;
+                if (kruizeObject.getKubernetes_objects().isEmpty())
+                    return null;
+                List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    if (null == k8sObject)
+                        continue;
+                    if (null == k8sObject.getContainerDataMap())
+                        continue;
+                    if (k8sObject.getContainerDataMap().isEmpty())
+                        continue;
+                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
+                    boolean matchFound = false;
+                    List<ContainerAPIObject> containerAPIObjectList = new ArrayList<>();
+                    for (ContainerData containerData: k8sObject.getContainerDataMap().values()) {
+                        ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+                        if (null == clonedContainerData.getContainerRecommendations())
+                            continue;
+                        if (null == clonedContainerData.getContainerRecommendations().getData())
+                            continue;
+                        if (clonedContainerData.getContainerRecommendations().getData().isEmpty())
+                            continue;
+                        HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                = clonedContainerData.getContainerRecommendations().getData();
+                        if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
+                            matchFound = true;
+                            ContainerAPIObject containerAPIObject = null;
+                            List<Timestamp> tempList = new ArrayList<>();
+                            for (Timestamp timestamp : recommendations.keySet()) {
+                                if (!timestamp.equals(monitoringEndTime))
+                                    tempList.add(timestamp);
+                            }
+                            for (Timestamp timestamp : tempList) {
+                                recommendations.remove(timestamp);
+                            }
+                            clonedContainerData.getContainerRecommendations().setData(recommendations);
+                            containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+                                    clonedContainerData.getContainer_image_name(),
+                                    clonedContainerData.getContainerRecommendations(),
+                                    null);
+                            containerAPIObjectList.add(containerAPIObject);
+                        }
+                    }
+                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjectList);
+                    if (matchFound) {
+                        kubernetesAPIObjectList.add(kubernetesAPIObject);
+                    }
+                }
+                ListRecommendationsAPIObject listRecommendationsAPIObject = null;
+                if (!kubernetesAPIObjectList.isEmpty()) {
+                    listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+                    listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
+                    listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
+                    listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                }
+                return listRecommendationsAPIObject;
+            }
+
             public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
                 Timestamp monitoringEndTime = null;
@@ -144,14 +217,9 @@ public class DBHelpers {
                 try {
                     if (null != experimentResultData) {
                         monitoringEndTime = experimentResultData.getIntervalEndTime();
-                        checkForTimestamp = true;
-                        getLatest = false;
                     }
-                    ListRecommendationsAPIObject listRecommendationsAPIObject = convertKruizeObjectToListRecommendationSO(
-                                    kruizeObject,
-                                    getLatest,
-                                    checkForTimestamp,
-                                    monitoringEndTime);
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
+                                    kruizeObject, monitoringEndTime);
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
@@ -171,6 +239,8 @@ public class DBHelpers {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
                     ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                    objectMapper.setDateFormat(df);
                     try {
                         kruizeRecommendationEntry.setExtended_data(
                                 objectMapper.readTree(
@@ -211,6 +281,7 @@ public class DBHelpers {
 
                 return createExperimentAPIObjects;
             }
+
             public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) throws JsonProcessingException {
                 ObjectMapper mapper = new ObjectMapper();
                 List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
@@ -259,6 +330,232 @@ public class DBHelpers {
                     kubernetesAPIObjects.add(kubernetesAPIObject);
                 }
                 return kubernetesAPIObjects;
+            }
+
+            public static List<ListRecommendationsAPIObject> convertRecommendationEntryToRecommendationAPIObject(
+                    List<KruizeRecommendationEntry> kruizeRecommendationEntryList) throws InvalidConversionOfRecommendationEntryException{
+                if (null == kruizeRecommendationEntryList)
+                    return null;
+                if (kruizeRecommendationEntryList.size() == 0)
+                    return null;
+                List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<ListRecommendationsAPIObject>();
+                for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
+                    // Check if instance of KruizeRecommendationEntry is null
+                    if (null == kruizeRecommendationEntry) {
+                        // Throw an exception stating it cannot be null
+                        throw new InvalidConversionOfRecommendationEntryException(
+                                String.format(
+                                        AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                        KruizeRecommendationEntry.class.getSimpleName()
+                                )
+                        );
+                    }
+                    // Create an Object Mapper to extract value from JSON Node
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.DB_EXTRACTION_FORMAT);
+                    objectMapper.setDateFormat(df);
+                    // Create a holder for recommendation object to save the result from object mapper
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = null;
+                    JsonNode extendedData = kruizeRecommendationEntry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                    if (null == extendedData)
+                        continue;
+                    try {
+                        // If successful, the object mapper returns the list recommendation API Object
+                        List<KubernetesAPIObject> kubernetesAPIObjectList = objectMapper.readValue(extendedData.toString(),
+                                new TypeReference<>(){});
+                        if (null != kubernetesAPIObjectList) {
+                            listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+                            listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                            listRecommendationsAPIObject.setExperimentName(kruizeRecommendationEntry.getExperiment_name());
+                            listRecommendationsAPIObject.setClusterName(kruizeRecommendationEntry.getCluster_name());
+                        }
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                        LOGGER.debug(e.getMessage());
+                    }
+                    if (null != listRecommendationsAPIObject)
+                        listRecommendationsAPIObjectList.add(listRecommendationsAPIObject);
+                }
+                if (listRecommendationsAPIObjectList.isEmpty())
+                    return null;
+                return listRecommendationsAPIObjectList;
+            }
+        }
+    }
+
+    // Sets the recommendations in recommendation entry to kruize object
+    // The caller should call the function in a try / catch block to catch and act on the
+    // InvalidConversionOfRecommendationEntryException
+    public static void setRecommendationsToKruizeObject(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList,
+                                                        KruizeObject kruizeObject)
+            throws InvalidConversionOfRecommendationEntryException {
+
+        if (null == listRecommendationsAPIObjectList) {
+            // Throw an exception stating it cannot be null
+            throw new InvalidConversionOfRecommendationEntryException(
+                    String.format(
+                            AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                            "List Recommendation API objects "
+                    )
+            );
+        }
+
+        if (listRecommendationsAPIObjectList.isEmpty()) {
+            // Throw an exception stating it cannot be null
+            throw new InvalidConversionOfRecommendationEntryException(
+                    String.format(
+                            AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
+                            "List Recommendation API objects "
+                    )
+            );
+        }
+
+        // Check if instance of KruizeObject is null
+        if (null == kruizeObject) {
+            // Throw an exception stating it cannot be null
+            throw new InvalidConversionOfRecommendationEntryException(
+                    String.format(
+                            AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                            KruizeObject.class.getSimpleName()
+                    )
+            );
+        }
+
+        // Check if the kubernetes objects is null
+        if (null == kruizeObject.getKubernetes_objects()) {
+            // Throw an exception stating it cannot be null
+            throw new InvalidConversionOfRecommendationEntryException(
+                    String.format(
+                            AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                            "Kubernetes Objects List"
+                    )
+            );
+        }
+
+        // Check if the kubernetes objects is empty
+        if (kruizeObject.getKubernetes_objects().isEmpty()) {
+            // Throw an exception stating it cannot be null
+            throw new InvalidConversionOfRecommendationEntryException(
+                    String.format(
+                            AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
+                            "Kubernetes Objects List"
+                    )
+            );
+        }
+
+        // Iterate over existing kubernetes objects in kruize object
+        for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
+            HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
+            // Check if container data map is not null
+            if (null == containerDataMap) {
+                throw new InvalidConversionOfRecommendationEntryException(
+                        String.format(
+                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                "Container data map in Kruize Object"
+                        )
+                );
+            }
+
+            // Check if Container data map is not empty
+            if (containerDataMap.isEmpty()) {
+                throw new InvalidConversionOfRecommendationEntryException(
+                        String.format(
+                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
+                                "Container data map in Kruize Object"
+                        )
+                );
+            }
+        }
+
+        for (ListRecommendationsAPIObject listRecommendationsAPIObject : listRecommendationsAPIObjectList) {
+            if (null == listRecommendationsAPIObject) {
+                // Throw an exception stating that List Recommendation object cannot be null
+                throw new InvalidConversionOfRecommendationEntryException(
+                        String.format(
+                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                ListRecommendationsAPIObject.class.getSimpleName()
+                        )
+                );
+            }
+
+            // Check Kubernetes API Object
+            if (null == listRecommendationsAPIObject.getKubernetesObjects()) {
+                // Throw an exception stating that List of k8s objects cannot be null
+                throw new InvalidConversionOfRecommendationEntryException(
+                        String.format(
+                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                KubernetesAPIObject.class.getSimpleName()
+                        )
+                );
+            }
+
+            // Check if the list size is greater than 0
+            if (listRecommendationsAPIObject.getKubernetesObjects().isEmpty()) {
+                // Throw an exception stating that List of k8s objects cannot be null
+                throw new InvalidConversionOfRecommendationEntryException(
+                        String.format(
+                                AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
+                                KubernetesAPIObject.class.getSimpleName()
+                        )
+                );
+            }
+
+            // Store the obtained list of kubernetes API Objects in a local list
+            List<KubernetesAPIObject> kubernetesAPIObjectList = listRecommendationsAPIObject.getKubernetesObjects();
+
+            for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectList) {
+                // Check for null
+                if (null == kubernetesAPIObject.getContainerAPIObjects()) {
+                    throw new InvalidConversionOfRecommendationEntryException(
+                            String.format(
+                                    AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                    "List of " + ContainerAPIObject.class.getSimpleName()
+                            )
+                    );
+                }
+                // Check for empty list
+                if (kubernetesAPIObject.getContainerAPIObjects().isEmpty()) {
+                    throw new InvalidConversionOfRecommendationEntryException(
+                            String.format(
+                                    AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
+                                    "List of " + ContainerAPIObject.class.getSimpleName()
+                            )
+                    );
+                }
+
+
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    if (kubernetesAPIObject.getName().equalsIgnoreCase(k8sObject.getName())
+                            && kubernetesAPIObject.getType().equalsIgnoreCase(k8sObject.getType())) {
+                        for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                            String containerName = containerAPIObject.getContainer_name();
+                            // Skip the record if the data map doesn't have the container
+                            if (!k8sObject.getContainerDataMap().containsKey(containerName))
+                                continue;
+
+                            ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
+                            // Set container recommendations
+                            if (null == containerAPIObject.getContainerRecommendations())
+                                continue;
+                            if (null == containerAPIObject.getContainerRecommendations().getData())
+                                continue;
+                            if (null == containerData.getContainerRecommendations()){
+                                containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
+                            } else {
+                                ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+                                if (null == containerRecommendations.getData()) {
+                                    containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
+                                } else {
+                                    containerRecommendations.getNotifications().clear();
+                                    containerRecommendations.getNotifications().addAll(containerAPIObject.getContainerRecommendations().getNotifications());
+                                    HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data = containerRecommendations.getData();
+                                    data.putAll(containerAPIObject.getContainerRecommendations().getData());
+                                }
+                            }
+
+                        }
+                    }
+                }
             }
         }
     }

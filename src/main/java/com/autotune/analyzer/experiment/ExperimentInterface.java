@@ -16,6 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 
@@ -39,6 +40,11 @@ public interface ExperimentInterface {
     //Add Experiment results into local storage and set status to Queue
     public boolean addResultsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap,
                                             List<ExperimentResultData> experimentResultDataList);
+
+    // Add Recommendations into local storage
+    public boolean addRecommendationsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap,
+                                                    List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList,
+                                                    boolean dbPlayback);
 
 
 }
