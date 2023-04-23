@@ -186,7 +186,7 @@ def main(argv):
             print("Failed! listExperiments before and after kruize pod restart are not same!")
 
         # Compare the listRecommendations before and after kruize pod restart
-        result = compare_json_files(list_reco_json_file_before, list_exp_json_file_after)
+        result = compare_json_files(list_reco_json_file_before, list_reco_json_file_after)
         if result == True:
             print("Passed! listRecommendations before and after kruize pod restart are same!")
         else:
@@ -204,7 +204,7 @@ def main(argv):
     if failed == 1:
         print("Test Failed! Check the logs for test failures")
     else:
-        print("Test Passed! Check the logs for test failures")
+        print("Test Passed! Check the logs for details")
     sys.exit(failed)
 
 if __name__ == '__main__':
