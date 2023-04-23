@@ -79,6 +79,14 @@ spec:
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
               value: "/etc/config/kruizeconfigjson"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=80"
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "4"
+            limits:
+              memory: "4Gi"
           ports:
             - name: kruize-port
               containerPort: 8080
