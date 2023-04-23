@@ -19,7 +19,6 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 
 /**
  * Abstraction layer containing methods for the validation of the Performance Profiles with respect to the updated experiment.
@@ -28,5 +27,5 @@ import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 public interface PerfProfileInterface {
 // name, validateResults, validateProfile, recommend
     String getName(PerformanceProfile profile);
-    void recommend(KruizeObject kruizeObject);
+    void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData);
 }

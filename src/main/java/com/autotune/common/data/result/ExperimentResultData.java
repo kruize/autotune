@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.google.gson.annotations.SerializedName;
 
@@ -30,14 +30,15 @@ import java.util.Objects;
 public class ExperimentResultData {
     private String experiment_name;
     private String trialNumber;
-    @SerializedName("interval_start_time")
-    private Timestamp starttimestamp;
-    @SerializedName("interval_end_time")
-    private Timestamp endtimestamp;
+    @SerializedName("INTERVAL_START_TIME")
+    private Timestamp intervalStartTime;
+    @SerializedName("INTERVAL_END_TIME")
+    private Timestamp intervalEndTime;
     private List<DeploymentResultData> deployments;
     private AnalyzerConstants.ExperimentStatus status;
     private ValidationOutputData validationOutputData;
     private List<K8sObject> kubernetes_objects;
+
 
     public String getExperiment_name() {
         return experiment_name;
@@ -80,21 +81,22 @@ public class ExperimentResultData {
         this.validationOutputData = validationOutputData;
     }
 
-    public Timestamp getStarttimestamp() {
-        return starttimestamp;
+    public Timestamp getIntervalStartTime() {
+        return intervalStartTime;
     }
 
-    public void setStarttimestamp(Timestamp starttimestamp) {
-        this.starttimestamp = starttimestamp;
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
     }
 
-    public Timestamp getEndtimestamp() {
-        return endtimestamp;
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
     }
 
-    public void setEndtimestamp(Timestamp endtimestamp) {
-        this.endtimestamp = endtimestamp;
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
     }
+
     public List<K8sObject> getKubernetes_objects() {
         return kubernetes_objects;
     }
@@ -108,8 +110,8 @@ public class ExperimentResultData {
         return "ExperimentResultData{" +
                 "experiment_name='" + experiment_name + '\'' +
                 ", trialNumber='" + trialNumber + '\'' +
-                ", startTimestamp='" + starttimestamp + '\'' +
-                ", endTimestamp='" + endtimestamp + '\'' +
+                ", intervalStartTime='" + intervalStartTime + '\'' +
+                ", intervalEndTime='" + intervalEndTime + '\'' +
                 ", deployments=" + deployments +
                 ", status=" + status +
                 ", validationOutputData=" + validationOutputData +
@@ -122,11 +124,11 @@ public class ExperimentResultData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ExperimentResultData that = (ExperimentResultData) o;
-        return experiment_name.equals(that.experiment_name) && endtimestamp.equals(that.endtimestamp);
+        return experiment_name.equals(that.experiment_name) && intervalEndTime.equals(that.intervalEndTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(experiment_name, endtimestamp);
+        return Objects.hash(experiment_name, intervalEndTime);
     }
 }

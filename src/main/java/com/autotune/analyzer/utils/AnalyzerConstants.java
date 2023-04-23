@@ -17,8 +17,8 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
-import com.autotune.analyzer.recommendations.algos.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.algos.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
@@ -38,15 +38,8 @@ public class AnalyzerConstants {
 
 
     // Used to parse autotune configmaps
-    public static final String K8S_TYPE = "K8S_TYPE";
-    public static final String AUTH_TYPE = "AUTH_TYPE";
-    public static final String AUTH_TOKEN = "AUTH_TOKEN";
-    public static final String CLUSTER_TYPE = "CLUSTER_TYPE";
-    public static final String LOGGING_LEVEL = "LOGGING_LEVEL";
-    public static final String ROOT_LOGGING_LEVEL = "ROOT_LOGGING_LEVEL";
-    public static final String MONITORING_AGENT = "MONITORING_AGENT";
-    public static final String MONITORING_SERVICE = "MONITORING_SERVICE";
-    public static final String MONITORING_AGENT_ENDPOINT = "MONITORING_AGENT_ENDPOINT";
+
+
     public static final String PROMETHEUS_DATA_SOURCE = "prometheus";
     public static final String PROMETHEUS_API = "/api/v1/query?query=";
     public static final String HTTP_PROTOCOL = "http";
@@ -91,6 +84,8 @@ public class AnalyzerConstants {
     public static final String NULL = "null";
     public static final String BULKUPLOAD_CREATEEXPERIMENT_LIMIT = "bulkupload_createexperiment_limit";
     public static final String PERSISTANCE_STORAGE = "persistance_storage";
+    public static final String RESULTS_COUNT = "results_count";
+    public static final int GC_THRESHOLD_COUNT = 100;
 
 
     private AnalyzerConstants() {
@@ -146,18 +141,39 @@ public class AnalyzerConstants {
                 new DurationBasedRecommendationSubCategory[]{
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
-                                1,
-                                TimeUnit.DAYS
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                                TimeUnit.DAYS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
-                                7,
-                                TimeUnit.DAYS
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                                TimeUnit.DAYS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                         new DurationBasedRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
-                                15,
-                                TimeUnit.DAYS
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                                TimeUnit.DAYS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                                KruizeConstants.RecommendationEngineConstants
+                                        .DurationBasedEngine.RecommendationDurationRanges
+                                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
                 }
         ),
@@ -222,6 +238,12 @@ public class AnalyzerConstants {
         REPLICASET,
         REPLICATION_CONTROLLER,
         DAEMONSET,
+    }
+
+    public enum RegisterRecommendationEngineStatus {
+        SUCCESS,
+        ALREADY_EXISTS,
+        INVALID
     }
 
     /**
@@ -509,7 +531,7 @@ public class AnalyzerConstants {
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
 
-        public static final Map<String , Class> perfProfileInstances = Map.of(
+        public static final Map<String, Class> perfProfileInstances = Map.of(
                 DEFAULT_PROFILE, DefaultImpl.class,
                 RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class
         );
@@ -527,6 +549,7 @@ public class AnalyzerConstants {
             public static final String REPLICASET = "replicaset";
             public static final String REPLICATION_CONTROLLER = "replicationController";
             public static final String DAEMONSET = "daemonset";
+
             private Types() {
 
             }
@@ -542,15 +565,41 @@ public class AnalyzerConstants {
         public static final String MEMORY_LIMIT = "memoryLimit";
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
+
         private MetricNameConstants() {
 
         }
 
     }
 
+    public static final class PercentileConstants {
+        public static final Integer FIFTIETH_PERCENTILE = 50;
+        public static final Integer NINETIETH_PERCENTILE = 90;
+        public static final Integer NINETY_FIFTH_PERCENTILE = 95;
+        public static final Integer NINETY_SIXTH_PERCENTILE = 96;
+        public static final Integer NINETY_SEVENTH_PERCENTILE = 97;
+        public static final Integer NINETY_EIGHTH_PERCENTILE = 98;
+        public static final Integer NINETY_NINTH_PERCENTILE = 99;
+        public static final Integer HUNDREDTH_PERCENTILE = 100;
+    }
+
+    public static final class RecommendationConstants {
+        public static final Double CPU_ONE_MILLICORE = 0.001;
+        public static final Double CPU_TEN_MILLICORE = 0.01;
+        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
+        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
+        public static final Double CPU_ONE_CORE = 1.0;
+        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
+        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
+    }
+
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
+        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
+        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
+
         private RecommendationNotificationMsgConstant() {
 
         }
@@ -565,37 +614,34 @@ public class AnalyzerConstants {
         public static final String FALSE = FALSE_LOWER;
         public static final String TRUE_UPPER = TRUE_DEFAULT.toUpperCase();
         public static final String FALSE_UPPER = FALSE_DEFAULT.toUpperCase();
+
         private BooleanString() {
 
         }
-    }
-
-    public enum RegisterRecommendationEngineStatus {
-        SUCCESS,
-        ALREADY_EXISTS,
-        INVALID
     }
 
     public static class RecommendationEngine {
         private RecommendationEngine() {
 
         }
-        public static class EngineNames {
-            private EngineNames() {
 
-            }
+        public static class EngineNames {
             public static String DEFAULT_NAME = "Default";
             public static String DURATION_BASED = "Duration Based";
             public static String PROFILE_BASED = "Profile Based";
+
+            private EngineNames() {
+
+            }
         }
 
         public static class EngineKeys {
+            public static String DURATION_BASED_KEY = "duration_based";
+            public static String PROFILE_BASED_KEY = "profile_based";
+
             private EngineKeys() {
 
             }
-
-            public static String DURATION_BASED_KEY = "duration_based";
-            public static String PROFILE_BASED_KEY = "profile_based";
         }
     }
 }

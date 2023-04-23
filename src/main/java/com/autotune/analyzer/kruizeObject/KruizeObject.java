@@ -18,7 +18,6 @@ package com.autotune.analyzer.kruizeObject;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -28,7 +27,6 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -59,7 +57,6 @@ public final class KruizeObject {
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experimentUseCaseType;
-    private Set<ExperimentResultData> resultData;                   // TODO: Need to remove this
     private ValidationOutputData validationData;
     private List<K8sObject> kubernetes_objects;
 
@@ -203,13 +200,6 @@ public final class KruizeObject {
         this.experimentUseCaseType = experimentUseCaseType;
     }
 
-    public Set<ExperimentResultData> getResultData() {
-        return resultData;
-    }
-
-    public void setResultData(Set<ExperimentResultData> resultData) {
-        this.resultData = resultData;
-    }
 
     public ValidationOutputData getValidationData() {
         return validationData;
@@ -255,7 +245,6 @@ public final class KruizeObject {
         this.namespace = namespace;
     }
 
-
     @Override
     public String toString() {
         // Creating a temparory cluster name as we allow null for cluster name now
@@ -277,7 +266,6 @@ public final class KruizeObject {
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experimentUseCaseType +
-                ", resultData=" + resultData +
                 ", validationData=" + validationData +
                 ", kubernetes_objects=" + kubernetes_objects +
                 '}';

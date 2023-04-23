@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -73,7 +74,9 @@ public class ListRecommendation extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
-        String monitoringTimestamp = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        Timestamp monitoringEndTimestamp = null;
+
         boolean getLatest = true;
         boolean checkForTimestamp = false;
         boolean error = false;
@@ -91,11 +94,13 @@ public class ListRecommendation extends HttpServlet {
             // Check if experiment exists
             if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
                 // Check if timestamp is passed
-                if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
-                    monitoringTimestamp = monitoringTimestamp.trim();
-                    if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+                if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                    monitoringEndTime = monitoringEndTime.trim();
+                    if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                        Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                        monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
                         // Check if timestamp exists in recommendations
-                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(experimentName), monitoringTimestamp);
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(experimentName), monitoringEndTime);
                         if (timestampExists) {
                             checkForTimestamp = true;
                         } else {
@@ -104,7 +109,7 @@ public class ListRecommendation extends HttpServlet {
                                     response,
                                     new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
                             );
                         }
                     } else {
@@ -113,7 +118,7 @@ public class ListRecommendation extends HttpServlet {
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
                         );
                     }
                 }
@@ -128,11 +133,13 @@ public class ListRecommendation extends HttpServlet {
                 );
             }
         } else {
-            if (null != monitoringTimestamp && !monitoringTimestamp.isEmpty()) {
-                monitoringTimestamp = monitoringTimestamp.trim();
-                if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringTimestamp)) {
+            if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                monitoringEndTime = monitoringEndTime.trim();
+                if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                    Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                    monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
                     for (String expName : this.mainKruizeExperimentMap.keySet()) {
-                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(expName), monitoringTimestamp);
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(expName), monitoringEndTime);
                         if (timestampExists) {
                             kruizeObjectList.add(this.mainKruizeExperimentMap.get(expName));
                             checkForTimestamp = true;
@@ -144,7 +151,7 @@ public class ListRecommendation extends HttpServlet {
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringTimestamp)
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
                         );
                     }
                 } else {
@@ -153,7 +160,7 @@ public class ListRecommendation extends HttpServlet {
                             response,
                             new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringTimestamp)
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
                     );
                 }
             } else {
@@ -171,7 +178,7 @@ public class ListRecommendation extends HttpServlet {
                                                                         ko,
                                                                         getLatest,
                                                                         checkForTimestamp,
-                                                                        monitoringTimestamp);
+                                                                        monitoringEndTimestamp);
                     recommendationList.add(listRecommendationsAPIObject);
                 } catch (Exception e) {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());

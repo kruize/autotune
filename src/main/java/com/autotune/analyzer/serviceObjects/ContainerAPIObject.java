@@ -24,6 +24,10 @@ public class ContainerAPIObject {
         this.metrics = metrics;
     }
 
+    public ContainerAPIObject() {
+
+    }
+
     public String getContainer_image_name() {
         return container_image_name;
     }

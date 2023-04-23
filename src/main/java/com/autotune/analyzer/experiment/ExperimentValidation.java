@@ -16,19 +16,18 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeOperator;
-import com.autotune.common.data.ValidationOutputData;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+
 import static com.autotune.utils.Utils.getApproriateK8sObjectType;
 
 /**
@@ -68,11 +68,11 @@ public class ExperimentValidation {
     public ExperimentValidation(Map<String, KruizeObject> mainKruizeExperimentMAP) {
         this.mainKruizeExperimentMAP = mainKruizeExperimentMAP;
         mainKruizeExperimentMAP.forEach((name, ko) -> ko.getKubernetes_objects().forEach(k8sObject -> {
-        if (null != k8sObject.getName()) {
-            namespaceDeploymentNameList.add(                                //TODO this logic should run once for new exp
-                    k8sObject.getNamespace().toLowerCase() + ":" + k8sObject.getName().toLowerCase()
-            );
-        }
+            if (null != k8sObject.getName()) {
+                namespaceDeploymentNameList.add(                                //TODO this logic should run once for new exp
+                        k8sObject.getNamespace().toLowerCase() + ":" + k8sObject.getName().toLowerCase()
+                );
+            }
         }));
     }
 
@@ -96,21 +96,18 @@ public class ExperimentValidation {
                         if (null != kruizeObject.getSloInfo()) {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        }
-                        else {
+                        } else {
                             if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            }
-                            else
+                            } else
                                 proceed = true;
                         }
                     } else {
                         if (null == kruizeObject.getSloInfo()) {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        }
-                        else {
+                        } else {
                             String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
                             kruizeObject.setPerformanceProfile(perfProfileName);
                             proceed = true;
@@ -142,7 +139,7 @@ public class ExperimentValidation {
             }
             List<K8sObject> k8sObjectList = new ArrayList<>();
             HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-            for (K8sObject k8sObject:kruizeObject.getKubernetes_objects()) {
+            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                 for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                     containerDataMap.put(containerData.getContainer_name(), new ContainerData(
                             containerData.getContainer_name(), containerData.getContainer_image_name(), new ContainerRecommendations(), metricsMap));
@@ -151,7 +148,6 @@ public class ExperimentValidation {
                 k8sObjectList.add(k8sObject);
             }
             kruizeObject.setKubernetes_objects(k8sObjectList);
-            LOGGER.debug("{}", new Gson().toJson(kruizeObject));
         }
     }
 
@@ -202,7 +198,6 @@ public class ExperimentValidation {
         );
         if (missingMandatoryFields.size() == 0) {
             try {
-                expObj.setExperimentUseCaseType(new ExperimentUseCaseType(expObj));
                 if (expObj.getExperimentUseCaseType().isRemoteMonitoring() || expObj.getExperimentUseCaseType().isLocalMonitoring()) {
                     mandatoryFieldsForLocalRemoteMonitoring.forEach(
                             mField -> {
@@ -224,11 +219,11 @@ public class ExperimentValidation {
                     mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
                     // check for valid k8stype
                     for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                       AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
-                               .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
-                               .findFirst()
-                               .orElse(null);
-                       if (type == null) {
+                        AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
+                                .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
+                                .findFirst()
+                                .orElse(null);
+                        if (type == null) {
                             depType = k8sObject.getType();
                             invalidType = true;
                             break;

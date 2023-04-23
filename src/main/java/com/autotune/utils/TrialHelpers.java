@@ -15,23 +15,23 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeLayer.layers.Layer;
-import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.trials.*;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.trials.*;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
@@ -47,11 +47,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 
-import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
-import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_NAME;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.TRAINING;
+import static com.autotune.experimentManager.utils.EMConstants.DeploymentStrategies.ROLLING_UPDATE;
+import static com.autotune.operator.KruizeOperator.autotuneObjectMap;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.ServerContext.LIST_EXPERIMENTS_END_POINT;
 
@@ -116,9 +116,9 @@ public class TrialHelpers {
     /**
      * Create a ExperimentTrial object that holds the trial config to be deployed to the k8s cluster
      *
-     * @param trialNumber        passed in from HPO
+     * @param trialNumber      passed in from HPO
      * @param kruizeExperiment from the user
-     * @param trialConfigJson    from HPO
+     * @param trialConfigJson  from HPO
      * @return ExperimentTrial object
      */
     public static ExperimentTrial createDefaultExperimentTrial(int trialNumber,
@@ -145,10 +145,10 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.getMonitoringAgent(),
-                new URL(KruizeDeploymentInfo.getMonitoringAgentEndpoint()));
+        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent,
+                new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
-        datasourceInfoHashMap.put(KruizeDeploymentInfo.getMonitoringAgent(), datasourceInfo);  //Change key value as per YAML input
+        datasourceInfoHashMap.put(KruizeDeploymentInfo.monitoring_agent, datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
@@ -202,7 +202,7 @@ public class TrialHelpers {
                 LOGGER.error("ERROR: tunable is null for tunableName: " + tunableName);
             }
             ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
-            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.getMonitoringAgent());
+            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
             Class<Layer> classRef = KruizeDeploymentInfo.getLayer(tunable.getLayerName());
             try {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
@@ -221,7 +221,7 @@ public class TrialHelpers {
             if (tunableQuery != null && !tunableQuery.isEmpty()) {
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
-                        KruizeDeploymentInfo.getMonitoringAgent(),
+                        KruizeDeploymentInfo.monitoring_agent,
                         tunable.getValueType(), null);
                 if (containerMetricsHashMap != null
                         && !containerMetricsHashMap.isEmpty()

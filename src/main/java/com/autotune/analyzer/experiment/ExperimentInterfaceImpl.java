@@ -15,7 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -23,7 +25,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.utils.Utils;
+import com.autotune.database.helper.DBHelpers;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +41,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
     public boolean addExperimentToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<KruizeObject> kruizeExperimentList) {
         kruizeExperimentList.forEach(
                 (kruizeObject) -> {
-                    LOGGER.debug("kruizeObject = {}", kruizeObject.toString());
-                    kruizeObject.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
-                    kruizeObject.setExperimentId(Utils.generateID(toString()));
                     mainKruizeExperimentMap.put(
                             kruizeObject.getExperimentName(),
                             kruizeObject
@@ -49,7 +48,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
-        LOGGER.debug("mainKruizeExperimentMap = {}", mainKruizeExperimentMap);
         return true;
     }
 
@@ -66,13 +64,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                 (resultData) -> {
                     resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
                     KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
-                    Set<ExperimentResultData> results;
-                    if (ko.getResultData() == null)
-                        results = new HashSet<>();
-                    else
-                        results = ko.getResultData();
-                    results.add(resultData);
-                    ko.setResultData(results);
                     // creating a temp map to store k8sdata
                     HashMap<String, K8sObject> k8sObjectHashMap = new HashMap<>();
                     for (K8sObject k8sObj : ko.getKubernetes_objects())
@@ -114,9 +105,9 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             if (null == resultsIntervalMap) {
                                 resultsIntervalMap = new HashMap<>();
                             }
-                            IntervalResults intervalResults = new IntervalResults(resultData.getStarttimestamp(), resultData.getEndtimestamp());
+                            IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
                             intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsIntervalMap.put(resultData.getEndtimestamp(), intervalResults);
+                            resultsIntervalMap.put(resultData.getIntervalEndTime(), intervalResults);
 
                             containerData.setResults(resultsIntervalMap);
                             containerDataMap.put(cName, containerData);
@@ -126,11 +117,43 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     }
                     List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
                     ko.setKubernetes_objects(k8sObjectList);
-                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getEndtimestamp());
+                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getIntervalEndTime());
                 }
         );
-        LOGGER.debug("{}", new Gson().toJson(experimentResultDataList));
-        // TODO   Insert into database
+        return true;
+    }
+
+    @Override
+    public boolean addRecommendationsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap,
+                                                    List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList,
+                                                    boolean dbPlayback) {
+        if (null == mainKruizeExperimentMap)
+            return false;
+        if (null == listRecommendationsAPIObjectList)
+            return false;
+        if (mainKruizeExperimentMap.isEmpty() || listRecommendationsAPIObjectList.isEmpty())
+            return false;
+        if (dbPlayback) {
+            for (String experimentName : mainKruizeExperimentMap.keySet()) {
+                KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
+                List<ListRecommendationsAPIObject> experimentListRecObjs = new ArrayList<>();
+                for (ListRecommendationsAPIObject apiObject : listRecommendationsAPIObjectList) {
+                    if (null != apiObject.getExperimentName() && apiObject.getExperimentName().equals(experimentName))
+                        experimentListRecObjs.add(apiObject);
+                }
+                try {
+                    if (!experimentListRecObjs.isEmpty()) {
+                        DBHelpers.setRecommendationsToKruizeObject(experimentListRecObjs, kruizeObject);
+                    }
+                } catch (InvalidConversionOfRecommendationEntryException e) {
+                    e.printStackTrace();
+                }
+                experimentListRecObjs.clear();
+            }
+        } else {
+            // TODO: Insert the recommendations to DB
+        }
+        // Returning true for now, needs to follow a specific
         return true;
     }
 

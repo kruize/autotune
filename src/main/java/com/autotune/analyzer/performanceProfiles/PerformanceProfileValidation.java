@@ -291,9 +291,8 @@ public class PerformanceProfileValidation {
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorMsg);
             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-            LOGGER.debug("Validation error message :{}", errorMsg);
+            LOGGER.error("Validation error message :{}", errorMsg);
         }
-        LOGGER.debug("{}", validationOutputData);
 
         return validationOutputData;
     }

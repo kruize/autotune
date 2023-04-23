@@ -19,8 +19,6 @@ import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.KruizeWorker;
-import com.autotune.database.dao.ExperimentDAO;
-import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +37,17 @@ import static com.autotune.operator.KruizeOperator.matchPodsToAutotuneObject;
  * TargetCluster : Local
  * mode : Experiment or Monitoring
  */
+/* ******************************************************
+      DO NOT MODIFY THIS FILE CURRENTLY IT IS DISABLED
+ **********************************************************
+ */
 
 public class CreateExperimentManager implements KruizeWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperimentManager.class);
 
     @Override
     public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
-        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-        experimentDAO.addExperimentToDB(kruizeObject);
+        //new ExperimentDBService().addExperimentToDB(kruizeObject);
         //experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExpStatus.IN_PROGRESS);
 
         if (kruizeObject.getExperimentUseCaseType().isLocalExperiment() || kruizeObject.getExperimentUseCaseType().isLocalMonitoring()) {

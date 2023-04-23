@@ -38,6 +38,10 @@ import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 /**
  * Worker that gets executed from ParallelEngine when new Experiment results are received.
  */
+/* ******************************************************
+      DO NOT MODIFY THIS FILE CURRENTLY IT IS DISABLED
+ **********************************************************
+ */
 public class UpdateResultManager implements KruizeWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResultManager.class);
 

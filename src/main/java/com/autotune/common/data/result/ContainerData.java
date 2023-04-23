@@ -27,7 +27,7 @@ import java.util.HashMap;
 public class ContainerData {
     private String container_image_name;
     private String container_name;
-    //key is IntervalEnd
+    //key is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;

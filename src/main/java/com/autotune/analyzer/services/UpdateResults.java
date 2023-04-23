@@ -26,8 +26,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.database.dao.ExperimentDAO;
-import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.service.ExperimentDBService;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +62,8 @@ public class UpdateResults extends HttpServlet {
         this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
         this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
                 .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
+        int totalResultsCount = 0;
+        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT,totalResultsCount);
     }
 
     @Override
@@ -79,37 +80,43 @@ public class UpdateResults extends HttpServlet {
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
                     experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
                 }
-                LOGGER.debug(experimentResultDataList.toString());
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
                 ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                 ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
+                ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
                 if (null == invalidKExperimentResultData) {
-                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    //  TODO savetoDB should move to queue and bulk upload not considered here
                     for (ExperimentResultData resultData : experimentResultDataList) {
-                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = experimentDAO.addResultsToDB(resultData);
-                    }
-                    if (addedToDB.isSuccess())
-                        sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
-                    else {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        addedToDB = new ExperimentDBService().addResultsToDB(resultData);
+                        if (addedToDB.isSuccess()) {
+                            sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                            //ToDO add temp code and call system.gc for every 100 results
+                            int count = (int)getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
+                            count++;
+                            LOGGER.debug("totalResultsCount so far : {}",count);
+                            if ( count >= AnalyzerConstants.GC_THRESHOLD_COUNT){
+                                LOGGER.debug("calling System GC");
+                                System.gc();
+                                count = 0;
+                            }
+                            getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT,count);
+                        } else {
+                            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        }
                     }
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
                     sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
                 }
 
-                if (validationOutputData.isSuccess()) {
-                    List<String> experimentList = new ArrayList<String>();
-                    for (ExperimentResultData experimentResultData : experimentResultDataList) {
-                        String experimentName = experimentResultData.getExperiment_name();
-                        if (mainKruizeExperimentMap.containsKey(experimentName))
-                            experimentList.add(experimentName);
-                    }
-                    if (!experimentList.isEmpty()) {
-                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentList);
-                        if (!recommendationCheck)
-                            LOGGER.error("Failed to create recommendations");
+                if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
+                    boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentResultDataList);
+                    if (!recommendationCheck)
+                        LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
+                                experimentResultDataList.get(0).getExperiment_name(),
+                                experimentResultDataList.get(0).getIntervalEndTime());
+                    else {
+                        new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentResultDataList);
                     }
                 }
             }

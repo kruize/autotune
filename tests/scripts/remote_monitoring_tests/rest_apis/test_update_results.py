@@ -7,11 +7,15 @@ from helpers.fixtures import *
 import time
 
 csvfile = "/tmp/update_results_test_data.csv"
+
+# Interval end time that is acceptable is measurement_duration + or - 30s
+# interval_start_time - "2022-01-23T18:25:43.511Z"
 interval_end_times = [
-        ("minus_more_than_5s", "2022-01-23T18:40:37.511Z"),
-        ("minus_5s", "2022-01-23T18:40:38.511Z"),
-        ("plus_more_than_5s", "2022-01-23T18:40:49.511Z"),
-        ("plus_5s", "2022-01-23T18:40:48.511Z")
+        ("invalid_zero_diff", "2022-01-23T18:25:43.511Z"),
+        ("invalid_minus_more_than_30s", "2022-01-23T18:40:12.511Z"),
+        ("valid_minus_30s", "2022-01-23T18:40:13.511Z"),
+        ("invalid_plus_more_than_30s", "2022-01-23T18:41:14.511Z"),
+        ("valid_plus_30s", "2022-01-23T18:41:13.511Z")
 ]
 
 @pytest.mark.negative
@@ -113,7 +117,7 @@ def test_update_valid_results_after_create_exp(cluster_type):
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
@@ -133,7 +137,7 @@ def test_update_valid_results_after_create_exp(cluster_type):
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_multiple_valid_results_single_json_after_create_exp(cluster_type):
@@ -164,7 +168,7 @@ def test_update_multiple_valid_results_single_json_after_create_exp(cluster_type
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_multiple_valid_results_after_create_exp(cluster_type):
@@ -235,7 +239,7 @@ def test_update_results_multiple_exps_from_same_json_file(cluster_type):
     form_kruize_url(cluster_type)
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
@@ -258,7 +262,7 @@ def test_update_results_multiple_exps_from_same_json_file(cluster_type):
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cluster_type):
@@ -294,7 +298,7 @@ def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cl
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_results_for_containers_not_present(cluster_type):
@@ -307,7 +311,7 @@ def test_update_results_for_containers_not_present(cluster_type):
     form_kruize_url(cluster_type)
 
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
@@ -413,7 +417,7 @@ def test_update_results_with_same_result(cluster_type):
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
-    print("delet exp = ", response.status_code)
+    print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
@@ -478,7 +482,7 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
     result_json_file="../json_files/update_results.json"
 
     json_data = read_json_data_from_file(result_json_file)
-    json_data[0]['end_timestamp'] = interval_end_time
+    json_data[0]['interval_end_time'] = interval_end_time
     json_file = "/tmp/update_results.json"
 
     write_json_data_to_file(json_file, json_data)
@@ -486,7 +490,7 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
     response = update_results(json_file)
 
     data = response.json()
-    if test_name == "plus_5s" or test_name == "minus_5s":
+    if test_name == "valid_plus_30s" or test_name == "valid_minus_30s":
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG

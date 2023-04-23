@@ -86,12 +86,9 @@ public class PerformanceProfileUtil {
             if (null != metric.getQuery())
                 queryList.add(metric.getQuery());
         }
-        LOGGER.debug(String.format("List of functionVariables: %s", perfProfileFunctionVariablesList));
-        LOGGER.debug(String.format("List of agg func objects: %s", perfProfileAggrFunctions));
 
         // Get the metrics data from the Kruize Object
         for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
-            LOGGER.debug("k8sObject = {}", new Gson().toJson(k8sObject));
             for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                 HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
                 List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet().stream().toList();
@@ -153,8 +150,6 @@ public class PerformanceProfileUtil {
     private static String validateAggFunction(Set<String> keySet, List<String> perfProfileAggrFunctions) {
 
         List<String> resultDataAggrFuncObjects = keySet.stream().toList();
-        LOGGER.debug("Performance Profile aggr functions = {}", perfProfileAggrFunctions);
-        LOGGER.debug("Result Data aggr functions = {}", resultDataAggrFuncObjects);
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the aggrInfoObjects List
         if (resultDataAggrFuncObjects.stream().noneMatch(perfProfileAggrFunctions::contains)) {
