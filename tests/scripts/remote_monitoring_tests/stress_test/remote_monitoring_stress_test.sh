@@ -35,6 +35,7 @@ CONTAINER_NAME=kruize
 NAMESPACE=monitoring
 users=1000
 rampup=200
+num_res=100
 loop=1
 
 RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
@@ -46,7 +47,7 @@ jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u users] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
 	exit -1
 }
 
@@ -76,7 +77,7 @@ function jmeter_setup() {
 	export PATH=${JMETER_HOME}/bin:${PATH}
 }
 
-while getopts c:r:i:u:d:t: gopts
+while getopts c:r:i:u:d:t:e: gopts
 do
 	case ${gopts} in
 	c)
@@ -90,6 +91,9 @@ do
 		;;
 	u)
 		users="${OPTARG}"		
+		;;
+	e)
+		num_res="${OPTARG}"
 		;;
 	d)
 		rampup="${OPTARG}"		
@@ -173,7 +177,7 @@ esac
 # Start monitoring metrics
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo ""
-	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" 
+	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" | tee -a ${LOG}
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} > ${LOG_DIR}/monitor-metrics.log 2>&1 &
 
 	# Create the performance profile
@@ -184,7 +188,7 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}
 else
 	echo ""
-	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &"
+	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" | tee -a ${LOG}
 	./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &
 
 	# Create the performance profile
@@ -212,15 +216,15 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
-	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
-	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
+	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
 
 else
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
-	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
-	#exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
-	cmd="jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop}"
+	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
+	#exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
+	cmd="jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop}"
 	${cmd} > ${JMETER_LOG}
 
 fi

@@ -25,7 +25,7 @@
           </elementProp>
           <elementProp name="rampup" elementType="Argument">
             <stringProp name="Argument.name">rampup</stringProp>
-            <stringProp name="Argument.value">${__P(ramup, 120)}</stringProp>
+            <stringProp name="Argument.value">${__P(rampup, 120)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="loop" elementType="Argument">
@@ -38,9 +38,9 @@
             <stringProp name="Argument.value">${__P(logdir, /tmp/results)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="repeat" elementType="Argument">
-            <stringProp name="Argument.name">repeat</stringProp>
-            <stringProp name="Argument.value">${__P(repeat,100)}</stringProp>
+          <elementProp name="num_res" elementType="Argument">
+            <stringProp name="Argument.name">num_res</stringProp>
+            <stringProp name="Argument.value">${__P(num_res,100)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="start_time" elementType="Argument">
@@ -376,7 +376,7 @@
           <hashTree/>
         </hashTree>
         <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-          <stringProp name="ConstantTimer.delay">5000</stringProp>
+          <stringProp name="ConstantTimer.delay">200</stringProp>
         </ConstantTimer>
         <hashTree/>
       </hashTree>
@@ -501,7 +501,7 @@ FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons/reco&quot; + Str
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">${repeat}</stringProp>
+          <stringProp name="LoopController.loops">${num_res}</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">${users}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">${rampup}</stringProp>
@@ -773,7 +773,7 @@ vars.put(&quot;end_time&quot;, endTimeString);
         </HTTPSamplerProxy>
         <hashTree>
           <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-            <stringProp name="ConstantTimer.delay">10000</stringProp>
+            <stringProp name="ConstantTimer.delay">1000</stringProp>
           </ConstantTimer>
           <hashTree/>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
@@ -960,10 +960,6 @@ vars.put(&quot;start_time&quot;, startTimeString);
           </ResultCollector>
           <hashTree/>
         </hashTree>
-        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-          <stringProp name="ConstantTimer.delay">5000</stringProp>
-        </ConstantTimer>
-        <hashTree/>
       </hashTree>
       <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
         <boolProp name="ResultCollector.error_logging">true</boolProp>
