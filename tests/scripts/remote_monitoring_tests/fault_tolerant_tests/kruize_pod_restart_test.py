@@ -72,12 +72,6 @@ def main(argv):
     split = False
     split_count = 1
 
-    exp_json_dir = results_dir + "/exp_jsons" + "_" + str(num_exps)
-    result_json_dir = results_dir + "/result_jsons" + "_" + str(num_exps)
-    list_reco_json_dir = results_dir + "/list_reco_jsons"
-    list_exp_json_dir = results_dir + "/list_exp_jsons"
-    os.mkdir(list_exp_json_dir)
-    os.mkdir(list_reco_json_dir)
 
     # Post 100 results
     num_res = 100
@@ -86,6 +80,14 @@ def main(argv):
         print("\n*************************")
         print(f"Iteration {i}...")
         print("*************************\n")
+        exp_json_dir = results_dir + "/exp_jsons" + "_iter" + str(i)
+        result_json_dir = results_dir + "/result_jsons" + "_iter" + str(i)
+        list_reco_json_dir = results_dir + "/list_reco_jsons_iter" + str(i)
+        list_exp_json_dir = results_dir + "/list_exp_jsons_iter" + str(i)
+
+        os.mkdir(list_exp_json_dir)
+        os.mkdir(list_reco_json_dir)
+
         create_exp_jsons(split, split_count, exp_json_dir, num_exps)
 
         if i == 1:
@@ -98,7 +100,7 @@ def main(argv):
             start_ts = new_timestamp
             create_update_results_jsons(csv_filename, split, split_count, result_json_dir, num_exps, num_res, new_timestamp)
 
-        reco_json_dir = results_dir + "/reco_jsons" + "_" + str(i)
+        reco_json_dir = results_dir + "/reco_jsons" + "_iter" + str(i)
         os.mkdir(reco_json_dir)
         for res_num in range(num_res):
             for exp_num in range(num_exps):
@@ -137,6 +139,7 @@ def main(argv):
         write_json_data_to_file(list_exp_json_file_before, list_exp_json)
 
         # Fetch the recommendations for all the experiments
+        experiment_name = None
         latest = "false"
         interval_end_time = None
         response = list_recommendations(experiment_name, latest, interval_end_time)
