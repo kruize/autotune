@@ -1,6 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -134,34 +135,12 @@ public class Converters {
                             }
                         } else if (getLatest) {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
-                            ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-                            if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
-                                        = clonedContainerData.getContainerRecommendations().getData();
-                                Timestamp latestTimestamp = null;
-                                List<Timestamp> tempList = new ArrayList<>();
-                                for (Timestamp timestamp : recommendations.keySet()) {
-                                    if (null == latestTimestamp) {
-                                        latestTimestamp = timestamp;
-                                    } else {
-                                        if (timestamp.after(latestTimestamp)) {
-                                            tempList.add(latestTimestamp);
-                                            latestTimestamp = timestamp;
-                                        } else {
-                                            tempList.add(timestamp);
-                                        }
-                                    }
-                                }
-                                for (Timestamp timestamp : tempList) {
-                                    recommendations.remove(timestamp);
-                                }
-                                clonedContainerData.getContainerRecommendations().setData(recommendations);
-                                containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-                                        clonedContainerData.getContainer_image_name(),
-                                        clonedContainerData.getContainerRecommendations(),
-                                        null);
-                                containerAPIObjects.add(containerAPIObject);
-                            }
+                            containerData = getLatestRecommendations(containerData);
+                            containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+                                    containerData.getContainer_image_name(),
+                                    containerData.getContainerRecommendations(),
+                                    null);
+                            containerAPIObjects.add(containerAPIObject);
                         } else {
                             containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
                                     containerData.getContainer_image_name(),
