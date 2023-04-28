@@ -26,6 +26,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -86,6 +87,12 @@ public class ExperimentValidation {
             ValidationOutputData validationOutputData = validateMandatoryFields(kruizeObject);
             if (validationOutputData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
+                try {
+                    new ExperimentDBService().loadExperimentByName(mainKruizeExperimentMAP, expName);
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
+                }
+
                 String mode = kruizeObject.getMode();
                 String target_cluster = kruizeObject.getTarget_cluster();
                 boolean proceed = false;

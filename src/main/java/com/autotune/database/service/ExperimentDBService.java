@@ -72,7 +72,7 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-    public boolean getRecommendationToSave(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
+    public boolean addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         if (null == experimentResultDataList)
             return false;
         if (experimentResultDataList.size() == 0)
@@ -167,6 +167,169 @@ public class ExperimentDBService {
             }
         }
         LOGGER.debug(KruizeOperator.autotuneObjectMap.toString());
+    }
+
+    public void loadExperimentByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentByName(experimentName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the experiments are able to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
+
+    public void loadExperimentAndResultsByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentByName(experimentName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the experiments are able to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+        // Load results from the DB and save to local
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName);
+        if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
+            List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
+            if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
+                List<ExperimentResultData> resultDataList = new ArrayList<>();
+                for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+                    try {
+                        ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                        if (experimentResultData != null)
+                            resultDataList.add(experimentResultData);
+                        else
+                            LOGGER.warn("Converted experimentResultData is null");
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+                    } catch (Exception e) {
+                        LOGGER.error("Unexpected error: {}", e.getMessage());
+                    }
+                }
+                experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
+            }
+        }
+    }
+
+    public void loadExperimentAndRecommendationsByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentByName(experimentName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the experiments are able to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByExperimentName(experimentName);
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
+    public void loadAllExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the experiments are able to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadAllRecommendations();
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

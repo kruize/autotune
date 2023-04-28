@@ -26,6 +26,7 @@ import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
@@ -47,6 +48,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -56,15 +58,13 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
  * Rest API used to recommend right configuration.
  */
 @WebServlet(asyncSupported = true)
-public class ListRecommendation extends HttpServlet {
+public class ListRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ListRecommendation.class);
-    private ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListRecommendations.class);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
 
     @Override
@@ -76,6 +76,7 @@ public class ListRecommendation extends HttpServlet {
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         Timestamp monitoringEndTimestamp = null;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
 
         boolean getLatest = true;
         boolean checkForTimestamp = false;
@@ -91,8 +92,13 @@ public class ListRecommendation extends HttpServlet {
         if (null != experimentName) {
             // trim the experiment name to remove whitespaces
             experimentName = experimentName.trim();
+            try {
+                new ExperimentDBService().loadExperimentAndRecommendationsByName(mKruizeExperimentMap, experimentName);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
+            }
             // Check if experiment exists
-            if (this.mainKruizeExperimentMap.containsKey(experimentName)) {
+            if (mKruizeExperimentMap.containsKey(experimentName)) {
                 // Check if timestamp is passed
                 if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
                     monitoringEndTime = monitoringEndTime.trim();
@@ -100,7 +106,7 @@ public class ListRecommendation extends HttpServlet {
                         Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
                         monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
                         // Check if timestamp exists in recommendations
-                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(experimentName), monitoringEndTime);
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(experimentName), monitoringEndTime);
                         if (timestampExists) {
                             checkForTimestamp = true;
                         } else {
@@ -122,7 +128,7 @@ public class ListRecommendation extends HttpServlet {
                         );
                     }
                 }
-                kruizeObjectList.add(this.mainKruizeExperimentMap.get(experimentName));
+                kruizeObjectList.add(mKruizeExperimentMap.get(experimentName));
             } else {
                 error = true;
                 sendErrorResponse(
@@ -133,15 +139,20 @@ public class ListRecommendation extends HttpServlet {
                 );
             }
         } else {
+            try {
+                new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
+            }
             if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
                 monitoringEndTime = monitoringEndTime.trim();
                 if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
                     Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
                     monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
-                    for (String expName : this.mainKruizeExperimentMap.keySet()) {
-                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(this.mainKruizeExperimentMap.get(expName), monitoringEndTime);
+                    for (String expName : mKruizeExperimentMap.keySet()) {
+                        boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(expName), monitoringEndTime);
                         if (timestampExists) {
-                            kruizeObjectList.add(this.mainKruizeExperimentMap.get(expName));
+                            kruizeObjectList.add(mKruizeExperimentMap.get(expName));
                             checkForTimestamp = true;
                         }
                     }
@@ -165,7 +176,7 @@ public class ListRecommendation extends HttpServlet {
                 }
             } else {
                 // Add all experiments to list
-                kruizeObjectList.addAll(this.mainKruizeExperimentMap.values());
+                kruizeObjectList.addAll(mKruizeExperimentMap.values());
             }
         }
         if (!error) {

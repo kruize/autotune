@@ -137,20 +137,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeResultsEntry> loadAllResults() throws Exception {
-        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
-        List<KruizeResultsEntry> kruizeResultsEntries = null;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS, KruizeResultsEntry.class).list();
-        } catch (Exception e) {
-            LOGGER.error("Not able to load results due to: {}", e.getMessage());
-            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
-        }
-        return kruizeResultsEntries;
-    }
-
-
-    @Override
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
@@ -164,11 +150,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeRecommendationEntry> loadRecommendationsByExperiment(String experimentName) throws Exception {
+    public List<KruizeResultsEntry> loadAllResults() throws Exception {
+        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
+        List<KruizeResultsEntry> kruizeResultsEntries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS, KruizeResultsEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        }
+        return kruizeResultsEntries;
+    }
+
+    @Override
+    public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
-            recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
-                    .setParameter("experimentName", experimentName).list();
+            recommendationEntries = session.createQuery(
+                    DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
+                    KruizeRecommendationEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
@@ -177,12 +177,39 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
+    public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS_BY_EXP_NAME, KruizeExperimentEntry.class)
+                    .setParameter("experimentName", experimentName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
+            throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    @Override
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName) throws Exception {
+        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
+        List<KruizeResultsEntry> kruizeResultsEntries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
+                    .setParameter("experimentName", experimentName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        }
+        return kruizeResultsEntries;
+    }
+
+    @Override
+    public List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
-            recommendationEntries = session.createQuery(
-                                        DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
-                                        KruizeRecommendationEntry.class).list();
+            recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
+                    .setParameter("experimentName", experimentName).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
