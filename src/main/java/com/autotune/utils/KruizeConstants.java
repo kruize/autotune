@@ -219,6 +219,8 @@ public class KruizeConstants {
         public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
+        public static final int ACCEPTED_YEAR = 1970;
+
 
         private TimeUnitsExt() {
         }
