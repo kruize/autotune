@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
+
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDAOImpl.class);
@@ -102,6 +104,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return true;
     }
 
+    /**
+     * Delete an experiment with the name experimentName
+     * This deletes the experiment from all three tables
+     * kruize_experiments, kruize_results and kruize_recommendations
+     * Delete from kruize_results and kruize_recommendations only if the delete from kruize_experiments succeeds.
+     *
+     * @param experimentName
+     * @return
+     */
     @Override
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
@@ -109,21 +120,27 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                Query query = session.createQuery("DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName", null);
+                Query query = session.createQuery(DELETE_FROM_EXPERIMENTS_BY_EXP_NAME, null);
                 query.setParameter("experimentName", experimentName);
                 int deletedCount = query.executeUpdate();
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
                 } else {
-                    Query KruizeResultsEntryquery = session.createQuery("DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName", null);
-                    KruizeResultsEntryquery.setParameter("experimentName", experimentName);
-                    KruizeResultsEntryquery.executeUpdate();
+                    // Remove the experiment from the Results table
+                    Query kruizeResultsEntryquery = session.createQuery(DELETE_FROM_RESULTS_BY_EXP_NAME, null);
+                    kruizeResultsEntryquery.setParameter("experimentName", experimentName);
+                    kruizeResultsEntryquery.executeUpdate();
+
+                    // Remove the experiment from the Recommendations table
+                    Query kruizeRecommendationEntryquery = session.createQuery(DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME, null);
+                    kruizeRecommendationEntryquery.setParameter("experimentName", experimentName);
+                    kruizeRecommendationEntryquery.executeUpdate();
                     validationOutputData.setSuccess(true);
                 }
                 tx.commit();
             } catch (HibernateException e) {
-                LOGGER.error("Not able to delete experiment due to {}", e.getMessage());
+                LOGGER.error("Not able to delete experiment {} due to {}", experimentName, e.getMessage());
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
@@ -131,7 +148,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
-            LOGGER.error("Not able to delete experiment due to {}", e.getMessage());
+            LOGGER.error("Not able to delete experiment {} due to {}", experimentName, e.getMessage());
         }
         return validationOutputData;
     }

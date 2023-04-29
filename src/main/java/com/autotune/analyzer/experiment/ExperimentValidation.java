@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
@@ -88,7 +87,7 @@ public class ExperimentValidation {
             if (validationOutputData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
                 try {
-                    new ExperimentDBService().loadExperimentByName(mainKruizeExperimentMAP, expName);
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, expName);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
                 }

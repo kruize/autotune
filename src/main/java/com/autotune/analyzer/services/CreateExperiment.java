@@ -138,24 +138,37 @@ public class CreateExperiment extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
-            for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
-                // TODO: TODO: TODO: Delete doesn't work
-                if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(ko.getExperimentName())) {
-                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(ko.getExperimentName());
-                    if (validationOutputData.isSuccess()) {
-                        mKruizeExperimentMap.remove(ko.getExperimentName());
-                        KruizeOperator.deploymentMap.remove(ko.getExperimentName());
-                    } else {
-                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+            if (createExperimentAPIObjects.length > 1) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+            } else {
+                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                    try {
+                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
                     }
-                } else
-                    throw new Exception("Experiment not found!");
+                }
+
+                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                    String expName = ko.getExperimentName();
+                    if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
+                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        if (validationOutputData.isSuccess()) {
+                            mKruizeExperimentMap.remove(ko.getExperimentName());
+                        } else {
+                            throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                        }
+                    } else
+                        throw new Exception("Experiment not found!");
+                }
+                sendSuccessResponse(response, "Experiment deleted successfully.");
             }
-            sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }

@@ -93,7 +93,7 @@ public class ListRecommendations extends HttpServlet {
             // trim the experiment name to remove whitespaces
             experimentName = experimentName.trim();
             try {
-                new ExperimentDBService().loadExperimentAndRecommendationsByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
             } catch (Exception e) {
                 LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
             }

@@ -57,7 +57,7 @@ public class ExperimentResultValidation {
                 String expName = resultData.getExperiment_name();
                 if (null != expName && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
                     try {
-                        new ExperimentDBService().loadExperimentAndResultsByName(mainKruizeExperimentMAP, expName);
+                        new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, expName);
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
                     }
