@@ -22,6 +22,7 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
@@ -48,10 +49,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -116,6 +114,12 @@ public class DBHelpers {
              */
             public static KruizeResultsEntry convertExperimentResultToExperimentResultsTable(ExperimentResultData experimentResultData) {
                 KruizeResultsEntry kruizeResultsEntry = null;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
@@ -125,13 +129,13 @@ public class DBHelpers {
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        k8sObjectString
                                 )
                         );
                     } catch (JsonProcessingException e) {
@@ -214,6 +218,12 @@ public class DBHelpers {
                 Timestamp monitoringEndTime = null;
                 Boolean checkForTimestamp = false;
                 Boolean getLatest = true;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .create();
                 try {
                     if (null != experimentResultData) {
                         monitoringEndTime = experimentResultData.getIntervalEndTime();
@@ -236,15 +246,15 @@ public class DBHelpers {
                         }
                     }
                     kruizeRecommendationEntry.setInterval_end_time(endInterval);
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
                     DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
                     objectMapper.setDateFormat(df);
                     try {
                         kruizeRecommendationEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        k8sObjectString
                                 )
                         );
                     } catch (JsonProcessingException e) {
