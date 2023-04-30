@@ -17,14 +17,15 @@ package com.autotune.common.data.metrics;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
 public class MetricResults {
     private String name;
-    @SerializedName("aggregation_info")
+    @SerializedName(KruizeConstants.JSONKeys.AGGREGATION_INFO)
     private MetricAggregationInfoResults metricAggregationInfoResults;
-    @SerializedName("percentile_info")
+    @SerializedName(KruizeConstants.JSONKeys.PERCENTILE_INFO)
     private MetricPercentileResults metricPercentileResults;
     private Double value;
     private String format;
@@ -51,13 +52,15 @@ public class MetricResults {
         return isPercentileResultsAvailable;
     }
 
-    public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
-        isPercentileResultsAvailable = percentileResultsAvailable;
+    public void setIsPercentileResultsAvailable(boolean isPercentileResultsAvailable) {
+        isPercentileResultsAvailable = isPercentileResultsAvailable;
     }
+    @JsonProperty(KruizeConstants.JSONKeys.AGGREGATION_INFO)
     public MetricAggregationInfoResults getAggregationInfoResult() {
         return metricAggregationInfoResults;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.PERCENTILE_INFO)
     public MetricPercentileResults getMetricPercentileResults() {
         return metricPercentileResults;
     }
