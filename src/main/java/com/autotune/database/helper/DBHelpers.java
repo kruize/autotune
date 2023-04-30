@@ -114,6 +114,12 @@ public class DBHelpers {
              */
             public static KruizeResultsEntry convertExperimentResultToExperimentResultsTable(ExperimentResultData experimentResultData) {
                 KruizeResultsEntry kruizeResultsEntry = null;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
@@ -123,13 +129,13 @@ public class DBHelpers {
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeResultsEntry.setExtended_data(
                                 objectMapper.readTree(
-                                        jsonObject.toString()
+                                        k8sObjectString
                                 )
                         );
                     } catch (JsonProcessingException e) {
