@@ -231,7 +231,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 }
 
                 // Set Limits variation map
-                variation.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+                variation.put(AnalyzerConstants.ResourceSetting.limits, limitsVariationMap);
                 recommendation.setVariation(variation);
 
                 // Set Recommendations
