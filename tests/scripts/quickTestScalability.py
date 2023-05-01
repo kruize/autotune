@@ -1,6 +1,6 @@
 # This is a handy tool for developers to check scalability. By running the "quickTestScalability.py" script with the specified parameters,
 #
-# python3 quickTestScalability.py --ip master-1.kruizevin.lab.psi.pnq2.redhat.com --port 31620 --name firstEXP --count 2,10 --minutesjump=15
+# python3 quickTestScalability.py --ip master-1.kruizevin.lab.psi.pnq2.redhat.com --port 31620 --name firstEXP --count 2,10 --measurement_mins=15
 #
 # above script creates default performance profile
 # followed by two experiments with the names "firstEXP_1" and "firstEXP_2" are generated.
@@ -12,7 +12,7 @@
 # --name name of the experiment
 # --count comma seprated first part number of experiment , second part number of results under each experiment
 #          if value is 2,10  then 2 experiments and 10 results for each
-# --minutesjump diff b/w endtime and starttime
+# --measurement_mins diff b/w endtime and starttime
 
 import json
 import datetime
@@ -26,19 +26,23 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--ip', type=str, help='enter  ip')
 parser.add_argument('--port', type=int, help='enter port')
 parser.add_argument('--name', type=str, help='enter experiment name')
-parser.add_argument('--count', type=str, help='enter number of experiment and results to create separated by , ')
-parser.add_argument('--minutesjump', type=int, help='enter time diff b/w interval_start_time and interval_end_time')
+parser.add_argument('--count', type=str, help='enter experiment_start_count,experiment_end_count,num_results to create separated by , ')
+parser.add_argument('--measurement_mins', type=int, help='enter time diff b/w interval_start_time and interval_end_time')
+parser.add_argument('--move_mins', type=int, help='move the interval minutes forward by this amount')
 
 # parse the arguments from the command line
 args = parser.parse_args()
 
 createExpURL = 'http://%s:%s/createExperiment'%(args.ip,args.port)
+listRecURL = 'http://%s:%s/listRecommendations'%(args.ip,args.port)
 updateExpURL = 'http://%s:%s/updateResults'%(args.ip,args.port)
 createProfileURL = 'http://%s:%s/createPerformanceProfile'%(args.ip,args.port)
 expnameprfix = args.name
-expcount = int(args.count.split(',')[0])
-rescount = int(args.count.split(',')[1])
-minutesjump = args.minutesjump
+expstart = int(args.count.split(',')[0])
+expend = int(args.count.split(',')[1])
+rescount = int(args.count.split(',')[2])
+measurement_mins = args.measurement_mins
+move_mins = args.move_mins
 headers = {
     'Content-Type': 'application/json'
 }
@@ -48,9 +52,11 @@ print(createExpURL)
 print(updateExpURL)
 print(createProfileURL)
 print("experiment_name : %s " %(expnameprfix))
-print("Number of experiments to create : %s" %(expcount))
+print("Experiment start count : %s" %(expstart))
+print("Experiment end count : %s" %(expend))
 print("Number of results to create : %s" %(rescount))
-print("minutes jump : %s" %(minutesjump))
+print("measurement mins : %s" %(measurement_mins))
+print("move minutes forward : %s" %(move_mins))
 
 profile_data = {
                    "name": "resource-optimization-openshift",
@@ -80,14 +86,15 @@ profile_data = {
                        ]
                    }
                }
+
 profile_json_payload = json.dumps(profile_data)
 # Send the request with the payload
 response = requests.post(createProfileURL, data=profile_json_payload, headers=headers)
 # Check the response
 if response.status_code == 201:
-    print('Request successful!')
+    print('CreateProfile Request successful!')
 else:
-   print(f'Request failed with status code {response.status_code}: {response.text}')
+    print(f'CreateProfile Request failed with status code {response.status_code}: {response.text}')
 
 
 createdata = {
@@ -122,7 +129,7 @@ createdata = {
             }
         }
 
-data = {
+resultsdata = {
                     "version": "1.0",
                     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_4",
                     "interval_start_time": "2022-01-26T14:35:43.511Z",
@@ -324,55 +331,82 @@ data = {
                     ]
                 }
 
+# calculate the new interval start and end times
+new_interval_start_time = datetime.datetime.strptime(resultsdata['interval_start_time'], '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(minutes=move_mins)
+new_interval_end_time = datetime.datetime.strptime(resultsdata['interval_end_time'], '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(minutes=move_mins)
 
-for i in range(expcount):
+daynum=move_mins/24/60
+
+for i in range(expstart, expend):
     try:
-        experiment_name = "%s_%s" %(expnameprfix,i)
+        # update the JSON data with the new interval times
+        resultsdata['interval_start_time'] = new_interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        resultsdata['interval_end_time'] = new_interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+        profile_json_payload = json.dumps(profile_data)
+        # Send the request with the payload
+        response = requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+        # Check the response
+        if response.status_code == 201:
+            print('CreateProfile Request successful!')
+        else:
+            print(f'CreateProfile Request failed with status code {response.status_code}: {response.text}')
+
+        experiment_name = "%s_%s" %(expnameprfix, i)
         createdata['experiment_name'] = experiment_name
         create_json_payload = json.dumps([createdata])
         # Send the request with the payload
         response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
         # Check the response
         if response.status_code == 201:
-            print('Request successful!')
-            data['experiment_name'] = experiment_name
-            for j in range(rescount):
-                try:
-                    # calculate the new interval start and end times
-                    interval_start_time = datetime.datetime.strptime(data['interval_end_time'] ,  '%Y-%m-%dT%H:%M:%S.%fZ')
-                    interval_end_time = datetime.datetime.strptime(data['interval_end_time'] , '%Y-%m-%dT%H:%M:%S.%fZ' ) + datetime.timedelta(minutes=minutesjump)
-
-                    # update the JSON data with the new interval times
-                    data['interval_start_time'] = interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-                    data['interval_end_time'] = interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-
-
-                    # Convert payload to JSON string
-                    json_payload = json.dumps([data])
-
-                    # Send the request with the payload
-                    response = requests.post(updateExpURL, data=json_payload, headers=headers, timeout=timeout)
-
-                    # Check the response
-                    if response.status_code == 201:
-                        pass
-                    else:
-                        print(f'Request failed with status code {response.status_code}: {response.text}')
-                except requests.exceptions.Timeout:
-                    print('Timeout occurred while connecting to')
-                except requests.exceptions.RequestException as e:
-                    print('An error occurred while connecting to',  e)
+            print('CreateExp Request successful!')
         else:
-           print(f'Request failed with status code {response.status_code}: {response.text}')
+            print(f'CreateExp Request failed with status code {response.status_code}: {response.text}')
+
+        resultsdata['experiment_name'] = experiment_name
+        for j in range(rescount):
+            try:
+                profile_json_payload = json.dumps(profile_data)
+                # Send the request with the payload
+                response = requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+                # Check the response
+                if response.status_code == 201:
+                    print('CreateProfile Request successful!')
+                #else:
+                #    print(f'CreateProfile Request failed with status code {response.status_code}: {response.text}')
+
+                # calculate the new interval start and end times
+                interval_start_time = datetime.datetime.strptime(resultsdata['interval_end_time'],  '%Y-%m-%dT%H:%M:%S.%fZ')
+                interval_end_time = datetime.datetime.strptime(resultsdata['interval_end_time'], '%Y-%m-%dT%H:%M:%S.%fZ') + datetime.timedelta(minutes=measurement_mins)
+
+                print('Interval_start_time: %s, Interval_end_time: %s' %(interval_start_time, interval_end_time))
+
+                # update the JSON data with the new interval times
+                resultsdata['interval_start_time'] = interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+                resultsdata['interval_end_time'] = interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+                # Convert payload to JSON string
+                results_json_payload = json.dumps([resultsdata])
+
+                # Send the request with the payload
+                response = requests.post(updateExpURL, data=results_json_payload, headers=headers, timeout=timeout)
+
+                # Check the response
+                if response.status_code == 201:
+                    pass
+                else:
+                    print(f'UpdateResults Request failed with status code {response.status_code}: {response.text}')
+            except requests.exceptions.Timeout:
+                print('Timeout occurred while connecting to')
+            except requests.exceptions.RequestException as e:
+                print('An error occurred while connecting to', e)
+
+            print('### Experiment: %s: Progress: %s/%s  %s/%s' %(experiment_name, i, expend, j, rescount))
+
     except requests.exceptions.Timeout:
         print('Timeout occurred while connecting to')
     except requests.exceptions.RequestException as e:
         print('An error occurred while connecting to', e)
 
-    print('Request successful!  completed  :  %s/%s  %s/%s '  %(i,expcount,j,rescount ))
-
-
-
-
-
+    print('Request successful!  Completed: Day: %s for %s-%s  %s/%s'  %(daynum, expstart, expend, j, rescount))
 
