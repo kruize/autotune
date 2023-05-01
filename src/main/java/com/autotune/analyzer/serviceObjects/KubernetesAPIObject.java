@@ -16,6 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public class KubernetesAPIObject {
         return namespace;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.CONTAINERS)
     public List<ContainerAPIObject> getContainerAPIObjects() {
         return containerAPIObjects;
     }

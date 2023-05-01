@@ -3,6 +3,7 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class ContainerAPIObject {
         return container_name;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     public ContainerRecommendations getContainerRecommendations() {
         return containerRecommendations;
     }
