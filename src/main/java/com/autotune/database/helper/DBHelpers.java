@@ -316,8 +316,6 @@ public class DBHelpers {
                         kruizeResultsEntry.getMeta_data();
                         JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
                         JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
-//                        List<K8sObject> k8sObjectList = mapper.readValue(mapper.writeValueAsString(k8sObjectsNode), new TypeReference<>() {
-//                        });
                         List<K8sObject> k8sObjectList = new ArrayList<K8sObject>();
                         if (k8sObjectsNode.isArray()) {
                             for (JsonNode node: k8sObjectsNode) {
@@ -325,7 +323,7 @@ public class DBHelpers {
                                 if (null != k8sObject) {
                                     k8sObjectList.add(k8sObject);
                                 } else {
-                                    System.out.println("\n\n\n\n Its null, cant convert, check DB results \n\n\n\n");
+                                    LOGGER.debug("GSON failed to convert the DB Json object in convertResultEntryToUpdateResultsAPIObject");
                                 }
                             }
                         }
@@ -409,7 +407,7 @@ public class DBHelpers {
                                 if (null != kubernetesAPIObject) {
                                     kubernetesAPIObjectList.add(kubernetesAPIObject);
                                 } else {
-                                    System.out.println("\n\n\n\n Its null, cant convert, check DB recommendations \n\n\n\n");
+                                    LOGGER.debug("GSON failed to convert the DB Json object in convertRecommendationEntryToRecommendationAPIObject");
                                 }
                             }
                         }
