@@ -18,7 +18,7 @@ package com.autotune.common.data.result;
 import java.util.HashMap;
 
 /**
- * ListRecommendation API use this object to show recommendation
+ * ListRecommendations API use this object to show recommendation
  */
 public class ViewRecommendation {
     private String experiment_name;

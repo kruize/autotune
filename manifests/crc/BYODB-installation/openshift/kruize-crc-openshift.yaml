@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.13_rm
+          image: kruize/autotune_operator:0.0.14_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -86,7 +86,7 @@ spec:
               memory: "4Gi"
               cpu: "4"
             limits:
-              memory: "4Gi"
+              memory: "8Gi"
           ports:
             - name: kruize-port
               containerPort: 8080

@@ -199,7 +199,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 }
 
                 // Set Request variation map
-                variation.put(AnalyzerConstants.ResourceSetting.requests, requestsVariationMap);
+                if (!requestsVariationMap.isEmpty())
+                    variation.put(AnalyzerConstants.ResourceSetting.requests, requestsVariationMap);
 
                 // Create a new map for storing variation in limits
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsVariationMap = new HashMap<>();
@@ -207,9 +208,17 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 // Calling requests on limits as we are maintaining limits and requests as same
                 // Maintaining different flow for both of them even though if they are same as in future we might have
                 // a different implementation for both and this avoids confusion
-                Double currentCpuLimit = currentCpuRequest;
-                Double currentMemLimit = currentMemRequest;
+                Double currentCpuLimit = getCurrentValue(   filteredResultsMap,
+                                                            timestampToExtract,
+                                                            AnalyzerConstants.ResourceSetting.limits,
+                                                            AnalyzerConstants.RecommendationItem.cpu);;
+                Double currentMemLimit = getCurrentValue(   filteredResultsMap,
+                                                            timestampToExtract,
+                                                            AnalyzerConstants.ResourceSetting.limits,
+                                                            AnalyzerConstants.RecommendationItem.memory);
 
+                // No notification if CPU limit not set
+                // Check if currentCpuLimit is not null and
                 if (null != currentCpuLimit
                         && null != generatedCpuLimit
                         && null != generatedCpuLimitFormat) {
@@ -231,8 +240,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 }
 
                 // Set Limits variation map
-                variation.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
-                recommendation.setVariation(variation);
+                if (!limitsVariationMap.isEmpty())
+                    variation.put(AnalyzerConstants.ResourceSetting.limits, limitsVariationMap);
+
+                // Set Variation Map
+                if (!variation.isEmpty())
+                    recommendation.setVariation(variation);
 
                 // Set Recommendations
                 resultRecommendation.put(recPeriod, recommendation);
