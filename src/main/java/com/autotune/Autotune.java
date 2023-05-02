@@ -82,14 +82,6 @@ public class Autotune {
             try {
                 session = KruizeHibernateUtil.getSessionFactory().openSession();
                 session.close();
-                try {
-                    LOGGER.info("Loading saved experiments from db ...");
-                    new ExperimentDBService().loadAllExperimentsData();   // todo this is temporary solution for playback implemented without primary cache
-                    LOGGER.info("Experiments loaded successfully!");
-                } catch (Exception e) {
-                    LOGGER.error("Loading saved experiments failed! : " + e.getMessage());
-                    System.exit(1);
-                }
             } catch (Exception e) {
                 LOGGER.error("DB connection failed! : " + e.getMessage());
                 System.exit(1);

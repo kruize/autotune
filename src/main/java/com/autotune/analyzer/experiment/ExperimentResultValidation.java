@@ -25,6 +25,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +54,15 @@ public class ExperimentResultValidation {
             boolean proceed = false;
             String errorMsg = "";
             for (ExperimentResultData resultData : experimentResultDataList) {
-                if (null != resultData.getExperiment_name() && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
-                    if (mainKruizeExperimentMAP.containsKey(resultData.getExperiment_name())) {
+                String expName = resultData.getExperiment_name();
+                if (null != expName && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
+                    try {
+                        new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, expName);
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
+                    }
+
+                    if (mainKruizeExperimentMAP.containsKey(expName)) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         // check if the intervalEndTime is greater than intervalStartTime and interval duration is greater than measurement duration
                         IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
@@ -101,7 +109,7 @@ public class ExperimentResultValidation {
                             LOGGER.debug("Kruize Object: {}", kruizeObject);
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
-                            errorMsg = PerformanceProfileUtil.validateResults(performanceProfile,resultData);
+                            errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, resultData);
                             if (null == errorMsg || errorMsg.isEmpty()) {
                                 proceed = true;
                             } else {
