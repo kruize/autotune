@@ -331,6 +331,15 @@ public class KruizeConstants {
         public static final String ALLOWED_METHODS = "POST, GET";
         public static final String ALLOWED_HEADERS = "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept";
         public static final String MAX_AGE = "1728000";
+        public static final String ALLOW_PRIVATE_NETWORKS = "true";
+
+        public static class FilterParam {
+
+            public static final String ACCESS_CONTROL_ALLOW_PRIVATE_NETWORK = "Access-Control-Allow-Private-Network";
+            private FilterParam() {
+
+            }
+        }
 
         private CORSConstants() {
 

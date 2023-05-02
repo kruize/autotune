@@ -55,6 +55,10 @@ public class KruizeCORSFilter {
                     CrossOriginFilter.ACCESS_CONTROL_MAX_AGE_HEADER,
                     KruizeConstants.CORSConstants.MAX_AGE
             );
+            filterParams.put(
+                    KruizeConstants.CORSConstants.FilterParam.ACCESS_CONTROL_ALLOW_PRIVATE_NETWORK,
+                    KruizeConstants.CORSConstants.ALLOW_PRIVATE_NETWORKS
+            );
             filterHolder.setInitParameters(filterParams);
         }
         return filterHolder;
