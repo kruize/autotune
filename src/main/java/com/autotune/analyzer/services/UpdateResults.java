@@ -95,7 +95,7 @@ public class UpdateResults extends HttpServlet {
                             count++;
                             LOGGER.debug("totalResultsCount so far : {}", count);
                             if (count >= AnalyzerConstants.GC_THRESHOLD_COUNT) {
-                                LOGGER.info("Calling System GC");
+                                LOGGER.debug("Calling System GC");
                                 System.gc();
                                 count = 0;
                             }
