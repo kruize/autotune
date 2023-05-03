@@ -409,19 +409,25 @@ def compare_json_files(json_file1, json_file2):
         try:
             json_data1 = json.load(f1)
         except json.JSONDecodeError:
+            print("Received JSONDecodeError")
             json_data1 = {}
         
     with open(json_file2, "r") as f2:
         try:
             json_data2 = json.load(f2)
         except json.JSONDecodeError:
+            print("Received JSONDecodeError")
             json_data2 = {}
-    
-    if json_data1 == json_data2:
-        print("The two JSON files are identical!")
-        return True
+   
+    if json_data1 and json_data2:
+        if json_data1 == json_data2:
+            print("The two JSON files are identical!")
+            return True
+        else:
+            print("The two JSON files are different!")
+            return False
     else:
-        print("The two JSON files are different!")
+        print(f"JSON files are empty! Check the files {json_file1} and {json_file2}")
         return False
 
 def get_kruize_pod(namespace):
