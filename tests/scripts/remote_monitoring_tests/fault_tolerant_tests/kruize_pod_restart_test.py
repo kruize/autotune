@@ -26,18 +26,18 @@ from helpers.generate_rm_jsons import *
 def main(argv):
     cluster_type = "minikube"
     results_dir = "."
-    iterations = 1
-    num_exps = 3
+    iterations = 2
+    num_exps = 1
     failed = 0
     try:
         opts, args = getopt.getopt(argv,"h:c:a:u:r:d:")
     except getopt.GetoptError:
-        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations of 100 results> -r <results dir>")
+        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart (default - 2> -r <results dir>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations of 100 results> -r <results dir>")
+            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart(default - 2> -r <results dir>")
             sys.exit(0)
         elif opt == '-c':
             cluster_type = arg

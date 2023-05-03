@@ -9,15 +9,13 @@ Kruize Remote monitoring fault tolerant test validates the behaviour of [Kruize 
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
    - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md) 
    - Runs the test that does the following:
-	- For the specified hours of metrics data it starts a loop to post 6 hours data each time
+	- For the no. of iterations it starts a loop
 	- In the loop, it creates the specified number of experiments 
-	- For each experiment created, 6 hours of metrics data is updated (6 hours equal to 24 data points considering 
-	  each data point / metrics corresponds to 15 mins interval)
-	- Once the 6 hours results are posted for all the experiments, recommendations are fetched for all the experiments
-	- Now the output of listExperiments API output is captured and kruize pod is restarted
-	- After restarting the kruize pod, performance profile is created and listExperiments API output is captured
-	- Both the listExperiment API outputs, that contains both metrics and recommendations data are compared
-	- Test is failed if the output doesn't match if not the loop continues
+	- For each experiment created, 100 results are updated (each result corresponds to 15 mins interval)
+	- Once the results are posted output of listRecommendations and listExperiments API are captured
+	- Now the kruize pod is restarted and performance profile is created (temporary step until performance profile is loaded from DB)
+	- Again the listRecommendations and listExperiment API output is captured and compared with the ones before restart
+	- If kruize restart fails test is exited if not the loop continues
   
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
@@ -28,7 +26,7 @@ Kruize Remote monitoring fault tolerant test validates the behaviour of [Kruize 
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u No. of experiments ] [ -d Number of iterations of 100 results to be posted] 
+<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/fault_tolerant_tests/remote_monitoring_fault_tolerant_tests.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u No. of experiments ] [ -d Number of iterations to test kruize restart ]
 ```
 
 Where values for remote_monitoring_fault_tolerant_tests.sh are:
@@ -39,8 +37,8 @@ usage: remote_monitoring_fault_tolerant_tests.sh
         [ -i ] : optional. Kruize docker image to be used for testing
                  default - kruize/autotune_operator:test
 	[ -r ] : Results directory path
-	[ -u ] : Number of experiments
-	[ -d ] : Number of iterations of 100 results to be posted
+	[ -u ] : Number of experiments, default - 1
+	[ -d ] : Number of iterations to test kruize restart, default - 2
 ```
 
 For example,

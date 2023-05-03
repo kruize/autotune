@@ -35,11 +35,12 @@ RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
 
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
-hours=6
+iterations=2
+num_exps=1
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments] [-d hours of data available] [-r <resultsdir path>]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>]"
 	exit -1
 }
 
@@ -70,7 +71,7 @@ do
 		num_exps="${OPTARG}"		
 		;;
 	d)
-		hours="${OPTARG}"		
+		iterations="${OPTARG}"
 		;;
 	h)
 		usage
@@ -150,12 +151,12 @@ TEST_LOG="${LOG_DIR}/kruize_pod_restart_test.log"
 echo ""
 echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
 
 else
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${hours} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
 fi
 
 end_time=$(get_date)
