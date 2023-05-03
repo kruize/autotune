@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   capacity:
-    storage: 1Gi
+    storage: 20Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
@@ -22,7 +22,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
