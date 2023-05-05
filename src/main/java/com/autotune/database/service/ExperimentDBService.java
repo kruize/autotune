@@ -45,7 +45,7 @@ public class ExperimentDBService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDBService.class);
     private ExperimentDAO experimentDAO;
 
-    private void loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+    public void loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
         if (null != entries && !entries.isEmpty()) {
@@ -71,7 +71,7 @@ public class ExperimentDBService {
         }
     }
 
-    private void loadAllResults(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+    public void loadAllResults(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
 
         // Load results from the DB and save to local
@@ -98,7 +98,7 @@ public class ExperimentDBService {
         }
     }
 
-    private void loadAllRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+    public void loadAllRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
 
         // Load Recommendations from DB and save to local

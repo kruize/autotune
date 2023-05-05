@@ -22,13 +22,9 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
-import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
@@ -37,13 +33,10 @@ import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +124,7 @@ public class DBHelpers {
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
-                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
+                    Map<String, List<K8sObject>> k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
@@ -236,7 +229,7 @@ public class DBHelpers {
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
-                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject).toString());
+                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
@@ -295,7 +288,7 @@ public class DBHelpers {
                 return createExperimentAPIObjects;
             }
 
-            public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) throws JsonProcessingException {
+            public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) {
                 ObjectMapper mapper = new ObjectMapper();
                 DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
                 mapper.setDateFormat(df);
@@ -313,10 +306,9 @@ public class DBHelpers {
                         updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
                         updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
                         updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
-                        kruizeResultsEntry.getMeta_data();
                         JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
                         JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
-                        List<K8sObject> k8sObjectList = new ArrayList<K8sObject>();
+                        List<K8sObject> k8sObjectList = new ArrayList<>();
                         if (k8sObjectsNode.isArray()) {
                             for (JsonNode node: k8sObjectsNode) {
                                 K8sObject k8sObject = gson.fromJson(mapper.writeValueAsString(node), K8sObject.class);
@@ -338,16 +330,14 @@ public class DBHelpers {
                 return updateResultsAPIObjects;
             }
 
-            private static List<KubernetesAPIObject> convertK8sObjectListToKubernetesAPIObjectList(List<K8sObject> k8sObjectList) {
+            private static List<KubernetesAPIObject> convertK8sObjectListToKubernetesAPIObjectList(List<K8sObject> k8sObjectList) throws JsonProcessingException {
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
-
                 for (K8sObject k8sObject : k8sObjectList) {
                     KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(
                             k8sObject.getName(),
                             k8sObject.getType(),
                             k8sObject.getNamespace()
                     );
-
                     List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
                     for (Map.Entry<String, ContainerData> entry : k8sObject.getContainerDataMap().entrySet()) {
                         containerAPIObjects.add(new ContainerAPIObject(
@@ -358,7 +348,6 @@ public class DBHelpers {
                         ));
                     }
                     kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
-
                     kubernetesAPIObjects.add(kubernetesAPIObject);
                 }
                 return kubernetesAPIObjects;
@@ -377,7 +366,7 @@ public class DBHelpers {
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .create();
-                List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<ListRecommendationsAPIObject>();
+                List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
                     // Check if instance of KruizeRecommendationEntry is null
                     if (null == kruizeRecommendationEntry) {
@@ -400,7 +389,7 @@ public class DBHelpers {
                         continue;
                     try {
                         // If successful, the object mapper returns the list recommendation API Object
-                        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<KubernetesAPIObject>();
+                        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
                         if (extendedData.isArray()) {
                             for (JsonNode node: extendedData) {
                                 KubernetesAPIObject kubernetesAPIObject = gson.fromJson(objectMapper.writeValueAsString(node), KubernetesAPIObject.class);
