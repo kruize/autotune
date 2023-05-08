@@ -42,8 +42,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
-	#remote_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
-	remote_monitoring_tests=("sanity")
+	remote_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -120,8 +119,8 @@ function remote_monitoring_tests() {
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report.html | cut -d' ' -f1)
 		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report.html | cut -d' ' -f1)
 
-		TESTS_PASSED+=${passed}
-		TESTS_FAILED+=${failed}
+		TESTS_PASSED=$(($TESTS_PASSED + $passed))
+		TESTS_FAILED=$(($TESTS_FAILED + $failed))
 		if [ "${TESTS_FAILED}" -ne "0" ]; then
 			((TOTAL_TESTS_FAILED++))
 			FAILED_CASES+=(${test})

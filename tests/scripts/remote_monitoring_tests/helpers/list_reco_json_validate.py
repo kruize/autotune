@@ -25,7 +25,7 @@ KUBERNETES_OBJECTS_TYPE_NOT_SUPPORTED = "Kubernetes objects type not supported!"
 JSON_NULL_VALUES = ("is not of type 'string'", "is not of type 'integer'", "is not of type 'number'")
 VALUE_MISSING = " cannot be empty or null!"
 
-def validate_list_reco_json(list_reco_json):
+def validate_list_reco_json(list_reco_json, json_schema):
     errorMsg = ""
     try:
         # create a validator with the format checker
@@ -34,7 +34,7 @@ def validate_list_reco_json(list_reco_json):
 
         # validate the JSON data against the schema
         errors = ""
-        errors = list(validator.iter_errors(json_data))
+        errors = list(validator.iter_errors(list_reco_json))
         print("Validating json against the json schema...done")
         errorMsg = validate_list_reco_json_values(list_reco_json[0])
 
