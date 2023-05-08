@@ -118,17 +118,25 @@ function remote_monitoring_tests() {
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report.html | cut -d' ' -f1)
 		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report.html | cut -d' ' -f1)
+		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report.html | cut -d' ' -f1)
 
 		TESTS_PASSED=$(($TESTS_PASSED + $passed))
 		TESTS_FAILED=$(($TESTS_FAILED + $failed))
+		TESTS=$(($TESTS + $TESTS_PASSED + $TESTS_FAILED))
+
+		if [ "${errors}" -ne "0" ]; then
+			echo "Tests did not execute there were errors, check the logs"
+			exit 1
+		fi
+
 		if [ "${TESTS_FAILED}" -ne "0" ]; then
-			((TOTAL_TESTS_FAILED++))
+			TOTAL_TESTS_FAILED=$(($TOTAL_TESTS_FAILED + $TESTS_FAILED))
+			TOTAL_TESTS_PASSED=$(($TOTAL_TESTS_PASSED + $TESTS_PASSED))
 			FAILED_CASES+=(${test})
 		else
-			((TOTAL_TESTS_PASSED++))
+			TOTAL_TESTS_PASSED=$(($TOTAL_TESTS_PASSED + $TESTS_PASSED))
 		fi
-		((TESTS++))
-		((TOTAL_TESTS++))
+		TOTAL_TESTS=$(($TOTAL_TESTS + $TESTS))
 
 	done
 
