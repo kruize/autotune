@@ -646,5 +646,18 @@ public class AnalyzerConstants {
 
             }
         }
+
+        public static class MinConstants {
+            private MinConstants() {
+
+            }
+
+            public static class CPU {
+                private CPU() {
+
+                }
+                public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
+            }
+        }
     }
 }

@@ -387,6 +387,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             cpuRequest = CommonUtils.percentile(NINETY_EIGHTH_PERCENTILE, cpuUsageList);
         }
 
+        // Make sure that the recommendation cannot be 0 or -ve
+        if (0 >= cpuRequest)
+            cpuRequest = AnalyzerConstants.RecommendationEngine.MinConstants.CPU.CPU_MIN_RECOMMENDATION_VALUE;
+
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
             if (cpuUsageResults != null) {
