@@ -136,7 +136,9 @@ def generate_test_data(csvfile, test_data):
                     else:
                         if any(re.findall(r'invalid.*sum|invalid.*max|invalid.*min|invalid.*avg', test_name, re.IGNORECASE)):
                                 data.append(-1)
-                        else :
+                        elif any(re.findall(r'blank.*sum|blank.*max|blank.*min|blank.*avg', test_name, re.IGNORECASE)):
+                                data.append("\"\"")
+                        else:
                                data.append(test_type[t])
 
                 writer.writerow(data)
@@ -373,4 +375,16 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+
+def strip_double_quotes_for_field(json_file, field, filename):
+
+    find = "\"{{" + field + "}}\""
+    replace = "{{" + field + "}}"
+    with open(json_file, 'r') as file:
+        data = file.read()
+
+        data = data.replace(find, replace)
+
+        with open(filename, 'w') as file:
+            file.write(data)
 
