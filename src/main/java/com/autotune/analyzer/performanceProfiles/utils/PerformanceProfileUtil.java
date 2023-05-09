@@ -26,7 +26,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.google.gson.Gson;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,9 +104,9 @@ public class PerformanceProfileUtil {
                         if (!perfProfileAggrFunctions.isEmpty()) {
                             try {
                                 aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), perfProfileAggrFunctions);
+                                errorMsg = validateAggFunction(metricResults.getName(), aggrInfoClassAsMap, perfProfileAggrFunctions);
                                 if (!errorMsg.isBlank()) {
-                                    errorMsg = errorMsg.concat(String.format("for the experiment : %s"
+                                    errorMsg = errorMsg.concat(String.format(" for the experiment : %s"
                                             , experimentResultData.getExperiment_name()));
                                     break;
                                 }
@@ -143,13 +143,14 @@ public class PerformanceProfileUtil {
     /**
      * Validates the aggregation function objects against the aggregationInfoResult metrics
      *
-     * @param keySet
+     * @param metricVariableName
+     * @param aggrInfoClassAsMap
      * @param perfProfileAggrFunctions
      * @return
      */
-    private static String validateAggFunction(Set<String> keySet, List<String> perfProfileAggrFunctions) {
+    private static String validateAggFunction(String metricVariableName, Map<String, Object> aggrInfoClassAsMap, List<String> perfProfileAggrFunctions) {
 
-        List<String> resultDataAggrFuncObjects = keySet.stream().toList();
+        List<String> resultDataAggrFuncObjects = aggrInfoClassAsMap.keySet().stream().toList();
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the aggrInfoObjects List
         if (resultDataAggrFuncObjects.stream().noneMatch(perfProfileAggrFunctions::contains)) {
@@ -161,6 +162,30 @@ public class PerformanceProfileUtil {
             LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH.concat(missingObjects.toString()));
             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH).concat(": ")
                     .concat(missingObjects.toString());
+        }
+        // validate the aggregation info values
+        for (Map.Entry<String, Object> entry : aggrInfoClassAsMap.entrySet()) {
+            Object value = entry.getValue();
+
+            if (value instanceof Number) {
+                double doubleValue = ((Number) value).doubleValue();
+                if (doubleValue < 0 || Double.isNaN(doubleValue)) {
+                    LOGGER.error(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    errorMsg = errorMsg.concat(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    break;
+                }
+            } else if (value instanceof String) {
+                String stringValue = (String) value;
+                if ( null == stringValue || stringValue.isBlank()) {
+                    LOGGER.error(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    errorMsg = errorMsg.concat(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    break;
+                } else if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
+                    LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
+                    errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
+                    break;
+                }
+            }
         }
         return errorMsg;
     }

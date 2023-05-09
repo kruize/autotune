@@ -16,6 +16,7 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 
 /**
  * Contains strings describing the errors encountered
@@ -79,6 +80,9 @@ public class AnalyzerErrorConstants {
 		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
 		public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
 		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than "+ KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS +" seconds";
+		public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
+		public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
+
 
 	}
 
