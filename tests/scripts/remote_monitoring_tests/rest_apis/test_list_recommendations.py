@@ -627,7 +627,7 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        time.sleep(2)
+        time.sleep(1)
 
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
@@ -720,7 +720,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-            time.sleep(2)
+            time.sleep(1)
 
             # Get the experiment name
             json_data = json.load(open(create_exp_json_file))
@@ -731,7 +731,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         list_of_result_json_arr.append(result_json_arr)
 
-    time.sleep(10)
+    time.sleep(5)
 
     experiment_name = None
     response = list_recommendations(experiment_name, latest)

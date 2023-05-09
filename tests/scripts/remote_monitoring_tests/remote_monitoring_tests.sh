@@ -122,7 +122,6 @@ function remote_monitoring_tests() {
 
 		TESTS_PASSED=$(($TESTS_PASSED + $passed))
 		TESTS_FAILED=$(($TESTS_FAILED + $failed))
-		TESTS=$(($TESTS + $TESTS_PASSED + $TESTS_FAILED))
 
 		if [ "${errors}" -ne "0" ]; then
 			echo "Tests did not execute there were errors, check the logs"
@@ -130,15 +129,15 @@ function remote_monitoring_tests() {
 		fi
 
 		if [ "${TESTS_FAILED}" -ne "0" ]; then
-			TOTAL_TESTS_FAILED=$(($TOTAL_TESTS_FAILED + $TESTS_FAILED))
-			TOTAL_TESTS_PASSED=$(($TOTAL_TESTS_PASSED + $TESTS_PASSED))
 			FAILED_CASES+=(${test})
-		else
-			TOTAL_TESTS_PASSED=$(($TOTAL_TESTS_PASSED + $TESTS_PASSED))
 		fi
-		TOTAL_TESTS=$(($TOTAL_TESTS + $TESTS))
 
 	done
+
+	TESTS=$(($TESTS_PASSED + $TESTS_FAILED))
+	TOTAL_TESTS_FAILED=${TESTS_FAILED}
+	TOTAL_TESTS_PASSED=${TESTS_PASSED}
+	TOTAL_TESTS=${TESTS}
 
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
