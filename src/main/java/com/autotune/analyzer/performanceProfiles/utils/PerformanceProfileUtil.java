@@ -166,21 +166,18 @@ public class PerformanceProfileUtil {
         // validate the aggregation info values
         for (Map.Entry<String, Object> entry : aggrInfoClassAsMap.entrySet()) {
             Object value = entry.getValue();
+            String key = entry.getKey();
 
-            if (value instanceof Number) {
+            if (value instanceof Number && !key.equals("format")) {
                 double doubleValue = ((Number) value).doubleValue();
                 if (doubleValue < 0 || Double.isNaN(doubleValue)) {
-                    LOGGER.error(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
-                    errorMsg = errorMsg.concat(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    LOGGER.error(key.concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    errorMsg = errorMsg.concat(key.concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
                     break;
                 }
-            } else if (value instanceof String) {
+            } else if (key.equals("format")) {
                 String stringValue = (String) value;
-                if ( null == stringValue || stringValue.isBlank()) {
-                    LOGGER.error(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
-                    errorMsg = errorMsg.concat(entry.getKey().concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
-                    break;
-                } else if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
+                if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
                     LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
                     errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
                     break;
@@ -206,8 +203,7 @@ public class PerformanceProfileUtil {
         for (Method m : methods) {
             if (m.getName().startsWith("get") && !m.getName().startsWith("getClass")) {
                 Object value = m.invoke(obj);
-                if (value instanceof Double)
-                    map.put(m.getName().substring(3).toLowerCase(), value);
+                map.put(m.getName().substring(3).toLowerCase(), value);
             }
         }
         return map;
