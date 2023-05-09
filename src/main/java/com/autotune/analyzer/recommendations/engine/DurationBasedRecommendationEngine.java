@@ -30,6 +30,7 @@ import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -93,8 +94,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
                 // Get the Recommendation Items
-                RecommendationConfigItem cpuRequestItem = getCPURequestRecommendation(filteredResultsMap);
-                RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(filteredResultsMap);
+                RecommendationConfigItem cpuRequestItem = getCPURequestRecommendation(filteredResultsMap, monitoringEndTime);
+                RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(filteredResultsMap, monitoringEndTime);
                 // Initiate generated value holders with min values constants to compare later
                 Double generatedCpuRequest = null;
                 String generatedCpuRequestFormat = null;
@@ -339,7 +340,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
+    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp monitoringEndTimestamp) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> cpuUsageList = filteredResultsMap.values()
@@ -379,17 +380,36 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 })
                 .collect(Collectors.toList());
 
-        double cpuRequest = 0.0;
-        double cpuRequestMax = Collections.max(cpuUsageList);
-        if (CPU_ONE_CORE > cpuRequestMax) {
+        Double cpuRequest = 0.0;
+        Double cpuRequestMax = Collections.max(cpuUsageList);
+        if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
             cpuRequest = CommonUtils.percentile(NINETY_EIGHTH_PERCENTILE, cpuUsageList);
         }
 
+        // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
         // Make sure that the recommendation cannot be 0 or -ve
-        if (0 >= cpuRequest)
-            cpuRequest = AnalyzerConstants.RecommendationEngine.MinConstants.CPU.CPU_MIN_RECOMMENDATION_VALUE;
+        // Check if the cpu request is null or 0 or -ve
+        if (null == cpuRequest || 0 >= cpuRequest) {
+            // check if record for monitoring end time (latest) exists
+            if (filteredResultsMap.containsKey(monitoringEndTimestamp)) {
+                IntervalResults latestIntervalResults = filteredResultsMap.get(monitoringEndTimestamp);
+                // get avg of the cpu request set
+                Double lastAvailableCPURequest = latestIntervalResults.getMetricResultsMap()
+                                                    .get(AnalyzerConstants.MetricName.cpuRequest)
+                                                    .getAggregationInfoResult().getAvg();
+                // if CPU request is not null and greater than 0 set the cpu Request
+                if (null != lastAvailableCPURequest && lastAvailableCPURequest > 0) {
+                    cpuRequest = lastAvailableCPURequest;
+                }
+            }
+            // Check if cpu request is not null and was set in the code block above
+            if (null == cpuRequest || 0 >= cpuRequest) {
+                // Set to the minimum recommendation as we should not recommend 0 CPU (Kill your workload)
+                cpuRequest = AnalyzerConstants.RecommendationEngine.MinConstants.CPU.CPU_MIN_RECOMMENDATION_VALUE;
+            }
+        }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
@@ -413,7 +433,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return null;
     }
 
-    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
+    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp monitoringEndTimestamp) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> memUsageList = filteredResultsMap.values()
