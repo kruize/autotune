@@ -104,7 +104,7 @@ public class PerformanceProfileUtil {
                         if (!perfProfileAggrFunctions.isEmpty()) {
                             try {
                                 aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                errorMsg = validateAggFunction(metricResults.getName(), aggrInfoClassAsMap, perfProfileAggrFunctions);
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
                                 if (!errorMsg.isBlank()) {
                                     errorMsg = errorMsg.concat(String.format(" for the experiment : %s"
                                             , experimentResultData.getExperiment_name()));
@@ -119,10 +119,6 @@ public class PerformanceProfileUtil {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                                 break;
                             }
-                        }
-                        // check if the 'value' is present in the result JSON
-                        if (null == metricResults.getValue()) {
-                            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metricResults.getName()));
                         }
                     }
                     if (!errorMsg.isBlank())
@@ -143,12 +139,11 @@ public class PerformanceProfileUtil {
     /**
      * Validates the aggregation function objects against the aggregationInfoResult metrics
      *
-     * @param metricVariableName
      * @param aggrInfoClassAsMap
      * @param perfProfileAggrFunctions
      * @return
      */
-    private static String validateAggFunction(String metricVariableName, Map<String, Object> aggrInfoClassAsMap, List<String> perfProfileAggrFunctions) {
+    public static String validateAggFunction(Map<String, Object> aggrInfoClassAsMap, List<String> perfProfileAggrFunctions) {
 
         List<String> resultDataAggrFuncObjects = aggrInfoClassAsMap.keySet().stream().toList();
         String errorMsg = "";
@@ -163,7 +158,32 @@ public class PerformanceProfileUtil {
             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH).concat(": ")
                     .concat(missingObjects.toString());
         }
+        return errorMsg;
+    }
+    public static String validateMetricsValues(String metricVariableName, MetricResults metricResults) {
+
+        String errorMsg = "";
+        // validate the metric variable name
+        try {
+            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricVariableName);
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_METRIC);
+            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_METRIC;
+            return errorMsg;
+        }
+        // check if the 'value' is present in the result JSON
+        if (null == metricResults.getValue()) {
+            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metricVariableName));
+        }
         // validate the aggregation info values
+        Map<String, Object> aggrInfoClassAsMap;
+        try {
+            aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+        } catch(IllegalAccessException | InvocationTargetException e){
+            errorMsg = "Exception occurred while aggregationInfo conversion to map: ".concat(e.getMessage());
+            LOGGER.error(errorMsg);
+            return errorMsg;
+        }
         for (Map.Entry<String, Object> entry : aggrInfoClassAsMap.entrySet()) {
             Object value = entry.getValue();
             String key = entry.getKey();

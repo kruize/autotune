@@ -6,9 +6,11 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -24,6 +26,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -198,7 +201,15 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                    String errorMsg = "";
                     for (Metric metric : containerAPIObject.getMetrics()) {
+                        // validate the metric values
+                        errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
+                        if (!errorMsg.isBlank()) {
+                            experimentResultData.setValidationOutputData(new ValidationOutputData(false, errorMsg,
+                                    HttpServletResponse.SC_BAD_REQUEST));
+                            return experimentResultData;
+                        }
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();
                         metricResults.setName(metric.getName());
@@ -215,6 +226,7 @@ public class Converters {
                 k8sObjectList.add(k8sObject);
             }
             experimentResultData.setKubernetes_objects(k8sObjectList);
+            experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));
             return experimentResultData;
         }
 
