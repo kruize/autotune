@@ -14,7 +14,8 @@ tuned.
 - **kubernetes_objects** \
   contains details of the deployment, containers and namespace of the application to be monitored.
   - **type** \
-    A type can either be a `Deployment`, `Replicaset`, `Statefulset`, etc.
+    A type can either be a `Deployment`, `Replicaset`, `Statefulset`, `Deployment_Config`, `Replication_Controller`,
+    `Daemonset`, etc.
   - **name** \
     A string name is specified for identifying individual deployments. Each deployment can have multiple experiments.
   - **namespace** \
