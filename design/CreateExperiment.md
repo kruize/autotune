@@ -11,6 +11,10 @@ tuned.
   Stay tuned
 * namespace \
   Stay tuned
+* performance_profile \
+  Performance profile is a setting which specifies the SLO related information like function variables and aggregration functions. Here we specify the name of already existing Performance profile. If we create a new performance profile we need to map it with appropriate Recommendation Engine Module for Kruize to generate recommendations. \
+   \
+  Note: Recommendations will not be generated if the newly created Performance Profile is not mapped with a Recommendation Engine. Please refer `perfProfileInstances` in `src/main/java/com/autotune/analyzer/utils/AnalyzerConstants.java` to check how it's mapped.
 
 # Response
 
