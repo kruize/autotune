@@ -12,9 +12,22 @@ tuned.
 * namespace \
   Stay tuned
 * performance_profile \
-  Performance profile is a setting which specifies the SLO related information like function variables and aggregration functions. Here we specify the name of already existing Performance profile. If we create a new performance profile we need to map it with appropriate Recommendation Engine Module for Kruize to generate recommendations. \
-   \
-  Note: Recommendations will not be generated if the newly created Performance Profile is not mapped with a Recommendation Engine. Please refer `perfProfileInstances` in `src/main/java/com/autotune/analyzer/utils/AnalyzerConstants.java` to check how it's mapped.
+  `performance_profile` is a pre-defined performance objective that is baked into Kruize.
+
+
+`performance_profile` consists of two parts:
+
+* A yaml file defines the metrics to be monitored and the queries used to derive those metrics.
+* Source code that defines the performance objective using the metrics provided
+
+Currently we have the following pre-defined profiles
+
+| Profile Name                           | yaml                                        | Associated Source | Comments                                       |
+|----------------------------------------|---------------------------------------------|-------------------|------------------------------------------------|
+| resource-optimization-openshift        | resource-optimization-openshift yaml        | source            | This is used for Remote Monitoring Usecase     |
+| resource-optimization-local-monitoring | resource-optimization-local-monitoring yaml | source            | This is used for Remote Monitoring Usecase     |
+| default                                | NA (User defined SLO)                       | source            | This is applicable to all to Autotune Usecases |
+
 
 # Response
 
