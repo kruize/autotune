@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "KruizePerformanceProfile"
 metadata:
-  name: "resource-optimization-acm"
+  name: "resource-optimization-local-monitoring"
 profile_version: 1.0
 k8s_type: openshift
 
