@@ -3,6 +3,14 @@ kind: Namespace
 metadata:
   name: openshift-tuning
 ---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: manual
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -77,6 +85,16 @@ data:
       }
     }
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: openshift-tuning
+data:
+  POSTGRESQL_USER: admin
+  POSTGRESQL_PASSWORD: admin
+  POSTGRESQL_DATABASE: kruizeDB
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -98,13 +116,9 @@ spec:
         - name: postgres
           image: image-registry.openshift-image-registry.svc:5000/openshift/postgresql
           imagePullPolicy: IfNotPresent
-          env:
-            - name: POSTGRESQL_DATABASE
-              value: kruizeDB
-            - name: POSTGRESQL_PASSWORD
-              value: admin
-            - name: POSTGRESQL_USER
-              value: admin
+          envFrom:
+            - configMapRef:
+                name: postgres-config
           ports:
             - containerPort: 5432
           volumeMounts:
