@@ -24,9 +24,9 @@ Currently we have the following pre-defined profiles
 
 | Profile Name                           | yaml                                        | Associated Source | Comments                                       |
 |----------------------------------------|---------------------------------------------|-------------------|------------------------------------------------|
-| resource-optimization-openshift        | resource-optimization-openshift yaml        | source            | This is used for Remote Monitoring Usecase     |
-| resource-optimization-local-monitoring | resource-optimization-local-monitoring yaml | source            | This is used for Remote Monitoring Usecase     |
-| default                                | NA (User defined SLO)                       | source            | This is applicable to all to Autotune Usecases |
+| resource-optimization-openshift        | [resource-optimization-openshift yaml](https://github.com/kruize/autotune/blob/master/manifests/autotune/performance-profiles/resource_optimization_openshift.yaml)        | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/ResourceOptimizationOpenshiftImpl.java)            | This is used for Remote Monitoring Usecase     |
+| resource-optimization-local-monitoring | [resource-optimization-local-monitoring yaml](https://github.com/kruize/autotune/blob/master/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.yaml) | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/ResourceOptimizationOpenshiftImpl.java)            | This is used for Remote Monitoring Usecase     |
+| default                                | NA (User defined SLO)                       | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/DefaultImpl.java)            | This is applicable to all to Autotune Usecases |
 
 
 # Response
