@@ -23,6 +23,7 @@
         <postgresql-version>42.3.1</postgresql-version>
         <hibernatecore-version>6.1.7.Final</hibernatecore-version>
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
+        <micrometer-version>1.9.9</micrometer-version>
     </properties>
     <dependencies>
         <dependency>
@@ -153,6 +154,16 @@
             <artifactId>hibernate-c3p0</artifactId>
             <version>${hibernatecp30-version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>${micrometer-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>${micrometer-version}</version>
+        </dependency>
 
     </dependencies>
     <build>
@@ -194,8 +205,8 @@
                 <version>${maven-compiler-plugin-version}</version>
                 <configuration>
                     <release>${java-version}</release>
-                    <source>${java-version}</source>
-                    <target>${java-version}</target>
+                    <source>16</source>
+                    <target>16</target>
                 </configuration>
             </plugin>
             <plugin>
