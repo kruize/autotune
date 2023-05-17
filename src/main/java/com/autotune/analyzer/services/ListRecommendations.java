@@ -33,6 +33,9 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.micrometer.core.instrument.Timer;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +53,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.autotune.utils.MetricsConfig;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -181,6 +185,8 @@ public class ListRecommendations extends HttpServlet {
         }
         if (!error) {
             List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+            //Add Timer
+            Timer.Sample listRec = Timer.start(MetricsConfig.registry);
             for (KruizeObject ko : kruizeObjectList) {
                 try {
                     LOGGER.debug(ko.getKubernetes_objects().toString());
@@ -195,6 +201,7 @@ public class ListRecommendations extends HttpServlet {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }
             }
+            listRec.stop(MetricsConfig.timerlistRec);
 
             ExclusionStrategy strategy = new ExclusionStrategy() {
                 @Override

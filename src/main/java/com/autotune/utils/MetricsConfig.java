@@ -15,7 +15,8 @@ import io.prometheus.client.hotspot.*;
 
 public class MetricsConfig {
 
-    public PrometheusMeterRegistry registry;
+    public static PrometheusMeterRegistry registry;
+    public static Timer timerlistRec;
 
     public MetricsConfig() {
         createMeterRegistry();
@@ -23,7 +24,7 @@ public class MetricsConfig {
 
     public void createMeterRegistry() {
         registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-        Timer timer = Timer.builder("my.timer").description("A timer metric").register(registry);
+        timerlistRec = Timer.builder("my.timer.listRec").description("Timer for listRecommendations").register(registry);
         registry.config().commonTags("application", "Kruize");
         //registry.config().meterFilter(MeterFilter.deny(id -> {
         //    String uri = id.getTag("uri");
