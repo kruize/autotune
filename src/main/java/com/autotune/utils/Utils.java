@@ -237,6 +237,7 @@ public class Utils {
                 Timestamp convertedDate = Timestamp.from(desiredInstant);
 
                 return convertedDate;
+
             } catch (Exception e) {
                 return null;
             }
