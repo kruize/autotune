@@ -18,17 +18,21 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 =======
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
+<<<<<<< HEAD
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -37,6 +41,8 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -55,12 +61,15 @@ import java.io.PrintWriter;
 import java.sql.Timestamp;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import java.util.Collections;
 =======
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
 import java.util.Collections;
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,17 +100,21 @@ public class UpdateRecommendation extends HttpServlet {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             return;
 =======
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
             return;
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
         }
 
         // Check if interval_end_time is provided
         if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -117,6 +130,10 @@ public class UpdateRecommendation extends HttpServlet {
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+        }
+
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
         // Convert interval_endtime to UTC date format
         if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
             sendErrorResponse(
@@ -127,16 +144,20 @@ public class UpdateRecommendation extends HttpServlet {
             );
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             return;
 =======
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
             return;
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
         }
 
         //Check if data exist
         Timestamp interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         ExperimentResultData experimentResultData = null;
@@ -201,6 +222,28 @@ public class UpdateRecommendation extends HttpServlet {
 >>>>>>> 88f25571 (Added exception conditions.)
                 }
 <<<<<<< HEAD
+=======
+        boolean dataExists = false;
+        try {
+            dataExists = new ExperimentDBService().checkIfResultsExists(experiment_name, interval_end_time);
+        } catch (Exception e) {
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+        if (dataExists) {
+            //Load KruizeObject and generate recommendation
+            Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
+            try {
+                new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, experiment_name, null, interval_end_time);
+                KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                for (K8sObject k8Obj : kruizeObject.getKubernetes_objects()) {
+                    for (ContainerData containerData : k8Obj.getContainerDataMap().values()) {
+                        for (IntervalResults result : containerData.getResults().values()) {
+
+                        }
+                    }
+                }
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
 //                List<ExperimentResultData> experimentResultDataList = ;
 //                boolean recommendationCheck = new ExperimentInitiator().generateAndAddRecommendations(mainKruizeExperimentMAP, experimentResultDataList);
 //                if (!recommendationCheck)
@@ -210,14 +253,18 @@ public class UpdateRecommendation extends HttpServlet {
 //                else {
 //                    new ExperimentDBService().addRecommendationToDB(mKruizeExperimentMap, experimentResultDataList);
 //                }
+<<<<<<< HEAD
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             return;
@@ -230,6 +277,10 @@ public class UpdateRecommendation extends HttpServlet {
             return;
         }
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+        }
+        sendSuccessResponse(response, "All ok");
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
     }
 
     private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
@@ -251,11 +302,15 @@ public class UpdateRecommendation extends HttpServlet {
             LOGGER.error(e.toString());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             e.printStackTrace();
 >>>>>>> 93d3e5f7 (In progress code checked in for updateRecommendation API.)
 =======
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
+=======
+            e.printStackTrace();
+>>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
