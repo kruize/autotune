@@ -235,9 +235,7 @@ public class Utils {
                 // Convert the timestamp to UTC
                 Instant desiredInstant = localDateTime.toInstant(ZoneOffset.UTC);
                 Timestamp convertedDate = Timestamp.from(desiredInstant);
-
                 return convertedDate;
-
             } catch (Exception e) {
                 return null;
             }
