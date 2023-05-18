@@ -12,12 +12,16 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public class MetricsConfig {
 
     public static PrometheusMeterRegistry registry;
     public static Timer timerlistRec;
 
+    @Bean
     public MetricsConfig() {
         createMeterRegistry();
     }
