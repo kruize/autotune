@@ -55,11 +55,11 @@ public interface ExperimentDAO {
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
 
+
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception;
 
     // Get KruizeResult Record
     KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception;
-
 
 }
