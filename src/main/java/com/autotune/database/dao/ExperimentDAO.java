@@ -59,6 +59,6 @@ public interface ExperimentDAO {
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception;
 
     // Get KruizeResult Record
-    KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception;
+    List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
 }
