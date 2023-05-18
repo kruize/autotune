@@ -153,7 +153,7 @@ public class DBHelpers {
             }
 
             //Add Timed annotataion
-            @Timed(value = "listRecommendations.timer", description = "Timer to get listRecommendationsAPIObject")
+            @Timed(value = "getListRecommendationAPIObjectForDB.timer", description = "Timer to listRecommendationsAPIObject")
             public static ListRecommendationsAPIObject getListRecommendationAPIObjectForDB (KruizeObject kruizeObject, Timestamp monitoringEndTime) {
                 if (null == kruizeObject)
                     return null;
