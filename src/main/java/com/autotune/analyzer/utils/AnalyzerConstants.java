@@ -526,14 +526,17 @@ public class AnalyzerConstants {
 
         // Perf profile names
         public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
+        public static final String RESOURCE_OPT_LOCAL_MON_PROFILE = "resource-optimization-local-monitoring";
 
         public static final Map<String, String> PerfProfileNames = Map.of(
-                RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl"
+                RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
+                RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
 
         public static final Map<String, Class> perfProfileInstances = Map.of(
                 DEFAULT_PROFILE, DefaultImpl.class,
-                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class
+                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class,
+                RESOURCE_OPT_LOCAL_MON_PROFILE, ResourceOptimizationOpenshiftImpl.class
         );
     }
 
