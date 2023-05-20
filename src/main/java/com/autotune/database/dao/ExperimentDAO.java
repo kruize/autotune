@@ -66,5 +66,7 @@ public interface ExperimentDAO {
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
 
+    // Get KruizeResult Record
+    KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception;
 
 }
