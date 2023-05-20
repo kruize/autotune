@@ -30,6 +30,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
@@ -222,8 +226,15 @@ public class Utils {
             try {
                 if (null == format || null == date)
                     return null;
-                Date convertedDate = (new SimpleDateFormat(format)).parse(date);
-                return new Timestamp(convertedDate.getTime());
+                // Parse the timestamp string to LocalDateTime
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+                // Convert the timestamp to UTC
+                Instant desiredInstant = localDateTime.toInstant(ZoneOffset.UTC);
+                Timestamp convertedDate = Timestamp.from(desiredInstant);
+
+                return convertedDate;
             } catch (Exception e) {
                 return null;
             }
