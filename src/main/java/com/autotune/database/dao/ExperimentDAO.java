@@ -55,7 +55,6 @@ public interface ExperimentDAO {
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
-
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
 
