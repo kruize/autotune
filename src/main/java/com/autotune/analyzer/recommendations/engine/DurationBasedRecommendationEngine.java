@@ -287,21 +287,26 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                                     DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
                                                     Timestamp endTime) {
         double sum = 0.0;
+        // Initiate with null as we have a null check at the caller end
+        Timestamp startTimestamp = null;
         // As we cannot sort HashSet
         List<Timestamp> timestampList = new ArrayList<Timestamp>(resultsHashMap.keySet());
         // Sort the time stamps in descending order
         timestampList.sort((t1, t2) -> t2.compareTo(t1));
         for (Timestamp timestamp: timestampList) {
-            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
-                return timestamp;
-            }
             if (timestamp.equals(endTime) || timestamp.before(endTime)) {
                 if (resultsHashMap.containsKey(timestamp)) {
                     sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
+                    if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                        // Storing the timestamp value in startTimestamp variable to return
+                        startTimestamp = timestamp;
+                        break;
+                    }
                 }
             }
         }
-        return null;
+        // Will be returned null if start time not found
+        return startTimestamp;
     }
 
     /**
