@@ -15,27 +15,16 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
 import com.autotune.operator.KruizeOperator;
-import com.autotune.operator.InitializeDeployment;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class Analyzer {
     public static void start(ServletContextHandler contextHandler) {
-        try {
-            InitializeDeployment.setup_deployment_info();
 
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
-            e.printStackTrace();
-            // Current deployment not supported. Exit
-            System.exit(1);
-        }
         Experimentator.start();
         KruizeOperator kruizeOperator = new KruizeOperator();
 
@@ -58,7 +47,7 @@ public class Analyzer {
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
-        context.addServlet(ListRecommendation.class, ServerContext.RECOMMEND_RESULTS);
+        context.addServlet(ListRecommendations.class, ServerContext.RECOMMEND_RESULTS);
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
 

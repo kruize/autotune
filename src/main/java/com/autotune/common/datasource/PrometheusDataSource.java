@@ -79,7 +79,7 @@ public class PrometheusDataSource implements DataSource
 					.getString(1);
 
 		} catch (Exception e) {
-			LOGGER.info(response.toString());
+			LOGGER.error(response);
 			e.printStackTrace();
 			return "";
 		}

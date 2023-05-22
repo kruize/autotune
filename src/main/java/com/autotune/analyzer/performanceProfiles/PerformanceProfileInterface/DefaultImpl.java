@@ -38,13 +38,13 @@ public class DefaultImpl extends PerfProfileImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultImpl.class);
 
     private String validateValues(HashMap<String, MetricResults> funcVar, List<String> funcVarValueTypes) {
-        LOGGER.info("Func variables : {}", funcVar);
-        LOGGER.info("Func variable value types : {}", funcVarValueTypes);
+        LOGGER.debug("Func variables : {}", funcVar);
+        LOGGER.debug("Func variable value types : {}", funcVarValueTypes);
         return "";
     }
 
     @Override
-    public void recommend(KruizeObject kruizeObject) {
+    public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
 
     }
 

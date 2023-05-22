@@ -29,11 +29,23 @@ public class RecommendationConfigItem {
         this.format = format;
     }
 
+    public RecommendationConfigItem() {
+
+    }
+
     public String getErrorMsg() {
         return errorMsg;
     }
 
     public void setErrorMsg(String errorMsg) {
         this.errorMsg = errorMsg;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public String getFormat() {
+        return format;
     }
 }

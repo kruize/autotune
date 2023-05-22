@@ -26,7 +26,9 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,13 +58,10 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
-    Map<String, KruizeObject> mainKruizeExperimentMap;
-
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
     }
 
     /**
@@ -80,6 +79,7 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
@@ -90,18 +90,25 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
+                    createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
                 }
-                new ExperimentInitiator().validateAndAddNewExperiments(mainKruizeExperimentMap, kruizeExpList);
+                new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO bulk upload not considered here
+                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
                     for (KruizeObject ko : kruizeExpList) {
+                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                                .findAny()
+                                .orElse(null);
+                        validAPIObj.setValidationData(ko.getValidationData());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = experimentDAO.addExperimentToDB(ko);
+                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess())
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
@@ -130,23 +137,37 @@ public class CreateExperiment extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
-            for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
-                if (mainKruizeExperimentMap.containsKey(ko.getExperimentName())) {
-                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(ko.getExperimentName());
-                    if (validationOutputData.isSuccess()) {
-                        mainKruizeExperimentMap.remove(ko.getExperimentName());
-                        KruizeOperator.deploymentMap.remove(ko.getExperimentName());
-                    }else{
-                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+            if (createExperimentAPIObjects.length > 1) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+            } else {
+                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                    try {
+                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
                     }
                 }
-                else
-                    throw new Exception("Experiment not found!");
+
+                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                    String expName = ko.getExperimentName();
+                    if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
+                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        if (validationOutputData.isSuccess()) {
+                            mKruizeExperimentMap.remove(ko.getExperimentName());
+                        } else {
+                            throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                        }
+                    } else
+                        throw new Exception("Experiment not found!");
+                }
+                sendSuccessResponse(response, "Experiment deleted successfully.");
             }
-            sendSuccessResponse(response, "Experiment deleted successfully.");
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }

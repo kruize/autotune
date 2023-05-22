@@ -83,14 +83,14 @@ data:
     }
   kruizeconfigjson: |
     {
-      "clustertype":"kubernetes",
-      "k8stype" : "openshift",
+      "clustertype": "kubernetes",
+      "k8stype": "openshift",
       "authtype": "",
-      "monitoringagent":"prometheus",
-      "monitoringservice":"prometheus-k8s",
-      "monitoringendpoint":"prometheus-k8s",
-      "savetodb":"true",
-      "dbdriver":"jdbc:postgresql://",
+      "monitoringagent": "prometheus",
+      "monitoringservice": "prometheus-k8s",
+      "monitoringendpoint": "prometheus-k8s",
+      "savetodb": "true",
+      "dbdriver": "jdbc:postgresql://",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -99,8 +99,8 @@ data:
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "update",
-        "showsql": "true",
-        "timezone":"UTC"
+        "showsql": "false",
+        "timezone": "UTC"
       }
     }
 ---
@@ -182,7 +182,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.12_rm
+          image: kruize/autotune_operator:0.0.13_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -191,11 +191,19 @@ spec:
             - name: LOGGING_LEVEL
               value: "info"
             - name: ROOT_LOGGING_LEVEL
-              value: "info"
+              value: "error"
             - name: DB_CONFIG_FILE
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
               value: "/etc/config/kruizeconfigjson"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=80"
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "4"
+            limits:
+              memory: "8Gi"
           ports:
             - name: kruize-port
               containerPort: 8080

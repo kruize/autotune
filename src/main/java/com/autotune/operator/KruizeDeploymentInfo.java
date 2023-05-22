@@ -63,7 +63,7 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-    public static String settings_save_to_db;
+    public static Boolean settings_save_to_db;
     public static String em_only_mode;
 
     private static Hashtable<String, Class> tunableLayerPair;

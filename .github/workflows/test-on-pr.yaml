@@ -50,6 +50,9 @@ jobs:
           echo "***************************************************************"
           ./deploy.sh -c minikube -i autotune_operator:test
           sleep 20
+      - name: Capture ffdc logs
+        if: always()
+        run: |
           ./scripts/ffdc.sh -d ${GITHUB_WORKSPACE}
       - name: Archive results
         if: always()
@@ -102,7 +105,9 @@ jobs:
 
           cd tests
           ./test_autotune.sh -c minikube -i autotune_operator:test --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
-          cd ..
+      - name: Capture ffdc logs
+        if: always()
+        run: |
           ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
       - name: Archive results
         if: always()

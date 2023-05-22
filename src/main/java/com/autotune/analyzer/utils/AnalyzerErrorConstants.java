@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.utils.KruizeConstants;
+
 /**
  * Contains strings describing the errors encountered
  */
@@ -76,7 +78,7 @@ public class AnalyzerErrorConstants {
 		public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
 		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
 		public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
-		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than 5 seconds";
+		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than "+ KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS +" seconds";
 
 	}
 
@@ -120,6 +122,23 @@ public class AnalyzerErrorConstants {
 
 			public static final String INVALID_EXPERIMENT_NAME_EXCPTN = "Invalid Experiment Name";
 			public static final String INVALID_EXPERIMENT_NAME_MSG = "Given experiment name - \" %s \" is not valid";
+		}
+	}
+
+	public static final class ConversionErrors {
+		private ConversionErrors() {
+
+		}
+
+		public static final class KruizeRecommendationError {
+			private KruizeRecommendationError() {
+
+			}
+
+			public static final String NOT_NULL = "{} Cannot be null";
+			public static final String NOT_EQUAL = "{} - {} of {} is not equal to {} - {} of {}";
+			public static final String NOT_EMPTY = "{} Cannot be empty";
+			public static final String INVALID_JSON_STRUCTURE_MAPPING_TO_CLASS = "The JSON Structure in the JSON NODE is invalid to be mapped with class - {}";
 		}
 	}
 }

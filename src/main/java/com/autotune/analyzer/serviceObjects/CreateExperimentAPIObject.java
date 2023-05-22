@@ -15,8 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -43,6 +45,9 @@ public class CreateExperimentAPIObject extends BaseSO {
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
+    private AnalyzerConstants.ExperimentStatus status;
+    private String experiment_id;   // this id is UUID and getting set at createExperiment API
+    private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
 
     public String getClusterName() {
         return clusterName;
@@ -108,65 +113,43 @@ public class CreateExperimentAPIObject extends BaseSO {
         this.sloInfo = sloInfo;
     }
 
+    public AnalyzerConstants.ExperimentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AnalyzerConstants.ExperimentStatus status) {
+        this.status = status;
+    }
+
+    public String getExperiment_id() {
+        return experiment_id;
+    }
+
+    public void setExperiment_id(String experiment_id) {
+        this.experiment_id = experiment_id;
+    }
+
+    public ValidationOutputData getValidationData() {
+        return validationData;
+    }
+
+    public void setValidationData(ValidationOutputData validationData) {
+        this.validationData = validationData;
+    }
+
     @Override
     public String toString() {
-        return "CreateExperimentSO{" +
+        return "CreateExperimentAPIObject{" +
+                "experimentName='" + getExperimentName() + '\'' +
+                "apiVersion='" + getApiVersion() + '\'' +
                 "clusterName='" + clusterName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", sloInfo=" + sloInfo +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
-                ", kubernetesObjects=" + kubernetesAPIObjects +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects.toString() +
                 ", trialSettings=" + trialSettings +
                 ", recommendationSettings=" + recommendationSettings +
-                '}';
-    }
-}
-
-/**
- * Simulating the K8sObject class for the create experiment API
- */
-class KubernetesAPIObject {
-    private String type;
-    private String name;
-    private String namespace;
-    @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
-    private List<ContainerAPIObject> containerAPIObjects;
-
-    public KubernetesAPIObject(String name, String type, String namespace) {
-        this.name = name;
-        this.type = type;
-        this.namespace = namespace;
-    }
-
-    // getters and setters
-
-    public String getType() {
-        return type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public List<ContainerAPIObject> getContainerAPIObjects() {
-        return containerAPIObjects;
-    }
-
-    public void setContainerAPIObjects(List<ContainerAPIObject> containerAPIObjects) {
-        this.containerAPIObjects = containerAPIObjects;
-    }
-
-    @Override
-    public String toString() {
-        return "KubernetesObject{" +
-                "type='" + type + '\'' +
-                ", name='" + name + '\'' +
-                ", namespace='" + namespace + '\'' +
-                ", containers=" + containerAPIObjects +
                 '}';
     }
 }

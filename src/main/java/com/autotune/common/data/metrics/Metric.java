@@ -14,6 +14,8 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
+import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
@@ -76,6 +78,7 @@ public final class Metric {
         return valueType;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.RESULTS)
     public MetricResults getMetricResult() {
         return metricResults;
     }

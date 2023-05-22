@@ -3,6 +3,7 @@ package com.autotune.common.k8sObjects;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
@@ -17,6 +18,8 @@ public class K8sObject {
         this.name = name;
         this.type = type;
         this.namespace = namespace;
+    }
+    public K8sObject() {
     }
 
     public String getType() {
@@ -43,6 +46,7 @@ public class K8sObject {
         this.namespace = namespace;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.CONTAINERS)
     public HashMap<String, ContainerData> getContainerDataMap() {
         return containerDataMap;
     }
