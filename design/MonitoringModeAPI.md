@@ -330,6 +330,1818 @@ see [Update results](/design/UpdateResults.md)
 }
 ```
 
+## Experiments
+
+List experiments output JSON as follows:
+
+**Attributes:**
+
+| Param             | Possible options | Defaults | Description                                                                                                      | 
+|-------------------| --- |----------|------------------------------------------------------------------------------------------------------------------|
+| `results`         |`true`, `false`| `false`  | Passing results = true as the parameter to the API returns the latest results and no recommendations             |
+| `latest`          |`true`, `false`| `true`   | Gets you the latest available results or recommendation if true, else returns all the results or recommendations |
+| `recommendations` |`true`, `false`| `false`  | Passing recommendations = true as the parameter to the API returns the latest recommendations and no results     |
+
+**Request without Parameter**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments`
+
+If no parameter is passed API returns only the experiment details without any results or recommendations.
+
+**Response**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "bc6b81cadbfe908988ad5c3c31f76f0c04dc09b46eb711888282a1a1a07a96d5",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-d",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1"
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0"
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
+**Request with results set to true**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true`
+
+Returns the latest result of all the experiments with no recommendations
+
+***Note : When we don't pass `latest` in the query URL, it it takes as `true` by default.***
+
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "bc6b81cadbfe908988ad5c3c31f76f0c04dc09b46eb711888282a1a1a07a96d5",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "results": {
+                            "2022-01-23T13:50:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:35:00.511Z",
+                                "interval_end_time": "2022-01-23T13:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T13:35:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:20:00.511Z",
+                                "interval_end_time": "2022-01-23T13:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T12:35:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:20:00.511Z",
+                                "interval_end_time": "2022-01-23T12:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        }
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "results": {
+                            "2022-01-23T13:50:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:35:00.511Z",
+                                "interval_end_time": "2022-01-23T13:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T13:35:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:20:00.511Z",
+                                "interval_end_time": "2022-01-23T13:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T12:35:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:20:00.511Z",
+                                "interval_end_time": "2022-01-23T12:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
+**Request with results set to true and latest set to false**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true&latest=false`
+
+Returns the latest result of all the experiments with no recommendations
+
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "bc6b81cadbfe908988ad5c3c31f76f0c04dc09b46eb711888282a1a1a07a96d5",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "results": {
+                            "2022-01-23T13:50:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:35:00.511Z",
+                                "interval_end_time": "2022-01-23T13:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        }
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "results": {
+                            "2022-01-23T13:50:30.511Z": {
+                                "metrics": {
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "percentile_info": {
+                                            "percentile50": 0.0,
+                                            "percentile97": 0.0,
+                                            "percentile95": 0.0,
+                                            "percentile99": 0.0,
+                                            "percentile99Point9": 0.0,
+                                            "percentile99Point99": 0.0,
+                                            "percentile99Point999": 0.0,
+                                            "percentile99Point9999": 0.0,
+                                            "percentile100": 0.0
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T13:35:00.511Z",
+                                "interval_end_time": "2022-01-23T13:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
+**Request with recommendations set to true**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true`
+
+Returns the latest recommendations of all the experiments with no results
+
+***Note : When we don't pass `latest` in the query URL, it takes it as `true` by default.***
+
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "c99d91a7ad8e43153a346a9a5f789b8debc25dd86a408765729a946873a3ac97",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
+**Request with recommendations set to true and latest set to false**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&latest=false`
+
+Returns the latest recommendations of all the experiments with no results
+
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "c99d91a7ad8e43153a346a9a5f789b8debc25dd86a408765729a946873a3ac97",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
+**Request with recommendations set to true and also results set to true with latest set to false**
+
+`GET /listExperiments`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&results=true&latest=false`
+
+Returns all the recommendations and the results of all the experiments.
+
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+```
+{
+    "quarkus-resteasy-kruize-min-http-response-time-db_0": {
+        "version": "1.0",
+        "experimentId": "c99d91a7ad8e43153a346a9a5f789b8debc25dd86a408765729a946873a3ac97",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
+        "cluster_name": "cluster-one-division-bell",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "status": "IN_PROGRESS",
+        "performance_profile": "resource-optimization-openshift",
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        },
+        "experimentUseCaseType": {
+            "remoteMonitoring": true,
+            "localMonitoring": false,
+            "localExperiment": false
+        },
+        "validationData": {
+            "success": true,
+            "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
+            "errorCode": 201
+        },
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "tfb-qrh-deployment",
+                "namespace": "default",
+                "containers": {
+                    "tfb-server-1": {
+                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+                        "container_name": "tfb-server-1",
+                        "results": {
+                            "2022-01-23T12:50:30.511Z": {
+                                "metrics": {
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:35:00.511Z",
+                                "interval_end_time": "2022-01-23T12:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T12:35:30.511Z": {
+                                "metrics": {
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 4.4,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:20:00.511Z",
+                                "interval_end_time": "2022-01-23T12:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        },
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    },
+                    "tfb-server-0": {
+                        "container_image_name": "kruize/tfb-db:1.15",
+                        "container_name": "tfb-server-0",
+                        "results": {
+                            "2022-01-23T12:50:30.511Z": {
+                                "metrics": {
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:35:00.511Z",
+                                "interval_end_time": "2022-01-23T12:50:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            },
+                            "2022-01-23T12:35:30.511Z": {
+                                "metrics": {
+                                    "memoryRequest": {
+                                        "name": "memoryRequest",
+                                        "aggregation_info": {
+                                            "avg": 50.21,
+                                            "sum": 250.85,
+                                            "format": "MiB"
+                                        },
+                                        "value": 50.12,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuUsage": {
+                                        "name": "cpuUsage",
+                                        "aggregation_info": {
+                                            "avg": 0.12,
+                                            "max": 0.84,
+                                            "min": 0.14,
+                                            "sum": 0.84,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.12,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuThrottle": {
+                                        "name": "cpuThrottle",
+                                        "aggregation_info": {
+                                            "avg": 0.045,
+                                            "max": 0.09,
+                                            "sum": 0.19,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.045,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryRSS": {
+                                        "name": "memoryRSS",
+                                        "aggregation_info": {
+                                            "avg": 31.91,
+                                            "max": 123.6,
+                                            "min": 50.6,
+                                            "sum": 123.6,
+                                            "format": "MiB"
+                                        },
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuRequest": {
+                                        "name": "cpuRequest",
+                                        "aggregation_info": {
+                                            "avg": 1.1,
+                                            "sum": 1.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 1.1,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryUsage": {
+                                        "name": "memoryUsage",
+                                        "aggregation_info": {
+                                            "avg": 40.1,
+                                            "max": 198.5,
+                                            "min": 50.6,
+                                            "sum": 198.5,
+                                            "format": "MiB"
+                                        },
+                                        "value": 40.1,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "cpuLimit": {
+                                        "name": "cpuLimit",
+                                        "aggregation_info": {
+                                            "avg": 0.5,
+                                            "sum": 2.0,
+                                            "format": "cores"
+                                        },
+                                        "value": 0.5,
+                                        "format": "cores",
+                                        "isPercentileResultsAvailable": false
+                                    },
+                                    "memoryLimit": {
+                                        "name": "memoryLimit",
+                                        "aggregation_info": {
+                                            "avg": 100.0,
+                                            "sum": 500.0,
+                                            "format": "MiB"
+                                        },
+                                        "value": 100.0,
+                                        "format": "MiB",
+                                        "isPercentileResultsAvailable": false
+                                    }
+                                },
+                                "interval_start_time": "2022-01-23T12:20:00.511Z",
+                                "interval_end_time": "2022-01-23T12:35:30.511Z",
+                                "duration_in_minutes": 15.5,
+                                "durationInSeconds": 930.0
+                            }
+                        },
+                        "recommendations": {
+                            "notifications": [
+                                {
+                                    "type": "info",
+                                    "message": "There is not enough data available to generate a recommendation."
+                                }
+                            ],
+                            "data": {}
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+```
+
 ## Recommendations
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
