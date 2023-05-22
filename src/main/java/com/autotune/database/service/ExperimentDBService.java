@@ -19,6 +19,7 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
@@ -30,6 +31,7 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.operator.KruizeOperator;
@@ -120,6 +122,11 @@ public class ExperimentDBService {
             }
         }
     }
+
+    private void loadAllPerformanceProfiles(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+        //TODO: add code below to load performance profiles from the DB
+    }
+
 
     private void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
@@ -219,6 +226,18 @@ public class ExperimentDBService {
         }
         return true;
     }
+
+    public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
+            validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.

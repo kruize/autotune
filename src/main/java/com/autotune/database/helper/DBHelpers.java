@@ -18,6 +18,7 @@ package com.autotune.database.helper;
 
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
@@ -32,6 +33,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
@@ -427,6 +429,13 @@ public class DBHelpers {
                 if (listRecommendationsAPIObjectList.isEmpty())
                     return null;
                 return listRecommendationsAPIObjectList;
+            }
+
+            public static KruizePerformanceProfileEntry convertPerfProfileObjToPerfProfileDBObj(PerformanceProfile performanceProfile) {
+                KruizePerformanceProfileEntry kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
+                //TODO: add conversion code below
+
+                return kruizePerformanceProfileEntry;
             }
         }
     }

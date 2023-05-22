@@ -1,5 +1,5 @@
 package com.autotune.database.helper;
 
-public class GenrateExperimentID {
+public class GenerateExperimentID {
     private String experiment_id;
 }

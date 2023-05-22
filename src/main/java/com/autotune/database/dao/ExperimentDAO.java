@@ -4,6 +4,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 
@@ -20,6 +21,9 @@ public interface ExperimentDAO {
     // Add recommendation  to DB
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry);
 
+    // Add Performance Profile  to DB
+    public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
+
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
 
@@ -34,6 +38,9 @@ public interface ExperimentDAO {
 
     // If Kruize restarts load all recommendations
     List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception;
+
+    // If Kruize restarts load all performance profiles
+    List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
