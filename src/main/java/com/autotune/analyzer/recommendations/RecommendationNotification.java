@@ -15,13 +15,23 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
+
 public class RecommendationNotification {
     private String type;
     private String message;
+    private int code;
 
     public RecommendationNotification(String type, String message) {
         this.type = type;
         this.message = message;
+        this.code = -1;
+    }
+
+    public RecommendationNotification(AnalyzerConstants.RecommendationNotification recommendationNotification) {
+        this.type = recommendationNotification.getType().getName();
+        this.message = recommendationNotification.getMsg();
+        this.code = recommendationNotification.getCode();
     }
     public RecommendationNotification() {
     }
@@ -40,5 +50,9 @@ public class RecommendationNotification {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public int getCode() {
+        return code;
     }
 }

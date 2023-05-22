@@ -220,6 +220,117 @@ public class AnalyzerConstants {
         }
     }
 
+    public enum RecommendationNotification {
+        /* Info     1000 - 1999 */
+        DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
+                NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE,
+                RecommendationNotificationTypes.INFO
+        ),
+        NOT_ENOUGH_DATA (
+                NotificationCodes.NOT_ENOUGH_DATA,
+                RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
+                RecommendationNotificationTypes.INFO
+        ),
+        DATA_NOT_USEFUL (
+                NotificationCodes.DATA_NOT_USEFUL,
+                RecommendationNotificationMsgConstant.DATA_NOT_USEFUL,
+                RecommendationNotificationTypes.INFO
+        ),
+        /* Warning  2000 - 2999 */
+        /* Error    3000 - 3999 */
+        /* Critical 4000 - 4999 */
+        CPU_REQUEST_NOT_SET (
+                NotificationCodes.CPU_REQUEST_NOT_SET,
+                RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        ),
+        MEMORY_REQUEST_NOT_SET (
+                NotificationCodes.MEMORY_REQUEST_NOT_SET,
+                RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        ),
+        CPU_LIMIT_NOT_SET (
+                NotificationCodes.CPU_LIMIT_NOT_SET,
+                RecommendationNotificationMsgConstant.CPU_LIMIT_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        ),
+        MEMORY_LIMIT_NOT_SET (
+                NotificationCodes.MEMORY_LIMIT_NOT_SET,
+                RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        );
+
+
+        private int code;
+        private String msg;
+        private RecommendationNotificationTypes type;
+
+        private RecommendationNotification (
+                int code,
+                String msg,
+                RecommendationNotificationTypes type
+        ) {
+            this.code = code;
+            this.msg = msg;
+            this.type = type;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public String getMsg() {
+            return msg;
+        }
+
+        public RecommendationNotificationTypes getType() {
+            return type;
+        }
+    }
+
+    public static final class NotificationCodes {
+        private NotificationCodes() {
+
+        }
+        /* Info     1000 - 1999 */
+        public static final int NOT_ENOUGH_DATA = 1000;
+        public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 1001;
+        public static final int DATA_NOT_USEFUL = 1002;
+
+        /* Warning  2000 - 2999 */
+        /* Error    3000 - 3999 */
+        /* Critical 4000 - 4999 */
+        public static final int CPU_REQUEST_NOT_SET = 4000;
+        public static final int MEMORY_REQUEST_NOT_SET = 4001;
+        public static final int CPU_LIMIT_NOT_SET = 4002;
+        public static final int MEMORY_LIMIT_NOT_SET = 4003;
+    }
+
+    public static final class RecommendationConstants {
+        public static final Double CPU_ONE_MILLICORE = 0.001;
+        public static final Double CPU_TEN_MILLICORE = 0.01;
+        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
+        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
+        public static final Double CPU_ONE_CORE = 1.0;
+        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
+        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
+    }
+
+    public static final class RecommendationNotificationMsgConstant {
+        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
+        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String DATA_NOT_USEFUL = "Available data for a given duration is not useful to generate a recommendation";
+        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
+        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
+        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
+        public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
+
+        private RecommendationNotificationMsgConstant() {
+
+        }
+    }
+
     public enum MetricName {
         cpuRequest,
         cpuLimit,
@@ -584,28 +695,6 @@ public class AnalyzerConstants {
         public static final Integer NINETY_EIGHTH_PERCENTILE = 98;
         public static final Integer NINETY_NINTH_PERCENTILE = 99;
         public static final Integer HUNDREDTH_PERCENTILE = 100;
-    }
-
-    public static final class RecommendationConstants {
-        public static final Double CPU_ONE_MILLICORE = 0.001;
-        public static final Double CPU_TEN_MILLICORE = 0.01;
-        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
-        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
-        public static final Double CPU_ONE_CORE = 1.0;
-        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
-        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
-    }
-
-    public static final class RecommendationNotificationMsgConstant {
-        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
-        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
-        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
-        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
-
-        private RecommendationNotificationMsgConstant() {
-
-        }
     }
 
     public static final class BooleanString {

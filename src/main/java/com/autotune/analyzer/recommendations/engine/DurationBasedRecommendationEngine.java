@@ -93,9 +93,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
                 // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
+                // Recommendation Item checks
+                boolean isCpuRequestValid = true;
+                boolean isMemoryRequestValid = true;
                 // Get the Recommendation Items
                 RecommendationConfigItem cpuRequestItem = getCPURequestRecommendation(filteredResultsMap, monitoringEndTime);
                 RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(filteredResultsMap, monitoringEndTime);
+
+                if (cpuRequestItem.getAmount() <= 0) { isCpuRequestValid = false; }
+                if (memRequestItem.getAmount() <= 0) { isMemoryRequestValid = false; }
+
                 // Initiate generated value holders with min values constants to compare later
                 Double generatedCpuRequest = null;
                 String generatedCpuRequestFormat = null;
@@ -103,29 +110,42 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 String generatedMemRequestFormat = null;
 
                 // Check for null
-                if (null != cpuRequestItem) {
+                if (null != cpuRequestItem && isCpuRequestValid) {
                     generatedCpuRequest = cpuRequestItem.getAmount();
                     generatedCpuRequestFormat = cpuRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuRequestItem);
+                } else {
+                    // Add notification here
                 }
+
                 // Check for null
-                if (null != memRequestItem) {
+                if (null != memRequestItem && isMemoryRequestValid) {
                     generatedMemRequest = memRequestItem.getAmount();
                     generatedMemRequestFormat = memRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.memory, memRequestItem);
+                } else {
+                    // Add notification here
                 }
 
                 // Set Request Map
-                config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+                if (!requestsMap.isEmpty()) {
+                    config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+                }
 
                 // Create Limits Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
+                // Recommendation Item checks (adding additional check for limits even though they are same as limits to maintain code to be flexible to add limits in future)
+                boolean isCpuLimitValid = true;
+                boolean isMemoryLimitValid = true;
                 // Get the Recommendation Items
                 // Calling requests on limits as we are maintaining limits and requests as same
                 // Maintaining different flow for both of them even though if they are same as in future we might have
                 // a different implementation for both and this avoids confusion
                 RecommendationConfigItem cpuLimitsItem =  cpuRequestItem;
                 RecommendationConfigItem memLimitsItem = memRequestItem;
+
+                if (cpuLimitsItem.getAmount() <= 0) { isCpuLimitValid = false; }
+                if (memLimitsItem.getAmount() <= 0) { isMemoryLimitValid = false; }
                 // Initiate generated value holders with min values constants to compare later
                 Double generatedCpuLimit = null;
                 String generatedCpuLimitFormat = null;
@@ -133,21 +153,28 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 String generatedMemLimitFormat = null;
 
                 // Check for null
-                if (null != cpuLimitsItem) {
+                if (null != cpuLimitsItem && isCpuLimitValid) {
                     generatedCpuLimit = cpuLimitsItem.getAmount();
                     generatedCpuLimitFormat = cpuLimitsItem.getFormat();
                     limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuLimitsItem);
+                } else {
+                    // Add notification here
                 }
 
                 // Check for null
-                if (null != memLimitsItem) {
+                if (null != memLimitsItem && isMemoryLimitValid) {
                     generatedMemLimit = memLimitsItem.getAmount();
                     generatedMemLimitFormat = memLimitsItem.getFormat();
                     limitsMap.put(AnalyzerConstants.RecommendationItem.memory, memLimitsItem);
+                } else {
+                    // Add notification here
                 }
 
                 // Set Limits Map
-                config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+                if (!limitsMap.isEmpty()) {
+                    config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+                }
+
                 // Set Config
                 recommendation.setConfig(config);
 
@@ -389,26 +416,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
-        // Make sure that the recommendation cannot be 0 or -ve
-        // Check if the cpu request is null or 0 or -ve
-        if (null == cpuRequest || 0 >= cpuRequest) {
-            // check if record for monitoring end time (latest) exists
-            if (filteredResultsMap.containsKey(monitoringEndTimestamp)) {
-                IntervalResults latestIntervalResults = filteredResultsMap.get(monitoringEndTimestamp);
-                // get avg of the cpu request set
-                Double lastAvailableCPURequest = latestIntervalResults.getMetricResultsMap()
-                                                    .get(AnalyzerConstants.MetricName.cpuRequest)
-                                                    .getAggregationInfoResult().getAvg();
-                // if CPU request is not null and greater than 0 set the cpu Request
-                if (null != lastAvailableCPURequest && lastAvailableCPURequest > 0) {
-                    cpuRequest = lastAvailableCPURequest;
-                }
-            }
-            // Check if cpu request is not null and was set in the code block above
-            if (null == cpuRequest || 0 >= cpuRequest) {
-                // Set to the minimum recommendation as we should not recommend 0 CPU (Kill your workload)
-                cpuRequest = AnalyzerConstants.RecommendationEngine.MinConstants.CPU.CPU_MIN_RECOMMENDATION_VALUE;
-            }
+        // Make sure that the recommendation cannot be null
+        // Check if the cpu request is null
+        if (null == cpuRequest) {
+            cpuRequest = 0.0;
         }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
