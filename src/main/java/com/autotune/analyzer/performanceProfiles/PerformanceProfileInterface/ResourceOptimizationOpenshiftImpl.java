@@ -107,19 +107,15 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
                         // check if notification exists
                         boolean notificationExist = false;
-                        for (RecommendationNotification notification : containerRecommendations.getNotifications()) {
-                            if (notification.getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE)) {
-                                notificationExist = true;
-                                break;
-                            }
-                        }
+                        if (containerRecommendations.getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                            notificationExist = true;
+
                         // If there is no notification add one
                         if (!notificationExist) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                    AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                                    AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE
+                                    AnalyzerConstants.RecommendationNotification.DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                             );
-                            containerRecommendations.getNotifications().add(recommendationNotification);
+                            containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                         }
 
                         // Get the engine recommendation map for a time stamp if it exists else create one

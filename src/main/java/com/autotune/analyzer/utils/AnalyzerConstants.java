@@ -224,7 +224,7 @@ public class AnalyzerConstants {
         /* Info     1000 - 1999 */
         DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
                 NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
-                RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE,
+                RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationTypes.INFO
         ),
         NOT_ENOUGH_DATA (
@@ -232,9 +232,24 @@ public class AnalyzerConstants {
                 RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
                 RecommendationNotificationTypes.INFO
         ),
-        DATA_NOT_USEFUL (
-                NotificationCodes.DATA_NOT_USEFUL,
-                RecommendationNotificationMsgConstant.DATA_NOT_USEFUL,
+        CPU_RECORDS_ARE_IDLE (
+                NotificationCodes.CPU_RECORDS_ARE_IDLE,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_IDLE,
+                RecommendationNotificationTypes.INFO
+        ),
+        CPU_RECORDS_ARE_ZERO (
+                NotificationCodes.CPU_RECORDS_ARE_ZERO,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_ZERO,
+                RecommendationNotificationTypes.INFO
+        ),
+        MEMORY_RECORDS_ARE_IDLE (
+                NotificationCodes.MEMORY_RECORDS_ARE_IDLE,
+                RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_IDLE,
+                RecommendationNotificationTypes.INFO
+        ),
+        MEMORY_RECORDS_ARE_ZERO (
+                NotificationCodes.MEMORY_RECORDS_ARE_ZERO,
+                RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.INFO
         ),
         /* Warning  2000 - 2999 */
@@ -296,7 +311,10 @@ public class AnalyzerConstants {
         /* Info     1000 - 1999 */
         public static final int NOT_ENOUGH_DATA = 1000;
         public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 1001;
-        public static final int DATA_NOT_USEFUL = 1002;
+        public static final int CPU_RECORDS_ARE_IDLE = 1002;
+        public static final int CPU_RECORDS_ARE_ZERO = 1003;
+        public static final int MEMORY_RECORDS_ARE_IDLE = 1004;
+        public static final int MEMORY_RECORDS_ARE_ZERO = 1005;
 
         /* Warning  2000 - 2999 */
         /* Error    3000 - 3999 */
@@ -319,8 +337,11 @@ public class AnalyzerConstants {
 
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
-        public static final String DATA_NOT_USEFUL = "Available data for a given duration is not useful to generate a recommendation";
+        public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String CPU_RECORDS_ARE_IDLE = "CPU usage is mostly idle, No CPU Recommendation can be generated";
+        public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
+        public static final String MEMORY_RECORDS_ARE_IDLE = "Memory Usage is mostly low, No Memory Recommendations can be generated";
+        public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
         public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
         public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
         public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";

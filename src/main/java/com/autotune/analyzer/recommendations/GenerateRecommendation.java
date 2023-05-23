@@ -90,26 +90,20 @@ public class GenerateRecommendation {
                                         recommendationPeriodMap.put(recPeriod, recommendation);
                                     } else {
                                         RecommendationNotification notification = new RecommendationNotification(
-                                                AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                                                AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                                                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA);
                                         recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
                                     }
                                 }
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
                                 boolean notifyExist = false;
-                                for (RecommendationNotification recNotify : containerData.getContainerRecommendations().getNotifications()) {
-                                    if (recNotify.getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE)) {
-                                        notifyExist = true;
-                                        break;
-                                    }
-                                }
+                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                                    notifyExist = true;
                                 if (!notifyExist) {
                                     RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                                            AnalyzerConstants.RecommendationNotificationMsgConstant.DURATION_BASED_AVAILABLE
+                                            AnalyzerConstants.RecommendationNotification.DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                                     );
-                                    containerData.getContainerRecommendations().getNotifications().add(recommendationNotification);
+                                    containerData.getContainerRecommendations().getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                 }
                                 break;
                             case PROFILE_BASED:

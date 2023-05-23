@@ -25,23 +25,22 @@ import java.util.*;
 
 public class ContainerRecommendations {
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private List<RecommendationNotification> notifications;
+    private HashMap<Integer, RecommendationNotification> notificationMap;
     @SerializedName(KruizeConstants.JSONKeys.DATA)
     private HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data;
 
     public ContainerRecommendations() {
-        this.notifications = Collections.synchronizedList(new ArrayList<RecommendationNotification>());
+        this.notificationMap = new HashMap<Integer, RecommendationNotification>();
         this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
 
         RecommendationNotification recommendationNotification = new RecommendationNotification(
-                AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA
+                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA
         );
-        this.notifications.add(recommendationNotification);
+        this.notificationMap.put(recommendationNotification.getCode(), recommendationNotification);
     }
 
-    public List<RecommendationNotification> getNotifications() {
-        return notifications;
+    public HashMap<Integer, RecommendationNotification> getNotificationMap() {
+        return notificationMap;
     }
 
     public HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> getData() {
@@ -50,15 +49,17 @@ public class ContainerRecommendations {
 
     public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data) {
         if (!data.isEmpty())
-            if (this.notifications.get(0).getMessage().equalsIgnoreCase(AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA))
-                this.notifications.remove(0);
+            if (this.notificationMap.containsKey(AnalyzerConstants.NotificationCodes.NOT_ENOUGH_DATA))
+                this.notificationMap.remove(AnalyzerConstants.NotificationCodes.NOT_ENOUGH_DATA);
         this.data = data;
     }
+
+
 
     @Override
     public String toString() {
         return "ContainerRecommendations{" +
-                "notifications=" + notifications +
+                "notifications=" + notificationMap +
                 ", data=" + data +
                 '}';
     }

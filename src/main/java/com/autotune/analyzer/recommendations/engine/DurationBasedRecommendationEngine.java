@@ -115,7 +115,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedCpuRequestFormat = cpuRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuRequestItem);
                 } else {
-                    // Add notification here
+                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                            AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_ZERO
+                    );
+                    recommendation.addNotification(recommendationNotification);
                 }
 
                 // Check for null
@@ -124,7 +127,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedMemRequestFormat = memRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.memory, memRequestItem);
                 } else {
-                    // Add notification here
+                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                            AnalyzerConstants.RecommendationNotification.MEMORY_RECORDS_ARE_ZERO
+                    );
+                    recommendation.addNotification(recommendationNotification);
                 }
 
                 // Set Request Map
@@ -157,8 +163,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedCpuLimit = cpuLimitsItem.getAmount();
                     generatedCpuLimitFormat = cpuLimitsItem.getFormat();
                     limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuLimitsItem);
-                } else {
-                    // Add notification here
                 }
 
                 // Check for null
@@ -166,8 +170,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedMemLimit = memLimitsItem.getAmount();
                     generatedMemLimitFormat = memLimitsItem.getFormat();
                     limitsMap.put(AnalyzerConstants.RecommendationItem.memory, memLimitsItem);
-                } else {
-                    // Add notification here
                 }
 
                 // Set Limits Map
@@ -202,8 +204,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 if (null == currentCpuRequest) {
                     RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
-                            AnalyzerConstants.RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET);
+                            AnalyzerConstants.RecommendationNotification.CPU_REQUEST_NOT_SET);
                     recommendation.addNotification(notification);
                 } else if (null != generatedCpuRequest
                             && null != generatedCpuRequestFormat) {
@@ -215,8 +216,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 if (null == currentMemRequest) {
                     RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
-                            AnalyzerConstants.RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET);
+                            AnalyzerConstants.RecommendationNotification.MEMORY_REQUEST_NOT_SET);
                     recommendation.addNotification(notification);
                 } else if (null != generatedMemRequest
                             && null != generatedMemRequestFormat) {
@@ -257,8 +257,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 if (null == currentMemLimit) {
                     RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotificationTypes.CRITICAL.getName(),
-                            AnalyzerConstants.RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET);
+                            AnalyzerConstants.RecommendationNotification.MEMORY_LIMIT_NOT_SET);
                     recommendation.addNotification(notification);
                 } else if (null != generatedMemLimit
                         && null != generatedMemLimitFormat) {
@@ -279,8 +278,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 resultRecommendation.put(recPeriod, recommendation);
             } else {
                 RecommendationNotification notification = new RecommendationNotification(
-                        AnalyzerConstants.RecommendationNotificationTypes.INFO.getName(),
-                        AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                        AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA);
                 resultRecommendation.put(recPeriod, new Recommendation(notification));
             }
         }

@@ -16,17 +16,13 @@
 package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.annotations.json.Exclude;
 
 public class RecommendationNotification {
     private String type;
     private String message;
+    @Exclude
     private int code;
-
-    public RecommendationNotification(String type, String message) {
-        this.type = type;
-        this.message = message;
-        this.code = -1;
-    }
 
     public RecommendationNotification(AnalyzerConstants.RecommendationNotification recommendationNotification) {
         this.type = recommendationNotification.getType().getName();
