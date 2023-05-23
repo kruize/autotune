@@ -249,6 +249,6 @@ public class ListExperiments extends HttpServlet {
                 ((ObjectNode) parent).remove(objectTobeRemoved);
         });
         // Convert the modified JsonNode back to a JSON string and return it
-        return mapper.writeValueAsString(rootNode);
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
     }
 }
