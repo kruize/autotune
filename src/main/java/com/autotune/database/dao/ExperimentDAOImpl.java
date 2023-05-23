@@ -13,6 +13,7 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
