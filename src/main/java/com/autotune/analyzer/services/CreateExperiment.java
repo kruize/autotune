@@ -27,7 +27,6 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -98,7 +97,7 @@ public class CreateExperiment extends HttpServlet {
                 }
                 new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects
-                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
                     ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
                     for (KruizeObject ko : kruizeExpList) {
@@ -106,7 +105,7 @@ public class CreateExperiment extends HttpServlet {
                                 .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
                                 .findAny()
                                 .orElse(null);
-                        validAPIObj.setValidationData(ko.getValidationData());
+                        validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
@@ -116,8 +115,8 @@ public class CreateExperiment extends HttpServlet {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                     }
                 } else {
-                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidationData().getMessage());
-                    sendErrorResponse(response, null, invalidKruizeObject.getValidationData().getErrorCode(), invalidKruizeObject.getValidationData().getMessage());
+                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidation_data().getMessage());
+                    sendErrorResponse(response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
                 }
             }
         } catch (Exception e) {

@@ -75,12 +75,12 @@ public class Converters {
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
                 kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
-                kruizeObject.setExperimentId(createExperimentAPIObject.getExperiment_id());
+                kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
-                kruizeObject.setExperimentUseCaseType(new ExperimentUseCaseType(kruizeObject));
+                kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
                 if(null != createExperimentAPIObject.getValidationData()){
                     //Validation already done and it is getting loaded back from db
-                    kruizeObject.setValidationData(createExperimentAPIObject.getValidationData());
+                    kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
             } catch (Exception e) {
                 LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
@@ -136,11 +136,13 @@ public class Converters {
                         } else if (getLatest) {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             containerData = getLatestRecommendations(containerData);
-                            containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
-                                    containerData.getContainer_image_name(),
-                                    containerData.getContainerRecommendations(),
-                                    null);
-                            containerAPIObjects.add(containerAPIObject);
+                            if (null != containerData) {
+                                containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+                                        containerData.getContainer_image_name(),
+                                        containerData.getContainerRecommendations(),
+                                        null);
+                                containerAPIObjects.add(containerAPIObject);
+                            }
                         } else {
                             containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
                                     containerData.getContainer_image_name(),
@@ -205,11 +207,13 @@ public class Converters {
 						} else if (getLatest) {
 							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
 							containerData = getLatestRecommendations(containerData);
-							containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
-									containerData.getContainer_image_name(),
-									containerData.getContainerRecommendations(),
-									new ArrayList<>(containerData.getMetrics().values()));
-							containerAPIObjects.add(containerAPIObject);
+                            if (null != containerData) {
+                                containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+                                        containerData.getContainer_image_name(),
+                                        containerData.getContainerRecommendations(),
+                                        null);
+                                containerAPIObjects.add(containerAPIObject);
+                            }
 						} else {
 							containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
 									containerData.getContainer_image_name(),

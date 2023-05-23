@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -83,7 +84,7 @@ public class ListExperiments extends HttpServlet {
         recommendations = (recommendations == null || recommendations.isEmpty()) ? AnalyzerConstants.BooleanString.FALSE: recommendations;
         latest = (latest == null || latest.isEmpty()) ? AnalyzerConstants.BooleanString.TRUE: latest;
 
-        String gsonStr;
+        String gsonStr = "[]";
         Gson gsonObj = new GsonBuilder()
             .disableHtmlEscaping()
             .setPrettyPrinting()
@@ -127,7 +128,7 @@ public class ListExperiments extends HttpServlet {
     private void checkPercentileInfo(Map<String, KruizeObject> mainKruizeExperimentMap) {
         HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         try {
-            mainExperimentLoop : for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
+            for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
                 List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
                 for (K8sObject k8sObject : k8sObjectList) {
                     for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
@@ -135,8 +136,8 @@ public class ListExperiments extends HttpServlet {
                         try {
                             intervalResultsList = containerData.getResults().values();
                         } catch (NullPointerException npe) {
-                            LOGGER.debug("Result data unavailable. Skipping experiment..");
-                            break mainExperimentLoop;
+                            LOGGER.debug("Result data unavailable. Skipping container..");
+                            continue;
                         }
                         for (IntervalResults intervalResult : intervalResultsList) {
                             for (Map.Entry<AnalyzerConstants.MetricName, MetricResults> innerEntry : intervalResult.getMetricResultsMap().entrySet()) {
@@ -170,7 +171,7 @@ public class ListExperiments extends HttpServlet {
         }
         // Case : default
         // return the response without results or recommendations
-        String gsonStr = gsonObj.toJson(mKruizeExperimentMap);
+        String gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
             gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
             gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
@@ -194,7 +195,7 @@ public class ListExperiments extends HttpServlet {
                         getLatestResults(mKruizeExperimentMap);
                     }
                     checkPercentileInfo(mKruizeExperimentMap);
-                    gsonStr = gsonObj.toJson(mKruizeExperimentMap);
+                    gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
                     gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
                 } else {
                     // fetch recommendations from the DB
@@ -214,7 +215,7 @@ public class ListExperiments extends HttpServlet {
                         getLatestRecommendations(mKruizeExperimentMap);
                     }
                     checkPercentileInfo(mKruizeExperimentMap);
-                    gsonStr = gsonObj.toJson(mKruizeExperimentMap);
+                    gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
                     return gsonStr;
                 }
             } else {
@@ -233,7 +234,7 @@ public class ListExperiments extends HttpServlet {
                     // filter the latest recommendations when latest = true, else return all
                     if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
                         getLatestRecommendations(mKruizeExperimentMap);
-                        gsonStr = gsonObj.toJson(mKruizeExperimentMap);
+                        gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
                     }
                     gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
                 }
@@ -256,16 +257,17 @@ public class ListExperiments extends HttpServlet {
     private void getLatestResults(Map<String, KruizeObject> mKruizeExperimentMap) {
         HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         try {
-            mainExperimentLoop: for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
+            for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
                 List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
                 for (K8sObject k8sObject : k8sObjectList) {
                     for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                         if (null == containerData.getResults()) {
-                            LOGGER.warn("Result data is missing for the experiment: {}", entry.getValue().getExperimentName());
-                            break mainExperimentLoop;
+                            LOGGER.warn("Result data is missing for the container: {}", containerData.getContainer_name());
+                            continue;
                         }
                         containerData = Converters.KruizeObjectConverters.getLatestResults(containerData);
-                        containerDataMap.put(containerData.getContainer_name(), containerData);
+                        if (null != containerData)
+                            containerDataMap.put(containerData.getContainer_name(), containerData);
                     }
                     k8sObject.setContainerDataMap(containerDataMap);
                 }
@@ -282,7 +284,9 @@ public class ListExperiments extends HttpServlet {
             for (K8sObject k8sObject : k8sObjectList) {
                 for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                     containerData = Converters.KruizeObjectConverters.getLatestRecommendations(containerData);
-                    containerDataMap.put(containerData.getContainer_name(), containerData);
+                    if (null != containerData) {
+                        containerDataMap.put(containerData.getContainer_name(), containerData);
+                    }
                 }
                 k8sObject.setContainerDataMap(containerDataMap);
             }
