@@ -88,7 +88,6 @@ public class UpdateResults extends HttpServlet {
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
                 sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
-
                 sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
             }
         } catch (Exception e) {
