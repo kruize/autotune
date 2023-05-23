@@ -76,7 +76,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     validationOutputData.setMessage(
                             String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
                     );
+
                 } else {
+
                     throw new Exception(ex.getMessage());
                 }
             } catch (Exception e) {
