@@ -80,6 +80,7 @@ timeout = (60, 60)
 
 print(createExpURL)
 print(updateExpURL)
+print(listRecURL)
 print(createProfileURL)
 print("experiment_name : %s " %(expnameprfix))
 print("Experiment start count : %s" %(expstart))
@@ -184,6 +185,14 @@ for i in range(expstart, expend+1):
                 print('An error occurred while connecting to', e)
 
             print('### Experiment: %s: Progress: %s/%s  %s/%s' %(experiment_name, i, expend, j, rescount))
+
+    # Fetch recommendations
+    response = requests.get(listRecURL + "?experiment_name=" + experiment_name)
+    # Check the response
+    if response.status_code == 200:
+        print('ListRecommendations Request successful!')
+    else:
+        print(f'ListRecommendations Request failed with status code {response.status_code}: {response.text}')
 
     except requests.exceptions.Timeout:
         print('Timeout occurred while connecting to')

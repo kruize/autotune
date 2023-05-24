@@ -39,7 +39,6 @@ NAMESPACE=monitoring
 num_exps=10000
 num_days_of_res=15
 
-
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"
 hours=6

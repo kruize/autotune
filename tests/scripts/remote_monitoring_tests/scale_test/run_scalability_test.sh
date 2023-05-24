@@ -4,6 +4,7 @@ cluster_type="openshift"
 move_mins=0
 num_exps=10000
 num_days_of_res=15
+num_threads=100
 
 function usage() {
 	echo
@@ -50,11 +51,13 @@ mkdir -p "${SCALE_LOG_DIR}"
 #
 # Each loops kicks off 10000 experiments and posts results for 1 day
 # This runs 15 times to post results for 15 days in all for all 10000 experiments
+
+num_exps_per_thread=$((num_exps / num_threads))
 for ((oloop=1; oloop<=num_days_of_res; oloop++));
 #for oloop in {1..15};
 do
 	exp_start=1
-	exp_end=100
+	exp_end=${num_exps_per_thread}
 	results_count=96
 	logfile="${SCALE_LOG_DIR}/scale_${exp_start}-${exp_end}.log"
 
@@ -67,7 +70,8 @@ do
 	# ...
 	# thread 100 - exp 9901 - 96 results, exp 9902 - 96 results ... exp 10000 - 96 results
 	# Wait for all 100 threads to complete
-	for iloop in {1..100};
+	for ((iloop=1; iloop<=num_threads; iloop++));
+	#for iloop in {1..100};
 	do
 		day=$(((move_mins / 24 / 60) + 1))
 		echo "Kicking off experiments: ${exp_start}..${exp_end}: Day: ${day}. Data in ${logfile}"
@@ -75,8 +79,8 @@ do
 
 		nohup time python3 -u quickTestScalability.py --cluster_type "${cluster_type}" --ip "${IP}" --port "${PORT}" --name scaleexp --count ${exp_start},${exp_end},${results_count} --measurement_mins=15 --move_mins=${move_mins} >> ${logfile} 2>&1 &
 
-		exp_start=$((exp_start + 100))
-		exp_end=$((exp_start + 99))
+		exp_start=$((exp_start + num_exps_per_thread))
+		exp_end=$((exp_start + num_exps_per_thread - 1))
 		logfile="${SCALE_LOG_DIR}/scale_${exp_start}-${exp_end}.log"
 	done
 
