@@ -66,9 +66,9 @@ public class ExperimentResultValidation {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         // check if the intervalEndTime is greater than intervalStartTime and interval duration is greater than measurement duration
                         IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
-                        Double durationInSeconds = intervalResults.getDurationInSeconds();
+                        Double durationInSeconds = intervalResults.getDuration_in_seconds();
                         String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
-                        LOGGER.debug("Duration in seconds = {}", intervalResults.getDurationInSeconds());
+                        LOGGER.debug("Duration in seconds = {}", intervalResults.getDuration_in_seconds());
                         if ( durationInSeconds < 0) {
                             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));

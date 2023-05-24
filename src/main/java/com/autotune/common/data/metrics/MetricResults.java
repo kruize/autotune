@@ -29,7 +29,7 @@ public class MetricResults {
     private MetricPercentileResults metricPercentileResults;
     private Double value;
     private String format;
-    private boolean isPercentileResultsAvailable;
+    private boolean percentile_results_available;
 
     public MetricResults() {
         metricAggregationInfoResults = new MetricAggregationInfoResults();
@@ -43,13 +43,13 @@ public class MetricResults {
         }
         metricAggregationInfoResults = new MetricAggregationInfoResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.AGGREGATION_INFO));
         if (jsonObject.has(KruizeConstants.JSONKeys.PERCENTILE_INFO)) {
-            isPercentileResultsAvailable = true;
+            percentile_results_available = true;
             metricPercentileResults = new MetricPercentileResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
 
-    public boolean isPercentileResultsAvailable() {
-        return isPercentileResultsAvailable;
+    public boolean isPercentile_results_available() {
+        return percentile_results_available;
     }
 
     public void setIsPercentileResultsAvailable(boolean isPercentileResultsAvailable) {
@@ -103,7 +103,7 @@ public class MetricResults {
                 ", metricPercentileResults=" + metricPercentileResults +
                 ", value=" + value +
                 ", format='" + format + '\'' +
-                ", isPercentileResultsAvailable=" + isPercentileResultsAvailable +
+                ", isPercentileResultsAvailable=" + percentile_results_available +
                 '}';
     }
 }

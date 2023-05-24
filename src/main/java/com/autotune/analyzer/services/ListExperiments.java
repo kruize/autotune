@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -142,16 +141,13 @@ public class ListExperiments extends HttpServlet {
                         for (IntervalResults intervalResult : intervalResultsList) {
                             for (Map.Entry<AnalyzerConstants.MetricName, MetricResults> innerEntry : intervalResult.getMetricResultsMap().entrySet()) {
                                 MetricResults metricResult = innerEntry.getValue();
-                                if (!metricResult.isPercentileResultsAvailable()) {
+                                if (!metricResult.isPercentile_results_available()) {
                                     metricResult.setMetricPercentileResults(null);
                                 }
                             }
                         }
-                        containerDataMap.put(containerData.getContainer_name(), containerData);
                     }
-                    k8sObject.setContainerDataMap(containerDataMap);
                 }
-                entry.getValue().setKubernetes_objects(k8sObjectList);
             }
         } catch (Exception e) {
             LOGGER.error("Exception occurred while checking the percentile: {}", e.getMessage());
