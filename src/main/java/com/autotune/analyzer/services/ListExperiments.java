@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,45 +75,51 @@ public class ListExperiments extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String gsonStr = "[]";
-        if (this.mainKruizeExperimentMap.size() > 0) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .setExclusionStrategies(new ExclusionStrategy() {
-                        @Override
-                        public boolean shouldSkipField(FieldAttributes f) {
-                            return f.getDeclaringClass() == Metric.class && (
-                                    f.getName().equals("trialSummaryResult")
-                                            || f.getName().equals("cycleDataMap")
-                            ) ||
-                                    f.getDeclaringClass() == ContainerData.class && (
-                                            f.getName().equalsIgnoreCase("metrics")
-                                            );
-                        }
-                        @Override
-                        public boolean shouldSkipClass(Class<?> aClass) {
-                            return false;
-                        }
-                    })
-                    .create();
-            gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
-        } else {
-            JSONArray experimentTrialJSONArray = new JSONArray();
-            for (String deploymentName : experimentsMap.keySet()) {
-                KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
-                for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
-                    ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
-                    JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
-                    experimentTrialJSONArray.put(experimentTrialJSON.get(0));
+        try {
+            if (this.mainKruizeExperimentMap.size() > 0) {
+                Gson gsonObj = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .setExclusionStrategies(new ExclusionStrategy() {
+                            @Override
+                            public boolean shouldSkipField(FieldAttributes f) {
+                                return f.getDeclaringClass() == Metric.class && (
+                                        f.getName().equals("trialSummaryResult")
+                                                || f.getName().equals("cycleDataMap")
+                                ) ||
+                                        f.getDeclaringClass() == ContainerData.class && (
+                                                f.getName().equalsIgnoreCase("metrics")
+                                                );
+                            }
+                            @Override
+                            public boolean shouldSkipClass(Class<?> aClass) {
+                                return false;
+                            }
+                        })
+                        .create();
+                gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
+            } else {
+                JSONArray experimentTrialJSONArray = new JSONArray();
+                for (String deploymentName : experimentsMap.keySet()) {
+                    KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
+                    for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
+                        ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
+                        JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
+                        experimentTrialJSONArray.put(experimentTrialJSON.get(0));
+                    }
                 }
+                gsonStr = experimentTrialJSONArray.toString(4);
             }
-            gsonStr = experimentTrialJSONArray.toString(4);
+            response.getWriter().println(gsonStr);
+            response.getWriter().close();
+        } catch (Exception e) {
+            LOGGER.error("Exception: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            listExp.stop(MetricsConfig.timerlistExp);
         }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
-        listExp.stop(MetricsConfig.timerlistExp);
     }
 
     //TODO this function no more used.
