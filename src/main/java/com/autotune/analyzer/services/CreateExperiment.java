@@ -28,8 +28,10 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +81,7 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample createExp = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
@@ -124,6 +127,8 @@ public class CreateExperiment extends HttpServlet {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+        } finally {
+            createExp.stop(MetricsConfig.timercreateExp);
         }
     }
 

@@ -73,6 +73,7 @@ public class ListRecommendations extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample listRec = Timer.start(MetricsConfig.meterRegistry());
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
@@ -185,8 +186,6 @@ public class ListRecommendations extends HttpServlet {
         }
         if (!error) {
             List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
-            //Add Timer
-            Timer.Sample listRec = Timer.start(MetricsConfig.registry);
             for (KruizeObject ko : kruizeObjectList) {
                 try {
                     LOGGER.debug(ko.getKubernetes_objects().toString());
@@ -201,7 +200,6 @@ public class ListRecommendations extends HttpServlet {
                     LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                 }
             }
-            listRec.stop(MetricsConfig.timerlistRec);
 
             ExclusionStrategy strategy = new ExclusionStrategy() {
                 @Override
@@ -229,6 +227,7 @@ public class ListRecommendations extends HttpServlet {
             response.getWriter().println(gsonStr);
             response.getWriter().close();
         }
+        listRec.stop(MetricsConfig.timerlistRec);
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {

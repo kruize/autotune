@@ -27,11 +27,13 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.TrialHelpers;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -67,6 +69,7 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample listExp = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -109,6 +112,7 @@ public class ListExperiments extends HttpServlet {
         }
         response.getWriter().println(gsonStr);
         response.getWriter().close();
+        listExp.stop(MetricsConfig.timerlistExp);
     }
 
     //TODO this function no more used.
