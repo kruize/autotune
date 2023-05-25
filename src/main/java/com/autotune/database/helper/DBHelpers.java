@@ -46,7 +46,6 @@ import com.google.gson.GsonBuilder;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.micrometer.core.annotation.Timed;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -152,8 +151,6 @@ public class DBHelpers {
                 return kruizeResultsEntry;
             }
 
-            //Add Timed annotataion
-            @Timed(value = "getListRecommendationAPIObjectForDB.timer", description = "Timer to listRecommendationsAPIObject")
             public static ListRecommendationsAPIObject getListRecommendationAPIObjectForDB (KruizeObject kruizeObject, Timestamp monitoringEndTime) {
                 if (null == kruizeObject)
                     return null;

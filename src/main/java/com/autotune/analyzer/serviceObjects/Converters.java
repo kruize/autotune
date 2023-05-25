@@ -23,7 +23,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.micrometer.core.annotation.Timed;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -91,8 +90,6 @@ public class Converters {
             return kruizeObject;
         }
 
-        //Add Timed annotations
-        @Timed(value = "convertKruizeObjectToListRecommendationSO.timer", description = "Timer to convertKruizeObjectToListRecommendationSO")
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,
