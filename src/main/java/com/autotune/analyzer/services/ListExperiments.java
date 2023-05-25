@@ -35,10 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,7 +122,6 @@ public class ListExperiments extends HttpServlet {
     }
 
     private void checkPercentileInfo(Map<String, KruizeObject> mainKruizeExperimentMap) {
-        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         try {
             for (Map.Entry<String, KruizeObject> entry : mainKruizeExperimentMap.entrySet()) {
                 List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
@@ -155,6 +151,7 @@ public class ListExperiments extends HttpServlet {
     }
 
     private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, String latest, String results, String recommendations, String experimentName) throws JsonProcessingException {
+        String gsonStr = "[]";
         // Fetch experiments data from the DB
         try {
             if (experimentName == null || experimentName.isEmpty())
@@ -167,79 +164,81 @@ public class ListExperiments extends HttpServlet {
         }
         // Case : default
         // return the response without results or recommendations
-        String gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
-            gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
-            gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
+            gsonStr = modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RECOMMENDATIONS, gsonObj);
             return gsonStr;
         } else {
-            if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
-                // fetch results from the DB
-                try {
-                    if (experimentName == null || experimentName.isEmpty())
-                        new ExperimentDBService().loadAllResults(mKruizeExperimentMap);
-                    else
-                        new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
-                } catch (Exception e) {
-                    LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
-                    return "";
+            // fetch results from the DB
+            try {
+                for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
+                    experimentName = entry.getValue().getExperimentName();
+                    new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
+                    if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                        if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
+                            // Case: results=true , recommendations=false
+                            // filter the latest results when latest = true, else return all
+                            if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                                getLatestResults(mKruizeExperimentMap);
+                            }
+
+                            checkPercentileInfo(mKruizeExperimentMap);
+                            gsonStr = modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RECOMMENDATIONS, gsonObj);
+                        } else {
+                            // fetch recommendations from the DB
+                            try {
+                                if (experimentName == null || experimentName.isEmpty())
+                                    new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
+                                else
+                                    new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                            } catch (Exception e) {
+                                LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
+                                return "";
+                            }
+                            // Case: results=true, recommendations=true, latest=true
+                            // get only latest results and recommendations
+                            if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                                getLatestResults(mKruizeExperimentMap);
+                                getLatestRecommendations(mKruizeExperimentMap);
+                            }
+                            checkPercentileInfo(mKruizeExperimentMap);
+                            gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
+                            return gsonStr;
+                        }
+                    } else {
+                        if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                            // fetch recommendations from the DB
+                            try {
+                                if (experimentName == null || experimentName.isEmpty())
+                                    new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
+                                else
+                                    new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                            } catch (Exception e) {
+                                LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
+                                return "";
+                            }
+                            // Case: result=false, recommendations=true, latest=true
+                            // filter the latest recommendations when latest = true, else return all
+                            if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+                                getLatestRecommendations(mKruizeExperimentMap);
+                                gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
+                            }
+                            gsonStr = modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RESULTS, gsonObj);
+                        }
+                    }
                 }
-                if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
-                    // Case: results=true , recommendations=false
-                    // filter the latest results when latest = true, else return all
-                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
-                        getLatestResults(mKruizeExperimentMap);
-                    }
-                    checkPercentileInfo(mKruizeExperimentMap);
-                    gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
-                    gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RECOMMENDATIONS);
-                } else {
-                    // fetch recommendations from the DB
-                    try {
-                        if (experimentName == null || experimentName.isEmpty())
-                            new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
-                        else
-                            new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
-                        return "";
-                    }
-                    // Case: results=true, recommendations=true, latest=true
-                    // get only latest results and recommendations
-                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
-                        getLatestResults(mKruizeExperimentMap);
-                        getLatestRecommendations(mKruizeExperimentMap);
-                    }
-                    checkPercentileInfo(mKruizeExperimentMap);
-                    gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
-                    return gsonStr;
-                }
-            } else {
-                if (recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
-                    // fetch recommendations from the DB
-                    try {
-                        if (experimentName == null || experimentName.isEmpty())
-                            new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
-                        else
-                            new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
-                        return "";
-                    }
-                    // Case: result=false, recommendations=true, latest=true
-                    // filter the latest recommendations when latest = true, else return all
-                    if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
-                        getLatestRecommendations(mKruizeExperimentMap);
-                        gsonStr = gsonObj.toJson(mKruizeExperimentMap.values());
-                    }
-                    gsonStr = modifyJSONResponse(gsonStr, KruizeConstants.JSONKeys.RESULTS);
-                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to load result data from DB: {} ", e.getMessage());
+                return "";
             }
         }
         return gsonStr;
     }
 
-    private String modifyJSONResponse(String gsonStr, String objectTobeRemoved) throws JsonProcessingException {
+    private String modifyJSONResponse(Map<String, KruizeObject> mKruizeExperimentMap, String objectTobeRemoved, Gson gsonObj) throws JsonProcessingException {
+        List<KruizeObject> kruizeObjectList = new ArrayList<>(mKruizeExperimentMap.values());
+        // Convert the list to a JSON array
+        String gsonStr = gsonObj.toJson(kruizeObjectList);
+
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(gsonStr);
         // Find the corresponding object and remove it
@@ -247,11 +246,10 @@ public class ListExperiments extends HttpServlet {
             if (parent instanceof ObjectNode)
                 ((ObjectNode) parent).remove(objectTobeRemoved);
         });
-        // Convert the modified JsonNode back to a JSON string and return it
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
+
+        return rootNode.toPrettyString();
     }
     private void getLatestResults(Map<String, KruizeObject> mKruizeExperimentMap) {
-        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         try {
             for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
                 List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
@@ -261,32 +259,22 @@ public class ListExperiments extends HttpServlet {
                             LOGGER.warn("Result data is missing for the container: {}", containerData.getContainer_name());
                             continue;
                         }
-                        containerData = Converters.KruizeObjectConverters.getLatestResults(containerData);
-                        if (null != containerData)
-                            containerDataMap.put(containerData.getContainer_name(), containerData);
+                        Converters.KruizeObjectConverters.getLatestResults(containerData);
                     }
-                    k8sObject.setContainerDataMap(containerDataMap);
                 }
-                entry.getValue().setKubernetes_objects(k8sObjectList);
             }
         } catch (NullPointerException npe) {
             LOGGER.error("Exception occurred while fetching results for the : {}", npe.getMessage());
         }
     }
     private void getLatestRecommendations(Map<String, KruizeObject> mKruizeExperimentMap) {
-        HashMap<String, ContainerData> containerDataMap = new HashMap<>();
         for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
             List<K8sObject> k8sObjectList = entry.getValue().getKubernetes_objects();
             for (K8sObject k8sObject : k8sObjectList) {
                 for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                    containerData = Converters.KruizeObjectConverters.getLatestRecommendations(containerData);
-                    if (null != containerData) {
-                        containerDataMap.put(containerData.getContainer_name(), containerData);
-                    }
+                    Converters.KruizeObjectConverters.getLatestRecommendations(containerData);
                 }
-                k8sObject.setContainerDataMap(containerDataMap);
             }
-            entry.getValue().setKubernetes_objects(k8sObjectList);
         }
     }
 }

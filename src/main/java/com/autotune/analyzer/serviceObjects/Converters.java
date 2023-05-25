@@ -258,10 +258,10 @@ public class Converters {
 			}
 			return clonedContainerData;
 		}
-		public static ContainerData getLatestResults(ContainerData containerData) {
-			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-			if (null != clonedContainerData) {
-				HashMap<Timestamp, IntervalResults> results = clonedContainerData.getResults();
+		public static void getLatestResults(ContainerData containerData) {
+//			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+			if (null != containerData) {
+				HashMap<Timestamp, IntervalResults> results = containerData.getResults();
 				Timestamp latestTimestamp = null;
 				List<Timestamp> tempList = new ArrayList<>();
 				for (Timestamp timestamp : results.keySet()) {
@@ -279,9 +279,9 @@ public class Converters {
 				for (Timestamp timestamp : tempList) {
 					results.remove(timestamp);
 				}
-				clonedContainerData.setResults(results);
+                containerData.setResults(results);
 			}
-			return clonedContainerData;
+//			return containerData;
 		}
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
