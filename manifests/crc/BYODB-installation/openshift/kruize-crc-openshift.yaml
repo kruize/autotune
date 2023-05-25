@@ -122,3 +122,19 @@ spec:
     - name: kruize-port
       port: 8080
       targetPort: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kruize-service-monitor
+  namespace: openshift-tuning
+  labels:
+    app: kruize
+spec:
+  selector:
+    matchLabels:
+      app: kruize
+  endpoints:
+    - port: kruize-port
+      interval: 30s
+      path: /metrics
