@@ -261,17 +261,6 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-    public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        try {
-            KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
-            validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
-        } catch (Exception e) {
-            LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
-        }
-        return validationOutputData;
-   }
-
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
