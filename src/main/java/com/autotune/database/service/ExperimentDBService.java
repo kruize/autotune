@@ -213,7 +213,6 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
         if (null == experimentResultDataList) {
@@ -225,6 +224,7 @@ public class ExperimentDBService {
 
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
 
+
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
                 LOGGER.error("Trying to locate Recommendation for non existent experiment: " +
@@ -235,7 +235,6 @@ public class ExperimentDBService {
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
                     convertKruizeObjectTORecommendation(kruizeObject, experimentResultData);
             if (null != kr) {
-
                 ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
                 if (!tempValObj.isSuccess()) {
                     validationOutputData.setSuccess(false);
