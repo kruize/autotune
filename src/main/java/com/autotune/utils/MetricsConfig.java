@@ -13,10 +13,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class MetricsConfig {
 
     private static MetricsConfig INSTANCE;
-    public static Timer timerlistRec, timerlistExp, timercreateExp, timerupdateResults;
-    public static Timer timerloadRecByExpName, timerloadResultsExpName, timerloadExpName;
-    public static Timer timerloadAllRec, timerloadAllExp, timerloadAllResults;
-    public static Timer timeraddRecDB, timeraddResultsDB, timeraddExpDB;
+    public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults;
+    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName;
+    public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
+    public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB;
+    public String API_METRIC_DESC = "Time taken for Kruize APIs";
+    public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
 
     public static PrometheusMeterRegistry meterRegistry;
 
@@ -25,20 +27,20 @@ public class MetricsConfig {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         meterRegistry.config().commonTags("application", "Kruize");
 
-        timerlistRec = Timer.builder("kruizeAPI").description("Time taken for Kruize APIs").tag("api","listRecommendations").tag("method","GET").register(meterRegistry);
-        timerlistExp = Timer.builder("kruizeAPI").description("Time taken for Kruize APIs").tag("api","listExperiments").tag("method","GET").register(meterRegistry);
-        timercreateExp = Timer.builder("kruizeAPI").description("Time taken for Kruize APIs").tag("api","createExperiment").tag("method","POST").register(meterRegistry);
-        timerupdateResults = Timer.builder("kruizeAPI").description("Time taken for Kruize APIs").tag("api","updateResults").tag("method","POST").register(meterRegistry);
+        timerListRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listRecommendations").tag("method","GET").register(meterRegistry);
+        timerListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listExperiments").tag("method","GET").register(meterRegistry);
+        timerCreateExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","createExperiment").tag("method","POST").register(meterRegistry);
+        timerUpdateResults = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","updateResults").tag("method","POST").register(meterRegistry);
 
-        timerloadRecByExpName = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadRecommendationsByExperimentName").register(meterRegistry);
-        timerloadResultsExpName = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadResultsByExperimentName").register(meterRegistry);
-        timerloadExpName = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadExperimentByName").register(meterRegistry);
-        timerloadAllRec = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadAllRecommendations").register(meterRegistry);
-        timerloadAllExp = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadAllExperiments").register(meterRegistry);
-        timerloadAllResults = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","loadAllResults").register(meterRegistry);
-        timeraddRecDB = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","addRecommendationToDB").register(meterRegistry);
-        timeraddResultsDB = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","addResultsToDB").register(meterRegistry);
-        timeraddExpDB = Timer.builder("kruizeDB").description("Time taken for KruizeDB methods").tag("method","addExperimentToDB").register(meterRegistry);
+        timerLoadRecExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadRecommendationsByExperimentName").register(meterRegistry);
+        timerLoadResultsExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadResultsByExperimentName").register(meterRegistry);
+        timerLoadExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadExperimentByName").register(meterRegistry);
+        timerLoadAllRec = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllRecommendations").register(meterRegistry);
+        timerLoadAllExp = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllExperiments").register(meterRegistry);
+        timerLoadAllResults = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllResults").register(meterRegistry);
+        timerAddRecDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addRecommendationToDB").register(meterRegistry);
+        timerAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addResultsToDB").register(meterRegistry);
+        timerAddExpDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addExperimentToDB").register(meterRegistry);
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

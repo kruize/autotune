@@ -81,7 +81,7 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Timer.Sample createExp = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerCreateExp = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
@@ -128,7 +128,7 @@ public class CreateExperiment extends HttpServlet {
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         } finally {
-            createExp.stop(MetricsConfig.timercreateExp);
+            if (null != timerCreateExp) timerCreateExp.stop(MetricsConfig.timerCreateExp);
         }
     }
 

@@ -70,7 +70,7 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Timer.Sample listExp = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -119,7 +119,7 @@ public class ListExperiments extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            listExp.stop(MetricsConfig.timerlistExp);
+            if (null != timerListExp) timerListExp.stop(MetricsConfig.timerListExp);
         }
     }
 

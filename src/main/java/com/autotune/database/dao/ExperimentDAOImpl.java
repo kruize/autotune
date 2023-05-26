@@ -29,7 +29,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
-        Timer.Sample timeraddExpDB = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
@@ -48,7 +48,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
         } finally {
-            timeraddExpDB.stop(MetricsConfig.timeraddExpDB);
+            if (null != timerAddExpDB)  timerAddExpDB.stop(MetricsConfig.timerAddExpDB);
         }
         return validationOutputData;
     }
@@ -57,7 +57,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
-        Timer.Sample timeraddResultsDB = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerAddResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
@@ -75,7 +75,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         } finally {
-            timeraddResultsDB.stop(MetricsConfig.timeraddResultsDB);
+            if (null != timerAddResultsDB) timerAddResultsDB.stop(MetricsConfig.timerAddResultsDB);
         }
         return validationOutputData;
     }
@@ -84,7 +84,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
-        Timer.Sample timeraddRecDB = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerAddRecDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
@@ -102,7 +102,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
         } finally {
-            timeraddRecDB.stop(MetricsConfig.timeraddRecDB);
+            if (null != timerAddRecDB) timerAddRecDB.stop(MetricsConfig.timerAddRecDB);
         }
         return validationOutputData;
     }
@@ -168,14 +168,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
-        Timer.Sample timerloadAllExp = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerLoadAllExp = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS, KruizeExperimentEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());
             throw new Exception("Error while loading exsisting experiments from database due to : " + e.getMessage());
         } finally {
-            timerloadAllExp.stop(MetricsConfig.timerloadAllExp);
+            if (null != timerLoadAllExp) timerLoadAllExp.stop(MetricsConfig.timerLoadAllExp);
         }
         return entries;
     }
@@ -184,11 +184,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
+        Timer.Sample timerLoadAllResults = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS, KruizeResultsEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load results due to: {}", e.getMessage());
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllResults) timerLoadAllResults.stop(MetricsConfig.timerLoadAllResults);
         }
         return kruizeResultsEntries;
     }
@@ -196,7 +199,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
-        Timer.Sample timerloadAllResults = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
             recommendationEntries = session.createQuery(
                     DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
@@ -205,7 +208,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
         } finally {
-            timerloadAllResults.stop(MetricsConfig.timerloadAllResults);
+            if (null != timerLoadAllRec) timerLoadAllRec.stop(MetricsConfig.timerLoadAllRec);
         }
         return recommendationEntries;
     }
@@ -214,7 +217,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
-        Timer.Sample timerloadExpName = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS_BY_EXP_NAME, KruizeExperimentEntry.class)
                     .setParameter("experimentName", experimentName).list();
@@ -222,7 +225,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
             throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
         } finally {
-            timerloadExpName.stop(MetricsConfig.timerloadExpName);
+            if (null != timerLoadExpName) timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
         }
         return entries;
     }
@@ -231,7 +234,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
-        Timer.Sample timerloadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
                     .setParameter("experimentName", experimentName).list();
@@ -239,7 +242,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to load results due to: {}", e.getMessage());
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         } finally {
-            timerloadResultsExpName.stop(MetricsConfig.timerloadResultsExpName);
+            if (null != timerLoadResultsExpName) timerLoadResultsExpName.stop(MetricsConfig.timerLoadResultsExpName);
         }
         return kruizeResultsEntries;
     }
@@ -247,7 +250,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
-        Timer.Sample loadRecByExpName = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
             recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
                     .setParameter("experimentName", experimentName).list();
@@ -255,7 +258,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
         } finally {
-            loadRecByExpName.stop(MetricsConfig.timerloadRecByExpName);
+            if (null != timerLoadRecExpName) timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
         }
         return recommendationEntries;
     }

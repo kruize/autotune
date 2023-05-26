@@ -73,7 +73,7 @@ public class ListRecommendations extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Timer.Sample listRec = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerListRec = Timer.start(MetricsConfig.meterRegistry());
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
@@ -233,7 +233,7 @@ public class ListRecommendations extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            listRec.stop(MetricsConfig.timerlistRec);
+            if (null != timerListRec) timerListRec.stop(MetricsConfig.timerListRec);
         }
     }
 

@@ -69,7 +69,7 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Timer.Sample updateResults = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
@@ -128,7 +128,7 @@ public class UpdateResults extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            updateResults.stop(MetricsConfig.timerupdateResults);
+            if (null != timerUpdateResults) timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
         }
     }
 
