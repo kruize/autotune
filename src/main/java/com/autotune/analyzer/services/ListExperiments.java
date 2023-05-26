@@ -18,12 +18,13 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -35,7 +36,10 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.TrialHelpers;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.gson.*;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +50,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * Rest API used to list experiments.
@@ -81,8 +85,34 @@ public class ListExperiments extends HttpServlet {
         recommendations = (recommendations == null || recommendations.isEmpty()) ? AnalyzerConstants.BooleanString.FALSE: recommendations;
         latest = (latest == null || latest.isEmpty()) ? AnalyzerConstants.BooleanString.TRUE: latest;
 
-        String gsonStr = "[]";
-        // Fetch experiments data from the DB
+        // Fetch experiments data from the DB and check if the requested experiment exists
+        loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName, response);
+        // create Gson Object
+        Gson gsonObj = createGsonObject();
+
+        // Modify the JSON response here based on query params.
+        String gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap,gsonObj, latest, results, recommendations, experimentName);
+        if (gsonStr.isEmpty()) {
+            gsonStr = generateDefaultResponse();
+        }
+        response.getWriter().println(gsonStr);
+        response.getWriter().close();
+    }
+
+    private String generateDefaultResponse() {
+        JSONArray experimentTrialJSONArray = new JSONArray();
+        for (String deploymentName : experimentsMap.keySet()) {
+            KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
+            for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
+                ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
+                JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
+                experimentTrialJSONArray.put(experimentTrialJSON.get(0));
+            }
+        }
+        return experimentTrialJSONArray.toString(4);
+    }
+
+    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, HttpServletResponse response) throws IOException {
         try {
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadAllExperiments(mKruizeExperimentMap);
@@ -101,45 +131,30 @@ public class ListExperiments extends HttpServlet {
                     String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
             );
         }
-
-        Gson gsonObj = new GsonBuilder()
-            .disableHtmlEscaping()
-            .setPrettyPrinting()
-            .enableComplexMapKeySerialization()
-            .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-            .setExclusionStrategies(new ExclusionStrategy() {
-                @Override
-                public boolean shouldSkipField(FieldAttributes f) {
-                    return f.getDeclaringClass() == Metric.class && (
-                            f.getName().equals("trialSummaryResult")
-                                    || f.getName().equals("cycleDataMap")
-                    ) ||
-                            f.getDeclaringClass() == ContainerData.class && (
-                                    f.getName().equalsIgnoreCase("metrics")
-                            );
-                }
-                @Override
-                public boolean shouldSkipClass(Class<?> aClass) {
-                    return false;
-                }
-            })
-            .create();
-        // Modify the JSON response here based on query params.
-        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap,gsonObj, latest, results, recommendations, experimentName);
-        if (gsonStr.isEmpty()) {
-            JSONArray experimentTrialJSONArray = new JSONArray();
-            for (String deploymentName : experimentsMap.keySet()) {
-                KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
-                for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
-                    ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
-                    JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
-                    experimentTrialJSONArray.put(experimentTrialJSON.get(0));
-                }
-            }
-            gsonStr = experimentTrialJSONArray.toString(4);
-        }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
+    }
+    private Gson createGsonObject() {
+        return new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .setExclusionStrategies(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return f.getDeclaringClass() == Metric.class && (
+                                f.getName().equals("trialSummaryResult")
+                                        || f.getName().equals("cycleDataMap")
+                        ) ||
+                                f.getDeclaringClass() == ContainerData.class && (
+                                        f.getName().equalsIgnoreCase("metrics")
+                                );
+                    }
+                    @Override
+                    public boolean shouldSkipClass(Class<?> aClass) {
+                        return false;
+                    }
+                })
+                .create();
     }
 
     private void checkPercentileInfo(Map<String, KruizeObject> mainKruizeExperimentMap) {
@@ -191,7 +206,6 @@ public class ListExperiments extends HttpServlet {
                             if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
                                 getLatestResults(mKruizeExperimentMap);
                             }
-
                             checkPercentileInfo(mKruizeExperimentMap);
                             modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RECOMMENDATIONS, gsonObj);
                             gsonStr = gsonObj.toJson(mKruizeExperimentMap);
@@ -271,6 +285,7 @@ public class ListExperiments extends HttpServlet {
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
         Boolean getLatest = Boolean.valueOf(latest);
         List<KruizeObject> kruizeObjectList = new ArrayList<>(mKruizeExperimentMap.values());
+        List<KruizeObject> updatedKruizeObjectList = new ArrayList<>();
         for (KruizeObject ko : kruizeObjectList) {
             try {
                 LOGGER.debug(ko.getKubernetes_objects().toString());
@@ -280,12 +295,13 @@ public class ListExperiments extends HttpServlet {
                                 getLatest,
                                 false,
                                 null);
-                recommendationList.add(listRecommendationsAPIObject);
+
+                updatedKruizeObjectList.add(mergeRecommendationsInKruizeObject(listRecommendationsAPIObject, ko));
             } catch (Exception e) {
                 LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
             }
         }
-        return gsonObj.toJson(recommendationList);
+        return gsonObj.toJson(kruizeObjectList);
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
@@ -296,5 +312,32 @@ public class ListExperiments extends HttpServlet {
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
+    }
+    private KruizeObject mergeRecommendationsInKruizeObject(ListRecommendationsAPIObject listRecommendationsAPIObject, KruizeObject ko) {
+        ko.setKubernetes_objects(convertKubernetesAPIObjectListToK8sObjectList(listRecommendationsAPIObject.getKubernetesObjects()));
+        return ko;
+    }
+
+    private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        List<K8sObject> k8sObjectList = new ArrayList<>();
+        for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjects) {
+            K8sObject k8sObject = new K8sObject(
+                    kubernetesAPIObject.getName(),
+                    kubernetesAPIObject.getType(),
+                    kubernetesAPIObject.getNamespace()
+            );
+            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                ContainerData containerData = new ContainerData(
+                        containerAPIObject.getContainer_name(),
+                        containerAPIObject.getContainer_image_name(),
+                        containerAPIObject.getContainerRecommendations(),
+                        null);
+                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
+            }
+            k8sObject.setContainerDataMap(containerDataMap);
+            k8sObjectList.add(k8sObject);
+        }
+        return k8sObjectList;
     }
 }
