@@ -27,7 +27,9 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +69,7 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
@@ -124,6 +127,8 @@ public class UpdateResults extends HttpServlet {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerUpdateResults) timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
         }
     }
 

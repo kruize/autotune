@@ -28,6 +28,7 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -114,7 +115,7 @@ public class Autotune {
     private static void addAutotuneServlets(ServletContextHandler context) {
         context.addServlet(HealthService.class, HEALTH_SERVICE);
         // Start the Prometheus end point (/metrics) for Autotune
-        context.addServlet(new ServletHolder(new MetricsServlet()), METRICS_SERVICE);
+        context.addServlet(new ServletHolder(new MetricsServlet(MetricsConfig.meterRegistry().getPrometheusRegistry())), METRICS_SERVICE);
         DefaultExports.initialize();
     }
 
