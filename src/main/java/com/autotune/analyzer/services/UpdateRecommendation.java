@@ -33,6 +33,7 @@ import com.autotune.common.k8sObjects.K8sObject;
 =======
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 >>>>>>> b0ef3a73 (UpdateRecommendation API E2E working code is ready.)
@@ -166,6 +167,7 @@ public class UpdateRecommendation extends HttpServlet {
                     else {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
                     }
+<<<<<<< HEAD
                 }
 =======
         boolean dataExists = false;
@@ -195,6 +197,8 @@ public class UpdateRecommendation extends HttpServlet {
                 else {
                     new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
                     sendSuccessResponse(response, "Recommendation generated successfully! visit /listRecommendations");
+=======
+>>>>>>> 88f25571 (Added exception conditions.)
                 }
 <<<<<<< HEAD
 //                List<ExperimentResultData> experimentResultDataList = ;
