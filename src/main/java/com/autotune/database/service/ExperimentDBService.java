@@ -212,6 +212,7 @@ public class ExperimentDBService {
     }
 
     public boolean addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
+        boolean success = false;
         if (null == experimentResultDataList)
             return false;
         if (experimentResultDataList.size() == 0)
@@ -228,10 +229,11 @@ public class ExperimentDBService {
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
                     convertKruizeObjectTORecommendation(kruizeObject, experimentResultData);
             if (null != kr) {
-                new ExperimentDAOImpl().addRecommendationToDB(kr);
+                ValidationOutputData validationOutputData = new ExperimentDAOImpl().addRecommendationToDB(kr);
+                success = validationOutputData.isSuccess();
             }
         }
-        return true;
+        return success;
     }
 
     public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
