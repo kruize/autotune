@@ -192,7 +192,7 @@ public class ListExperiments extends HttpServlet {
         // return the response without results or recommendations
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
             modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RECOMMENDATIONS, gsonObj);
-            return gsonObj.toJson(mKruizeExperimentMap);
+            return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
         } else {
             // fetch results from the DB
             try {
@@ -208,7 +208,7 @@ public class ListExperiments extends HttpServlet {
                             }
                             checkPercentileInfo(mKruizeExperimentMap);
                             modifyJSONResponse(mKruizeExperimentMap, KruizeConstants.JSONKeys.RECOMMENDATIONS, gsonObj);
-                            gsonStr = gsonObj.toJson(mKruizeExperimentMap);
+                            gsonStr = gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                         } else {
                             // fetch recommendations from the DB
                             try {
