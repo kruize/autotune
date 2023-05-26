@@ -47,6 +47,7 @@ import com.autotune.common.data.result.ExperimentResultData;
 =======
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 >>>>>>> a670b8f5 (UpdateRecommendation API E2E working code is ready.)
@@ -274,8 +275,12 @@ public class UpdateRecommendation extends HttpServlet {
                             experimentResultData.getExperiment_name(),
                             experimentResultData.getIntervalEndTime());
                 else {
-                    new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
-                    sendSuccessResponse(response, "Recommendation generated successfully! visit /listRecommendations");
+                    boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
+                    if (success)
+                        sendSuccessResponse(response, "Recommendation generated successfully! visit /listRecommendations");
+                    else {
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                    }
                 }
 <<<<<<< HEAD
 >>>>>>> 89b4c960 (In progress code checked in for updateRecommendation API.)
