@@ -117,6 +117,7 @@ public class ListExperiments extends HttpServlet {
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             listExp.stop(MetricsConfig.timerlistExp);
         }
@@ -168,5 +169,15 @@ public class ListExperiments extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+            IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
     }
 }

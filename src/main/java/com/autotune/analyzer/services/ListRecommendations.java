@@ -231,6 +231,7 @@ public class ListRecommendations extends HttpServlet {
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             listRec.stop(MetricsConfig.timerlistRec);
         }
