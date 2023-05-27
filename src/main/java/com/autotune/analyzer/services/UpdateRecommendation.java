@@ -101,10 +101,17 @@ public class UpdateRecommendation extends HttpServlet {
             //Load KruizeObject and generate recommendation
             Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
             try {
-                // Subtract LONG_TERM_DURATION_DAYS from the given interval_end_time
-                long subtractedTime = interval_end_time.getTime() - (KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.DateFormats.MILLI_SECONDS_FOR_DAY);
-                Timestamp interval_start_time = new Timestamp(subtractedTime);
-                new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, experiment_name, interval_start_time, interval_end_time);
+                //Load KruizeObject
+                ExperimentDBService experimentDBService = new ExperimentDBService();
+                experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                /*
+                    To restrict the number of rows in the result set, the Load results operation involves locating the appropriate method and configuring the desired limitation.
+                    It's important to note that in order for the Limit rows feature to function correctly,
+                    the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
+                 */
+                int limitRows = (int) ((KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.DateFormats.MINUTES_FOR_DAY) / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+                experimentDBService.loadResultsFromDBByName(mainKruizeExperimentMAP, experiment_name, interval_end_time, limitRows);
                 boolean recommendationCheck = new ExperimentInitiator().generateAndAddRecommendations(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
                 if (!recommendationCheck)
                     LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
