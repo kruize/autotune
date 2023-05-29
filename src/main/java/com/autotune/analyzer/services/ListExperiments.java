@@ -32,6 +32,8 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.TrialHelpers;
@@ -40,7 +42,10 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +76,73 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
+        String gsonStr = "[]";
+        try {
+            if (this.mainKruizeExperimentMap.size() > 0) {
+                Gson gsonObj = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .setExclusionStrategies(new ExclusionStrategy() {
+                            @Override
+                            public boolean shouldSkipField(FieldAttributes f) {
+                                return f.getDeclaringClass() == Metric.class && (
+                                        f.getName().equals("trialSummaryResult")
+                                                || f.getName().equals("cycleDataMap")
+                                ) ||
+                                        f.getDeclaringClass() == ContainerData.class && (
+                                                f.getName().equalsIgnoreCase("metrics")
+                                                );
+                            }
+                            @Override
+                            public boolean shouldSkipClass(Class<?> aClass) {
+                                return false;
+                            }
+                        })
+                        .create();
+                gsonStr = gsonObj.toJson(mainKruizeExperimentMap);
+            } else {
+                JSONArray experimentTrialJSONArray = new JSONArray();
+                for (String deploymentName : experimentsMap.keySet()) {
+                    KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
+                    for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
+                        ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
+                        JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
+                        experimentTrialJSONArray.put(experimentTrialJSON.get(0));
+                    }
+                }
+                gsonStr = experimentTrialJSONArray.toString(4);
+            }
+            response.getWriter().println(gsonStr);
+            response.getWriter().close();
+        } catch (Exception e) {
+            LOGGER.error("Exception: " + e.getMessage());
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerListExp) timerListExp.stop(MetricsConfig.timerListExp);
+        }
+    }
+
+    //TODO this function no more used.
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+
+        LOGGER.info("Processing trial result...");
+        try {
+            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+            // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
+
+            String trialResultsData = request.getReader().lines().collect(Collectors.joining());
+            JSONObject trialResultsJson = new JSONObject(trialResultsData);
 
         String results = request.getParameter(KruizeConstants.JSONKeys.RESULTS);
         String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
@@ -302,6 +371,16 @@ public class ListExperiments extends HttpServlet {
             }
         }
         return gsonObj.toJson(kruizeObjectList);
+    }
+
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+            IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
