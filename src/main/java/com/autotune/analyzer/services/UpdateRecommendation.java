@@ -18,13 +18,21 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -120,7 +126,7 @@ public class UpdateRecommendation extends HttpServlet {
                 else {
                     boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
                     if (success)
-                        sendSuccessResponse(response, "Recommendation generated successfully! visit /listRecommendations");
+                        sendSuccessResponse(response,  kruizeObject , interval_end_time);
                     else {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
                     }
@@ -134,17 +140,48 @@ public class UpdateRecommendation extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko , Timestamp interval_end_time) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
-        PrintWriter out = response.getWriter();
-        out.append(
-                new Gson().toJson(
-                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
-                )
-        );
-        out.flush();
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        try {
+            LOGGER.debug(ko.getKubernetes_objects().toString());
+            ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
+                    convertKruizeObjectToListRecommendationSO(
+                            ko,
+                            false,
+                            false,
+                            interval_end_time);
+            recommendationList.add(listRecommendationsAPIObject);
+        } catch (Exception e) {
+            LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+        }
+        ExclusionStrategy strategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes field) {
+                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
+                        || ( field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+        String gsonStr = "[]";
+        if (recommendationList.size() > 0) {
+            Gson gsonObj = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .setPrettyPrinting()
+                    .enableComplexMapKeySerialization()
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .setExclusionStrategies(strategy)
+                    .create();
+            gsonStr = gsonObj.toJson(recommendationList);
+        }
+        response.getWriter().println(gsonStr);
+        response.getWriter().close();
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
