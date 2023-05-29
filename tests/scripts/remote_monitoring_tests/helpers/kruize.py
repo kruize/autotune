@@ -167,3 +167,16 @@ def create_performance_profile(perf_profile_json_file):
     print(response.text)
     return response
 
+# Description: This function obtains the metrics from Kruize Autotune using metrics API
+def get_metrics():
+    print("\nGenerating Metrics...")
+    url = URL + "/metrics"
+    print("URL = ", url)
+
+    response = requests.get(url = url)
+
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    return response
+

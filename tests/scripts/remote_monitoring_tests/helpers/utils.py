@@ -35,6 +35,33 @@ EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
 INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 30 seconds"
 
+createExperimentCount_STATUS = "Metric Category: API, Metric Type: count, Name: createExperiment, Value: 10.0"
+createExperimentSum_STATUS = "Metric Category: API, Metric Type: sum, Name: createExperiment, Value: 0.228229311"
+listRecommendationsCount_STATUS = "Metric Category: API, Metric Type: count, Name: listRecommendations, Value: 11.0"
+listRecommendationsSum_STATUS = "Metric Category: API, Metric Type: sum, Name: listRecommendations, Value: 0.349422898"
+listExperimentsCount_STATUS = "Metric Category: API, Metric Type: count, Name: listExperiments, Value: 0.0"
+listExperimentsSum_STATUS = "Metric Category: API, Metric Type: sum, Name: listExperiments, Value: 0.0"
+updateResultsCount_STATUS = "Metric Category: API, Metric Type: count, Name: updateResults, Value: 1000.0"
+updateResultsSum_STATUS = "Metric Category: API, Metric Type: sum, Name: updateResults, Value: 51.24196982"
+addRecommendationToDBcount_STATUS = "Metric Category: DB, Metric Type: count, Name: addRecommendationToDB, Value: 50.0"
+addRecommendationToDBsum_STATUS = "Metric Category: DB, Metric Type: sum, Name: addRecommendationToDB, Value: 0.11283727"
+addResultsToDBCount_STATUS = "Metric Category: DB, Metric Type: count, Name: addResultsToDB, Value: 1000.0"
+addResultsToDBSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: addResultsToDB, Value: 3.513978451"
+loadAllRecommendationsCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadAllRecommendations, Value: 0.0"
+loadAllRecommendationsSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadAllRecommendations, Value: 0.0"
+loadAllExperimentsCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadAllExperiments, Value: 0.0"
+loadAllExperimentsSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadAllExperiments, Value: 0.0"
+addExperimentToDBCount_STATUS = "Metric Category: DB, Metric Type: count, Name: addExperimentToDB, Value: 10.0"
+addExperimentToDBSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: addExperimentToDB, Value: 0.132267294"
+loadResultsByExperimentNameCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadResultsByExperimentName, Value: 1000.0"
+loadResultsByExperimentNameSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadResultsByExperimentName, Value: 16.355101603"
+loadExperimentByNameCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadExperimentByName, Value: 1031.0"
+loadExperimentByNameSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadExperimentByName, Value: 1.665818586"
+loadAllResultsCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadAllResults, Value: 0.0"
+loadAllResultsSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadAllResults, Value: 0.0"
+loadRecommendationsByExperimentNameCount_STATUS = "Metric Category: DB, Metric Type: count, Name: loadRecommendationsByExperimentName, Value: 11.0"
+loadRecommendationsByExperimentNameSum_STATUS = "Metric Category: DB, Metric Type: sum, Name: loadRecommendationsByExperimentName, Value: 0.090203608"
+
 time_log_csv = "/tmp/time_log.csv"
 
 # DURATION - No. of days * 24.0 hrs
@@ -371,4 +398,58 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+
+def match_metrics(output_metrics):
+    api_pattern = re.compile(r'kruizeAPI_seconds_(count|sum){api="(\w+)",application="Kruize",method="(\w+)",}\s+([\d.]+)')
+    db_pattern = re.compile(r'kruizeDB_seconds_(count|sum){application="Kruize",method="(\w+)",}\s+([\d.]+)')
+    output_metrics = output_metrics.content.decode('utf-8')
+    api_matches = api_pattern.findall(output_metrics)
+    db_matches = db_pattern.findall(output_metrics)
+    match_metrics = []
+    for match in api_matches:
+        metric_type = match[0]
+        api_name = match[1]
+        http_method = match[2]
+        value = float(match[3])
+        match_metrics.append(('API', metric_type, api_name, http_method, value))
+
+    for match in db_matches:
+        metric_type = match[0]
+        method = match[1]
+        value = float(match[2])
+        match_metrics.append(('DB', metric_type, method, None, value))
+
+    metrics = []
+    for metric in match_metrics:
+        metric_category, metric_type, name, http_method, value = metric
+        metrics = f"Metric Category: {metric_category}, Metric Type: {metric_type}, Name: {name}"
+        metrics += f", Value: {value}"
+        metrics.append(metrics)
+
+    assert createExperimentCount_STATUS in metrics, "createExperimentCount_STATUS assertion failed"
+    assert createExperimentSum_STATUS in metrics, "createExperimentSum_STATUS assertion failed"
+    assert listRecommendationsCount_STATUS in metrics, "listRecommendationsCount_STATUS assertion failed"
+    assert listRecommendationsSum_STATUS in metrics, "listRecommendationsSum_STATUS assertion failed"
+    assert listExperimentsCount_STATUS in metrics, "listExperimentsCount_STATUS assertion failed"
+    assert listExperimentsSum_STATUS in metrics, "listExperimentsSum_STATUS assertion failed"
+    assert updateResultsCount_STATUS in metrics, "updateResultsCount_STATUS assertion failed"
+    assert updateResultsSum_STATUS in metrics, "updateResultsSum_STATUS assertion failed"
+    assert addRecommendationToDBcount_STATUS in metrics, "addRecommendationToDBcount_STATUS assertion failed"
+    assert addRecommendationToDBsum_STATUS in metrics, "addRecommendationToDBsum_STATUS assertion failed"
+    assert addResultsToDBCount_STATUS in metrics, "addResultsToDBCount_STATUS assertion failed"
+    assert addResultsToDBSum_STATUS in metrics, "addResultsToDBSum_STATUS assertion failed"
+    assert loadAllRecommendationsCount_STATUS in metrics, "loadAllRecommendationsCount_STATUS assertion failed"
+    assert loadAllRecommendationsSum_STATUS in metrics, "loadAllRecommendationsSum_STATUS assertion failed"
+    assert loadAllExperimentsCount_STATUS in metrics, "loadAllExperimentsCount_STATUS assertion failed"
+    assert loadAllExperimentsSum_STATUS in metrics, "loadAllExperimentsSum_STATUS assertion failed"
+    assert addExperimentToDBCount_STATUS in metrics, "addExperimentToDBCount_STATUS assertion failed"
+    assert addExperimentToDBSum_STATUS in metrics, "addExperimentToDBSum_STATUS assertion failed"
+    assert loadResultsByExperimentNameCount_STATUS in metrics, "loadResultsByExperimentNameCount_STATUS assertion failed"
+    assert loadResultsByExperimentNameSum_STATUS in metrics, "loadResultsByExperimentNameSum_STATUS assertion failed"
+    assert loadExperimentByNameCount_STATUS in metrics, "loadExperimentByNameCount_STATUS assertion failed"
+    assert loadExperimentByNameSum_STATUS in metrics, "loadExperimentByNameSum_STATUS assertion failed"
+    assert loadAllResultsCount_STATUS in metrics, "loadAllResultsCount_STATUS assertion failed"
+    assert loadAllResultsSum_STATUS in metrics, "loadAllResultsSum_STATUS assertion failed"
+    assert loadRecommendationsByExperimentNameCount_STATUS in metrics, "loadRecommendationsByExperimentNameCount_STATUS assertion failed"
+    assert loadRecommendationsByExperimentNameSum_STATUS in metrics, "loadRecommendationsByExperimentNameSum_STATUS assertion failed"
 

@@ -108,7 +108,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
     INVALID_EXP_NAME_MSG = "Given experiment name - \" " + experiment_name + " \" is not valid"
     assert data['message'] == INVALID_EXP_NAME_MSG, f"expected - {INVALID_EXP_NAME_MSG}, actual - {data['message']}"
 
-    # Delete all the experiments
+    # Validate the metrics for Kruize Autotune
+    response = get_metrics()
+    match_metrics(response)
+
+# Delete all the experiments
     for i in range(num_exps):
         json_file = "/tmp/create_exp_" + str(i) + ".json"
         response = delete_experiment(json_file)
