@@ -108,8 +108,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                                                 monitoringEndTime,
                                                                 notifications);
 
-                if (cpuRequestItem.getAmount() <= 0) { isCpuRequestValid = false; }
-                if (memRequestItem.getAmount() <= 0) { isMemoryRequestValid = false; }
+                if (null == cpuRequestItem || cpuRequestItem.getAmount() <= 0) { isCpuRequestValid = false; }
+                if (null == memRequestItem || memRequestItem.getAmount() <= 0) { isMemoryRequestValid = false; }
 
                 // Initiate generated value holders with min values constants to compare later
                 Double generatedCpuRequest = null;
@@ -148,8 +148,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 RecommendationConfigItem cpuLimitsItem =  cpuRequestItem;
                 RecommendationConfigItem memLimitsItem = memRequestItem;
 
-                if (cpuLimitsItem.getAmount() <= 0) { isCpuLimitValid = false; }
-                if (memLimitsItem.getAmount() <= 0) { isMemoryLimitValid = false; }
+                if (null == cpuLimitsItem || cpuLimitsItem.getAmount() <= 0) { isCpuLimitValid = false; }
+                if (null == memLimitsItem || memLimitsItem.getAmount() <= 0) { isMemoryLimitValid = false; }
                 // Initiate generated value holders with min values constants to compare later
                 Double generatedCpuLimit = null;
                 String generatedCpuLimitFormat = null;
