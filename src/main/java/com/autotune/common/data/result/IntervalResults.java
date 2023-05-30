@@ -17,7 +17,6 @@ package com.autotune.common.data.result;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -39,12 +38,12 @@ public class IntervalResults {
     private Timestamp intervalEndTime;
     @SerializedName(DURATION_IN_MINUTES)
     private Double durationInMinutes;
-    private Double durationInSeconds;
+    private Double duration_in_seconds;
 
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
         this.intervalStartTime = intervalStartTime;
         this.intervalEndTime = intervalEndTime;
-        this.durationInSeconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
+        this.duration_in_seconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
         this.durationInMinutes = Double.valueOf(intervalEndTime.getTime() - intervalStartTime.getTime()) / (NO_OF_MSECS_IN_SEC * NO_OF_SECONDS_PER_MINUTE);
     }
     public IntervalResults() {
@@ -54,8 +53,8 @@ public class IntervalResults {
         return durationInMinutes;
     }
 
-    public Double getDurationInSeconds() {
-        return durationInSeconds;
+    public Double getDuration_in_seconds() {
+        return duration_in_seconds;
     }
 
     public HashMap<AnalyzerConstants.MetricName, MetricResults> getMetricResultsMap() {
@@ -73,7 +72,7 @@ public class IntervalResults {
                 ", intervalStartTime=" + intervalStartTime +
                 ", intervalEndTime=" + intervalEndTime +
                 ", durationInMinutes=" + durationInMinutes +
-                ", durationInSeconds=" + durationInSeconds +
+                ", durationInSeconds=" + duration_in_seconds +
                 '}';
     }
 }

@@ -124,15 +124,15 @@ public class ExperimentValidation {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
                 }
                 if (!proceed) {
-                    kruizeObject.setValidationData(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
                     markFailed(errorMsg);
                     break;
                 } else {
                     setSuccess(true);
-                    kruizeObject.setValidationData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.EXPERIMENT_REGISTERED, HttpServletResponse.SC_CREATED));
+                    kruizeObject.setValidation_data(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.EXPERIMENT_REGISTERED, HttpServletResponse.SC_CREATED));
                 }
             } else {
-                kruizeObject.setValidationData(validationOutputData);
+                kruizeObject.setValidation_data(validationOutputData);
                 markFailed(validationOutputData.getMessage());
                 break;
             }
@@ -204,7 +204,7 @@ public class ExperimentValidation {
         );
         if (missingMandatoryFields.size() == 0) {
             try {
-                if (expObj.getExperimentUseCaseType().isRemoteMonitoring() || expObj.getExperimentUseCaseType().isLocalMonitoring()) {
+                if (expObj.getExperiment_usecase_type().isRemote_monitoring() || expObj.getExperiment_usecase_type().isLocal_monitoring()) {
                     mandatoryFieldsForLocalRemoteMonitoring.forEach(
                             mField -> {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
@@ -220,7 +220,7 @@ public class ExperimentValidation {
                     );
                 }
                 String depType = "";
-                if (expObj.getExperimentUseCaseType().isRemoteMonitoring()) {
+                if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
                     mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
                     // check for valid k8stype

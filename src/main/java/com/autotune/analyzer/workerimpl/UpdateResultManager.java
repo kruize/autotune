@@ -48,7 +48,7 @@ public class UpdateResultManager implements KruizeWorker {
     @Override
     public void execute(KruizeObject kruizeObject, Object o, KruizeExecutor kruizeExecutor, ServletContext context) {
         ExperimentResultData resultData = (ExperimentResultData) o;
-        if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
+        if (kruizeObject.getExperiment_usecase_type().isLocal_experiment()) {
             String trialNumber = resultData.getTrialNumber();
             List<DeploymentResultData> deploymentResultDataList = resultData.getDeployments();
             deploymentResultDataList.forEach(
