@@ -40,7 +40,6 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.TrialHelpers;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -84,7 +83,7 @@ public class ListExperiments extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        String gsonStr = "[]";
+        String gsonStr;
         String results = request.getParameter(KruizeConstants.JSONKeys.RESULTS);
         String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
@@ -100,23 +99,19 @@ public class ListExperiments extends HttpServlet {
             }
         }
         if (invalidParams.isEmpty()) {
-            List<String> params = new ArrayList<>(Arrays.asList(results, recommendations, latest));
-            for (int i = 0; i < params.size(); i++) {
-                String param = params.get(i);
-                if (param == null || param.isEmpty()) {
-                    if (i == 2) { // Check if it's the "latest" parameter
-                        params.set(i, AnalyzerConstants.BooleanString.TRUE);
-                    } else {
-                        params.set(i, AnalyzerConstants.BooleanString.FALSE);
-                    }
-                } else if (!param.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE) && !param.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
-                    invalidParams.add(param);
-                }
-            }
-            if(invalidParams.isEmpty()) {
+            // Set default values if absent
+            if (results == null || results.isEmpty())
+                results = "false";
+            if (recommendations == null || recommendations.isEmpty())
+                recommendations = "false";
+            if (latest == null || latest.isEmpty())
+                latest = "true";
+
+            // Validate query parameter values
+            if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
                 try {
                     // Fetch experiments data from the DB and check if the requested experiment exists
-                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName, response);
+                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
                     // Check if experiment exists
                     if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
                         error = true;
@@ -132,7 +127,7 @@ public class ListExperiments extends HttpServlet {
                         Gson gsonObj = createGsonObject();
 
                         // Modify the JSON response here based on query params.
-                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, params, experimentName);
+                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
                         if (gsonStr.isEmpty()) {
                             gsonStr = generateDefaultResponse();
                         }
@@ -151,7 +146,7 @@ public class ListExperiments extends HttpServlet {
                         response,
                         new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE, invalidParams)
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
                 );
             }
         } else {
@@ -163,6 +158,11 @@ public class ListExperiments extends HttpServlet {
             );
         }
     }
+
+    private boolean isValidBooleanValue(String value) {
+        return value != null && (value.equals("true") || value.equals("false"));
+    }
+
     private String generateDefaultResponse() {
         JSONArray experimentTrialJSONArray = new JSONArray();
         for (String deploymentName : experimentsMap.keySet()) {
@@ -176,7 +176,7 @@ public class ListExperiments extends HttpServlet {
         return experimentTrialJSONArray.toString(4);
     }
 
-    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, HttpServletResponse response) throws IOException {
+    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
         try {
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadAllExperiments(mKruizeExperimentMap);
@@ -241,10 +241,8 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-    private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, List<String> params, String experimentName) throws JsonProcessingException {
-        String results = params.get(0);
-        String recommendations = params.get(1);
-        String latest = params.get(2);
+    private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, String results,
+                                             String recommendations, String latest, String experimentName) {
         // Case : default
         // return the response without results or recommendations
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
