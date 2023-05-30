@@ -5,24 +5,27 @@ tuned.
 
 # Attributes
 
+### Experiment
 - **version** \
   Signifies the API version.
 - **experiment_name** \
   A unique string name is specified for identifying individual experiments.
-* deployment_name \
-  Stay tuned
-* namespace \
-  Stay tuned
-* performance_profile \
-  `performance_profile` is a pre-defined performance objective that is baked into Kruize.
+- **cluster_name** \
+  Name of the cluster where the app is deployed.
 
+### Performance Objective
+- **performance_profile** \
+    `performance_profile` is a pre-defined performance objective that is baked into Kruize. 
+- **slo** \
+  Service Level Objective to be defined in the `performance_profile` as shown in [Performance Profile](https://github.com/kruize/autotune/blob/master/manifests/autotune/performance-profiles/resource_optimization_openshift.yaml) section, or it can be defined here in the experiment JSON and a Default Performance Profile will be created. 
+  
 
-`performance_profile` consists of two parts:
+ `performance_profile` consists of two parts:
 
-* A yaml file defines the metrics to be monitored and the queries used to derive those metrics.
-* Source code that defines the performance objective using the metrics provided
+  - A yaml file defines the metrics to be monitored and the queries used to derive those metrics.
+  - Source code that defines the performance objective using the metrics provided
 
-Currently we have the following pre-defined profiles
+Currently, we have the following pre-defined profiles
 
 | Profile Name                           | yaml                                        | Associated Source | Comments                                       |
 |----------------------------------------|---------------------------------------------|-------------------|------------------------------------------------|
@@ -30,14 +33,15 @@ Currently we have the following pre-defined profiles
 | resource-optimization-local-monitoring | [resource-optimization-local-monitoring yaml](https://github.com/kruize/autotune/blob/master/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.yaml) | [ResourceOptimizationOpenshiftImpl.java](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/ResourceOptimizationOpenshiftImpl.java)            | This is used for Local Monitoring Usecase     |
 | default                                | NA (User defined SLO)                       | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/DefaultImpl.java)            | This is applicable to all to Autotune Usecases |
 
-- **cluster_name** \
-  Name of the cluster where the app is deployed.
-- **performance_profile** \
-  Performance profile name which contains the `SLO` data and the `objective function` data. 
+***Note: One of Performance Profile name or SLO data needs to be present. Both cannot be present together!***
+
+### Experiment Type
 - **mode** \
   It can be either `monitor` or `experiment` 
 - **target_cluster** \
-   Target cluster can be one of `remote` or `local` 
+   Target cluster can be one of `remote` or `local`
+
+### Experiment Target
 - **kubernetes_objects** \
    contains details of the deployment, containers and namespace of the application to be monitored. 
   - **type** \
@@ -53,6 +57,10 @@ Currently we have the following pre-defined profiles
       Name of the container in which image(s) is deployed. E.g: `tfb-server`
     - **container_image_name** \
       Name of the image deployed in the container. E.g: `kruize/tfb-db:0.1`
+- **Selector** \
+  stay tuned
+
+### Settings
 - **trial_settings** \
     contains details of the trials like the `measurement_duration`
   - **measurement_duration** \
@@ -61,6 +69,9 @@ Currently we have the following pre-defined profiles
   contains details of the recommendations like the `threshold value`
   - **threshold** \
     Double value depicting the threshold value of the recommendation. E.g: `0.1`
+
+### Datasource
+  stay tuned
 
 # Response
 
