@@ -122,6 +122,9 @@ public class ExperimentInitiator {
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
                     e.printStackTrace();
                 }
+            } else {
+                LOGGER.error("No Recommendation Engine mapping found for performance profile: " +
+                        kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");
             }
         }
         return true;
