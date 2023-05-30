@@ -96,9 +96,17 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 // Recommendation Item checks
                 boolean isCpuRequestValid = true;
                 boolean isMemoryRequestValid = true;
+                // Pass Notification object to all callers to update the notifications required
+                ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();
                 // Get the Recommendation Items
-                RecommendationConfigItem cpuRequestItem = getCPURequestRecommendation(filteredResultsMap, monitoringEndTime);
-                RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(filteredResultsMap, monitoringEndTime);
+                RecommendationConfigItem cpuRequestItem = getCPURequestRecommendation(
+                                                                filteredResultsMap,
+                                                                monitoringEndTime,
+                                                                notifications);
+                RecommendationConfigItem memRequestItem = getMemoryRequestRecommendation(
+                                                                filteredResultsMap,
+                                                                monitoringEndTime,
+                                                                notifications);
 
                 if (cpuRequestItem.getAmount() <= 0) { isCpuRequestValid = false; }
                 if (memRequestItem.getAmount() <= 0) { isMemoryRequestValid = false; }
@@ -114,11 +122,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedCpuRequest = cpuRequestItem.getAmount();
                     generatedCpuRequestFormat = cpuRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuRequestItem);
-                } else {
-                    RecommendationNotification recommendationNotification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_ZERO
-                    );
-                    recommendation.addNotification(recommendationNotification);
                 }
 
                 // Check for null
@@ -126,11 +129,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     generatedMemRequest = memRequestItem.getAmount();
                     generatedMemRequestFormat = memRequestItem.getFormat();
                     requestsMap.put(AnalyzerConstants.RecommendationItem.memory, memRequestItem);
-                } else {
-                    RecommendationNotification recommendationNotification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotification.MEMORY_RECORDS_ARE_ZERO
-                    );
-                    recommendation.addNotification(recommendationNotification);
                 }
 
                 // Set Request Map
@@ -196,30 +194,22 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 Double currentCpuRequest = getCurrentValue( filteredResultsMap,
                                                             timestampToExtract,
                                                             AnalyzerConstants.ResourceSetting.requests,
-                                                            AnalyzerConstants.RecommendationItem.cpu);
+                                                            AnalyzerConstants.RecommendationItem.cpu,
+                                                            notifications);
                 Double currentMemRequest = getCurrentValue( filteredResultsMap,
                                                             timestampToExtract,
                                                             AnalyzerConstants.ResourceSetting.requests,
-                                                            AnalyzerConstants.RecommendationItem.memory);
+                                                            AnalyzerConstants.RecommendationItem.memory,
+                                                            notifications);
 
-                if (null == currentCpuRequest) {
-                    RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotification.CPU_REQUEST_NOT_SET);
-                    recommendation.addNotification(notification);
-                } else if (null != generatedCpuRequest
-                            && null != generatedCpuRequestFormat) {
+                if (null != currentCpuRequest && null != generatedCpuRequest && null != generatedCpuRequestFormat) {
                     double diff = generatedCpuRequest - currentCpuRequest;
                     // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
                     RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
                     requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
                 }
 
-                if (null == currentMemRequest) {
-                    RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotification.MEMORY_REQUEST_NOT_SET);
-                    recommendation.addNotification(notification);
-                } else if (null != generatedMemRequest
-                            && null != generatedMemRequestFormat) {
+                if (null != currentMemRequest && null != generatedMemRequest && null != generatedMemRequestFormat) {
                     double diff = generatedMemRequest - currentMemRequest;
                     // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
                     RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemRequestFormat);
@@ -239,28 +229,23 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 Double currentCpuLimit = getCurrentValue(   filteredResultsMap,
                                                             timestampToExtract,
                                                             AnalyzerConstants.ResourceSetting.limits,
-                                                            AnalyzerConstants.RecommendationItem.cpu);;
+                                                            AnalyzerConstants.RecommendationItem.cpu,
+                                                            notifications);
                 Double currentMemLimit = getCurrentValue(   filteredResultsMap,
                                                             timestampToExtract,
                                                             AnalyzerConstants.ResourceSetting.limits,
-                                                            AnalyzerConstants.RecommendationItem.memory);
+                                                            AnalyzerConstants.RecommendationItem.memory,
+                                                            notifications);
 
                 // No notification if CPU limit not set
                 // Check if currentCpuLimit is not null and
-                if (null != currentCpuLimit
-                        && null != generatedCpuLimit
-                        && null != generatedCpuLimitFormat) {
+                if (null != currentCpuLimit && null != generatedCpuLimit && null != generatedCpuLimitFormat) {
                     double diff = generatedCpuLimit - currentCpuLimit;
                     RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
                     limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
                 }
 
-                if (null == currentMemLimit) {
-                    RecommendationNotification notification = new RecommendationNotification(
-                            AnalyzerConstants.RecommendationNotification.MEMORY_LIMIT_NOT_SET);
-                    recommendation.addNotification(notification);
-                } else if (null != generatedMemLimit
-                        && null != generatedMemLimitFormat) {
+                if (null != currentMemLimit && null != generatedMemLimit && null != generatedMemLimitFormat) {
                     double diff = generatedMemLimit - currentMemLimit;
                     RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemLimitFormat);
                     limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
@@ -273,6 +258,42 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 // Set Variation Map
                 if (!variation.isEmpty())
                     recommendation.setVariation(variation);
+
+                // Iterate over notifications and set to recommendations
+                for (RecommendationNotification recommendationNotification : notifications) {
+                    recommendation.addNotification(recommendationNotification);
+                }
+
+                // Validating contradicting notifications
+
+                // Get the notifications map in the recommendations
+                HashMap<Integer, RecommendationNotification> populatedNotifications = recommendation.getNotifications();
+                // Loop over collected notifications, there might be duplicates but it's fine
+                for (RecommendationNotification recommendationNotification : notifications) {
+                    int codeToCheck = recommendationNotification.getCode();
+                    // Check if the code is available in map to get the list of contradicting codes
+                    if (!AnalyzerConstants.NotificationCodes.CONTRADICTING_MAP.containsKey(codeToCheck)) {
+                        continue;
+                    }
+                    // Retrieve the list of contradicting codes from map
+                    List<Integer> contradictingCodes = AnalyzerConstants.NotificationCodes.CONTRADICTING_MAP.get(codeToCheck);
+                    // Check if list is not empty and not null
+                    if (null == contradictingCodes || contradictingCodes.isEmpty()) {
+                        continue;
+                    }
+                    // Iterate over the list for each code
+                    for (Integer code: contradictingCodes) {
+                        // Check if the existing map is not null and has elements
+                        if (null == populatedNotifications || populatedNotifications.isEmpty()) {
+                            break;
+                        }
+                        // Check if the map contains a contradicting key
+                        if (populatedNotifications.containsKey(code)) {
+                            // Remove the contradicting key
+                            populatedNotifications.remove(code);
+                        }
+                    }
+                }
 
                 // Set Recommendations
                 resultRecommendation.put(recPeriod, recommendation);
@@ -365,7 +386,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp monitoringEndTimestamp) {
+    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                                                        Timestamp monitoringEndTimestamp,
+                                                                        ArrayList<RecommendationNotification> notifications) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> cpuUsageList = filteredResultsMap.values()
@@ -420,6 +443,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             cpuRequest = 0.0;
         }
 
+        if (0.0 == cpuRequest) {
+            if (null != notifications) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_ZERO
+                ));
+            }
+            // Returning null will make sure that the map is not populated with values
+            return null;
+        }
+
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
             if (cpuUsageResults != null) {
@@ -442,7 +475,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         return null;
     }
 
-    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp monitoringEndTimestamp) {
+    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                                                           Timestamp monitoringEndTimestamp,
+                                                                           ArrayList<RecommendationNotification> notifications) {
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> memUsageList = filteredResultsMap.values()
@@ -507,6 +542,16 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // We'll use the minimum of the above two values
         Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
 
+        if (null == memRec || 0.0 == memRec) {
+            if (null != notifications) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.MEMORY_RECORDS_ARE_ZERO
+                ));
+            }
+            // Returning null will make sure that the map is not populated with values
+            return null;
+        }
+
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
             MetricResults memoryUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
             if (memoryUsageResults != null) {
@@ -532,7 +577,8 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static Double getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                           Timestamp timestampToExtract,
                                           AnalyzerConstants.ResourceSetting resourceSetting,
-                                          AnalyzerConstants.RecommendationItem recommendationItem) {
+                                          AnalyzerConstants.RecommendationItem recommendationItem,
+                                          ArrayList<RecommendationNotification> notifications) {
         Double currentValue = null;
         AnalyzerConstants.MetricName metricName = null;
         for (Timestamp timestamp : filteredResultsMap.keySet()) {
@@ -556,9 +602,37 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     Optional<MetricResults>  metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
                     currentValue = metricResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(null);
                 }
+                if (null == currentValue) {
+                    setNotificationsFor(resourceSetting, recommendationItem, notifications);
+                }
                 return currentValue;
             }
         }
+        setNotificationsFor(resourceSetting, recommendationItem, notifications);
         return null;
+    }
+
+    private static void setNotificationsFor(AnalyzerConstants.ResourceSetting resourceSetting,
+                                            AnalyzerConstants.RecommendationItem recommendationItem,
+                                            ArrayList<RecommendationNotification> notifications) {
+        if (null == notifications)
+            return;
+        if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu) {
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.CPU_REQUEST_NOT_SET
+                ));
+            }
+        } else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.MEMORY_REQUEST_NOT_SET
+                ));
+            } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.MEMORY_LIMIT_NOT_SET
+                ));
+            }
+        }
     }
 }

@@ -21,6 +21,9 @@ import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommenda
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -306,23 +309,136 @@ public class AnalyzerConstants {
 
     public static final class NotificationCodes {
         private NotificationCodes() {
-
         }
+
         /* Info     1000 - 1999 */
+        // Scope: At Higher (Recommendations) & Lower (Engine & Sub Category) level
         public static final int NOT_ENOUGH_DATA = 1000;
+        // Scope: Only at Higher (Recommendations) level
         public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 1001;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int CPU_RECORDS_ARE_IDLE = 1002;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int CPU_RECORDS_ARE_ZERO = 1003;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int MEMORY_RECORDS_ARE_IDLE = 1004;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int MEMORY_RECORDS_ARE_ZERO = 1005;
 
         /* Warning  2000 - 2999 */
         /* Error    3000 - 3999 */
         /* Critical 4000 - 4999 */
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int CPU_REQUEST_NOT_SET = 4000;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int MEMORY_REQUEST_NOT_SET = 4001;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int CPU_LIMIT_NOT_SET = 4002;
+        // Scope: Only at Lower (Engine & Sub Category) level
         public static final int MEMORY_LIMIT_NOT_SET = 4003;
+
+        public static final HashMap<Integer, List<Integer>> CONTRADICTING_MAP = new HashMap<>();
+
+        // Add contents in static block instead of initialising every var as static
+        static {
+            // Contradicting Codes for NOT_ENOUGH_DATA -> 1000
+            Integer[] CODES_CONTRADICT_NOT_ENOUGH_DATA = {
+                // Add things which contradict 1000
+                // Currently it's added by default so no contradicting codes will be added here
+            };
+
+            CONTRADICTING_MAP.put(NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
+
+            // Contradicting Codes for DURATION_BASED_RECOMMENDATIONS_AVAILABLE -> 1001
+            Integer[] CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE)
+            );
+
+            // Contradicting Codes for CPU_RECORDS_ARE_IDLE -> 1002
+            Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CPU_RECORDS_ARE_IDLE,
+                    Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE)
+            );
+
+            // Contradicting Codes for CPU_RECORDS_ARE_ZERO -> 1003
+            Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CPU_RECORDS_ARE_ZERO,
+                    Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO)
+            );
+
+            // Contradicting Codes for MEMORY_RECORDS_ARE_IDLE -> 1004
+            Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_IDLE = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    MEMORY_RECORDS_ARE_IDLE,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_IDLE)
+            );
+
+            // Contradicting Codes for MEMORY_RECORDS_ARE_ZERO -> 1005
+            Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    MEMORY_RECORDS_ARE_ZERO,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO)
+            );
+
+            // Contradicting Codes for CPU_REQUEST_NOT_SET -> 4000
+            Integer[] CODES_CONTRADICT_CPU_REQUEST_NOT_SET = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CPU_REQUEST_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_CPU_REQUEST_NOT_SET)
+            );
+
+            // Contradicting Codes for MEMORY_REQUEST_NOT_SET -> 4001
+            Integer[] CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    MEMORY_REQUEST_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET)
+            );
+
+            // Contradicting Codes for CPU_LIMIT_NOT_SET -> 4002
+            Integer[] CODES_CONTRADICT_CPU_LIMIT_NOT_SET = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CPU_LIMIT_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_CPU_LIMIT_NOT_SET)
+            );
+
+            // Contradicting Codes for MEMORY_LIMIT_NOT_SET -> 4003
+            Integer[] CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET = {
+                    NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    MEMORY_LIMIT_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET)
+            );
+        }
     }
 
     public static final class RecommendationConstants {
