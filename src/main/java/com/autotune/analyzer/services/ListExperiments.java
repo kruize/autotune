@@ -104,9 +104,12 @@ public class ListExperiments extends HttpServlet {
             for (int i = 0; i < params.size(); i++) {
                 String param = params.get(i);
                 if (param == null || param.isEmpty()) {
-                    params.set(i, AnalyzerConstants.BooleanString.FALSE);
+                    if (i == 2) { // Check if it's the "latest" parameter
+                        params.set(i, AnalyzerConstants.BooleanString.TRUE);
+                    } else {
+                        params.set(i, AnalyzerConstants.BooleanString.FALSE);
+                    }
                 } else if (!param.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE) && !param.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
-                    // Handle mistyped values here
                     invalidParams.add(param);
                 }
             }
