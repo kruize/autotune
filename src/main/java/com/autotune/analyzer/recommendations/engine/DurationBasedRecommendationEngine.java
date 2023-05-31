@@ -286,17 +286,23 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
                                                     DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
                                                     Timestamp endTime) {
+        Set<Map.Entry<Timestamp, IntervalResults>> entrySet = resultsHashMap.entrySet();
+        List<Map.Entry<Timestamp, IntervalResults>> entryList = new ArrayList<>(entrySet);
+
+        // Sort the list in descending order
+        Collections.sort(entryList, (entry1, entry2) -> entry2.getKey().compareTo(entry1.getKey()));
+
+        LinkedHashMap<Timestamp, IntervalResults> sortedResultsHashMap = new LinkedHashMap<>();
+        for (Map.Entry<Timestamp, IntervalResults> entry : entryList) {
+            sortedResultsHashMap.put(entry.getKey(), entry.getValue());
+        }
+
         double sum = 0.0;
-        // Initiate with null as we have a null check at the caller end
         Timestamp startTimestamp = null;
-        // As we cannot sort HashSet
-        List<Timestamp> timestampList = new ArrayList<Timestamp>(resultsHashMap.keySet());
-        // Sort the time stamps in descending order
-        timestampList.sort((t1, t2) -> t2.compareTo(t1));
-        for (Timestamp timestamp: timestampList) {
+        for (Timestamp timestamp: sortedResultsHashMap.keySet()) {
             if (!timestamp.after(endTime)) {
-                if (resultsHashMap.containsKey(timestamp)) {
-                    sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
+                if (sortedResultsHashMap.containsKey(timestamp)) {
+                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
                     if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
                         // Storing the timestamp value in startTimestamp variable to return
                         startTimestamp = timestamp;
@@ -305,6 +311,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 }
             }
         }
+        startTimestamp = sortedResultsHashMap.get(startTimestamp).getIntervalStartTime();
         // Will be returned null if start time not found
         return startTimestamp;
     }
