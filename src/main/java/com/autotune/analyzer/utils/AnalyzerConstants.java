@@ -325,7 +325,7 @@ public class AnalyzerConstants {
         //          SubSystem - Power       127000 - 127999 (10% of availability)
 
         public static final int INFO_GENERAL_INFO_GENERAL_START = 110000;
-        // Subsystem section: Recomemndation Engines
+        // Subsystem section: Recommendation Engines
         // Range: 112000 - 112999 (Each subsection can be given 100 entries which fit total of 10 entries or engines)
 
         // Subsystem subsection: Default Engine
