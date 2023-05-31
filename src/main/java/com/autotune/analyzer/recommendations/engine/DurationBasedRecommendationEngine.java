@@ -359,7 +359,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                                                         Timestamp monitoringEndTimestamp,
                                                                         ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
-        if (null != notifications) {
+        if (null == notifications) {
             LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
             setNotification = false;
         }
@@ -465,7 +465,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                                                            Timestamp monitoringEndTimestamp,
                                                                            ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
-        if (null != notifications) {
+        if (null == notifications) {
             LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
             setNotification = false;
         }
