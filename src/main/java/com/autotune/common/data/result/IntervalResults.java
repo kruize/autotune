@@ -65,6 +65,10 @@ public class IntervalResults {
         this.metricResultsMap = metricResultsMap;
     }
 
+    public Timestamp getIntervalStartTime() {
+        return intervalStartTime;
+    }
+
     @Override
     public String toString() {
         return "IntervalResults{" +
