@@ -202,9 +202,10 @@ public class AnalyzerConstants {
 
     public enum RecommendationNotificationTypes {
         INFO("info", 1),
-        WARN("warning", 2),
-        ERROR("error", 3),
-        CRITICAL("critical", 4);
+        NOTICE("notice", 2),
+        WARN("warning", 3),
+        ERROR("error", 4),
+        CRITICAL("critical", 5);
 
         private String name;
         private int severity;
@@ -238,22 +239,22 @@ public class AnalyzerConstants {
         CPU_RECORDS_ARE_IDLE (
                 NotificationCodes.CPU_RECORDS_ARE_IDLE,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_IDLE,
-                RecommendationNotificationTypes.INFO
+                RecommendationNotificationTypes.NOTICE
         ),
         CPU_RECORDS_ARE_ZERO (
                 NotificationCodes.CPU_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_ZERO,
-                RecommendationNotificationTypes.INFO
+                RecommendationNotificationTypes.NOTICE
         ),
         MEMORY_RECORDS_ARE_IDLE (
                 NotificationCodes.MEMORY_RECORDS_ARE_IDLE,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_IDLE,
-                RecommendationNotificationTypes.INFO
+                RecommendationNotificationTypes.NOTICE
         ),
         MEMORY_RECORDS_ARE_ZERO (
                 NotificationCodes.MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
-                RecommendationNotificationTypes.INFO
+                RecommendationNotificationTypes.NOTICE
         ),
         /* Warning  2000 - 2999 */
         /* Error    3000 - 3999 */
@@ -311,31 +312,277 @@ public class AnalyzerConstants {
         private NotificationCodes() {
         }
 
-        /* Info     1000 - 1999 */
-        // Scope: At Higher (Recommendations) & Lower (Engine & Sub Category) level
-        public static final int NOT_ENOUGH_DATA = 1000;
-        // Scope: Only at Higher (Recommendations) level
-        public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 1001;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int CPU_RECORDS_ARE_IDLE = 1002;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int CPU_RECORDS_ARE_ZERO = 1003;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int MEMORY_RECORDS_ARE_IDLE = 1004;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int MEMORY_RECORDS_ARE_ZERO = 1005;
+        // Section - Info:                  100000 - 199999
+        //      SubSection - General Info:  110000 - 119999
+        //          SubSystem - General:    110000 - 112999 (30% of availability)
+        //          SubSystem - CPU:        113000 - 113999 (10% of availability)
+        //          SubSystem - Memory      114000 - 114999 (10% of availability)
+        //          SubSystem - Network     115000 - 115999 (10% of availability)
+        //          SubSystem - Disk        116000 - 116999 (10% of availability)
+        //          SubSystem - Power       117000 - 117999 (10% of availability)
+        //      SubSection - Data Availability: 120000 - 129999
+        //          SubSystem - General:    120000 - 122999 (30% of availability)
+        //          SubSystem - CPU:        123000 - 123999 (10% of availability)
+        //          SubSystem - Memory      124000 - 124999 (10% of availability)
+        //          SubSystem - Network     125000 - 125999 (10% of availability)
+        //          SubSystem - Disk        126000 - 126999 (10% of availability)
+        //          SubSystem - Power       127000 - 127999 (10% of availability)
 
-        /* Warning  2000 - 2999 */
-        /* Error    3000 - 3999 */
-        /* Critical 4000 - 4999 */
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int CPU_REQUEST_NOT_SET = 4000;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int MEMORY_REQUEST_NOT_SET = 4001;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int CPU_LIMIT_NOT_SET = 4002;
-        // Scope: Only at Lower (Engine & Sub Category) level
-        public static final int MEMORY_LIMIT_NOT_SET = 4003;
+        public static final int INFO_GENERAL_INFO_GENERAL_START = 110000;
+        // Subsystem section: Recomemndation Engines
+        // Range: 112000 - 112999 (Each subsection can be given 100 entries which fit total of 10 entries or engines)
+
+        // Subsystem subsection: Default Engine
+        // Range: 112000 - 112099
+        // Subsystem subsection: Duration Based Engine
+        // Range: 112100 - 112199
+        public static final int DURATION_BASED_ENGINE_START = 112100;
+        public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int DURATION_BASED_ENGINE_END = 112199;
+        // Subsystem subsection: Profile Based Engine
+        // Range: 112200 - 112299
+
+        public static final int INFO_GENERAL_INFO_GENERAL_END = 112999;
+        public static final int INFO_GENERAL_CPU_START = 113000;
+        public static final int INFO_GENERAL_CPU_END = 113999;
+        public static final int INFO_GENERAL_MEMORY_START = 114000;
+        public static final int INFO_GENERAL_MEMORY_END = 114999;
+        public static final int INFO_GENERAL_NETWORK_START = 115000;
+        public static final int INFO_GENERAL_NETWORK_END = 115999;
+        public static final int INFO_GENERAL_DISK_START = 116000;
+        public static final int INFO_GENERAL_DISK_END = 116999;
+        public static final int INFO_GENERAL_POWER_START = 117000;
+        public static final int INFO_GENERAL_POWER_END = 117999;
+        public static final int INFO_GENERAL_FUTURE_1_START = 118000;
+        public static final int INFO_GENERAL_FUTURE_1_END = 118999;
+        public static final int INFO_GENERAL_FUTURE_2_START = 119000;
+        public static final int INFO_GENERAL_FUTURE_2_END = 119999;
+
+        public static final int INFO_DATA_AVAILABILITY_GENERAL_START = 120000;
+        public static final int NOT_ENOUGH_DATA = 120001;
+        public static final int INFO_DATA_AVAILABILITY_GENERAL__END = 122999;
+        public static final int INFO_DATA_CPU_START = 123000;
+        public static final int INFO_DATA_CPU_END = 123999;
+        public static final int INFO_DATA_MEMORY_START = 124000;
+        public static final int INFO_DATA_MEMORY_END = 124999;
+        public static final int INFO_DATA_NETWORK_START = 125000;
+        public static final int INFO_DATA_NETWORK_END = 125999;
+        public static final int INFO_DATA_DISK_START = 126000;
+        public static final int INFO_DATA_DISK_END = 126999;
+        public static final int INFO_DATA_POWER_START = 127000;
+        public static final int INFO_DATA_POWER_END = 127999;
+        public static final int INFO_DATA_FUTURE_1_START = 128000;
+        public static final int INFO_DATA_FUTURE_1_END = 128999;
+        public static final int INFO_DATA_FUTURE_2_START = 129000;
+        public static final int INFO_DATA_FUTURE_2_END = 129999;
+
+        // Section - Notice:                200000 - 299999
+        //      SubSection - General Info:  210000 - 219999
+        //          SubSystem - General:    210000 - 212999 (30% of availability)
+        //          SubSystem - CPU:        213000 - 213999 (10% of availability)
+        //          SubSystem - Memory:     214000 - 214999 (10% of availability)
+        //          SubSystem - Network:    215000 - 215999 (10% of availability)
+        //          SubSystem - Disk:       216000 - 216999 (10% of availability)
+        //          SubSystem - Power:      217000 - 217999 (10% of availability)
+        //      SubSection - Data Availability: 220000 - 229999
+        //          SubSystem - General:    221000 - 222999 (30% of availability)
+        //          SubSystem - CPU:        223000 - 223999 (10% of availability)
+        //          SubSystem - Memory:     224000 - 224999 (10% of availability)
+        //          SubSystem - Network:    225000 - 225999 (10% of availability)
+        //          SubSystem - Disk:       226000 - 226999 (10% of availability)
+        //          SubSystem - Power:      227000 - 227999 (10% of availability)
+
+        public static final int NOTICE_GENERAL_INFO_START = 210000;
+        public static final int NOTICE_GENERAL_INFO_END = 212999;
+        public static final int NOTICE_GENERAL_CPU_START = 213000;
+        public static final int CPU_RECORDS_ARE_IDLE = 213001;
+        public static final int NOTICE_GENERAL_CPU_END = 213999;
+        public static final int NOTICE_GENERAL_MEMORY_START = 214000;
+        public static final int MEMORY_RECORDS_ARE_IDLE = 214001;
+        public static final int NOTICE_GENERAL_MEMORY_END = 214999;
+        public static final int NOTICE_GENERAL_NETWORK_START = 215000;
+        public static final int NOTICE_GENERAL_NETWORK_END = 215999;
+        public static final int NOTICE_GENERAL_DISK_START = 216000;
+        public static final int NOTICE_GENERAL_DISK_END = 216999;
+        public static final int NOTICE_GENERAL_POWER_START = 217000;
+        public static final int NOTICE_GENERAL_POWER_END = 217999;
+        public static final int NOTICE_GENERAL_FUTURE_1_START = 218000;
+        public static final int NOTICE_GENERAL_FUTURE_1_END = 218999;
+        public static final int NOTICE_GENERAL_FUTURE_2_START = 219000;
+        public static final int NOTICE_GENERAL_FUTURE_2_END = 219999;
+
+        public static final int NOTICE_DATA_AVAILABILITY_START = 220000;
+        public static final int NOTICE_DATA_AVAILABILITY_END = 222999;
+        public static final int NOTICE_DATA_CPU_START = 223000;
+        public static final int CPU_RECORDS_ARE_ZERO = 223001;
+        public static final int NOTICE_DATA_CPU_END = 223999;
+        public static final int NOTICE_DATA_MEMORY_START = 224000;
+        public static final int MEMORY_RECORDS_ARE_ZERO = 224001;
+        public static final int NOTICE_DATA_MEMORY_END = 224999;
+        public static final int NOTICE_DATA_NETWORK_START = 225000;
+        public static final int NOTICE_DATA_NETWORK_END = 225999;
+        public static final int NOTICE_DATA_DISK_START = 226000;
+        public static final int NOTICE_DATA_DISK_END = 226999;
+        public static final int NOTICE_DATA_POWER_START = 227000;
+        public static final int NOTICE_DATA_POWER_END = 227999;
+        public static final int NOTICE_DATA_FUTURE_1_START = 228000;
+        public static final int NOTICE_DATA_FUTURE_1_END = 228999;
+        public static final int NOTICE_DATA_FUTURE_2_START = 229000;
+        public static final int NOTICE_DATA_FUTURE_2_END = 229999;
+
+        // Section - Warning:               300000 - 399999
+        //      SubSection - General Info:  310000 - 319999
+        //          SubSystem - General:    310000 - 312999 (30% of availability)
+        //          SubSystem - CPU:        313000 - 313999 (10% of availability)
+        //          SubSystem - Memory:     314000 - 314999 (10% of availability)
+        //          SubSystem - Network:    315000 - 315999 (10% of availability)
+        //          SubSystem - Disk:       316000 - 316999 (10% of availability)
+        //          SubSystem - Power:      317000 - 317999 (10% of availability)
+        //      SubSection - Data Availability: 320000 - 329999
+        //          SubSystem - General:    321000 - 322999 (30% of availability)
+        //          SubSystem - CPU:        323000 - 323999 (10% of availability)
+        //          SubSystem - Memory:     324000 - 324999 (10% of availability)
+        //          SubSystem - Network:    325000 - 325999 (10% of availability)
+        //          SubSystem - Disk:       326000 - 326999 (10% of availability)
+        //          SubSystem - Power:      327000 - 327999 (10% of availability)
+
+        public static final int WARNING_GENERAL_INFO_START = 310000;
+        public static final int WARNING_GENERAL_INFO_END = 312999;
+        public static final int WARNING_GENERAL_CPU_START = 313000;
+        public static final int WARNING_GENERAL_CPU_END = 313999;
+        public static final int WARNING_GENERAL_MEMORY_START = 314000;
+        public static final int WARNING_GENERAL_MEMORY_END = 314999;
+        public static final int WARNING_GENERAL_NETWORK_START = 315000;
+        public static final int WARNING_GENERAL_NETWORK_END = 315999;
+        public static final int WARNING_GENERAL_DISK_START = 316000;
+        public static final int WARNING_GENERAL_DISK_END = 316999;
+        public static final int WARNING_GENERAL_POWER_START = 317000;
+        public static final int WARNING_GENERAL_POWER_END = 317999;
+        public static final int WARNING_GENERAL_FUTURE_1_START = 318000;
+        public static final int WARNING_GENERAL_FUTURE_1_END = 318999;
+        public static final int WARNING_GENERAL_FUTURE_2_START = 319000;
+        public static final int WARNING_GENERAL_FUTURE_2_END = 319999;
+
+        public static final int WARNING_DATA_AVAILABILITY_START = 320000;
+        public static final int WARNING_DATA_AVAILABILITY_END = 322999;
+        public static final int WARNING_DATA_CPU_START = 323000;
+        public static final int WARNING_DATA_CPU_END = 323999;
+        public static final int WARNING_DATA_MEMORY_START = 324000;
+        public static final int WARNING_DATA_MEMORY_END = 324999;
+        public static final int WARNING_DATA_NETWORK_START = 325000;
+        public static final int WARNING_DATA_NETWORK_END = 325999;
+        public static final int WARNING_DATA_DISK_START = 326000;
+        public static final int WARNING_DATA_DISK_END = 326999;
+        public static final int WARNING_DATA_POWER_START = 327000;
+        public static final int WARNING_DATA_POWER_END = 327999;
+        public static final int WARNING_DATA_FUTURE_1_START = 328000;
+        public static final int WARNING_DATA_FUTURE_1_END = 328999;
+        public static final int WARNING_DATA_FUTURE_2_START = 329000;
+        public static final int WARNING_DATA_FUTURE_2_END = 329999;
+
+        // Section - Error:                 400000 - 499999
+        //      SubSection - General Info:  410000 - 419999
+        //          SubSystem - General:    410000 - 412999 (30% of availability)
+        //          SubSystem - CPU:        413000 - 413999 (10% of availability)
+        //          SubSystem - Memory:     414000 - 414999 (10% of availability)
+        //          SubSystem - Network:    415000 - 415999 (10% of availability)
+        //          SubSystem - Disk:       416000 - 416999 (10% of availability)
+        //          SubSystem - Power:      417000 - 417999 (10% of availability)
+        //      SubSection - Data Availability: 420000 - 429999
+        //          SubSystem - General:    421000 - 422999 (30% of availability)
+        //          SubSystem - CPU:        423000 - 423999 (10% of availability)
+        //          SubSystem - Memory:     424000 - 424999 (10% of availability)
+        //          SubSystem - Network:    425000 - 425999 (10% of availability)
+        //          SubSystem - Disk:       426000 - 426999 (10% of availability)
+        //          SubSystem - Power:      427000 - 427999 (10% of availability)
+
+        public static final int ERROR_GENERAL_INFO_START = 410000;
+        public static final int ERROR_GENERAL_INFO_END = 412999;
+        public static final int ERROR_GENERAL_CPU_START = 413000;
+        public static final int ERROR_GENERAL_CPU_END = 413999;
+        public static final int ERROR_GENERAL_MEMORY_START = 414000;
+        public static final int ERROR_GENERAL_MEMORY_END = 414999;
+        public static final int ERROR_GENERAL_NETWORK_START = 415000;
+        public static final int ERROR_GENERAL_NETWORK_END = 415999;
+        public static final int ERROR_GENERAL_DISK_START = 416000;
+        public static final int ERROR_GENERAL_DISK_END = 416999;
+        public static final int ERROR_GENERAL_POWER_START = 417000;
+        public static final int ERROR_GENERAL_POWER_END = 417999;
+        public static final int ERROR_GENERAL_FUTURE_1_START = 418000;
+        public static final int ERROR_GENERAL_FUTURE_1_END = 418999;
+        public static final int ERROR_GENERAL_FUTURE_2_START = 419000;
+        public static final int ERROR_GENERAL_FUTURE_2_END = 419999;
+
+        public static final int ERROR_DATA_AVAILABILITY_START = 420000;
+        public static final int ERROR_DATA_AVAILABILITY_END = 422999;
+        public static final int ERROR_DATA_CPU_START = 423000;
+        public static final int ERROR_DATA_CPU_END = 423999;
+        public static final int ERROR_DATA_MEMORY_START = 424000;
+        public static final int ERROR_DATA_MEMORY_END = 424999;
+        public static final int ERROR_DATA_NETWORK_START = 425000;
+        public static final int ERROR_DATA_NETWORK_END = 425999;
+        public static final int ERROR_DATA_DISK_START = 426000;
+        public static final int ERROR_DATA_DISK_END = 426999;
+        public static final int ERROR_DATA_POWER_START = 427000;
+        public static final int ERROR_DATA_POWER_END = 427999;
+        public static final int ERROR_DATA_FUTURE_1_START = 428000;
+        public static final int ERROR_DATA_FUTURE_1_END = 428999;
+        public static final int ERROR_DATA_FUTURE_2_START = 429000;
+        public static final int ERROR_DATA_FUTURE_2_END = 429999;
+
+        // Section - Critical:              500000 - 599999
+        //      SubSection - General Info:  510000 - 519999
+        //          SubSystem - General:    510000 - 512999 (30% of availability)
+        //          SubSystem - CPU:        513000 - 513999 (10% of availability)
+        //          SubSystem - Memory:     514000 - 514999 (10% of availability)
+        //          SubSystem - Network:    515000 - 515999 (10% of availability)
+        //          SubSystem - Disk:       516000 - 516999 (10% of availability)
+        //          SubSystem - Power:      517000 - 517999 (10% of availability)
+        //      SubSection - Data Availability: 520000 - 529999
+        //          SubSystem - General:    521000 - 522999 (30% of availability)
+        //          SubSystem - CPU:        523000 - 523999 (10% of availability)
+        //          SubSystem - Memory:     524000 - 524999 (10% of availability)
+        //          SubSystem - Network:    525000 - 525999 (10% of availability)
+        //          SubSystem - Disk:       526000 - 526999 (10% of availability)
+        //          SubSystem - Power:      527000 - 527999 (10% of availability)
+
+        public static final int CRITICAL_GENERAL_INFO_START = 510000;
+        public static final int CRITICAL_GENERAL_INFO_END = 512999;
+        public static final int CRITICAL_GENERAL_CPU_START = 513000;
+        public static final int CRITICAL_GENERAL_CPU_END = 513999;
+        public static final int CRITICAL_GENERAL_MEMORY_START = 514000;
+        public static final int CRITICAL_GENERAL_MEMORY_END = 514999;
+        public static final int CRITICAL_GENERAL_NETWORK_START = 515000;
+        public static final int CRITICAL_GENERAL_NETWORK_END = 515999;
+        public static final int CRITICAL_GENERAL_DISK_START = 516000;
+        public static final int CRITICAL_GENERAL_DISK_END = 516999;
+        public static final int CRITICAL_GENERAL_POWER_START = 517000;
+        public static final int CRITICAL_GENERAL_POWER_END = 517999;
+        public static final int CRITICAL_GENERAL_FUTURE_1_START = 518000;
+        public static final int CRITICAL_GENERAL_FUTURE_1_END = 518999;
+        public static final int CRITICAL_GENERAL_FUTURE_2_START = 519000;
+        public static final int CRITICAL_GENERAL_FUTURE_2_END = 519999;
+
+        public static final int CRITICAL_DATA_AVAILABILITY_START = 520000;
+        public static final int CRITICAL_DATA_AVAILABILITY_END = 522999;
+        public static final int CRITICAL_DATA_CPU_START = 523000;
+        public static final int CPU_REQUEST_NOT_SET = 523001;
+        public static final int CPU_LIMIT_NOT_SET = 523002;
+        public static final int CRITICAL_DATA_CPU_END = 523999;
+        public static final int CRITICAL_DATA_MEMORY_START = 524000;
+        public static final int MEMORY_REQUEST_NOT_SET = 524001;
+        public static final int MEMORY_LIMIT_NOT_SET = 524002;
+        public static final int CRITICAL_DATA_MEMORY_END = 524999;
+        public static final int CRITICAL_DATA_NETWORK_START = 525000;
+        public static final int CRITICAL_DATA_NETWORK_END = 525999;
+        public static final int CRITICAL_DATA_DISK_START = 526000;
+        public static final int CRITICAL_DATA_DISK_END = 526999;
+        public static final int CRITICAL_DATA_POWER_START = 527000;
+        public static final int CRITICAL_DATA_POWER_END = 527999;
+        public static final int CRITICAL_DATA_FUTURE_1_START = 528000;
+        public static final int CRITICAL_DATA_FUTURE_1_END = 528999;
+        public static final int CRITICAL_DATA_FUTURE_2_START = 529000;
+        public static final int CRITICAL_DATA_FUTURE_2_END = 529999;
 
         public static final HashMap<Integer, List<Integer>> CONTRADICTING_MAP = new HashMap<>();
 
@@ -442,6 +689,7 @@ public class AnalyzerConstants {
     }
 
     public static final class RecommendationConstants {
+        public static final Double CPU_ZERO = 0.0;
         public static final Double CPU_ONE_MILLICORE = 0.001;
         public static final Double CPU_TEN_MILLICORE = 0.01;
         public static final Double CPU_HUNDRED_MILLICORE = 0.1;

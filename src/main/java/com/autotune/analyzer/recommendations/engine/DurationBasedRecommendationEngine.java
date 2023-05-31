@@ -264,37 +264,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     recommendation.addNotification(recommendationNotification);
                 }
 
-                // Validating contradicting notifications
-
-                // Get the notifications map in the recommendations
-                HashMap<Integer, RecommendationNotification> populatedNotifications = recommendation.getNotifications();
-                // Loop over collected notifications, there might be duplicates but it's fine
-                for (RecommendationNotification recommendationNotification : notifications) {
-                    int codeToCheck = recommendationNotification.getCode();
-                    // Check if the code is available in map to get the list of contradicting codes
-                    if (!AnalyzerConstants.NotificationCodes.CONTRADICTING_MAP.containsKey(codeToCheck)) {
-                        continue;
-                    }
-                    // Retrieve the list of contradicting codes from map
-                    List<Integer> contradictingCodes = AnalyzerConstants.NotificationCodes.CONTRADICTING_MAP.get(codeToCheck);
-                    // Check if list is not empty and not null
-                    if (null == contradictingCodes || contradictingCodes.isEmpty()) {
-                        continue;
-                    }
-                    // Iterate over the list for each code
-                    for (Integer code: contradictingCodes) {
-                        // Check if the existing map is not null and has elements
-                        if (null == populatedNotifications || populatedNotifications.isEmpty()) {
-                            break;
-                        }
-                        // Check if the map contains a contradicting key
-                        if (populatedNotifications.containsKey(code)) {
-                            // Remove the contradicting key
-                            populatedNotifications.remove(code);
-                        }
-                    }
-                }
-
                 // Set Recommendations
                 resultRecommendation.put(recPeriod, recommendation);
             } else {
@@ -389,6 +358,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                         Timestamp monitoringEndTimestamp,
                                                                         ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null != notifications) {
+            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            setNotification = false;
+        }
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> cpuUsageList = filteredResultsMap.values()
@@ -443,14 +417,26 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             cpuRequest = 0.0;
         }
 
-        if (0.0 == cpuRequest) {
-            if (null != notifications) {
+        // Set notifications only if notification object is available
+        if (setNotification) {
+            // Check for Zero CPU
+            if (CPU_ZERO == cpuRequest) {
+                // Add notification for CPU_RECORDS_ARE_ZERO
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_ZERO
                 ));
+                // Returning null will make sure that the map is not populated with values
+                return null;
             }
-            // Returning null will make sure that the map is not populated with values
-            return null;
+            // Check for IDLE CPU
+            else if (CPU_ONE_MILLICORE >= cpuRequest) {
+                // Add notification for CPU_RECORDS_ARE_IDLE
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_IDLE
+                ));
+                // Returning null will make sure that the map is not populated with values
+                return null;
+            }
         }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
@@ -478,6 +464,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                            Timestamp monitoringEndTimestamp,
                                                                            ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null != notifications) {
+            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            setNotification = false;
+        }
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         List<Double> memUsageList = filteredResultsMap.values()
@@ -542,14 +533,17 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // We'll use the minimum of the above two values
         Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
 
-        if (null == memRec || 0.0 == memRec) {
-            if (null != notifications) {
+        // Set notifications only if notification object is available
+        if (setNotification) {
+            // Check if the memory recommendation is 0
+            if (null == memRec || 0.0 == memRec) {
+                // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.MEMORY_RECORDS_ARE_ZERO
                 ));
+                // Returning null will make sure that the map is not populated with values
+                return null;
             }
-            // Returning null will make sure that the map is not populated with values
-            return null;
         }
 
         for (IntervalResults intervalResults: filteredResultsMap.values()) {
@@ -615,20 +609,28 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static void setNotificationsFor(AnalyzerConstants.ResourceSetting resourceSetting,
                                             AnalyzerConstants.RecommendationItem recommendationItem,
                                             ArrayList<RecommendationNotification> notifications) {
+        // Check notifications is null, If it's null -> return.
         if (null == notifications)
             return;
+        // Check if the item is CPU
         if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu) {
+            // Check if the setting is REQUESTS
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.CPU_REQUEST_NOT_SET
                 ));
             }
-        } else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {
+        }
+        // Check if the item is Memory
+        else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {
+            // Check if the setting is REQUESTS
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.MEMORY_REQUEST_NOT_SET
                 ));
-            } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+            }
+            // Check if the setting is LIMITS
+            else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.MEMORY_LIMIT_NOT_SET
                 ));
