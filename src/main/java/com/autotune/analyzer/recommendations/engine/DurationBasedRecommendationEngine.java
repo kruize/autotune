@@ -419,7 +419,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Set notifications only if notification object is available
         if (setNotification) {
             // Check for Zero CPU
-            if (CPU_ZERO == cpuRequest) {
+            if (CPU_ZERO.equals(cpuRequest)) {
                 // Add notification for CPU_RECORDS_ARE_ZERO
                 notifications.add(new RecommendationNotification(
                         AnalyzerConstants.RecommendationNotification.CPU_RECORDS_ARE_ZERO
