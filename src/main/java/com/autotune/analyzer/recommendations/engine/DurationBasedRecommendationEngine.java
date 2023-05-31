@@ -30,7 +30,6 @@ import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -414,7 +413,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Make sure that the recommendation cannot be null
         // Check if the cpu request is null
         if (null == cpuRequest) {
-            cpuRequest = 0.0;
+            cpuRequest = CPU_ZERO;
         }
 
         // Set notifications only if notification object is available

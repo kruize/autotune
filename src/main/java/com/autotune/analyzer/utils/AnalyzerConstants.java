@@ -225,7 +225,6 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationNotification {
-        /* Info     1000 - 1999 */
         DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
                 NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
@@ -256,9 +255,6 @@ public class AnalyzerConstants {
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.NOTICE
         ),
-        /* Warning  2000 - 2999 */
-        /* Error    3000 - 3999 */
-        /* Critical 4000 - 4999 */
         CPU_REQUEST_NOT_SET (
                 NotificationCodes.CPU_REQUEST_NOT_SET,
                 RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
