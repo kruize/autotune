@@ -68,7 +68,8 @@ public class UpdateResults extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+        ;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
@@ -92,7 +93,7 @@ public class UpdateResults extends HttpServlet {
                         if (addedToDB.isSuccess()) {
                             sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                             //ToDO add temp code and call system.gc for every 100 results
-                            int count = (int)getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
+                            int count = (int) getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
                             count++;
                             LOGGER.debug("totalResultsCount so far : {}", count);
                             if (count >= AnalyzerConstants.GC_THRESHOLD_COUNT) {
@@ -108,17 +109,6 @@ public class UpdateResults extends HttpServlet {
                 } else {
                     LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
                     sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
-                }
-
-                if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
-                    boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mKruizeExperimentMap, experimentResultDataList);
-                    if (!recommendationCheck)
-                        LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
-                                experimentResultDataList.get(0).getExperiment_name(),
-                                experimentResultDataList.get(0).getIntervalEndTime());
-                    else {
-                        new ExperimentDBService().addRecommendationToDB(mKruizeExperimentMap, experimentResultDataList);
-                    }
                 }
             }
         } catch (Exception e) {
