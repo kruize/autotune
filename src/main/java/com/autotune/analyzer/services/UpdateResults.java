@@ -67,6 +67,7 @@ public class UpdateResults extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+
         try {
             performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
                     .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);

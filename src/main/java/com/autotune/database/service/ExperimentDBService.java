@@ -54,7 +54,6 @@ public class ExperimentDBService {
         this.experimentDAO = new ExperimentDAOImpl();
     }
 
-
     public void loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
@@ -214,7 +213,6 @@ public class ExperimentDBService {
         failedUpdateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(failedResultsEntries);
         return failedUpdateResultsAPIObjects;
     }
-
 
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);

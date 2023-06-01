@@ -153,7 +153,6 @@ public class AnalyzerErrorConstants {
 
             private KruizeRecommendationError() {
 
-
             }
         }
     }
