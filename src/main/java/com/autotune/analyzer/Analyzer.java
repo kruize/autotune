@@ -48,7 +48,6 @@ public class Analyzer {
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(UpdateRecommendations.class, ServerContext.UPDATE_RECOMMENDATIONS);
-
         context.addServlet(ListRecommendations.class, ServerContext.RECOMMEND_RESULTS);
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
