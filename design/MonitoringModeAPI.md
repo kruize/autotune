@@ -1434,9 +1434,10 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_name": "tfb-server-1",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "120001": {
                                     "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation."
+                                    "message": "There is not enough data available to generate a recommendation.",
+                                    "code": 120001
                                 }
                             ],
                             "data": {}
@@ -1447,9 +1448,10 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_name": "tfb-server-0",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "120001": {
                                     "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation."
+                                    "message": "There is not enough data available to generate a recommendation.",
+                                    "code": 120001
                                 }
                             ],
                             "data": {}
@@ -1474,9 +1476,10 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_name": "tfb-server-1",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available"
+                                    "message": "Duration Based Recommendations Available",
+                                    "code": 112101
                                 }
                             ],
                             "data": {
@@ -1516,9 +1519,10 @@ If no parameter is passed API returns all the latest recommendations available f
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         },
@@ -1526,9 +1530,10 @@ If no parameter is passed API returns all the latest recommendations available f
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         }
@@ -1542,9 +1547,10 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_name": "tfb-server-0",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "120001": {
                                     "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation."
+                                    "message": "There is not enough data available to generate a recommendation.",
+                                    "code": 120001
                                 }
                             ],
                             "data": {}
@@ -1583,9 +1589,10 @@ Returns the latest result of that experiment
                         "container_name": "tfb-server-1",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available"
+                                    "message": "Duration Based Recommendations Available",
+                                    "code": 112101
                                 }
                             ],
                             "data": {
@@ -1625,9 +1632,10 @@ Returns the latest result of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         },
@@ -1635,9 +1643,10 @@ Returns the latest result of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         }
@@ -1651,9 +1660,10 @@ Returns the latest result of that experiment
                         "container_name": "tfb-server-0",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "120001": {
                                     "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation."
+                                    "message": "There is not enough data available to generate a recommendation.",
+                                    "code": 120001
                                 }
                             ],
                             "data": {}
@@ -1693,9 +1703,10 @@ Returns all the results of that experiment
                         "container_name": "tfb-server-1",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available"
+                                    "message": "Duration Based Recommendations Available",
+                                    "code": 112101
                                 }
                             ],
                             "data": {
@@ -1735,9 +1746,10 @@ Returns all the results of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         },
@@ -1745,9 +1757,10 @@ Returns all the results of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         }
@@ -1789,9 +1802,10 @@ Returns all the results of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         },
@@ -1799,9 +1813,10 @@ Returns all the results of that experiment
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         }
@@ -1815,9 +1830,10 @@ Returns all the results of that experiment
                         "container_name": "tfb-server-0",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "120001": {
                                     "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation."
+                                    "message": "There is not enough data available to generate a recommendation.",
+                                    "code": 120001
                                 }
                             ],
                             "data": {}
@@ -1857,9 +1873,10 @@ Returns the recommendation at a particular timestamp if it exists
                         "container_name": "tfb-server-1",
                         "recommendations": {
                             "notifications": [
-                                {
+                                "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available"
+                                    "message": "Duration Based Recommendations Available",
+                                    "code": 112101
                                 }
                             ],
                             "data": {
@@ -1899,9 +1916,10 @@ Returns the recommendation at a particular timestamp if it exists
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         },
@@ -1909,9 +1927,10 @@ Returns the recommendation at a particular timestamp if it exists
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
                                             "notifications": [
-                                                {
+                                                "120001": {
                                                     "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation."
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
                                                 }
                                             ]
                                         }

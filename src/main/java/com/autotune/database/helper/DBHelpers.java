@@ -583,8 +583,8 @@ public class DBHelpers {
                                 if (null == containerRecommendations.getData()) {
                                     containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                                 } else {
-                                    containerRecommendations.getNotifications().clear();
-                                    containerRecommendations.getNotifications().addAll(containerAPIObject.getContainerRecommendations().getNotifications());
+                                    containerRecommendations.getNotificationMap().clear();
+                                    containerRecommendations.getNotificationMap().putAll(containerAPIObject.getContainerRecommendations().getNotificationMap());
                                     HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data = containerRecommendations.getData();
                                     data.putAll(containerAPIObject.getContainerRecommendations().getData());
                                 }
