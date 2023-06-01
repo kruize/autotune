@@ -48,6 +48,14 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
 
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_exp_template.json")
+    if "null" in test_name:
+        field = test_name.replace("null_", "")
+        json_file = "../json_files/create_exp_template.json"
+        filename = "/tmp/create_exp_template.json"
+
+        strip_double_quotes_for_field(json_file, field, filename)
+        environment = Environment(loader=FileSystemLoader("/tmp/"))
+        template = environment.get_template("create_exp_template.json")
 
     content = template.render(
         version=version,

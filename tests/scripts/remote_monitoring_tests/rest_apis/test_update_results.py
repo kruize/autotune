@@ -48,6 +48,15 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("update_results_template.json")
 
+    if "null" in test_name:
+        field = test_name.replace("null_", "")
+        json_file = "../json_files/update_results_template.json"
+        filename = "/tmp/update_results_template.json"
+
+        strip_double_quotes_for_field(json_file, field, filename)
+        environment = Environment(loader=FileSystemLoader("/tmp/"))
+        template = environment.get_template("update_results_template.json")
+
     filename = f"/tmp/update_results_{test_name}.json"
     content = template.render(
         version = version,
