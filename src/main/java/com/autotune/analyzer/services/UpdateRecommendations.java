@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -43,7 +42,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -54,9 +52,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
  *
  */
 @WebServlet(asyncSupported = true)
-public class UpdateRecommendation extends HttpServlet {
+public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendation.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -116,7 +114,10 @@ public class UpdateRecommendation extends HttpServlet {
                     It's important to note that in order for the Limit rows feature to function correctly,
                     the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
                  */
-                int limitRows = (int) ((KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.DateFormats.MINUTES_FOR_DAY) / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+                int limitRows = (int) ((
+                        KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
+                                KruizeConstants.DateFormats.MINUTES_FOR_DAY)
+                        / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
                 experimentDBService.loadResultsFromDBByName(mainKruizeExperimentMAP, experiment_name, interval_end_time, limitRows);
                 boolean recommendationCheck = new ExperimentInitiator().generateAndAddRecommendations(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
                 if (!recommendationCheck)
@@ -126,7 +127,7 @@ public class UpdateRecommendation extends HttpServlet {
                 else {
                     boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
                     if (success)
-                        sendSuccessResponse(response,  kruizeObject , interval_end_time);
+                        sendSuccessResponse(response, kruizeObject, interval_end_time);
                     else {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
                     }
@@ -140,7 +141,7 @@ public class UpdateRecommendation extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko , Timestamp interval_end_time) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
@@ -161,7 +162,7 @@ public class UpdateRecommendation extends HttpServlet {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
                 return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                        || ( field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
             }
 
             @Override
