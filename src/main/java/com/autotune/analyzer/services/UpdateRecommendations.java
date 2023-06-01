@@ -84,6 +84,7 @@ public class UpdateRecommendations extends HttpServlet {
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time = null;
         Timestamp interval_start_time = null;
+
         // Check if experiment_name is provided
         if (experiment_name == null || experiment_name.isEmpty()) {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY);
@@ -141,6 +142,7 @@ public class UpdateRecommendations extends HttpServlet {
         List<ExperimentResultData> experimentResultDataList = null;
         try {
             experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
@@ -171,6 +173,7 @@ public class UpdateRecommendations extends HttpServlet {
 
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
+
 
             }
         } else {
