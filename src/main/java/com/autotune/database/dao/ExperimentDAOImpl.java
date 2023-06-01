@@ -345,7 +345,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
         Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
@@ -396,5 +395,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
+
     }
 }

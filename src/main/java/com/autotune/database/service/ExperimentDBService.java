@@ -347,6 +347,7 @@ public class ExperimentDBService {
         return true;
     }
 
+
     public List<ExperimentResultData> getExperimentResultData(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
         List<KruizeResultsEntry> kruizeResultsEntryList = experimentDAO.getKruizeResultsEntry(experiment_name, interval_start_time, interval_end_time);
@@ -359,6 +360,5 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
-
     }
 }
