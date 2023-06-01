@@ -3,12 +3,6 @@ list_reco_json_schema = {
   "items": {
     "type": "object",
     "properties": {
-      "version": {
-        "type": "string"
-      },
-      "experiment_name": {
-        "type": "string"
-      },
       "cluster_name": {
         "type": "string"
       },
@@ -31,6 +25,9 @@ list_reco_json_schema = {
               "items": {
                 "type": "object",
                 "properties": {
+                  "container_image_name": {
+                    "type": "string"
+                  },
                   "container_name": {
                     "type": "string"
                   },
@@ -57,8 +54,8 @@ list_reco_json_schema = {
                       },
                       "data": {
                         "type": "object",
-                        "properties": {
-                          "2022-01-23T18:25:43.511Z": {
+                        "patternProperties": {
+                          "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
                             "type": "object",
                             "properties": {
                               "duration_based": {
@@ -74,7 +71,7 @@ list_reco_json_schema = {
                                         "type": "string"
                                       },
                                       "duration_in_hours": {
-                                        "type": "string"
+                                        "type": "number"
                                       },
                                       "pods_count": {
                                         "type": "number"
@@ -85,7 +82,7 @@ list_reco_json_schema = {
                                       "config": {
                                         "type": "object",
                                         "properties": {
-                                          "limits": {
+                                          "requests": {
                                             "type": "object",
                                             "properties": {
                                               "memory": {
@@ -124,7 +121,7 @@ list_reco_json_schema = {
                                               "cpu"
                                             ]
                                           },
-                                          "requests": {
+                                          "limits": {
                                             "type": "object",
                                             "properties": {
                                               "memory": {
@@ -165,14 +162,14 @@ list_reco_json_schema = {
                                           }
                                         },
                                         "required": [
-                                          "limits",
-                                          "requests"
+                                          "requests",
+                                          "limits"
                                         ]
                                       },
                                       "variation": {
                                         "type": "object",
                                         "properties": {
-                                          "limits": {
+                                          "requests": {
                                             "type": "object",
                                             "properties": {
                                               "memory": {
@@ -211,7 +208,7 @@ list_reco_json_schema = {
                                               "cpu"
                                             ]
                                           },
-                                          "requests": {
+                                          "limits": {
                                             "type": "object",
                                             "properties": {
                                               "memory": {
@@ -252,27 +249,13 @@ list_reco_json_schema = {
                                           }
                                         },
                                         "required": [
-                                          "limits",
-                                          "requests"
+                                          "requests",
+                                          "limits"
                                         ]
                                       },
                                       "notifications": {
                                         "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": {
-                                              "type": "string"
-                                            },
-                                            "message": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "message"
-                                          ]
-                                        }
+                                        "items": {}
                                       }
                                     },
                                     "required": [
@@ -282,200 +265,18 @@ list_reco_json_schema = {
                                       "pods_count",
                                       "confidence_level",
                                       "config",
+                                      "variation",
                                       "notifications"
                                     ]
                                   },
                                   "medium_term": {
                                     "type": "object",
                                     "properties": {
-                                      "monitoring_start_time": {
-                                        "type": "string"
-                                      },
-                                      "monitoring_end_time": {
-                                        "type": "string"
-                                      },
-                                      "duration_in_hours": {
-                                        "type": "string"
-                                      },
                                       "pods_count": {
                                         "type": "number"
                                       },
                                       "confidence_level": {
                                         "type": "number"
-                                      },
-                                      "config": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "variation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
                                       },
                                       "notifications": {
                                         "type": "array",
@@ -505,194 +306,11 @@ list_reco_json_schema = {
                                   "long_term": {
                                     "type": "object",
                                     "properties": {
-                                      "monitoring_start_time": {
-                                        "type": "string"
-                                      },
-                                      "monitoring_end_time": {
-                                        "type": "string"
-                                      },
-                                      "duration_in_hours": {
-                                        "type": "string"
-                                      },
                                       "pods_count": {
                                         "type": "number"
                                       },
                                       "confidence_level": {
                                         "type": "number"
-                                      },
-                                      "config": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "variation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
                                       },
                                       "notifications": {
                                         "type": "array",
@@ -725,700 +343,24 @@ list_reco_json_schema = {
                                   "medium_term",
                                   "long_term"
                                 ]
-                              },
-                              "profile_based": {
-                                "type": "object",
-                                "properties": {
-                                  "cost": {
-                                    "type": "object",
-                                    "properties": {
-                                      "monitoring_start_time": {
-                                        "type": "string"
-                                      },
-                                      "monitoring_end_time": {
-                                        "type": "string"
-                                      },
-                                      "duration_in_hours": {
-                                        "type": "string"
-                                      },
-                                      "pods_count": {
-                                        "type": "number"
-                                      },
-                                      "confidence_level": {
-                                        "type": "number"
-                                      },
-                                      "config": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "variation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "notifications": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": {
-                                              "type": "string"
-                                            },
-                                            "message": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "message"
-                                          ]
-                                        }
-                                      }
-                                    },
-                                    "required": [
-                                      "monitoring_start_time",
-                                      "monitoring_end_time",
-                                      "duration_in_hours",
-                                      "pods_count",
-                                      "confidence_level",
-                                      "config",
-                                      "variation",
-                                      "notifications"
-                                    ]
-                                  },
-                                  "balanced": {
-                                    "type": "object",
-                                    "properties": {
-                                      "monitoring_start_time": {
-                                        "type": "string"
-                                      },
-                                      "monitoring_end_time": {
-                                        "type": "string"
-                                      },
-                                      "duration_in_hours": {
-                                        "type": "string"
-                                      },
-                                      "pods_count": {
-                                        "type": "number"
-                                      },
-                                      "confidence_level": {
-                                        "type": "number"
-                                      },
-                                      "config": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "variation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "notifications": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": {
-                                              "type": "string"
-                                            },
-                                            "message": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "message"
-                                          ]
-                                        }
-                                      }
-                                    },
-                                    "required": [
-                                      "monitoring_start_time",
-                                      "monitoring_end_time",
-                                      "duration_in_hours",
-                                      "pods_count",
-                                      "confidence_level",
-                                      "config",
-                                      "variation",
-                                      "notifications"
-                                    ]
-                                  },
-                                  "performance": {
-                                    "type": "object",
-                                    "properties": {
-                                      "monitoring_start_time": {
-                                        "type": "string"
-                                      },
-                                      "monitoring_end_time": {
-                                        "type": "string"
-                                      },
-                                      "duration_in_hours": {
-                                        "type": "string"
-                                      },
-                                      "pods_count": {
-                                        "type": "number"
-                                      },
-                                      "confidence_level": {
-                                        "type": "number"
-                                      },
-                                      "config": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "variation": {
-                                        "type": "object",
-                                        "properties": {
-                                          "limits": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          },
-                                          "requests": {
-                                            "type": "object",
-                                            "properties": {
-                                              "memory": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              },
-                                              "cpu": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "amount": {
-                                                    "type": "number"
-                                                  },
-                                                  "format": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "amount",
-                                                  "format"
-                                                ]
-                                              }
-                                            },
-                                            "required": [
-                                              "memory",
-                                              "cpu"
-                                            ]
-                                          }
-                                        },
-                                        "required": [
-                                          "limits",
-                                          "requests"
-                                        ]
-                                      },
-                                      "notifications": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": {
-                                              "type": "string"
-                                            },
-                                            "message": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "message"
-                                          ]
-                                        }
-                                      }
-                                    },
-                                    "required": [
-                                      "monitoring_start_time",
-                                      "monitoring_end_time",
-                                      "duration_in_hours",
-                                      "pods_count",
-                                      "confidence_level",
-                                      "config",
-                                      "variation",
-                                      "notifications"
-                                    ]
-                                  }
-                                },
-                                "required": [
-                                  "cost",
-                                  "balanced",
-                                  "performance"
-                                ]
                               }
                             },
                             "required": [
-                              "duration_based",
+                              "duration_based"
                             ]
                           }
                         },
                       }
                     },
                     "required": [
-                      "notifications"
+                      "notifications",
+                      "data"
                     ]
-                  },
-                  "name": {
-                    "type": "string"
                   }
                 },
                 "required": [
+                  "container_image_name",
+                  "container_name",
                   "recommendations"
                 ]
               }
@@ -1431,14 +373,19 @@ list_reco_json_schema = {
             "containers"
           ]
         }
+      },
+      "version": {
+        "type": "string"
+      },
+      "experiment_name": {
+        "type": "string"
       }
     },
     "required": [
-      "version",
-      "experiment_name",
       "cluster_name",
-      "kubernetes_objects"
+      "kubernetes_objects",
+      "version",
+      "experiment_name"
     ]
   }
 }
-

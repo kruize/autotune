@@ -2,6 +2,7 @@ import requests
 import pytest
 from jinja2 import Environment, FileSystemLoader
 from helpers.list_reco_json_validate import *
+from helpers.list_reco_json_schema import *
 from helpers.utils import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
@@ -87,7 +88,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         list_reco_json = response.json()
 
         # Validate the json against the json schema
-        errorMsg = validate_list_reco_json(list_reco_json)
+        errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
         assert errorMsg == ""
 
         # Validate the json values

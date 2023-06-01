@@ -42,7 +42,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("sanity" "negative" "extended" "test_e2e")
+	remote_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -115,19 +115,29 @@ function remote_monitoring_tests() {
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
 		popd > /dev/null
-		if  grep -q "AssertionError" "${LOG}" ; then
-			failed=1
-			((TESTS_FAILED++))
-			((TOTAL_TESTS_FAILED++))
-			FAILED_CASES+=(${test})
-		else
-			((TESTS_PASSED++))
-			((TOTAL_TESTS_PASSED++))
+
+		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report.html | cut -d' ' -f1)
+		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report.html | cut -d' ' -f1)
+		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report.html | cut -d' ' -f1)
+
+		TESTS_PASSED=$(($TESTS_PASSED + $passed))
+		TESTS_FAILED=$(($TESTS_FAILED + $failed))
+
+		if [ "${errors}" -ne "0" ]; then
+			echo "Tests did not execute there were errors, check the logs"
+			exit 1
 		fi
-		((TESTS++))
-		((TOTAL_TESTS++))
+
+		if [ "${TESTS_FAILED}" -ne "0" ]; then
+			FAILED_CASES+=(${test})
+		fi
 
 	done
+
+	TESTS=$(($TESTS_PASSED + $TESTS_FAILED))
+	TOTAL_TESTS_FAILED=${TESTS_FAILED}
+	TOTAL_TESTS_PASSED=${TESTS_PASSED}
+	TOTAL_TESTS=${TESTS}
 
 	if [ "${TESTS_FAILED}" -ne "0" ]; then
 		FAILED_TEST_SUITE+=(${FUNCNAME})
