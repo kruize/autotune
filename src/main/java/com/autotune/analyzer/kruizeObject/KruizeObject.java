@@ -36,7 +36,7 @@ import java.util.List;
 public final class KruizeObject {
     @SerializedName("version")
     private String apiVersion;
-    private String experimentId;
+    private String experiment_id;
     @SerializedName("experiment_name")
     private String experimentName;
     @SerializedName("cluster_name")
@@ -56,8 +56,8 @@ public final class KruizeObject {
     private String performanceProfile;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
-    private ExperimentUseCaseType experimentUseCaseType;
-    private ValidationOutputData validationData;
+    private ExperimentUseCaseType experiment_usecase_type;
+    private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
 
 
@@ -86,7 +86,7 @@ public final class KruizeObject {
             this.mode = mode;
             this.targetCluster = targetCluster;
             this.selectorInfo = selectorInfo;
-            this.experimentId = Utils.generateID(toString());
+            this.experiment_id = Utils.generateID(toString());
             this.objectReference = objectReference;
             this.clusterName = clusterName;
         } else {
@@ -144,12 +144,12 @@ public final class KruizeObject {
         this.targetCluster = targetCluster;
     }
 
-    public String getExperimentId() {
-        return experimentId;
+    public String getExperiment_id() {
+        return experiment_id;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
+    public void setExperiment_id(String experiment_id) {
+        this.experiment_id = experiment_id;
     }
 
     public ObjectReference getObjectReference() {
@@ -192,21 +192,21 @@ public final class KruizeObject {
         this.recommendation_settings = recommendation_settings;
     }
 
-    public ExperimentUseCaseType getExperimentUseCaseType() {
-        return experimentUseCaseType;
+    public ExperimentUseCaseType getExperiment_usecase_type() {
+        return experiment_usecase_type;
     }
 
-    public void setExperimentUseCaseType(ExperimentUseCaseType experimentUseCaseType) {
-        this.experimentUseCaseType = experimentUseCaseType;
+    public void setExperiment_usecase_type(ExperimentUseCaseType experiment_usecase_type) {
+        this.experiment_usecase_type = experiment_usecase_type;
     }
 
 
-    public ValidationOutputData getValidationData() {
-        return validationData;
+    public ValidationOutputData getValidation_data() {
+        return validation_data;
     }
 
-    public void setValidationData(ValidationOutputData validationData) {
-        this.validationData = validationData;
+    public void setValidation_data(ValidationOutputData validation_data) {
+        this.validation_data = validation_data;
     }
 
     public String getHpoAlgoImpl() {
@@ -253,7 +253,7 @@ public final class KruizeObject {
         if (clusterName != null)
             tmpClusterName = clusterName;
         return "KruizeObject{" +
-                "experimentId='" + experimentId + '\'' +
+                "experimentId='" + experiment_id + '\'' +
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName +
                 ", mode='" + mode + '\'' +
@@ -265,8 +265,8 @@ public final class KruizeObject {
                 ", performanceProfile='" + performanceProfile + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
-                ", experimentUseCaseType=" + experimentUseCaseType +
-                ", validationData=" + validationData +
+                ", experimentUseCaseType=" + experiment_usecase_type +
+                ", validationData=" + validation_data +
                 ", kubernetes_objects=" + kubernetes_objects +
                 '}';
     }

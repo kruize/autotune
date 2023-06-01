@@ -286,22 +286,30 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
                                                     DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
                                                     Timestamp endTime) {
+
+        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
+        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
+        sortedResultsHashMap.putAll(resultsHashMap);
+
         double sum = 0.0;
-        // As we cannot sort HashSet
-        List<Timestamp> timestampList = new ArrayList<Timestamp>(resultsHashMap.keySet());
-        // Sort the time stamps in descending order
-        timestampList.sort((t1, t2) -> t2.compareTo(t1));
-        for (Timestamp timestamp: timestampList) {
-            if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
-                return timestamp;
-            }
-            if (timestamp.equals(endTime) || timestamp.before(endTime)) {
-                if (resultsHashMap.containsKey(timestamp)) {
-                    sum = sum + resultsHashMap.get(timestamp).getDurationInMinutes();
+        Timestamp intervalEndTime = null;
+        for (Timestamp timestamp: sortedResultsHashMap.keySet()) {
+            if (!timestamp.after(endTime)) {
+                if (sortedResultsHashMap.containsKey(timestamp)) {
+                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
+                    if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                        // Storing the timestamp value in startTimestamp variable to return
+                        intervalEndTime = timestamp;
+                        break;
+                    }
                 }
             }
         }
-        return null;
+        try {
+            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+        } catch (NullPointerException npe) {
+            return null;
+        }
     }
 
     /**

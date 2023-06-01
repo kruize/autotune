@@ -110,8 +110,8 @@ function remote_monitoring_tests() {
 		echo " " | tee -a ${LOG}
 	
 		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
-			echo "pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type}"
-			pytest -m ${test} --html=${TEST_DIR}/report.html --cluster_type ${cluster_type} | tee -a ${LOG}
+			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
+			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
 		popd > /dev/null
