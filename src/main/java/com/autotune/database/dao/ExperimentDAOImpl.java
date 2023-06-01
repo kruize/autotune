@@ -398,39 +398,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return recommendationEntries;
     }
 
-<<<<<<< HEAD
-    @Override
-    public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
-        List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-
-            if (interval_start_time != null && interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, interval_start_time)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
-            } else if (interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
-            } else {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .getResultList();
-            }
-        } catch (NoResultException e) {
-            LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
-            kruizeResultsEntryList = null;
-        } catch (Exception e) {
-            kruizeResultsEntryList = null;
-            LOGGER.error("Not able to load results due to: {}", e.getMessage());
-            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
-        }
-        return kruizeResultsEntryList;
-    }
-=======
 
     public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
         List<KruizePerformanceProfileEntry> entries = null;
@@ -479,20 +446,4 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return kruizeResultsEntryList;
 
     }
-<<<<<<< HEAD
->>>>>>> d35a6510 (Taking care of duplicate entry to recommendation table)
-=======
-
-    public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
-        List<KruizePerformanceProfileEntry> entries = null;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
-                    .setParameter("name", performanceProfileName).list();
-        } catch (Exception e) {
-            LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
-            throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
-        }
-        return entries;
-    }
->>>>>>> f82f7db7 (update service methods for performance profiles)
 }

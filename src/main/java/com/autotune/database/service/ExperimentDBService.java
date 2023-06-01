@@ -54,6 +54,7 @@ public class ExperimentDBService {
         this.experimentDAO = new ExperimentDAOImpl();
     }
 
+
     public void loadAllExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         List<KruizeExperimentEntry> entries = experimentDAO.loadAllExperiments();
@@ -144,7 +145,6 @@ public class ExperimentDBService {
     }
 
     public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
-
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load results from the DB and save to local
         List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
@@ -214,7 +214,6 @@ public class ExperimentDBService {
         failedUpdateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(failedResultsEntries);
         return failedUpdateResultsAPIObjects;
     }
-
 
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
@@ -344,7 +343,6 @@ public class ExperimentDBService {
         // TODO   update into database
         return true;
     }
-
 
     public List<ExperimentResultData> getExperimentResultData(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
