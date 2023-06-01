@@ -224,8 +224,6 @@ public class ExperimentDBService {
             return validationOutputData;
         }
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
-
-
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
                 LOGGER.error("Trying to locate Recommendation for non existent experiment: " +
