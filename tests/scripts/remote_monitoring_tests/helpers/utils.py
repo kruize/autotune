@@ -379,7 +379,7 @@ def validate_config(reco_config):
         assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
-    notifications = duration_based_obj["notifications"]:
+    notifications = duration_based_obj["notifications"]
     if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
         return False
     return True
