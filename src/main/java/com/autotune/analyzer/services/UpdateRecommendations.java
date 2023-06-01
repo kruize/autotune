@@ -149,7 +149,6 @@ public class UpdateRecommendations extends HttpServlet {
             return;
         }
 
-
         if (experimentResultDataList.size() > 0) {
 
             //Load KruizeObject and generate recommendation
