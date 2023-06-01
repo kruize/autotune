@@ -40,7 +40,7 @@ public class KruizePerformanceProfileEntry {
     private Long performance_profile_id;
     @Column(unique = true)
     private String name;
-    private String profile_version;
+    private double profile_version;
     private String k8s_type;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode slo;
@@ -54,11 +54,11 @@ public class KruizePerformanceProfileEntry {
         this.name = name;
     }
 
-    public String getProfile_version() {
+    public double getProfile_version() {
         return profile_version;
     }
 
-    public void setProfile_version(String profile_version) {
+    public void setProfile_version(double profile_version) {
         this.profile_version = profile_version;
     }
 

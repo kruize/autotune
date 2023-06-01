@@ -23,9 +23,13 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
@@ -35,10 +39,13 @@ import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -421,11 +428,52 @@ public class DBHelpers {
             }
 
             public static KruizePerformanceProfileEntry convertPerfProfileObjToPerfProfileDBObj(PerformanceProfile performanceProfile) {
-                KruizePerformanceProfileEntry kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
-                //TODO: add conversion code below
+                KruizePerformanceProfileEntry kruizePerformanceProfileEntry = null;
+                try {
+                    kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
+                    kruizePerformanceProfileEntry.setName(performanceProfile.getName());
+                    kruizePerformanceProfileEntry.setProfile_version(performanceProfile.getProfile_version());
+                    kruizePerformanceProfileEntry.setK8s_type(performanceProfile.getK8S_TYPE());
 
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        kruizePerformanceProfileEntry.setSlo(
+                                objectMapper.readTree(new Gson().toJson(performanceProfile.getSloInfo())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating SLO data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting Performance Profile Object to PerformanceProfile table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
                 return kruizePerformanceProfileEntry;
             }
+
+            public static List<PerformanceProfile> convertPerformanceProfileEntryToPerformanceProfileObject(List<KruizePerformanceProfileEntry> entries) throws Exception {
+                List<PerformanceProfile> performanceProfiles = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+                for (KruizePerformanceProfileEntry entry : entries) {
+                    try {
+                        JsonNode sloData = entry.getSlo();
+                        String slo_rawJson = sloData.toString();
+                        PerformanceProfile performanceProfile = new Gson().fromJson(slo_rawJson, PerformanceProfile.class);
+                        performanceProfile.setName(entry.getName());
+                        performanceProfile.setProfile_version(entry.getProfile_version());
+                        performanceProfile.setK8s_type(entry.getK8s_type());
+                        performanceProfiles.add(performanceProfile);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from Performance Profile DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Performance Profiles loaded from DB.");
+
+                return performanceProfiles;
+            }
+
         }
     }
 

@@ -300,4 +300,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return recommendationEntries;
     }
+
+    @Override
+    public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
+        List<KruizePerformanceProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
+                    .setParameter("name", performanceProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
+            throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
 }
