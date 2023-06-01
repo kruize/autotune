@@ -213,6 +213,7 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
         if (null == experimentResultDataList) {
@@ -221,6 +222,7 @@ public class ExperimentDBService {
         if (experimentResultDataList.size() == 0) {
             return validationOutputData;
         }
+
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
@@ -354,5 +356,6 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
+
     }
 }

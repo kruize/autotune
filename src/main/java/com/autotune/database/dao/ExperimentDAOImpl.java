@@ -333,7 +333,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-
     public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
         List<KruizePerformanceProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
@@ -345,6 +344,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
+
 
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
