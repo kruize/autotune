@@ -130,7 +130,6 @@ public class ExperimentDBService {
         }
     }
 
-
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
         if (null != entries && !entries.isEmpty()) {
@@ -145,7 +144,6 @@ public class ExperimentDBService {
 
     public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-
         // Load results from the DB and save to local
         List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
