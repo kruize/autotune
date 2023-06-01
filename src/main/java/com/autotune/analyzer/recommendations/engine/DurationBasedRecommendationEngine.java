@@ -619,6 +619,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                         AnalyzerConstants.RecommendationNotification.CPU_REQUEST_NOT_SET
                 ));
             }
+            // heck if the setting is LIMITS
+            else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                notifications.add(new RecommendationNotification(
+                        AnalyzerConstants.RecommendationNotification.CPU_LIMIT_NOT_SET
+                ));
+            }
+
         }
         // Check if the item is Memory
         else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {

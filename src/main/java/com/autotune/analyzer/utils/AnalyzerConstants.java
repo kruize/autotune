@@ -202,9 +202,9 @@ public class AnalyzerConstants {
 
     public enum RecommendationNotificationTypes {
         INFO("info", 1),
-        NOTICE("notice", 2),
-        WARN("warning", 3),
-        ERROR("error", 4),
+        ERROR("error", 2),
+        NOTICE("notice", 3),
+        WARNING("warning", 4),
         CRITICAL("critical", 5);
 
         private String name;
@@ -226,57 +226,57 @@ public class AnalyzerConstants {
 
     public enum RecommendationNotification {
         DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
-                NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationTypes.INFO
         ),
         NOT_ENOUGH_DATA (
-                NotificationCodes.NOT_ENOUGH_DATA,
+                NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
                 RecommendationNotificationTypes.INFO
         ),
         CPU_RECORDS_ARE_IDLE (
-                NotificationCodes.CPU_RECORDS_ARE_IDLE,
+                NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_IDLE,
                 RecommendationNotificationTypes.NOTICE
         ),
         CPU_RECORDS_ARE_ZERO (
-                NotificationCodes.CPU_RECORDS_ARE_ZERO,
+                NotificationCodes.NOTICE_CPU_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_RECORDS_ARE_MISSING (
-                NotificationCodes.CPU_RECORDS_ARE_MISSING,
-                RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_MISSING,
+        CPU_RECORDS_NOT_AVAILABLE(
+                NotificationCodes.NOTICE_CPU_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationTypes.NOTICE
         ),
         MEMORY_RECORDS_ARE_ZERO (
-                NotificationCodes.MEMORY_RECORDS_ARE_ZERO,
+                NotificationCodes.NOTICE_MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.NOTICE
         ),
-        MEMORY_RECORDS_ARE_MISSING (
-                NotificationCodes.MEMORY_RECORDS_ARE_MISSING,
-                RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_MISSING,
+        MEMORY_RECORDS_NOT_AVAILABLE(
+                NotificationCodes.NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationMsgConstant.MEMORY_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationTypes.NOTICE
         ),
         CPU_REQUEST_NOT_SET (
-                NotificationCodes.CPU_REQUEST_NOT_SET,
+                NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
                 RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
         ),
         MEMORY_REQUEST_NOT_SET (
-                NotificationCodes.MEMORY_REQUEST_NOT_SET,
+                NotificationCodes.CRITICAL_MEMORY_REQUEST_NOT_SET,
                 RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
         ),
         CPU_LIMIT_NOT_SET (
-                NotificationCodes.CPU_LIMIT_NOT_SET,
+                NotificationCodes.WARNING_CPU_LIMIT_NOT_SET,
                 RecommendationNotificationMsgConstant.CPU_LIMIT_NOT_SET,
-                RecommendationNotificationTypes.WARN
+                RecommendationNotificationTypes.WARNING
         ),
         MEMORY_LIMIT_NOT_SET (
-                NotificationCodes.MEMORY_LIMIT_NOT_SET,
+                NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET,
                 RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
         );
@@ -340,7 +340,7 @@ public class AnalyzerConstants {
         // Subsystem subsection: Duration Based Engine
         // Range: 112100 - 112199
         public static final int DURATION_BASED_ENGINE_START = 112100;
-        public static final int DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int DURATION_BASED_ENGINE_END = 112199;
         // Subsystem subsection: Profile Based Engine
         // Range: 112200 - 112299
@@ -354,7 +354,7 @@ public class AnalyzerConstants {
         public static final int SECTION_INFO_SUBSECTION_DATA_END = 129999;
 
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 120000;
-        public static final int NOT_ENOUGH_DATA = 120001;
+        public static final int INFO_NOT_ENOUGH_DATA = 120001;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 122999;
 
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 123000;
@@ -448,14 +448,14 @@ public class AnalyzerConstants {
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 322999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 323000;
-        public static final int CPU_RECORDS_ARE_IDLE = 323001;
-        public static final int CPU_RECORDS_ARE_ZERO = 323002;
-        public static final int CPU_RECORDS_ARE_MISSING = 323003;
+        public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
+        public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
+        public static final int NOTICE_CPU_RECORDS_NOT_AVAILABLE = 323003;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 323999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 324000;
-        public static final int MEMORY_RECORDS_ARE_ZERO = 324001;
-        public static final int MEMORY_RECORDS_ARE_MISSING = 324002;
+        public static final int NOTICE_MEMORY_RECORDS_ARE_ZERO = 324001;
+        public static final int NOTICE_MEMORY_RECORDS_NOT_AVAILABLE = 324002;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 324999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 325000;
@@ -498,7 +498,7 @@ public class AnalyzerConstants {
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 422999;
 
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 423000;
-        public static final int CPU_LIMIT_NOT_SET = 423001;
+        public static final int WARNING_CPU_LIMIT_NOT_SET = 423001;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 423999;
 
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 424000;
@@ -544,12 +544,12 @@ public class AnalyzerConstants {
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 522999;
 
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 523000;
-        public static final int CPU_REQUEST_NOT_SET = 523001;
+        public static final int CRITICAL_CPU_REQUEST_NOT_SET = 523001;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 523999;
 
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 524000;
-        public static final int MEMORY_REQUEST_NOT_SET = 524001;
-        public static final int MEMORY_LIMIT_NOT_SET = 524002;
+        public static final int CRITICAL_MEMORY_REQUEST_NOT_SET = 524001;
+        public static final int CRITICAL_MEMORY_LIMIT_NOT_SET = 524002;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 524999;
 
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 525000;
@@ -571,106 +571,106 @@ public class AnalyzerConstants {
                 // Currently it's added by default so no contradicting codes will be added here
             };
 
-            CONTRADICTING_MAP.put(NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
+            CONTRADICTING_MAP.put(INFO_NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
 
             // Contradicting Codes for DURATION_BASED_RECOMMENDATIONS_AVAILABLE
             Integer[] CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                    INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                     Arrays.asList(CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE)
             );
 
             // Contradicting Codes for CPU_RECORDS_ARE_IDLE
             Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    CPU_RECORDS_ARE_IDLE,
+                    NOTICE_CPU_RECORDS_ARE_IDLE,
                     Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE)
             );
 
             // Contradicting Codes for CPU_RECORDS_ARE_ZERO
             Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    CPU_RECORDS_ARE_ZERO,
+                    NOTICE_CPU_RECORDS_ARE_ZERO,
                     Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO)
             );
 
             // Contradicting Codes for CPU_RECORDS_ARE_MISSING
             Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_MISSING = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    CPU_RECORDS_ARE_MISSING,
+                    NOTICE_CPU_RECORDS_NOT_AVAILABLE,
                     Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_MISSING)
             );
 
             // Contradicting Codes for MEMORY_RECORDS_ARE_ZERO -> 1005
             Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    MEMORY_RECORDS_ARE_ZERO,
+                    NOTICE_MEMORY_RECORDS_ARE_ZERO,
                     Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO)
             );
 
 
             // Contradicting Codes for MEMORY_RECORDS_ARE_MISSING
             Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_MISSING = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    MEMORY_RECORDS_ARE_MISSING,
+                    NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
                     Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_MISSING)
             );
 
             // Contradicting Codes for CPU_REQUEST_NOT_SET
             Integer[] CODES_CONTRADICT_CPU_REQUEST_NOT_SET = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    CPU_REQUEST_NOT_SET,
+                    CRITICAL_CPU_REQUEST_NOT_SET,
                     Arrays.asList(CODES_CONTRADICT_CPU_REQUEST_NOT_SET)
             );
 
             // Contradicting Codes for MEMORY_REQUEST_NOT_SET
             Integer[] CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    MEMORY_REQUEST_NOT_SET,
+                    CRITICAL_MEMORY_REQUEST_NOT_SET,
                     Arrays.asList(CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET)
             );
 
             // Contradicting Codes for CPU_LIMIT_NOT_SET
             Integer[] CODES_CONTRADICT_CPU_LIMIT_NOT_SET = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    CPU_LIMIT_NOT_SET,
+                    WARNING_CPU_LIMIT_NOT_SET,
                     Arrays.asList(CODES_CONTRADICT_CPU_LIMIT_NOT_SET)
             );
 
             // Contradicting Codes for MEMORY_LIMIT_NOT_SET
             Integer[] CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET = {
-                    NOT_ENOUGH_DATA
+                    INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    MEMORY_LIMIT_NOT_SET,
+                    CRITICAL_MEMORY_LIMIT_NOT_SET,
                     Arrays.asList(CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET)
             );
         }
@@ -690,15 +690,15 @@ public class AnalyzerConstants {
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
-        public static final String CPU_RECORDS_ARE_IDLE = "CPU usage is mostly idle (< 0.001 cores or < 1 millicore), No CPU Recommendation can be generated";
+        public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendation can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
         public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
         public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
         public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
         public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
-        public static final String CPU_RECORDS_ARE_MISSING = "CPU metrics are missing, No CPU Recommendations can be generated";
-        public static final String MEMORY_RECORDS_ARE_MISSING = "Memory metrics are missing, No Memory Recommendations can be generated";
+        public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
+        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics not available, No Memory Recommendations can be generated";
 
         private RecommendationNotificationMsgConstant() {
 

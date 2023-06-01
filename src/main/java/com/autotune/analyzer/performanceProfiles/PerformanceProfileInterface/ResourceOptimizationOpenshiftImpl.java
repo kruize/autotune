@@ -107,7 +107,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
                         // check if notification exists
                         boolean notificationExist = false;
-                        if (containerRecommendations.getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                        if (containerRecommendations.getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
                             notificationExist = true;
 
                         // If there is no notification add one

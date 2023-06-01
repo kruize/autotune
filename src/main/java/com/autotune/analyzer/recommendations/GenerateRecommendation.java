@@ -97,7 +97,7 @@ public class GenerateRecommendation {
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
                                 boolean notifyExist = false;
-                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
                                     notifyExist = true;
                                 if (!notifyExist) {
                                     RecommendationNotification recommendationNotification = new RecommendationNotification(
