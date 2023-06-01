@@ -116,9 +116,9 @@ function remote_monitoring_tests() {
 
 		popd > /dev/null
 
-		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report.html | cut -d' ' -f1)
-		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report.html | cut -d' ' -f1)
-		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report.html | cut -d' ' -f1)
+		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
+		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
+		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
 
 		TESTS_PASSED=$(($TESTS_PASSED + $passed))
 		TESTS_FAILED=$(($TESTS_FAILED + $failed))
