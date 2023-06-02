@@ -62,6 +62,13 @@ public class ExperimentResultValidation {
                         LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
                     }
 
+                    // Check if there is only one K8sObject in resultData
+                    if (resultData.getKubernetes_objects().size() > 1) {
+                        errorMsg = errorMsg.concat(String.format("Multiple Kubernetes Objects are detected for result data of experiment : {} .Multiple Kubernetes Objects are unsupported", expName));
+                        resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                        break;
+                    }
+
                     if (mainKruizeExperimentMAP.containsKey(expName)) {
                         KruizeObject kruizeObject = mainKruizeExperimentMAP.get(resultData.getExperiment_name());
                         // check if the intervalEndTime is greater than intervalStartTime and interval duration is greater than measurement duration
@@ -84,6 +91,57 @@ public class ExperimentResultValidation {
                                 break;
                             }
                         }
+                        boolean kubeObjsMisMatch = false;
+                        // Check if Kubernetes Object Type is matched
+                        String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
+                        String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
+
+                        if (!kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
+                            kubeObjsMisMatch = true;
+                            errorMsg = errorMsg.concat(
+                                    String.format(
+                                            "Kubernetes Object Types MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            kubeObjTypeInKruizeObject,
+                                            kubeObjTypeInResultData,
+                                            expName
+                                    ));
+                        }
+
+                        // Check if Kubernetes Object Name is matched
+                        String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
+                        String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
+
+                        if (!kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
+                            kubeObjsMisMatch = true;
+                            errorMsg = errorMsg.concat(
+                                    String.format(
+                                            "Kubernetes Object Names MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            kubeObjNameInKruizeObject,
+                                            kubeObjNameInResultsData,
+                                            expName
+                                    ));
+                        }
+
+                        // Check if Kubernetes Object NameSpace is matched
+                        String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
+                        String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
+
+                        if (!kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
+                            kubeObjsMisMatch = true;
+                            errorMsg = errorMsg.concat(
+                                    String.format(
+                                            "Kubernetes Object Namespaces MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            kubeObjNameSpaceInKruizeObject,
+                                            kubeObjNameSpaceInResultsData,
+                                            expName
+                                    ));
+                        }
+
+                        if (kubeObjsMisMatch) {
+                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                            break;
+                        }
+
                         // check if resultData is present
                         boolean isExist = false;
                         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
