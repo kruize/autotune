@@ -64,7 +64,7 @@ public class ExperimentResultValidation {
 
                     // Check if there is only one K8sObject in resultData
                     if (resultData.getKubernetes_objects().size() > 1) {
-                        errorMsg = errorMsg.concat(String.format("Multiple Kubernetes Objects are detected for result data of experiment : {} .Multiple Kubernetes Objects are unsupported", expName));
+                        errorMsg = errorMsg.concat(String.format("Multiple Kubernetes Objects are detected for result data of experiment: %s .Multiple Kubernetes Objects are unsupported", expName));
                         resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                         break;
                     }
@@ -100,7 +100,7 @@ public class ExperimentResultValidation {
                             kubeObjsMisMatch = true;
                             errorMsg = errorMsg.concat(
                                     String.format(
-                                            "Kubernetes Object Types MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            "Kubernetes Object Types MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
                                             kubeObjTypeInKruizeObject,
                                             kubeObjTypeInResultData,
                                             expName
@@ -115,7 +115,7 @@ public class ExperimentResultValidation {
                             kubeObjsMisMatch = true;
                             errorMsg = errorMsg.concat(
                                     String.format(
-                                            "Kubernetes Object Names MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            "Kubernetes Object Names MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
                                             kubeObjNameInKruizeObject,
                                             kubeObjNameInResultsData,
                                             expName
@@ -130,7 +130,7 @@ public class ExperimentResultValidation {
                             kubeObjsMisMatch = true;
                             errorMsg = errorMsg.concat(
                                     String.format(
-                                            "Kubernetes Object Namespaces MisMatched. Expected Type: {}, Found: {} in Results for experiment: {} \n",
+                                            "Kubernetes Object Namespaces MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
                                             kubeObjNameSpaceInKruizeObject,
                                             kubeObjNameSpaceInResultsData,
                                             expName
