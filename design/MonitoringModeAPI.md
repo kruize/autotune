@@ -949,12 +949,13 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "Duration Based Recommendations Available"
+              "notifications": {
+                "112101": {
+                    "type": "info",
+                    "message": "Duration Based Recommendations Available",
+                    "code": 112101
                 }
-              ],
+              },
               "data": {
                 "2023-04-02T08:00:00.680Z": {
                   "duration_based": {
@@ -1013,22 +1014,24 @@ Returns the latest recommendations of all the experiments
                     "medium_term": {
                       "pods_count": 0,
                       "confidence_level": 0.0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     },
                     "long_term": {
                       "pods_count": 0,
                       "confidence_level": 0.0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     }
                   }
                 }
@@ -1039,12 +1042,13 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "There is not enough data available to generate a recommendation."
+              "notifications": {
+                "120001": {
+                    "type": "info",
+                    "message": "There is not enough data available to generate a recommendation.",
+                    "code": 120001
                 }
-              ],
+              },
               "data": {}
             }
           }
@@ -1090,12 +1094,13 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "There is not enough data available to generate a recommendation."
+              "notifications": {
+                "120001": {
+                    "type": "info",
+                    "message": "There is not enough data available to generate a recommendation.",
+                    "code": 120001
                 }
-              ],
+              },
               "data": {}
             }
           },
@@ -1103,12 +1108,13 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "There is not enough data available to generate a recommendation."
+              "notifications": {
+                "120001": {
+                    "type": "info",
+                    "message": "There is not enough data available to generate a recommendation.",
+                    "code": 120001
                 }
-              ],
+              },
               "data": {}
             }
           }
@@ -1174,12 +1180,13 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "Duration Based Recommendations Available"
+              "notifications": {
+                "112101": {
+                    "type": "info",
+                    "message": "Duration Based Recommendations Available",
+                    "code": 112101
                 }
-              ],
+              },
               "data": {
                 "2023-04-02T06:00:00.770Z": {
                   "duration_based": {
@@ -1238,22 +1245,24 @@ Returns all the recommendations of all the experiments
                     "medium_term": {
                       "pods_count": 0,
                       "confidence_level": 0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     },
                     "long_term": {
                       "pods_count": 0,
                       "confidence_level": 0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     }
                   }
                 },
@@ -1318,22 +1327,24 @@ Returns all the recommendations of all the experiments
                     "medium_term": {
                       "pods_count": 0,
                       "confidence_level": 0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     },
                     "long_term": {
                       "pods_count": 0,
                       "confidence_level": 0,
-                      "notifications": [
-                        {
-                          "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                      "notifications": {
+                        "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
                         }
-                      ]
+                      }
                     }
                   }
                 }
@@ -1344,12 +1355,13 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
-              "notifications": [
-                {
-                  "type": "info",
-                  "message": "There is not enough data available to generate a recommendation."
+              "notifications": {
+                "120001": {
+                    "type": "info",
+                    "message": "There is not enough data available to generate a recommendation.",
+                    "code": 120001
                 }
-              ],
+              },
               "data": {}
             }
           }
@@ -1433,13 +1445,13 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "120001": {
                                     "type": "info",
                                     "message": "There is not enough data available to generate a recommendation.",
                                     "code": 120001
                                 }
-                            ],
+                            },
                             "data": {}
                         }
                     },
@@ -1447,13 +1459,13 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "120001": {
                                     "type": "info",
                                     "message": "There is not enough data available to generate a recommendation.",
                                     "code": 120001
                                 }
-                            ],
+                            },
                             "data": {}
                         }
                     }
@@ -1475,13 +1487,13 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "112101": {
                                     "type": "info",
                                     "message": "Duration Based Recommendations Available",
                                     "code": 112101
                                 }
-                            ],
+                            },
                             "data": {
                                 "2022-12-21T00:40:17.000Z": {
                                     "duration_based": {
@@ -1513,29 +1525,29 @@ If no parameter is passed API returns all the latest recommendations available f
                                                     }
                                                 }
                                             },
-                                            "notifications": []
+                                            "notifications": {}
                                         },
                                         "medium_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         },
                                         "long_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         }
                                     }
                                 }
@@ -1546,13 +1558,13 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "120001": {
                                     "type": "info",
                                     "message": "There is not enough data available to generate a recommendation.",
                                     "code": 120001
                                 }
-                            ],
+                            },
                             "data": {}
                         }
                     }
@@ -1588,13 +1600,13 @@ Returns the latest result of that experiment
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "112101": {
                                     "type": "info",
                                     "message": "Duration Based Recommendations Available",
                                     "code": 112101
                                 }
-                            ],
+                            },
                             "data": {
                                 "2022-12-21T00:40:17.000Z": {
                                     "duration_based": {
@@ -1626,29 +1638,29 @@ Returns the latest result of that experiment
                                                     }
                                                 }
                                             },
-                                            "notifications": []
+                                            "notifications": {}
                                         },
                                         "medium_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         },
                                         "long_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         }
                                     }
                                 }
@@ -1659,13 +1671,13 @@ Returns the latest result of that experiment
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "120001": {
                                     "type": "info",
                                     "message": "There is not enough data available to generate a recommendation.",
                                     "code": 120001
                                 }
-                            ],
+                            },
                             "data": {}
                         }
                     }
@@ -1702,13 +1714,13 @@ Returns all the results of that experiment
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "112101": {
                                     "type": "info",
                                     "message": "Duration Based Recommendations Available",
                                     "code": 112101
                                 }
-                            ],
+                            },
                             "data": {
                                 "2022-12-20T17:55:05.000Z": {
                                     "duration_based": {
@@ -1740,29 +1752,29 @@ Returns all the results of that experiment
                                                     }
                                                 }
                                             },
-                                            "notifications": []
+                                            "notifications": {}
                                         },
                                         "medium_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         },
                                         "long_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         }
                                     }
                                 },
@@ -1796,29 +1808,29 @@ Returns all the results of that experiment
                                                     }
                                                 }
                                             },
-                                            "notifications": []
+                                            "notifications": {}
                                         },
                                         "medium_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         },
                                         "long_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         }
                                     }
                                 }
@@ -1829,13 +1841,13 @@ Returns all the results of that experiment
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "120001": {
                                     "type": "info",
                                     "message": "There is not enough data available to generate a recommendation.",
                                     "code": 120001
                                 }
-                            ],
+                            },
                             "data": {}
                         }
                     }
@@ -1872,13 +1884,13 @@ Returns the recommendation at a particular timestamp if it exists
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
-                            "notifications": [
+                            "notifications": {
                                 "112101": {
                                     "type": "info",
                                     "message": "Duration Based Recommendations Available",
                                     "code": 112101
                                 }
-                            ],
+                            },
                             "data": {
                                 "2022-12-20T17:55:05.000Z": {
                                     "duration_based": {
@@ -1910,29 +1922,29 @@ Returns the recommendation at a particular timestamp if it exists
                                                     }
                                                 }
                                             },
-                                            "notifications": []
+                                            "notifications": {}
                                         },
                                         "medium_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         },
                                         "long_term": {
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "notifications": [
+                                            "notifications": {
                                                 "120001": {
                                                     "type": "info",
                                                     "message": "There is not enough data available to generate a recommendation.",
                                                     "code": 120001
                                                 }
-                                            ]
+                                            }
                                         }
                                     }
                                 }
