@@ -276,6 +276,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
     @Override
     public boolean checkIfMinDataAvailable(ContainerData containerData) {
+        // Check if data available
+        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
+            return false;
+        }
         // Initiate to the first sub category available
         DurationBasedRecommendationSubCategory categoryToConsider = (DurationBasedRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
         // Loop over categories to set the least category
@@ -288,7 +292,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Set bounds to check if we get minimum requirement satisfied
         double lowerBound = categoryToConsider.getGetDurationLowerBound();
         double sum = 0.0;
-        // Loop over the data to check if there is
+        // Loop over the data to check if there is min data available
         for (IntervalResults intervalResults: containerData.getResults().values()) {
             sum = sum + intervalResults.getDurationInMinutes();
             // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
