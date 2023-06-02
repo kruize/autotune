@@ -1,0 +1,62 @@
+name: Kruize Remote monitoring functional tests
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  functest:
+
+    # Only run this if the user asked us to
+    if: github.event.comment.body == 'test'
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Build crc
+        run: |
+          echo Build crc
+          ./build.sh -i autotune_operator:test_build
+          docker images | grep autotune
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+    
+      - name: Run Kruize remote monitoring functional tests on minikube
+        run: |
+          ps -ef | grep python
+          echo Running Kruize remote monitoring tests on minikube
+          cp ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old
+          sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+          cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
+
+          cd tests         
+          ./test_autotune.sh -c minikube -i autotune_operator:test_build --testsuite=remote_monitoring_tests --resultsdir=${GITHUB_WORKSPACE}
+
+      - name: Capture ffdc logs
+        if: always()
+        run: |
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
+          
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf kruize_test_results.tgz kruize_test_results
+          
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: kruize_test_results
+           path: ./kruize_test_results.tar
+           retention-days: 2
