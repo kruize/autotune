@@ -176,12 +176,12 @@ def create_performance_profile(perf_profile_json_file):
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
 def list_experiments():
-    PARAMS = ""
+    PARAMS = {'results': "true", 'recommendations': "true", "latest": "false"}
     print("\nListing the experiments...")
     url = URL + "/listExperiments"
     print("URL = ", url)
 
-    response = requests.get(url = url)
+    response = requests.get(url = url, params = PARAMS)
 
     print("Response status code = ", response.status_code)
     return response
