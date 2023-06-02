@@ -30,6 +30,20 @@ ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
+# Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE  = "112101"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA                           = "120001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE                      = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO                      = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE                 = "323003"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO                   = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE              = "324002"
+NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET                       = "523001"
+NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
+NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
+NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
+
+
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
@@ -365,9 +379,9 @@ def validate_config(reco_config):
         assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
-    for notification in duration_based_obj["notifications"]:
-        if notification["message"] == NOT_ENOUGH_DATA_MSG:
-            return False
+    notifications = duration_based_obj["notifications"]
+    if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+        return False
     return True
 
 def time_diff_in_hours(interval_start_time, interval_end_time):
