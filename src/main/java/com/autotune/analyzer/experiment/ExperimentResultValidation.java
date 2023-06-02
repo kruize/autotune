@@ -64,7 +64,7 @@ public class ExperimentResultValidation {
 
                     // Check if there is only one K8sObject in resultData
                     if (resultData.getKubernetes_objects().size() > 1) {
-                        errorMsg = errorMsg.concat(String.format("Multiple Kubernetes Objects are detected for result data of experiment: %s .Multiple Kubernetes Objects are unsupported", expName));
+                        errorMsg = errorMsg.concat(String.format("Bulk Kubernetes Objects are unsupported!"));
                         resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                         break;
                     }
