@@ -115,7 +115,7 @@ public class ExperimentResultValidation {
                             kubeObjsMisMatch = true;
                             errorMsg = errorMsg.concat(
                                     String.format(
-                                            "Kubernetes Object Names MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
+                                            "Kubernetes Object Names MisMatched. Expected Name: %s, Found: %s in Results for experiment: %s \n",
                                             kubeObjNameInKruizeObject,
                                             kubeObjNameInResultsData,
                                             expName
@@ -130,7 +130,7 @@ public class ExperimentResultValidation {
                             kubeObjsMisMatch = true;
                             errorMsg = errorMsg.concat(
                                     String.format(
-                                            "Kubernetes Object Namespaces MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
+                                            "Kubernetes Object Namespaces MisMatched. Expected Namespace: %s, Found: %s in Results for experiment: %s \n",
                                             kubeObjNameSpaceInKruizeObject,
                                             kubeObjNameSpaceInResultsData,
                                             expName
