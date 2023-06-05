@@ -80,7 +80,7 @@ update_results_test_data = {
         "interval_start_time": "2022-01-23T18:25:43.511Z",
         "interval_end_time": "2022-01-23T18:40:43.511Z",
         "type": "deployment",
-        "name": "tfb-qrh-sample",
+        "name": "tfb-qrh-deployment",
         "namespace": "default",
         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
         "container_name": "tfb-server",
