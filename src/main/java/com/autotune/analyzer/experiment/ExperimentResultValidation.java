@@ -55,7 +55,7 @@ public class ExperimentResultValidation {
             String errorMsg = "";
             for (ExperimentResultData resultData : experimentResultDataList) {
                 String expName = resultData.getExperiment_name();
-                if (null != expName && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
+                if (null != expName && !expName.isEmpty() && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
                     try {
                         new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, expName);
                     } catch (Exception e) {
@@ -190,7 +190,7 @@ public class ExperimentResultValidation {
                     }
                     resultData.setValidationOutputData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.RESULT_SAVED, HttpServletResponse.SC_CREATED));
                 } else {
-                    errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields.");
+                    errorMsg = errorMsg.concat("experiment_name and timestamp are mandatory fields and they cannot be empty");
                     proceed = false;
                     resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                     break;
