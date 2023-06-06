@@ -27,22 +27,22 @@ import org.slf4j.LoggerFactory;
 public class ExperimentUseCaseType {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentUseCaseType.class);
-    boolean remoteMonitoring;
-    boolean localMonitoring;
-    boolean localExperiment;
+    boolean remote_monitoring;
+    boolean local_monitoring;
+    boolean local_experiment;
 
     public ExperimentUseCaseType(KruizeObject kruizeObject) throws Exception {
         if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
-                setRemoteMonitoring(true);
+                setRemote_monitoring(true);
             } else {
                 throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Remote.");
             }
         } else if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
-                setLocalMonitoring(true);
+                setLocal_monitoring(true);
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {
-                setLocalExperiment(true);
+                setLocal_experiment(true);
             } else {
                 throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Local.");
             }
@@ -51,36 +51,36 @@ public class ExperimentUseCaseType {
         }
     }
 
-    public boolean isRemoteMonitoring() {
-        return remoteMonitoring;
+    public boolean isRemote_monitoring() {
+        return remote_monitoring;
     }
 
-    public void setRemoteMonitoring(boolean remoteMonitoring) {
-        this.remoteMonitoring = remoteMonitoring;
+    public void setRemote_monitoring(boolean remote_monitoring) {
+        this.remote_monitoring = remote_monitoring;
     }
 
-    public boolean isLocalMonitoring() {
-        return localMonitoring;
+    public boolean isLocal_monitoring() {
+        return local_monitoring;
     }
 
-    public void setLocalMonitoring(boolean localMonitoring) {
-        this.localMonitoring = localMonitoring;
+    public void setLocal_monitoring(boolean local_monitoring) {
+        this.local_monitoring = local_monitoring;
     }
 
-    public boolean isLocalExperiment() {
-        return localExperiment;
+    public boolean isLocal_experiment() {
+        return local_experiment;
     }
 
-    public void setLocalExperiment(boolean localExperiment) {
-        this.localExperiment = localExperiment;
+    public void setLocal_experiment(boolean local_experiment) {
+        this.local_experiment = local_experiment;
     }
 
     @Override
     public String toString() {
         return "ExperimentUseCaseType{" +
-                "remoteMonitoring=" + remoteMonitoring +
-                ", localMonitoring=" + localMonitoring +
-                ", localExperiment=" + localExperiment +
+                "remoteMonitoring=" + remote_monitoring +
+                ", localMonitoring=" + local_monitoring +
+                ", localExperiment=" + local_experiment +
                 '}';
     }
 }

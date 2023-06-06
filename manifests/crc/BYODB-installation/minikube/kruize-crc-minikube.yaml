@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.14_rm
+          image: kruize/autotune_operator:0.0.15_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -116,3 +116,19 @@ spec:
     - name: kruize-port
       port: 8080
       targetPort: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kruize-service-monitor
+  namespace: monitoring
+  labels:
+    app: kruize
+spec:
+  selector:
+    matchLabels:
+      app: kruize
+  endpoints:
+    - port: kruize-port
+      interval: 30s
+      path: /metrics

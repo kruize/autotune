@@ -30,6 +30,20 @@ ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 
+# Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE  = "112101"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA                           = "120001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE                      = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO                      = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE                 = "323003"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO                   = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE              = "324002"
+NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET                       = "523001"
+NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
+NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
+NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
+
+
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
@@ -44,100 +58,104 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
-        "version": "\"1.0\"",
-        "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "cluster_name": "\"cluster-one-division-bell\"",
-        "performance_profile": "\"resource-optimization-openshift\"",
-        "mode": "\"monitor\"",
-        "target_cluster": "\"remote\"",
-        "type": "\"deployment\"",
-        "name": "\"tfb-qrh-sample\"",
-        "namespace": "\"default\"",
-        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
-        "container_name": "\"tfb-server\"",
-        "measurement_duration": "\"15min\"",
-        "threshold": "\"0.1\""
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "cluster_name": "cluster-one-division-bell",
+        "performance_profile": "resource-optimization-openshift",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "type": "deployment",
+        "name": "tfb-qrh-sample",
+        "namespace": "default",
+        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+        "container_name": "tfb-server",
+        "measurement_duration": "15min",
+        "threshold": "0.1"
 }
 
 # version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
-        "version": "\"1.0\"",
-        "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "interval_start_time": "\"2022-01-23T18:25:43.511Z\"",
-        "interval_end_time": "\"2022-01-23T18:40:43.511Z\"",
-        "type": "\"deployment\"",
-        "name": "\"tfb-qrh-sample\"",
-        "namespace": "\"default\"",
-        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
-        "container_name": "\"tfb-server\"",
-        "cpuRequest_name": "\"cpuRequest\"",
-        "cpuRequest_sum": "4.4",
-        "cpuRequest_avg": "1.1",
-        "cpuRequest_format": "\"cores\"",
-        "cpuLimit_name": "\"cpuLimit\"",
-        "cpuLimit_sum": "5.4",
-        "cpuLimit_avg": "22.1",
-        "cpuLimit_format": "\"cores\"",
-        "cpuUsage_name": "\"cpuUsage\"",
-        "cpuUsage_sum": "3.4",
-        "cpuUsage_max": "2.4",
-        "cpuUsage_avg": "1.5",
-        "cpuUsage_min": "0.5",
-        "cpuUsage_format": "\"cores\"",
-        "cpuThrottle_name": "\"cpuThrottle\"",
-        "cpuThrottle_sum": "1.09",
-        "cpuThrottle_max": "0.09",
-        "cpuThrottle_avg": "0.045",
-        "cpuThrottle_format": "\"cores\"",
-        "memoryRequest_name": "\"memoryRequest\"",
-        "memoryRequest_sum": "250.85",
-        "memoryRequest_avg": "51.1",
-        "memoryRequest_format": "\"MiB\"",
-        "memoryLimit_name": "\"memoryLimit\"",
-        "memoryLimit_sum": "500",
-        "memoryLimit_avg": "100",
-        "memoryLimit_format": "\"MiB\"",
-        "memoryUsage_name": "\"memoryUsage\"",
-        "memoryUsage_sum": "298.5",
-        "memoryUsage_max": "198.4",
-        "memoryUsage_avg": "41.5",
-        "memoryUsage_min": "21.5",
-        "memoryUsage_format": "\"MiB\"",
-        "memoryRSS_name": "\"memoryRSS\"",
-        "memoryRSS_sum": "225.64",
-        "memoryRSS_max": "125.54",
-        "memoryRSS_avg": "46.5",
-        "memoryRSS_min": "26.5",
-        "memoryRSS_format": "\"MiB\""
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-01-23T18:25:43.511Z",
+        "interval_end_time": "2022-01-23T18:40:43.511Z",
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+        "container_name": "tfb-server",
+        "cpuRequest_name": "cpuRequest",
+        "cpuRequest_sum": 4.4,
+        "cpuRequest_avg": 1.1,
+        "cpuRequest_format": "cores",
+        "cpuLimit_name": "cpuLimit",
+        "cpuLimit_sum": 5.4,
+        "cpuLimit_avg": 22.1,
+        "cpuLimit_format": "cores",
+        "cpuUsage_name": "cpuUsage",
+        "cpuUsage_sum": 3.4,
+        "cpuUsage_max": 2.4,
+        "cpuUsage_avg": 1.5,
+        "cpuUsage_min": 0.5,
+        "cpuUsage_format": "cores",
+        "cpuThrottle_name": "cpuThrottle",
+        "cpuThrottle_sum": 1.09,
+        "cpuThrottle_max": 0.09,
+        "cpuThrottle_avg": 0.045,
+        "cpuThrottle_format": "cores",
+        "memoryRequest_name": "memoryRequest",
+        "memoryRequest_sum": 250.85,
+        "memoryRequest_avg": 51.1,
+        "memoryRequest_format": "MiB",
+        "memoryLimit_name": "memoryLimit",
+        "memoryLimit_sum": 500,
+        "memoryLimit_avg": 100,
+        "memoryLimit_format": "MiB",
+        "memoryUsage_name": "memoryUsage",
+        "memoryUsage_sum": 298.5,
+        "memoryUsage_max": 198.4,
+        "memoryUsage_avg": 41.5,
+        "memoryUsage_min": 21.5,
+        "memoryUsage_format": "MiB",
+        "memoryRSS_name": "memoryRSS",
+        "memoryRSS_sum": 225.64,
+        "memoryRSS_max": 125.54,
+        "memoryRSS_avg": 46.5,
+        "memoryRSS_min": 26.5,
+        "memoryRSS_format": "MiB"
     }
 
-test_type = {"blank": "\"\"", "null": "null", "invalid": "\"xyz\""}
+test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
 def generate_test_data(csvfile, test_data):
     if os.path.isfile(csvfile):
         os.remove(csvfile)
-    f = open(csvfile, "a")
+    with open(csvfile, 'a') as f:
+        writer = csv.writer(f)
 
-    for key in test_data:
-        for t in test_type:
-            data_str = ""
+        for key in test_data:
+            for t in test_type:
+                data = []
 
-            test_name = t + "_" + key
-            status_code = "400"
+                test_name = t + "_" + key
+                status_code = 400
+                if test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name":
+                    status_code = 201
 
-            data_str = "\"" + test_name + "\"," + status_code
-            for k in test_data:
-                data_str += ","
-                if  k != key :
-                        data_str += test_data[k]
-                else:
-                        if any(re.findall(r'mean|sum|max|min|avg|number', k, re.IGNORECASE)):
-                            data_str += "-1"
-                        else :
-                           data_str += test_type[t]
+                data.append(test_name)
+                data.append(status_code)
+                for k in test_data:
+                    if  k != key :
+                            data.append(test_data[k])
+                    else:
+                        if any(re.findall(r'invalid.*sum|invalid.*max|invalid.*min|invalid.*avg', test_name, re.IGNORECASE)):
+                                data.append(-1)
+                        elif any(re.findall(r'blank.*sum|blank.*max|blank.*min|blank.*avg', test_name, re.IGNORECASE)):
+                                data.append("\"\"")
+                        else:
+                               data.append(test_type[t])
 
-            data_str += "\n"
-            f.write(data_str)
+                writer.writerow(data)
 
     f.close()
     test_data = read_test_data_from_csv(csvfile)
@@ -361,9 +379,9 @@ def validate_config(reco_config):
         assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
-    for notification in duration_based_obj["notifications"]:
-        if notification["message"] == NOT_ENOUGH_DATA_MSG:
-            return False
+    notifications = duration_based_obj["notifications"]
+    if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+        return False
     return True
 
 def time_diff_in_hours(interval_start_time, interval_end_time):
@@ -371,4 +389,16 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+
+def strip_double_quotes_for_field(json_file, field, filename):
+
+    find = "\"{{" + field + "}}\""
+    replace = "{{" + field + "}}"
+    with open(json_file, 'r') as file:
+        data = file.read()
+
+        data = data.replace(find, replace)
+
+        with open(filename, 'w') as file:
+            file.write(data)
 

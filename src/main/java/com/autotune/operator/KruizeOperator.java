@@ -168,11 +168,11 @@ public class KruizeOperator {
                 kruizeObjectList.add(kruizeObject);
                 ExperimentInitiator experimentInitiator = new ExperimentInitiator();
                 experimentInitiator.validateAndAddNewExperiments(autotuneObjectMap, kruizeObjectList);
-                KruizeObject invalidKruizeObject = kruizeObjectList.stream().filter((ko) -> (!ko.getValidationData().isSuccess())).findAny().orElse(null);
+                KruizeObject invalidKruizeObject = kruizeObjectList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (invalidKruizeObject != null) {
-                    new KubeEventLogger(Clock.systemUTC()).log("Failed", invalidKruizeObject.getValidationData().getMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", invalidKruizeObject.getValidation_data().getMessage(), EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);
                 } else {
-                    LOGGER.debug(kruizeObject.getExperimentName() + " " + kruizeObject.getValidationData().getMessage());
+                    LOGGER.debug(kruizeObject.getExperimentName() + " " + kruizeObject.getValidation_data().getMessage());
                 }
             } else {
                 new KubeEventLogger(Clock.systemUTC()).log("Failed", "Not able to process KruizeObject ", EventLogger.Type.Warning, null, null, kruizeObject.getObjectReference(), null);

@@ -48,6 +48,15 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("update_results_template.json")
 
+    if "null" in test_name:
+        field = test_name.replace("null_", "")
+        json_file = "../json_files/update_results_template.json"
+        filename = "/tmp/update_results_template.json"
+
+        strip_double_quotes_for_field(json_file, field, filename)
+        environment = Environment(loader=FileSystemLoader("/tmp/"))
+        template = environment.get_template("update_results_template.json")
+
     filename = f"/tmp/update_results_{test_name}.json"
     content = template.render(
         version = version,
@@ -107,6 +116,9 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     data = response.json()
     print(data['message'])
     assert response.status_code == int(expected_status_code)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_valid_results_after_create_exp(cluster_type):
@@ -367,8 +379,6 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    num_exps = 10
-    for i in range(num_exps):
         # Update results for the experiment
         json_file = "/tmp/update_results.json"
         generate_json(find, result_json_file, json_file, i)
@@ -379,6 +389,9 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
 
 #@pytest.mark.negative
 def test_update_valid_results_without_create_exp(cluster_type):

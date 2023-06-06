@@ -50,12 +50,12 @@ public class CreateExperimentManager implements KruizeWorker {
         //new ExperimentDBService().addExperimentToDB(kruizeObject);
         //experimentInterface.updateExperimentStatus(kruizeExperiment, AnalyzerConstants.ExpStatus.IN_PROGRESS);
 
-        if (kruizeObject.getExperimentUseCaseType().isLocalExperiment() || kruizeObject.getExperimentUseCaseType().isLocalMonitoring()) {
+        if (kruizeObject.getExperiment_usecase_type().isLocal_experiment() || kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             matchPodsToAutotuneObject(kruizeObject);
             for (String kruizeConfig : KruizeOperator.autotuneConfigMap.keySet()) {
                 addLayerInfo(KruizeOperator.autotuneConfigMap.get(kruizeConfig), kruizeObject);
             }
-            if (kruizeObject.getExperimentUseCaseType().isLocalExperiment()) {
+            if (kruizeObject.getExperiment_usecase_type().isLocal_experiment()) {
                 if (!KruizeOperator.deploymentMap.isEmpty() &&
                         KruizeOperator.deploymentMap.get(kruizeObject.getExperimentName()) != null) {
                     Map<String, ApplicationDeployment> depMap = KruizeOperator.deploymentMap.get(kruizeObject.getExperimentName());
