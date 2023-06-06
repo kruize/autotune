@@ -113,7 +113,6 @@ public class ListExperiments extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
-
         // validate Query params
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
