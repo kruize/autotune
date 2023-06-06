@@ -22,6 +22,7 @@ import multiprocessing
 import time
 from multiprocessing import Manager
 
+
 def postResult(expName,startDate,endDate):
     if args.debug: print("Posting results for %s - %s "%(startDate,endDate))
     # update the JSON data with the new interval times
@@ -35,6 +36,7 @@ def postResult(expName,startDate,endDate):
         response = requests.post(updateExpURL, data=json_payload, headers=headers, timeout=timeout)
     # Check the response
         if response.status_code == 201:
+            print(f"progress {expName} :  ExperimentCount : %s/%s   Results Count : %s/%s  Recommendation count : %s"  %(completedExperimentCount.value,expcount,len(completedResultDatesList),len(totalResultDates),len(completedRecommendation) ), end="\r")
             pass
         else:
             print(f'Request failed with status code {response.status_code}: {response.text}')
@@ -54,6 +56,7 @@ def updateRecommendation(experiment_name,endDate):
         response = requests.post(payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
         # Check the response
         if response.status_code == 201:
+            print(f"progress {experiment_name} :  ExperimentCount : %s/%s   Results Count : %s/%s  Recommendation count : %s"  %(completedExperimentCount.value,expcount,len(completedResultDatesList),len(totalResultDates),len(completedRecommendation) ), end="\r")
             pass
         else:
             if args.debug: print(f'{payloadRecommendationURL} Request failed with status code {response.status_code}: {response.text}')
@@ -62,23 +65,46 @@ def updateRecommendation(experiment_name,endDate):
         print('updateRecommendation Timeout occurred while connecting to')
     except requests.exceptions.RequestException as e:
         print('updateRecommendation Timeout occurred while connecting to',  e)
+    finally:
+        completedRecommendation.append(endDate)
+
+def updateRecommendationInBulk():
+    pendingRecommendation = list(set(totalResultDates).difference(completedRecommendation))
+    print(len(pendingRecommendation))
+    print(len(pendingRecommendation))
+    recommendationDataList = []
+    for i_end_date in pendingRecommendation:
+        recommendationDataList.append((createdata['experiment_name'],i_end_date))
+    num_processes = args.parallelresultcount
+    pool = multiprocessing.Pool(processes=num_processes)
+    # Start the parallel execution
+    pool.starmap(updateRecommendation, recommendationDataList)
+    # Close the pool and wait for the processes to finish
+    pool.close()
+    pool.join()
 
 def validateRecommendation():
     totalResultDates.sort()
     completedResultDatesList.sort()
     while len(completedRecommendation) < len(totalResultDates):
-        for completedDate in completedResultDatesList:
-            if completedDate not in completedRecommendation:
-                subTotalResulutDates = totalResultDates[:totalResultDates.index(completedDate)]
-                if(all(x in completedResultDatesList for x in subTotalResulutDates)):
-                    if args.debug: print("You can generate recommendation for completedDate %s \n due to subTotalResulutDates %s  \n are subset of completedResultSet %s" %(completedDate,subTotalResulutDates,completedResultDatesList))
-                    completedRecommendation.append(completedDate)
-                    updateRecommendation(createdata['experiment_name'],completedDate)
-                else:
-                    if args.debug: print("You CANNOT generate recommendation for completedDate %s \n due to subTotalResulutDates %s  \n are not subset of completedResultSet %s" %(completedDate,subTotalResulutDates,completedResultDatesList))
-                    pass
-                if args.debug: print('*************************')
-        time.sleep(2)
+        if (len(totalResultDates) == len(completedResultDatesList)):
+            updateRecommendationInBulk()
+            break
+        else:
+            for completedDate in completedResultDatesList:
+                if completedDate not in completedRecommendation:
+                    subTotalResulutDates = totalResultDates[:totalResultDates.index(completedDate)]
+                    if(all(x in completedResultDatesList for x in subTotalResulutDates)):
+                        if args.debug: print("You can generate recommendation for completedDate %s \n due to subTotalResulutDates %s  \n are subset of completedResultSet %s" %(completedDate,subTotalResulutDates,completedResultDatesList))
+                        updateRecommendation(createdata['experiment_name'],completedDate)
+                        if (len(totalResultDates) == len(completedResultDatesList)):
+                            updateRecommendationInBulk()
+                            break
+                    else:
+                        if args.debug: print("You CANNOT generate recommendation for completedDate %s \n due to subTotalResulutDates %s  \n are not subset of completedResultSet %s" %(completedDate,subTotalResulutDates,completedResultDatesList))
+                        pass
+                    if args.debug: print('*************************')
+            time.sleep(1)
 
 def loadData():
     createdata = {
@@ -367,12 +393,19 @@ if __name__ == "__main__":
 
     # parse the arguments from the command line
     args = parser.parse_args()
+    if args.port != 0:
+        createExpURL = 'http://%s:%s/createExperiment'%(args.ip,args.port)
+        updateExpURL = 'http://%s:%s/updateResults'%(args.ip,args.port)
+        createProfileURL = 'http://%s:%s/createPerformanceProfile'%(args.ip,args.port)
+        updateExpURL = 'http://%s:%s/updateResults'%(args.ip,args.port)
+        updateRecommendationURL = 'http://%s:%s/updateRecommendations'%(args.ip,args.port)
+    else:
+        createExpURL = 'http://%s/createExperiment'%(args.ip)
+        updateExpURL = 'http://%s/updateResults'%(args.ip)
+        createProfileURL = 'http://%s/createPerformanceProfile'%(args.ip)
+        updateExpURL = 'http://%s/updateResults'%(args.ip)
+        updateRecommendationURL = 'http://%s/updateRecommendations'%(args.ip)
 
-    createExpURL = 'http://%s:%s/createExperiment'%(args.ip,args.port)
-    updateExpURL = 'http://%s:%s/updateResults'%(args.ip,args.port)
-    createProfileURL = 'http://%s:%s/createPerformanceProfile'%(args.ip,args.port)
-    updateExpURL = 'http://%s:%s/updateResults'%(args.ip,args.port)
-    updateRecommendationURL = 'http://%s:%s/updateRecommendations'%(args.ip,args.port)
     expnameprfix = args.name
     expcount = int(args.count.split(',')[0])
     rescount = int(args.count.split(',')[1])
@@ -415,6 +448,8 @@ if __name__ == "__main__":
     totalResultDates = manager.list()
     completedResultDatesList = manager.list()
     completedRecommendation = manager.list()
+    completedExperimentCount = manager.Value(int,0)
+    completedResultsCount = manager.Value(int,0)
 
     start_time = time.time()
     for i in range(1,expcount+1):
@@ -429,6 +464,7 @@ if __name__ == "__main__":
             j = 0
             if response.status_code == 201 or response.status_code == 409:
                 print('Create experiment_name %s Request successful!'%(experiment_name))
+                completedExperimentCount.value = completedExperimentCount.value + 1
                 timeDeltaList = []
                 for j in range(rescount):
                     interval_start_time = datetime.datetime.strptime(data['interval_end_time'] ,  '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -480,7 +516,7 @@ if __name__ == "__main__":
             print('An error occurred ', e)
 
 
-    print('Request successful!  completed  :  ExperimentCount : %s/%s   Results Count : %s/%s  Recommendation count : %s'  %(i,expcount,len(completedResultDatesList),len(totalResultDates),len(completedRecommendation) ))
+    print('Request successful!  completed  :  ExperimentCount : %s/%s   Results Count : %s/%s  Recommendation count : %s'  %(completedExperimentCount.value,expcount,len(completedResultDatesList),len(totalResultDates),len(completedRecommendation) ))
     elapsed_time = time.time() - start_time
     hours, rem = divmod(elapsed_time, 3600)
     minutes, seconds = divmod(rem, 60)
