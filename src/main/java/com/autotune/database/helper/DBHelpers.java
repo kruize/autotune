@@ -629,10 +629,9 @@ public class DBHelpers {
                     try {
                         JsonNode sloData = entry.getSlo();
                         String slo_rawJson = sloData.toString();
-                        PerformanceProfile performanceProfile = new Gson().fromJson(slo_rawJson, PerformanceProfile.class);
-                        performanceProfile.setName(entry.getName());
-                        performanceProfile.setProfile_version(entry.getProfile_version());
-                        performanceProfile.setK8s_type(entry.getK8s_type());
+                        SloInfo sloInfo = new Gson().fromJson(slo_rawJson, SloInfo.class);
+                        PerformanceProfile performanceProfile = new PerformanceProfile(
+                                entry.getName(), entry.getProfile_version(), entry.getK8s_type(), sloInfo);
                         performanceProfiles.add(performanceProfile);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while reading from Performance Profile DB object due to : {}", e.getMessage());
