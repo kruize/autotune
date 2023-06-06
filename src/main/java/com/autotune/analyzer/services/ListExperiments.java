@@ -72,6 +72,29 @@ public class ListExperiments extends HttpServlet {
     ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
     KubernetesServices kubernetesServices = null;
 
+    private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        List<K8sObject> k8sObjectList = new ArrayList<>();
+        for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjects) {
+            K8sObject k8sObject = new K8sObject(
+                    kubernetesAPIObject.getName(),
+                    kubernetesAPIObject.getType(),
+                    kubernetesAPIObject.getNamespace()
+            );
+            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                ContainerData containerData = new ContainerData(
+                        containerAPIObject.getContainer_name(),
+                        containerAPIObject.getContainer_image_name(),
+                        containerAPIObject.getContainerRecommendations(),
+                        null);
+                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
+            }
+            k8sObject.setContainerDataMap(containerDataMap);
+            k8sObjectList.add(k8sObject);
+        }
+        return k8sObjectList;
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -187,6 +210,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
         }
     }
+
     private Gson createGsonObject() {
         return new GsonBuilder()
                 .disableHtmlEscaping()
@@ -204,6 +228,7 @@ public class ListExperiments extends HttpServlet {
                                         f.getName().equalsIgnoreCase("metrics")
                                 );
                     }
+
                     @Override
                     public boolean shouldSkipClass(Class<?> aClass) {
                         return false;
@@ -252,7 +277,7 @@ public class ListExperiments extends HttpServlet {
             try {
                 if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE) && recommendations.equalsIgnoreCase(
                         AnalyzerConstants.BooleanString.TRUE)) {
-                // Case: results=true , recommendations=true
+                    // Case: results=true , recommendations=true
                     // fetch results and recomm. from the DB
                     loadRecommendations(mKruizeExperimentMap, experimentName);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
@@ -324,6 +349,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Unsupported Object passed!");
 
     }
+
     private void getLatestResults(Map<String, KruizeObject> mKruizeExperimentMap) {
         try {
             for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
@@ -342,6 +368,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Exception occurred while fetching results for the : {}", npe.getMessage());
         }
     }
+
     private void buildRecommendationsResponse(Map<String, KruizeObject> mKruizeExperimentMap, String latest) {
         boolean getLatest = Boolean.parseBoolean(latest);
         for (KruizeObject ko : mKruizeExperimentMap.values()) {
@@ -361,32 +388,8 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-
     private void mergeRecommendationsInKruizeObject(ListRecommendationsAPIObject listRecommendationsAPIObject, KruizeObject ko) {
         ko.setKubernetes_objects(convertKubernetesAPIObjectListToK8sObjectList(listRecommendationsAPIObject.getKubernetesObjects()));
-    }
-
-    private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
-        List<K8sObject> k8sObjectList = new ArrayList<>();
-        for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjects) {
-            K8sObject k8sObject = new K8sObject(
-                    kubernetesAPIObject.getName(),
-                    kubernetesAPIObject.getType(),
-                    kubernetesAPIObject.getNamespace()
-            );
-            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                ContainerData containerData = new ContainerData(
-                        containerAPIObject.getContainer_name(),
-                        containerAPIObject.getContainer_image_name(),
-                        containerAPIObject.getContainerRecommendations(),
-                        null);
-                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
-            }
-            k8sObject.setContainerDataMap(containerDataMap);
-            k8sObjectList.add(k8sObject);
-        }
-        return k8sObjectList;
     }
 
     //TODO this function no more used.
