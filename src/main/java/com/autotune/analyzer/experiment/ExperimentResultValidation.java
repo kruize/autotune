@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 public class ExperimentResultValidation {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentResultValidation.class);
 
-
 }
 
 
