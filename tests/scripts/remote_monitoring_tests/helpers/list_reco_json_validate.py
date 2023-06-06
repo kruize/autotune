@@ -15,7 +15,8 @@ limitations under the License.
 """
 import json
 import jsonschema
-from jsonschema import validate, draft7_format_checker
+from jsonschema import FormatChecker
+from jsonschema.exceptions import ValidationError
 from helpers.list_reco_json_schema import list_reco_json_schema
 
 KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "replicaset", "deploymentConfig", "statefulset", "daemonset", "replicationController")
@@ -24,16 +25,28 @@ KUBERNETES_OBJECTS_TYPE_NOT_SUPPORTED = "Kubernetes objects type not supported!"
 JSON_NULL_VALUES = ("is not of type 'string'", "is not of type 'integer'", "is not of type 'number'")
 VALUE_MISSING = " cannot be empty or null!"
 
-def validate_list_reco_json(list_reco_json):
+def validate_list_reco_json(list_reco_json, json_schema):
     errorMsg = ""
     try:
+        # create a validator with the format checker
         print("Validating json against the json schema...")
-        validate(instance=list_reco_json, schema=list_reco_json_schema, format_checker=draft7_format_checker)
+        validator = jsonschema.Draft7Validator(json_schema, format_checker=FormatChecker())
+
+        # validate the JSON data against the schema
+        errors = ""
+        errors = list(validator.iter_errors(list_reco_json))
         print("Validating json against the json schema...done")
         errorMsg = validate_list_reco_json_values(list_reco_json[0])
 
-        return errorMsg
-    except jsonschema.exceptions.ValidationError as err:
+        if errors:
+            custom_err = ValidationError(errorMsg)
+            errors.append(custom_err)
+            return errors
+        else:
+            return errorMsg
+    except ValidationError as err:
+        print("Received a VaidationError")
+
         # Check if the exception is due to empty or null required parameters and prepare the response accordingly
         if any(word in err.message for word in JSON_NULL_VALUES):
             errorMsg = "Parameters" + VALUE_MISSING

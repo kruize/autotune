@@ -60,6 +60,8 @@ sanity=0
 setup=1
 skip_setup=0
 
+cleanup_prometheus=0
+
 target="autotune"
 
 # Path to the directory containing yaml files
@@ -277,7 +279,9 @@ function autotune_cleanup() {
 	echo "CMD = ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
-	prometheus_cleanup
+	if [ "${cleanup_prometheus}" -eq "1" ]; then
+		prometheus_cleanup
+	fi
 	popd > /dev/null
 	echo "done"
 }
