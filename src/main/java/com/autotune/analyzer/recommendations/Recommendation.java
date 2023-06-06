@@ -43,24 +43,19 @@ public class Recommendation {
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private List<RecommendationNotification> notifications;
+    private HashMap<Integer, RecommendationNotification> notifications;
 
     public Recommendation(Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.monitoringStartTime = monitoringStartTime;
         this.monitoringEndTime = monitoringEndTime;
-        notifications = new ArrayList<RecommendationNotification>();
-    }
-
-    public Recommendation(List<RecommendationNotification> notifications) {
-        notifications = new ArrayList<RecommendationNotification>();
-        if (null != notifications && notifications.size() > 0)
-            notifications.addAll(notifications);
+        notifications = new HashMap<Integer, RecommendationNotification>();
     }
 
     public Recommendation(RecommendationNotification notification) {
-        notifications = new ArrayList<RecommendationNotification>();
+        if (null == notifications)
+            notifications = new HashMap<Integer, RecommendationNotification>();
         if (null != notification)
-            notifications.add(notification);
+            notifications.put(notification.getCode(), notification);
     }
 
     public Recommendation() {
@@ -125,14 +120,14 @@ public class Recommendation {
 
     public void addNotification(RecommendationNotification notification) {
         if (null != notification)
-            this.notifications.add(notification);
+            this.notifications.put(notification.getCode(), notification);
     }
 
-    public List<RecommendationNotification> getNotifications() {
+    public HashMap<Integer, RecommendationNotification> getNotifications() {
         return notifications;
     }
 
-    public void setNotifications(List<RecommendationNotification> notifications) {
+    public void setNotifications(HashMap<Integer, RecommendationNotification> notifications) {
         this.notifications = notifications;
     }
 

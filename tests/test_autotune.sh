@@ -27,7 +27,7 @@ resultsdir="${CURRENT_DIR}"
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c [minikube] -k kurl -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune & application setup] "
+	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune & application setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
 	echo ""
 	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=slo_class -r /home/benchmarks --resultsdir=/home/results"
 	echo "Example: $0 -c minikube --testmodule=da -r /home/benchmarks --resultsdir=/home/results"
@@ -158,6 +158,9 @@ do
 				;;
 			skipsetup)
 				skip_setup=1
+				;;
+			cleanup_prometheus)
+				cleanup_prometheus=1
 				;;
 
 		esac

@@ -17,18 +17,19 @@ package com.autotune.common.data.metrics;
 
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 
 public class MetricResults {
     private String name;
-    @SerializedName("aggregation_info")
+    @SerializedName(KruizeConstants.JSONKeys.AGGREGATION_INFO)
     private MetricAggregationInfoResults metricAggregationInfoResults;
-    @SerializedName("percentile_info")
+    @SerializedName(KruizeConstants.JSONKeys.PERCENTILE_INFO)
     private MetricPercentileResults metricPercentileResults;
     private Double value;
     private String format;
-    private boolean isPercentileResultsAvailable;
+    private boolean percentile_results_available;
 
     public MetricResults() {
         metricAggregationInfoResults = new MetricAggregationInfoResults();
@@ -42,28 +43,34 @@ public class MetricResults {
         }
         metricAggregationInfoResults = new MetricAggregationInfoResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.AGGREGATION_INFO));
         if (jsonObject.has(KruizeConstants.JSONKeys.PERCENTILE_INFO)) {
-            isPercentileResultsAvailable = true;
+            percentile_results_available = true;
             metricPercentileResults = new MetricPercentileResults(jsonObject.getJSONObject(KruizeConstants.JSONKeys.PERCENTILE_INFO));
         }
     }
 
-    public boolean isPercentileResultsAvailable() {
-        return isPercentileResultsAvailable;
+    public boolean isPercentile_results_available() {
+        return percentile_results_available;
     }
 
-    public void setPercentileResultsAvailable(boolean percentileResultsAvailable) {
-        isPercentileResultsAvailable = percentileResultsAvailable;
+    public void setIsPercentileResultsAvailable(boolean isPercentileResultsAvailable) {
+        isPercentileResultsAvailable = isPercentileResultsAvailable;
     }
+    @JsonProperty(KruizeConstants.JSONKeys.AGGREGATION_INFO)
     public MetricAggregationInfoResults getAggregationInfoResult() {
         return metricAggregationInfoResults;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.PERCENTILE_INFO)
     public MetricPercentileResults getMetricPercentileResults() {
         return metricPercentileResults;
     }
 
     public void setAggregationInfoResult(MetricAggregationInfoResults metricAggregationInfoResults) {
         this.metricAggregationInfoResults = metricAggregationInfoResults;
+    }
+
+    public void setMetricPercentileResults(MetricPercentileResults metricPercentileResults) {
+        this.metricPercentileResults = metricPercentileResults;
     }
 
     public Double getValue() {
@@ -96,7 +103,7 @@ public class MetricResults {
                 ", metricPercentileResults=" + metricPercentileResults +
                 ", value=" + value +
                 ", format='" + format + '\'' +
-                ", isPercentileResultsAvailable=" + isPercentileResultsAvailable +
+                ", isPercentileResultsAvailable=" + percentile_results_available +
                 '}';
     }
 }

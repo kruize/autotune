@@ -27,8 +27,10 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -60,21 +62,22 @@ import static com.autotune.utils.KruizeConstants.TimeUnitsExt.ACCEPTED_YEAR;
 public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
-    Map<String, KruizeObject> mainKruizeExperimentMap;
     Map<String, PerformanceProfile> performanceProfilesMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.mainKruizeExperimentMap = (ConcurrentHashMap<String, KruizeObject>) getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
+
         this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
                 .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
         int totalResultsCount = 0;
-        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT,totalResultsCount);
+        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, totalResultsCount);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             // check for valid timestamps
@@ -93,7 +96,7 @@ public class UpdateResults extends HttpServlet {
                         experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
                     }
                     ExperimentInitiator experimentInitiator = new ExperimentInitiator();
-                    ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mainKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
+                    ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
                     ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
                     ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
                     if (null == invalidKExperimentResultData) {
@@ -107,7 +110,7 @@ public class UpdateResults extends HttpServlet {
                                 count++;
                                 LOGGER.debug("totalResultsCount so far : {}", count);
                                 if (count >= AnalyzerConstants.GC_THRESHOLD_COUNT) {
-                                    LOGGER.debug("calling System GC");
+                                    LOGGER.debug("Calling System GC");
                                     System.gc();
                                     count = 0;
                                 }
@@ -122,13 +125,13 @@ public class UpdateResults extends HttpServlet {
                     }
 
                     if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
-                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mainKruizeExperimentMap, experimentResultDataList);
+                        boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mKruizeExperimentMap, experimentResultDataList);
                         if (!recommendationCheck)
                             LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
                                     experimentResultDataList.get(0).getExperiment_name(),
                                     experimentResultDataList.get(0).getIntervalEndTime());
                         else {
-                            new ExperimentDBService().getRecommendationToSave(mainKruizeExperimentMap, experimentResultDataList);
+                            new ExperimentDBService().addRecommendationToDB(mKruizeExperimentMap, experimentResultDataList);
                         }
                     }
                 }
@@ -137,6 +140,8 @@ public class UpdateResults extends HttpServlet {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerUpdateResults) timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
         }
     }
 

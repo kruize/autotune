@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
@@ -26,6 +25,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -86,6 +86,12 @@ public class ExperimentValidation {
             ValidationOutputData validationOutputData = validateMandatoryFields(kruizeObject);
             if (validationOutputData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
+                try {
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, expName);
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
+                }
+
                 String mode = kruizeObject.getMode();
                 String target_cluster = kruizeObject.getTarget_cluster();
                 boolean proceed = false;
@@ -118,15 +124,15 @@ public class ExperimentValidation {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
                 }
                 if (!proceed) {
-                    kruizeObject.setValidationData(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, errorMsg, validationOutputData.getErrorCode()));
                     markFailed(errorMsg);
                     break;
                 } else {
                     setSuccess(true);
-                    kruizeObject.setValidationData(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.EXPERIMENT_REGISTERED, HttpServletResponse.SC_CREATED));
+                    kruizeObject.setValidation_data(new ValidationOutputData(true, AnalyzerConstants.ServiceConstants.EXPERIMENT_REGISTERED, HttpServletResponse.SC_CREATED));
                 }
             } else {
-                kruizeObject.setValidationData(validationOutputData);
+                kruizeObject.setValidation_data(validationOutputData);
                 markFailed(validationOutputData.getMessage());
                 break;
             }
@@ -198,7 +204,7 @@ public class ExperimentValidation {
         );
         if (missingMandatoryFields.size() == 0) {
             try {
-                if (expObj.getExperimentUseCaseType().isRemoteMonitoring() || expObj.getExperimentUseCaseType().isLocalMonitoring()) {
+                if (expObj.getExperiment_usecase_type().isRemote_monitoring() || expObj.getExperiment_usecase_type().isLocal_monitoring()) {
                     mandatoryFieldsForLocalRemoteMonitoring.forEach(
                             mField -> {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
@@ -214,7 +220,7 @@ public class ExperimentValidation {
                     );
                 }
                 String depType = "";
-                if (expObj.getExperimentUseCaseType().isRemoteMonitoring()) {
+                if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
                     mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
                     // check for valid k8stype
