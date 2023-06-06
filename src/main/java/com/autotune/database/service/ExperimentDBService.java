@@ -139,7 +139,7 @@ public class ExperimentDBService {
     }
 
 
-    private void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
 
         // Load results from the DB and save to local
