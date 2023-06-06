@@ -206,9 +206,10 @@ def main(argv):
 
     if failed == 1:
         print("Test Failed! Check the logs for test failures")
+        sys.exit(1)
     else:
         print("Test Passed! Check the logs for details")
-    sys.exit(failed)
+        sys.exit(0)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

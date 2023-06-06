@@ -152,13 +152,25 @@ echo ""
 echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}"
+	exit_code=$?
+	echo "exit_code = $exit_code"
 
 else
 	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a ${TEST_LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}"
+	exit_code=$?
+	echo "exit_code = $exit_code"
 fi
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+
+if [ "${exit_code}" -ne 0 ]; then
+	echo "Fault tolerant test failed! Check the log for details" | tee -a ${LOG}
+	exit 1
+else
+	echo "Fault tolerant test passed!" | tee -a ${LOG}
+	exit 0
+fi
