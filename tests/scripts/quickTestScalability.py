@@ -57,7 +57,6 @@ def updateRecommendation(experiment_name,endDate):
         # Check the response
         if response.status_code == 201:
             print(f"progress {experiment_name} :  ExperimentCount : %s/%s   Results Count : %s/%s  Recommendation count : %s"  %(completedExperimentCount.value,expcount,len(completedResultDatesList),len(totalResultDates),len(completedRecommendation) ), end="\r")
-            pass
         else:
             if args.debug: print(f'{payloadRecommendationURL} Request failed with status code {response.status_code}: {response.text}')
             requests.post(createProfileURL, data=profile_json_payload, headers=headers)
@@ -70,8 +69,6 @@ def updateRecommendation(experiment_name,endDate):
 
 def updateRecommendationInBulk():
     pendingRecommendation = list(set(totalResultDates).difference(completedRecommendation))
-    print(len(pendingRecommendation))
-    print(len(pendingRecommendation))
     recommendationDataList = []
     for i_end_date in pendingRecommendation:
         recommendationDataList.append((createdata['experiment_name'],i_end_date))
