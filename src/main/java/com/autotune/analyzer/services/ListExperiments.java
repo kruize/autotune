@@ -129,7 +129,6 @@ public class ListExperiments extends HttpServlet {
                 recommendations = "false";
             if (latest == null || latest.isEmpty())
                 latest = "true";
-
             // Validate query parameter values
             if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
                 try {
