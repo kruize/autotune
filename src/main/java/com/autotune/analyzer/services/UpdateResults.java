@@ -60,9 +60,8 @@ public class UpdateResults extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        int totalResultsCount = 0;
-        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, totalResultsCount);
+        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
+                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     @Override
