@@ -78,6 +78,6 @@ public class KruizeSupportedTypes
 			new HashSet<>(Arrays.asList("deployment", "pod", "container"));
 
 	public static final Set<String> QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-			"experiment_name", "results", "recommendations", "latest"
+			"experiment_name", "results", "recommendations", "latest", "page", "limit"
 	));
 }

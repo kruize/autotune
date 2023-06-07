@@ -89,6 +89,8 @@ public class AnalyzerConstants {
     public static final String PERSISTANCE_STORAGE = "persistance_storage";
     public static final String RESULTS_COUNT = "results_count";
     public static final int GC_THRESHOLD_COUNT = 100;
+    public static final int DEFAULT_PAGE_VALUE = 1;
+    public static final int DEFAULT_LIMIT_VALUE = 50;
 
 
     private AnalyzerConstants() {
@@ -865,6 +867,8 @@ public class AnalyzerConstants {
         public static final String LATEST = "latest";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
+        public static final String PAGE = "page";
+        public static final String LIMIT = "limit";
 
         private ServiceConstants() {
         }

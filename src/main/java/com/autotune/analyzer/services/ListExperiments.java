@@ -32,7 +32,6 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -69,9 +68,6 @@ import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
  */
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
-    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -88,10 +84,14 @@ public class ListExperiments extends HttpServlet {
         String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String pageStr = request.getParameter(PAGE);
+        String limitStr = request.getParameter(LIMIT);
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
 
         // validate Query params
+        int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
+        int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
             if (!KruizeSupportedTypes.QUERY_PARAMS_SUPPORTED.contains(param)) {
@@ -127,7 +127,7 @@ public class ListExperiments extends HttpServlet {
                         Gson gsonObj = createGsonObject();
 
                         // Modify the JSON response here based on query params.
-                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, page, limit);
                         if (gsonStr.isEmpty()) {
                             gsonStr = generateDefaultResponse();
                         }
@@ -156,6 +156,14 @@ public class ListExperiments extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST,
                     String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
             );
+        }
+    }
+    private int parseIntegerOrDefault(String value, int defaultValue) {
+        try {
+            int intValue = Integer.parseInt(value);
+            return intValue > 0 ? intValue : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 
@@ -242,7 +250,7 @@ public class ListExperiments extends HttpServlet {
     }
 
     private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, String results,
-                                             String recommendations, String latest, String experimentName) {
+                                             String recommendations, String latest, String experimentName, int page, int limit) {
         // Case : default
         // return the response without results or recommendations
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
@@ -256,7 +264,7 @@ public class ListExperiments extends HttpServlet {
                     // fetch results and recomm. from the DB
                     loadRecommendations(mKruizeExperimentMap, experimentName);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
-                    loadResults(mKruizeExperimentMap, experimentName);
+                    loadResults(mKruizeExperimentMap, experimentName, page, limit);
 
                     // filter the latest results when latest = true, else return all
                     if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
@@ -266,7 +274,7 @@ public class ListExperiments extends HttpServlet {
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 } else if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
                     // Case: results=true , recommendations=false
-                    loadResults(mKruizeExperimentMap, experimentName);
+                    loadResults(mKruizeExperimentMap, experimentName, page, limit);
                     checkPercentileInfo(mKruizeExperimentMap);
                     // filter the latest results when latest = true, else return all
                     if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
@@ -287,11 +295,12 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-    private void loadResults(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadResults(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllResults(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedResults(mKruizeExperimentMap, page, limit);
             else
+                // TODO: add pagination for the below results
                 new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
 
         } catch (Exception e) {
@@ -301,6 +310,7 @@ public class ListExperiments extends HttpServlet {
 
     private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
         try {
+            // TODO: add pagination for the below recomm
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
             else

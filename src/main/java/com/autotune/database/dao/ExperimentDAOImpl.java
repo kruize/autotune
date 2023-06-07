@@ -195,6 +195,23 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeResultsEntries;
     }
+    public List<KruizeResultsEntry> loadPaginatedResults(int page, int limit) throws Exception {
+        List<KruizeResultsEntry> kruizeResultsEntries;
+        Timer.Sample timerLoadPaginatedResults = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeResultsEntry> query = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS, KruizeResultsEntry.class);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit); // Set the maximum number of results to retrieve
+            kruizeResultsEntries = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load paginated results due to: {}", e.getMessage());
+            throw new Exception("Error while loading paginated results from the database due to: " + e.getMessage());
+        } finally {
+            timerLoadPaginatedResults.stop(MetricsConfig.timerLoadPaginatedResults);
+        }
+        return kruizeResultsEntries;
+    }
+
 
     @Override
     public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {

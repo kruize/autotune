@@ -97,6 +97,34 @@ public class ExperimentDBService {
             }
         }
     }
+    public void loadPaginatedResults(Map<String, KruizeObject> mainKruizeExperimentMap, int page, int limit) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+
+        // Load results from the DB and save to local
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadPaginatedResults(page, limit);
+        if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
+            List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                    .convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
+            if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
+                List<ExperimentResultData> resultDataList = new ArrayList<>();
+                for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+                    try {
+                        ExperimentResultData experimentResultData = Converters.KruizeObjectConverters
+                                .convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                        if (experimentResultData != null)
+                            resultDataList.add(experimentResultData);
+                        else
+                            LOGGER.warn("Converted experimentResultData is null");
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+                    } catch (Exception e) {
+                        LOGGER.error("Unexpected error: {}", e.getMessage());
+                    }
+                }
+                experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
+            }
+        }
+    }
 
     public void loadAllRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
