@@ -70,14 +70,17 @@ see [Update results](/design/UpdateResults.md)
 
 **NOTE:** The update to results of a particular experiment should follow Time Series Order to get valid recommendations.
 
-**Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that timestamp
-
+**Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that
+timestamp
 
 * Mandatory parameters in the input JSON:
+
  ```
  cpuUsage, memoryUsage, memoryRSS
  ```
-* Note: If the parameters `cpuRequest`, `cpuLimit`, `memoryRequest` and `memoryLimit` are missing, then they are assumed to not have been set for the container in question.
+
+* Note: If the parameters `cpuRequest`, `cpuLimit`, `memoryRequest` and `memoryLimit` are missing, then they are assumed
+  to not have been set for the container in question.
 
 **Request**
 `POST /updateResults`
@@ -336,12 +339,12 @@ List experiments output JSON as follows:
 
 **Attributes:**
 
-| Param              | Possible options | Defaults | Description                                                                                                                                 | 
-|--------------------|------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `results`          | `true`, `false`  | `false`  | Passing results = true as the parameter to the API returns the latest results.                                                              |
-| `latest`           | `true`, `false`  | `true`   | Gets you the latest available results or recommendation if true, else returns all the results or recommendations                            |
-| `recommendations`  | `true`, `false`  | `false`  | Passing recommendations = true as the parameter to the API returns the latest recommendations and no results                                |
-| `experiment_name`  | Any string       | None     | Passing Experiment Name as the parameter to the API returns the results or recommendation or both of the particular experiment if it exists |
+| Param             | Possible options | Defaults | Description                                                                                                                                 | 
+|-------------------|------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `results`         | `true`, `false`  | `false`  | Passing results = true as the parameter to the API returns the latest results.                                                              |
+| `latest`          | `true`, `false`  | `true`   | Gets you the latest available results or recommendation if true, else returns all the results or recommendations                            |
+| `recommendations` | `true`, `false`  | `false`  | Passing recommendations = true as the parameter to the API returns the latest recommendations and no results                                |
+| `experiment_name` | Any string       | None     | Passing Experiment Name as the parameter to the API returns the results or recommendation or both of the particular experiment if it exists |
 
 **Request without Parameter**
 
@@ -352,6 +355,7 @@ List experiments output JSON as follows:
 If no parameter is passed API returns all the experiment details.
 
 **Response**
+
 ```
 [
   {
@@ -465,6 +469,7 @@ Returns the latest result of all the experiments
 ***Note : When we don't pass `latest` in the query URL, it takes as `true` by default.***
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+
 ```
 [
   {
@@ -647,6 +652,7 @@ Returns the latest result of all the experiments
   }  
 ]
 ```
+
 <br>
 
 **Request with results set to true and with experiment name parameter**
@@ -667,6 +673,7 @@ Returns the latest result of the specified experiment
 Returns all the results of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+
 ```
 [
   {
@@ -893,6 +900,7 @@ Returns all the results of all the experiments
   }
 ]
 ```
+
 <br>
 
 **Request with results set to true, latest set to false and with experiment name parameter**
@@ -912,6 +920,7 @@ Returns all the results of the specific experiment
 Returns the latest recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+
 ```
 [
   {
@@ -1124,6 +1133,7 @@ Returns the latest recommendations of all the experiments
   }
 ]
 ```
+
 <br><br>
 **Request with recommendations set to true with experiment name parameter**
 
@@ -1143,6 +1153,7 @@ Returns the latest recommendations of the specified experiment with no results
 Returns all the recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+
 ```
 [
   {
@@ -1374,6 +1385,7 @@ Returns all the recommendations of all the experiments
   ...
 ]
 ```
+
 <br><br>
 **Request with recommendations set to true, latest set to false and with experiment name parameter**
 
@@ -1399,7 +1411,8 @@ Returns the latest recommendations and the results of all the experiments.
 
 Returns all the recommendations and all the results of all the experiments.
 <br><br>
-**Request with recommendations set to true and also results set to true with latest set to false and with experiment name parameter**
+**Request with recommendations set to true and also results set to true with latest set to false and with experiment
+name parameter**
 
 `GET /listExperiments`
 
@@ -1407,18 +1420,17 @@ Returns all the recommendations and all the results of all the experiments.
 
 Returns all the recommendations and all the results of the specified experiment.
 
-
 ## Recommendations
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
 **Attributes:**
 
-| Param    | Possible options | Defaults | Description | 
-| --- | --- | --- | --- |
-|`experiment_name`|Any string|None|Passing Experiment Name as the parameter to the API returns the recommendation of the particular experiment if it exists|
-|`latest`|`true`, `false`|`true`|Gets you the latest available recommendation if true, else returns all the recommendations|
-|`monitoring_end_time`|Any valid timestamp*|None|Gets the recommendation of a particular timestamp if it exists|
+| Param                 | Possible options     | Defaults | Description                                                                                                              | 
+|-----------------------|----------------------|----------|--------------------------------------------------------------------------------------------------------------------------|
+| `experiment_name`     | Any string           | None     | Passing Experiment Name as the parameter to the API returns the recommendation of the particular experiment if it exists |
+| `latest`              | `true`, `false`      | `true`   | Gets you the latest available recommendation if true, else returns all the recommendations                               |
+| `monitoring_end_time` | Any valid timestamp* | None     | Gets the recommendation of a particular timestamp if it exists                                                           |
 
 `*valid timestamp is the same format as that used by the updateResults API`
 
@@ -1431,6 +1443,7 @@ List recommendations output JSON as follows. Some parameters like CPU limit , EN
 If no parameter is passed API returns all the latest recommendations available for each experiment.
 
 **Response**
+
 ```
 [
     {
@@ -1586,6 +1599,7 @@ If no parameter is passed API returns all the latest recommendations available f
 Returns the latest result of that experiment
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
+
 ```
 [
     {
@@ -1868,7 +1882,8 @@ Returns all the results of that experiment
 
 Returns the recommendation at a particular timestamp if it exists
 
-**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End Time - `2022-12-20T17:55:05.000Z`**
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End
+Time - `2022-12-20T17:55:05.000Z`**
 
 ```
 [
@@ -1965,6 +1980,7 @@ Returns the recommendation at a particular timestamp if it exists
 **Invalid experiment name**
 
 `experiment_name=stub-experiment`
+
 ```
 {
     "message": "Given experiment name - \" stub-experiment \" is not valid",
@@ -1977,6 +1993,7 @@ Returns the recommendation at a particular timestamp if it exists
 **Invalid Timestamp format**
 
 `monitoring_end_time=Tony Stark` (Invalid Timestamp)
+
 ```
 {
     "message": "Given timestamp - \" Tony Stark \" is not a valid timestamp format",
@@ -1989,6 +2006,7 @@ Returns the recommendation at a particular timestamp if it exists
 **Non Existing Timestamp**
 
 `monitoring_end_time=2022-12-20T17:55:07.000Z`
+
 ```
 {
     "message": "Recommendation for timestamp - \" 2022-12-20T17:55:07.000Z \" does not exist",
@@ -1997,3 +2015,166 @@ Returns the recommendation at a particular timestamp if it exists
     "status": "ERROR"
 }
 ```
+
+## Update Recommendations API
+
+Generate the recommendations for a specific experiment based on provided parameters.
+
+**Request Parameters**
+
+| Parameter         | Type   | Required | Description                                                           |
+|-------------------|--------|----------|-----------------------------------------------------------------------|
+| experiment_name   | string | Yes      | The name of the experiment.                                           |
+| intervalEndTime   | string | Yes      | The end time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ".   |
+| intervalStartTime | string | optional | The start time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ". |
+
+The recommendation API requires two mandatory fields, namely "experiment_name" and "intervalEndTime".
+By utilizing these parameters, the API generates recommendations based on short-term, medium-term, and long-term
+factors.
+For instance, if the long-term setting is configured for 15 days and the intervalEndTime is set to "Jan 15 2023 00:00:
+00.000Z", the API retrieves data from the past 15 days, starting from January 1st. Using this data, the API generates
+three recommendations for Jan 15th 2023.
+
+If an optional intervalStartTime is provided, the API generates recommendations for each date within the range of
+intervalStartTime and intervalEndTime. However, it is important to ensure that the difference between these dates does
+not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations beyond
+this threshold might require more time.
+
+**Request**
+
+`POST /updateRecommendations?experiment_name=?&intervalEndTime=?`
+
+`POST /updateRecommendations?experiment_name=?&intervalEndTime=?&intervalStartTime=?`
+
+example
+
+`curl --location --request POST 'http://127.0.0.1:8080/updateRecommendations?interval_end_time=2023-01-02T00:15:00.000Z&experiment_name=temp_1'`
+
+success status code : 201
+
+**Response**
+
+The response will contain a array of JSON object with the updated recommendations for the specified experiment.
+
+Example Response Body:
+
+```json
+[
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_5",
+        "namespace": "default_5",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "notifications": [
+                {
+                  "type": "info",
+                  "message": "Duration Based Recommendations Available"
+                }
+              ],
+              "data": {
+                "2023-01-02T00:15:00.000Z": {
+                  "duration_based": {
+                    "short_term": {
+                      "monitoring_start_time": "2023-01-01T00:15:00.000Z",
+                      "monitoring_end_time": "2023-01-02T00:15:00.000Z",
+                      "duration_in_hours": 24.0,
+                      "pods_count": 7,
+                      "confidence_level": 0.0,
+                      "config": {
+                        "limits": {
+                          "cpu": {
+                            "amount": 0.9299999999999999,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 238.2,
+                            "format": "MiB"
+                          }
+                        },
+                        "requests": {
+                          "cpu": {
+                            "amount": 0.9299999999999999,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 238.2,
+                            "format": "MiB"
+                          }
+                        }
+                      },
+                      "variation": {
+                        "limits": {
+                          "cpu": {
+                            "amount": 0.42999999999999994,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 138.2,
+                            "format": "MiB"
+                          }
+                        },
+                        "requests": {
+                          "cpu": {
+                            "amount": -0.17000000000000015,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 187.98999999999998,
+                            "format": "MiB"
+                          }
+                        }
+                      },
+                      "notifications": []
+                    },
+                    "medium_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": [
+                        {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation."
+                        }
+                      ]
+                    },
+                    "long_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": [
+                        {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "1.0",
+    "experiment_name": "temp_1"
+  }
+]
+```
+
+**Error Responses**
+
+| HTTP Status Code | Description                                                   |
+|------------------|---------------------------------------------------------------|
+| 400              | The experiment name parameter is missing or empty.            |
+| 400              | The interval end time parameter is missing or empty.          |
+| 400              | The provided interval end time is in an invalid format.       |
+| 400              | No data found for the specified experiment and time interval. |
+| 400              | date range should not exceed 15 days.                         |
+| 500              | Internal Server Error                                         
+
