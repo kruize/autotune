@@ -111,7 +111,7 @@ public class ListExperiments extends HttpServlet {
             if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
                 try {
                     // Fetch experiments data from the DB and check if the requested experiment exists
-                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName, page, limit);
                     // Check if experiment exists
                     if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
                         error = true;
@@ -184,10 +184,10 @@ public class ListExperiments extends HttpServlet {
         return experimentTrialJSONArray.toString(4);
     }
 
-    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllExperiments(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedExperiments(mKruizeExperimentMap, page, limit);
             else
                 new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, experimentName);
 
@@ -262,7 +262,7 @@ public class ListExperiments extends HttpServlet {
                         AnalyzerConstants.BooleanString.TRUE)) {
                 // Case: results=true , recommendations=true
                     // fetch results and recomm. from the DB
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, page, limit);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
                     loadResults(mKruizeExperimentMap, experimentName, page, limit);
 
@@ -284,7 +284,7 @@ public class ListExperiments extends HttpServlet {
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 } else {
                     // Case: results=false , recommendations=true
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, page, limit);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 }
@@ -300,21 +300,19 @@ public class ListExperiments extends HttpServlet {
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadPaginatedResults(mKruizeExperimentMap, page, limit);
             else
-                // TODO: add pagination for the below results
-                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadPaginatedResultsFromDBByName(mKruizeExperimentMap, experimentName, page, limit);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved results data: {} ", e.getMessage());
         }
     }
 
-    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
-            // TODO: add pagination for the below recomm
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedRecommendations(mKruizeExperimentMap, page, limit);
             else
-                new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadPaginatedRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, page, limit);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved recommendations data: {} ", e.getMessage());

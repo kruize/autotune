@@ -181,6 +181,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeExperimentEntry> loadPaginatedExperiments(int page, int limit) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries = null;
+        Timer.Sample timerLoadAllExp = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeExperimentEntry> query = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS, KruizeExperimentEntry.class);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit); // Set the maximum number of results to retrieve
+            entries = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading existing experiments from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllExp) timerLoadAllExp.stop(MetricsConfig.timerLoadAllExp);
+        }
+        return entries;
+    }
+
+    @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
@@ -231,6 +250,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeRecommendationEntry> loadPaginatedRecommendations(int page, int limit) throws Exception {
+        List<KruizeRecommendationEntry> recommendationEntries;
+        Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+            Query<KruizeRecommendationEntry> query  = session.createQuery(
+                    DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
+                    KruizeRecommendationEntry.class);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit); // Set the maximum number of results to retrieve
+            recommendationEntries = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllRec) timerLoadAllRec.stop(MetricsConfig.timerLoadAllRec);
+        }
+        return recommendationEntries;
+    }
+
+    @Override
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
@@ -265,12 +304,51 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeResultsEntry> loadPaginatedResultsByExperimentName(String experimentName, int page, int limit) throws Exception {
+        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
+        List<KruizeResultsEntry> kruizeResultsEntries;
+        Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeResultsEntry> query = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
+                    .setParameter("experimentName", experimentName);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit); // Set the maximum number of results to retrieve
+            kruizeResultsEntries = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadResultsExpName) timerLoadResultsExpName.stop(MetricsConfig.timerLoadResultsExpName);
+        }
+        return kruizeResultsEntries;
+    }
+
+    @Override
     public List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
         Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
             recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
                     .setParameter("experimentName", experimentName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadRecExpName) timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
+        }
+        return recommendationEntries;
+    }
+
+    @Override
+    public List<KruizeRecommendationEntry> loadPaginatedRecommendationsByExperimentName(String experimentName, int page, int limit) throws Exception {
+        List<KruizeRecommendationEntry> recommendationEntries;
+        Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+            Query<KruizeRecommendationEntry> query  = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
+                    .setParameter("experimentName", experimentName);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit); // Set the maximum number of results to retrieve
+            recommendationEntries = query.list();
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
