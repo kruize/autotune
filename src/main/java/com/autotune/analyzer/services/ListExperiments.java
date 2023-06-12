@@ -158,7 +158,7 @@ public class ListExperiments extends HttpServlet {
             );
         }
     }
-    private int parseIntegerOrDefault(String value, int defaultValue) {
+    public static int parseIntegerOrDefault(String value, int defaultValue) {
         try {
             int intValue = Integer.parseInt(value);
             return intValue > 0 ? intValue : defaultValue;

@@ -400,12 +400,24 @@ public class ExperimentDBService {
 
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
+    public void loadPaginatedExperimentAndRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, int page, int limit) throws Exception {
+
+        loadExperimentFromDBByName(mainKruizeExperimentMap, experimentName);
+
+        loadPaginatedRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName, page, limit);
+    }
 
     public void loadAllExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
 
         loadAllExperiments(mainKruizeExperimentMap);
 
         loadAllRecommendations(mainKruizeExperimentMap);
+    }
+    public void loadPaginatedExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap, int page, int limit) throws Exception {
+
+        loadPaginatedExperiments(mainKruizeExperimentMap, page, limit);
+
+        loadPaginatedRecommendations(mainKruizeExperimentMap, page, limit);
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
