@@ -93,6 +93,7 @@ public class ExperimentInitiator {
         }
     }
 
+
     public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
         List<UpdateResultsAPIObject> failedDBObjects = new ArrayList<>();
         Validator validator = Validation.byProvider(HibernateValidator.class)
