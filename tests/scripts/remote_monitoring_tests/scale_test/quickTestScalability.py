@@ -186,13 +186,15 @@ for i in range(expstart, expend+1):
 
             print('### Experiment: %s: Progress: %s/%s  %s/%s' %(experiment_name, i, expend, j, rescount))
 
-    # Fetch recommendations
-    response = requests.get(listRecURL + "?experiment_name=" + experiment_name)
-    # Check the response
-    if response.status_code == 200:
-        print('ListRecommendations Request successful!')
-    else:
-        print(f'ListRecommendations Request failed with status code {response.status_code}: {response.text}')
+        # Fetch recommendations
+        print(experiment_name)
+        print(listRecURL)
+        response = requests.get(listRecURL + "?experiment_name=" + experiment_name)
+        # Check the response
+        if response.status_code == 200:
+            print('ListRecommendations Request successful!')
+        else:
+            print(f'ListRecommendations Request failed with status code {response.status_code}: {response.text}')
 
     except requests.exceptions.Timeout:
         print('Timeout occurred while connecting to')
