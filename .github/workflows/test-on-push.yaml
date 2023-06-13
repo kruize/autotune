@@ -23,10 +23,21 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        id: pr_num
+        run: |
+          echo "Commit SHA: ${{ github.sha }}"
+          pr_number=$(curl -s -X GET \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            | jq -r '.[0].number')
+          echo "PR NUMBER=${pr_number}"
+          echo "pr_number=${pr_number}" >> $GITHUB_ENV
+
       - name: Build monitoring
         run: |
           echo Build monitoring
-          ./build.sh -i autotune_operator:test -o autotune_optuna:test
+          ./build.sh -i autotune_operator:${{ env.pr_number }} -o autotune_optuna:${{ env.pr_number }}
           docker images | grep autotune
       - name: docker login
         uses: docker/login-action@v2
@@ -35,8 +46,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:test kruize/autotune_operator:test
-          docker push kruize/autotune_operator:test
+          docker tag autotune_operator:${{ env.pr_number }} kruize/autotune_operator:${{ env.pr_number }}
+          docker push kruize/autotune_operator:${{ env.pr_number }}
 
   deploy_autotune:
     # The type of runner that the job will run on
@@ -46,6 +57,16 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        id: pr_num
+        run: |
+          echo "Commit SHA: ${{ github.sha }}"
+          pr_number=$(curl -s -X GET \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            | jq -r '.[0].number')
+          echo "PR NUMBER=${pr_number}"
+          echo "pr_number=${pr_number}" >> $GITHUB_ENV
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -63,7 +84,7 @@ jobs:
       - name: Deploy kruize in experiment mode
         run: |
           echo Deploy Kruize in experiment mode
-          ./deploy.sh -c minikube -i kruize/autotune_operator:test      
+          ./deploy.sh -c minikube -i kruize/autotune_operator:${{ env.pr_number }}
           sleep 20
       - name: Capture ffdc logs
         if: always()
@@ -91,6 +112,16 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        id: pr_num
+        run: |
+          echo "Commit SHA: ${{ github.sha }}"
+          pr_number=$(curl -s -X GET \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            | jq -r '.[0].number')
+          echo "PR NUMBER=${pr_number}"
+          echo "pr_number=${pr_number}" >> $GITHUB_ENV
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -113,7 +144,7 @@ jobs:
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
-          ./test_autotune.sh -c minikube -i kruize/autotune_operator:test --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c minikube -i kruize/autotune_operator:${{ env.pr_number }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |

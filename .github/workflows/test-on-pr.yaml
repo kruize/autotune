@@ -29,7 +29,9 @@ jobs:
       - name: Build autotune
         run: |
           echo Build autotune
-          ./build.sh -i autotune_operator:test
+          pr_number=${{ github.event.pull_request.number }}
+          echo "PR NUMBER = ${pr_number}"
+          ./build.sh -i autotune_operator:${pr_number}
           docker images | grep autotune     
       - name: Check cluster info on minikube
         run: |
@@ -48,7 +50,7 @@ jobs:
           echo "***************************************************************"
           cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune_operator:test
+          ./deploy.sh -c minikube -i autotune_operator:${pr_number}
           sleep 20
       - name: Capture ffdc logs
         if: always()
@@ -84,7 +86,9 @@ jobs:
       - name: Build crc
         run: |
           echo Build crc
-          ./build.sh -i autotune_operator:test
+          pr_number=${{ github.event.pull_request.number }}
+          echo "PR NUMBER = ${pr_number}"
+          ./build.sh -i autotune_operator:${pr_number}
           docker images | grep autotune
       - name: Check cluster info on minikube
         run: |
@@ -104,7 +108,7 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
 
           cd tests
-          ./test_autotune.sh -c minikube -i autotune_operator:test --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c minikube -i autotune_operator:${pr_number} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |
