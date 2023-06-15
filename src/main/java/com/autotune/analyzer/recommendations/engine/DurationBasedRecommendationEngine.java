@@ -175,7 +175,95 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 }
 
                 // Set Config
-                recommendation.setConfig(config);
+                if (!config.isEmpty()) {
+                    recommendation.setConfig(config);
+                }
+                // Set the timestamp to extract
+                Timestamp timestampToExtract = monitoringEndTime;
+
+                // Current CPU Request
+                Double currentCpuRequest = getCurrentValue( filteredResultsMap,
+                        timestampToExtract,
+                        AnalyzerConstants.ResourceSetting.requests,
+                        AnalyzerConstants.RecommendationItem.cpu,
+                        notifications);
+
+                // Current Memory Request
+                Double currentMemRequest = getCurrentValue( filteredResultsMap,
+                        timestampToExtract,
+                        AnalyzerConstants.ResourceSetting.requests,
+                        AnalyzerConstants.RecommendationItem.memory,
+                        notifications);
+
+                // Current CPU Limit
+                Double currentCpuLimit = getCurrentValue(   filteredResultsMap,
+                        timestampToExtract,
+                        AnalyzerConstants.ResourceSetting.limits,
+                        AnalyzerConstants.RecommendationItem.cpu,
+                        notifications);
+
+                // Current Memory Limit
+                Double currentMemLimit = getCurrentValue(   filteredResultsMap,
+                        timestampToExtract,
+                        AnalyzerConstants.ResourceSetting.limits,
+                        AnalyzerConstants.RecommendationItem.memory,
+                        notifications);
+
+                // Create Current Map
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+
+                // Create Current Requests Map
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
+
+                // Check if Current CPU Requests Exists
+                if (null != currentCpuRequest) {
+                    if (currentCpuRequest > 0.0) {
+                        RecommendationConfigItem currentCpuRequestConfig = new RecommendationConfigItem(currentCpuRequest, generatedCpuRequestFormat);
+                        currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequestConfig);
+                    }
+                }
+
+                // Check if Current Memory Requests Exists
+                if (null != currentMemRequest) {
+                    if (currentMemRequest > 0.0) {
+                        RecommendationConfigItem currentMemRequestConfig = new RecommendationConfigItem(currentMemRequest, generatedMemRequestFormat);
+                        currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequestConfig);
+                    }
+                }
+
+                // Check if map is not empty and set requests map to current config
+                if (!currentRequestsMap.isEmpty()) {
+                    currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+                }
+
+                // Create Current Limits Map
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+
+                // Check if Current CPU Limits Exists
+                if (null != currentCpuLimit) {
+                    if (currentCpuLimit > 0.0) {
+                        RecommendationConfigItem currentCpuLimitConfig = new RecommendationConfigItem(currentCpuLimit, generatedCpuLimitFormat);
+                        currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimitConfig);
+                    }
+                }
+
+                // Check if Current Memory Limits Exists
+                if (null != currentMemLimit) {
+                    if (currentMemLimit > 0.0) {
+                        RecommendationConfigItem currentMemLimitConfig = new RecommendationConfigItem(currentMemLimit, generatedMemLimitFormat);
+                        currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimitConfig);
+                    }
+                }
+
+                // Check if map is not empty and set limits map to current config
+                if (!currentLimitsMap.isEmpty()) {
+                    currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+                }
+
+                // Set Current Config
+                if (!currentConfig.isEmpty()) {
+                    recommendation.setCurrentConfig(currentConfig);
+                }
 
                 // Set number of pods
                 int numPods = getNumPods(filteredResultsMap);
@@ -185,21 +273,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 recommendation.setDuration_in_hours(hours);
 
-                Timestamp timestampToExtract = monitoringEndTime;
                 // Create variation map
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation = new HashMap<>();
                 // Create a new map for storing variation in requests
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsVariationMap = new HashMap<>();
-                Double currentCpuRequest = getCurrentValue( filteredResultsMap,
-                                                            timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting.requests,
-                                                            AnalyzerConstants.RecommendationItem.cpu,
-                                                            notifications);
-                Double currentMemRequest = getCurrentValue( filteredResultsMap,
-                                                            timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting.requests,
-                                                            AnalyzerConstants.RecommendationItem.memory,
-                                                            notifications);
 
                 if (null != currentCpuRequest && null != generatedCpuRequest && null != generatedCpuRequestFormat) {
                     double diff = generatedCpuRequest - currentCpuRequest;
@@ -221,20 +298,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
                 // Create a new map for storing variation in limits
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsVariationMap = new HashMap<>();
-
-                // Calling requests on limits as we are maintaining limits and requests as same
-                // Maintaining different flow for both of them even though if they are same as in future we might have
-                // a different implementation for both and this avoids confusion
-                Double currentCpuLimit = getCurrentValue(   filteredResultsMap,
-                                                            timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting.limits,
-                                                            AnalyzerConstants.RecommendationItem.cpu,
-                                                            notifications);
-                Double currentMemLimit = getCurrentValue(   filteredResultsMap,
-                                                            timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting.limits,
-                                                            AnalyzerConstants.RecommendationItem.memory,
-                                                            notifications);
 
                 // No notification if CPU limit not set
                 // Check if currentCpuLimit is not null and

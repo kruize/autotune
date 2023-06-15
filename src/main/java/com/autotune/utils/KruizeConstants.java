@@ -109,6 +109,7 @@ public class KruizeConstants {
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
         public static final String CONFIG = "config";
+        public static final String CURRENT = "current";
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String DATASOURCE = "datasource";
