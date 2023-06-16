@@ -30,8 +30,8 @@ jobs:
         run: |
           echo Build autotune
           pr_number=${{ github.event.pull_request.number }}
-          echo "PR NUMBER = ${pr_number}"
-          ./build.sh -i autotune_operator:${pr_number}
+          echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
+          ./build.sh -i autotune_operator:pr_${pr_number}
           docker images | grep autotune     
       - name: Check cluster info on minikube
         run: |
@@ -50,7 +50,10 @@ jobs:
           echo "***************************************************************"
           cat ./manifests/autotune/autotune-operator-deployment.yaml_template
           echo "***************************************************************"
-          ./deploy.sh -c minikube -i autotune_operator:${pr_number}
+          
+          echo "PR_NUMBER = ${{ env.pr_number }}"
+          ./deploy.sh -c minikube -i autotune_operator:pr_${{ env.pr_number }}
+
           sleep 20
       - name: Capture ffdc logs
         if: always()
@@ -79,6 +82,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+        with:
+          repository: kruize/autotune
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -88,8 +93,8 @@ jobs:
         run: |
           echo Build crc
           pr_number=${{ github.event.pull_request.number }}
-          echo "PR NUMBER = ${pr_number}"
-          ./build.sh -i autotune_operator:${pr_number}
+          echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
+          ./build.sh -i autotune_operator:pr_${pr_number}
           docker images | grep autotune
       - name: Check cluster info on minikube
         run: |
@@ -107,9 +112,9 @@ jobs:
           cp ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
-
           cd tests
-          ./test_autotune.sh -c minikube -i autotune_operator:${pr_number} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          echo "PR_NUMBER = ${{ env.pr_number }}"
+          ./test_autotune.sh -c minikube -i autotune_operator:pr_${{ env.pr_number }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |
@@ -128,4 +133,3 @@ jobs:
           name: crc-results
           path: ./crc_results.tar
           retention-days: 2
-
