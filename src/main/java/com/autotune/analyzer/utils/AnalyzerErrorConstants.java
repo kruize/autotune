@@ -129,6 +129,9 @@ public class AnalyzerErrorConstants {
             public static final String INTERVAL_END_TIME_MANDATORY = KruizeConstants.JSONKeys.INTERVAL_END_TIME + " is mandatory";
             public static final String DATA_NOT_FOUND = "Data not found!";
 
+            public static final String TIME_COMPARE = "The Start time should precede the End time!";
+
+
             private UpdateRecommendationsAPI() {
             }
         }
