@@ -38,7 +38,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.NINETY_EIGHTH_PERCENTILE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.RecommendationConstants.*;
 
-public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine{
+public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine, KruizeRecommendationSections{
     private static final Logger LOGGER = LoggerFactory.getLogger(DurationBasedRecommendationEngine.class);
     private String name;
     private String key;
@@ -70,6 +70,133 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     }
 
     @Override
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> generateRecommendationConfig() {
+        // Create a Hashmap to store config
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendedConfig = new HashMap<>();
+        
+        // Generate Recommendation Requests
+
+            // Generate Recommendation CPU requests
+
+            // Generate Recommendation Memory Requests
+
+        // Generate Recommendation Limits
+
+            // Generate Recommendation CPU Limits
+
+            // Generate Recommendation Memory Limits
+        
+        
+        // Check if config is not empty
+        if (!recommendedConfig.isEmpty())
+            return recommendedConfig;
+        return null;
+    }
+
+    @Override
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> generateCurrentConfig() {
+        // Create a Hashmap to store config
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+
+        // Generate Current Requests
+
+            // Generate Current CPU requests
+
+            // Generate Current Memory Requests
+
+        // Generate Current Limits
+
+            // Generate Current CPU Limits
+
+            // Generate Current Memory Limits
+        // Check if config is not empty
+        if (!currentConfig.isEmpty())
+            return currentConfig;
+        return null;
+    }
+
+    @Override
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> generateVariation() {
+        return null;
+    }
+
+    @Override
+    public void populateNotifications() {
+
+    }
+
+    @Override
+    public HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> generateRequests(AnalyzerConstants.RecommendationSection recommendationSection) {
+        return null;
+    }
+
+    @Override
+    public HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> generateLimits(AnalyzerConstants.RecommendationSection recommendationSection) {
+        return null;
+    }
+
+    private Recommendation populateRecommendation(  String recommendationTerm,
+                                                    int days,
+                                                    Timestamp monitoringStartTime,
+                                                    Timestamp monitoringEndTime,
+                                                    Map<Timestamp, IntervalResults> filteredResultsMap ) {
+        // Check for null
+        if (null == recommendationTerm || 0 == days || null == monitoringStartTime || null == monitoringEndTime) {
+            return null;
+        }
+        // Remove whitespaces
+        recommendationTerm = recommendationTerm.trim();
+
+        // Check if term is not empty and also must be one of short, medium or long term
+        if (recommendationTerm.isEmpty() ||
+                (
+                        !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
+                        !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
+                        !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
+                )
+        ) {
+            return null;
+        }
+
+        // Create a recommendation object
+        Recommendation recommendation =  new Recommendation(monitoringStartTime, monitoringEndTime);
+        // Create a check for sending at the end
+        boolean canSend = true;
+
+        // Create a notifications list
+        ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();
+
+        // Generate Current config
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = generateCurrentConfig();
+            
+        
+        // Generate Recommendation config
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendationConfig = generateRecommendationConfig();
+            
+        
+        // Generate Variation config
+        generateVariation();
+            // Generate Variation Requests
+
+                // Generate Variation CPU requests
+
+                // Generate Variation Memory Requests
+
+            // Generate Variation Limits
+
+                // Generate Variation CPU Limits
+
+                // Generate Variation Memory Limits
+
+        // Check if we can send the recommendation
+        if (canSend) {
+            // Return the recommendation
+            return recommendation;
+        }
+        return null;
+    }
+
+    @Override
     public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime) {
         // Get the results
         HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
@@ -83,12 +210,19 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                                                                 durationBasedRecommendationSubCategory,
                                                                 monitoringEndTime);
             if (null != monitoringStartTime) {
+
                 Timestamp finalMonitoringStartTime = monitoringStartTime;
                 Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                         .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
                                 && (x.getKey().compareTo(monitoringEndTime) <= 0))))
                         .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-                Recommendation recommendation = new Recommendation(monitoringStartTime, monitoringEndTime);
+
+                Recommendation recommendation = populateRecommendation( recPeriod,
+                                        days,
+                                        monitoringStartTime,
+                                        monitoringEndTime,
+                                        filteredResultsMap);
+
                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
                 // Create Request Map
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
@@ -335,6 +469,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             }
         }
         return resultRecommendation;
+    }
+
+    @Override
+    public void validateRecommendations() {
+
     }
 
     @Override

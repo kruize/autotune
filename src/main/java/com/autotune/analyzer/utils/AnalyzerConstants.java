@@ -138,6 +138,22 @@ public class AnalyzerConstants {
         DB                  //Store only DB
     }
 
+    public enum RecommendationSection {
+        CURRENT_CONFIG(KruizeConstants.JSONKeys.CURRENT),
+        RECOMMENDATION_CONFIG(KruizeConstants.JSONKeys.CONFIG),
+        VARIATION(KruizeConstants.JSONKeys.VARIATION);
+
+        private String name;
+
+        private RecommendationSection(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
     public enum RecommendationCategory {
         DURATION_BASED(
                 KruizeConstants.JSONKeys.DURATION_BASED,
