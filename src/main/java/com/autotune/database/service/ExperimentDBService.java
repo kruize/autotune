@@ -215,7 +215,6 @@ public class ExperimentDBService {
         return failedUpdateResultsAPIObjects;
     }
 
-
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
         if (null == experimentResultDataList) {
