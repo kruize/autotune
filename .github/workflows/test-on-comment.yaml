@@ -10,7 +10,7 @@ jobs:
   functest:
 
     # Only run this if the user asked us to
-    if: github.event.comment.body == 'test'
+    if: github.event.comment.body == 'run functional tests'
 
     runs-on: ubuntu-20.04
     steps:
