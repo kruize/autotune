@@ -260,7 +260,6 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,

@@ -19,6 +19,8 @@ public interface ExperimentDAO {
     // Add experiment results from local storage to DB and set status to Inprogress
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry);
 
+    public List<KruizeResultsEntry> addToDBAndFetchFailedResults(List<KruizeResultsEntry> kruizeResultsEntries);
+
     // Add recommendation  to DB
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry);
 

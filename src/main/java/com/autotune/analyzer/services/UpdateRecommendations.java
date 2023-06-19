@@ -81,6 +81,9 @@ public class UpdateRecommendations extends HttpServlet {
         // Get the values from the request parameters
         String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        Timestamp interval_end_time = null;
+        Timestamp interval_start_time = null;
 
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time = null;
