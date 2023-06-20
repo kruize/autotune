@@ -123,13 +123,35 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             return false;
         }
 
-        // Set numPods
-        if (numPods > 0) {
+        boolean isSuccess = true;
+
+        if (numPods == 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.NUM_PODS_CANNOT_BE_ZERO);
+            notifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be zero");
+            isSuccess = false;
+        } else if (numPods < 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.NUM_PODS_CANNOT_BE_NEGATIVE);
+            notifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be negative");
+            isSuccess = false;
+        } else {
             recommendation.setPodsCount(numPods);
         }
 
+
         // Set Hours
-        if (hours > 0.0) {
+        if (hours == 0.0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.HOURS_CANNOT_BE_ZERO);
+            notifications.add(recommendationNotification);
+            LOGGER.error("Duration hours cannot be zero");
+            isSuccess = false;
+        } else if (hours < 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.HOURS_CANNOT_BE_NEGATIVE);
+            notifications.add(recommendationNotification);
+            LOGGER.error("Duration hours cannot be negative");
+            isSuccess = false;
+        } else {
             recommendation.setDuration_in_hours(hours);
         }
 
@@ -175,10 +197,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         boolean isCpuRequestValid = true;
         boolean isMemoryRequestValid = true;
 
-
-
-        if (null == recommendationCpuRequest || recommendationCpuRequest.getAmount() <= 0) { isCpuRequestValid = false; }
-        if (null == recommendationMemRequest || recommendationMemRequest.getAmount() <= 0) { isMemoryRequestValid = false; }
+        if (null == recommendationCpuRequest || recommendationCpuRequest.getAmount() <= 0) {
+            isCpuRequestValid = false;
+        }
+        if (null == recommendationMemRequest || recommendationMemRequest.getAmount() <= 0) {
+            isMemoryRequestValid = false;
+        }
 
         // Initiate generated value holders with min values constants to compare later
         Double generatedCpuRequest = null;
@@ -192,6 +216,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             generatedCpuRequestFormat = recommendationCpuRequest.getFormat();
             if (null != generatedCpuRequestFormat && !generatedCpuRequestFormat.isEmpty()) {
                 requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuRequest);
+            } else {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST);
             }
         }
 
@@ -201,6 +229,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             generatedMemRequestFormat = recommendationMemRequest.getFormat();
             if (null != generatedMemRequestFormat && !generatedMemRequestFormat.isEmpty()) {
                 requestsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemRequest);
+            } else {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST);
             }
         }
 
@@ -216,8 +248,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         boolean isMemoryLimitValid = true;
 
 
-        if (null == recommendationCpuLimits || recommendationCpuLimits.getAmount() <= 0) { isCpuLimitValid = false; }
-        if (null == recommendationMemLimits || recommendationMemLimits.getAmount() <= 0) { isMemoryLimitValid = false; }
+        if (null == recommendationCpuLimits || recommendationCpuLimits.getAmount() <= 0) {
+            isCpuLimitValid = false;
+        }
+        if (null == recommendationMemLimits || recommendationMemLimits.getAmount() <= 0) {
+            isMemoryLimitValid = false;
+        }
+
         // Initiate generated value holders with min values constants to compare later
         Double generatedCpuLimit = null;
         String generatedCpuLimitFormat = null;
@@ -228,14 +265,26 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (null != recommendationCpuLimits && isCpuLimitValid) {
             generatedCpuLimit = recommendationCpuLimits.getAmount();
             generatedCpuLimitFormat = recommendationCpuLimits.getFormat();
-            limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuLimits);
+            if (null != generatedCpuLimitFormat && !generatedCpuLimitFormat.isEmpty()) {
+                limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuLimits);
+            } else {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT);
+            }
         }
 
         // Check for null
         if (null != recommendationMemLimits && isMemoryLimitValid) {
             generatedMemLimit = recommendationMemLimits.getAmount();
             generatedMemLimitFormat = recommendationMemLimits.getFormat();
-            limitsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemLimits);
+            if (null != generatedMemLimitFormat && !generatedMemLimitFormat.isEmpty()) {
+                limitsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemLimits);
+            } else {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT);
+            }
         }
 
         // Set Limits Map
@@ -350,6 +399,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (!variation.isEmpty())
             recommendation.setVariation(variation);
 
+        return isSuccess;
     }
 
     @Override
@@ -448,7 +498,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 internalMapToPopulate.put(AnalyzerConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
                 // Call the populate method to validate and populate the recommendation object
-                populateRecommendation(
+                boolean isSuccess = populateRecommendation(
                         recPeriod,
                         recommendation,
                         notifications,
@@ -457,11 +507,14 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                         hours
                 );
 
+                // Use success in future if you want to avoid sending the recommendations
+                if (!isSuccess) {
+                    // Handle the issue accordingly
 
-
-
-
-
+                    // Currently it's unused as we are adding notification for every error we encounter
+                    // Also stopping the recommendation process is not advisable as the API USER need to know it via
+                    // Notifications and check the logs for what went wrong
+                }
 
                 // Iterate over notifications and set to recommendations
                 for (RecommendationNotification recommendationNotification : notifications) {
