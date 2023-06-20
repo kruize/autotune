@@ -305,14 +305,30 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         // Check if Current CPU Requests Exists
         if (null != currentCpuRequest) {
-            if (currentCpuRequest.getAmount() > 0.0 && null != currentCpuRequest.getFormat()) {
+            if (currentCpuRequest.getAmount() <= 0.0) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST);
+            } else if (null == currentCpuRequest.getFormat() || currentCpuRequest.getFormat().isEmpty()) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST);
+            } else {
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequest);
             }
         }
 
         // Check if Current Memory Requests Exists
         if (null != currentMemRequest) {
-            if (currentMemRequest.getAmount() > 0.0 && null != currentMemRequest.getFormat()) {
+            if (currentMemRequest.getAmount() <= 0) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST);
+            } else if (null == currentMemRequest.getFormat() || currentMemRequest.getFormat().isEmpty()) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST);
+            } else {
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequest);
             }
         }
@@ -327,14 +343,30 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         // Check if Current CPU Limits Exists
         if (null != currentCpuLimit) {
-            if (currentCpuLimit.getAmount() > 0.0 && null != currentCpuLimit.getFormat()) {
+            if (currentCpuLimit.getAmount() <= 0.0) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT);
+            } else if (null == currentCpuLimit.getFormat() || currentCpuLimit.getFormat().isEmpty()) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT);
+            } else {
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimit);
             }
         }
 
         // Check if Current Memory Limits Exists
         if (null != currentMemLimit) {
-            if (currentMemLimit.getAmount() > 0.0 && null != currentMemLimit.getFormat()) {
+            if (currentMemLimit.getAmount() <= 0.0) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT);
+            } else if (null == currentMemLimit.getFormat() || currentMemLimit.getFormat().isEmpty()) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT);
+                notifications.add(recommendationNotification);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT);
+            } else {
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimit);
             }
         }
@@ -348,8 +380,6 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (!currentConfig.isEmpty()) {
             recommendation.setCurrentConfig(currentConfig);
         }
-
-
 
         // Create variation map
         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation = new HashMap<>();
