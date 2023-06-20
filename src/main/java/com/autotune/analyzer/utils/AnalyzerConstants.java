@@ -1138,5 +1138,20 @@ public class AnalyzerConstants {
                 public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
             }
         }
+
+        public static class InternalConstants {
+            private InternalConstants() {
+
+            }
+
+            public static final String CURRENT_CPU_REQUEST = "CURRENT_CPU_REQUEST";
+            public static final String CURRENT_MEMORY_REQUEST = "CURRENT_MEMORY_REQUEST";
+            public static final String CURRENT_CPU_LIMIT = "CURRENT_CPU_LIMIT";
+            public static final String CURRENT_MEMORY_LIMIT = "CURRENT_MEMORY_LIMIT";
+            public static final String RECOMMENDED_CPU_REQUEST = "RECOMMENDED_CPU_REQUEST";
+            public static final String RECOMMENDED_MEMORY_REQUEST = "RECOMMENDED_MEMORY_REQUEST";
+            public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
+            public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
+        }
     }
 }
