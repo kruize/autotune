@@ -893,7 +893,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 if (intervalResults.getMetricResultsMap().containsKey(metricName)) {
                     Optional<MetricResults>  metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
                     currentValue = metricResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(null);
-                    format = metricResults.map(m -> m.getFormat()).orElse(null);
+                    format = metricResults.map(m -> m.getAggregationInfoResult().getFormat()).orElse(null);
                 }
                 if (null == currentValue) {
                     setNotificationsFor(resourceSetting, recommendationItem, notifications);
