@@ -251,164 +251,44 @@ public class AnalyzerConstants {
                 RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
                 RecommendationNotificationTypes.INFO
         ),
-        AMOUNT_MISSING_IN_CURRENT_CPU_REQUEST(
-                NotificationCodes.AMOUNT_MISSING_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CURRENT_CPU_REQUEST,
+        AMOUNT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_CURRENT_CPU_REQUEST(
-                NotificationCodes.FORMAT_MISSING_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CURRENT_CPU_REQUEST,
+        INVALID_AMOUNT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        AMOUNT_MISSING_IN_CURRENT_CPU_LIMIT(
-                NotificationCodes.AMOUNT_MISSING_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CURRENT_CPU_LIMIT,
+        FORMAT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_CURRENT_CPU_LIMIT(
-                NotificationCodes.FORMAT_MISSING_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CURRENT_CPU_LIMIT,
+        INVALID_FORMAT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        AMOUNT_MISSING_IN_RECOMMENDED_CPU_REQUEST(
-                NotificationCodes.AMOUNT_MISSING_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_RECOMMENDED_CPU_REQUEST,
+        AMOUNT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST(
-                NotificationCodes.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST,
+        INVALID_AMOUNT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        AMOUNT_MISSING_IN_RECOMMENDED_CPU_LIMIT(
-                NotificationCodes.AMOUNT_MISSING_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_RECOMMENDED_CPU_LIMIT,
+        FORMAT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT(
-                NotificationCodes.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        AMOUNT_MISSING_IN_CURRENT_MEMORY_REQUEST(
-                NotificationCodes.AMOUNT_MISSING_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        FORMAT_MISSING_IN_CURRENT_MEMORY_REQUEST(
-                NotificationCodes.FORMAT_MISSING_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        AMOUNT_MISSING_IN_CURRENT_MEMORY_LIMIT(
-                NotificationCodes.AMOUNT_MISSING_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        FORMAT_MISSING_IN_CURRENT_MEMORY_LIMIT(
-                NotificationCodes.FORMAT_MISSING_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST(
-                NotificationCodes.AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST(
-                NotificationCodes.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT(
-                NotificationCodes.AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT(
-                NotificationCodes.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST(
-                NotificationCodes.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST(
-                NotificationCodes.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_RECOMMENDED_CPU_REQUEST(
-                NotificationCodes.INVALID_AMOUNT_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_REQUEST(
-                NotificationCodes.INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_CURRENT_CPU_REQUEST(
-                NotificationCodes.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST(
-                NotificationCodes.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_RECOMMENDED_CPU_REQUEST(
-                NotificationCodes.INVALID_FORMAT_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_RECOMMENDED_CPU_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_RECOMMENDED_MEMORY_REQUEST(
-                NotificationCodes.INVALID_FORMAT_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_RECOMMENDED_MEMORY_REQUEST,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT(
-                NotificationCodes.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT(
-                NotificationCodes.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_RECOMMENDED_CPU_LIMIT(
-                NotificationCodes.INVALID_AMOUNT_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_LIMIT(
-                NotificationCodes.INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_CURRENT_CPU_LIMIT(
-                NotificationCodes.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT(
-                NotificationCodes.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_RECOMMENDED_CPU_LIMIT(
-                NotificationCodes.INVALID_FORMAT_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_RECOMMENDED_CPU_LIMIT,
-                RecommendationNotificationTypes.ERROR
-        ),
-        INVALID_FORMAT_IN_RECOMMENDED_MEMORY_LIMIT(
-                NotificationCodes.INVALID_FORMAT_IN_RECOMMENDED_MEMORY_LIMIT,
-                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_RECOMMENDED_MEMORY_LIMIT,
+        INVALID_FORMAT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
         NUM_PODS_CANNOT_BE_ZERO(
@@ -603,41 +483,17 @@ public class AnalyzerConstants {
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
-        public static final int AMOUNT_MISSING_IN_CURRENT_CPU_REQUEST = 223001;
-        public static final int FORMAT_MISSING_IN_CURRENT_CPU_REQUEST = 223002;
-        public static final int AMOUNT_MISSING_IN_CURRENT_CPU_LIMIT = 223003;
-        public static final int FORMAT_MISSING_IN_CURRENT_CPU_LIMIT = 223004;
-        public static final int AMOUNT_MISSING_IN_RECOMMENDED_CPU_REQUEST = 223005;
-        public static final int FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST = 223006;
-        public static final int AMOUNT_MISSING_IN_RECOMMENDED_CPU_LIMIT = 223007;
-        public static final int FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT = 223008;
-        public static final int INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT = 223009;
-        public static final int INVALID_FORMAT_IN_CURRENT_CPU_LIMIT = 223010;
-        public static final int INVALID_AMOUNT_IN_RECOMMENDED_CPU_REQUEST = 223011;
-        public static final int INVALID_FORMAT_IN_RECOMMENDED_CPU_REQUEST = 223012;
-        public static final int INVALID_AMOUNT_IN_RECOMMENDED_CPU_LIMIT = 223013;
-        public static final int INVALID_FORMAT_IN_RECOMMENDED_CPU_LIMIT = 223014;
-        public static final int INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST = 223015;
-        public static final int INVALID_FORMAT_IN_CURRENT_CPU_REQUEST = 223016;
+        public static final int AMOUNT_MISSING_IN_CPU_SECTION = 223001;
+        public static final int INVALID_AMOUNT_IN_CPU_SECTION = 223002;
+        public static final int FORMAT_MISSING_IN_CPU_SECTION = 223003;
+        public static final int INVALID_FORMAT_IN_CPU_SECTION = 223004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 223999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 224000;
-        public static final int AMOUNT_MISSING_IN_CURRENT_MEMORY_REQUEST = 224001;
-        public static final int FORMAT_MISSING_IN_CURRENT_MEMORY_REQUEST = 224002;
-        public static final int AMOUNT_MISSING_IN_CURRENT_MEMORY_LIMIT = 224003;
-        public static final int FORMAT_MISSING_IN_CURRENT_MEMORY_LIMIT = 224004;
-        public static final int AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST = 224005;
-        public static final int FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST = 224006;
-        public static final int AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT = 224007;
-        public static final int FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT = 224008;
-        public static final int INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST = 224009;
-        public static final int INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST = 224010;
-        public static final int INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT = 224011;
-        public static final int INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT = 224012;
-        public static final int INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_REQUEST = 224013;
-        public static final int INVALID_FORMAT_IN_RECOMMENDED_MEMORY_REQUEST = 224014;
-        public static final int INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_LIMIT = 224015;
-        public static final int INVALID_FORMAT_IN_RECOMMENDED_MEMORY_LIMIT = 224016;
+        public static final int AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
+        public static final int INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
+        public static final int FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
+        public static final int INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 224999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 225000;
@@ -931,42 +787,18 @@ public class AnalyzerConstants {
         public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
         public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics not available, No Memory Recommendations can be generated";
-        public static final String AMOUNT_MISSING_IN_CURRENT_CPU_REQUEST = "Amount field is missing in the Current CPU Request section";
-        public static final String FORMAT_MISSING_IN_CURRENT_CPU_REQUEST = "Format field is missing in the Current CPU Request section";
-        public static final String AMOUNT_MISSING_IN_CURRENT_MEMORY_REQUEST = "Amount field is missing in the Current Memory Request section";
-        public static final String FORMAT_MISSING_IN_CURRENT_MEMORY_REQUEST = "Format field is missing in the Current Memory Request section";
-        public static final String AMOUNT_MISSING_IN_CURRENT_CPU_LIMIT = "Amount field is missing in the Current CPU Limit section";
-        public static final String FORMAT_MISSING_IN_CURRENT_CPU_LIMIT = "Format field is missing in the Current CPU Limit section";
-        public static final String AMOUNT_MISSING_IN_CURRENT_MEMORY_LIMIT = "Amount field is missing in the Current Memory Limit section";
-        public static final String FORMAT_MISSING_IN_CURRENT_MEMORY_LIMIT = "Format field is missing in the Current Memory Limit section";
-        public static final String AMOUNT_MISSING_IN_RECOMMENDED_CPU_REQUEST = "Amount field is missing in the Recommended CPU Request section";
-        public static final String FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST = "Format field is missing in the Recommended CPU Request section";
-        public static final String AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST = "Amount field is missing in the Recommended Memory Request section";
-        public static final String FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST = "Format field is missing in the Recommended Memory Request section";
-        public static final String AMOUNT_MISSING_IN_RECOMMENDED_CPU_LIMIT = "Amount field is missing in the Recommended CPU Limit section";
-        public static final String FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT = "Format field is missing in the Recommended CPU Limit section";
-        public static final String AMOUNT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT = "Amount field is missing in the Recommended Memory Limit section";
-        public static final String FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT = "Format field is missing in the Recommended Memory Limit section";
+        public static final String AMOUNT_MISSING_IN_CPU_SECTION = "Amount field is missing in the CPU Section";
+        public static final String INVALID_AMOUNT_IN_CPU_SECTION = "Invalid Amount in CPU Section";
+        public static final String FORMAT_MISSING_IN_CPU_SECTION = "Format field is missing in CPU Section";
+        public static final String INVALID_FORMAT_IN_CPU_SECTION = "Invalid Format in CPU Section";
+        public static final String AMOUNT_MISSING_IN_MEMORY_SECTION = "Amount field is missing in the Memory Section";
+        public static final String INVALID_AMOUNT_IN_MEMORY_SECTION = "Invalid Amount in Memory Section";
+        public static final String FORMAT_MISSING_IN_MEMORY_SECTION = "Format field is missing in Memory Section";
+        public static final String INVALID_FORMAT_IN_MEMORY_SECTION = "Invalid Format in Memory Section";
         public static final String NUM_PODS_CANNOT_BE_ZERO = "Number of pods cannot be zero";
         public static final String NUM_PODS_CANNOT_BE_NEGATIVE = "Number of pods cannot be negative";
         public static final String HOURS_CANNOT_BE_ZERO = "Duration hours cannot be zero";
         public static final String HOURS_CANNOT_BE_NEGATIVE = "Duration hours cannot be negative";
-        public static final String INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST = "Invalid amount in the Current Memory Request section";
-        public static final String INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST = "Invalid format in the Current Memory Request section";
-        public static final String INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT = "Invalid amount in the Current CPU Limit section";
-        public static final String INVALID_FORMAT_IN_CURRENT_CPU_LIMIT = "Invalid format in the Current CPU Limit section";
-        public static final String INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT = "Invalid amount in the Current Memory Limit section";
-        public static final String INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT = "Invalid format in the Current Memory Limit section";
-        public static final String INVALID_AMOUNT_IN_RECOMMENDED_CPU_REQUEST = "Invalid amount in the Recommended CPU Request section";
-        public static final String INVALID_FORMAT_IN_RECOMMENDED_CPU_REQUEST = "Invalid format in the Recommended CPU Request section";
-        public static final String INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_REQUEST = "Invalid amount in the Recommended Memory Request section";
-        public static final String INVALID_FORMAT_IN_RECOMMENDED_MEMORY_REQUEST = "Invalid format in the Recommended Memory Request section";
-        public static final String INVALID_AMOUNT_IN_RECOMMENDED_CPU_LIMIT = "Invalid amount in the Recommended CPU Limit section";
-        public static final String INVALID_FORMAT_IN_RECOMMENDED_CPU_LIMIT = "Invalid format in the Recommended CPU Limit section";
-        public static final String INVALID_AMOUNT_IN_RECOMMENDED_MEMORY_LIMIT = "Invalid amount in the Recommended Memory Limit section";
-        public static final String INVALID_FORMAT_IN_RECOMMENDED_MEMORY_LIMIT = "Invalid format in the Recommended Memory Limit section";
-        public static final String INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST = "Invalid amount in the Current CPU Request section";
-        public static final String INVALID_FORMAT_IN_CURRENT_CPU_REQUEST = "Invalid format in the Current CPU Request section";
 
         private RecommendationNotificationMsgConstant() {
 

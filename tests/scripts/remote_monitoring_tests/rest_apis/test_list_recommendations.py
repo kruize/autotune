@@ -779,3 +779,160 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
+    """
+        Test Description: This test validates list recommendations for multiple experiments posted using different json files
+                          and pass different update results to test the notifications provided
+        """
+
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 111
+    list_of_result_json_arr = []
+
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        response = create_experiment(create_exp_json_file)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+
+        for j in range(num_res):
+            update_timestamps = True
+            generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = get_datetime()
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            # Expecting that metrics exists for container as we read from template
+            # Add if exists checks for each key if needed
+            container_metrics: list = result_json[0]["kubernetes_objects"][0]["containers"][0]["metrics"]
+            num_metrics = len(container_metrics)
+
+            CPU_REQUEST_INDEX = get_index_of_metric(container_metrics, CPU_REQUEST)
+            CPU_LIMIT_INDEX = get_index_of_metric(container_metrics, CPU_LIMIT)
+            CPU_THROTTLE_INDEX = get_index_of_metric(container_metrics, CPU_THROTTLE)
+            CPU_USAGE_INDEX = get_index_of_metric(container_metrics, CPU_USAGE)
+
+            MEMORY_REQUEST_INDEX = get_index_of_metric(container_metrics, MEMORY_REQUEST)
+            MEMORY_LIMIT_INDEX = get_index_of_metric(container_metrics, MEMORY_LIMIT)
+            MEMORY_USAGE_INDEX = get_index_of_metric(container_metrics, MEMORY_USAGE)
+            MEMORY_RSS_INDEX = get_index_of_metric(container_metrics, MEMORY_RSS)
+
+            if j == 96:
+                # 97 th update result - miss all the non-mandatory fields
+                # [ CpuRequest, CpuLimit, MemoryRequest, MemoryLimit, CpuThrottle ]
+                if CPU_REQUEST_INDEX is not None:
+                    container_metrics.pop(CPU_REQUEST_INDEX)
+                if CPU_LIMIT_INDEX is not None:
+                    container_metrics.pop(CPU_LIMIT_INDEX)
+                if CPU_THROTTLE_INDEX is not None:
+                    container_metrics.pop(CPU_THROTTLE_INDEX)
+                if MEMORY_REQUEST_INDEX is not None:
+                    container_metrics.pop(MEMORY_REQUEST_INDEX)
+                if MEMORY_LIMIT_INDEX is not None:
+                    container_metrics.pop(MEMORY_LIMIT_INDEX)
+            elif j == 97:
+                # 98 th update result   - misses Cpu Request
+                if CPU_REQUEST_INDEX is not None:
+                    container_metrics.pop(CPU_REQUEST_INDEX)
+            elif j == 98:
+                # 99 th update result   - misses Cpu Limit
+                if CPU_LIMIT_INDEX is not None:
+                    container_metrics.pop(CPU_LIMIT_INDEX)
+            elif j == 99:
+                # 100 th update result  - misses Memory Request
+                if MEMORY_REQUEST_INDEX is not None:
+                    container_metrics.pop(MEMORY_REQUEST_INDEX)
+            elif j == 100:
+                # 101 st update result  - misses Memory Limit
+                if MEMORY_LIMIT_INDEX is not None:
+                    container_metrics.pop(MEMORY_LIMIT_INDEX)
+            elif j == 101:
+                # 102 nd update result  - Invalid Amount in CPU Request
+                cpu_request_entry = container_metrics[CPU_REQUEST_INDEX]
+
+            elif j == 102:
+                # 103 rd update result  - Invalid Amount in Memory Request
+                pass
+            elif j == 103:
+                # 104 th update result  - Invalid Amount in CPU Limit
+                pass
+            elif j == 104:
+                # 105 th update result  - Invalid Amount in Memory Limit
+                pass
+            elif j == 105:
+                # 106 th update result  - Invalid Format in CPU Request
+                pass
+            elif j == 106:
+                # 107 th update result  - Invalid Format in Memory Request
+                pass
+            elif j == 107:
+                # 108 th update result  - Invalid Format in CPU Limit
+                pass
+            elif j == 108:
+                # 109 th update result  - Invalid Format in Memory Limit
+                pass
+
+            write_json_data_to_file(update_results_json_file, result_json)
+            result_json_arr.append(result_json[0])
+            response = update_results(update_results_json_file)
+
+            data = response.json()
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+            time.sleep(1)
+
+            # Get the experiment name
+            json_data = json.load(open(create_exp_json_file))
+            experiment_name = json_data[0]['experiment_name']
+
+            response = list_recommendations(experiment_name)
+            assert response.status_code == SUCCESS_200_STATUS_CODE
+
+
+
+
+    # Delete the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)

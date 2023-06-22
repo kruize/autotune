@@ -217,9 +217,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             if (null != generatedCpuRequestFormat && !generatedCpuRequestFormat.isEmpty()) {
                 requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuRequest);
             } else {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION);
             }
         }
 
@@ -230,9 +230,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             if (null != generatedMemRequestFormat && !generatedMemRequestFormat.isEmpty()) {
                 requestsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemRequest);
             } else {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION);
             }
         }
 
@@ -268,9 +268,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             if (null != generatedCpuLimitFormat && !generatedCpuLimitFormat.isEmpty()) {
                 limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuLimits);
             } else {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_CPU_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION);
             }
         }
 
@@ -281,9 +281,9 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             if (null != generatedMemLimitFormat && !generatedMemLimitFormat.isEmpty()) {
                 limitsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemLimits);
             } else {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_RECOMMENDED_MEMORY_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION);
             }
         }
 
@@ -306,13 +306,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Check if Current CPU Requests Exists
         if (null != currentCpuRequest) {
             if (currentCpuRequest.getAmount() <= 0.0) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION);
             } else if (null == currentCpuRequest.getFormat() || currentCpuRequest.getFormat().isEmpty()) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION);
             } else {
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequest);
             }
@@ -321,13 +321,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Check if Current Memory Requests Exists
         if (null != currentMemRequest) {
             if (currentMemRequest.getAmount() <= 0) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION);
             } else if (null == currentMemRequest.getFormat() || currentMemRequest.getFormat().isEmpty()) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_REQUEST);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION);
             } else {
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequest);
             }
@@ -344,13 +344,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Check if Current CPU Limits Exists
         if (null != currentCpuLimit) {
             if (currentCpuLimit.getAmount() <= 0.0) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_CPU_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION);
             } else if (null == currentCpuLimit.getFormat() || currentCpuLimit.getFormat().isEmpty()) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_CPU_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION);
             } else {
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimit);
             }
@@ -359,13 +359,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Check if Current Memory Limits Exists
         if (null != currentMemLimit) {
             if (currentMemLimit.getAmount() <= 0.0) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CURRENT_MEMORY_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION);
             } else if (null == currentMemLimit.getFormat() || currentMemLimit.getFormat().isEmpty()) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_FORMAT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CURRENT_MEMORY_LIMIT);
+                LOGGER.error(AnalyzerConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION);
             } else {
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimit);
             }

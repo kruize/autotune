@@ -45,6 +45,31 @@ NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
 NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
 NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
 
+AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
+INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
+FORMAT_MISSING_IN_CPU_SECTION_CODE = "223003"
+INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
+
+AMOUNT_MISSING_IN_MEMORY_SECTION_CODE = "224001"
+INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
+FORMAT_MISSING_IN_MEMORY_SECTION_CODE = "224003"
+INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
+
+WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
+CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
+CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
+CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
+
+CPU_REQUEST = "cpuRequest"
+CPU_LIMIT = "cpuLimit"
+CPU_USAGE = "cpuUsage"
+CPU_THROTTLE = "cpuThrottle"
+
+MEMORY_REQUEST = "memoryRequest"
+MEMORY_LIMIT = "memoryLimit"
+MEMORY_USAGE = "memoryUsage"
+MEMORY_RSS = "memoryRSS"
+
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
@@ -474,4 +499,11 @@ def check_pod_running(namespace, pod_name):
     else:
         print(f"Kruize Pod {pod_name} is now running")
         return True
+
+def get_index_of_metric(metrics: list, metric_name: str):
+    for i, metric in enumerate(metrics):
+        if metric["name"] == metric_name:
+            return i
+
+    return None
 
