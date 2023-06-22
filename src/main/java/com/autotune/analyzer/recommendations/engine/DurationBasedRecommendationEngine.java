@@ -197,10 +197,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         boolean isCpuRequestValid = true;
         boolean isMemoryRequestValid = true;
 
-        if (null == recommendationCpuRequest || recommendationCpuRequest.getAmount() <= 0) {
+        if (null == recommendationCpuRequest || null == recommendationCpuRequest.getAmount() || recommendationCpuRequest.getAmount() <= 0) {
             isCpuRequestValid = false;
         }
-        if (null == recommendationMemRequest || recommendationMemRequest.getAmount() <= 0) {
+        if (null == recommendationMemRequest || null == recommendationMemRequest.getAmount() || recommendationMemRequest.getAmount() <= 0) {
             isMemoryRequestValid = false;
         }
 
@@ -248,10 +248,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         boolean isMemoryLimitValid = true;
 
 
-        if (null == recommendationCpuLimits || recommendationCpuLimits.getAmount() <= 0) {
+        if (null == recommendationCpuLimits || null == recommendationCpuLimits.getAmount() || recommendationCpuLimits.getAmount() <= 0) {
             isCpuLimitValid = false;
         }
-        if (null == recommendationMemLimits || recommendationMemLimits.getAmount() <= 0) {
+        if (null == recommendationMemLimits || null == recommendationMemLimits.getAmount() || recommendationMemLimits.getAmount() <= 0) {
             isMemoryLimitValid = false;
         }
 
@@ -304,7 +304,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
 
         // Check if Current CPU Requests Exists
-        if (null != currentCpuRequest) {
+        if (null != currentCpuRequest && null != currentCpuRequest.getAmount()) {
             if (currentCpuRequest.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -319,7 +319,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         }
 
         // Check if Current Memory Requests Exists
-        if (null != currentMemRequest) {
+        if (null != currentMemRequest && null != currentMemRequest.getAmount()) {
             if (currentMemRequest.getAmount() <= 0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -342,7 +342,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
 
         // Check if Current CPU Limits Exists
-        if (null != currentCpuLimit) {
+        if (null != currentCpuLimit && null != currentCpuLimit.getAmount()) {
             if (currentCpuLimit.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -357,7 +357,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         }
 
         // Check if Current Memory Limits Exists
-        if (null != currentMemLimit) {
+        if (null != currentMemLimit && null != currentMemLimit.getAmount()) {
             if (currentMemLimit.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(AnalyzerConstants.RecommendationNotification.INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -386,14 +386,14 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Create a new map for storing variation in requests
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsVariationMap = new HashMap<>();
 
-        if (null != currentCpuRequest && currentCpuRequest.getAmount() > 0.0 && null != generatedCpuRequest && null != generatedCpuRequestFormat) {
+        if (null != currentCpuRequest && null != currentCpuRequest.getAmount() && currentCpuRequest.getAmount() > 0.0 && null != generatedCpuRequest && null != generatedCpuRequestFormat) {
             double diff = generatedCpuRequest - currentCpuRequest.getAmount();
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
             requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
         }
 
-        if (null != currentMemRequest && currentMemRequest.getAmount() > 0.0 && null != generatedMemRequest && null != generatedMemRequestFormat) {
+        if (null != currentMemRequest && null != currentMemRequest.getAmount() && currentMemRequest.getAmount() > 0.0 && null != generatedMemRequest && null != generatedMemRequestFormat) {
             double diff = generatedMemRequest - currentMemRequest.getAmount();
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemRequestFormat);
@@ -409,13 +409,13 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         // No notification if CPU limit not set
         // Check if currentCpuLimit is not null and
-        if (null != currentCpuLimit && currentCpuLimit.getAmount() > 0.0 && null != generatedCpuLimit && null != generatedCpuLimitFormat) {
+        if (null != currentCpuLimit && null != currentCpuLimit.getAmount() && currentCpuLimit.getAmount() > 0.0 && null != generatedCpuLimit && null != generatedCpuLimitFormat) {
             double diff = generatedCpuLimit - currentCpuLimit.getAmount();
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
         }
 
-        if (null != currentMemLimit && currentMemLimit.getAmount() > 0.0 && null != generatedMemLimit && null != generatedMemLimitFormat) {
+        if (null != currentMemLimit && null != currentMemLimit.getAmount() && currentMemLimit.getAmount() > 0.0 && null != generatedMemLimit && null != generatedMemLimitFormat) {
             double diff = generatedMemLimit - currentMemLimit.getAmount();
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemLimitFormat);
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
