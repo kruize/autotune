@@ -75,6 +75,30 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
+            # Expecting that we have recommendations
+            if j > 96:
+                # Sleep for 1 sec to get recommendations
+                time.sleep(1)
+
+                response = list_recommendations(experiment_name)
+                if response.status_code == SUCCESS_200_STATUS_CODE
+                    recommendation_json = response.json()
+                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+                    high_level_notifications = recommendation_section["notifications"]
+                    # Check if duration
+                    assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+
+                    data_section = recommendation_section["data"]
+                    # Check if recommendation exists
+                    assert str(end_time) in data_section
+
+                    short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+
+                    short_term_notifications = short_term_recommendation["notifications"]
+
+                    for key, notification in short_term_notifications.items():
+                        assert notifications[key]["type"] != "error"
+
         # sleep for a while before fetching recommendations
         time.sleep(20)
 
