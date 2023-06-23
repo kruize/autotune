@@ -89,8 +89,6 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
                     assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
                     data_section = recommendation_section["data"]
-                    # Check if recommendation exists
-                    assert str(end_time) in data_section
 
                     short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
 
