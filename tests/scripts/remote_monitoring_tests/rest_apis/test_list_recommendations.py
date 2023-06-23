@@ -782,6 +782,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
 
 @pytest.mark.sanity
+@pytest.mark.test_e2e
 def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
     """
         Test Description: This test validates list recommendations for multiple experiments posted using different json files
@@ -843,15 +844,15 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
             container_metrics: list = result_json[0]["kubernetes_objects"][0]["containers"][0]["metrics"]
             num_metrics = len(container_metrics)
 
-            CPU_REQUEST_INDEX = get_index(container_metrics, CPU_REQUEST)
-            CPU_LIMIT_INDEX = get_index(container_metrics, CPU_LIMIT)
-            CPU_THROTTLE_INDEX = get_index(container_metrics, CPU_THROTTLE)
-            CPU_USAGE_INDEX = get_index(container_metrics, CPU_USAGE)
+            CPU_REQUEST_INDEX = get_index_of_metric(container_metrics, CPU_REQUEST)
+            CPU_LIMIT_INDEX = get_index_of_metric(container_metrics, CPU_LIMIT)
+            CPU_THROTTLE_INDEX = get_index_of_metric(container_metrics, CPU_THROTTLE)
+            CPU_USAGE_INDEX = get_index_of_metric(container_metrics, CPU_USAGE)
 
-            MEMORY_REQUEST_INDEX = get_index(container_metrics, MEMORY_REQUEST)
-            MEMORY_LIMIT_INDEX = get_index(container_metrics, MEMORY_LIMIT)
-            MEMORY_USAGE_INDEX = get_index(container_metrics, MEMORY_USAGE)
-            MEMORY_RSS_INDEX = get_index(container_metrics, MEMORY_RSS)
+            MEMORY_REQUEST_INDEX = get_index_of_metric(container_metrics, MEMORY_REQUEST)
+            MEMORY_LIMIT_INDEX = get_index_of_metric(container_metrics, MEMORY_LIMIT)
+            MEMORY_USAGE_INDEX = get_index_of_metric(container_metrics, MEMORY_USAGE)
+            MEMORY_RSS_INDEX = get_index_of_metric(container_metrics, MEMORY_RSS)
 
             if j == 96:
                 # 97 th update result - miss all the non-mandatory fields

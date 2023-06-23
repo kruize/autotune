@@ -541,7 +541,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 if (!isSuccess) {
                     // Handle the issue accordingly
 
-                    // Currently it's unused as we are adding notification for every error we encounter
+                    // Currently, it's unused as we are adding notification for every error we encounter
                     // Also stopping the recommendation process is not advisable as the API USER need to know it via
                     // Notifications and check the logs for what went wrong
                 }
