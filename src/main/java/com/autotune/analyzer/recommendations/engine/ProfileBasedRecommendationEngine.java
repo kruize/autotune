@@ -58,6 +58,11 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
+    public void validateRecommendations() {
+
+    }
+
+    @Override
     public boolean checkIfMinDataAvailable(ContainerData containerData) {
         // TODO: Needs to be implemented
         return false;
