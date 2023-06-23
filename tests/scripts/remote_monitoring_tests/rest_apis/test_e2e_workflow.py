@@ -81,7 +81,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
                 time.sleep(1)
 
                 response = list_recommendations(experiment_name)
-                if response.status_code == SUCCESS_200_STATUS_CODE
+                if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
                     recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
                     high_level_notifications = recommendation_section["notifications"]
