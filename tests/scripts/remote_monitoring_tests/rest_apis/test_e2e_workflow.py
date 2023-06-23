@@ -94,8 +94,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
                     short_term_notifications = short_term_recommendation["notifications"]
 
-                    for key, notification in short_term_notifications.items():
-                        assert notifications[key]["type"] != "error"
+                    for notification in short_term_notifications.values():
+                        assert notification["type"] != "error"
 
         # sleep for a while before fetching recommendations
         time.sleep(20)
