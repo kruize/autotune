@@ -18,6 +18,8 @@ import csv
 import json
 import os
 import re
+import time
+import subprocess
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -401,4 +403,75 @@ def strip_double_quotes_for_field(json_file, field, filename):
 
         with open(filename, 'w') as file:
             file.write(data)
+
+def compare_json_files(json_file1, json_file2):
+    with open(json_file1, "r") as f1:
+        try:
+            json_data1 = json.load(f1)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data1 = {}
+        
+    with open(json_file2, "r") as f2:
+        try:
+            json_data2 = json.load(f2)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data2 = {}
+   
+    if json_data1 and json_data2:
+        if json_data1 == json_data2:
+            print("The two JSON files are identical!")
+            return True
+        else:
+            print("The two JSON files are different!")
+            return False
+    else:
+        print(f"JSON files are empty! Check the files {json_file1} and {json_file2}")
+        return False
+
+def get_kruize_pod(namespace):
+    command = f"kubectl get pod -n {namespace} | grep kruize | cut -d ' ' -f1"
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+    
+    pod_name = output.decode('utf-8')
+    print(f"pod name = {pod_name}")
+    return pod_name.rstrip()
+
+def delete_kruize_pod(namespace):
+    pod_name = get_kruize_pod(namespace) 
+ 
+    command = f"kubectl delete pod {pod_name} -n {namespace}"
+    print(command)
+
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    print(output.decode('utf-8'))
+
+
+def check_pod_running(namespace, pod_name):
+    command = f"kubectl get pod -n {namespace} | grep {pod_name}"
+
+    # set the maximum number of retries and the retry interval
+    MAX_RETRIES = 12
+    RETRY_INTERVAL = 5
+
+    # execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    # check if the pod is running
+    retry_count = 0
+    while "Running" not in output.decode('utf-8') and retry_count < MAX_RETRIES:
+        time.sleep(RETRY_INTERVAL)
+        output = subprocess.check_output(command, shell=True)
+        retry_count += 1
+
+    if retry_count == MAX_RETRIES:
+        print(f"Kruize Pod {pod_name} did not start within the specified time")
+        return False
+    else:
+        print(f"Kruize Pod {pod_name} is now running")
+        return True
 

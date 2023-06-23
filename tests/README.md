@@ -139,6 +139,10 @@ Refer [Autotune modules](https://github.com/kruize/autotune/blob/master/docs/aut
 
 To run the stress test refer the Stress test [README](/tests/scripts/remote_monitoring_tests/README.md)
 
+#### Fault tolerant test
+
+To run the fault tolerant test refer the [README](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
+
 ## Supported Clusters
 - Minikube
 
