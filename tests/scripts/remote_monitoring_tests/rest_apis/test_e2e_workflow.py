@@ -52,6 +52,10 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+
         for j in range(num_res):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
