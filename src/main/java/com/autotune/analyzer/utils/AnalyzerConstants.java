@@ -786,7 +786,7 @@ public class AnalyzerConstants {
         public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
         public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
         public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
-        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics not available, No Memory Recommendations can be generated";
+        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics are not available, No Memory Recommendations can be generated";
         public static final String AMOUNT_MISSING_IN_CPU_SECTION = "Amount field is missing in the CPU Section";
         public static final String INVALID_AMOUNT_IN_CPU_SECTION = "Invalid Amount in CPU Section";
         public static final String FORMAT_MISSING_IN_CPU_SECTION = "Format field is missing in CPU Section";
