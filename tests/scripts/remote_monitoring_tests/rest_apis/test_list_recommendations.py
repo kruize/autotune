@@ -838,6 +838,7 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             # Expecting that metrics exists for container as we read from template
             # Add if exists checks for each key if needed
             container_metrics: list = result_json[0]["kubernetes_objects"][0]["containers"][0]["metrics"]
+            container_name_to_update = result_json[0]["kubernetes_objects"][0]["containers"][0]["container_name"]
             num_metrics = len(container_metrics)
 
             CPU_REQUEST_INDEX = get_index_of_metric(container_metrics, CPU_REQUEST)
@@ -981,8 +982,17 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                 #############################################################################################
                 recommendation_json = response.json()
 
+                recommendation_section = None
 
-                recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+                for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
+                    actual_container_name = containers["container_name"]
+                    print(f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
+                    if containers["container_name"] == container_name_to_update:
+                        recommendation_section = containers["recommendations"]
+                        break
+
+                assert recommendation_section is not None
+
                 high_level_notifications = recommendation_section["notifications"]
 
                 # Check if duration
