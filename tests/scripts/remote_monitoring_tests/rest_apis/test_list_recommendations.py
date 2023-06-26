@@ -991,7 +991,13 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                 short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
 
                 assert "variation" in short_term_recommendation
+                assert "config" in short_term_recommendation
 
+                short_term_recommendation_current = None
+                if "current" in short_term_recommendation:
+                    short_term_recommendation_current = short_term_recommendation["current"]
+
+                short_term_recommendation_config = short_term_recommendation["config"]
                 short_term_recommendation_variation = short_term_recommendation["variation"]
 
                 short_term_notifications = short_term_recommendation["notifications"]
@@ -1056,32 +1062,24 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                     assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
                 elif j == 109:
                     # Expecting CPU request variation is available
-                    assert "requests" in short_term_recommendation_variation
-                    assert "cpu" in short_term_recommendation_variation["requests"]
-                    content_to_check = short_term_recommendation_variation["requests"]["cpu"]
-                    assert "amount" in content_to_check
-                    assert "format" in content_to_check
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
                 elif j == 110:
                     # Expecting CPU limit variation is available
-                    assert "limits" in short_term_recommendation_variation
-                    assert "cpu" in short_term_recommendation_variation["limits"]
-                    content_to_check = short_term_recommendation_variation["limits"]["cpu"]
-                    assert "amount" in content_to_check
-                    assert "format" in content_to_check
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
                 elif j == 111:
                     # Expecting Memory request variation is available
-                    assert "requests" in short_term_recommendation_variation
-                    assert "memory" in short_term_recommendation_variation["requests"]
-                    content_to_check = short_term_recommendation_variation["requests"]["memory"]
-                    assert "amount" in content_to_check
-                    assert "format" in content_to_check
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
                 elif j == 112:
                     # Expecting Memory limit variation is available
-                    assert "limits" in short_term_recommendation_variation
-                    assert "memory" in short_term_recommendation_variation["limits"]
-                    content_to_check = short_term_recommendation_variation["limits"]["memory"]
-                    assert "amount" in content_to_check
-                    assert "format" in content_to_check
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
 
 
     # Delete the experiments

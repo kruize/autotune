@@ -405,7 +405,7 @@ def validate_config(reco_config):
         assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
         assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
         assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
-        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
     notifications = duration_based_obj["notifications"]
@@ -509,3 +509,78 @@ def get_index_of_metric(metrics: list, metric_name: str):
 
     return None
 
+def check_if_dict_has_same_keys(base_dict, test_dict):
+    # Return false if the key set is not equal
+    if set(base_dict.keys()) != set(test_dict.keys()):
+        return False
+
+    for key in base_dict.keys():
+        if key not in test_dict:
+            return False
+        if isinstance(base_dict[key], dict) and isinstance(test_dict[key], dict):
+            check_if_dict_has_same_keys(base_dict[key], test_dict[key])
+    return True
+
+def validate_variation(current_config: dict, recommended_config: dict, variation_config: dict):
+    # Check structure
+    assert check_if_dict_has_same_keys(recommended_config, variation_config) == True
+
+    # Create temporary dict if it's none jus to make process easier
+    if current_config == None:
+        current_config = {}
+
+    # Check values
+    REQUESTS_KEY = "requests"
+    LIMITS_KEY = "limits"
+    CPU_KEY = "cpu"
+    MEMORY_KEY = "memory"
+    AMOUNT_KEY = "amount"
+    FORMAT_KEY = "format"
+
+    # Initialise requests holders
+    current_requests: dict = None
+    recommended_requests: dict = None
+    variation_requests: dict = None
+
+    # Initialise limits holders
+    current_limits: dict = None
+    recommended_limits: dict = None
+    variation_limits: dict = None
+
+    if REQUESTS_KEY in current_config:
+        current_requests = current_config[REQUESTS_KEY]
+    if LIMITS_KEY in current_config:
+        current_limits = current_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in recommended_config:
+        recommended_requests = recommended_config[REQUESTS_KEY]
+    if LIMITS_KEY in recommended_config:
+        recommended_limits = recommended_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in variation_config:
+        variation_requests = variation_config[REQUESTS_KEY]
+    if LIMITS_KEY in variation_config:
+        variation_limits = variation_config[LIMITS_KEY]
+
+    if recommended_requests is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_requests:
+            if CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
+                current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_requests:
+            if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
+                current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
+    if recommended_limits is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_limits:
+            if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
+                current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
+            assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_limits:
+            if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
+                current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
