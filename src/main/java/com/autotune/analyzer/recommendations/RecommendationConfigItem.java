@@ -16,7 +16,7 @@
 package com.autotune.analyzer.recommendations;
 
 public class RecommendationConfigItem {
-    private double amount;
+    private Double amount;
     private String format;
     private String errorMsg;
 
@@ -24,7 +24,7 @@ public class RecommendationConfigItem {
         this.errorMsg = errorMsg;
     }
 
-    public RecommendationConfigItem(double amount, String format) {
+    public RecommendationConfigItem(Double amount, String format) {
         this.amount = amount;
         this.format = format;
     }
@@ -41,7 +41,7 @@ public class RecommendationConfigItem {
         this.errorMsg = errorMsg;
     }
 
-    public double getAmount() {
+    public Double getAmount() {
         return amount;
     }
 

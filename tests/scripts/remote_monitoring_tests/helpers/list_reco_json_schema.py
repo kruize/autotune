@@ -83,6 +83,90 @@ list_reco_json_schema = {
                                       "confidence_level": {
                                         "type": "number"
                                       },
+                                      "current": {
+                                        "type": "object",
+                                        "properties": {
+                                          "limits": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          },
+                                          "requests": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+
+                                        ]
+                                      },
                                       "config": {
                                         "type": "object",
                                         "properties": {
@@ -395,6 +479,90 @@ list_reco_json_schema = {
                                       "confidence_level": {
                                         "type": "number"
                                       },
+                                      "current": {
+                                        "type": "object",
+                                        "properties": {
+                                          "limits": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          },
+                                          "requests": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+
+                                        ]
+                                      },
                                       "config": {
                                         "type": "object",
                                         "properties": {
@@ -621,6 +789,90 @@ list_reco_json_schema = {
                                       "confidence_level": {
                                         "type": "number"
                                       },
+                                      "current": {
+                                        "type": "object",
+                                        "properties": {
+                                          "limits": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          },
+                                          "requests": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+
+                                        ]
+                                      },
                                       "config": {
                                         "type": "object",
                                         "properties": {
@@ -846,6 +1098,90 @@ list_reco_json_schema = {
                                       },
                                       "confidence_level": {
                                         "type": "number"
+                                      },
+                                      "current": {
+                                        "type": "object",
+                                        "properties": {
+                                          "limits": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          },
+                                          "requests": {
+                                            "type": "object",
+                                            "properties": {
+                                              "memory": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              },
+                                              "cpu": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "amount": {
+                                                    "type": "number"
+                                                  },
+                                                  "format": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "amount",
+                                                  "format"
+                                                ]
+                                              }
+                                            },
+                                            "required": [
+
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+
+                                        ]
                                       },
                                       "config": {
                                         "type": "object",

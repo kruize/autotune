@@ -20,7 +20,7 @@ Kruize Remote monitoring stress test validates the behaviour of [Kruize remote m
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u users ] [ -d rampup time in seconds ] [ -t timeout in seconds ]
+<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u users ] [ -e No. of results to be updated ] [ -d rampup time in seconds ] [ -t timeout in seconds ]
 ```
 
 Where values for remote_monitoring_stress_test.sh are:
@@ -31,7 +31,8 @@ usage: remote_monitoring_stress_test.sh
         [ -i ] : optional. Kruize docker image to be used for testing
                  default - kruize/autotune_operator:test
 	[ -r ] : Results directory path
-	[ -u ]: Jmeter users
+	[ -u ] : Jmeter users / No. of experiments
+	[ -e ] : No. of results to be updated
 	[ -d ] : Jmeter Rampup time in seconds
 	[ -t ] : Monitoring metrics timeout duration in seconds
 ```
@@ -39,7 +40,14 @@ usage: remote_monitoring_stress_test.sh
 For example,
 
 ```
-<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -r /tmp/stress-test-results -i kruize/autotune_operator:0.0.10_mvp -u 2000 -t 900
+<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -r /tmp/stress-test-results -i kruize/autotune_operator:0.0.10_mvp -u 1000 -e 100 -t 900
 ```
+
+Test with the following inputs:
+100 exps / 100 results
+100 exps / 1500 results
+1000 exps / 100 results
+1000 exps / 1500 results
+10000 exps / 100 results
 
 Once the tests are complete, verify if there are no errors or exceptions in jmeter logs. Kruize resource usage metrics can be found in monitoring_metrics.csv in the results directory.

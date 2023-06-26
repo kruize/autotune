@@ -681,15 +681,12 @@ function form_curl_cmd() {
 	case $cluster_type in
 	   openshift)
 		NAMESPACE="openshift-tuning"
+		oc expose svc/${service} -n ${NAMESPACE}
 
-        	AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-
-        	echo "PORT = $AUTOTUNE_PORT"
-
-		SERVER_IP=$(kubectl get pods -l=app=${service} -o wide -n openshift-tuning -o=custom-columns=NODE:.spec.nodeName --no-headers)
+		SERVER_IP=($(oc status --namespace=${NAMESPACE} | grep ${service} | grep port | cut -d " " -f1 | cut -d "/" -f3))
 	        echo "IP = $SERVER_IP"
 
-		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		AUTOTUNE_URL="http://${SERVER_IP}"
 		;;
 	   minikube)
 		NAMESPACE="monitoring"
