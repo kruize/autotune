@@ -225,7 +225,8 @@ Message: CPU usage is less than one millicore, No CPU Recommendations can be gen
                                                     "format": "MiB"
                                                 },
                                                 "cpu": {
-                                                    "amount": 1.432e-05
+                                                    "amount": 0.5,
+                                                    "format": "cores"
                                                 }
                                             },
                                             "limits": {
@@ -234,7 +235,8 @@ Message: CPU usage is less than one millicore, No CPU Recommendations can be gen
                                                     "format": "MiB"
                                                 },
                                                 "cpu": {
-                                                    "amount": 4.51e-05
+                                                    "amount": 0.5,
+                                                    "format": "cores"
                                                 }
                                             }
                                         },
@@ -269,7 +271,7 @@ Message: CPU usage is less than one millicore, No CPU Recommendations can be gen
                                         "notifications": {
                                             "323001": {
                                                 "type": "notice",
-                                                "message": "CPU Usage is less than a millicore, No CPU Recommendation can be generated",
+                                                "message": "CPU Usage is less than a millicore, No CPU Recommendations can be generated",
                                                 "code": 323001
                                             }
                                         }
@@ -626,6 +628,10 @@ Message: CPU Request Not Set._**
                                                 "memory": {
                                                     "amount": 662.4639999999999,
                                                     "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 7.73,
+                                                    "format": "cores"
                                                 }
                                             },
                                             "limits": {
@@ -684,6 +690,140 @@ Message: CPU Request Not Set._**
 
 **_Code: 423001
 Message: CPU Limit Not Set._**
+
+```
+{
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+        {
+            "type": "deployment",
+            "name": "my-sample-deployment",
+            "namespace": "default",
+            "containers": [
+                {
+                    "container_image_name": "my-sample-image",
+                    "container_name": "my-sample-container",
+                    "recommendations": {
+                        "notifications": {
+                            "112101": {
+                                "type": "info",
+                                "message": "Duration Based Recommendations Available",
+                                "code": 112101
+                            }
+                        },
+                        "data": {
+                            "2023-06-15T00:56:27.893Z": {
+                                "duration_based": {
+                                    "short_term": {
+                                        "monitoring_start_time": "2023-06-14T00:56:27.893Z",
+                                        "monitoring_end_time": "2023-06-15T00:56:27.893Z",
+                                        "duration_in_hours": 24.0,
+                                        "pods_count": 1,
+                                        "confidence_level": 0.0,
+                                        "current": {
+                                            "requests": {
+                                                "memory": {
+                                                    "amount": 525.5,
+                                                    "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 0.91,
+                                                    "format": "cores"
+                                                }
+                                            },
+                                            "limits": {
+                                                "memory": {
+                                                    "amount": 442.56,
+                                                    "format": "MiB"
+                                                }
+                                            }
+                                        },
+                                        "config": {
+                                            "requests": {
+                                                "memory": {
+                                                    "amount": 1187.964,
+                                                    "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 7.73,
+                                                    "format": "cores"
+                                                }
+                                            },
+                                            "limits": {
+                                                "memory": {
+                                                    "amount": 1187.964,
+                                                    "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 7.73,
+                                                    "format": "cores"
+                                                }
+                                            }
+                                        },
+                                        "variation": {
+                                            "requests": {
+                                                "memory": {
+                                                    "amount": 662.4639999999999,
+                                                    "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 6.82,
+                                                    "format": "cores"
+                                                }
+                                            },
+                                            "limits": {
+                                                "memory": {
+                                                    "amount": 745.404,
+                                                    "format": "MiB"
+                                                },
+                                                "cpu": {
+                                                    "amount": 7.73,
+                                                    "format": "cores"
+                                                }
+                                            }
+                                        },
+                                        "notifications": {
+                                            "423001": {
+                                                "type": "warning",
+                                                "message": "CPU Limit Not Set",
+                                                "code": 423001
+                                            }
+                                        }
+                                    },
+                                    "medium_term": {
+                                        "pods_count": 0,
+                                        "confidence_level": 0.0,
+                                        "notifications": {
+                                            "120001": {
+                                                "type": "info",
+                                                "message": "There is not enough data available to generate a recommendation.",
+                                                "code": 120001
+                                            }
+                                        }
+                                    },
+                                    "long_term": {
+                                        "pods_count": 0,
+                                        "confidence_level": 0.0,
+                                        "notifications": {
+                                            "120001": {
+                                                "type": "info",
+                                                "message": "There is not enough data available to generate a recommendation.",
+                                                "code": 120001
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "version": "1.0",
+    "experiment_name": "hilarious-shreya"
+}
+```
 
 **_Code: 524001
 Message: Memory Request Not Set._**
@@ -759,6 +899,10 @@ Message: Memory Request Not Set._**
                                         },
                                         "variation": {
                                             "requests": {
+                                                "memory": {
+                                                    "amount": 1197.708,
+                                                    "format": "MiB"
+                                                },
                                                 "cpu": {
                                                     "amount": 7.109999999999999,
                                                     "format": "cores"
@@ -902,6 +1046,10 @@ Message: Memory Limit Not Set._**
                                                 }
                                             },
                                             "limits": {
+                                                "memory": {
+                                                    "amount": 1187.688,
+                                                    "format": "MiB"
+                                                },
                                                 "cpu": {
                                                     "amount": 5.05,
                                                     "format": "cores"
