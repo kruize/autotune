@@ -779,7 +779,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
 
 @pytest.mark.sanity
-def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
+def test_list_recommendations_notification_codes(cluster_type: str):
     """
         Test Description: This test validates list recommendations for multiple experiments posted using different json files
                           and pass different update results to test the notifications provided
