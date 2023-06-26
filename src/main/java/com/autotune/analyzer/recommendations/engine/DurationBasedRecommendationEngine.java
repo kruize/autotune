@@ -386,15 +386,25 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Create a new map for storing variation in requests
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsVariationMap = new HashMap<>();
 
-        if (null != currentCpuRequest && null != currentCpuRequest.getAmount() && currentCpuRequest.getAmount() > 0.0 && null != generatedCpuRequest && null != generatedCpuRequestFormat) {
-            double diff = generatedCpuRequest - currentCpuRequest.getAmount();
+
+        double currentCpuRequestValue = 0.0;
+        if (null != currentCpuRequest && null != currentCpuRequest.getAmount() && currentCpuRequest.getAmount() > 0.0) {
+            currentCpuRequestValue = currentCpuRequest.getAmount();
+        }
+        if (null != generatedCpuRequest && null != generatedCpuRequestFormat) {
+            double diff = generatedCpuRequest - currentCpuRequestValue;
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
             requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
         }
 
-        if (null != currentMemRequest && null != currentMemRequest.getAmount() && currentMemRequest.getAmount() > 0.0 && null != generatedMemRequest && null != generatedMemRequestFormat) {
-            double diff = generatedMemRequest - currentMemRequest.getAmount();
+
+        double currentMemRequestValue = 0.0;
+        if (null != currentMemRequest && null != currentMemRequest.getAmount() && currentMemRequest.getAmount() > 0.0) {
+            currentMemRequestValue = currentMemRequest.getAmount();
+        }
+        if (null != generatedMemRequest && null != generatedMemRequestFormat) {
+            double diff = generatedMemRequest - currentMemRequestValue;
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemRequestFormat);
             requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
@@ -409,14 +419,23 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         // No notification if CPU limit not set
         // Check if currentCpuLimit is not null and
-        if (null != currentCpuLimit && null != currentCpuLimit.getAmount() && currentCpuLimit.getAmount() > 0.0 && null != generatedCpuLimit && null != generatedCpuLimitFormat) {
-            double diff = generatedCpuLimit - currentCpuLimit.getAmount();
+
+        double currentCpuLimitValue = 0.0;
+        if (null != currentCpuLimit && null != currentCpuLimit.getAmount() && currentCpuLimit.getAmount() > 0.0) {
+            currentCpuLimitValue = currentCpuLimit.getAmount();
+        }
+        if (null != generatedCpuLimit && null != generatedCpuLimitFormat) {
+            double diff = generatedCpuLimit - currentCpuLimitValue;
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationConfigItem);
         }
 
-        if (null != currentMemLimit && null != currentMemLimit.getAmount() && currentMemLimit.getAmount() > 0.0 && null != generatedMemLimit && null != generatedMemLimitFormat) {
-            double diff = generatedMemLimit - currentMemLimit.getAmount();
+        double currentMemLimitValue = 0.0;
+        if (null != currentMemLimit && null != currentMemLimit.getAmount() && currentMemLimit.getAmount() > 0.0) {
+            currentMemLimitValue = currentMemLimit.getAmount();
+        }
+        if (null != generatedMemLimit && null != generatedMemLimitFormat) {
+            double diff = generatedMemLimit - currentMemLimitValue;
             RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(diff, generatedMemLimitFormat);
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationConfigItem);
         }
