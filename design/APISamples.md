@@ -2,19 +2,19 @@ This doc has the sample list Recommendation API response for Notification Code.
 
 **List of Notification codes:**
 
-|   CODE   |   TYPE   |                                  MESSAGE                                 |
-|:--------:|:-------:|:-----------------------------------------------------------------------:|
-| 112101   |  info   |                       Duration Based Recommendations Available                       |
-| 120001   |  info   |              There is not enough data available to generate a recommendation             |
-| 323001   | notice  |    CPU usage is less than one millicore, No CPU Recommendations can be generated    |
-| 323002   | notice  |                     CPU usage is zero, No CPU Recommendations can be generated                     |
-| 323003   | notice  |             CPU metrics are not available, No CPU Recommendations can be generated            |
-| 324001   | notice  |                Memory usage is zero, No Memory Recommendations can be generated                |
-| 324002   | notice  |            Memory metrics not available, No Memory Recommendations can be generated           |
-| 523001   | critical |                                CPU Request Not Set                               |
-| 423001   | warning |                                CPU Limit Not Set                                |
-| 524001   | critical |                             Memory Request Not Set                             |
-| 524002   | critical |                              Memory Limit Not Set                              |
+|   CODE   |   TYPE   |                                    MESSAGE                                    |
+|:--------:|:-------:|:-----------------------------------------------------------------------------:|
+| 112101   |  info   |                   Duration Based Recommendations Available                    |
+| 120001   |  info   |        There is not enough data available to generate a recommendation        |
+| 323001   | notice  | CPU usage is less than one millicore, No CPU Recommendations can be generated |
+| 323002   | notice  |          CPU usage is zero, No CPU Recommendations can be generated           |
+| 323003   | notice  |    CPU metrics are not available, No CPU Recommendations can be generated     |
+| 324001   | notice  |       Memory usage is zero, No Memory Recommendations can be generated        |
+| 324002   | notice  | Memory metrics are not available, No Memory Recommendations can be generated  |
+| 523001   | critical |                              CPU Request Not Set                              |
+| 423001   | warning |                               CPU Limit Not Set                               |
+| 524001   | critical |                            Memory Request Not Set                             |
+| 524002   | critical |                             Memory Limit Not Set                              |
 
 
 **_Code: 112101
@@ -549,7 +549,7 @@ Message: Memory usage is zero, No Memory Recommendations can be generated._**
 ```
 
 **_Code: 324002
-Message: Memory metrics not available, No Memory Recommendations can be generated._**
+Message: Memory metrics are not available, No Memory Recommendations can be generated._**
 
 **_Code: 523001
 Message: CPU Request Not Set._**
