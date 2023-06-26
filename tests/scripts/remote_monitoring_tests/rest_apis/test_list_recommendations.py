@@ -1,6 +1,4 @@
-import requests
 import pytest
-from jinja2 import Environment, FileSystemLoader
 from helpers.list_reco_json_validate import *
 from helpers.list_reco_json_schema import *
 from helpers.utils import *
@@ -9,7 +7,6 @@ from helpers.kruize import *
 from helpers.fixtures import *
 import time
 import json
-import shutil
 
 @pytest.mark.sanity
 def test_list_recommendations_single_result(cluster_type):
@@ -782,7 +779,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
 
 @pytest.mark.sanity
-def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
+def test_list_recommendations_notification_codes(cluster_type: str):
     """
         Test Description: This test validates list recommendations for multiple experiments posted using different json files
                           and pass different update results to test the notifications provided
@@ -802,7 +799,7 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
 
     # Create experiment using the specified json
     num_exps = 1
-    num_res = 111
+    num_res = 120
     list_of_result_json_arr = []
 
     for i in range(num_exps):
@@ -841,6 +838,7 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
             # Expecting that metrics exists for container as we read from template
             # Add if exists checks for each key if needed
             container_metrics: list = result_json[0]["kubernetes_objects"][0]["containers"][0]["metrics"]
+            container_name_to_update = result_json[0]["kubernetes_objects"][0]["containers"][0]["container_name"]
             num_metrics = len(container_metrics)
 
             CPU_REQUEST_INDEX = get_index_of_metric(container_metrics, CPU_REQUEST)
@@ -859,12 +857,16 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                 if CPU_REQUEST_INDEX is not None:
                     container_metrics.pop(CPU_REQUEST_INDEX)
                 if CPU_LIMIT_INDEX is not None:
+                    CPU_LIMIT_INDEX = get_index_of_metric(container_metrics, CPU_LIMIT)
                     container_metrics.pop(CPU_LIMIT_INDEX)
                 if CPU_THROTTLE_INDEX is not None:
+                    CPU_THROTTLE_INDEX = get_index_of_metric(container_metrics, CPU_THROTTLE)
                     container_metrics.pop(CPU_THROTTLE_INDEX)
                 if MEMORY_REQUEST_INDEX is not None:
+                    MEMORY_REQUEST_INDEX = get_index_of_metric(container_metrics, MEMORY_REQUEST)
                     container_metrics.pop(MEMORY_REQUEST_INDEX)
                 if MEMORY_LIMIT_INDEX is not None:
+                    MEMORY_LIMIT_INDEX = get_index_of_metric(container_metrics, MEMORY_LIMIT)
                     container_metrics.pop(MEMORY_LIMIT_INDEX)
             elif j == 97:
                 # 98 th update result   - misses Cpu Request
@@ -934,6 +936,22 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                     memory_limit_entry = container_metrics[MEMORY_LIMIT_INDEX]
                     aggre_info = memory_limit_entry["results"]["aggregation_info"]
                     aggre_info["format"] = None
+            elif j == 109:
+                # 110 th update result - Skip CPU Request entry to check if variation is available
+                if CPU_REQUEST_INDEX is not None:
+                    container_metrics.pop(CPU_REQUEST_INDEX)
+            elif j == 110:
+                # 111 th update result - Skip CPU Limit entry to check if variation is available
+                if CPU_LIMIT_INDEX is not None:
+                    container_metrics.pop(CPU_LIMIT_INDEX)
+            elif j == 111:
+                # 112 th update result - Skip Memory Request entry to check if variation is available
+                if MEMORY_REQUEST_INDEX is not None:
+                    container_metrics.pop(MEMORY_REQUEST_INDEX)
+            elif j == 112:
+                # 113 th update result - Skip Memory Limit entry to check if variation is available
+                if MEMORY_LIMIT_INDEX is not None:
+                    container_metrics.pop(MEMORY_LIMIT_INDEX)
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
@@ -945,94 +963,138 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-            time.sleep(1)
+            if j > 95:
+                time.sleep(1)
 
-            # Get the experiment name
-            json_data = json.load(open(create_exp_json_file))
-            experiment_name = json_data[0]['experiment_name']
+                # Get the experiment name
+                json_data = json.load(open(create_exp_json_file))
+                experiment_name = json_data[0]['experiment_name']
 
-            response = list_recommendations(experiment_name)
-            assert response.status_code == SUCCESS_200_STATUS_CODE
+                response = list_recommendations(experiment_name)
+                assert response.status_code == SUCCESS_200_STATUS_CODE
 
-            #############################################################################################
-            # TODO: Optimise the flow by having everything in the same else if ladder blocks            #
-            #############################################################################################
-            # This mechanism can be optimised by placing the above content in a function and calling    #
-            # recommendations in the same else if ladder above, but parking it for later as Currently   #
-            # we are not intended to disturb the flow as of now.                                        #
-            #############################################################################################
-            recommendation_json = response.json()
-            recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
-            high_level_notifications = recommendation_section["notifications"]
-            # Check if duration
-            assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                #############################################################################################
+                # TODO: Optimise the flow by having everything in the same else if ladder blocks            #
+                #############################################################################################
+                # This mechanism can be optimised by placing the above content in a function and calling    #
+                # recommendations in the same else if ladder above, but parking it for later as Currently   #
+                # we are not intended to disturb the flow as of now.                                        #
+                #############################################################################################
+                recommendation_json = response.json()
 
-            data_section = recommendation_section["data"]
-            # Check if recommendation exists
-            assert str(end_time) in data_section
+                recommendation_section = None
 
-            short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+                for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
+                    actual_container_name = containers["container_name"]
+                    print(f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
+                    if containers["container_name"] == container_name_to_update:
+                        recommendation_section = containers["recommendations"]
+                        break
 
-            short_term_notifications = short_term_recommendation["notifications"]
+                assert recommendation_section is not None
 
-            if j == 96:
-                # Expected notifications in short term recommendation
-                # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
-                # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
-                # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
-                # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
-                assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
-                assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
-                assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
-                assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
-            elif j == 97:
-                # Expected notifications in short term recommendation
-                # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
-                assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
-            elif j == 98:
-                # Expected notifications in short term recommendation
-                # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
-                assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
-            elif j == 99:
-                # Expected notifications in short term recommendation
-                # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
-                assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
-            elif j == 100:
-                # Expected notifications in short term recommendation
-                # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
-                assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
-            elif j == 101:
-                # Expected notifications in short term recommendation
-                # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
-                assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
-            elif j == 102:
-                # Expected notifications in short term recommendation
-                # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
-                assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
-            elif j == 103:
-                # Expected notifications in short term recommendation
-                # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
-                assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
-            elif j == 104:
-                # Expected notifications in short term recommendation
-                # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
-                assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
-            elif j == 105:
-                # Expected notifications in short term recommendation
-                # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
-                assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
-            elif j == 106:
-                # Expected notifications in short term recommendation
-                # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
-                assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
-            elif j == 107:
-                # Expected notifications in short term recommendation
-                # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
-                assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
-            elif j == 108:
-                # Expected notifications in short term recommendation
-                # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
-                assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                high_level_notifications = recommendation_section["notifications"]
+
+                # Check if duration
+                assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+
+                data_section = recommendation_section["data"]
+                # Check if recommendation exists
+                assert str(end_time) in data_section
+
+                short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+
+                assert "variation" in short_term_recommendation
+                assert "config" in short_term_recommendation
+
+                short_term_recommendation_current = None
+                if "current" in short_term_recommendation:
+                    short_term_recommendation_current = short_term_recommendation["current"]
+
+                short_term_recommendation_config = short_term_recommendation["config"]
+                short_term_recommendation_variation = short_term_recommendation["variation"]
+
+                short_term_notifications = short_term_recommendation["notifications"]
+
+                if j == 96:
+                    # Expected notifications in short term recommendation
+                    # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
+                    # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
+                    # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
+                    # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
+                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
+                elif j == 97:
+                    # Expected notifications in short term recommendation
+                    # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
+                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
+                elif j == 98:
+                    # Expected notifications in short term recommendation
+                    # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
+                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
+                elif j == 99:
+                    # Expected notifications in short term recommendation
+                    # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
+                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
+                elif j == 100:
+                    # Expected notifications in short term recommendation
+                    # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
+                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
+                elif j == 101:
+                    # Expected notifications in short term recommendation
+                    # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
+                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
+                elif j == 102:
+                    # Expected notifications in short term recommendation
+                    # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
+                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                elif j == 103:
+                    # Expected notifications in short term recommendation
+                    # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
+                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
+                elif j == 104:
+                    # Expected notifications in short term recommendation
+                    # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
+                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                elif j == 105:
+                    # Expected notifications in short term recommendation
+                    # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
+                    assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
+                elif j == 106:
+                    # Expected notifications in short term recommendation
+                    # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
+                    assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                elif j == 107:
+                    # Expected notifications in short term recommendation
+                    # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
+                    assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
+                elif j == 108:
+                    # Expected notifications in short term recommendation
+                    # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
+                    assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                elif j == 109:
+                    # Expecting CPU request variation is available
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
+                elif j == 110:
+                    # Expecting CPU limit variation is available
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
+                elif j == 111:
+                    # Expecting Memory request variation is available
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
+                elif j == 112:
+                    # Expecting Memory limit variation is available
+                    validate_variation(current_config=short_term_recommendation_current,
+                                       recommended_config=short_term_recommendation_config,
+                                       variation_config=short_term_recommendation_variation)
+
 
     # Delete the experiments
     for i in range(num_exps):
