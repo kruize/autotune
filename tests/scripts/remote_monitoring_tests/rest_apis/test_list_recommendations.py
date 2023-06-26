@@ -856,12 +856,16 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                 if CPU_REQUEST_INDEX is not None:
                     container_metrics.pop(CPU_REQUEST_INDEX)
                 if CPU_LIMIT_INDEX is not None:
+                    CPU_LIMIT_INDEX = get_index_of_metric(container_metrics, CPU_LIMIT)
                     container_metrics.pop(CPU_LIMIT_INDEX)
                 if CPU_THROTTLE_INDEX is not None:
+                    CPU_THROTTLE_INDEX = get_index_of_metric(container_metrics, CPU_THROTTLE)
                     container_metrics.pop(CPU_THROTTLE_INDEX)
                 if MEMORY_REQUEST_INDEX is not None:
+                    MEMORY_REQUEST_INDEX = get_index_of_metric(container_metrics, MEMORY_REQUEST)
                     container_metrics.pop(MEMORY_REQUEST_INDEX)
                 if MEMORY_LIMIT_INDEX is not None:
+                    MEMORY_LIMIT_INDEX = get_index_of_metric(container_metrics, MEMORY_LIMIT)
                     container_metrics.pop(MEMORY_LIMIT_INDEX)
             elif j == 97:
                 # 98 th update result   - misses Cpu Request
