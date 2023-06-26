@@ -1,6 +1,4 @@
-import requests
 import pytest
-from jinja2 import Environment, FileSystemLoader
 from helpers.list_reco_json_validate import *
 from helpers.list_reco_json_schema import *
 from helpers.utils import *
@@ -9,7 +7,6 @@ from helpers.kruize import *
 from helpers.fixtures import *
 import time
 import json
-import shutil
 
 @pytest.mark.sanity
 def test_list_recommendations_single_result(cluster_type):
@@ -802,7 +799,7 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
 
     # Create experiment using the specified json
     num_exps = 1
-    num_res = 111
+    num_res = 120
     list_of_result_json_arr = []
 
     for i in range(num_exps):
@@ -934,6 +931,22 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                     memory_limit_entry = container_metrics[MEMORY_LIMIT_INDEX]
                     aggre_info = memory_limit_entry["results"]["aggregation_info"]
                     aggre_info["format"] = None
+            elif j == 109:
+                # 110 th update result - Skip CPU Request entry to check if variation is available
+                if CPU_REQUEST_INDEX is not None:
+                    container_metrics.pop(CPU_REQUEST_INDEX)
+            elif j == 110:
+                # 111 th update result - Skip CPU Limit entry to check if variation is available
+                if CPU_LIMIT_INDEX is not None:
+                    container_metrics.pop(CPU_LIMIT_INDEX)
+            elif j == 111:
+                # 112 th update result - Skip Memory Request entry to check if variation is available
+                if MEMORY_REQUEST_INDEX is not None:
+                    container_metrics.pop(MEMORY_REQUEST_INDEX)
+            elif j == 112:
+                # 113 th update result - Skip Memory Limit entry to check if variation is available
+                if MEMORY_LIMIT_INDEX is not None:
+                    container_metrics.pop(MEMORY_LIMIT_INDEX)
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
@@ -972,6 +985,10 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
             assert str(end_time) in data_section
 
             short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+
+            assert "variation" in short_term_recommendation
+
+            short_term_recommendation_variation = short_term_recommendation["variation"]
 
             short_term_notifications = short_term_recommendation["notifications"]
 
@@ -1033,6 +1050,35 @@ def test_list_recommendations_with_changes_in_update_results(cluster_type: str):
                 # Expected notifications in short term recommendation
                 # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
                 assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+            elif j == 109:
+                # Expecting CPU request variation is available
+                assert "requests" in short_term_recommendation_variation
+                assert "cpu" in short_term_recommendation_variation["requests"]
+                content_to_check = short_term_recommendation_variation["requests"]["cpu"]
+                assert "amount" in content_to_check
+                assert "format" in content_to_check
+            elif j == 110:
+                # Expecting CPU limit variation is available
+                assert "limits" in short_term_recommendation_variation
+                assert "cpu" in short_term_recommendation_variation["limits"]
+                content_to_check = short_term_recommendation_variation["limits"]["cpu"]
+                assert "amount" in content_to_check
+                assert "format" in content_to_check
+            elif j == 111:
+                # Expecting Memory request variation is available
+                assert "requests" in short_term_recommendation_variation
+                assert "memory" in short_term_recommendation_variation["requests"]
+                content_to_check = short_term_recommendation_variation["requests"]["memory"]
+                assert "amount" in content_to_check
+                assert "format" in content_to_check
+            elif j == 112:
+                # Expecting Memory limit variation is available
+                assert "limits" in short_term_recommendation_variation
+                assert "memory" in short_term_recommendation_variation["limits"]
+                content_to_check = short_term_recommendation_variation["limits"]["memory"]
+                assert "amount" in content_to_check
+                assert "format" in content_to_check
+
 
     # Delete the experiments
     for i in range(num_exps):
