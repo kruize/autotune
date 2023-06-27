@@ -1,14 +1,13 @@
-import requests
+import json
+
 import pytest
-from jinja2 import Environment, FileSystemLoader
-from helpers.list_reco_json_validate import *
-from helpers.list_reco_json_schema import *
-from helpers.utils import *
+from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.fixtures import *
-import time
-import json
+from helpers.list_reco_json_schema import *
+from helpers.list_reco_json_validate import *
+from helpers.utils import *
+
 
 @pytest.mark.test_e2e
 def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
@@ -16,8 +15,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
 
-    input_json_file="../json_files/create_exp.json"
-    result_json_file="../json_files/update_results.json"
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
 
     find = []
     json_data = json.load(open(input_json_file))
@@ -55,13 +54,13 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
-
+        interval_start_time = get_datetime()
         for j in range(num_res):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
             if j == 0:
-                start_time = get_datetime()
+                start_time = interval_start_time
             else:
                 start_time = end_time
 
@@ -81,32 +80,26 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
             # Expecting that we have recommendations
             if j > 96:
-                # Sleep for 1 sec to get recommendations
-                time.sleep(1)
-
+                response = update_recommendations(experiment_name, interval_start_time, end_time)
+                data = response.json()
+                assert response.status_code == SUCCESS_STATUS_CODE
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
-                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
+                        "recommendations"]
                     high_level_notifications = recommendation_section["notifications"]
                     # Check if duration
                     assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
-
                     data_section = recommendation_section["data"]
-
                     short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
-
                     short_term_notifications = short_term_recommendation["notifications"]
-
                     for notification in short_term_notifications.values():
                         assert notification["type"] != "error"
 
-        # sleep for a while before fetching recommendations
-        time.sleep(20)
-
-        # Get the experiment name
-        json_data = json.load(open(create_exp_json_file))
-        experiment_name = json_data[0]['experiment_name']
+        response = update_recommendations(experiment_name, interval_start_time, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -120,11 +113,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         # Validate the json values
         create_exp_json = read_json_data_from_file(create_exp_json_file)
         update_results_json = []
-        update_results_json.append(result_json_arr[len(result_json_arr)-1])
+        update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
-        
+
     # Invoke list recommendations for a non-existing experiment
     experiment_name = "Non-existing-exp"
     response = list_recommendations(experiment_name)
@@ -141,4 +134,3 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
         assert response.status_code == SUCCESS_STATUS_CODE
-

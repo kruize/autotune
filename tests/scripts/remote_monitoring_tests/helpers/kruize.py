@@ -94,6 +94,19 @@ def update_results(result_json_file):
     print(response.text)
     return response
 
+# Description: This function generates recommendation for the given experiment_name , start time and end time .
+def update_recommendations(experiment_name, startTime, endTime):
+    print("\n************************************************************")
+    print("\nUpdating the recommendation \n for %s for dates Start-time: %s and End-time: %s..."%(experiment_name,startTime,endTime))
+    url = URL + "/updateRecommendations?experiment_name=%s&interval_start_time=%s&interval_end_time=%s"%(experiment_name,startTime,endTime)
+    print("URL = ", url)
+    response = requests.post(url,)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    print("\n************************************************************")
+    return response
+
+
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment name, flag indicating latest result and monitoring end time
 def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None):
