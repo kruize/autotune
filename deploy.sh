@@ -78,6 +78,9 @@ target="autotune"
 # docker: loop timeout is turned off by default
 timeout=-1
 
+# Test with the kruize docker image specified in the deployment yaml
+use_yaml_image=0
+
 function ctrlc_handler() {
 	# Check if cluster type is docker
 	if [[ "$cluster_type" == "docker" ]]; then
@@ -103,6 +106,7 @@ function usage() {
 	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
 	echo " -m: Target mode selection [autotune | crc]"
+	echo " -b: Test with the kruize docker image in the deployment yaml"
 	exit -1
 }
 
@@ -119,7 +123,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:m:n:o:p:stu:-: gopts; do
+while getopts ac:d:i:k:m:n:o:p:stub-: gopts; do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
@@ -170,6 +174,8 @@ while getopts ac:d:i:k:m:n:o:p:stu:-: gopts; do
 		;;
 	u)
 		KRUIZE_UI_DOCKER_IMAGE="${OPTARG}"
+	b)
+		use_yaml_build=1
 		;;
 	[?])
 		usage

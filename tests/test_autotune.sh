@@ -213,9 +213,11 @@ if [ ! -z "${testcase}" ]; then
 	fi
 fi
 
-if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-	AUTOTUNE_DOCKER_IMAGE="${AUTOTUNE_IMAGE}"
-fi
+#if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
+#	if [ ${testsuite} != "remote_monitoring_tests" ]; then
+#		AUTOTUNE_DOCKER_IMAGE="${AUTOTUNE_IMAGE}"
+#	fi
+#fi
 
 # check for benchmarks directory path
 if [ ! "${testsuite}" == "remote_monitoring_tests" ]; then
@@ -236,9 +238,19 @@ if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
 	echo -n "############# Performing ${tctype} test for autotune #############"
 	if [ ${skip_setup} -eq 1 ]; then
-		${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO} --skipsetup
+		#if [ ${testsuite} == "remote_monitoring_tests" ]; then
+		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -r ${APP_REPO} --skipsetup
+		else
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO} --skipsetup
+		fi
 	else
-		${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
+		#if [ ${testsuite} == "remote_monitoring_tests" ]; then
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -r ${APP_REPO}
+		else
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+		fi
 	fi
 
 	TEST_RESULT=$?

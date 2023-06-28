@@ -133,3 +133,50 @@ jobs:
           name: crc-results
           path: ./crc_results.tar
           retention-days: 2
+
+
+  test_crc_manifest_build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - name: Check cluster info on minikube
+        run: |
+          kubectl cluster-info
+          kubectl get pods -n kube-system
+      - name: Install Prometheus on minikube
+        run: |
+          echo Install Prometheus on minikube
+          cd scripts
+          ./prometheus_on_minikube.sh -as
+      - name: Test with manifest kruize build in crc mode
+        run: |
+          echo Test with manifest kruize build in crc mode
+          echo "***************************************************************"
+          cd tests
+          ./test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+      - name: Capture ffdc logs
+        if: always()
+        run: |
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          tar cvf crc_results.tar kruize_test_results
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: crc-results
+          path: ./crc_results.tar
+          retention-days: 2
+
