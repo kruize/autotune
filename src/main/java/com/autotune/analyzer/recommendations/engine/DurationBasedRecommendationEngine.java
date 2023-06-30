@@ -452,7 +452,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
     }
 
     @Override
-    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime) {
+    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, Double threshold) {
         // Get the results
         HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
         // Create a new map for returning the result

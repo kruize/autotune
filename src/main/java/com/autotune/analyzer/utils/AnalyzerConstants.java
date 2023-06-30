@@ -773,6 +773,7 @@ public class AnalyzerConstants {
         public static final Double CPU_ONE_CORE = 1.0;
         public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
+        public static final Double DEFAULT_THRESHOLD = 0.1;
     }
 
     public static final class RecommendationNotificationMsgConstant {
