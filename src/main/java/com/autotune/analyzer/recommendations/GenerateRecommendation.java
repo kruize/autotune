@@ -90,7 +90,7 @@ public class GenerateRecommendation {
                                         recommendationPeriodMap.put(recPeriod, recommendation);
                                     } else {
                                         RecommendationNotification notification = new RecommendationNotification(
-                                                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA);
+                                                AnalyzerConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                         recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
                                     }
                                 }
@@ -101,7 +101,7 @@ public class GenerateRecommendation {
                                     notifyExist = true;
                                 if (!notifyExist) {
                                     RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            AnalyzerConstants.RecommendationNotification.DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                            AnalyzerConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                                     );
                                     containerData.getContainerRecommendations().getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                 }

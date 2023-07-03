@@ -116,7 +116,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // If there is no notification add one
                         if (!notificationExist) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                    AnalyzerConstants.RecommendationNotification.DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                    AnalyzerConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                             );
                             containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                         }

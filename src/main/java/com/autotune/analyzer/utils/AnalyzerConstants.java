@@ -241,137 +241,137 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationNotification {
-        DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
+        INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE(
                 NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationTypes.INFO
         ),
-        NOT_ENOUGH_DATA (
+        INFO_NOT_ENOUGH_DATA(
                 NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
                 RecommendationNotificationTypes.INFO
         ),
-        AMOUNT_MISSING_IN_CPU_SECTION(
-                NotificationCodes.AMOUNT_MISSING_IN_CPU_SECTION,
+        ERROR_AMOUNT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.ERROR_AMOUNT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        INVALID_AMOUNT_IN_CPU_SECTION(
-                NotificationCodes.INVALID_AMOUNT_IN_CPU_SECTION,
+        ERROR_INVALID_AMOUNT_IN_CPU_SECTION(
+                NotificationCodes.ERROR_INVALID_AMOUNT_IN_CPU_SECTION,
                 RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_CPU_SECTION(
-                NotificationCodes.FORMAT_MISSING_IN_CPU_SECTION,
+        ERROR_FORMAT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.ERROR_FORMAT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        INVALID_FORMAT_IN_CPU_SECTION(
-                NotificationCodes.INVALID_FORMAT_IN_CPU_SECTION,
+        ERROR_INVALID_FORMAT_IN_CPU_SECTION(
+                NotificationCodes.ERROR_INVALID_FORMAT_IN_CPU_SECTION,
                 RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        AMOUNT_MISSING_IN_MEMORY_SECTION(
-                NotificationCodes.AMOUNT_MISSING_IN_MEMORY_SECTION,
+        ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        INVALID_AMOUNT_IN_MEMORY_SECTION(
-                NotificationCodes.INVALID_AMOUNT_IN_MEMORY_SECTION,
+        ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION(
+                NotificationCodes.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION,
                 RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        FORMAT_MISSING_IN_MEMORY_SECTION(
-                NotificationCodes.FORMAT_MISSING_IN_MEMORY_SECTION,
+        ERROR_FORMAT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        INVALID_FORMAT_IN_MEMORY_SECTION(
-                NotificationCodes.INVALID_FORMAT_IN_MEMORY_SECTION,
+        ERROR_INVALID_FORMAT_IN_MEMORY_SECTION(
+                NotificationCodes.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION,
                 RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION,
                 RecommendationNotificationTypes.ERROR
         ),
-        NUM_PODS_CANNOT_BE_ZERO(
-                NotificationCodes.NUM_PODS_CANNOT_BE_ZERO,
+        ERROR_NUM_PODS_CANNOT_BE_ZERO(
+                NotificationCodes.ERROR_NUM_PODS_CANNOT_BE_ZERO,
                 RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO,
                 RecommendationNotificationTypes.ERROR
         ),
-        NUM_PODS_CANNOT_BE_NEGATIVE(
-                NotificationCodes.NUM_PODS_CANNOT_BE_NEGATIVE,
+        ERROR_NUM_PODS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE,
                 RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE,
                 RecommendationNotificationTypes.ERROR
         ),
-        HOURS_CANNOT_BE_ZERO(
-                NotificationCodes.HOURS_CANNOT_BE_ZERO,
+        ERROR_HOURS_CANNOT_BE_ZERO(
+                NotificationCodes.ERROR_HOURS_CANNOT_BE_ZERO,
                 RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_ZERO,
                 RecommendationNotificationTypes.ERROR
         ),
-        HOURS_CANNOT_BE_NEGATIVE(
-                NotificationCodes.HOURS_CANNOT_BE_NEGATIVE,
+        ERROR_HOURS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.ERROR_HOURS_CANNOT_BE_NEGATIVE,
                 RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_NEGATIVE,
                 RecommendationNotificationTypes.ERROR
         ),
-        CPU_RECORDS_ARE_IDLE (
+        NOTICE_CPU_RECORDS_ARE_IDLE(
                 NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_IDLE,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_RECORDS_ARE_ZERO (
+        NOTICE_CPU_RECORDS_ARE_ZERO(
                 NotificationCodes.NOTICE_CPU_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_RECORDS_NOT_AVAILABLE(
+        NOTICE_CPU_RECORDS_NOT_AVAILABLE(
                 NotificationCodes.NOTICE_CPU_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationMsgConstant.CPU_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_REQUESTS_OPTIMISED(
-                NotificationCodes.CPU_REQUESTS_OPTIMISED,
+        NOTICE_CPU_REQUESTS_OPTIMISED(
+                NotificationCodes.NOTICE_CPU_REQUESTS_OPTIMISED,
                 RecommendationNotificationMsgConstant.CPU_REQUESTS_OPTIMISED,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_LIMITS_OPTIMISED(
-                NotificationCodes.CPU_LIMITS_OPTIMISED,
+        NOTICE_CPU_LIMITS_OPTIMISED(
+                NotificationCodes.NOTICE_CPU_LIMITS_OPTIMISED,
                 RecommendationNotificationMsgConstant.CPU_LIMITS_OPTIMISED,
                 RecommendationNotificationTypes.NOTICE
         ),
-        MEMORY_RECORDS_ARE_ZERO (
+        NOTICE_MEMORY_RECORDS_ARE_ZERO(
                 NotificationCodes.NOTICE_MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationTypes.NOTICE
         ),
-        MEMORY_RECORDS_NOT_AVAILABLE(
+        NOTICE_MEMORY_RECORDS_NOT_AVAILABLE(
                 NotificationCodes.NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationTypes.NOTICE
         ),
-        MEMORY_REQUESTS_OPTIMISED(
-                NotificationCodes.MEMORY_REQUESTS_OPTIMISED,
+        NOTICE_MEMORY_REQUESTS_OPTIMISED(
+                NotificationCodes.NOTICE_MEMORY_REQUESTS_OPTIMISED,
                 RecommendationNotificationMsgConstant.MEMORY_REQUESTS_OPTIMISED,
                 RecommendationNotificationTypes.NOTICE
         ),
-        MEMORY_LIMITS_OPTIMISED(
-                NotificationCodes.MEMORY_LIMITS_OPTIMISED,
+        NOTICE_MEMORY_LIMITS_OPTIMISED(
+                NotificationCodes.NOTICE_MEMORY_LIMITS_OPTIMISED,
                 RecommendationNotificationMsgConstant.MEMORY_LIMITS_OPTIMISED,
                 RecommendationNotificationTypes.NOTICE
         ),
-        CPU_REQUEST_NOT_SET (
+        CRITICAL_CPU_REQUEST_NOT_SET(
                 NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
                 RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
         ),
-        MEMORY_REQUEST_NOT_SET (
+        CRITICAL_MEMORY_REQUEST_NOT_SET(
                 NotificationCodes.CRITICAL_MEMORY_REQUEST_NOT_SET,
                 RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
         ),
-        CPU_LIMIT_NOT_SET (
+        WARNING_CPU_LIMIT_NOT_SET(
                 NotificationCodes.WARNING_CPU_LIMIT_NOT_SET,
                 RecommendationNotificationMsgConstant.CPU_LIMIT_NOT_SET,
                 RecommendationNotificationTypes.WARNING
         ),
-        MEMORY_LIMIT_NOT_SET (
+        CRITICAL_MEMORY_LIMIT_NOT_SET(
                 NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET,
                 RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
                 RecommendationNotificationTypes.CRITICAL
@@ -496,24 +496,24 @@ public class AnalyzerConstants {
         public static final int SECTION_ERROR_SUBSECTION_DATA_END = 229999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 221000;
-        public static final int NUM_PODS_CANNOT_BE_ZERO = 221001;
-        public static final int NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
-        public static final int HOURS_CANNOT_BE_ZERO = 221003;
-        public static final int HOURS_CANNOT_BE_NEGATIVE = 221004;
+        public static final int ERROR_NUM_PODS_CANNOT_BE_ZERO = 221001;
+        public static final int ERROR_NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
+        public static final int ERROR_HOURS_CANNOT_BE_ZERO = 221003;
+        public static final int ERROR_HOURS_CANNOT_BE_NEGATIVE = 221004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
-        public static final int AMOUNT_MISSING_IN_CPU_SECTION = 223001;
-        public static final int INVALID_AMOUNT_IN_CPU_SECTION = 223002;
-        public static final int FORMAT_MISSING_IN_CPU_SECTION = 223003;
-        public static final int INVALID_FORMAT_IN_CPU_SECTION = 223004;
+        public static final int ERROR_AMOUNT_MISSING_IN_CPU_SECTION = 223001;
+        public static final int ERROR_INVALID_AMOUNT_IN_CPU_SECTION = 223002;
+        public static final int ERROR_FORMAT_MISSING_IN_CPU_SECTION = 223003;
+        public static final int ERROR_INVALID_FORMAT_IN_CPU_SECTION = 223004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 223999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 224000;
-        public static final int AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
-        public static final int INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
-        public static final int FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
-        public static final int INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
+        public static final int ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
+        public static final int ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
+        public static final int ERROR_FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
+        public static final int ERROR_INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 224999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 225000;
@@ -559,15 +559,15 @@ public class AnalyzerConstants {
         public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
         public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
         public static final int NOTICE_CPU_RECORDS_NOT_AVAILABLE = 323003;
-        public static final int CPU_REQUESTS_OPTIMISED = 323004;
-        public static final int CPU_LIMITS_OPTIMISED = 323005;
+        public static final int NOTICE_CPU_REQUESTS_OPTIMISED = 323004;
+        public static final int NOTICE_CPU_LIMITS_OPTIMISED = 323005;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 323999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 324000;
         public static final int NOTICE_MEMORY_RECORDS_ARE_ZERO = 324001;
         public static final int NOTICE_MEMORY_RECORDS_NOT_AVAILABLE = 324002;
-        public static final int MEMORY_REQUESTS_OPTIMISED = 324003;
-        public static final int MEMORY_LIMITS_OPTIMISED = 324004;
+        public static final int NOTICE_MEMORY_REQUESTS_OPTIMISED = 324003;
+        public static final int NOTICE_MEMORY_LIMITS_OPTIMISED = 324004;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 324999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 325000;

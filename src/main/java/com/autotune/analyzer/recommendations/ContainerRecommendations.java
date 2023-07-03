@@ -34,7 +34,7 @@ public class ContainerRecommendations {
         this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
 
         RecommendationNotification recommendationNotification = new RecommendationNotification(
-                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA
+                AnalyzerConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
         );
         this.notificationMap.put(recommendationNotification.getCode(), recommendationNotification);
     }
