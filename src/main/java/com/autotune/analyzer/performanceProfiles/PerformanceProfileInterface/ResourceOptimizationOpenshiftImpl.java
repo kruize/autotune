@@ -16,6 +16,7 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -78,16 +79,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
         //TODO: Will be updated once algo is completed
         if (null != kruizeObject && null != experimentResultData) {
-            Double threshold = kruizeObject.getRecommendation_settings().getThreshold();
-            if (null == threshold) {
-                LOGGER.info("Threshold is not set, setting it to Default Threshold : " + AnalyzerConstants.RecommendationConstants.DEFAULT_THRESHOLD);
-                threshold = AnalyzerConstants.RecommendationConstants.DEFAULT_THRESHOLD;
-            }
+            RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
 
-            if (threshold.doubleValue() <= 0.0) {
-                LOGGER.error("Threshold is set to negative, setting it to Default Threshold : " + AnalyzerConstants.RecommendationConstants.DEFAULT_THRESHOLD);
-                threshold = AnalyzerConstants.RecommendationConstants.DEFAULT_THRESHOLD;
-            }
             for (K8sObject k8sObjectResultData : experimentResultData.getKubernetes_objects()) {
                 // We only support one K8sObject currently
                 K8sObject k8sObjectKruizeObject = kruizeObject.getKubernetes_objects().get(0);
@@ -107,7 +100,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             continue;
 
                         // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                        HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, threshold);
+                        HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, recommendationSettings);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
                         ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();

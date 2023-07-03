@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
@@ -52,7 +53,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, Double threshold) {
+    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, RecommendationSettings recommendationSettings) {
         // TODO: Needs to be implemented
         return null;
     }

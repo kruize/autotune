@@ -326,6 +326,16 @@ public class AnalyzerConstants {
                 RecommendationNotificationMsgConstant.CPU_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationTypes.NOTICE
         ),
+        CPU_REQUESTS_OPTIMISED(
+                NotificationCodes.CPU_REQUESTS_OPTIMISED,
+                RecommendationNotificationMsgConstant.CPU_REQUESTS_OPTIMISED,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        CPU_LIMITS_OPTIMISED(
+                NotificationCodes.CPU_LIMITS_OPTIMISED,
+                RecommendationNotificationMsgConstant.CPU_LIMITS_OPTIMISED,
+                RecommendationNotificationTypes.NOTICE
+        ),
         MEMORY_RECORDS_ARE_ZERO (
                 NotificationCodes.NOTICE_MEMORY_RECORDS_ARE_ZERO,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
@@ -334,6 +344,16 @@ public class AnalyzerConstants {
         MEMORY_RECORDS_NOT_AVAILABLE(
                 NotificationCodes.NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
                 RecommendationNotificationMsgConstant.MEMORY_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        MEMORY_REQUESTS_OPTIMISED(
+                NotificationCodes.MEMORY_REQUESTS_OPTIMISED,
+                RecommendationNotificationMsgConstant.MEMORY_REQUESTS_OPTIMISED,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        MEMORY_LIMITS_OPTIMISED(
+                NotificationCodes.MEMORY_LIMITS_OPTIMISED,
+                RecommendationNotificationMsgConstant.MEMORY_LIMITS_OPTIMISED,
                 RecommendationNotificationTypes.NOTICE
         ),
         CPU_REQUEST_NOT_SET (
@@ -539,11 +559,15 @@ public class AnalyzerConstants {
         public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
         public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
         public static final int NOTICE_CPU_RECORDS_NOT_AVAILABLE = 323003;
+        public static final int CPU_REQUESTS_OPTIMISED = 323004;
+        public static final int CPU_LIMITS_OPTIMISED = 323005;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 323999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 324000;
         public static final int NOTICE_MEMORY_RECORDS_ARE_ZERO = 324001;
         public static final int NOTICE_MEMORY_RECORDS_NOT_AVAILABLE = 324002;
+        public static final int MEMORY_REQUESTS_OPTIMISED = 324003;
+        public static final int MEMORY_LIMITS_OPTIMISED = 324004;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 324999;
 
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 325000;
@@ -773,7 +797,8 @@ public class AnalyzerConstants {
         public static final Double CPU_ONE_CORE = 1.0;
         public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
-        public static final Double DEFAULT_THRESHOLD = 0.1;
+        public static final Double DEFAULT_CPU_THRESHOLD = 0.1;
+        public static final Double DEFAULT_MEMORY_THRESHOLD = 0.1;
     }
 
     public static final class RecommendationNotificationMsgConstant {
@@ -800,6 +825,10 @@ public class AnalyzerConstants {
         public static final String NUM_PODS_CANNOT_BE_NEGATIVE = "Number of pods cannot be negative";
         public static final String HOURS_CANNOT_BE_ZERO = "Duration hours cannot be zero";
         public static final String HOURS_CANNOT_BE_NEGATIVE = "Duration hours cannot be negative";
+        public static final String CPU_REQUESTS_OPTIMISED = "Workload is optimised wrt CPU REQUESTS, no changes needed";
+        public static final String CPU_LIMITS_OPTIMISED = "Workload is optimised wrt CPU LIMITS, no changes needed";
+        public static final String MEMORY_REQUESTS_OPTIMISED = "Workload is optimised wrt MEMORY REQUESTS, no changes needed";
+        public static final String MEMORY_LIMITS_OPTIMISED = "Workload is optimised wrt MEMORY LIMITS, no changes needed";
 
         private RecommendationNotificationMsgConstant() {
 
