@@ -28,7 +28,11 @@ import java.sql.Timestamp;
  */
 @Entity
 @Table(name = "kruize_results",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"experiment_name", "interval_start_time", "interval_end_time"})})
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"experiment_name", "interval_start_time", "interval_end_time"})},
+        indexes = @Index(
+                name = "idx_result_experiment_name",
+                columnList = "experiment_name",
+                unique = false))
 public class KruizeResultsEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
