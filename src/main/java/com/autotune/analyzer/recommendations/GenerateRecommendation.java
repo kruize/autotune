@@ -55,7 +55,7 @@ public class GenerateRecommendation {
                     Timestamp minDate = containerData.getResults().keySet().stream().min(Timestamp::compareTo).get();
                     Timestamp monitorStartDate;
                     HashMap<String,HashMap<String, Recommendation>> recCatMap = new HashMap<String, HashMap<String, Recommendation>>();
-                    for (AnalyzerConstants.RecommendationCategory recommendationCategory : AnalyzerConstants.RecommendationCategory.values()) {
+                    for (RecommendationConstants.RecommendationCategory recommendationCategory : RecommendationConstants.RecommendationCategory.values()) {
                         HashMap<String, Recommendation> recommendationPeriodMap = new HashMap<>();
                         // TODO: Add all possible cases which are added in RecommendationCategory
                         switch (recommendationCategory) {
@@ -90,18 +90,18 @@ public class GenerateRecommendation {
                                         recommendationPeriodMap.put(recPeriod, recommendation);
                                     } else {
                                         RecommendationNotification notification = new RecommendationNotification(
-                                                AnalyzerConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                         recommendationPeriodMap.put(recPeriod, new Recommendation(notification));
                                     }
                                 }
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
                                 boolean notifyExist = false;
-                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
                                     notifyExist = true;
                                 if (!notifyExist) {
                                     RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            AnalyzerConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                            RecommendationConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                                     );
                                     containerData.getContainerRecommendations().getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                 }

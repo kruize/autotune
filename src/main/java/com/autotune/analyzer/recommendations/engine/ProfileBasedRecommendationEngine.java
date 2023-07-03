@@ -17,7 +17,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.Recommendation;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.common.data.result.ContainerData;
 
 import java.sql.Timestamp;
@@ -26,11 +26,11 @@ import java.util.HashMap;
 public class ProfileBasedRecommendationEngine implements KruizeRecommendationEngine{
     private String name;
     private String key;
-    private AnalyzerConstants.RecommendationCategory category;
+    private RecommendationConstants.RecommendationCategory category;
 
     public ProfileBasedRecommendationEngine() {
-        this.name = AnalyzerConstants.RecommendationEngine.EngineNames.PROFILE_BASED;
-        this.key = AnalyzerConstants.RecommendationEngine.EngineKeys.PROFILE_BASED_KEY;
+        this.name = RecommendationConstants.RecommendationEngine.EngineNames.PROFILE_BASED;
+        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.PROFILE_BASED_KEY;
     }
 
     public ProfileBasedRecommendationEngine(String name) {
@@ -48,7 +48,7 @@ public class ProfileBasedRecommendationEngine implements KruizeRecommendationEng
     }
 
     @Override
-    public AnalyzerConstants.RecommendationCategory getEngineCategory() {
+    public RecommendationConstants.RecommendationCategory getEngineCategory() {
         return this.category;
     }
 

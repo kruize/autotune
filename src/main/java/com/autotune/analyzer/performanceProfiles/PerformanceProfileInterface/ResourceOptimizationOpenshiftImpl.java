@@ -19,6 +19,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.recommendations.engine.DurationBasedRecommendationEngine;
@@ -110,13 +111,13 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
                         // check if notification exists
                         boolean notificationExist = false;
-                        if (containerRecommendations.getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                        if (containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
                             notificationExist = true;
 
                         // If there is no notification add one
                         if (!notificationExist) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                    AnalyzerConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                    RecommendationConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                             );
                             containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                         }
