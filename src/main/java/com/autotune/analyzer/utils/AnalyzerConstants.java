@@ -91,6 +91,9 @@ public class AnalyzerConstants {
     public static final int GC_THRESHOLD_COUNT = 100;
     public static final int DEFAULT_PAGE_VALUE = 1;
     public static final int DEFAULT_LIMIT_VALUE = 50;
+    public static final int DEFAULT_LIMIT_VALUE_WHEN_ALL_ARE_FALSE = 2150;
+    public static final int DEFAULT_LIMIT_VALUE_WHEN_SOME_OR_ALL_ARE_TRUE = 350;
+
 
 
     private AnalyzerConstants() {

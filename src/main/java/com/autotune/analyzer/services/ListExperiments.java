@@ -92,6 +92,8 @@ public class ListExperiments extends HttpServlet {
         // validate Query params
         int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
         int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
+        // set record limit based on the user's request
+        limit = setDefaultRecordsLimit(results, recommendations, limit);
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
             if (!KruizeSupportedTypes.QUERY_PARAMS_SUPPORTED.contains(param)) {
@@ -158,6 +160,18 @@ public class ListExperiments extends HttpServlet {
             );
         }
     }
+
+    private int setDefaultRecordsLimit(String results, String recommendations, int limit) {
+        if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(
+                AnalyzerConstants.BooleanString.FALSE)) {
+                limit = AnalyzerConstants.DEFAULT_LIMIT_VALUE_WHEN_ALL_ARE_FALSE;
+        }
+        else
+            limit = AnalyzerConstants.DEFAULT_LIMIT_VALUE_WHEN_SOME_OR_ALL_ARE_TRUE ;
+
+        return limit;
+    }
+
     public static int parseIntegerOrDefault(String value, int defaultValue) {
         try {
             int intValue = Integer.parseInt(value);
