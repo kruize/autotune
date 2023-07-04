@@ -18,6 +18,8 @@ import csv
 import json
 import os
 import re
+import time
+import subprocess
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -42,6 +44,33 @@ NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET                       = "523001"
 NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
 NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
 NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
+
+AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
+INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
+FORMAT_MISSING_IN_CPU_SECTION_CODE = "223003"
+INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
+
+AMOUNT_MISSING_IN_MEMORY_SECTION_CODE = "224001"
+INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
+FORMAT_MISSING_IN_MEMORY_SECTION_CODE = "224003"
+INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
+
+WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
+CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
+CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
+CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
+
+INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+
+CPU_REQUEST = "cpuRequest"
+CPU_LIMIT = "cpuLimit"
+CPU_USAGE = "cpuUsage"
+CPU_THROTTLE = "cpuThrottle"
+
+MEMORY_REQUEST = "memoryRequest"
+MEMORY_LIMIT = "memoryLimit"
+MEMORY_USAGE = "memoryUsage"
+MEMORY_RSS = "memoryRSS"
 
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
@@ -376,7 +405,7 @@ def validate_config(reco_config):
         assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
         assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
         assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
-        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
     notifications = duration_based_obj["notifications"]
@@ -402,3 +431,156 @@ def strip_double_quotes_for_field(json_file, field, filename):
         with open(filename, 'w') as file:
             file.write(data)
 
+def compare_json_files(json_file1, json_file2):
+    with open(json_file1, "r") as f1:
+        try:
+            json_data1 = json.load(f1)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data1 = {}
+        
+    with open(json_file2, "r") as f2:
+        try:
+            json_data2 = json.load(f2)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data2 = {}
+   
+    if json_data1 and json_data2:
+        if json_data1 == json_data2:
+            print("The two JSON files are identical!")
+            return True
+        else:
+            print("The two JSON files are different!")
+            return False
+    else:
+        print(f"JSON files are empty! Check the files {json_file1} and {json_file2}")
+        return False
+
+def get_kruize_pod(namespace):
+    command = f"kubectl get pod -n {namespace} | grep kruize | cut -d ' ' -f1"
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+    
+    pod_name = output.decode('utf-8')
+    print(f"pod name = {pod_name}")
+    return pod_name.rstrip()
+
+def delete_kruize_pod(namespace):
+    pod_name = get_kruize_pod(namespace) 
+ 
+    command = f"kubectl delete pod {pod_name} -n {namespace}"
+    print(command)
+
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    print(output.decode('utf-8'))
+
+
+def check_pod_running(namespace, pod_name):
+    command = f"kubectl get pod -n {namespace} | grep {pod_name}"
+
+    # set the maximum number of retries and the retry interval
+    MAX_RETRIES = 12
+    RETRY_INTERVAL = 5
+
+    # execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    # check if the pod is running
+    retry_count = 0
+    while "Running" not in output.decode('utf-8') and retry_count < MAX_RETRIES:
+        time.sleep(RETRY_INTERVAL)
+        output = subprocess.check_output(command, shell=True)
+        retry_count += 1
+
+    if retry_count == MAX_RETRIES:
+        print(f"Kruize Pod {pod_name} did not start within the specified time")
+        return False
+    else:
+        print(f"Kruize Pod {pod_name} is now running")
+        return True
+
+def get_index_of_metric(metrics: list, metric_name: str):
+    for i, metric in enumerate(metrics):
+        if metric["name"] == metric_name:
+            return i
+
+    return None
+
+def check_if_dict_has_same_keys(base_dict, test_dict):
+    # Return false if the key set is not equal
+    if set(base_dict.keys()) != set(test_dict.keys()):
+        return False
+
+    for key in base_dict.keys():
+        if key not in test_dict:
+            return False
+        if isinstance(base_dict[key], dict) and isinstance(test_dict[key], dict):
+            check_if_dict_has_same_keys(base_dict[key], test_dict[key])
+    return True
+
+def validate_variation(current_config: dict, recommended_config: dict, variation_config: dict):
+    # Check structure
+    assert check_if_dict_has_same_keys(recommended_config, variation_config) == True
+
+    # Create temporary dict if it's none jus to make process easier
+    if current_config == None:
+        current_config = {}
+
+    # Check values
+    REQUESTS_KEY = "requests"
+    LIMITS_KEY = "limits"
+    CPU_KEY = "cpu"
+    MEMORY_KEY = "memory"
+    AMOUNT_KEY = "amount"
+    FORMAT_KEY = "format"
+
+    # Initialise requests holders
+    current_requests: dict = None
+    recommended_requests: dict = None
+    variation_requests: dict = None
+
+    # Initialise limits holders
+    current_limits: dict = None
+    recommended_limits: dict = None
+    variation_limits: dict = None
+
+    if REQUESTS_KEY in current_config:
+        current_requests = current_config[REQUESTS_KEY]
+    if LIMITS_KEY in current_config:
+        current_limits = current_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in recommended_config:
+        recommended_requests = recommended_config[REQUESTS_KEY]
+    if LIMITS_KEY in recommended_config:
+        recommended_limits = recommended_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in variation_config:
+        variation_requests = variation_config[REQUESTS_KEY]
+    if LIMITS_KEY in variation_config:
+        variation_limits = variation_config[LIMITS_KEY]
+
+    if recommended_requests is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_requests:
+            if CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
+                current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_requests:
+            if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
+                current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
+    if recommended_limits is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_limits:
+            if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
+                current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
+            assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_limits:
+            if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
+                current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][AMOUNT_KEY] - current_memory_value

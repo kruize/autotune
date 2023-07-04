@@ -140,6 +140,22 @@ public class AnalyzerConstants {
         DB                  //Store only DB
     }
 
+    public enum RecommendationSection {
+        CURRENT_CONFIG(KruizeConstants.JSONKeys.CURRENT),
+        RECOMMENDATION_CONFIG(KruizeConstants.JSONKeys.CONFIG),
+        VARIATION(KruizeConstants.JSONKeys.VARIATION);
+
+        private String name;
+
+        private RecommendationSection(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
     public enum RecommendationCategory {
         DURATION_BASED(
                 KruizeConstants.JSONKeys.DURATION_BASED,
@@ -236,6 +252,66 @@ public class AnalyzerConstants {
                 NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
                 RecommendationNotificationTypes.INFO
+        ),
+        AMOUNT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_AMOUNT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        FORMAT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_FORMAT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        AMOUNT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_AMOUNT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        FORMAT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_FORMAT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        NUM_PODS_CANNOT_BE_ZERO(
+                NotificationCodes.NUM_PODS_CANNOT_BE_ZERO,
+                RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO,
+                RecommendationNotificationTypes.ERROR
+        ),
+        NUM_PODS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.NUM_PODS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationTypes.ERROR
+        ),
+        HOURS_CANNOT_BE_ZERO(
+                NotificationCodes.HOURS_CANNOT_BE_ZERO,
+                RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_ZERO,
+                RecommendationNotificationTypes.ERROR
+        ),
+        HOURS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.HOURS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationTypes.ERROR
         ),
         CPU_RECORDS_ARE_IDLE (
                 NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE,
@@ -402,12 +478,24 @@ public class AnalyzerConstants {
         public static final int SECTION_ERROR_SUBSECTION_DATA_END = 229999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 221000;
+        public static final int NUM_PODS_CANNOT_BE_ZERO = 221001;
+        public static final int NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
+        public static final int HOURS_CANNOT_BE_ZERO = 221003;
+        public static final int HOURS_CANNOT_BE_NEGATIVE = 221004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
+        public static final int AMOUNT_MISSING_IN_CPU_SECTION = 223001;
+        public static final int INVALID_AMOUNT_IN_CPU_SECTION = 223002;
+        public static final int FORMAT_MISSING_IN_CPU_SECTION = 223003;
+        public static final int INVALID_FORMAT_IN_CPU_SECTION = 223004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 223999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 224000;
+        public static final int AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
+        public static final int INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
+        public static final int FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
+        public static final int INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 224999;
 
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 225000;
@@ -692,7 +780,7 @@ public class AnalyzerConstants {
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
-        public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendation can be generated";
+        public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
         public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
@@ -700,7 +788,19 @@ public class AnalyzerConstants {
         public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
         public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
         public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
-        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics not available, No Memory Recommendations can be generated";
+        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics are not available, No Memory Recommendations can be generated";
+        public static final String AMOUNT_MISSING_IN_CPU_SECTION = "Amount field is missing in the CPU Section";
+        public static final String INVALID_AMOUNT_IN_CPU_SECTION = "Invalid Amount in CPU Section";
+        public static final String FORMAT_MISSING_IN_CPU_SECTION = "Format field is missing in CPU Section";
+        public static final String INVALID_FORMAT_IN_CPU_SECTION = "Invalid Format in CPU Section";
+        public static final String AMOUNT_MISSING_IN_MEMORY_SECTION = "Amount field is missing in the Memory Section";
+        public static final String INVALID_AMOUNT_IN_MEMORY_SECTION = "Invalid Amount in Memory Section";
+        public static final String FORMAT_MISSING_IN_MEMORY_SECTION = "Format field is missing in Memory Section";
+        public static final String INVALID_FORMAT_IN_MEMORY_SECTION = "Invalid Format in Memory Section";
+        public static final String NUM_PODS_CANNOT_BE_ZERO = "Number of pods cannot be zero";
+        public static final String NUM_PODS_CANNOT_BE_NEGATIVE = "Number of pods cannot be negative";
+        public static final String HOURS_CANNOT_BE_ZERO = "Duration hours cannot be zero";
+        public static final String HOURS_CANNOT_BE_NEGATIVE = "Duration hours cannot be negative";
 
         private RecommendationNotificationMsgConstant() {
 
@@ -1125,6 +1225,21 @@ public class AnalyzerConstants {
                 }
                 public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
             }
+        }
+
+        public static class InternalConstants {
+            private InternalConstants() {
+
+            }
+
+            public static final String CURRENT_CPU_REQUEST = "CURRENT_CPU_REQUEST";
+            public static final String CURRENT_MEMORY_REQUEST = "CURRENT_MEMORY_REQUEST";
+            public static final String CURRENT_CPU_LIMIT = "CURRENT_CPU_LIMIT";
+            public static final String CURRENT_MEMORY_LIMIT = "CURRENT_MEMORY_LIMIT";
+            public static final String RECOMMENDED_CPU_REQUEST = "RECOMMENDED_CPU_REQUEST";
+            public static final String RECOMMENDED_MEMORY_REQUEST = "RECOMMENDED_MEMORY_REQUEST";
+            public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
+            public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
         }
     }
 }
