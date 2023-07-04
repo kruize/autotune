@@ -469,7 +469,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     diffCpuRequestPercentage = diffCpuRequestPercentage * (-1);
                 }
                 if (diffCpuRequestPercentage <= cpuThreshold) {
+                    // Remove from Config
                     requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Variation
+                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     notifications.add(recommendationNotification);
                 }
@@ -485,7 +488,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     diffCPULimitPercentage = diffCPULimitPercentage * (-1);
                 }
                 if (diffCPULimitPercentage <= cpuThreshold) {
+                    // Remove from Config
                     limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Variation
+                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     notifications.add(recommendationNotification);
                 }
@@ -501,7 +507,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     diffMemRequestPercentage = diffMemRequestPercentage * (-1);
                 }
                 if (diffMemRequestPercentage <= memoryThreshold) {
+                    // Remove from Config
                     requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation
+                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     notifications.add(recommendationNotification);
                 }
@@ -517,7 +526,10 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                     diffMemLimitPercentage = diffMemLimitPercentage * (-1);
                 }
                 if (diffMemLimitPercentage <= cpuThreshold) {
+                    // Remove from Config
                     limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation
+                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     notifications.add(recommendationNotification);
                 }
