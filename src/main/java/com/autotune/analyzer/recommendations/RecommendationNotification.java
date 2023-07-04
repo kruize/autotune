@@ -24,7 +24,7 @@ public class RecommendationNotification {
     @Exclude
     private int code;
 
-    public RecommendationNotification(AnalyzerConstants.RecommendationNotification recommendationNotification) {
+    public RecommendationNotification(RecommendationConstants.RecommendationNotification recommendationNotification) {
         this.type = recommendationNotification.getType().getName();
         this.message = recommendationNotification.getMsg();
         this.code = recommendationNotification.getCode();

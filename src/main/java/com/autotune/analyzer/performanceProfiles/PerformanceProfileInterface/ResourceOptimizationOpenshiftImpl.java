@@ -16,8 +16,10 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.recommendations.engine.DurationBasedRecommendationEngine;
@@ -78,6 +80,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
         //TODO: Will be updated once algo is completed
         if (null != kruizeObject && null != experimentResultData) {
+            RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
+
             for (K8sObject k8sObjectResultData : experimentResultData.getKubernetes_objects()) {
                 // We only support one K8sObject currently
                 K8sObject k8sObjectKruizeObject = kruizeObject.getKubernetes_objects().get(0);
@@ -97,7 +101,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             continue;
 
                         // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                        HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime);
+                        HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, recommendationSettings);
                         if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                             continue;
                         ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
@@ -107,13 +111,13 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
                         // check if notification exists
                         boolean notificationExist = false;
-                        if (containerRecommendations.getNotificationMap().containsKey(AnalyzerConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                        if (containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
                             notificationExist = true;
 
                         // If there is no notification add one
                         if (!notificationExist) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                    AnalyzerConstants.RecommendationNotification.DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                    RecommendationConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
                             );
                             containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                         }

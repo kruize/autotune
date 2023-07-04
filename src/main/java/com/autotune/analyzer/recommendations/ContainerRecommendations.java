@@ -34,7 +34,7 @@ public class ContainerRecommendations {
         this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
 
         RecommendationNotification recommendationNotification = new RecommendationNotification(
-                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA
+                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
         );
         this.notificationMap.put(recommendationNotification.getCode(), recommendationNotification);
     }
@@ -49,8 +49,8 @@ public class ContainerRecommendations {
 
     public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data) {
         if (!data.isEmpty())
-            if (this.notificationMap.containsKey(AnalyzerConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA))
-                this.notificationMap.remove(AnalyzerConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA);
+            if (this.notificationMap.containsKey(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA))
+                this.notificationMap.remove(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA);
         this.data = data;
     }
 
