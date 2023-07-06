@@ -56,11 +56,6 @@ public class KruizeConstants {
         }
     }
 
-    public static final class Versions {
-        public static final String KRUIZE_RESULTS_API_VERSION = "1.0";
-        public static final String KRUIZE_RECOMMENDATION_API_VERSION = "1.0";
-    }
-
     public static final class HpoOperations {
         public static final String EXP_TRIAL_GENERATE_NEW = "EXP_TRIAL_GENERATE_NEW";
         public static final String EXP_TRIAL_GENERATE_SUBSEQUENT = "EXP_TRIAL_GENERATE_SUBSEQUENT";

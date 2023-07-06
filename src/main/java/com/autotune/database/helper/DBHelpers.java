@@ -219,7 +219,7 @@ public class DBHelpers {
                                 containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                             } else {
                                 ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
-                                containerRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());  //TODO should we set version from DB or set version to Latest ?
+                                containerRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());
                                 if (null == containerRecommendations.getData()) {
                                     containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                                 } else {
