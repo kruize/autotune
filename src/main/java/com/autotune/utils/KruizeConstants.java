@@ -39,6 +39,11 @@ public class KruizeConstants {
         }
     }
 
+    public static final class Versions {
+        public static final String KRUIZE_RESULTS_API_VERSION = "1.0";
+        public static final String KRUIZE_RECOMMENDATION_API_VERSION = "1.0";
+    }
+
     public static final class HpoOperations {
         public static final String EXP_TRIAL_GENERATE_NEW = "EXP_TRIAL_GENERATE_NEW";
         public static final String EXP_TRIAL_GENERATE_SUBSEQUENT = "EXP_TRIAL_GENERATE_SUBSEQUENT";
@@ -409,39 +414,34 @@ public class KruizeConstants {
             }
 
             public static final class DurationAmount {
-                private DurationAmount() {
-
-                }
-
                 public static final int SHORT_TERM_DURATION_DAYS = 1;
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
+                private DurationAmount() {
+
+                }
             }
 
             public static final class RecommendationDurationRanges {
-                private RecommendationDurationRanges() {
-
-                }
-
                 private static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 /* SHORT TERM */
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
-
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
-
                 /* MEDIUM TERM */
                 public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
-
                 /* LONG TERM */
                 public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+                private RecommendationDurationRanges() {
+
+                }
 
             }
         }

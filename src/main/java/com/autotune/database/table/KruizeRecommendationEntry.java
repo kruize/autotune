@@ -26,7 +26,7 @@ public class KruizeRecommendationEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recommendation_id;
-
+    private String version;
     private String experiment_name;
     private Timestamp interval_end_time;
     private String cluster_name;
@@ -63,5 +63,13 @@ public class KruizeRecommendationEntry {
 
     public void setExtended_data(JsonNode extended_data) {
         this.extended_data = extended_data;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }
