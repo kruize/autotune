@@ -97,7 +97,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());  // todo what if listRecommendations list two recommendation with different version
+                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
