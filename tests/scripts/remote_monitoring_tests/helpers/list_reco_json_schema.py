@@ -34,6 +34,9 @@ list_reco_json_schema = {
                   "recommendations": {
                     "type": "object",
                     "properties": {
+                      "version": {
+                        "type": "string"
+                      },
                       "notifications": {
                         "type": "object",
                         "items": {
@@ -1407,6 +1410,7 @@ list_reco_json_schema = {
                       }
                     },
                     "required": [
+                      "version",
                       "notifications",
                       "data"
                     ]
