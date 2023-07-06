@@ -958,6 +958,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "112101": {
                     "type": "info",
@@ -1073,6 +1074,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1125,6 +1127,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1139,6 +1142,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1213,6 +1217,7 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "112101": {
                     "type": "info",
@@ -1431,6 +1436,7 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1683,6 +1689,7 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
@@ -2101,6 +2108,7 @@ Returns all the results of that experiment
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
