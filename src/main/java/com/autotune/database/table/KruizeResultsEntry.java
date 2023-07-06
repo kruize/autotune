@@ -37,7 +37,7 @@ public class KruizeResultsEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long interval_id;
-
+    private String version;
     private String experiment_name;
     private Timestamp interval_start_time;
     private Timestamp interval_end_time;
@@ -93,5 +93,13 @@ public class KruizeResultsEntry {
 
     public void setMeta_data(JsonNode meta_data) {
         this.meta_data = meta_data;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

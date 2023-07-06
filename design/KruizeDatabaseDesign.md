@@ -380,7 +380,7 @@ monitoring, duration in minutes, extended data, and metadata.
    </td>
    <td>string
    </td>
-   <td>The version of the create experiment json template.
+   <td>The version of the update result json template.
    </td>
   </tr>
   <tr>
@@ -635,7 +635,7 @@ tree stored in the extended_data column, where the recommendations are stored on
    </td>
    <td>string
    </td>
-   <td>The version of the create experiment json template.
+   <td>The version of the recommendations json template.
    </td>
   </tr>
   <tr>
