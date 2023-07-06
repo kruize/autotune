@@ -45,9 +45,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.autotune.utils.KruizeConstants.Versions.KRUIZE_RECOMMENDATION_API_VERSION;
-import static com.autotune.utils.KruizeConstants.Versions.KRUIZE_RESULTS_API_VERSION;
-
 /**
  * Helper functions used by the DB to create entity objects.
  */
@@ -209,6 +206,7 @@ public class DBHelpers {
                                 continue;
 
                             ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
+
                             // Set container recommendations
                             if (null == containerAPIObject.getContainerRecommendations())
                                 continue;
@@ -218,6 +216,7 @@ public class DBHelpers {
                                 containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                             } else {
                                 ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+                                containerRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());
                                 if (null == containerRecommendations.getData()) {
                                     containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                                 } else {
@@ -297,7 +296,7 @@ public class DBHelpers {
                         .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
-                    kruizeResultsEntry.setVersion(KRUIZE_RESULTS_API_VERSION);
+                    kruizeResultsEntry.setVersion(experimentResultData.getVersion());
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
                     kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
                     kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
@@ -412,7 +411,7 @@ public class DBHelpers {
                     }
                     LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
-                    kruizeRecommendationEntry.setVersion(KRUIZE_RECOMMENDATION_API_VERSION);
+                    kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
                     Timestamp endInterval = null;

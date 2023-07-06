@@ -28,6 +28,23 @@ public class KruizeConstants {
     private KruizeConstants() {
     }
 
+
+    public static enum KRUIZE_RECOMMENDATION_API_VERSION {
+        V1_0("1.0"),
+        LATEST("1.0");
+        private final String versionNumber;
+
+        KRUIZE_RECOMMENDATION_API_VERSION(String versionNumber) {
+            this.versionNumber = versionNumber;
+        }
+
+        public String getVersionNumber() {
+            return versionNumber;
+        }
+
+    }
+
+
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */
@@ -37,11 +54,6 @@ public class KruizeConstants {
 
         private StartUpMode() {
         }
-    }
-
-    public static final class Versions {
-        public static final String KRUIZE_RESULTS_API_VERSION = "1.0";
-        public static final String KRUIZE_RECOMMENDATION_API_VERSION = "1.0";
     }
 
     public static final class HpoOperations {
@@ -417,6 +429,7 @@ public class KruizeConstants {
                 public static final int SHORT_TERM_DURATION_DAYS = 1;
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
+
                 private DurationAmount() {
 
                 }
@@ -439,6 +452,7 @@ public class KruizeConstants {
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+
                 private RecommendationDurationRanges() {
 
                 }

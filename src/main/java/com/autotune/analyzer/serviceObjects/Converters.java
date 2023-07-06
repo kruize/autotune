@@ -96,7 +96,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());  // todo what if listRecommendations list two recommendation with different version
+                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -207,6 +207,7 @@ public class Converters {
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
+            experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
             experimentResultData.setExperiment_name(updateResultsAPIObject.getExperimentName());
