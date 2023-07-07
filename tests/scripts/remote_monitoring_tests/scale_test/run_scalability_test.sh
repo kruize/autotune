@@ -54,7 +54,6 @@ mkdir -p "${SCALE_LOG_DIR}"
 
 num_exps_per_thread=$((num_exps / num_threads))
 for ((oloop=1; oloop<=num_days_of_res; oloop++));
-#for oloop in {1..15};
 do
 	exp_start=1
 	exp_end=${num_exps_per_thread}
@@ -71,7 +70,6 @@ do
 	# thread 100 - exp 9901 - 96 results, exp 9902 - 96 results ... exp 10000 - 96 results
 	# Wait for all 100 threads to complete
 	for ((iloop=1; iloop<=num_threads; iloop++));
-	#for iloop in {1..100};
 	do
 		day=$(((move_mins / 24 / 60) + 1))
 		echo "Kicking off experiments: ${exp_start}..${exp_end}: Day: ${day}. Data in ${logfile}"
@@ -87,7 +85,7 @@ do
 	echo
 	echo "###########################################################################"
 	echo "#                                                                         #"
-	echo "#     Kicked off 10000 experiments and data upload for day: ${oloop}      #"
+	echo "#     Kicked off ${num_exps} experiments and data upload for day: ${oloop}      #"
 	echo "#                                                                         #"
 	echo "###########################################################################"
 	echo
@@ -97,7 +95,7 @@ do
 	echo
 	echo "###########################################################################"
 	echo "#                                                                         #"
-	echo "#     Completed 10000 experiments and data upload for day: ${oloop}       #"
+	echo "#     Completed ${num_exps} experiments and data upload for day: ${oloop}       #"
 	echo "#                                                                         #"
 	echo "###########################################################################"
 	echo
