@@ -72,7 +72,6 @@ see [Update results](/design/UpdateResults.md)
 
 **Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that timestamp
 
-
 * Mandatory parameters in the input JSON:
  ```
  cpuUsage, memoryUsage, memoryRSS
