@@ -1041,7 +1041,7 @@ Returns the latest recommendations of all the experiments
                               }
                           }
                       },
-                      "notifications": []
+                      "notifications": {}
                     },
                     "medium_term": {
                       "pods_count": 0,
