@@ -18,8 +18,8 @@
                 "name": "{{cpuRequest_name}}",
                 "results": {
                   "aggregation_info": {
-                    "sum": "{{cpuRequest_sum}}",
-                    "avg": "{{cpuRequest_avg}}",
+                    "sum": {{cpuRequest_sum}},
+                    "avg": {{cpuRequest_avg}},
                     "format": "{{cpuRequest_format}}"
                   }
                 }
@@ -28,8 +28,8 @@
                 "name": "{{cpuLimit_name}}",
                 "results": {
                   "aggregation_info": {
-                    "sum": "{{cpuLimit_sum}}",
-                    "avg": "{{cpuLimit_avg}}",
+                    "sum": {{cpuLimit_sum}},
+                    "avg": {{cpuLimit_avg}},
                     "format": "{{cpuLimit_format}}"
                   }
                 }
@@ -38,10 +38,10 @@
                 "name": "{{cpuUsage_name}}",
                 "results": {
                   "aggregation_info": {
-                    "min": "{{cpuUsage_min}}",
-                    "max": "{{cpuUsage_max}}",
-                    "sum": "{{cpuUsage_sum}}",
-                    "avg": "{{cpuUsage_avg}}",
+                    "min": {{cpuUsage_min}},
+                    "max": {{cpuUsage_max}},
+                    "sum": {{cpuUsage_sum}},
+                    "avg": {{cpuUsage_avg}},
                     "format": "{{cpuUsage_format}}"
                   }
                 }
@@ -50,9 +50,9 @@
                 "name": "{{cpuThrottle_name}}",
                 "results": {
                   "aggregation_info": {
-                    "sum": "{{cpuThrottle_sum}}",
-                    "max": "{{cpuThrottle_max}}",
-                    "avg": "{{cpuThrottle_avg}}",
+                    "sum": {{cpuThrottle_sum}},
+                    "max": {{cpuThrottle_max}},
+                    "avg": {{cpuThrottle_avg}},
                     "format": "{{cpuThrottle_format}}"
                   }
                 }
@@ -61,8 +61,8 @@
                 "name": "{{memoryRequest_name}}",
                 "results": {
                   "aggregation_info": {
-                    "sum": "{{memoryRequest_sum}}",
-                    "avg": "{{memoryRequest_avg}}",
+                    "sum": {{memoryRequest_sum}},
+                    "avg": {{memoryRequest_avg}},
                     "format": "{{memoryRequest_format}}"
                   }
                 }
@@ -71,8 +71,8 @@
                 "name": "{{memoryLimit_name}}",
                 "results": {
                   "aggregation_info": {
-                    "sum": "{{memoryLimit_sum}}",
-                    "avg": "{{memoryLimit_avg}}",
+                    "sum": {{memoryLimit_sum}},
+                    "avg": {{memoryLimit_avg}},
                     "format": "{{memoryLimit_format}}"
                   }
                 }
@@ -81,10 +81,10 @@
                 "name": "{{memoryUsage_name}}",
                 "results": {
                   "aggregation_info": {
-                    "min": "{{memoryUsage_min}}",
-                    "max": "{{memoryUsage_max}}",
-                    "sum": "{{memoryUsage_sum}}",
-                    "avg": "{{memoryUsage_avg}}",
+                    "min": {{memoryUsage_min}},
+                    "max": {{memoryUsage_max}},
+                    "sum": {{memoryUsage_sum}},
+                    "avg": {{memoryUsage_avg}},
                     "format": "{{memoryUsage_format}}"
                   }
                 }
@@ -93,10 +93,10 @@
                 "name": "{{memoryRSS_name}}",
                 "results": {
                   "aggregation_info": {
-                    "min": "{{memoryRSS_min}}",
-                    "max": "{{memoryRSS_max}}",
-                    "sum": "{{memoryRSS_sum}}",
-                    "avg": "{{memoryRSS_avg}}",
+                    "min": {{memoryRSS_min}},
+                    "max": {{memoryRSS_max}},
+                    "sum": {{memoryRSS_sum}},
+                    "avg": {{memoryRSS_avg}},
                     "format": "{{memoryRSS_format}}"
                   }
                 }

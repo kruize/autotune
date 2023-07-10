@@ -104,7 +104,7 @@ public class Experimentator implements Runnable {
 
             KruizeObject kruizeObject = kruizeExperiment.getAutotuneObject();
             String experimentName = kruizeExperiment.getExperimentName();
-            String experimentId = kruizeObject.getExperimentId();
+            String experimentId = kruizeObject.getExperiment_id();
             PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
                     .get(kruizeObject.getPerformanceProfile());
             ObjectiveFunction objectiveFunction = performanceProfile.getSloInfo().getObjectiveFunction();

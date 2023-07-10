@@ -21,6 +21,9 @@ import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommenda
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -135,6 +138,22 @@ public class AnalyzerConstants {
         DB                  //Store only DB
     }
 
+    public enum RecommendationSection {
+        CURRENT_CONFIG(KruizeConstants.JSONKeys.CURRENT),
+        RECOMMENDATION_CONFIG(KruizeConstants.JSONKeys.CONFIG),
+        VARIATION(KruizeConstants.JSONKeys.VARIATION);
+
+        private String name;
+
+        private RecommendationSection(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
     public enum RecommendationCategory {
         DURATION_BASED(
                 KruizeConstants.JSONKeys.DURATION_BASED,
@@ -199,9 +218,10 @@ public class AnalyzerConstants {
 
     public enum RecommendationNotificationTypes {
         INFO("info", 1),
-        WARN("warning", 2),
-        ERROR("error", 3),
-        CRITICAL("critical", 4);
+        ERROR("error", 2),
+        NOTICE("notice", 3),
+        WARNING("warning", 4),
+        CRITICAL("critical", 5);
 
         private String name;
         private int severity;
@@ -217,6 +237,571 @@ public class AnalyzerConstants {
 
         public int getSeverity() {
             return severity;
+        }
+    }
+
+    public enum RecommendationNotification {
+        DURATION_BASED_RECOMMENDATIONS_AVAILABLE (
+                NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationTypes.INFO
+        ),
+        NOT_ENOUGH_DATA (
+                NotificationCodes.INFO_NOT_ENOUGH_DATA,
+                RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
+                RecommendationNotificationTypes.INFO
+        ),
+        AMOUNT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_AMOUNT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        FORMAT_MISSING_IN_CPU_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_FORMAT_IN_CPU_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_CPU_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        AMOUNT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.AMOUNT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_AMOUNT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_AMOUNT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        FORMAT_MISSING_IN_MEMORY_SECTION(
+                NotificationCodes.FORMAT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        INVALID_FORMAT_IN_MEMORY_SECTION(
+                NotificationCodes.INVALID_FORMAT_IN_MEMORY_SECTION,
+                RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION,
+                RecommendationNotificationTypes.ERROR
+        ),
+        NUM_PODS_CANNOT_BE_ZERO(
+                NotificationCodes.NUM_PODS_CANNOT_BE_ZERO,
+                RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO,
+                RecommendationNotificationTypes.ERROR
+        ),
+        NUM_PODS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.NUM_PODS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationTypes.ERROR
+        ),
+        HOURS_CANNOT_BE_ZERO(
+                NotificationCodes.HOURS_CANNOT_BE_ZERO,
+                RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_ZERO,
+                RecommendationNotificationTypes.ERROR
+        ),
+        HOURS_CANNOT_BE_NEGATIVE(
+                NotificationCodes.HOURS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_NEGATIVE,
+                RecommendationNotificationTypes.ERROR
+        ),
+        CPU_RECORDS_ARE_IDLE (
+                NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_IDLE,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        CPU_RECORDS_ARE_ZERO (
+                NotificationCodes.NOTICE_CPU_RECORDS_ARE_ZERO,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_ARE_ZERO,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        CPU_RECORDS_NOT_AVAILABLE(
+                NotificationCodes.NOTICE_CPU_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationMsgConstant.CPU_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        MEMORY_RECORDS_ARE_ZERO (
+                NotificationCodes.NOTICE_MEMORY_RECORDS_ARE_ZERO,
+                RecommendationNotificationMsgConstant.MEMORY_RECORDS_ARE_ZERO,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        MEMORY_RECORDS_NOT_AVAILABLE(
+                NotificationCodes.NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationMsgConstant.MEMORY_RECORDS_NOT_AVAILABLE,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        CPU_REQUEST_NOT_SET (
+                NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
+                RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        ),
+        MEMORY_REQUEST_NOT_SET (
+                NotificationCodes.CRITICAL_MEMORY_REQUEST_NOT_SET,
+                RecommendationNotificationMsgConstant.MEMORY_REQUEST_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        ),
+        CPU_LIMIT_NOT_SET (
+                NotificationCodes.WARNING_CPU_LIMIT_NOT_SET,
+                RecommendationNotificationMsgConstant.CPU_LIMIT_NOT_SET,
+                RecommendationNotificationTypes.WARNING
+        ),
+        MEMORY_LIMIT_NOT_SET (
+                NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET,
+                RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
+                RecommendationNotificationTypes.CRITICAL
+        );
+
+
+        private int code;
+        private String msg;
+        private RecommendationNotificationTypes type;
+
+        private RecommendationNotification (
+                int code,
+                String msg,
+                RecommendationNotificationTypes type
+        ) {
+            this.code = code;
+            this.msg = msg;
+            this.type = type;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public String getMsg() {
+            return msg;
+        }
+
+        public RecommendationNotificationTypes getType() {
+            return type;
+        }
+    }
+
+    public static final class NotificationCodes {
+        private NotificationCodes() {
+        }
+
+        // Section - Info:                  100000 - 199999
+        //      SubSection - General Info:  110000 - 119999
+        //          SubSystem - General:    110000 - 112999 (30% of availability)
+        //          SubSystem - Reserved:   113000 - 119999 (70% of availability)
+        //      SubSection - Data:          120000 - 129999
+        //          SubSystem - General:    120000 - 122999 (30% of availability)
+        //          SubSystem - CPU:        123000 - 123999 (10% of availability)
+        //          SubSystem - Memory      124000 - 124999 (10% of availability)
+        //          SubSystem - Network     125000 - 125999 (10% of availability)
+        //          SubSystem - Disk        126000 - 126999 (10% of availability)
+        //          SubSystem - Power       127000 - 127999 (10% of availability)
+
+        public static final int SECTION_INFO_START = 100000;
+        public static final int SECTION_INFO_END = 199999;
+
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_START = 110000;
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_END = 119999;
+
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 110000;
+        // Subsystem section: Recommendation Engines
+        // Range: 112000 - 112999 (Each subsection can be given 100 entries which fit total of 10 entries or engines)
+
+        // Subsystem subsection: Default Engine
+        // Range: 112000 - 112099
+        // Subsystem subsection: Duration Based Engine
+        // Range: 112100 - 112199
+        public static final int DURATION_BASED_ENGINE_START = 112100;
+        public static final int INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int DURATION_BASED_ENGINE_END = 112199;
+        // Subsystem subsection: Profile Based Engine
+        // Range: 112200 - 112299
+
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
+
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 113000;
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 119999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_START = 120000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_END = 129999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 120000;
+        public static final int INFO_NOT_ENOUGH_DATA = 120001;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 122999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 123000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 123999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 124000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 124999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 125000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 125999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 126000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 126999;
+
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 127000;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 127999;
+
+        // Section - Error:                 200000 - 299999
+        //      SubSection - General Info:  210000 - 219999
+        //          SubSystem - General:    210000 - 212999 (30% of availability)
+        //          SubSystem - Reserved:   213000 - 219999 (70% of availability)
+        //      SubSection - Data:          220000 - 229999
+        //          SubSystem - General:    221000 - 222999 (30% of availability)
+        //          SubSystem - CPU:        223000 - 223999 (10% of availability)
+        //          SubSystem - Memory:     224000 - 224999 (10% of availability)
+        //          SubSystem - Network:    225000 - 225999 (10% of availability)
+        //          SubSystem - Disk:       226000 - 226999 (10% of availability)
+        //          SubSystem - Power:      227000 - 227999 (10% of availability)
+
+        public static final int SECTION_ERROR_START = 200000;
+        public static final int SECTION_ERROR_END = 299999;
+
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_START = 210000;
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_END = 219999;
+
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 210000;
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 212999;
+
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 213000;
+        public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 219999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_START = 220000;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_END = 229999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 221000;
+        public static final int NUM_PODS_CANNOT_BE_ZERO = 221001;
+        public static final int NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
+        public static final int HOURS_CANNOT_BE_ZERO = 221003;
+        public static final int HOURS_CANNOT_BE_NEGATIVE = 221004;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
+        public static final int AMOUNT_MISSING_IN_CPU_SECTION = 223001;
+        public static final int INVALID_AMOUNT_IN_CPU_SECTION = 223002;
+        public static final int FORMAT_MISSING_IN_CPU_SECTION = 223003;
+        public static final int INVALID_FORMAT_IN_CPU_SECTION = 223004;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 223999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 224000;
+        public static final int AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
+        public static final int INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
+        public static final int FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
+        public static final int INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 224999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 225000;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 225999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 226000;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 226999;
+
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 227000;
+        public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 227999;
+
+        // Section - Notice:                300000 - 399999
+        //      SubSection - General Info:  310000 - 319999
+        //          SubSystem - General:    310000 - 312999 (30% of availability)
+        //          SubSystem - Reserved:   313000 - 319999 (70% of availability)
+        //      SubSection - Data:          320000 - 329999
+        //          SubSystem - General:    321000 - 322999 (30% of availability)
+        //          SubSystem - CPU:        323000 - 323999 (10% of availability)
+        //          SubSystem - Memory:     324000 - 324999 (10% of availability)
+        //          SubSystem - Network:    325000 - 325999 (10% of availability)
+        //          SubSystem - Disk:       326000 - 326999 (10% of availability)
+        //          SubSystem - Power:      327000 - 327999 (10% of availability)
+
+        public static final int SECTION_NOTICE_START = 300000;
+        public static final int SECTION_NOTICE_END = 399999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_START = 310000;
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_END = 319999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 310000;
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 312999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 313000;
+        public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 319999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_START = 320000;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_END = 329999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 321000;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 322999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 323000;
+        public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
+        public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
+        public static final int NOTICE_CPU_RECORDS_NOT_AVAILABLE = 323003;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 323999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 324000;
+        public static final int NOTICE_MEMORY_RECORDS_ARE_ZERO = 324001;
+        public static final int NOTICE_MEMORY_RECORDS_NOT_AVAILABLE = 324002;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 324999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 325000;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 325999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 326000;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 326999;
+
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 327000;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 327999;
+
+        // Section - Warning:               400000 - 499999
+        //      SubSection - General Info:  410000 - 419999
+        //          SubSystem - General:    410000 - 412999 (30% of availability)
+        //          SubSystem - Reserve:    413000 - 419999 (70% of availability)
+        //      SubSection - Data:          420000 - 429999
+        //          SubSystem - General:    421000 - 422999 (30% of availability)
+        //          SubSystem - CPU:        423000 - 423999 (10% of availability)
+        //          SubSystem - Memory:     424000 - 424999 (10% of availability)
+        //          SubSystem - Network:    425000 - 425999 (10% of availability)
+        //          SubSystem - Disk:       426000 - 426999 (10% of availability)
+        //          SubSystem - Power:      427000 - 427999 (10% of availability)
+
+        public static final int SECTION_WARNING_START = 400000;
+        public static final int SECTION_WARNING_END = 499999;
+
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_START = 410000;
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_END = 419999;
+
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 410000;
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 412999;
+
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 413000;
+        public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 419999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_START = 420000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_END = 429999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 421000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 422999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 423000;
+        public static final int WARNING_CPU_LIMIT_NOT_SET = 423001;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 423999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 424000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 424999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 425000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 425999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 426000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 426999;
+
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 427000;
+        public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 427999;
+
+        // Section - Critical:              500000 - 599999
+        //      SubSection - General Info:  510000 - 519999
+        //          SubSystem - General:    510000 - 512999 (30% of availability)
+        //          SubSystem - Reserve:    513000 - 519999 (70% of availability)
+        //      SubSection - Data:          520000 - 529999
+        //          SubSystem - General:    521000 - 522999 (30% of availability)
+        //          SubSystem - CPU:        523000 - 523999 (10% of availability)
+        //          SubSystem - Memory:     524000 - 524999 (10% of availability)
+        //          SubSystem - Network:    525000 - 525999 (10% of availability)
+        //          SubSystem - Disk:       526000 - 526999 (10% of availability)
+        //          SubSystem - Power:      527000 - 527999 (10% of availability)
+
+        public static final int SECTION_CRITICAL_START = 500000;
+        public static final int SECTION_CRITICAL_END = 599999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_START = 510000;
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_END = 519999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 510000;
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 512999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 513000;
+        public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 519999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_START = 520000;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_END = 529999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 521000;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 522999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 523000;
+        public static final int CRITICAL_CPU_REQUEST_NOT_SET = 523001;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 523999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 524000;
+        public static final int CRITICAL_MEMORY_REQUEST_NOT_SET = 524001;
+        public static final int CRITICAL_MEMORY_LIMIT_NOT_SET = 524002;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 524999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 525000;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 525999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 526000;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 526999;
+
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 527000;
+        public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 527999;
+
+        public static final HashMap<Integer, List<Integer>> CONTRADICTING_MAP = new HashMap<>();
+
+        // Add contents in static block instead of initialising every var as static
+        static {
+            // Contradicting Codes for NOT_ENOUGH_DATA
+            Integer[] CODES_CONTRADICT_NOT_ENOUGH_DATA = {
+                // Add things which contradict
+                // Currently it's added by default so no contradicting codes will be added here
+            };
+
+            CONTRADICTING_MAP.put(INFO_NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
+
+            // Contradicting Codes for DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+            Integer[] CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE)
+            );
+
+            // Contradicting Codes for CPU_RECORDS_ARE_IDLE
+            Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_CPU_RECORDS_ARE_IDLE,
+                    Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_IDLE)
+            );
+
+            // Contradicting Codes for CPU_RECORDS_ARE_ZERO
+            Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_CPU_RECORDS_ARE_ZERO,
+                    Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_ZERO)
+            );
+
+            // Contradicting Codes for CPU_RECORDS_ARE_MISSING
+            Integer[] CODES_CONTRADICT_CPU_RECORDS_ARE_MISSING = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_CPU_RECORDS_NOT_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_CPU_RECORDS_ARE_MISSING)
+            );
+
+            // Contradicting Codes for MEMORY_RECORDS_ARE_ZERO -> 1005
+            Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_MEMORY_RECORDS_ARE_ZERO,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_ZERO)
+            );
+
+
+            // Contradicting Codes for MEMORY_RECORDS_ARE_MISSING
+            Integer[] CODES_CONTRADICT_MEMORY_RECORDS_ARE_MISSING = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_MEMORY_RECORDS_NOT_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_RECORDS_ARE_MISSING)
+            );
+
+            // Contradicting Codes for CPU_REQUEST_NOT_SET
+            Integer[] CODES_CONTRADICT_CPU_REQUEST_NOT_SET = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CRITICAL_CPU_REQUEST_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_CPU_REQUEST_NOT_SET)
+            );
+
+            // Contradicting Codes for MEMORY_REQUEST_NOT_SET
+            Integer[] CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CRITICAL_MEMORY_REQUEST_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_REQUEST_NOT_SET)
+            );
+
+            // Contradicting Codes for CPU_LIMIT_NOT_SET
+            Integer[] CODES_CONTRADICT_CPU_LIMIT_NOT_SET = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    WARNING_CPU_LIMIT_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_CPU_LIMIT_NOT_SET)
+            );
+
+            // Contradicting Codes for MEMORY_LIMIT_NOT_SET
+            Integer[] CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET = {
+                    INFO_NOT_ENOUGH_DATA
+            };
+
+            CONTRADICTING_MAP.put(
+                    CRITICAL_MEMORY_LIMIT_NOT_SET,
+                    Arrays.asList(CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET)
+            );
+        }
+    }
+
+    public static final class RecommendationConstants {
+        public static final Double CPU_ZERO = 0.0;
+        public static final Double CPU_ONE_MILLICORE = 0.001;
+        public static final Double CPU_TEN_MILLICORE = 0.01;
+        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
+        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
+        public static final Double CPU_ONE_CORE = 1.0;
+        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
+        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
+    }
+
+    public static final class RecommendationNotificationMsgConstant {
+        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
+        public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
+        public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
+        public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
+        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
+        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
+        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
+        public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
+        public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
+        public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics are not available, No Memory Recommendations can be generated";
+        public static final String AMOUNT_MISSING_IN_CPU_SECTION = "Amount field is missing in the CPU Section";
+        public static final String INVALID_AMOUNT_IN_CPU_SECTION = "Invalid Amount in CPU Section";
+        public static final String FORMAT_MISSING_IN_CPU_SECTION = "Format field is missing in CPU Section";
+        public static final String INVALID_FORMAT_IN_CPU_SECTION = "Invalid Format in CPU Section";
+        public static final String AMOUNT_MISSING_IN_MEMORY_SECTION = "Amount field is missing in the Memory Section";
+        public static final String INVALID_AMOUNT_IN_MEMORY_SECTION = "Invalid Amount in Memory Section";
+        public static final String FORMAT_MISSING_IN_MEMORY_SECTION = "Format field is missing in Memory Section";
+        public static final String INVALID_FORMAT_IN_MEMORY_SECTION = "Invalid Format in Memory Section";
+        public static final String NUM_PODS_CANNOT_BE_ZERO = "Number of pods cannot be zero";
+        public static final String NUM_PODS_CANNOT_BE_NEGATIVE = "Number of pods cannot be negative";
+        public static final String HOURS_CANNOT_BE_ZERO = "Duration hours cannot be zero";
+        public static final String HOURS_CANNOT_BE_NEGATIVE = "Duration hours cannot be negative";
+
+        private RecommendationNotificationMsgConstant() {
+
         }
     }
 
@@ -586,28 +1171,6 @@ public class AnalyzerConstants {
         public static final Integer HUNDREDTH_PERCENTILE = 100;
     }
 
-    public static final class RecommendationConstants {
-        public static final Double CPU_ONE_MILLICORE = 0.001;
-        public static final Double CPU_TEN_MILLICORE = 0.01;
-        public static final Double CPU_HUNDRED_MILLICORE = 0.1;
-        public static final Double CPU_FIVE_HUNDRED_MILLICORE = 0.5;
-        public static final Double CPU_ONE_CORE = 1.0;
-        public static final Double MEM_USAGE_BUFFER_DECIMAL = 0.2;
-        public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
-    }
-
-    public static final class RecommendationNotificationMsgConstant {
-        public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_AVAILABLE = "Duration Based Recommendations Available";
-        public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
-        public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
-        public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
-
-        private RecommendationNotificationMsgConstant() {
-
-        }
-    }
-
     public static final class BooleanString {
         public static final String TRUE_DEFAULT = "True";
         public static final String FALSE_DEFAULT = "False";
@@ -645,6 +1208,34 @@ public class AnalyzerConstants {
             private EngineKeys() {
 
             }
+        }
+
+        public static class MinConstants {
+            private MinConstants() {
+
+            }
+
+            public static class CPU {
+                private CPU() {
+
+                }
+                public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
+            }
+        }
+
+        public static class InternalConstants {
+            private InternalConstants() {
+
+            }
+
+            public static final String CURRENT_CPU_REQUEST = "CURRENT_CPU_REQUEST";
+            public static final String CURRENT_MEMORY_REQUEST = "CURRENT_MEMORY_REQUEST";
+            public static final String CURRENT_CPU_LIMIT = "CURRENT_CPU_LIMIT";
+            public static final String CURRENT_MEMORY_LIMIT = "CURRENT_MEMORY_LIMIT";
+            public static final String RECOMMENDED_CPU_REQUEST = "RECOMMENDED_CPU_REQUEST";
+            public static final String RECOMMENDED_MEMORY_REQUEST = "RECOMMENDED_MEMORY_REQUEST";
+            public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
+            public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
         }
     }
 }

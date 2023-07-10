@@ -281,7 +281,7 @@ public class CommonUtils {
         return new Timestamp(cal.getTime().getTime());
     }
 
-    public static double percentile(double percentile, List<Double> items) {
+    public static Double percentile(double percentile, List<Double> items) {
         Collections.sort(items);
         return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }

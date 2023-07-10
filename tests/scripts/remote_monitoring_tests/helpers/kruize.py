@@ -20,8 +20,14 @@ import json
 import os
 import time
 
-def form_kruize_url(cluster_type):
+def form_kruize_url(cluster_type, SERVER_IP = None):
     global URL
+
+    if SERVER_IP != None:
+        URL = "http://" + str(SERVER_IP)
+        print ("\nKRUIZE AUTOTUNE URL = ", URL)
+        return
+
     if (cluster_type == "minikube"):
         port = subprocess.run(['kubectl -n monitoring get svc kruize --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort'], shell=True, stdout=subprocess.PIPE)
 
@@ -29,18 +35,15 @@ def form_kruize_url(cluster_type):
 
         ip = subprocess.run(['minikube ip'], shell=True, stdout=subprocess.PIPE)
         SERVER_IP=ip.stdout.decode('utf-8').strip('\n')
+        URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
 
     elif (cluster_type == "openshift"):
-        port = subprocess.run(['kubectl -n openshift-tuning get svc kruize --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort'], shell=True, stdout=subprocess.PIPE)
 
-        AUTOTUNE_PORT=port.stdout.decode('utf-8').strip('\n')
-        print("PORT = ", AUTOTUNE_PORT)
-
-        ip = subprocess.run(['kubectl get pods -l=app=kruize -o wide -n openshift-tuning -o=custom-columns=NODE:.spec.nodeName --no-headers'], shell=True, stdout=subprocess.PIPE)
+        subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
+        ip = subprocess.run(['oc status -n openshift-tuning | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3'], shell=True, stdout=subprocess.PIPE)
         SERVER_IP=ip.stdout.decode('utf-8').strip('\n')
         print("IP = ", SERVER_IP)
-
-    URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
+        URL = "http://" + str(SERVER_IP)
     print ("\nKRUIZE AUTOTUNE URL = ", URL)
 
 
@@ -92,7 +95,7 @@ def update_results(result_json_file):
     return response
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
-# Input Parameters: experiment input json
+# Input Parameters: experiment name, flag indicating latest result and monitoring end time
 def list_recommendations(experiment_name = None, latest = None, monitoring_end_time = None):
     PARAMS = ""
     print("\nListing the recommendations...")
@@ -180,3 +183,15 @@ def get_metrics():
     print(response.text)
     return response
 
+# Description: This function obtains the experiments from Kruize Autotune using listExperiments API
+# Input Parameters: None
+def list_experiments():
+    PARAMS = {'results': "true", 'recommendations': "true", "latest": "false"}
+    print("\nListing the experiments...")
+    url = URL + "/listExperiments"
+    print("URL = ", url)
+
+    response = requests.get(url = url, params = PARAMS)
+
+    print("Response status code = ", response.status_code)
+    return response

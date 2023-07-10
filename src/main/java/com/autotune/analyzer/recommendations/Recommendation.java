@@ -38,29 +38,26 @@ public class Recommendation {
     private int podsCount;
     private double confidence_level;
 
+    @SerializedName(KruizeConstants.JSONKeys.CURRENT)
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private List<RecommendationNotification> notifications;
+    private HashMap<Integer, RecommendationNotification> notifications;
 
     public Recommendation(Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.monitoringStartTime = monitoringStartTime;
         this.monitoringEndTime = monitoringEndTime;
-        notifications = new ArrayList<RecommendationNotification>();
-    }
-
-    public Recommendation(List<RecommendationNotification> notifications) {
-        notifications = new ArrayList<RecommendationNotification>();
-        if (null != notifications && notifications.size() > 0)
-            notifications.addAll(notifications);
+        notifications = new HashMap<Integer, RecommendationNotification>();
     }
 
     public Recommendation(RecommendationNotification notification) {
-        notifications = new ArrayList<RecommendationNotification>();
+        if (null == notifications)
+            notifications = new HashMap<Integer, RecommendationNotification>();
         if (null != notification)
-            notifications.add(notification);
+            notifications.put(notification.getCode(), notification);
     }
 
     public Recommendation() {
@@ -107,6 +104,14 @@ public class Recommendation {
         this.confidence_level = confidence_level;
     }
 
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfig() {
+        return currentConfig;
+    }
+
+    public void setCurrentConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig) {
+        this.currentConfig = currentConfig;
+    }
+
     public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getConfig() {
         return config;
     }
@@ -125,14 +130,14 @@ public class Recommendation {
 
     public void addNotification(RecommendationNotification notification) {
         if (null != notification)
-            this.notifications.add(notification);
+            this.notifications.put(notification.getCode(), notification);
     }
 
-    public List<RecommendationNotification> getNotifications() {
+    public HashMap<Integer, RecommendationNotification> getNotifications() {
         return notifications;
     }
 
-    public void setNotifications(List<RecommendationNotification> notifications) {
+    public void setNotifications(HashMap<Integer, RecommendationNotification> notifications) {
         this.notifications = notifications;
     }
 
@@ -145,6 +150,7 @@ public class Recommendation {
                 ", podsCount=" + podsCount +
                 ", confidence_level=" + confidence_level +
                 ", config=" + config +
+                ", current=" + currentConfig +
                 '}';
     }
 }

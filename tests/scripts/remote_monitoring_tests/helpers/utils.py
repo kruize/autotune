@@ -18,6 +18,8 @@ import csv
 import json
 import os
 import re
+import time
+import subprocess
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -29,6 +31,47 @@ SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
+
+# Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE  = "112101"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA                           = "120001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE                      = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO                      = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE                 = "323003"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO                   = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE              = "324002"
+NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET                       = "523001"
+NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
+NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
+NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
+
+AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
+INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
+FORMAT_MISSING_IN_CPU_SECTION_CODE = "223003"
+INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
+
+AMOUNT_MISSING_IN_MEMORY_SECTION_CODE = "224001"
+INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
+FORMAT_MISSING_IN_MEMORY_SECTION_CODE = "224003"
+INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
+
+WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
+CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
+CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
+CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
+
+INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+
+CPU_REQUEST = "cpuRequest"
+CPU_LIMIT = "cpuLimit"
+CPU_USAGE = "cpuUsage"
+CPU_THROTTLE = "cpuThrottle"
+
+MEMORY_REQUEST = "memoryRequest"
+MEMORY_LIMIT = "memoryLimit"
+MEMORY_USAGE = "memoryUsage"
+MEMORY_RSS = "memoryRSS"
+
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
@@ -71,100 +114,104 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
-        "version": "\"1.0\"",
-        "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "cluster_name": "\"cluster-one-division-bell\"",
-        "performance_profile": "\"resource-optimization-openshift\"",
-        "mode": "\"monitor\"",
-        "target_cluster": "\"remote\"",
-        "type": "\"deployment\"",
-        "name": "\"tfb-qrh-sample\"",
-        "namespace": "\"default\"",
-        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
-        "container_name": "\"tfb-server\"",
-        "measurement_duration": "\"15min\"",
-        "threshold": "\"0.1\""
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "cluster_name": "cluster-one-division-bell",
+        "performance_profile": "resource-optimization-openshift",
+        "mode": "monitor",
+        "target_cluster": "remote",
+        "type": "deployment",
+        "name": "tfb-qrh-sample",
+        "namespace": "default",
+        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+        "container_name": "tfb-server",
+        "measurement_duration": "15min",
+        "threshold": "0.1"
 }
 
 # version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
-        "version": "\"1.0\"",
-        "experiment_name": "\"quarkus-resteasy-kruize-min-http-response-time-db\"",
-        "interval_start_time": "\"2022-01-23T18:25:43.511Z\"",
-        "interval_end_time": "\"2022-01-23T18:40:43.511Z\"",
-        "type": "\"deployment\"",
-        "name": "\"tfb-qrh-sample\"",
-        "namespace": "\"default\"",
-        "container_image_name": "\"kruize/tfb-qrh:1.13.2.F_et17\"",
-        "container_name": "\"tfb-server\"",
-        "cpuRequest_name": "\"cpuRequest\"",
-        "cpuRequest_sum": "4.4",
-        "cpuRequest_avg": "1.1",
-        "cpuRequest_format": "\"cores\"",
-        "cpuLimit_name": "\"cpuLimit\"",
-        "cpuLimit_sum": "5.4",
-        "cpuLimit_avg": "22.1",
-        "cpuLimit_format": "\"cores\"",
-        "cpuUsage_name": "\"cpuUsage\"",
-        "cpuUsage_sum": "3.4",
-        "cpuUsage_max": "2.4",
-        "cpuUsage_avg": "1.5",
-        "cpuUsage_min": "0.5",
-        "cpuUsage_format": "\"cores\"",
-        "cpuThrottle_name": "\"cpuThrottle\"",
-        "cpuThrottle_sum": "1.09",
-        "cpuThrottle_max": "0.09",
-        "cpuThrottle_avg": "0.045",
-        "cpuThrottle_format": "\"cores\"",
-        "memoryRequest_name": "\"memoryRequest\"",
-        "memoryRequest_sum": "250.85",
-        "memoryRequest_avg": "51.1",
-        "memoryRequest_format": "\"MiB\"",
-        "memoryLimit_name": "\"memoryLimit\"",
-        "memoryLimit_sum": "500",
-        "memoryLimit_avg": "100",
-        "memoryLimit_format": "\"MiB\"",
-        "memoryUsage_name": "\"memoryUsage\"",
-        "memoryUsage_sum": "298.5",
-        "memoryUsage_max": "198.4",
-        "memoryUsage_avg": "41.5",
-        "memoryUsage_min": "21.5",
-        "memoryUsage_format": "\"MiB\"",
-        "memoryRSS_name": "\"memoryRSS\"",
-        "memoryRSS_sum": "225.64",
-        "memoryRSS_max": "125.54",
-        "memoryRSS_avg": "46.5",
-        "memoryRSS_min": "26.5",
-        "memoryRSS_format": "\"MiB\""
+        "version": "1.0",
+        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+        "interval_start_time": "2022-01-23T18:25:43.511Z",
+        "interval_end_time": "2022-01-23T18:40:43.511Z",
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+        "container_name": "tfb-server",
+        "cpuRequest_name": "cpuRequest",
+        "cpuRequest_sum": 4.4,
+        "cpuRequest_avg": 1.1,
+        "cpuRequest_format": "cores",
+        "cpuLimit_name": "cpuLimit",
+        "cpuLimit_sum": 5.4,
+        "cpuLimit_avg": 22.1,
+        "cpuLimit_format": "cores",
+        "cpuUsage_name": "cpuUsage",
+        "cpuUsage_sum": 3.4,
+        "cpuUsage_max": 2.4,
+        "cpuUsage_avg": 1.5,
+        "cpuUsage_min": 0.5,
+        "cpuUsage_format": "cores",
+        "cpuThrottle_name": "cpuThrottle",
+        "cpuThrottle_sum": 1.09,
+        "cpuThrottle_max": 0.09,
+        "cpuThrottle_avg": 0.045,
+        "cpuThrottle_format": "cores",
+        "memoryRequest_name": "memoryRequest",
+        "memoryRequest_sum": 250.85,
+        "memoryRequest_avg": 51.1,
+        "memoryRequest_format": "MiB",
+        "memoryLimit_name": "memoryLimit",
+        "memoryLimit_sum": 500,
+        "memoryLimit_avg": 100,
+        "memoryLimit_format": "MiB",
+        "memoryUsage_name": "memoryUsage",
+        "memoryUsage_sum": 298.5,
+        "memoryUsage_max": 198.4,
+        "memoryUsage_avg": 41.5,
+        "memoryUsage_min": 21.5,
+        "memoryUsage_format": "MiB",
+        "memoryRSS_name": "memoryRSS",
+        "memoryRSS_sum": 225.64,
+        "memoryRSS_max": 125.54,
+        "memoryRSS_avg": 46.5,
+        "memoryRSS_min": 26.5,
+        "memoryRSS_format": "MiB"
     }
 
-test_type = {"blank": "\"\"", "null": "null", "invalid": "\"xyz\""}
+test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
 def generate_test_data(csvfile, test_data):
     if os.path.isfile(csvfile):
         os.remove(csvfile)
-    f = open(csvfile, "a")
+    with open(csvfile, 'a') as f:
+        writer = csv.writer(f)
 
-    for key in test_data:
-        for t in test_type:
-            data_str = ""
+        for key in test_data:
+            for t in test_type:
+                data = []
 
-            test_name = t + "_" + key
-            status_code = "400"
+                test_name = t + "_" + key
+                status_code = 400
+                if test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name":
+                    status_code = 201
 
-            data_str = "\"" + test_name + "\"," + status_code
-            for k in test_data:
-                data_str += ","
-                if  k != key :
-                        data_str += test_data[k]
-                else:
-                        if any(re.findall(r'mean|sum|max|min|avg|number', k, re.IGNORECASE)):
-                            data_str += "-1"
-                        else :
-                           data_str += test_type[t]
+                data.append(test_name)
+                data.append(status_code)
+                for k in test_data:
+                    if  k != key :
+                            data.append(test_data[k])
+                    else:
+                        if any(re.findall(r'invalid.*sum|invalid.*max|invalid.*min|invalid.*avg', test_name, re.IGNORECASE)):
+                                data.append(-1)
+                        elif any(re.findall(r'blank.*sum|blank.*max|blank.*min|blank.*avg', test_name, re.IGNORECASE)):
+                                data.append("\"\"")
+                        else:
+                               data.append(test_type[t])
 
-            data_str += "\n"
-            f.write(data_str)
+                writer.writerow(data)
 
     f.close()
     test_data = read_test_data_from_csv(csvfile)
@@ -385,12 +432,12 @@ def validate_config(reco_config):
         assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
         assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
         assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
-        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
 
 def check_if_recommendations_are_present(duration_based_obj):
-    for notification in duration_based_obj["notifications"]:
-        if notification["message"] == NOT_ENOUGH_DATA_MSG:
-            return False
+    notifications = duration_based_obj["notifications"]
+    if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+        return False
     return True
 
 def time_diff_in_hours(interval_start_time, interval_end_time):
@@ -471,3 +518,169 @@ def match_metrics(output_metrics):
             metric_value = float(found_metric.split("Value:")[-1].strip())
             status_value = float(status_string.split("Value:")[-1].strip())
             assert abs(metric_value - status_value) <= tolerance, f"{variable_name} assertion failed. Expected: {status_value}, Actual: {metric_value}, Tolerance: {tolerance}"
+
+def strip_double_quotes_for_field(json_file, field, filename):
+
+    find = "\"{{" + field + "}}\""
+    replace = "{{" + field + "}}"
+    with open(json_file, 'r') as file:
+        data = file.read()
+
+        data = data.replace(find, replace)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+def compare_json_files(json_file1, json_file2):
+    with open(json_file1, "r") as f1:
+        try:
+            json_data1 = json.load(f1)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data1 = {}
+        
+    with open(json_file2, "r") as f2:
+        try:
+            json_data2 = json.load(f2)
+        except json.JSONDecodeError:
+            print("Received JSONDecodeError")
+            json_data2 = {}
+   
+    if json_data1 and json_data2:
+        if json_data1 == json_data2:
+            print("The two JSON files are identical!")
+            return True
+        else:
+            print("The two JSON files are different!")
+            return False
+    else:
+        print(f"JSON files are empty! Check the files {json_file1} and {json_file2}")
+        return False
+
+def get_kruize_pod(namespace):
+    command = f"kubectl get pod -n {namespace} | grep kruize | cut -d ' ' -f1"
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+    
+    pod_name = output.decode('utf-8')
+    print(f"pod name = {pod_name}")
+    return pod_name.rstrip()
+
+def delete_kruize_pod(namespace):
+    pod_name = get_kruize_pod(namespace) 
+ 
+    command = f"kubectl delete pod {pod_name} -n {namespace}"
+    print(command)
+
+    # Execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    print(output.decode('utf-8'))
+
+
+def check_pod_running(namespace, pod_name):
+    command = f"kubectl get pod -n {namespace} | grep {pod_name}"
+
+    # set the maximum number of retries and the retry interval
+    MAX_RETRIES = 12
+    RETRY_INTERVAL = 5
+
+    # execute the command and capture the output
+    output = subprocess.check_output(command, shell=True)
+
+    # check if the pod is running
+    retry_count = 0
+    while "Running" not in output.decode('utf-8') and retry_count < MAX_RETRIES:
+        time.sleep(RETRY_INTERVAL)
+        output = subprocess.check_output(command, shell=True)
+        retry_count += 1
+
+    if retry_count == MAX_RETRIES:
+        print(f"Kruize Pod {pod_name} did not start within the specified time")
+        return False
+    else:
+        print(f"Kruize Pod {pod_name} is now running")
+        return True
+
+def get_index_of_metric(metrics: list, metric_name: str):
+    for i, metric in enumerate(metrics):
+        if metric["name"] == metric_name:
+            return i
+
+    return None
+
+def check_if_dict_has_same_keys(base_dict, test_dict):
+    # Return false if the key set is not equal
+    if set(base_dict.keys()) != set(test_dict.keys()):
+        return False
+
+    for key in base_dict.keys():
+        if key not in test_dict:
+            return False
+        if isinstance(base_dict[key], dict) and isinstance(test_dict[key], dict):
+            check_if_dict_has_same_keys(base_dict[key], test_dict[key])
+    return True
+
+def validate_variation(current_config: dict, recommended_config: dict, variation_config: dict):
+    # Check structure
+    assert check_if_dict_has_same_keys(recommended_config, variation_config) == True
+
+    # Create temporary dict if it's none jus to make process easier
+    if current_config == None:
+        current_config = {}
+
+    # Check values
+    REQUESTS_KEY = "requests"
+    LIMITS_KEY = "limits"
+    CPU_KEY = "cpu"
+    MEMORY_KEY = "memory"
+    AMOUNT_KEY = "amount"
+    FORMAT_KEY = "format"
+
+    # Initialise requests holders
+    current_requests: dict = None
+    recommended_requests: dict = None
+    variation_requests: dict = None
+
+    # Initialise limits holders
+    current_limits: dict = None
+    recommended_limits: dict = None
+    variation_limits: dict = None
+
+    if REQUESTS_KEY in current_config:
+        current_requests = current_config[REQUESTS_KEY]
+    if LIMITS_KEY in current_config:
+        current_limits = current_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in recommended_config:
+        recommended_requests = recommended_config[REQUESTS_KEY]
+    if LIMITS_KEY in recommended_config:
+        recommended_limits = recommended_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in variation_config:
+        variation_requests = variation_config[REQUESTS_KEY]
+    if LIMITS_KEY in variation_config:
+        variation_limits = variation_config[LIMITS_KEY]
+
+    if recommended_requests is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_requests:
+            if CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
+                current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_requests:
+            if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
+                current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
+    if recommended_limits is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_limits:
+            if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
+                current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
+            assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+        if MEMORY_KEY in recommended_limits:
+            if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
+                current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][AMOUNT_KEY] - current_memory_value

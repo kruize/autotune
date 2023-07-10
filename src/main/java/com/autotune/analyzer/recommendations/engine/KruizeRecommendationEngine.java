@@ -27,5 +27,6 @@ public interface KruizeRecommendationEngine {
     public String getEngineKey();
     public AnalyzerConstants.RecommendationCategory getEngineCategory();
     public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime);
+    public void validateRecommendations();
     public boolean checkIfMinDataAvailable(ContainerData containerData);
 }
