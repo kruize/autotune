@@ -17,6 +17,16 @@ Consider an Flight Booking Application as shown in the figure. It consists of a 
 
 Tracking down performance issues in a dynamic microservices environment can be challenging and more often than not, stack or runtime specific optimizations are written off as too complex. This is because runtime optimization is a very involved effort and requires deep expertise. Common fixes are mostly limited to increasing pod resources, fixing application logic to make it more optimal or increasing horizontal pod auto-scaling. 
 
+##Usecases
+Kruize will support the following use cases
+Use Case 1: Autotune - Config Recommendation for a User Provided Performance Objective
+Use Case 2: Hyper Parameter Optimization as a Service - Performance
+Use Case 3: Monitor a deployment over a long term and provide recommendations to help reduce cost (Production scenario with no experiment trials)
+Remote (ROS)
+Local (ACM)
+Use Case 4: Provide tooling for automating performance regressions instead of manual testing (A/B/n testing as part of the build pipeline)
+
+
 ## How do I start ?
 
 Autotune helps to capture your performance tuning needs in a comprehensive way and runs experiments to provide recommendations that help achieve your slo goals. So how does it do it ? We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo for a quick start !
