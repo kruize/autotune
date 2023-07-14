@@ -4,15 +4,15 @@ import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 
 public class MetricPercentileResults {
-    private float percentile50;
-    private float percentile97;
-    private float percentile95;
-    private float percentile99;
-    private float percentile99Point9;
-    private float percentile99Point99;
-    private float percentile99Point999;
-    private float percentile99Point9999;
-    private float percentile100;
+    private Float percentile50;
+    private Float percentile97;
+    private Float percentile95;
+    private Float percentile99;
+    private Float percentile99Point9;
+    private Float percentile99Point99;
+    private Float percentile99Point999;
+    private Float percentile99Point9999;
+    private Float percentile100;
 
     public MetricPercentileResults() {
     }

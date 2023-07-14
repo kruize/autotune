@@ -16,18 +16,28 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.database.service.ExperimentDBService;
+import com.google.gson.annotations.SerializedName;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Initiates new experiment data validations and push into queue for worker to
@@ -36,8 +46,9 @@ import java.util.Map;
 public class ExperimentInitiator {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentInitiator.class);
+    List<UpdateResultsAPIObject> successUpdateResultsAPIObjects = new ArrayList<>();
+    List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
-
 
     /**
      * Initiate Experiment validation
@@ -68,36 +79,6 @@ public class ExperimentInitiator {
         }
     }
 
-    /**
-     * @param mainKruizeExperimentMap
-     * @param experimentResultDataList
-     * @param performanceProfilesMap
-     */
-    public ValidationOutputData validateAndUpdateResults(
-            Map<String, KruizeObject> mainKruizeExperimentMap,
-            List<ExperimentResultData> experimentResultDataList,
-            Map<String, PerformanceProfile> performanceProfilesMap) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        try {
-            ExperimentResultValidation experimentResultValidation = new ExperimentResultValidation(mainKruizeExperimentMap, performanceProfilesMap);
-            experimentResultValidation.validate(experimentResultDataList, performanceProfilesMap);
-            if (experimentResultValidation.isSuccess()) {
-                ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-                experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, experimentResultDataList);
-                validationOutputData.setSuccess(true);
-            } else {
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage("Validation failed: " + experimentResultValidation.getErrorMessage());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Validate and push experiment falied: " + e.getMessage());
-            validationOutputData.setSuccess(false);
-            validationOutputData.setMessage("Exception occurred while validating the result data: " + e.getMessage());
-            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-        return validationOutputData;
-    }
-
     // Generate recommendations and add it to the kruize object
     public void generateAndAddRecommendations(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
@@ -110,6 +91,72 @@ public class ExperimentInitiator {
             throw new Exception("No Recommendation Engine mapping found for performance profile: " +
                     kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");
         }
+    }
+
+    public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
+        List<UpdateResultsAPIObject> failedDBObjects = new ArrayList<>();
+        Validator validator = Validation.byProvider(HibernateValidator.class)
+                .configure()
+                .messageInterpolator(new ParameterMessageInterpolator())
+                .failFast(false)
+                .buildValidatorFactory()
+                .getValidator();
+
+        for (UpdateResultsAPIObject object : updateResultsAPIObjects) {
+            Set<ConstraintViolation<UpdateResultsAPIObject>> violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
+            if (violations.isEmpty()) {
+                successUpdateResultsAPIObjects.add(object);
+            } else {
+                List<String> errorReasons = new ArrayList<>();
+                for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
+                    String propertyPath = violation.getPropertyPath().toString();
+                    if (null != propertyPath && propertyPath.length() != 0) {
+                        errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
+                    } else {
+                        errorReasons.add(violation.getMessage());
+                    }
+                }
+                object.setErrorReasons(errorReasons);
+                failedUpdateResultsAPIObjects.add(object);
+            }
+        }
+        List<ExperimentResultData> resultDataList = new ArrayList<>();
+        successUpdateResultsAPIObjects.forEach(
+                (successObj) -> {
+                    resultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(successObj));
+                }
+        );
+
+        if (successUpdateResultsAPIObjects.size() > 0) {
+            failedDBObjects = new ExperimentDBService().addResultsToDB(resultDataList);
+            failedUpdateResultsAPIObjects.addAll(failedDBObjects);
+        }
+    }
+
+    public String getSerializedName(String fieldName, Class<?> targetClass) {
+        Class<?> currentClass = targetClass;
+        while (currentClass != null) {
+            try {
+                Field field = currentClass.getDeclaredField(fieldName);
+                SerializedName annotation = field.getAnnotation(SerializedName.class);
+                if (annotation != null) {
+                    fieldName = annotation.value();
+                }
+            } catch (NoSuchFieldException e) {
+                // Field not found in the current class
+                // Move up to the superclass
+                currentClass = currentClass.getSuperclass();
+            }
+        }
+        return fieldName;
+    }
+
+    public List<UpdateResultsAPIObject> getSuccessUpdateResultsAPIObjects() {
+        return successUpdateResultsAPIObjects;
+    }
+
+    public List<UpdateResultsAPIObject> getFailedUpdateResultsAPIObjects() {
+        return failedUpdateResultsAPIObjects;
     }
 
 
