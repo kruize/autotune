@@ -262,4 +262,21 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return recommendationEntries;
     }
+
+    @Override
+    public List<String> loadClusterNames() throws Exception {
+        List<String> distinctClusterNames;
+        Timer.Sample timerLoadAllExp = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<String> query = session.createQuery(DBConstants.SQLQUERY.SELECT_DISTINCT_CLUSTER_NAMES_FROM_EXPERIMENTS,
+                    String.class);
+            distinctClusterNames = query.getResultList();
+        } catch (Exception e) {
+            LOGGER.error("Unable to fetch cluster names : {}", e.getMessage());
+            throw new Exception("Error while fetching the cluster names from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllExp) timerLoadAllExp.stop(MetricsConfig.timerLoadAllExp);
+        }
+        return distinctClusterNames;
+    }
 }

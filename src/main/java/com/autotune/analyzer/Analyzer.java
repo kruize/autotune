@@ -50,6 +50,7 @@ public class Analyzer {
         context.addServlet(ListRecommendations.class, ServerContext.RECOMMEND_RESULTS);
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
+        context.addServlet(ListClusters.class, ServerContext.LIST_CLUSTER_NAMES);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

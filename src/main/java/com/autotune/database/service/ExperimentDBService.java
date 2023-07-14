@@ -287,4 +287,8 @@ public class ExperimentDBService {
         // TODO   update into database
         return true;
     }
+
+    public List<String> loadClusterNames() throws Exception {
+        return experimentDAO.loadClusterNames();
+    }
 }

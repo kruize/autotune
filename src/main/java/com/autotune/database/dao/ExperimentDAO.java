@@ -44,4 +44,5 @@ public interface ExperimentDAO {
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
+    List<String> loadClusterNames() throws Exception;
 }
