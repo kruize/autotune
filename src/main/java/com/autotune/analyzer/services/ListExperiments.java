@@ -292,7 +292,7 @@ public class ListExperiments extends HttpServlet {
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadAllResults(mKruizeExperimentMap);
             else
-                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName, null, null);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved results data: {} ", e.getMessage());
@@ -352,7 +352,7 @@ public class ListExperiments extends HttpServlet {
                                 ko,
                                 getLatest,
                                 false,
-                                null);
+                                (String) null);
 
                 mergeRecommendationsInKruizeObject(listRecommendationsAPIObject, ko);
             } catch (Exception e) {

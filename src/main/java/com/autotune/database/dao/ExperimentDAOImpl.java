@@ -358,10 +358,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception {
         KruizeResultsEntry kruizeResultsEntry = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
-                    .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                    .getSingleResult();
+            if (null != interval_end_time) {
+                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                        .getSingleResult();
+            }else{
+                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
+                        .getSingleResult();
+            }
         } catch (NoResultException e) {
             LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
             kruizeResultsEntry = null;

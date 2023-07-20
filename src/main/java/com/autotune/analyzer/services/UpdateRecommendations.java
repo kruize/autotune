@@ -17,6 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
@@ -74,25 +75,29 @@ public class UpdateRecommendations extends HttpServlet {
         }
 
         // Check if interval_end_time is provided
-        if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
+        /*
+            if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
             return;
-        }
+        }*/
 
         LOGGER.debug("experiment_name : {} and interval_end_time : {}", experiment_name, intervalEndTimeStr);
         // Convert interval_endtime to UTC date format
-        if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
-            sendErrorResponse(
-                    response,
-                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
-            );
-            return;
+        Timestamp interval_end_time = null ;
+        if (intervalEndTimeStr != null ) {
+            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
+                );
+                return;
+            }
+            //Check if data exist
+            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
         }
 
-        //Check if data exist
-        Timestamp interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
         ExperimentResultData experimentResultData = null;
         try {
             experimentResultData = new ExperimentDBService().getExperimentResultData(experiment_name, interval_end_time);
@@ -129,7 +134,7 @@ public class UpdateRecommendations extends HttpServlet {
                     if (success)
                         sendSuccessResponse(response, kruizeObject, interval_end_time);
                     else {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
                     }
                 }
             } catch (Exception e) {

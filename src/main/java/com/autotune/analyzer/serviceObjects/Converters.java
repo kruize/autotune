@@ -1,6 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -273,31 +275,6 @@ public class Converters {
 				clonedContainerData.getContainerRecommendations().setData(recommendations);
 			}
 			return clonedContainerData;
-		}
-		public static void getLatestResults(ContainerData containerData) {
-//			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-			if (null != containerData) {
-				HashMap<Timestamp, IntervalResults> results = containerData.getResults();
-				Timestamp latestTimestamp = null;
-				List<Timestamp> tempList = new ArrayList<>();
-				for (Timestamp timestamp : results.keySet()) {
-					if (null == latestTimestamp) {
-						latestTimestamp = timestamp;
-					} else {
-						if (timestamp.after(latestTimestamp)) {
-							tempList.add(latestTimestamp);
-							latestTimestamp = timestamp;
-						} else {
-							tempList.add(timestamp);
-						}
-					}
-				}
-				for (Timestamp timestamp : tempList) {
-					results.remove(timestamp);
-				}
-                containerData.setResults(results);
-			}
-//			return containerData;
 		}
 
         public static void getLatestResults(ContainerData containerData) {
