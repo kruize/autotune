@@ -174,7 +174,6 @@ public class UpdateRecommendations extends HttpServlet {
                         experiment_name,
                         interval_start_time,
                         interval_end_time);
-
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
 
