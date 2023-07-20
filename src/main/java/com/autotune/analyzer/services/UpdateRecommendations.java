@@ -194,3 +194,4 @@ public class UpdateRecommendations extends HttpServlet {
         response.sendError(httpStatusCode, errorMsg);
     }
 }
+

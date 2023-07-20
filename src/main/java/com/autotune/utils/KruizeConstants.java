@@ -458,6 +458,7 @@ public class KruizeConstants {
                 private RecommendationDurationRanges() {
 
                 }
+
             }
         }
 
