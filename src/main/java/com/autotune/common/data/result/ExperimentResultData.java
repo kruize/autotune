@@ -29,6 +29,8 @@ import java.util.Objects;
  */
 public class ExperimentResultData {
     private String experiment_name;
+
+    private String version;
     private String trialNumber;
     @SerializedName("INTERVAL_START_TIME")
     private Timestamp intervalStartTime;
@@ -103,6 +105,14 @@ public class ExperimentResultData {
 
     public void setKubernetes_objects(List<K8sObject> kubernetes_objects) {
         this.kubernetes_objects = kubernetes_objects;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     @Override
