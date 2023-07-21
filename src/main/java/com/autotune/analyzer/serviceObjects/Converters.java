@@ -251,7 +251,12 @@ public class Converters {
 			return listRecommendationsAPIObject;
 		}
 
-		public static ContainerData getLatestRecommendations(ContainerData containerData) {
+        /**
+         *
+         * @param containerData
+         * @return
+         */
+        public static ContainerData getLatestRecommendations(ContainerData containerData) {
 			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
 			if (null != clonedContainerData) {
 				HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
@@ -277,6 +282,10 @@ public class Converters {
 			return clonedContainerData;
 		}
 
+        /**
+         *
+         * @param containerData
+         */
         public static void getLatestResults(ContainerData containerData) {
             if (null != containerData) {
                 HashMap<Timestamp, IntervalResults> results = containerData.getResults();
