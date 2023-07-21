@@ -319,7 +319,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
-        String statusValue = "success";
+        String statusValue = "failure";
         Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             recommendationEntries = session.createQuery(
