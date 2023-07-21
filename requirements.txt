@@ -1,0 +1,4 @@
+pytest
+requests
+jinja2
+json

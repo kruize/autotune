@@ -17,6 +17,37 @@ Consider an Flight Booking Application as shown in the figure. It consists of a 
 
 Tracking down performance issues in a dynamic microservices environment can be challenging and more often than not, stack or runtime specific optimizations are written off as too complex. This is because runtime optimization is a very involved effort and requires deep expertise. Common fixes are mostly limited to increasing pod resources, fixing application logic to make it more optimal or increasing horizontal pod auto-scaling. 
 
+<<<<<<< Updated upstream
+=======
+## Usecases
+Kruize will support the following use cases
+
+**Use Case 1:** **Autotune - Config Recommendation for a User Provided Performance Objective** 
+
+In this use case, the user provides a deployment name and a performance objective. The performance objective consists of metrics that either needs to be maximized or minimized.
+
+The goal is to find the config supplied by HPO that best optimizes the user provided objective. The config can consist of both resource requests and limits and Runtime parameters. A config recommendation will be provided at the end of the experiment.
+
+**Use Case 2:** **Hyper Parameter Optimization as a Service - Performance**
+
+In this use case, provide HPO as an independent entity that can be used outside of Kubernetes. This is very useful for arriving at OS tuning (RHEL Performance Profiles, TuneD and NTO), Tuning OpenShift itself, Thresholds for perf tests in CI/CD pipelines etc (as part of Integrated Performance Threshold Testing - IPT)
+
+**Use Case 3:** **Monitor a deployment over a long term and provide recommendations to help reduce cost (Production scenario with no experiment trials)** 
+
+1.Remote 
+
+2.Local
+In this use case, the SRE will provide a deployment that needs to be monitored over a long period of time. The intention is to better understand the variance of the incoming load conditions and provide recommendations on the container and heap sizing in an effort to reduce costs.
+
+**Use Case 4:** **Provide tooling for automating performance regressions instead of manual testing (A/B/n testing as part of the build pipeline)**
+
+In this use case, the user provides a deployment name, two docker images and metrics to be monitored during the course of the experiment. The goal is to deploy the docker images in two separate trials respectively, one after the other.
+
+It will monitor the given metrics during both the trials and report the results at the end of each trial. The results from each of the trials can then be used to compare the two trials and determine if there has been a variation in the performance objective and the quantum of the same.
+
+For more information refer the file [USECASES](USECASES.md)
+
+>>>>>>> Stashed changes
 ## How do I start ?
 
 Autotune helps to capture your performance tuning needs in a comprehensive way and runs experiments to provide recommendations that help achieve your slo goals. So how does it do it ? We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo for a quick start !

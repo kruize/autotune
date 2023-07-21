@@ -1,0 +1,976 @@
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+configmap "autotune-config" deleted
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+configmap "autotune-config" deleted
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+persistentvolume "postgres-pv" deleted
+persistentvolumeclaim "postgres-pvc" deleted
+deployment.apps "postgres-deployment" deleted
+service "postgres-service" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+persistentvolume "postgres-pv" deleted
+persistentvolumeclaim "postgres-pvc" deleted
+deployment.apps "postgres-deployment" deleted
+service "postgres-service" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+persistentvolume "postgres-pv" deleted
+persistentvolumeclaim "postgres-pvc" deleted
+deployment.apps "postgres-deployment" deleted
+service "postgres-service" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+customresourcedefinition.apiextensions.k8s.io "kruizeperformanceprofiles.recommender.com" deleted
+
+Removing autotune
+deployment.apps "autotune" deleted
+service "autotune" deleted
+persistentvolume "postgres-pv" deleted
+persistentvolumeclaim "postgres-pvc" deleted
+deployment.apps "postgres-deployment" deleted
+service "postgres-service" deleted
+
+Removing autotune service account
+serviceaccount "autotune-sa" deleted
+
+Removing autotune role
+clusterrole.rbac.authorization.k8s.io "autotune-cr" deleted
+
+Removing autotune rolebinding
+clusterrolebinding.rbac.authorization.k8s.io "autotune-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-prometheus-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-docker-crb" deleted
+clusterrolebinding.rbac.authorization.k8s.io "autotune-scc-crb" deleted
+
+Removing autotune serviceMonitor
+servicemonitor.monitoring.coreos.com "autotune" deleted
+prometheus.monitoring.coreos.com "prometheus" deleted
+
+Removing AutotuneConfig objects
+kruizelayer.recommender.com "container" deleted
+kruizelayer.recommender.com "hotspot" deleted
+kruizelayer.recommender.com "openj9" deleted
+kruizelayer.recommender.com "quarkus" deleted
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+customresourcedefinition.apiextensions.k8s.io "autotunes.recommender.com" deleted
+
+Removing AutotuneConfig CRD
+customresourcedefinition.apiextensions.k8s.io "autotuneconfigs.recommender.com" deleted
+
+Removing AutotuneQueryVariables CRD
+customresourcedefinition.apiextensions.k8s.io "autotunequeryvariables.recommender.com" deleted
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+configmap "kruizeconfig" deleted
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory

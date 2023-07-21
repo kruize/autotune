@@ -1,0 +1,61 @@
+Removing Autotune dependencies...
+CMD = ./deploy.sh -c minikube -m autotune -t
+Info: deleting prometheus...
+###   Removing cadvisor and prometheus./scripts/prometheus_on_minikube.sh: line 99: pushd: minikube_downloads: No such file or directory
+
+Removing cadvisor
+./scripts/prometheus_on_minikube.sh: line 102: pushd: cadvisor/deploy/kubernetes/base: No such file or directory
+error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/rpancham/Documents/Kruize/autotune/autotune'
+No resources found
+./scripts/prometheus_on_minikube.sh: line 104: popd: directory stack empty
+
+Removing prometheus
+./scripts/prometheus_on_minikube.sh: line 108: pushd: kube-prometheus/manifests: No such file or directory
+./scripts/prometheus_on_minikube.sh: line 111: popd: directory stack empty
+./scripts/prometheus_on_minikube.sh: line 112: popd: directory stack empty
+done
+
+Info: Checking prerequisites...
+Deploying autotune...
+Installing Prometheus on minikube
+Deploying autotune autotune
+Kruize deploy command - ./deploy.sh -c minikube -i kruize/autotune_operator:test -d  -m autotune
+
+###   Installing autotune for minikube
+
+
+Info: Checking pre requisites for minikube...
+Prometheus is installed and running.
+Create autotune namespace monitoring
+Error from server (AlreadyExists): namespaces "monitoring" already exists
+Info: One time setup - Create a service account to deploy autotune
+serviceaccount/autotune-sa created
+customresourcedefinition.apiextensions.k8s.io/autotunes.recommender.com created
+customresourcedefinition.apiextensions.k8s.io/autotuneconfigs.recommender.com created
+customresourcedefinition.apiextensions.k8s.io/autotunequeryvariables.recommender.com created
+customresourcedefinition.apiextensions.k8s.io/kruizeperformanceprofiles.recommender.com created
+clusterrole.rbac.authorization.k8s.io/autotune-cr created
+clusterrolebinding.rbac.authorization.k8s.io/autotune-crb created
+clusterrolebinding.rbac.authorization.k8s.io/autotune-prometheus-crb created
+clusterrolebinding.rbac.authorization.k8s.io/autotune-docker-crb created
+clusterrolebinding.rbac.authorization.k8s.io/autotune-scc-crb created
+autotunequeryvariable.recommender.com/minikube created
+servicemonitor.monitoring.coreos.com/autotune created
+prometheus.monitoring.coreos.com/prometheus created
+
+Creating environment variable in minikube cluster using configMap
+error: the path "-m/minikube-config.yaml" does not exist
+
+Deploying AutotuneConfig objects
+kruizelayer.recommender.com/container created
+kruizelayer.recommender.com/hotspot created
+kruizelayer.recommender.com/openj9 created
+kruizelayer.recommender.com/quarkus created
+
+Deploying Performance Profile objects
+kruizeperformanceprofile.recommender.com/resource-optimization-openshift created
+Info: Deploying autotune yaml to minikube cluster
+deployment.apps/autotune created
+service/autotune created
+Info: Waiting for autotune to come up.....
+autotune-7c7f597f4-dlc9r               0/2     ContainerCreating   0               4s

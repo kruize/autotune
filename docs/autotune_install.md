@@ -25,13 +25,41 @@ $ git clone git@github.com:kruize/benchmarks.git
 
 # Install the required software
 
+Minikube setup
+Only a specific version of minikube v1.26.0 is compatible with prometheus version v0.8.0, hence preferred to install this version on your machine by:
+curl -LO https://github.com/kubernetes/minikube/releases/download/v1.26.1/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+
 ## Kubernetes
 
 Autotune can be deployed to a supported Kubernetes cluster. We currently support Minikube.
 
 ### Install kubectl and minikube
 
+**Install kubectl**
+
+**`curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl`**
+
+**`chmod +x ./kubectl`**
+
+
+**`sudo mv ./kubectl /usr/local/bin/kubectl`**
+
+**`kubectl version --client`**
+
+**Minikube setup**
+
 Minikube setup with 8 CPUs and 16 GB Memory is recommended for autotune deployment. After setting up minikube, install prometheus from autotune repo with the following command
+
+Only a specific version of minikube v1.26.0 is compatible with prometheus version v0.8.0, hence preferred to install this version on
+your machine by:
+
+**`curl -LO https://github.com/kubernetes/minikube/releases/download/v1.26.1/minikube-linux-amd64`**
+
+**`sudo install minikube-linux-amd64 /usr/local/bin/minikube`**
+
+**`minikube start --cpus=8 --memory=16384M`**
 
 ```
 $ ./scripts/prometheus_on_minikube.sh -as 
@@ -55,6 +83,8 @@ prometheus-k8s-1                       1/2     Running   1          106s
 
 Build autotune docker image 'autotune:test' with the following command
 
+
+
 ```
 $ ./build.sh -i autotune:test
 
@@ -65,6 +95,20 @@ $ ./build.sh -i autotune:test
 	-v: build as specific autotune version
 
 ```
+
+After building the docker image push the image 
+
+1.Login into the docker account
+
+click here to create an account in docker hub [Docker](https://hub.docker.com/) 
+
+**`docker login`**
+
+**`docker tag autotune:test docker.io/username/autotune:test`**
+
+2.Push the Docker image
+
+**`docker push uname/autotune:test`**
 
 Note - You can use the 'dev friendly mode' option to quickly build the autotune docker image using the cached layers.
 

@@ -1,0 +1,27 @@
+###   Removing autotune for minikube
+Removing Performance Profile
+
+Removing autotune
+
+Removing autotune service account
+
+Removing autotune role
+
+Removing autotune rolebinding
+
+Removing autotune serviceMonitor
+
+Removing AutotuneConfig objects
+
+Removing AutotuneQueryVariable objects
+
+Removing Autotune configmap
+
+Removing Autotune CRD
+
+Removing AutotuneConfig CRD
+
+Removing AutotuneQueryVariables CRD
+rm: cannot remove './manifests/autotune/autotune-operator-deployment.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-operator-rolebinding.yaml': No such file or directory
+rm: cannot remove './manifests/autotune/autotune-query-variables/query-variable.yaml': No such file or directory
