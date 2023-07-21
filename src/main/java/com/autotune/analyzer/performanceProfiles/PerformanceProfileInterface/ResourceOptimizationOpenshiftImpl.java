@@ -91,6 +91,14 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
                         KruizeConstants.DateFormats.MINUTES_FOR_DAY)
                 / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+        if (null != interval_start_time) {
+            long diffMilliseconds = interval_end_time.getTime() - interval_start_time.getTime();
+            long minutes = diffMilliseconds / (60 * 1000);
+            int addToLimitRows = (int) (minutes / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+            LOGGER.debug("add to limit rows set to {}", addToLimitRows);
+            limitRows = limitRows + addToLimitRows;
+        }
+        LOGGER.debug("Limit rows set to {}", limitRows);
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
@@ -165,9 +173,11 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             // set the container recommendations in container object
                             containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
                         }
-                   }
+                    }
                 }
             }
         }
     }
+
+
 }
