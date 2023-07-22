@@ -21,14 +21,15 @@ To monitor the performance of these APIs, you can use the following metrics:
 
 Here are some sample metrics for the mentioned APIs which can run in Prometheus:
 
-- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST"}`: Returns the count of invocations for the `createExperiment` API.
-- `kruizeAPI_seconds_sum{api="createExperiment", application="Kruize", method="POST"}`: Returns the sum of the time taken by the `createExperiment` API.
-- `kruizeAPI_seconds_max{api="createExperiment", application="Kruize", method="POST"}`: Returns the maximum time taken by the `createExperiment` API.
+- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the count of successful invocations for the `createExperiment` API.
+- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST", status="failure"}`: Returns the count of failed invocations for the `createExperiment` API.
+- `kruizeAPI_seconds_sum{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the sum of the time taken by the successful invocations of `createExperiment` API.
+- `kruizeAPI_seconds_max{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the maximum time taken by the successful invocation of `createExperiment` API.
 
 By changing the value of the `api` and `method` label, you can gather metrics for other Kruize APIs such as `listRecommendations`, `listExperiments`, and `updateResults`.
 
 Here is a sample command to collect the metric through `curl`
-- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_seconds_sum{api="listRecommendations", application="Kruize", method="GET"}' ${PROMETHEUS_URL} | jq` : 
+- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_seconds_sum{api="listRecommendations", application="Kruize", method="GET", status="success"}' ${PROMETHEUS_URL} | jq` : 
 Returns the sum of the time taken by `listRecommendations` API.
   
 Sample Output:
@@ -84,14 +85,15 @@ To monitor the performance of these methods, you can use the following metrics:
 
 Here are some sample metrics for the mentioned DB methods which can run in Prometheus:
 
-- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments"}`: Number of times the `loadAllExperiments` method was called.
-- `kruizeDB_seconds_sum{application="Kruize", method="loadAllExperiments"}`: Total time taken by the `loadAllExperiments` method.
-- `kruizeDB_seconds_max{application="Kruize", method="loadAllExperiments"}`: Maximum time taken by the `loadAllExperiments` method.
+- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments", status="success"}`: Number of successful invocations of `loadAllExperiments` method.
+- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments", status="success"}`: Number of failed invocations of `loadAllExperiments` method.
+- `kruizeDB_seconds_sum{application="Kruize", method="loadAllExperiments", status="success"}`: Total time taken by the `loadAllExperiments` method which were success.
+- `kruizeDB_seconds_max{application="Kruize", method="loadAllExperiments", status="success"}`: Maximum time taken by the `loadAllExperiments` method which were success.
 
 By changing the value of the `method` label, you can gather metrics for other KruizeDB metrics.
 
 Here is a sample command to collect the metric through `curl`
-- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeDB_seconds_sum{method="loadRecommendationsByExperimentName"}' ${PROMETHEUS_URL} | jq` :
+- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeDB_seconds_sum{application="Kruize", method="loadRecommendationsByExperimentName", status="success"}' ${PROMETHEUS_URL} | jq` :
   Returns the sum of the time taken by `loadRecommendationsByExperimentName` method.
 
 Sample Output:
