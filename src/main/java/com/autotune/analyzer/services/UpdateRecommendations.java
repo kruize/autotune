@@ -75,11 +75,10 @@ public class UpdateRecommendations extends HttpServlet {
         }
 
         // Check if interval_end_time is provided
-        /*
-            if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
+        if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
             return;
-        }*/
+        }
 
         LOGGER.debug("experiment_name : {} and interval_end_time : {}", experiment_name, intervalEndTimeStr);
         // Convert interval_endtime to UTC date format
