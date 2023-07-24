@@ -92,11 +92,10 @@ public class UpdateRecommendations extends HttpServlet {
         }
 
         // Check if interval_end_time is provided
-        /*
-            if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
+        if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
             return;
-        }*/
+        }
 
         if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
             sendErrorResponse(
