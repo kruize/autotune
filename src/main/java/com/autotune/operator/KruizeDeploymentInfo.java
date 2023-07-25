@@ -65,6 +65,7 @@ public class KruizeDeploymentInfo {
     public static String database_ssl_mode;
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
+    public static Integer bulk_update_results_limit = 100;
 
     public static int generate_recommendations_date_range_limit_in_days = 15;
 

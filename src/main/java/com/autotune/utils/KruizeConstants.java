@@ -377,6 +377,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
      */
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
@@ -393,6 +394,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
      */
     public static final class KRUIZE_CONFIG_ENV_NAME {
         public static final String K8S_TYPE = "k8stype";
@@ -404,6 +406,7 @@ public class KruizeConstants {
         public static final String CLUSTER_TYPE = "clustertype";
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
+        public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
