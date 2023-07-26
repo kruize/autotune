@@ -50,7 +50,7 @@ public class ListClusters extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         List<String> clusterNamesList;
 
-        // get cluster list from the DB
+        // get cluster list from the DB and send JSON array as the response
         try {
             clusterNamesList = new ExperimentDBService().loadClusterNames();
             Gson gson = new Gson();

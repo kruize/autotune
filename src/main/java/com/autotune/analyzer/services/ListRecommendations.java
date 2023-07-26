@@ -23,9 +23,9 @@ import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -34,8 +34,6 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,22 +184,8 @@ public class ListRecommendations extends HttpServlet {
                 }
             }
             if (!error) {
-                List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
-                for (KruizeObject ko : kruizeObjectList) {
-                    try {
-                        LOGGER.debug(ko.getKubernetes_objects().toString());
-                        ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                                                                        convertKruizeObjectToListRecommendationSO(
-                                                                            ko,
-                                                                            getLatest,
-                                                                            checkForTimestamp,
-                                                                            monitoringEndTimestamp);
-                        recommendationList.add(listRecommendationsAPIObject);
-                    } catch (Exception e) {
-                        LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
-                    }
-                }
-
+                List<ListRecommendationsAPIObject> recommendationList = buildAPIResponse(kruizeObjectList,
+                        checkForTimestamp, getLatest, monitoringEndTimestamp);
                 ExclusionStrategy strategy = new ExclusionStrategy() {
                     @Override
                     public boolean shouldSkipField(FieldAttributes field) {
@@ -235,6 +219,28 @@ public class ListRecommendations extends HttpServlet {
         } finally {
             if (null != timerListRec) timerListRec.stop(MetricsConfig.timerListRec);
         }
+    }
+
+    protected static List<ListRecommendationsAPIObject> buildAPIResponse(List<KruizeObject> kruizeObjectList, boolean checkForTimestamp, boolean getLatest,
+                                                                         Timestamp monitoringEndTimestamp) {
+
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        for (KruizeObject ko : kruizeObjectList) {
+            try {
+                LOGGER.debug(ko.getKubernetes_objects().toString());
+                ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
+                        convertKruizeObjectToListRecommendationSO(
+                                ko,
+                                getLatest,
+                                checkForTimestamp,
+                                monitoringEndTimestamp);
+                recommendationList.add(listRecommendationsAPIObject);
+            } catch (Exception e) {
+                LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+            }
+        }
+
+        return recommendationList;
     }
 
     private void sendSuccessResponse(HttpServletResponse response) throws IOException {

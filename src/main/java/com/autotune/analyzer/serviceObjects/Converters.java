@@ -8,6 +8,8 @@ import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -25,10 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Converters {
@@ -288,6 +287,172 @@ public class Converters {
 
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
+        }
+
+        public static SummarizeAPIObject convertListRecommendationAPIObjToSummarizeAPIObj(List<ListRecommendationsAPIObject> recommendations) {
+            SummarizeAPIObject summarize = new SummarizeAPIObject();
+            summarize.setClusterName(recommendations.get(0).getClusterName());
+
+            HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data = new HashMap<>();
+
+            for (ListRecommendationsAPIObject recObj : recommendations) {
+                for (KubernetesAPIObject obj : recObj.getKubernetesObjects()) {
+                    for (ContainerAPIObject container : obj.getContainerAPIObjects()) {
+
+                        ContainerRecommendations crecs = container.getContainerRecommendations();
+
+                        for (Map.Entry<Timestamp, HashMap<String, HashMap<String, Recommendation>>> entry : crecs.getData().entrySet()) {
+                            Timestamp timestamp = entry.getKey();
+
+                            HashMap<String, HashMap<String, RecommendationSummary>> summaries = data.get(timestamp);
+                            if (summaries == null) {
+                                summaries = new HashMap<>();
+                                data.put(timestamp, summaries);
+                            }
+
+                            HashMap<String, HashMap<String, Recommendation>> recs = entry.getValue();
+
+                            for (Map.Entry<String, HashMap<String, Recommendation>> r : recs.entrySet()) {
+                                String recKey = r.getKey();
+
+                                HashMap<String, Recommendation> recMap = r.getValue();
+
+                                HashMap<String, RecommendationSummary> recSummaries = summaries.computeIfAbsent(recKey, k -> new HashMap<>());
+
+                                for (Map.Entry<String, Recommendation> recEntry : recMap.entrySet()) {
+                                    String key = recEntry.getKey();
+                                    Recommendation rec = recEntry.getValue();
+                                    LOGGER.info("Recommendation = {}", rec);
+
+                                    RecommendationSummary summary = recSummaries.get(key);
+                                    if (summary == null) {
+                                        summary = createSummaryFromRecommendation(rec);
+                                        recSummaries.put(key, summary);
+                                    } else {
+                                        mergeRecommendationIntoSummary(rec, summary);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            summarize.setData(data);
+            return summarize;
+        }
+
+        private static RecommendationSummary createSummaryFromRecommendation(Recommendation rec) {
+
+            RecommendationSummary summary = new RecommendationSummary();
+
+            summary.setCurrentConfig(cloneConfig(rec.getCurrentConfig()));
+            summary.setConfig(cloneConfig(rec.getConfig()));
+
+            HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changes =
+                    new HashMap<>();
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> increase =
+                    cloneConfig(rec.getVariation());
+            changes.put(AnalyzerConstants.ResourceChange.increase, increase);
+
+            summary.setChange(changes);
+
+            summary.setNotifications(rec.getNotifications());
+
+            return summary;
+        }
+
+        private static HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> cloneConfig(
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> clone =
+                    new HashMap<>();
+
+            for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> entry : config.entrySet()) {
+                AnalyzerConstants.ResourceSetting key = entry.getKey();
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> value = entry.getValue();
+
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> clonedValue =
+                        new HashMap<>();
+
+                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> v : value.entrySet()) {
+                    AnalyzerConstants.RecommendationItem k = v.getKey();
+                    RecommendationConfigItem c = v.getValue();
+
+                    // create deep copy of RecommendationConfigItem
+                    RecommendationConfigItem copiedConfig = new RecommendationConfigItem();
+                    copiedConfig.setAmount(c.getAmount());
+                    copiedConfig.setFormat(c.getFormat());
+                    copiedConfig.setErrorMsg(c.getErrorMsg());
+
+                    clonedValue.put(k, copiedConfig);
+                }
+
+                clone.put(key, clonedValue);
+            }
+
+            return clone;
+        }
+
+        private static void mergeRecommendationIntoSummary(Recommendation rec, RecommendationSummary summary) {
+
+            mergeConfig(rec.getCurrentConfig(), summary.getCurrentConfig());
+            mergeConfig(rec.getConfig(), summary.getConfig());
+
+            HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changes =
+                    summary.getChange();
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> increase =
+                    changes.get(AnalyzerConstants.ResourceChange.increase);
+            mergeConfig(rec.getVariation(), increase);
+
+            mergeNotifications(rec.getNotifications(), summary.getNotifications());
+
+        }
+
+        private static void mergeConfig(
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> src,
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> dest) {
+
+            for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> entry : src.entrySet()) {
+                AnalyzerConstants.ResourceSetting key = entry.getKey();
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> srcValue = entry.getValue();
+
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> destValue = dest.get(key);
+                if (destValue == null) {
+                    destValue = new HashMap<>();
+                    dest.put(key, destValue);
+                }
+
+                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> v : srcValue.entrySet()) {
+                    AnalyzerConstants.RecommendationItem k = v.getKey();
+                    RecommendationConfigItem srcConfig = v.getValue();
+
+                    RecommendationConfigItem destConfig = destValue.get(k);
+                    if (destConfig == null) {
+                        destConfig = new RecommendationConfigItem();
+                        destValue.put(k, destConfig);
+                    }
+
+                    // merge fields from srcConfig into destConfig
+                    destConfig.setAmount(srcConfig.getAmount());
+                    destConfig.setFormat(srcConfig.getFormat());
+                    destConfig.setErrorMsg(srcConfig.getErrorMsg());
+                }
+            }
+        }
+
+        private static void mergeNotifications(
+                HashMap<Integer, RecommendationNotification> src,
+                HashMap<Integer, RecommendationNotification> dest) {
+
+            for (Map.Entry<Integer, RecommendationNotification> entry : src.entrySet()) {
+                Integer key = entry.getKey();
+                RecommendationNotification notification = entry.getValue();
+
+                dest.put(key, notification);
+            }
         }
     }
 }

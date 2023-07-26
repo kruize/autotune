@@ -51,6 +51,7 @@ public class Analyzer {
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
         context.addServlet(ListClusters.class, ServerContext.LIST_CLUSTER_NAMES);
+        context.addServlet(Summarize.class, ServerContext.SUMMARIZE);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

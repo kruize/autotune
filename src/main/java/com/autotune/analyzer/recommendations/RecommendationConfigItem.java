@@ -48,4 +48,21 @@ public class RecommendationConfigItem {
     public String getFormat() {
         return format;
     }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    @Override
+    public String toString() {
+        return "RecommendationConfigItem{" +
+                "amount=" + amount +
+                ", format='" + format + '\'' +
+                ", errorMsg='" + errorMsg + '\'' +
+                '}';
+    }
 }
