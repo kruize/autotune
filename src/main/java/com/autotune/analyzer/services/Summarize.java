@@ -16,23 +16,15 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.Recommendation;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.serviceObjects.SummarizeAPIObject;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.analyzer.utils.ServiceHelpers;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +34,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -67,7 +59,6 @@ public class Summarize extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         List<ListRecommendationsAPIObject> recommendationList;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
-        List<KruizeObject> kruizeObjectList =  new ArrayList<>();
 
         // get Recommendations data from the DB
         try {
@@ -76,10 +67,12 @@ public class Summarize extends HttpServlet {
             LOGGER.error("Loading saved recommendations failed: {} ", e.getMessage());
         }
         // Add all experiments to list
-        kruizeObjectList.addAll(mKruizeExperimentMap.values());
+        List<KruizeObject> kruizeObjectList = new ArrayList<>(mKruizeExperimentMap.values());
         try {
+            // get the latest recommendations
             recommendationList = ListRecommendations.buildAPIResponse(kruizeObjectList, false,
                     true, null);
+            // convert the recommendation response to summarizeAPI Object
             SummarizeAPIObject summarizeAPIObject = Converters.KruizeObjectConverters.
                     convertListRecommendationAPIObjToSummarizeAPIObj(recommendationList);
 
@@ -98,7 +91,7 @@ public class Summarize extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerListRec) timerListRec.stop(MetricsConfig.timerListRec);
+            timerListRec.stop(MetricsConfig.timerListRec);
         }
     }
 

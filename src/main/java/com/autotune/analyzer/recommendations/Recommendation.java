@@ -20,9 +20,7 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Storage object for recommendation
@@ -151,6 +149,8 @@ public class Recommendation {
                 ", confidence_level=" + confidence_level +
                 ", config=" + config +
                 ", current=" + currentConfig +
+                ", variation=" + variation +
+                ", notifications=" + notifications +
                 '}';
     }
 }
