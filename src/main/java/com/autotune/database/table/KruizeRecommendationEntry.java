@@ -8,12 +8,25 @@ import org.hibernate.type.SqlTypes;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "kruize_recommendations")
+@Table(name = "kruize_recommendations", indexes = {
+        @Index(
+                name = "idx_recommendation_experiment_name",
+                columnList = "experiment_name",
+                unique = false),
+        @Index(
+                name = "idx_recommendation_cluster_name",
+                columnList = "cluster_name",
+                unique = false),
+        @Index(
+                name = "idx_recommendation_interval_end_time",
+                columnList = "interval_end_time",
+                unique = false)
+})
 public class KruizeRecommendationEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recommendation_id;
-
+    private String version;
     private String experiment_name;
     private Timestamp interval_end_time;
     private String cluster_name;
@@ -50,5 +63,13 @@ public class KruizeRecommendationEntry {
 
     public void setExtended_data(JsonNode extended_data) {
         this.extended_data = extended_data;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }
