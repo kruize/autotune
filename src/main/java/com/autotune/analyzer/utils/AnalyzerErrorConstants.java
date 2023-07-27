@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 
 /**
@@ -131,6 +132,7 @@ public class AnalyzerErrorConstants {
 
             public static final String TIME_COMPARE = "The Start time should precede the End time!";
 
+            public static final String TIME_GAP_LIMIT = String.format("The gap between the interval_start_time and interval_end_time must be within a maximum of %s days!", KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days);
 
             private UpdateRecommendationsAPI() {
             }
