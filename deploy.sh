@@ -46,9 +46,16 @@ KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yam
 
 AUTOTUNE_PORT="8080"
 AUTOTUNE_DOCKER_REPO="docker.io/kruize/autotune_operator"
+
 #Fetch autotune version from the pom.xml file.
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
+
+# Kruize UI repo
+KRUIZE_UI_REPO="quay.io/kruize/kruize-ui"
+KRUIZE_UI_VERSION="$(curl -s https://raw.githubusercontent.com/kruize/kruize-ui/main/package.json | grep -m1 '\"version\"' | tr -d ' ' | cut -d: -f2 | tr -d \" | sed 's/,$//')"
+KRUIZE_UI_DOCKER_IMAGE=${KRUIZE_UI_REPO}:${KRUIZE_UI_VERSION}
+
 HPO_DOCKER_REPO="docker.io/kruize/hpo"
 # From the kruize/hpo repo
 HPO_VERSION=0.0.2
@@ -161,6 +168,9 @@ do
 	t)
 		setup=0
 		;;
+  u)
+    KRUIZE_UI_DOCKER_IMAGE="${OPTARG}"
+    ;;
 	[?])
 		usage
 	esac

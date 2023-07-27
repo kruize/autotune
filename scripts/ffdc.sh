@@ -41,7 +41,7 @@ function ffdc() {
 	pod_log="${log_dir}/kruize_pod_log.txt"
 	describe_log="${log_dir}/kruize_describe_pod_log.txt"
 
-	kruize_pod=$(kubectl get pod -n $namespace | grep $service | cut -d " " -f1)
+	kruize_pod=$(kubectl get pod -n $namespace | grep $service | grep -v "kruize-ui" | cut -d " " -f1)
 
 	kubectl describe pod ${kruize_pod} -n ${namespace} > ${describe_log} 2>&1
 	check_err "Error getting kubectl describe kruize pod log! Check ${describe_log} for details!"
