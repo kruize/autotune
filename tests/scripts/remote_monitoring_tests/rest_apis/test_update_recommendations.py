@@ -4,6 +4,13 @@ from helpers.kruize import *
 from helpers.list_reco_json_validate import *
 from helpers.utils import *
 
+'''
+    Creates Experiment + 
+    update results for 24 hrs + 
+    update recommendation using start and end time as a parameter
+        Expected : recommendation should be available for the timestamp provided 
+'''
+
 
 @pytest.mark.sanity
 def test_update_valid_recommendations_after_results_after_create_exp(cluster_type):
@@ -75,6 +82,9 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                 response = update_recommendations(experiment_name, interval_start_time, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
+                assert data[0]['experiment_name'] == experiment_name
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                           'message'] == 'Duration Based Recommendations Available'
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
@@ -92,6 +102,9 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
         response = update_recommendations(experiment_name, interval_start_time, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                   'message'] == 'Duration Based Recommendations Available'
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -116,6 +129,14 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
         assert response.status_code == SUCCESS_STATUS_CODE
+
+
+'''
+    Creates Experiment + 
+    update results for 24 hrs + 
+    update recommendation using only end time as a parameter
+        Expected : recommendation should be available for the timestamp provided 
+'''
 
 
 @pytest.mark.sanity
@@ -188,6 +209,9 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
                 response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
+                assert data[0]['experiment_name'] == experiment_name
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                           'message'] == 'Duration Based Recommendations Available'
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
@@ -205,6 +229,9 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                   'message'] == 'Duration Based Recommendations Available'
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -231,6 +258,11 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         assert response.status_code == SUCCESS_STATUS_CODE
 
 
+'''
+try to update recommendation without experiment name and end time and get 400 status with UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+'''
+
+
 @pytest.mark.negative
 def test_update_recommendations_without_experiment_name_end_time(cluster_type):
     form_kruize_url(cluster_type)
@@ -238,6 +270,11 @@ def test_update_recommendations_without_experiment_name_end_time(cluster_type):
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+
+
+'''
+try to update recommendation without end time and get 400 status with UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
+'''
 
 
 @pytest.mark.negative
@@ -248,6 +285,11 @@ def test_update_recommendations_without_end_time(cluster_type):
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
+
+
+'''
+Update recommendation with unknown experiment name and end date.
+'''
 
 
 @pytest.mark.negative
@@ -261,6 +303,11 @@ def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluste
     assert data['message'] == UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND
 
 
+'''
+Update recommendation with start time precede end time.
+'''
+
+
 @pytest.mark.negative
 def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     form_kruize_url(cluster_type)
@@ -271,3 +318,20 @@ def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME
+
+
+'''
+Update recommendation with start time and end time having difference more than 15 days.
+'''
+
+
+@pytest.mark.negative
+def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
+    form_kruize_url(cluster_type)
+    experiment_name = "test123"
+    start_time = "2023-01-03T00:15:00.000Z"
+    end_time = "2023-01-30T00:15:00.000Z"
+    response = update_recommendations(experiment_name, start_time, end_time)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR

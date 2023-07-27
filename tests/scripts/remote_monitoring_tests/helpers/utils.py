@@ -34,6 +34,7 @@ UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND = 'Data not found!'
 UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
+UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "112101"
