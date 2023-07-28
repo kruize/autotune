@@ -358,22 +358,38 @@ public class DBHelpers {
                         HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
                                 = clonedContainerData.getContainerRecommendations().getData();
                         if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
-                            matchFound = true;
-                            ContainerAPIObject containerAPIObject = null;
-                            List<Timestamp> tempList = new ArrayList<>();
-                            for (Timestamp timestamp : recommendations.keySet()) {
-                                if (!timestamp.equals(monitoringEndTime))
-                                    tempList.add(timestamp);
+                            HashMap<String, HashMap<String, Recommendation>> recomMap = recommendations.get(monitoringEndTime);
+                            Collection<HashMap<String, Recommendation>> recomMapTemp = recomMap.values();
+                            // Create a list to store all the Recommendation objects
+                            ArrayList<Recommendation> allRecommendations = new ArrayList<>();
+                            // Iterate through each HashMap<String, Recommendation> in the collection
+                            for (HashMap<String, Recommendation> map : recomMapTemp) {
+                                // Get all the Recommendation objects from the current HashMap and add them to the list
+                                allRecommendations.addAll(map.values());
                             }
-                            for (Timestamp timestamp : tempList) {
-                                recommendations.remove(timestamp);
+                            for (Recommendation recommendation : allRecommendations) {
+                                if (recommendation.isSaveToDB()) {
+                                    matchFound = true;
+                                    break;
+                                }
                             }
-                            clonedContainerData.getContainerRecommendations().setData(recommendations);
-                            containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-                                    clonedContainerData.getContainer_image_name(),
-                                    clonedContainerData.getContainerRecommendations(),
-                                    null);
-                            containerAPIObjectList.add(containerAPIObject);
+                            if (matchFound) {
+                                ContainerAPIObject containerAPIObject = null;
+                                List<Timestamp> tempList = new ArrayList<>();
+                                for (Timestamp timestamp : recommendations.keySet()) {
+                                    if (!timestamp.equals(monitoringEndTime))
+                                        tempList.add(timestamp);
+                                }
+                                for (Timestamp timestamp : tempList) {
+                                    recommendations.remove(timestamp);
+                                }
+                                clonedContainerData.getContainerRecommendations().setData(recommendations);
+                                containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+                                        clonedContainerData.getContainer_image_name(),
+                                        clonedContainerData.getContainerRecommendations(),
+                                        null);
+                                containerAPIObjectList.add(containerAPIObject);
+                            }
                         }
                     }
                     kubernetesAPIObject.setContainerAPIObjects(containerAPIObjectList);
