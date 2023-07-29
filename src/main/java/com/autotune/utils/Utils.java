@@ -204,8 +204,10 @@ public class Utils {
             try {
                 if (null == format || null == date)
                     return false;
-                Date _unused = (new SimpleDateFormat(format)).parse(date);
-                return true;
+                SimpleDateFormat dateFormat = (new SimpleDateFormat(format));
+                dateFormat.setLenient(false);
+                Date parsedDate = dateFormat.parse(date);
+                return date.equals(dateFormat.format(parsedDate));
             } catch (Exception e) {
                 return false;
             }
