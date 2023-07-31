@@ -81,7 +81,6 @@ $ ./scripts/prometheus_on_minikube.sh -as
     daemonset.apps/cadvisor created
     
     Info: Downloading prometheus git release - v0.8.0
-    
     Info: Installing prometheus
     namespace/monitoring created
     customresourcedefinition.apiextensions.k8s.io/alertmanagerconfigs.monitoring.coreos.com created
@@ -94,12 +93,7 @@ $ ./scripts/prometheus_on_minikube.sh -as
     prometheus-k8s-1                       2/2     Running   1    85s
     Info: prometheus-k8s-1 deploy succeeded: Running
     prometheus-k8s-1                       2/2     Running   1    85s
-
 ```
-
-
-
-
 
 # Build autotune docker image
 
