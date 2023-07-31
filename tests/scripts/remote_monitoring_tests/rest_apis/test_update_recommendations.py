@@ -281,6 +281,20 @@ def test_update_recommendations_without_end_time(cluster_type):
 
 
 @pytest.mark.negative
+def test_update_recommendations_with_invalid_date_format_end_time(cluster_type):
+    '''
+        Update recommendation with invalid end date format.
+    '''
+    form_kruize_url(cluster_type)
+    experiment_name = "test123"
+    end_time = "2023-011-02T00:15:00.000Z"
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT % (end_time)
+
+
+@pytest.mark.negative
 def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluster_type):
     '''
         Update recommendation with unknown experiment name and end date.
