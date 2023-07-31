@@ -33,14 +33,19 @@ Autotune can be deployed to a supported Kubernetes cluster. We currently support
 
 **Install kubectl**
 
-**`curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-`**
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
 
-**`chmod +x ./kubectl`**
+```
+$ chmod +x ./kubectl
+```
 
-**`sudo mv ./kubectl /usr/local/bin/kubectl`**
+```
+$ sudo mv ./kubectl /usr/local/bin/kubectl
+```
 
-**`kubectl version --client`**
+```
+$ kubectl version --client
+```
 
 **Minikube setup**
 
@@ -49,29 +54,52 @@ Minikube setup with 8 CPUs and 16 GB Memory is recommended for autotune deployme
 Only a specific version of minikube v1.26.0 is compatible with prometheus version v0.8.0, hence preferred to install this version on
 your machine by:
 
-**`curl -LO https://github.com/kubernetes/minikube/releases/download/v1.26.1/minikube-linux-amd64`**
+```
+$ curl -LO https://github.com/kubernetes/minikube/releases/download/v1.26.1/minikube-linux-amd64
+```
 
-**`sudo install minikube-linux-amd64 /usr/local/bin/minikube`**
+```
+$ sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
 
-**`minikube start --cpus=8 --memory=16384M`**
+```
+$ minikube start --cpus=8 --memory=16384M
+```
 
 ```
 $ ./scripts/prometheus_on_minikube.sh -as 
 
-Info: installing prometheus...
+    Info: installing prometheus...
+    
+    Info: Checking pre requisites for prometheus...
+    No resources found in monitoring namespace.
+    Info: Downloading cadvisor git
+    
+    Info: Installing cadvisor
+    namespace/cadvisor created
+    serviceaccount/cadvisor created
+    daemonset.apps/cadvisor created
+    
+    Info: Downloading prometheus git release - v0.8.0
+    
+    Info: Installing prometheus
+    namespace/monitoring created
+    customresourcedefinition.apiextensions.k8s.io/alertmanagerconfigs.monitoring.coreos.com created
+    customresourcedefinition.apiextensions.k8s.io/alertmanagers.monitoring.coreos.com created
+    Info: Waiting for all Prometheus Pods to get spawned....done
+    
+    Info: Waiting for prometheus-k8s-1 to come up.....
+    prometheus-k8s-1                       0/2     ContainerCreating            0          70s
+    prometheus-k8s-1                       0/2     Pending             0          74s
+    prometheus-k8s-1                       2/2     Running   1    85s
+    Info: prometheus-k8s-1 deploy succeeded: Running
+    prometheus-k8s-1                       2/2     Running   1    85s
 
-Info: Checking pre requisites for prometheus...
-No resources found in monitoring namespace.
-Info: Downloading cadvisor git
-
-...
-
-Info: Waiting for prometheus-k8s-1 to come up...
-prometheus-k8s-1                       0/2     ContainerCreating   0          102s
-prometheus-k8s-1                       1/2     Running   1          106s
-Info: prometheus-k8s-1 deploy succeeded: Running
-prometheus-k8s-1                       1/2     Running   1          106s
 ```
+
+
+
+
 
 # Build autotune docker image
 
@@ -92,15 +120,21 @@ After building the docker image push the image
 
 1.Login into the docker account
 
-click here to create an account in docker hub [Docker](https://hub.docker.com/)
+Click here to create an account in docker hub [Docker](https://hub.docker.com/)
 
-**`docker login`**
+```
+$ docker login
+```
 
-**`docker tag autotune:test docker.io/username/autotune:test`**
+```
+$ docker tag autotune:test docker.io/username/autotune:test
+```
 
 2.Push the Docker image
 
-**`docker push uname/autotune:test`**
+```
+$ docker push username/autotune:test
+```
 
 Note - You can use the 'dev friendly mode' option to quickly build the autotune docker image using the cached layers.
 
@@ -112,55 +146,75 @@ Let us now deploy autotune using the docker image onto the minikube cluster
 ```
 $ ./deploy.sh -c minikube -i autotune:test
 
-  Usage: ./deploy.sh [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [-s start] [-t terminate]
-        -s: Deploy autotune [Default]
-        -t: Terminate autotune deployment
-        -c: kubernetes cluster type. At present we support only minikube [Default - minikube]
-        -i: deploy with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
-        -o: deploy with specific hpo docker image name [Default - kruize/hpo:<current hpo version>]
-        -n: Namespace to which autotune is deployed [Default - monitoring for cluster type minikube]
-        -d: Config maps directory [Default - manifests/configmaps]
-
+  Usage: ./deploy.sh [-a] [-k url] [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]
+         -s = start(default), -t = terminate
+         -s: Deploy autotune [Default]
+         -t: Terminate autotune deployment
+         -c: kubernetes cluster type. At present we support only minikube [Default - minikube]
+         -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
+         -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]
+         -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]
+         -d: Config maps directory [Default - manifests/configmaps]
+         -m: Target mode selection [autotune | crc]
+         -d: Config maps directory [Default - manifests/configmaps]
+        Unknown option --help
+        
+ 
   For example,
-  ./deploy.sh -c minikube -i <docker hub user>/autotune_operator:test -o <docker hub user>/hpo:test
-
-
-Info: Checking pre requisites for minikube...
-Prometheus is installed and running.
-Info: One time setup - Create a service account to deploy autotune
-serviceaccount/autotune-sa created
-customresourcedefinition.apiextensions.k8s.io/autotunes.recommender.com created
-customresourcedefinition.apiextensions.k8s.io/autotuneconfigs.recommender.com created
-customresourcedefinition.apiextensions.k8s.io/autotunequeryvariables.recommender.com created
-clusterrole.rbac.authorization.k8s.io/autotune-cr created
-clusterrolebinding.rbac.authorization.k8s.io/autotune-crb created
-servicemonitor.monitoring.coreos.com/autotune created
-prometheus.monitoring.coreos.com/prometheus created
-
-Creating environment variable in minikube cluster using configMap
-configmap/autotune-config created
-
-Deploying AutotuneConfig objects
-autotuneconfig.recommender.com/container created
-autotuneconfig.recommender.com/hotspot created
-autotuneconfig.recommender.com/quarkus created
-
-Deploying AutotuneQueryVariable objects
-autotunequeryvariable.recommender.com/minikube created
-Info: Deploying autotune yaml to minikube cluster
-deployment.apps/autotune created
-service/autotune created
-Info: Waiting for autotune to come up...
-autotune-58cf47df84-rhqhx              0/1     ContainerCreating   0          4s
-...
-autotune-58cf47df84-rhqhx              0/1     ContainerCreating   0          50s
-autotune-58cf47df84-rhqhx              1/1     Running   0          54s
-Info: autotune deploy succeeded: Running
-autotune-58cf47df84-rhqhx              1/1     Running   0          54s
-
-Info: Access Autotune at http://192.168.39.12:30113/listKruizeTunables
-```
-
+ 
+  ./deploy.sh -c minikube -m autotune -i docker.io/<dockerhub username>/autotune:test
+    
+    Info: Checking pre requisites for minikube...
+    Prometheus is installed and running.
+    Create autotune namespace monitoring
+    Info: One time setup - Create a service account to deploy autotune
+    serviceaccount/autotune-sa created
+    customresourcedefinition.apiextensions.k8s.io/autotunes.recommender.com created
+    customresourcedefinition.apiextensions.k8s.io/autotuneconfigs.recommender.com created
+    customresourcedefinition.apiextensions.k8s.io/autotunequeryvariables.recommender.com created
+    customresourcedefinition.apiextensions.k8s.io/kruizeperformanceprofiles.recommender.com created
+    clusterrole.rbac.authorization.k8s.io/autotune-cr created
+    clusterrolebinding.rbac.authorization.k8s.io/autotune-crb created
+    clusterrolebinding.rbac.authorization.k8s.io/autotune-prometheus-crb created
+    clusterrolebinding.rbac.authorization.k8s.io/autotune-docker-crb created
+    clusterrolebinding.rbac.authorization.k8s.io/autotune-scc-crb created
+    autotunequeryvariable.recommender.com/minikube created
+    servicemonitor.monitoring.coreos.com/autotune created
+    prometheus.monitoring.coreos.com/prometheus created
+    
+    Creating environment variable in minikube cluster using configMap
+    configmap/autotune-config created
+    
+    Deploying AutotuneConfig objects
+    kruizelayer.recommender.com/container created
+    kruizelayer.recommender.com/hotspot created
+    kruizelayer.recommender.com/openj9 created
+    kruizelayer.recommender.com/quarkus created
+    
+    Deploying Performance Profile objects
+    kruizeperformanceprofile.recommender.com/resource-optimization-openshift created
+    Info: Deploying autotune yaml to minikube cluster
+    deployment.apps/autotune created
+    service/autotune created
+    Info: Waiting for autotune to come up.....
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               4s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               8s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               12s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               17s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               21s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               25s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               29s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               33s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               37s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               41s
+    autotune-7fd48dd988-xd6x5              0/2     ContainerCreating   0               45s
+    autotune-7fd48dd988-xd6x5              2/2     Running   0               49s
+    Info: autotune deploy succeeded: Running
+    autotune-7fd48dd988-xd6x5              2/2     Running   0               50s
+    
+    Info: Access Autotune at http://192.168.49.2:30523/listKruizeTunables
+    ```
+    
 # Demo
 
 Please see the [demo](https://github.com/kruize/kruize-demos) repo for more details on how to use Autotune.
