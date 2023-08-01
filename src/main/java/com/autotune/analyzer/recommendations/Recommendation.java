@@ -45,8 +45,6 @@ public class Recommendation {
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notifications;
 
-    private boolean saveToDB = true;
-
     public Recommendation(Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.monitoringStartTime = monitoringStartTime;
         this.monitoringEndTime = monitoringEndTime;
@@ -60,13 +58,6 @@ public class Recommendation {
             notifications.put(notification.getCode(), notification);
     }
 
-    public Recommendation(RecommendationNotification notification, boolean saveToDB) {
-        if (null == notifications)
-            notifications = new HashMap<Integer, RecommendationNotification>();
-        if (null != notification)
-            notifications.put(notification.getCode(), notification);
-        this.saveToDB = false;
-    }
 
     public Recommendation() {
 
@@ -147,14 +138,6 @@ public class Recommendation {
 
     public void setNotifications(HashMap<Integer, RecommendationNotification> notifications) {
         this.notifications = notifications;
-    }
-
-    public boolean isSaveToDB() {
-        return saveToDB;
-    }
-
-    public void setSaveToDB(boolean saveToDB) {
-        this.saveToDB = saveToDB;
     }
 
     @Override

@@ -1078,7 +1078,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             } else {
                 RecommendationNotification notification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-                resultRecommendation.put(recPeriod, new Recommendation(notification, false));
+                resultRecommendation.put(recPeriod, new Recommendation(notification));
             }
         }
         return resultRecommendation;
