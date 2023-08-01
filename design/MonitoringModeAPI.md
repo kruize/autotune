@@ -68,11 +68,6 @@ see [Create Experiment](/design/CreateExperiment.md)
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
 
-**NOTE:** The update to results of a particular experiment should follow Time Series Order to get valid recommendations.
-
-**Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that
-timestamp
-
 * Mandatory parameters in the input JSON:
 
  ```
@@ -2022,29 +2017,30 @@ Generate the recommendations for a specific experiment based on provided paramet
 
 **Request Parameters**
 
-| Parameter         | Type   | Required | Description                                                           |
-|-------------------|--------|----------|-----------------------------------------------------------------------|
-| experiment_name   | string | Yes      | The name of the experiment.                                           |
-| intervalEndTime   | string | Yes      | The end time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ".   |
-| intervalStartTime | string | optional | The start time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ". |
+| Parameter           | Type   | Required | Description                                                           |
+|---------------------|--------|----------|-----------------------------------------------------------------------|
+| experiment_name     | string | Yes      | The name of the experiment.                                           |
+| interval_end_time   | string | Yes      | The end time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ".   |
+| interval_start_time | string | optional | The start time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ". |
 
-The recommendation API requires two mandatory fields, namely "experiment_name" and "intervalEndTime".
+The recommendation API requires two mandatory fields, namely "experiment_name" and "interval_end_time".
 By utilizing these parameters, the API generates recommendations based on short-term, medium-term, and long-term
 factors.
-For instance, if the long-term setting is configured for 15 days and the intervalEndTime is set to "Jan 15 2023 00:00:
+For instance, if the long-term setting is configured for 15 days and the interval_end_time is set to "Jan 15 2023 00:00:
 00.000Z", the API retrieves data from the past 15 days, starting from January 1st. Using this data, the API generates
 three recommendations for Jan 15th 2023.
 
-If an optional intervalStartTime is provided, the API generates recommendations for each date within the range of
-intervalStartTime and intervalEndTime. However, it is important to ensure that the difference between these dates does
+If an optional interval_start_time is provided, the API generates recommendations for each date within the range of
+interval_start_time and interval_end_time. However, it is important to ensure that the difference between these dates
+does
 not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations beyond
 this threshold might require more time.
 
 **Request**
 
-`POST /updateRecommendations?experiment_name=?&intervalEndTime=?`
+`POST /updateRecommendations?experiment_name=?&interval_end_time=?`
 
-`POST /updateRecommendations?experiment_name=?&intervalEndTime=?&intervalStartTime=?`
+`POST /updateRecommendations?experiment_name=?&interval_end_time=?&interval_start_time=?`
 
 example
 
@@ -2072,12 +2068,13 @@ Example Response Body:
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "notifications": [
-                {
+              "notifications": {
+                "112101": {
                   "type": "info",
-                  "message": "Duration Based Recommendations Available"
+                  "message": "Duration Based Recommendations Available",
+                  "code": 112101
                 }
-              ],
+              },
               "data": {
                 "2023-01-02T00:15:00.000Z": {
                   "duration_based": {
@@ -2136,22 +2133,24 @@ Example Response Body:
                     "medium_term": {
                       "pods_count": 0,
                       "confidence_level": 0.0,
-                      "notifications": [
-                        {
+                      "notifications": {
+                        "120001": {
                           "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
                         }
-                      ]
+                      }
                     },
                     "long_term": {
                       "pods_count": 0,
                       "confidence_level": 0.0,
-                      "notifications": [
-                        {
+                      "notifications": {
+                        "120001": {
                           "type": "info",
-                          "message": "There is not enough data available to generate a recommendation."
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
                         }
-                      ]
+                      }
                     }
                   }
                 }
@@ -2169,12 +2168,12 @@ Example Response Body:
 
 **Error Responses**
 
-| HTTP Status Code | Description                                                   |
-|------------------|---------------------------------------------------------------|
-| 400              | The experiment name parameter is missing or empty.            |
-| 400              | The interval end time parameter is missing or empty.          |
-| 400              | The provided interval end time is in an invalid format.       |
-| 400              | No data found for the specified experiment and time interval. |
-| 400              | date range should not exceed 15 days.                         |
-| 500              | Internal Server Error                                         
+| HTTP Status Code | Description                                                                                        |
+|------------------|----------------------------------------------------------------------------------------------------|
+| 400              | experiment_name is mandatory.                                                                      |
+| 400              | interval_end_time is mandatory.                                                                    |
+| 400              | Given timestamp - \" 2023-011-02T00:00:00.000Z \" is not a valid timestamp format.                 |
+| 400              | Data not found!.                                                                                   |
+| 400              | The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days! |
+| 500              | Internal Server Error                                                                              
 
