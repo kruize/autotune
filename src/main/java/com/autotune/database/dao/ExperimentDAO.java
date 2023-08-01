@@ -45,4 +45,10 @@ public interface ExperimentDAO {
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
     List<String> loadClusterNames() throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByClusterAndNSName(String clusterName, String nsName) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByNSName(String nsName) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception;
 }

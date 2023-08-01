@@ -1,5 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.recommendations.summary.RecommendationSummary;
+import com.autotune.analyzer.recommendations.summary.Summary;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -11,8 +13,11 @@ public class SummarizeAPIObject {
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
 
-    @SerializedName(KruizeConstants.JSONKeys.DATA)
-    private HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data;
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE)
+    private String namespace;
+
+    @SerializedName(KruizeConstants.JSONKeys.SUMMARY)
+    private Summary summary;
 
     public String getClusterName() {
         return clusterName;
@@ -22,19 +27,28 @@ public class SummarizeAPIObject {
         this.clusterName = clusterName;
     }
 
-    public HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> getData() {
-        return data;
+    public String getNamespace() {
+        return namespace;
     }
 
-    public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data) {
-        this.data = data;
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public Summary getSummary() {
+        return summary;
+    }
+
+    public void setSummary(Summary summary) {
+        this.summary = summary;
     }
 
     @Override
     public String toString() {
         return "SummarizeAPIObject{" +
                 "clusterName='" + clusterName + '\'' +
-                ", data=" + data +
+                ", namespace='" + namespace + '\'' +
+                ", summary=" + summary +
                 '}';
     }
 }

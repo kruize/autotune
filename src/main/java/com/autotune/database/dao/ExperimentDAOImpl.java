@@ -279,4 +279,56 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return distinctClusterNames;
     }
+
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentsByClusterAndNSName(String clusterName, String nsName) throws Exception {
+        List<KruizeExperimentEntry> entries = null;
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_CLUSTER_AND_NS_NAME, KruizeExperimentEntry.class)
+                    .setParameter("cluster_name", clusterName)
+                    .setParameter("namespace", nsName)
+                    .list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+        }
+        return entries;
+    }
+
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentsByNSName(String nsName) throws Exception {
+        List<KruizeExperimentEntry> entries = null;
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_NS_NAME, KruizeExperimentEntry.class)
+                    .setParameter("namespace", nsName)
+                    .list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+        }
+        return entries;
+    }
+
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception {
+        List<KruizeExperimentEntry> entries = null;
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_CLUSTER_NAME, KruizeExperimentEntry.class)
+                    .setParameter("cluster_name", clusterName)
+                    .list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+        }
+        return entries;
+    }
 }

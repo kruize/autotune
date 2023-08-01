@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.serviceObjects;
+package com.autotune.analyzer.recommendations.summary;
 
+import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -22,6 +23,7 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Storage object for recommendation
@@ -35,19 +37,7 @@ public class RecommendationSummary {
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
     @SerializedName(KruizeConstants.JSONKeys.CHANGE)
     private HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> change;
-    @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private HashMap<Integer, RecommendationNotification> notifications;
-
-    public RecommendationSummary() {
-        notifications = new HashMap<Integer, RecommendationNotification>();
-    }
-
-    public RecommendationSummary(RecommendationNotification notification) {
-        if (null == notifications)
-            notifications = new HashMap<Integer, RecommendationNotification>();
-        if (null != notification)
-            notifications.put(notification.getCode(), notification);
-    }
+    private NotificationsSummary notificationsSummary;
 
     public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfig() {
         return currentConfig;
@@ -73,17 +63,37 @@ public class RecommendationSummary {
         this.change = change;
     }
 
-    public void addNotification(RecommendationNotification notification) {
-        if (null != notification)
-            this.notifications.put(notification.getCode(), notification);
+    public NotificationsSummary getNotificationsSummary() {
+        return notificationsSummary;
     }
 
-    public HashMap<Integer, RecommendationNotification> getNotifications() {
-        return notifications;
+    public void setNotificationsSummary(NotificationsSummary notificationsSummary) {
+        this.notificationsSummary = notificationsSummary;
     }
 
-    public void setNotifications(HashMap<Integer, RecommendationNotification> notifications) {
-        this.notifications = notifications;
+
+    // Check if the Recommendation object is empty
+    public boolean isEmpty() {
+        return this.currentConfig == null &&
+                this.config == null &&
+                this.change == null &&
+                this.notificationsSummary == null;
+    }
+
+    // Merge existing values with new ones
+    public void mergeValues(RecommendationSummary newRecommendationSum) {
+        if (newRecommendationSum.getCurrentConfig() != null) {
+            this.currentConfig = newRecommendationSum.getCurrentConfig();
+        }
+        if (newRecommendationSum.getConfig() != null) {
+            this.config = newRecommendationSum.getConfig();
+        }
+        if (newRecommendationSum.getChange() != null) {
+            this.change = newRecommendationSum.change;
+        }
+        if (newRecommendationSum.notificationsSummary != null) {
+            this.notificationsSummary = newRecommendationSum.notificationsSummary;
+        }
     }
 
     @Override
@@ -92,7 +102,7 @@ public class RecommendationSummary {
                 "currentConfig=" + currentConfig +
                 ", config=" + config +
                 ", change=" + change +
-                ", notifications=" + notifications +
+                ", notificationsSummary=" + notificationsSummary +
                 '}';
     }
 }

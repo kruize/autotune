@@ -19,8 +19,11 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.serviceObjects.SummarizeAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,10 +37,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -59,10 +59,33 @@ public class Summarize extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         List<ListRecommendationsAPIObject> recommendationList;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
+        String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
+        String nsName = request.getParameter(AnalyzerConstants.ServiceConstants.NAMESPACE);
 
-        // get Recommendations data from the DB
+        // validate Query params
+        Set<String> invalidParams = new HashSet<>();
+        for (String param : request.getParameterMap().keySet()) {
+            if (!KruizeSupportedTypes.CLUSTER_PARAMS_SUPPORTED.contains(param)) {
+                invalidParams.add(param);
+            }
+        }
+        // load recommendations based on params
         try {
-            new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+            ExperimentDBService experimentDBService = new ExperimentDBService();
+            if (clusterName != null) {
+                clusterName = clusterName.trim();
+                if (nsName != null) {
+                    nsName = nsName.trim();
+                    experimentDBService.loadAllRecommendationsByClusterAndNSName(mKruizeExperimentMap, clusterName, nsName);
+                } else {
+                    experimentDBService.loadAllRecommendationsByClusterName(mKruizeExperimentMap, clusterName);
+                }
+            } else if (nsName != null) {
+                nsName = nsName.trim();
+                experimentDBService.loadAllRecommendationsByNSName(mKruizeExperimentMap, nsName);
+            } else {
+                experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+            }
         } catch (Exception e) {
             LOGGER.error("Loading saved recommendations failed: {} ", e.getMessage());
         }
