@@ -285,4 +285,11 @@ public class CommonUtils {
         Collections.sort(items);
         return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
+
+    public static double getPercentage(double newer, double older) {
+        if (older == 0)
+            return 0.0;
+
+        return ((newer - older)/older) * 100;
+    }
 }

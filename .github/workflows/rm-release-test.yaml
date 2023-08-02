@@ -1,0 +1,55 @@
+name: Kruize Remote monitoring release tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      image: 
+        description: 'Kruize docker image'
+        required: true
+        
+jobs:
+  releasetest:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+      - uses: actions/checkout@v3
+        with:
+          repository: kruize/autotune
+          path: autotune
+          ref: mvp_demo
+   
+      - name: Run Kruize remote monitoring functional tests on minikube
+        run: |
+          ps -ef | grep python
+          echo Running Kruize remote monitoring functional testsuite on minikube
+          cd tests         
+          ./test_autotune.sh -c minikube -i ${{ github.event.inputs.image }} --testsuite=remote_monitoring_tests --resultsdir=${GITHUB_WORKSPACE}
+          
+      - name: Run Kruize remote monitoring fault tolerant tests on minikube
+        if: always()
+        run: |
+          ps -ef | grep python
+          echo Running Kruize remote monitoring fault tolerant testsuite on minikube
+          cd tests/scripts/remote_monitoring_tests/fault_tolerant_tests         
+          ./remote_monitoring_fault_tolerant_tests.sh -c minikube -i ${{ github.event.inputs.image }}  -r  ${GITHUB_WORKSPACE}
+          
+      - name: Archive results
+        if: always()
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          ls
+          tar cvf kruize_test_results.tar kruize_test_results
+          ls
+          
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+           name: kruize_test_results
+           path: ./kruize_test_results.tar
+           retention-days: 2

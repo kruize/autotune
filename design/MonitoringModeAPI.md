@@ -953,6 +953,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "112101": {
                     "type": "info",
@@ -969,51 +970,73 @@ Returns the latest recommendations of all the experiments
                       "duration_in_hours": 24.0,
                       "pods_count": 27,
                       "confidence_level": 0.0,
+                      "current": {
+                          "requests": {
+                              "memory": {
+                                  "amount": 490.93,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.46,
+                                  "format": "cores"
+                              }
+                          },
+                          "limits": {
+                              "memory": {
+                                  "amount": 712.21,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.54,
+                                  "format": "cores"
+                              }
+                          }
+                      },
                       "config": {
-                        "requests": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
+                          "limits": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
-                          },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
-                          }
-                        }
                       },
                       "variation": {
-                        "requests": {
-                          "memory": {
-                            "amount": 187.98999999999998,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 707.0540000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.22,
+                                  "format": "cores"
+                              }
                           },
-                          "cpu": {
-                            "amount": -4.44,
-                            "format": "cores"
+                          "limits": {
+                              "memory": {
+                                  "amount": 485.7740000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.14,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "memory": {
-                            "amount": 138.2,
-                            "format": "MiB"
-                          },
-                          "cpu": {
-                            "amount": 0.42999999999999994,
-                            "format": "cores"
-                          }
-                        }
                       },
-                      "notifications": []
+                      "notifications": {}
                     },
                     "medium_term": {
                       "pods_count": 0,
@@ -1046,6 +1069,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1098,6 +1122,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1112,6 +1137,7 @@ Returns the latest recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1186,6 +1212,7 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "112101": {
                     "type": "info",
@@ -1202,51 +1229,73 @@ Returns all the recommendations of all the experiments
                       "duration_in_hours": 24,
                       "pods_count": 27,
                       "confidence_level": 0,
+                      "current": {
+                          "requests": {
+                              "memory": {
+                                  "amount": 490.93,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.46,
+                                  "format": "cores"
+                              }
+                          },
+                          "limits": {
+                              "memory": {
+                                  "amount": 712.21,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.54,
+                                  "format": "cores"
+                              }
+                          }
+                      },
                       "config": {
-                        "requests": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
+                          "limits": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
-                          },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
-                          }
-                        }
                       },
                       "variation": {
-                        "requests": {
-                          "memory": {
-                            "amount": 187.98999999999998,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 707.0540000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.22,
+                                  "format": "cores"
+                              }
                           },
-                          "cpu": {
-                            "amount": -4.44,
-                            "format": "cores"
+                          "limits": {
+                              "memory": {
+                                  "amount": 485.7740000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.14,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "memory": {
-                            "amount": 138.2,
-                            "format": "MiB"
-                          },
-                          "cpu": {
-                            "amount": 0.42999999999999994,
-                            "format": "cores"
-                          }
-                        }
                       },
-                      "notifications": []
+                      "notifications": {}
                     },
                     "medium_term": {
                       "pods_count": 0,
@@ -1283,52 +1332,73 @@ Returns all the recommendations of all the experiments
                       "duration_in_hours": 24,
                       "pods_count": 27,
                       "confidence_level": 0,
+                      "current": {
+                          "requests": {
+                              "memory": {
+                                  "amount": 490.93,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.46,
+                                  "format": "cores"
+                              }
+                          },
+                          "limits": {
+                              "memory": {
+                                  "amount": 712.21,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 1.54,
+                                  "format": "cores"
+                              }
+                          }
+                      },
                       "config": {
-                        "requests": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
+                          "limits": {
+                              "memory": {
+                                  "amount": 1197.9840000000002,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 7.68,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "memory": {
-                            "amount": 238.2,
-                            "format": "MiB"
-                          },
-                          "cpu": {
-                            "amount": 0.9299999999999999,
-                            "format": "cores"
-                          }
-                        }
                       },
                       "variation": {
-                        "requests": {
-                          "memory": {
-                            "amount": 187.98999999999998,
-                            "format": "MiB"
+                          "requests": {
+                              "memory": {
+                                  "amount": 707.0540000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.22,
+                                  "format": "cores"
+                              }
+                          },
+                          "limits": {
+                              "memory": {
+                                  "amount": 485.7740000000001,
+                                  "format": "MiB"
+                              },
+                              "cpu": {
+                                  "amount": 6.14,
+                                  "format": "cores"
+                              }
                           }
-                        },
-                        "limits": {
-                          "cpu": {
-                            "amount": 0.42999999999999994,
-                            "format": "cores"
-                          }
-                        }
                       },
-                      "notifications": [
-                        {
-                          "type": "critical",
-                          "message": "CPU Request Not Set"
-                        },
-                        {
-                          "type": "critical",
-                          "message": "Memory Limit Not Set"
-                        }
-                      ]
+                      "notifications": {}
                     },
                     "medium_term": {
                       "pods_count": 0,
@@ -1361,6 +1431,7 @@ Returns all the recommendations of all the experiments
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
+              "version" : "1.0",
               "notifications": {
                 "120001": {
                     "type": "info",
@@ -1453,6 +1524,7 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
@@ -1467,6 +1539,7 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
@@ -1495,6 +1568,7 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "112101": {
                                     "type": "info",
@@ -1511,24 +1585,68 @@ If no parameter is passed API returns all the latest recommendations available f
                                             "duration_in_hours": 9.0,
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "config": {
-                                                "limits": {
+                                            "current": {
+                                                "requests": {
                                                     "memory": {
-                                                        "amount": 982.5997506234414,
+                                                        "amount": 490.93,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 6.51,
+                                                        "amount": 1.46,
                                                         "format": "cores"
                                                     }
                                                 },
-                                                "requests": {
+                                                "limits": {
                                                     "memory": {
-                                                        "amount": 123.6,
+                                                        "amount": 712.21,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 1.03,
+                                                        "amount": 1.54,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "config": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "variation": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 707.0540000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.22,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 485.7740000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.14,
                                                         "format": "cores"
                                                     }
                                                 }
@@ -1566,6 +1684,7 @@ If no parameter is passed API returns all the latest recommendations available f
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
@@ -1609,6 +1728,7 @@ Returns the latest result of that experiment
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "112101": {
                                     "type": "info",
@@ -1625,24 +1745,68 @@ Returns the latest result of that experiment
                                             "duration_in_hours": 9.0,
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "config": {
-                                                "limits": {
+                                            "current": {
+                                                "requests": {
                                                     "memory": {
-                                                        "amount": 982.5997506234414,
+                                                        "amount": 490.93,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 6.51,
+                                                        "amount": 1.46,
                                                         "format": "cores"
                                                     }
                                                 },
-                                                "requests": {
+                                                "limits": {
                                                     "memory": {
-                                                        "amount": 123.6,
+                                                        "amount": 712.21,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 1.03,
+                                                        "amount": 1.54,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "config": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "variation": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 707.0540000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.22,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 485.7740000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.14,
                                                         "format": "cores"
                                                     }
                                                 }
@@ -1723,6 +1887,7 @@ Returns all the results of that experiment
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "112101": {
                                     "type": "info",
@@ -1739,24 +1904,68 @@ Returns all the results of that experiment
                                             "duration_in_hours": 2.25,
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "config": {
-                                                "limits": {
+                                            "current": {
+                                                "requests": {
                                                     "memory": {
-                                                        "amount": 982.5997506234414,
+                                                        "amount": 490.93,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 6.51,
+                                                        "amount": 1.46,
                                                         "format": "cores"
                                                     }
                                                 },
-                                                "requests": {
+                                                "limits": {
                                                     "memory": {
-                                                        "amount": 123.6,
+                                                        "amount": 712.21,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 1.03,
+                                                        "amount": 1.54,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "config": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "variation": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 707.0540000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.22,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 485.7740000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.14,
                                                         "format": "cores"
                                                     }
                                                 }
@@ -1795,24 +2004,68 @@ Returns all the results of that experiment
                                             "duration_in_hours": 8.5,
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "config": {
-                                                "limits": {
+                                            "current": {
+                                                "requests": {
                                                     "memory": {
-                                                        "amount": 982.5997506234414,
+                                                        "amount": 490.93,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 6.51,
+                                                        "amount": 1.46,
                                                         "format": "cores"
                                                     }
                                                 },
-                                                "requests": {
+                                                "limits": {
                                                     "memory": {
-                                                        "amount": 123.6,
+                                                        "amount": 712.21,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 1.03,
+                                                        "amount": 1.54,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "config": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "variation": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 707.0540000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.22,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 485.7740000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.14,
                                                         "format": "cores"
                                                     }
                                                 }
@@ -1850,6 +2103,7 @@ Returns all the results of that experiment
                         "container_image_name": "kruize/tfb-db:1.15",
                         "container_name": "tfb-server-0",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "120001": {
                                     "type": "info",
@@ -1869,7 +2123,7 @@ Returns all the results of that experiment
 ]
 ```
 
-**Request with experiment name parameter and monitoing end time set to a valid timestamp**
+**Request with experiment name parameter and monitoring end time set to a valid timestamp**
 
 `GET /listRecommendations`
 
@@ -1894,6 +2148,7 @@ Time - `2022-12-20T17:55:05.000Z`**
                         "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
                         "container_name": "tfb-server-1",
                         "recommendations": {
+                            "version" : "1.0",
                             "notifications": {
                                 "112101": {
                                     "type": "info",
@@ -1910,24 +2165,68 @@ Time - `2022-12-20T17:55:05.000Z`**
                                             "duration_in_hours": 2.25,
                                             "pods_count": 0,
                                             "confidence_level": 0.0,
-                                            "config": {
-                                                "limits": {
+                                            "current": {
+                                                "requests": {
                                                     "memory": {
-                                                        "amount": 982.5997506234414,
+                                                        "amount": 490.93,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 6.51,
+                                                        "amount": 1.46,
                                                         "format": "cores"
                                                     }
                                                 },
-                                                "requests": {
+                                                "limits": {
                                                     "memory": {
-                                                        "amount": 123.6,
+                                                        "amount": 712.21,
                                                         "format": "MiB"
                                                     },
                                                     "cpu": {
-                                                        "amount": 1.03,
+                                                        "amount": 1.54,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "config": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 1197.9840000000002,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 7.68,
+                                                        "format": "cores"
+                                                    }
+                                                }
+                                            },
+                                            "variation": {
+                                                "requests": {
+                                                    "memory": {
+                                                        "amount": 707.0540000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.22,
+                                                        "format": "cores"
+                                                    }
+                                                },
+                                                "limits": {
+                                                    "memory": {
+                                                        "amount": 485.7740000000001,
+                                                        "format": "MiB"
+                                                    },
+                                                    "cpu": {
+                                                        "amount": 6.14,
                                                         "format": "cores"
                                                     }
                                                 }

@@ -48,17 +48,32 @@
 
 # Detailed Codes
 
-|    CODE    |  TYPE   |      SHORT NOTATION      |                          DESCRIPTION                           |                             MESSAGE                            |    SCOPE    |
-|:----------:|:-------:|:-----------------------:|:------------------------------------------------------------:|:------------------------------------------------------------:|:-----------:|
-|   112101   |  INFO   | DURATION_BASED_RECOMMENDATIONS_AVAILABLE |      Specifies that the Duration Based Recommendations are available      |           Duration Based Recommendations Available          |  API USER   |
-|   120001   |  INFO   |         NOT_ENOUGH_DATA          | Specifies that required data is not enough to create a recommendation |    There is not enough data available to generate a recommendation.   |  API USER   |
-|   323001   | NOTICE |        CPU_RECORDS_ARE_IDLE         | Specifies that the CPU records in the observed period are less than a millicore | CPU Usage is less than a millicore, No CPU Recommendation can be generated |    DATA USER     |
-|   323002   | NOTICE |        CPU_RECORDS_ARE_ZERO         |               Specifies that the CPU recordings are ZERO               |                CPU usage is zero, No CPU Recommendations can be generated               |    DATA USER     |
-|   323003   | NOTICE |      CPU_RECORDS_NOT_AVAILABLE        |           Specifies that the CPU recordings are NOT AVAILABLE           |              CPU metrics are not available, No CPU Recommendations can be generated             |    DATA USER     |
-|   324001   | NOTICE |      MEMORY_RECORDS_ARE_ZERO        |               Specifies that the Memory recordings are ZERO               |                Memory usage is zero, No Memory Recommendations can be generated               |    DATA USER     |
-|   324002   | NOTICE |     MEMORY_RECORDS_NOT_AVAILABLE      |           Specifies that the Memory recordings are NOT AVAILABLE           |              Memory metrics not available, No Memory Recommendations can be generated             |    DATA USER     |
-|   523001   | CRITICAL |        CPU_REQUEST_NOT_SET         |           Specifies that the CPU Requests are not set for the pod           |                      CPU Request Not Set                     |    DATA USER     |
-|   423001   | WARNING |        CPU_LIMIT_NOT_SET          |           Specifies that the CPU Limits are not set for the pod           |                      CPU Limit Not Set                       |    DATA USER     |
-|   524001   | CRITICAL |      MEMORY_REQUEST_NOT_SET        |           Specifies that the Memory Requests are not set for the pod          |                    Memory Request Not Set                   |    DATA USER     |
-|   524002   | CRITICAL |      MEMORY_LIMIT_NOT_SET         |           Specifies that the Memory Limits are not set for the pod           |                    Memory Limit Not Set                     |    DATA USER     |
-
+|   CODE   |   TYPE   |        SHORT NOTATION        |                         DESCRIPTION                          |                                  MESSAGE                                  |    SCOPE    |
+|:--------:|:--------:|:---------------------------:|:----------------------------------------------------------:|:-------------------------------------------------------------------------:|:-----------:|
+|  112101  |   INFO   | DURATION_BASED_RECOMMENDATIONS_AVAILABLE | Specifies that the Duration Based Recommendations are available |          Duration Based Recommendations Available          |  API USER   |
+|  120001  |   INFO   |         NOT_ENOUGH_DATA         |  Specifies that required data is not enough to create a recommendation |    There is not enough data available to generate a recommendation.    |  API USER   |
+|  221001  |   ERROR  |    NUM_PODS_CANNOT_BE_ZERO    |           Specifies that the number of pods cannot be zero           |              Number of pods cannot be zero              |  API USER   |
+|  221002  |   ERROR  |   NUM_PODS_CANNOT_BE_NEGATIVE |        Specifies that the number of pods cannot be negative         |           Number of pods cannot be negative            |  API USER   |
+|  221003  |   ERROR  |       HOURS_CANNOT_BE_ZERO       |          Specifies that duration hours cannot be zero           |              Duration hours cannot be zero              |  API USER   |
+|  221004  |   ERROR  |     HOURS_CANNOT_BE_NEGATIVE     |        Specifies that duration hours cannot be negative         |           Duration hours cannot be negative            |  API USER   |
+|  223001  |   ERROR  | AMOUNT_MISSING_IN_CPU_SECTION |   Specifies that the amount field is missing in the CPU Section   |         Amount field is missing in the CPU Section         |  API USER   |
+|  223002  |   ERROR  | INVALID_AMOUNT_IN_CPU_SECTION |  Specifies that there is an invalid amount in the CPU Section  |          Invalid Amount in CPU Section          |  API USER   |
+|  223003  |   ERROR  | FORMAT_MISSING_IN_CPU_SECTION |   Specifies that the format field is missing in the CPU Section   |        Format field is missing in CPU Section         |  API USER   |
+|  223004  |   ERROR  | INVALID_FORMAT_IN_CPU_SECTION |  Specifies that there is an invalid format in the CPU Section  |          Invalid Format in CPU Section          |  API USER   |
+|  224001  |   ERROR  | AMOUNT_MISSING_IN_MEMORY_SECTION | Specifies that the amount field is missing in the Memory Section |      Amount field is missing in the Memory Section       |  API USER   |
+|  224002  |   ERROR  | INVALID_AMOUNT_IN_MEMORY_SECTION | Specifies that there is an invalid amount in the Memory Section |       Invalid Amount in Memory Section        |  API USER   |
+|  224003  |   ERROR  | FORMAT_MISSING_IN_MEMORY_SECTION | Specifies that the format field is missing in the Memory Section |    Format field is missing in Memory Section     |  API USER   |
+|  224004  |   ERROR  | INVALID_FORMAT_IN_MEMORY_SECTION | Specifies that there is an invalid format in the Memory Section |      Invalid Format in Memory Section       |  API USER   |
+|  323001  |  NOTICE  |        CPU_RECORDS_ARE_IDLE         |  Specifies that the CPU records in the observed period are less than a millicore | CPU Usage is less than a millicore, No CPU Recommendations can be generated |    DATA USER     |
+|  323002  |  NOTICE  |        CPU_RECORDS_ARE_ZERO         |            Specifies that the CPU recordings are ZERO            |     CPU usage is zero, No CPU Recommendations can be generated     |    DATA USER     |
+|  323003  |  NOTICE  |      CPU_RECORDS_NOT_AVAILABLE      |         Specifies that the CPU recordings are NOT AVAILABLE         |   CPU metrics are not available, No CPU Recommendations can be generated   |    DATA USER     |
+|  323004  |  NOTICE  |    CPU_REQUESTS_OPTIMISED    |      Specifies that the workload is optimised wrt CPU REQUESTS      | Workload is optimised wrt CPU REQUESTS, no changes needed |    DATA USER     |
+|  323005  |  NOTICE  |    CPU_LIMITS_OPTIMISED    |      Specifies that the workload is optimised wrt CPU LIMITS      | Workload is optimised wrt CPU LIMITS, no changes needed |    DATA USER     |
+|  324001  |  NOTICE  |      MEMORY_RECORDS_ARE_ZERO      |            Specifies that the Memory recordings are ZERO            |   Memory usage is zero, No Memory Recommendations can be generated   |    DATA USER     |
+|  324002  |  NOTICE  |     MEMORY_RECORDS_NOT_AVAILABLE    |        Specifies that the Memory recordings are NOT AVAILABLE        | Memory metrics are not available, No Memory Recommendations can be generated |    DATA USER     |
+|  324003  |  NOTICE  |   MEMORY_REQUESTS_OPTIMISED    |      Specifies that the workload is optimised wrt MEMORY REQUESTS     | Workload is optimised wrt MEMORY REQUESTS, no changes needed |    DATA USER     |
+|  324004  |  NOTICE  |   MEMORY_LIMITS_OPTIMISED    |      Specifies that the workload is optimised wrt MEMORY LIMITS      | Workload is optimised wrt MEMORY LIMITS, no changes needed |    DATA USER     |
+|  423001  | WARNING  |        CPU_LIMIT_NOT_SET          |          Specifies that the CPU Limits are not set for the pod          |                 CPU Limit Not Set                 |    DATA USER     |
+|  523001  | CRITICAL |        CPU_REQUEST_NOT_SET         |          Specifies that the CPU Requests are not set for the pod         |                CPU Request Not Set               |    DATA USER     |
+|  524001  | CRITICAL |      MEMORY_REQUEST_NOT_SET       |         Specifies that the Memory Requests are not set for the pod        |              Memory Request Not Set             |    DATA USER     |
+|  524002  | CRITICAL |      MEMORY_LIMIT_NOT_SET         |          Specifies that the Memory Limits are not set for the pod         |               Memory Limit Not Set              |    DATA USER     |

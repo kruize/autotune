@@ -15,7 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 
@@ -25,7 +27,8 @@ import java.util.HashMap;
 public interface KruizeRecommendationEngine {
     public String getEngineName();
     public String getEngineKey();
-    public AnalyzerConstants.RecommendationCategory getEngineCategory();
-    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime);
+    public RecommendationConstants.RecommendationCategory getEngineCategory();
+    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, RecommendationSettings recommendationSettings);
+    public void validateRecommendations();
     public boolean checkIfMinDataAvailable(ContainerData containerData);
 }
