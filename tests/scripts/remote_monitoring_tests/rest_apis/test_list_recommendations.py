@@ -1,6 +1,5 @@
 import datetime
 import json
-import time
 
 import pytest
 from helpers.fixtures import *
@@ -51,8 +50,6 @@ def test_list_recommendations_single_result(cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['120001'][
                'message'] == 'There is not enough data available to generate a recommendation.'
 
-    time.sleep(1)
-
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -102,8 +99,6 @@ def test_list_recommendations_without_parameters(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-    time.sleep(1)
 
     start_time = '2023-04-13T22:59:20.982Z'
     end_time = '2023-04-14T23:59:20.982Z'
@@ -205,8 +200,6 @@ def test_list_recommendations_without_results(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    time.sleep(1)
-
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -255,8 +248,6 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-    time.sleep(1)
 
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -425,8 +416,6 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    time.sleep(1)
-
     # update Recommendations
     with open(result_json_file, 'r') as file:
         data = json.load(file)
@@ -440,11 +429,17 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     start_time = min(data, key=lambda x: x['interval_start_time'])['interval_start_time']
     end_time = max(data, key=lambda x: x['interval_end_time'])['interval_end_time']
 
+    sorted_data = sorted(data, key=lambda x: x['interval_end_time'], reverse=True)
+    top_5_records = sorted_data[:5]
+    top_5_dates = [
+        item['interval_start_time'] for item in sorted_data[:5]
+    ]
+    print(f"{top_5_dates}")
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    response = update_recommendations(experiment_name, start_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
+    response = update_recommendations(experiment_name, top_5_dates[4].strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
                                       end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -575,7 +570,6 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    time.sleep(1)
     # update Recommendations
     with open(result_json_file, 'r') as file:
         data = json.load(file)
@@ -689,9 +683,6 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-        time.sleep(1)
-
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
@@ -1040,7 +1031,6 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
             if j > 95:
-                time.sleep(1)
                 response = update_recommendations(experiment_name, interval_start_time, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE

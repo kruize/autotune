@@ -1,38 +1,42 @@
-import requests
 import pytest
-from jinja2 import Environment, FileSystemLoader
-from helpers.utils import *
-from helpers.kruize import *
 from helpers.fixtures import *
+from helpers.kruize import *
+from helpers.utils import *
+from jinja2 import Environment, FileSystemLoader
 
 mandatory_fields = [
-        ("version", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("cluster_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("mode", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("target_cluster", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("kubernetes_objects", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("type", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("kubernetes_objects_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("containers", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("container_image_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("container_name", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
-        ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
-        ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("trial_settings", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
-        ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
+    ("version", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("cluster_name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("mode", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("target_cluster", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("kubernetes_objects", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("type", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("kubernetes_objects_name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("containers", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("container_image_name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("container_name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
+    ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
+    ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("trial_settings", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
 
 csvfile = "/tmp/create_exp_test_data.csv"
 
+
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold", generate_test_data(csvfile, create_exp_test_data))
-def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold, cluster_type):
+@pytest.mark.parametrize(
+    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold",
+    generate_test_data(csvfile, create_exp_test_data))
+def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name,
+                                  performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace,
+                                  container_image_name, container_name, measurement_duration, threshold, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API against 
     invalid input (blank, null, empty) for the json parameters.
@@ -40,7 +44,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
     print("\n****************************************************")
     print("Test - ", test_name)
     print("****************************************************\n")
-    tmp_json_file="/tmp/create_exp_" + test_name + ".json"
+    tmp_json_file = "/tmp/create_exp_" + test_name + ".json"
 
     print("tmp_json_file = ", tmp_json_file)
 
@@ -87,13 +91,14 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
     response = delete_experiment(tmp_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_exp(cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API by passing a
     valid input for the json
     """
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
     form_kruize_url(cluster_type)
 
     response = delete_experiment(input_json_file)
@@ -112,14 +117,16 @@ def test_create_exp(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
-@pytest.mark.parametrize("k8s_obj_type", ["deployment", "deploymentConfig", "statefulset", "daemonset", "replicaset", "replicationController"])
+@pytest.mark.parametrize("k8s_obj_type", ["deployment", "deploymentConfig", "statefulset", "daemonset", "replicaset",
+                                          "replicationController"])
 def test_create_exp_for_supported_k8s_obj_type(k8s_obj_type, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API by passing a
     valid json with supported kuberenetes object type
     """
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
     form_kruize_url(cluster_type)
 
     json_data = read_json_data_from_file(input_json_file)
@@ -144,13 +151,14 @@ def test_create_exp_for_supported_k8s_obj_type(k8s_obj_type, cluster_type):
     response = delete_experiment(json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_duplicate_exp(cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API by specifying the
     same experiment name
     """
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
     json_data = json.load(open(input_json_file))
 
     experiment_name = json_data[0]['experiment_name']
@@ -184,6 +192,7 @@ def test_create_duplicate_exp(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_multiple_exps_from_same_json_file(cluster_type):
     """
@@ -191,7 +200,7 @@ def test_create_multiple_exps_from_same_json_file(cluster_type):
     multiple experiments in the same json file. This test also validates the behaviour with multiple 
     containers with different container images & container names
     """
-    input_json_file="../json_files/create_multiple_exps.json"
+    input_json_file = "../json_files/create_multiple_exps.json"
 
     form_kruize_url(cluster_type)
 
@@ -204,12 +213,13 @@ def test_create_multiple_exps_from_same_json_file(cluster_type):
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == CREATE_EXP_BULK_ERROR_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
 
 @pytest.mark.sanity
 def test_create_multiple_exps_from_diff_json_files(cluster_type):
@@ -217,7 +227,7 @@ def test_create_multiple_exps_from_diff_json_files(cluster_type):
     Test Description: This test validates the creation of multiple experiments using different json files
     """
 
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
     find = []
     json_data = json.load(open(input_json_file))
 
@@ -248,13 +258,14 @@ def test_create_multiple_exps_from_diff_json_files(cluster_type):
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_multiple_exps_with_same_deployment_namespace(cluster_type):
     """
     Test Description: This test validates the creation of multiple experiments using same deployment & namespace 
     """
 
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
     find = []
     json_data = json.load(open(input_json_file))
 
@@ -263,7 +274,7 @@ def test_create_multiple_exps_with_same_deployment_namespace(cluster_type):
     form_kruize_url(cluster_type)
 
     # Create experiment using the specified json
-    num_exps = 5 
+    num_exps = 5
     for i in range(num_exps):
         json_file = "/tmp/create_exp.json"
         generate_json(find, input_json_file, json_file, i)
@@ -277,7 +288,7 @@ def test_create_multiple_exps_with_same_deployment_namespace(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    num_exps = 5 
+    num_exps = 5
     for i in range(num_exps):
         json_file = "/tmp/create_exp.json"
         generate_json(find, input_json_file, json_file, i)
@@ -285,13 +296,14 @@ def test_create_multiple_exps_with_same_deployment_namespace(cluster_type):
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_exp_with_both_performance_profile_slo(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying both performance profile & slo 
     """
 
-    input_json_file="../json_files/perf_profile_slo.json"
+    input_json_file = "../json_files/perf_profile_slo.json"
 
     form_kruize_url(cluster_type)
 
@@ -308,6 +320,7 @@ def test_create_exp_with_both_performance_profile_slo(cluster_type):
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
 
 @pytest.mark.sanity
 def test_create_exp_with_both_deployment_name_selector(cluster_type):
@@ -315,7 +328,7 @@ def test_create_exp_with_both_deployment_name_selector(cluster_type):
     Test Description: This test validates the creation of an experiment by specifying both deployment name & selector
     """
 
-    input_json_file="../json_files/deployment_name_selector.json"
+    input_json_file = "../json_files/deployment_name_selector.json"
 
     form_kruize_url(cluster_type)
 
@@ -333,13 +346,14 @@ def test_create_exp_with_both_deployment_name_selector(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.sanity
 def test_create_exp_with_invalid_header(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying invalid content type in the header
     """
 
-    input_json_file="../json_files/create_exp.json"
+    input_json_file = "../json_files/create_exp.json"
 
     form_kruize_url(cluster_type)
 
@@ -347,7 +361,7 @@ def test_create_exp_with_invalid_header(cluster_type):
     print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
-    response = create_experiment(input_json_file, invalid_header = True)
+    response = create_experiment(input_json_file, invalid_header=True)
 
     data = response.json()
     print(data['message'])
@@ -359,15 +373,15 @@ def test_create_exp_with_invalid_header(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.extended
 @pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
 def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
-
     form_kruize_url(cluster_type)
 
     # Create experiment using the specified json
     json_file = "/tmp/create_exp.json"
-    input_json_file="../json_files/create_exp_mandatory.json"
+    input_json_file = "../json_files/create_exp_mandatory.json"
     json_data = json.load(open(input_json_file))
 
     if field == "performance_profile_slo":

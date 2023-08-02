@@ -57,7 +57,8 @@ def create_experiment(input_json_file, invalid_header=False):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
     print("\n************************************************************")
-    print(input_json)
+    pretty_json_str = json.dumps(input_json, indent=4)
+    print(pretty_json_str)
     print("\n************************************************************")
 
     # read the json
@@ -73,8 +74,24 @@ def create_experiment(input_json_file, invalid_header=False):
     else:
         response = requests.post(url, json=input_json)
 
-    print(response)
     print("Response status code = ", response.status_code)
+    try:
+        # Parse the response content as JSON into a Python dictionary
+        response_json = response.json()
+
+        # Check if the response_json is a valid JSON object or array
+        if isinstance(response_json, (dict, list)):
+            # Convert the response_json back to a JSON-formatted string with double quotes and pretty print it
+            pretty_response_json_str = json.dumps(response_json, indent=4)
+
+            # Print the JSON string
+            print(pretty_response_json_str)
+        else:
+            print("Invalid JSON format in the response.")
+            print(response.text)  # Print the response text as-is
+    except json.JSONDecodeError:
+        print("Response content is not valid JSON.")
+        print(response.text)  # Print the response text as-is
     return response
 
 

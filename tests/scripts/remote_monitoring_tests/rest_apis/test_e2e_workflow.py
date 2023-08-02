@@ -1,3 +1,4 @@
+import copy
 import json
 
 import pytest
@@ -70,36 +71,53 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
 
+        # Define the batch size
+        batch_size = 96
+        # Loop to fetch elements in batches
+        current_index = 0
+        while current_index < len(result_json_arr):
+            print(f"{current_index} -- {len(result_json_arr)}")
+            # Get the current batch
+            batch = result_json_arr[current_index:current_index + batch_size]
+            batch_deep_copy = copy.deepcopy(batch)
+            file_path = '/tmp/result_%s_to_%s.json' % (current_index, batch_size)
+            with open(file_path, 'w') as json_file:
+                json.dump(batch, json_file)
+            response = update_results(file_path)
             data = response.json()
-            print("message = ", data['message'])
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-            # Expecting that we have recommendations
-            if j > 96:
-                response = update_recommendations(experiment_name, interval_start_time, end_time)
-                data = response.json()
-                assert response.status_code == SUCCESS_STATUS_CODE
-                response = list_recommendations(experiment_name)
-                if response.status_code == SUCCESS_200_STATUS_CODE:
-                    recommendation_json = response.json()
-                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
-                        "recommendations"]
-                    high_level_notifications = recommendation_section["notifications"]
-                    # Check if duration
-                    assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
-                    data_section = recommendation_section["data"]
-                    short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
-                    short_term_notifications = short_term_recommendation["notifications"]
-                    for notification in short_term_notifications.values():
-                        assert notification["type"] != "error"
-
-        response = update_recommendations(experiment_name, interval_start_time, end_time)
-        data = response.json()
-        assert response.status_code == SUCCESS_STATUS_CODE
+            # Update the current index for the next batch
+            current_index += batch_size
+            # Convert UTC strings to datetime objects
+            for item in batch_deep_copy:
+                item['interval_start_time'] = datetime.strptime(item['interval_start_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                item['interval_end_time'] = datetime.strptime(item['interval_end_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            end_time = max(batch_deep_copy, key=lambda x: x['interval_end_time'])['interval_end_time']
+            start_time = min(batch_deep_copy, key=lambda x: x['interval_start_time'])['interval_start_time']
+            response = update_recommendations(experiment_name, start_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
+                                              end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
+            data = response.json()
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data[0]['experiment_name'] == experiment_name
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                       'message'] == 'Duration Based Recommendations Available'
+            response = list_recommendations(experiment_name)
+            if response.status_code == SUCCESS_200_STATUS_CODE:
+                recommendation_json = response.json()
+                recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
+                    "recommendations"]
+                high_level_notifications = recommendation_section["notifications"]
+                # Check if duration
+                assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                data_section = recommendation_section["data"]
+                short_term_recommendation = \
+                    data_section[end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"]["duration_based"]["short_term"]
+                short_term_notifications = short_term_recommendation["notifications"]
+                for notification in short_term_notifications.values():
+                    assert notification["type"] != "error"
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
