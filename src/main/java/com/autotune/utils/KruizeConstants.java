@@ -203,6 +203,7 @@ public class KruizeConstants {
         public static final String PROFILE_BASED = "profile_based";
         public static final String CHANGE = "change";
         public static final String SUMMARY = "summary";
+        public static final String NAMESPACE_NAME = "namespace_name";
 
         private JSONKeys() {
         }

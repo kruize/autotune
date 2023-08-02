@@ -1,6 +1,5 @@
 package com.autotune.analyzer.recommendations.summary;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Namespaces {
@@ -28,5 +27,13 @@ public class Namespaces {
 
   public void setNames(List<String> names) {
     this.names = names;
+  }
+
+  @Override
+  public String toString() {
+    return "Namespaces{" +
+            "count=" + count +
+            ", names=" + names +
+            '}';
   }
 }

@@ -286,7 +286,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_CLUSTER_AND_NS_NAME, KruizeExperimentEntry.class)
-                    .setParameter("cluster_name", clusterName)
+                    .setParameter("clusterName", clusterName)
                     .setParameter("namespace", nsName)
                     .list();
         } catch (Exception e) {
@@ -321,7 +321,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_CLUSTER_NAME, KruizeExperimentEntry.class)
-                    .setParameter("cluster_name", clusterName)
+                    .setParameter("clusterName", clusterName)
                     .list();
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());

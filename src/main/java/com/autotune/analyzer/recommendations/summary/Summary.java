@@ -9,6 +9,7 @@ public class Summary {
     private NotificationsSummary notificationsSummary;
 
     private Namespaces namespaces;
+    private Workloads workloads;
 
     public HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> getData() {
         return data;
@@ -32,5 +33,22 @@ public class Summary {
 
     public void setNamespaces(Namespaces namespaces) {
         this.namespaces = namespaces;
+    }
+    public Workloads getWorkloads() {
+        return workloads;
+    }
+
+    public void setWorkloads(Workloads workloads) {
+        this.workloads = workloads;
+    }
+
+    @Override
+    public String toString() {
+        return "Summary{" +
+                "data=" + data +
+                ", notificationsSummary=" + notificationsSummary +
+                ", namespaces=" + namespaces +
+                ", workloads=" + workloads +
+                '}';
     }
 }

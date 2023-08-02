@@ -7,10 +7,8 @@ import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.*;
-import com.autotune.analyzer.recommendations.summary.Namespaces;
-import com.autotune.analyzer.recommendations.summary.NotificationsSummary;
-import com.autotune.analyzer.recommendations.summary.RecommendationSummary;
-import com.autotune.analyzer.recommendations.summary.Summary;
+import com.autotune.analyzer.recommendations.summary.*;
+import com.autotune.analyzer.services.Summarize;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -296,19 +294,30 @@ public class Converters {
             return null;
         }
 
-        public static SummarizeAPIObject convertListRecommendationAPIObjToSummarizeAPIObj(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList) {
-            SummarizeAPIObject summarize = new SummarizeAPIObject();
-            summarize.setClusterName(listRecommendationsAPIObjectList.get(0).getClusterName());
-            Summary summary = new Summary();
+        public static List<SummarizeAPIObject> convertListRecommendationAPIObjToSummarizeAPIObj(List<ListRecommendationsAPIObject>
+                                                                                                        listRecommendationsAPIObjectList,
+                                                                                                String nsName, String clusterName) {
+            Summarize summarize = new Summarize();
+            List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
 
             Recommendation recommendation;
-            NotificationsSummary allOuterNotificationsSummary = null;
             RecommendationSummary allRecommendationSummary = new RecommendationSummary();
             HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data = new HashMap<>();
             HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = null;
-            Set<String> namespaceSet = new HashSet<>();
+            // Get the current system time in UTC and set it for the response
+            Instant currentTime = Instant.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+            String formattedTime = currentTime.atZone(java.time.ZoneOffset.UTC).format(formatter);
 
             for (ListRecommendationsAPIObject listRecommendationsAPIObject : listRecommendationsAPIObjectList) {
+                Summary summary = new Summary();
+                NotificationsSummary allOuterNotificationsSummary = null;
+                Set<String> namespaceSet = new HashSet<>();
+                Set<String> workloadsSet = new HashSet<>();
+                SummarizeAPIObject summarizeAPIObject = new SummarizeAPIObject();
+
+                summarizeAPIObject.setClusterName(listRecommendationsAPIObject.getClusterName());
+
                 for (KubernetesAPIObject obj : listRecommendationsAPIObject.getKubernetesObjects()) {
                     for (ContainerAPIObject containerAPIObject : obj.getContainerAPIObjects()) {
 
@@ -327,11 +336,13 @@ public class Converters {
                                     LOGGER.debug("RecommendationsMapEntry Key = {}", key);
                                     recommendation = recommendationsMapEntry.getValue();
                                     if (recommendation.getCurrentConfig() != null) {
-                                        RecommendationSummary recommendationSummaryCurrent = convertToSummary(recommendation);
-                                        if (!allRecommendationSummary.isEmpty())
-                                            allRecommendationSummary = mergeSummaries(allRecommendationSummary, recommendationSummaryCurrent);
-                                        else
+                                        RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
+                                        if (!allRecommendationSummary.isEmpty()) {
+                                            allRecommendationSummary = summarize.mergeSummaries(allRecommendationSummary, recommendationSummaryCurrent);
+                                        }
+                                        else {
                                             allRecommendationSummary = recommendationSummaryCurrent;
+                                        }
 
                                         recommendationsPeriodMap.put(key, allRecommendationSummary);
                                     }
@@ -340,225 +351,46 @@ public class Converters {
                             }
                         }
                         // get the outer notifications summary here
-                        NotificationsSummary currentNotificationsSummary = calculateNotificationsSummary(containerRecommendations.getNotificationMap());
-                        if (allOuterNotificationsSummary != null)
-                            allOuterNotificationsSummary = mergeNotificationsSummary(allOuterNotificationsSummary, currentNotificationsSummary);
-                        else
+                        NotificationsSummary currentNotificationsSummary = summarize.calculateNotificationsSummary(containerRecommendations.getNotificationMap());
+                        if (allOuterNotificationsSummary != null) {
+                            allOuterNotificationsSummary = summarize.mergeNotificationsSummary(allOuterNotificationsSummary, currentNotificationsSummary);
+                        }
+                        else {
                             allOuterNotificationsSummary = currentNotificationsSummary;
+                        }
+                        workloadsSet.add(containerAPIObject.getContainer_name());
                     }
                     namespaceSet.add(obj.getNamespace());
                 }
-            }
-            summary.setNotificationsSummary(allOuterNotificationsSummary);
-            // Get the current system time in UTC
-            Instant currentTime = Instant.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-            String formattedTime = currentTime.atZone(java.time.ZoneOffset.UTC).format(formatter);
 
-            data.put(Timestamp.from(Instant.parse(formattedTime)), recommendationsCategoryMap);
-            summary.setData(data);
+                data.put(Timestamp.from(Instant.parse(formattedTime)), recommendationsCategoryMap);
+                summary.setData(data);
+                // set the recommendations level notifications summary
+                summary.setNotificationsSummary(allOuterNotificationsSummary);
 
-            // set the namespaces count
-            Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
-            summary.setNamespaces(namespaces);
-
-            summarize.setSummary(summary);
-            return summarize;
-        }
-
-        public static RecommendationSummary convertToSummary(Recommendation recommendation) {
-            RecommendationSummary summary = new RecommendationSummary();
-            summary.setCurrentConfig(recommendation.getCurrentConfig());
-            summary.setConfig(recommendation.getConfig());
-            summary.setChange(calculateChange(recommendation));
-            summary.setNotificationsSummary(calculateNotificationsSummary(recommendation.getNotifications()));
-            return summary;
-        }
-
-        private static HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> calculateChange(Recommendation recommendation) {
-            HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMap = new HashMap<>();
-            changeMap.put(AnalyzerConstants.ResourceChange.increase, new HashMap<>());
-            changeMap.put(AnalyzerConstants.ResourceChange.decrease, new HashMap<>());
-            changeMap.put(AnalyzerConstants.ResourceChange.variation, new HashMap<>());
-
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variationConfig = recommendation.getVariation();
-
-            for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> settingEntry : variationConfig.entrySet()) {
-                AnalyzerConstants.ResourceSetting resourceSetting = settingEntry.getKey();
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemMap = settingEntry.getValue();
-
-                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemEntry : itemMap.entrySet()) {
-                    AnalyzerConstants.RecommendationItem recommendationItem = itemEntry.getKey();
-                    RecommendationConfigItem configItem = itemEntry.getValue();
-                    double amount = configItem.getAmount();
-
-                    if (amount > 0) {
-                        changeMap.get(AnalyzerConstants.ResourceChange.increase)
-                                .computeIfAbsent(resourceSetting, k -> new HashMap<>())
-                                .put(recommendationItem, configItem);
-                    } else if (amount < 0) {
-                        changeMap.get(AnalyzerConstants.ResourceChange.decrease)
-                                .computeIfAbsent(resourceSetting, k -> new HashMap<>())
-                                .put(recommendationItem, configItem);
+                if (clusterName != null) {
+                    if (nsName != null) {
+                        // set the workloads
+                        Workloads workloads = new Workloads(workloadsSet.size(), new ArrayList<>(workloadsSet));
+                        summary.setWorkloads(workloads);
+                    } else {
+                        // set the namespaces
+                        Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
+                        summary.setNamespaces(namespaces);
                     }
+                } else if (nsName != null) {
+                    // need to update
+                } else {
+                    // set the namespaces
+                    Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
+                    summary.setNamespaces(namespaces);
                 }
+                LOGGER.info("summary = {}", summary.getNamespaces());
+
+                summarizeAPIObject.setSummary(summary);
+                summarizeAPIObjectList.add(summarizeAPIObject);
             }
-
-            // Calculate the variation
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> increaseConfig = changeMap.get(AnalyzerConstants.ResourceChange.increase);
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> decreaseConfig = changeMap.get(AnalyzerConstants.ResourceChange.decrease);
-
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variationMap = new HashMap<>();
-            for (AnalyzerConstants.ResourceSetting resourceSetting : variationConfig.keySet()) {
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> variationItemMap = new HashMap<>();
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> increaseItemMap = increaseConfig.getOrDefault(resourceSetting, new HashMap<>());
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> decreaseItemMap = decreaseConfig.getOrDefault(resourceSetting, new HashMap<>());
-
-                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : variationConfig.get(resourceSetting).entrySet()) {
-                    AnalyzerConstants.RecommendationItem recommendationItem = entry.getKey();
-                    RecommendationConfigItem variationConfigItem = entry.getValue();
-
-                    RecommendationConfigItem increaseConfigItem = increaseItemMap.get(recommendationItem);
-                    if (increaseConfigItem == null) {
-                        increaseConfigItem = new RecommendationConfigItem(0.0, null);
-                    }
-
-                    RecommendationConfigItem decreaseConfigItem = decreaseItemMap.get(recommendationItem);
-                    if (decreaseConfigItem == null) {
-                        decreaseConfigItem = new RecommendationConfigItem(0.0, null);
-                    }
-
-                    double variationValue = increaseConfigItem.getAmount() + decreaseConfigItem.getAmount();
-                    variationConfigItem.setAmount(variationValue);
-                    variationItemMap.put(recommendationItem, variationConfigItem);
-                }
-
-                variationMap.put(resourceSetting, variationItemMap);
-            }
-            changeMap.put(AnalyzerConstants.ResourceChange.variation, variationMap);
-            return changeMap;
-        }
-
-        private static NotificationsSummary calculateNotificationsSummary(HashMap<Integer, RecommendationNotification> notifications) {
-            NotificationsSummary summary = new NotificationsSummary();
-            int infoCount = 0;
-            int noticeCount = 0;
-            int warningCount = 0;
-            int errorCount = 0;
-            int criticalCount = 0;
-
-            for (RecommendationNotification notification : notifications.values()) {
-                switch (notification.getType()) {
-                    case "info" -> infoCount++;
-                    case "notice" -> noticeCount++;
-                    case "warning" -> warningCount++;
-                    case "error" -> errorCount++;
-                    case "critical" -> criticalCount++;
-                }
-            }
-            summary.setInfo(infoCount);
-            summary.setNotice(noticeCount);
-            summary.setWarning(warningCount);
-            summary.setError(errorCount);
-            summary.setCritical(criticalCount);
-            return summary;
-        }
-        public static RecommendationSummary mergeSummaries(RecommendationSummary summary1, RecommendationSummary summary2) {
-            RecommendationSummary mergedSummary = new RecommendationSummary();
-
-            mergedSummary.setCurrentConfig(mergeConfigItems(summary1.getCurrentConfig(), summary2.getCurrentConfig(), mergedSummary.getCurrentConfig()));
-            mergedSummary.setConfig(mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
-            mergedSummary.setChange(mergeChange(summary1, summary2, mergedSummary.getChange()));
-            mergedSummary.setNotificationsSummary(mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
-            return mergedSummary;
-        }
-
-        private static HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> mergeConfigItems(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config1, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config2, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> configMap) {
-            if (configMap == null) {
-                configMap = new HashMap<>();
-            }
-
-            mergeConfigMap(configMap, config1);
-            mergeConfigMap(configMap, config2);
-
-            return configMap;
-        }
-
-        private static void mergeConfigMap(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
-                RecommendationConfigItem>> targetMap, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
-                RecommendationConfigItem>> sourceMap) {
-            for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> entry :
-                    sourceMap.entrySet()) {
-                AnalyzerConstants.ResourceSetting resourceSetting = entry.getKey();
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemMap = entry.getValue();
-
-                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemEntry : itemMap.entrySet()) {
-                    AnalyzerConstants.RecommendationItem recommendationItem = itemEntry.getKey();
-                    RecommendationConfigItem configItem = itemEntry.getValue();
-
-                    targetMap.computeIfAbsent(resourceSetting, k -> new HashMap<>())
-                            .merge(recommendationItem, configItem, (existingItem, newItem) -> {
-                                // Sum the amount values for existing and new RecommendationConfigItems
-                                existingItem.setAmount(existingItem.getAmount() + newItem.getAmount());
-                                return existingItem;
-                            });
-                }
-            }
-        }
-
-        private static HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> mergeChange(RecommendationSummary summary1, RecommendationSummary summary2, HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMap) {
-            if (changeMap == null) {
-                changeMap = new HashMap<>();
-            }
-            HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMap1 = summary1.getChange();
-            HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMap2 = summary2.getChange();
-
-            mergeChangeMap(changeMap, changeMap1);
-            mergeChangeMap(changeMap, changeMap2);
-
-            return changeMap;
-        }
-
-        private static void mergeChangeMap(HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> targetMap, HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> sourceMap) {
-            for (Map.Entry<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> entry : sourceMap.entrySet()) {
-                AnalyzerConstants.ResourceChange resourceChange = entry.getKey();
-                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> settingMap = entry.getValue();
-
-                for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> settingEntry : settingMap.entrySet()) {
-                    AnalyzerConstants.ResourceSetting resourceSetting = settingEntry.getKey();
-                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemMap = settingEntry.getValue();
-
-                    for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemEntry : itemMap.entrySet()) {
-                        AnalyzerConstants.RecommendationItem recommendationItem = itemEntry.getKey();
-                        RecommendationConfigItem configItem = itemEntry.getValue();
-
-                        targetMap.computeIfAbsent(resourceChange, k -> new HashMap<>())
-                                .computeIfAbsent(resourceSetting, k -> new HashMap<>())
-                                .merge(recommendationItem, configItem, (existingItem, newItem) -> {
-                                    // Sum the amount values for existing and new RecommendationConfigItems
-                                    existingItem.setAmount(existingItem.getAmount() + newItem.getAmount());
-                                    return existingItem;
-                                });
-                    }
-                }
-            }
-        }
-
-        private static NotificationsSummary mergeNotificationsSummary(NotificationsSummary notifications1, NotificationsSummary notifications2) {
-
-            int infoCount = notifications1.getInfo() + notifications2.getInfo();
-            int noticeCount = notifications1.getNotice() + notifications2.getNotice();
-            int warningCount = notifications1.getWarning() + notifications2.getWarning();
-            int errorCount = notifications1.getError() + notifications2.getError();
-            int criticalCount = notifications1.getCritical() + notifications2.getCritical();
-
-            NotificationsSummary mergedSummary = new NotificationsSummary();
-            mergedSummary.setInfo(infoCount);
-            mergedSummary.setNotice(noticeCount);
-            mergedSummary.setWarning(warningCount);
-            mergedSummary.setError(errorCount);
-            mergedSummary.setCritical(criticalCount);
-            return mergedSummary;
+            return summarizeAPIObjectList;
         }
     }
 }

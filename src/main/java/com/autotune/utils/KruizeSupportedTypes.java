@@ -81,6 +81,6 @@ public class KruizeSupportedTypes
 			"experiment_name", "results", "recommendations", "latest"
 	));
 	public static final Set<String> CLUSTER_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-			"cluster_name", "namespace"
+			"cluster_name", "namespace_name"
 	));
 }
