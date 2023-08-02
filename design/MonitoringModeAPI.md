@@ -2175,5 +2175,6 @@ Example Response Body:
 | 400              | Given timestamp - \" 2023-011-02T00:00:00.000Z \" is not a valid timestamp format.                 |
 | 400              | Data not found!.                                                                                   |
 | 400              | The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days! |
-| 500              | Internal Server Error                                                                              
+| 400              | The Start time should precede the End time!                                                        |                                           |
+| 500              | Internal Server Error                                                                              |
 
