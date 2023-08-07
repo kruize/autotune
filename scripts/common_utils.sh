@@ -82,7 +82,7 @@ check_err() {
 # Deploy kruize in remote monitoring mode with the specified docker image
 kruize_crc_start() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
-	CRC_MANIFEST_FILE_OLD="/tmp/kruize_${cluster_type}.yaml"
+	CRC_MANIFEST_FILE_OLD="${CRC_DIR}/${cluster_type}/kruize_${cluster_type}.yaml"
 
 	cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
 	awk -v image_name=${AUTOTUNE_DOCKER_IMAGE} '{
@@ -101,4 +101,5 @@ kruize_crc_start() {
 		exit 1
 	fi
 	cp ${CRC_MANIFEST_FILE_OLD} ${CRC_MANIFEST_FILE}
+	rm ${CRC_MANIFEST_FILE_OLD}
 }
