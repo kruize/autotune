@@ -50,6 +50,10 @@ public class KruizeHibernateUtil {
             configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.settings_hibernate_hbm2ddl_auto);
             configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.settings_hibernate_show_sql);
             configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.settings_hibernate_time_zone);
+            configuration.setProperty("hibernate.connection.ssl", KruizeDeploymentInfo.database_ssl);
+            configuration.setProperty("hibernate.connection.sslVerify", KruizeDeploymentInfo.database_sslverify);
+            configuration.setProperty("hibernate.connection.sslTrustStore", KruizeDeploymentInfo.database_ssltruststore);
+            configuration.setProperty("hibernate.connection.sslTrustStorePassword", KruizeDeploymentInfo.database_ssltruststorepassword);
             configuration.addAnnotatedClass(KruizeExperimentEntry.class);
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);

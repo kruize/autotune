@@ -384,7 +384,10 @@ public class KruizeConstants {
         public static final String DATABASE_HOSTNAME = "database_hostname";
         public static final String DATABASE_DBNAME = "database_name";
         public static final String DATABASE_PORT = "database_port";
-        public static final String DATABASE_SSL_MODE = "database_sslmode";
+        public static final String DATABASE_SSL = "database_sslMode";
+        public static final String DATABASE_SSLVERIFY = "database_sslverify";
+        public static final String DATABASE_SSLTRUSTSTORE = "database_ssltruststore";
+        public static final String DATABASE_SSLTRUSTSTOREPASSWORD = "database_ssltruststorepassword";
     }
 
     /**

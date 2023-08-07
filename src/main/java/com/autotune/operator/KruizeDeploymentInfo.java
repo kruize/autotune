@@ -62,9 +62,12 @@ public class KruizeDeploymentInfo {
     public static String auth_token;
     public static String database_admin_username;
     public static String database_admin_password;
-    public static String database_ssl_mode;
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
+    public static String database_ssl;
+    public static String database_sslverify;
+    public static String database_ssltruststore;
+    public static String database_ssltruststorepassword;
 
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;

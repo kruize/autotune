@@ -77,7 +77,10 @@ data:
         "name": "kruizeDB",
         "password": "admin",
         "port": 5432,
-        "sslMode": "require",
+        "sslMode": "disabled",
+        "sslverify": "false",
+        "ssltruststore" : null,
+        "ssltruststorepassword" : null,
         "username": "admin"
       }
     }
