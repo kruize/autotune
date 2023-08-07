@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class Converters {
     private Converters() {
@@ -298,28 +299,43 @@ public class Converters {
                                                                                                         listRecommendationsAPIObjectList,
                                                                                                 String nsName, String clusterName) {
             Summarize summarize = new Summarize();
-            List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
+            Set<SummarizeAPIObject> summarizeAPIObjectsSet = new HashSet<>();
+            if (clusterName != null && nsName != null) {
+                // Filter by both cluster name and namespace
+                listRecommendationsAPIObjectList = listRecommendationsAPIObjectList.stream()
+                        .filter(r -> r.getClusterName().equals(clusterName) &&
+                                r.getKubernetesObjects().stream()
+                                        .anyMatch(ko -> ko.getNamespace().equals(nsName)))
+                        .collect(Collectors.toList());
+            } else if (nsName != null) {
+                // filter by namespace
+                listRecommendationsAPIObjectList = listRecommendationsAPIObjectList.stream()
+                        .filter(r -> r.getKubernetesObjects().stream()
+                                .anyMatch(ko -> ko.getNamespace().equals(nsName)))
+                        .collect(Collectors.toList());
+            }
 
             Recommendation recommendation;
             RecommendationSummary allRecommendationSummary = new RecommendationSummary();
             HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data = new HashMap<>();
-            HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = null;
-            // Get the current system time in UTC and set it for the response
+            HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = new HashMap<>();
+            HashMap<String, HashMap<String, HashMap<String, RecommendationSummary>>> clusterRecommendationsMap = new HashMap<>();
+            // Get the current system timestamp in UTC and set it for the response
             Instant currentTime = Instant.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
             String formattedTime = currentTime.atZone(java.time.ZoneOffset.UTC).format(formatter);
+            Timestamp currentTimestamp = Timestamp.from(Instant.parse(formattedTime));
 
+            SummarizeAPIObject summarizeAPIObject;
             for (ListRecommendationsAPIObject listRecommendationsAPIObject : listRecommendationsAPIObjectList) {
-                Summary summary = new Summary();
-                NotificationsSummary allOuterNotificationsSummary = null;
+                summarizeAPIObject = new SummarizeAPIObject();
                 Set<String> namespaceSet = new HashSet<>();
+                NotificationsSummary allOuterNotificationsSummary = new NotificationsSummary();
+                Summary summary = new Summary();
                 Set<String> workloadsSet = new HashSet<>();
-                SummarizeAPIObject summarizeAPIObject = new SummarizeAPIObject();
 
-                summarizeAPIObject.setClusterName(listRecommendationsAPIObject.getClusterName());
-
-                for (KubernetesAPIObject obj : listRecommendationsAPIObject.getKubernetesObjects()) {
-                    for (ContainerAPIObject containerAPIObject : obj.getContainerAPIObjects()) {
+                for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
+                    for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
 
                         ContainerRecommendations containerRecommendations = containerAPIObject.getContainerRecommendations();
 
@@ -358,38 +374,37 @@ public class Converters {
                         else {
                             allOuterNotificationsSummary = currentNotificationsSummary;
                         }
-                        workloadsSet.add(containerAPIObject.getContainer_name());
                     }
-                    namespaceSet.add(obj.getNamespace());
+                    workloadsSet.add(kubernetesAPIObject.getName());
+                    namespaceSet.add(kubernetesAPIObject.getNamespace());
+                }
+                if (!clusterRecommendationsMap.isEmpty() && clusterRecommendationsMap.containsKey(
+                        listRecommendationsAPIObject.getClusterName())) {
+                    // merge the recommendation in one map
+                    summarize.mergeClusterRecommendations(clusterRecommendationsMap.get(listRecommendationsAPIObject.getClusterName()), recommendationsCategoryMap);
+                } else {
+                    clusterRecommendationsMap.put(listRecommendationsAPIObject.getClusterName(), recommendationsCategoryMap);
                 }
 
-                data.put(Timestamp.from(Instant.parse(formattedTime)), recommendationsCategoryMap);
+                data.put(currentTimestamp, clusterRecommendationsMap.get(listRecommendationsAPIObject.getClusterName()));
                 summary.setData(data);
                 // set the recommendations level notifications summary
                 summary.setNotificationsSummary(allOuterNotificationsSummary);
-
-                if (clusterName != null) {
-                    if (nsName != null) {
-                        // set the workloads
-                        Workloads workloads = new Workloads(workloadsSet.size(), new ArrayList<>(workloadsSet));
-                        summary.setWorkloads(workloads);
-                    } else {
-                        // set the namespaces
-                        Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
-                        summary.setNamespaces(namespaces);
-                    }
-                } else if (nsName != null) {
-                    // need to update
+                // set the namespaces/workloads object
+                if (clusterName == null && nsName != null) {
+                    Workloads workloads = new Workloads(workloadsSet.size(), new ArrayList<>(workloadsSet));
+                    summary.setWorkloads(workloads);
+                    summarizeAPIObject.setNamespace(nsName);
                 } else {
-                    // set the namespaces
                     Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
                     summary.setNamespaces(namespaces);
                 }
-                LOGGER.info("summary = {}", summary.getNamespaces());
-
                 summarizeAPIObject.setSummary(summary);
-                summarizeAPIObjectList.add(summarizeAPIObject);
+                summarizeAPIObject.setClusterName(listRecommendationsAPIObject.getClusterName());
+                summarizeAPIObjectsSet.add(summarizeAPIObject);
             }
+            List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
+            summarizeAPIObjectList.addAll(summarizeAPIObjectsSet);
             return summarizeAPIObjectList;
         }
     }

@@ -83,13 +83,15 @@ public class Summarize extends HttpServlet {
                     clusterName = clusterName.trim();
                     if (nsName != null) {
                         nsName = nsName.trim();
-                        experimentDBService.loadAllRecommendationsByClusterAndNSName(mKruizeExperimentMap, clusterName, nsName);
+                        //TODO: Loading all recommendations from the DB in this case for now, need to update query
+                        experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                     } else {
                         experimentDBService.loadAllRecommendationsByClusterName(mKruizeExperimentMap, clusterName);
                     }
                 } else if (nsName != null) {
                     nsName = nsName.trim();
-                    experimentDBService.loadAllRecommendationsByNSName(mKruizeExperimentMap, nsName);
+                    //TODO: Loading all recommendations from the DB in this case for now, need to update query
+                    experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                 } else {
                     experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                 }
@@ -100,8 +102,7 @@ public class Summarize extends HttpServlet {
             List<KruizeObject> kruizeObjectList = new ArrayList<>(mKruizeExperimentMap.values());
             try {
                 // get the latest recommendations
-                recommendationList = ListRecommendations.buildAPIResponse(kruizeObjectList, false,
-                        true, null);
+                recommendationList = ListRecommendations.buildAPIResponse(kruizeObjectList, false,true, null);
                 // convert the recommendation response to summarizeAPI Object
                 List<SummarizeAPIObject> summarizeAPIObjectList = Converters.KruizeObjectConverters.
                         convertListRecommendationAPIObjToSummarizeAPIObj(recommendationList, nsName, clusterName);
@@ -335,6 +336,30 @@ public class Summarize extends HttpServlet {
         }
         response.sendError(httpStatusCode, errorMsg);
     }
+    public void mergeClusterRecommendations(HashMap<String, HashMap<String, RecommendationSummary>> clusterRecommendationsSummary,
+                                     HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap) {
 
+        for (Map.Entry<String, HashMap<String, RecommendationSummary>> entry : recommendationsCategoryMap.entrySet()) {
 
+            String category = entry.getKey();
+            HashMap<String, RecommendationSummary> recommendationSummaryMap = entry.getValue();
+
+            if (clusterRecommendationsSummary.containsKey(category)) {
+
+                HashMap<String, RecommendationSummary> existing = clusterRecommendationsSummary.get(category);
+
+                for (String resource : existing.keySet()) {
+                    RecommendationSummary existingSummary = existing.get(resource);
+                    RecommendationSummary categorySummary = recommendationSummaryMap.get(resource);
+                    // Merge the summaries
+                    RecommendationSummary merged = mergeSummaries(existingSummary, categorySummary);
+                    // Put merged summary back
+                    existing.put(resource, merged);
+                }
+
+            } else {
+                clusterRecommendationsSummary.put(category, recommendationSummaryMap);
+            }
+        }
+    }
 }
