@@ -15,7 +15,7 @@ public class MetricsConfig {
     private static MetricsConfig INSTANCE;
     public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults;
     public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName;
-    public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
+    public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults, timerLoadPaginatedResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
@@ -38,6 +38,7 @@ public class MetricsConfig {
         timerLoadAllRec = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllRecommendations").register(meterRegistry);
         timerLoadAllExp = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllExperiments").register(meterRegistry);
         timerLoadAllResults = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllResults").register(meterRegistry);
+        timerLoadPaginatedResults = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadPaginatedResults").register(meterRegistry);
         timerAddRecDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addRecommendationToDB").register(meterRegistry);
         timerAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addResultsToDB").register(meterRegistry);
         timerAddExpDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addExperimentToDB").register(meterRegistry);

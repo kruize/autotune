@@ -32,7 +32,6 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -69,9 +68,6 @@ import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
  */
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
-    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -88,10 +84,16 @@ public class ListExperiments extends HttpServlet {
         String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String pageStr = request.getParameter(PAGE);
+        String limitStr = request.getParameter(LIMIT);
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
 
         // validate Query params
+        int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
+        int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
+        // set record limit based on the user's request
+        limit = setDefaultRecordsLimit(results, recommendations, limit);
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
             if (!KruizeSupportedTypes.QUERY_PARAMS_SUPPORTED.contains(param)) {
@@ -111,7 +113,7 @@ public class ListExperiments extends HttpServlet {
             if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
                 try {
                     // Fetch experiments data from the DB and check if the requested experiment exists
-                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName, page, limit);
                     // Check if experiment exists
                     if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
                         error = true;
@@ -127,7 +129,7 @@ public class ListExperiments extends HttpServlet {
                         Gson gsonObj = createGsonObject();
 
                         // Modify the JSON response here based on query params.
-                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, page, limit);
                         if (gsonStr.isEmpty()) {
                             gsonStr = generateDefaultResponse();
                         }
@@ -159,6 +161,26 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
+    private int setDefaultRecordsLimit(String results, String recommendations, int limit) {
+        if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(
+                AnalyzerConstants.BooleanString.FALSE)) {
+                limit = AnalyzerConstants.DEFAULT_LIMIT_VALUE_WHEN_ALL_ARE_FALSE;
+        }
+        else
+            limit = AnalyzerConstants.DEFAULT_LIMIT_VALUE_WHEN_SOME_OR_ALL_ARE_TRUE ;
+
+        return limit;
+    }
+
+    public static int parseIntegerOrDefault(String value, int defaultValue) {
+        try {
+            int intValue = Integer.parseInt(value);
+            return intValue > 0 ? intValue : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private boolean isValidBooleanValue(String value) {
         return value != null && (value.equals("true") || value.equals("false"));
     }
@@ -176,10 +198,10 @@ public class ListExperiments extends HttpServlet {
         return experimentTrialJSONArray.toString(4);
     }
 
-    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllExperiments(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedExperiments(mKruizeExperimentMap, page, limit);
             else
                 new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, experimentName);
 
@@ -242,7 +264,7 @@ public class ListExperiments extends HttpServlet {
     }
 
     private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, String results,
-                                             String recommendations, String latest, String experimentName) {
+                                             String recommendations, String latest, String experimentName, int page, int limit) {
         // Case : default
         // return the response without results or recommendations
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
@@ -254,9 +276,9 @@ public class ListExperiments extends HttpServlet {
                         AnalyzerConstants.BooleanString.TRUE)) {
                 // Case: results=true , recommendations=true
                     // fetch results and recomm. from the DB
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, page, limit);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
-                    loadResults(mKruizeExperimentMap, experimentName);
+                    loadResults(mKruizeExperimentMap, experimentName, page, limit);
 
                     // filter the latest results when latest = true, else return all
                     if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
@@ -266,7 +288,7 @@ public class ListExperiments extends HttpServlet {
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 } else if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
                     // Case: results=true , recommendations=false
-                    loadResults(mKruizeExperimentMap, experimentName);
+                    loadResults(mKruizeExperimentMap, experimentName, page, limit);
                     checkPercentileInfo(mKruizeExperimentMap);
                     // filter the latest results when latest = true, else return all
                     if (latest.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
@@ -276,7 +298,7 @@ public class ListExperiments extends HttpServlet {
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 } else {
                     // Case: results=false , recommendations=true
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, page, limit);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 }
@@ -287,24 +309,24 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-    private void loadResults(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadResults(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllResults(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedResults(mKruizeExperimentMap, page, limit);
             else
-                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadPaginatedResultsFromDBByName(mKruizeExperimentMap, experimentName, page, limit);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved results data: {} ", e.getMessage());
         }
     }
 
-    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, int page, int limit) {
         try {
             if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
+                new ExperimentDBService().loadPaginatedRecommendations(mKruizeExperimentMap, page, limit);
             else
-                new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadPaginatedRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, page, limit);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved recommendations data: {} ", e.getMessage());

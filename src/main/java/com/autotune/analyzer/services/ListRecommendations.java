@@ -55,8 +55,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.autotune.utils.MetricsConfig;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.services.ListExperiments.parseIntegerOrDefault;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.LIMIT;
 
 /**
  * Rest API used to recommend right configuration.
@@ -80,12 +81,17 @@ public class ListRecommendations extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        String pageStr = request.getParameter(PAGE);
+        String limitStr = request.getParameter(LIMIT);
         Timestamp monitoringEndTimestamp = null;
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();;
 
         boolean getLatest = true;
         boolean checkForTimestamp = false;
         boolean error = false;
+        // validate Query params
+        int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
+        int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
         if (null != latestRecommendation
                 && !latestRecommendation.isEmpty()
                 && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)
@@ -99,7 +105,7 @@ public class ListRecommendations extends HttpServlet {
                 // trim the experiment name to remove whitespaces
                 experimentName = experimentName.trim();
                 try {
-                    new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    new ExperimentDBService().loadPaginatedExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, page, limit);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
                 }
@@ -146,7 +152,7 @@ public class ListRecommendations extends HttpServlet {
                 }
             } else {
                 try {
-                    new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                    new ExperimentDBService().loadPaginatedExperimentsAndRecommendations(mKruizeExperimentMap, page, limit);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
                 }
