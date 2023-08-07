@@ -78,6 +78,33 @@ EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
 INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greater than measurement_duration by more than 30 seconds"
 
+createExperimentCount_STATUS = "Metric Category: API, Name: createExperiment_count, Value: 10.0"
+createExperimentSum_STATUS = "Metric Category: API, Name: createExperiment_sum, Value: 0.228229311"
+listRecommendationsCount_STATUS = "Metric Category: API, Name: listRecommendations_count, Value: 11.0"
+listRecommendationsSum_STATUS = "Metric Category: API, Name: listRecommendations_sum, Value: 0.349422898"
+listExperimentsCount_STATUS = "Metric Category: API, Name: listExperiments_count, Value: 0.0"
+listExperimentsSum_STATUS = "Metric Category: API, Name: listExperiments_sum, Value: 0.0"
+updateResultsCount_STATUS = "Metric Category: API, Name: updateResults_count, Value: 1000.0"
+updateResultsSum_STATUS = "Metric Category: API, Name: updateResults_sum, Value: 51.24196982"
+addRecommendationToDBCount_STATUS = "Metric Category: DB, Name: addRecommendationToDB_count, Value: 50.0"
+addRecommendationToDBSum_STATUS = "Metric Category: DB, Name: addRecommendationToDB_sum, Value: 0.11283727"
+addResultsToDBCount_STATUS = "Metric Category: DB, Name: addResultsToDB_count, Value: 1000.0"
+addResultsToDBSum_STATUS = "Metric Category: DB, Name: addResultsToDB_sum, Value: 3.513978451"
+loadAllRecommendationsCount_STATUS = "Metric Category: DB, Name: loadAllRecommendations_count, Value: 0.0"
+loadAllRecommendationsSum_STATUS = "Metric Category: DB, Name: loadAllRecommendations_sum, Value: 0.0"
+loadAllExperimentsCount_STATUS = "Metric Category: DB, Name: loadAllExperiments_count, Value: 0.0"
+loadAllExperimentsSum_STATUS = "Metric Category: DB, Name: loadAllExperiments_sum, Value: 0.0"
+addExperimentToDBCount_STATUS = "Metric Category: DB, Name: addExperimentToDB_count, Value: 10.0"
+addExperimentToDBSum_STATUS = "Metric Category: DB, Name: addExperimentToDB_sum, Value: 0.132267294"
+loadResultsByExperimentNameCount_STATUS = "Metric Category: DB, Name: loadResultsByExperimentName_count, Value: 1000.0"
+loadResultsByExperimentNameSum_STATUS = "Metric Category: DB, Name: loadResultsByExperimentName_sum, Value: 16.355101603"
+loadExperimentByNameCount_STATUS = "Metric Category: DB, Name: loadExperimentByName_count, Value: 1031.0"
+loadExperimentByNameSum_STATUS = "Metric Category: DB, Name: loadExperimentByName_sum, Value: 1.665818586"
+loadAllResultsCount_STATUS = "Metric Category: DB, Name: loadAllResults_count, Value: 0.0"
+loadAllResultsSum_STATUS = "Metric Category: DB, Name: loadAllResults_sum, Value: 0.0"
+loadRecommendationsByExperimentNameCount_STATUS = "Metric Category: DB, Name: loadRecommendationsByExperimentName_count, Value: 11.0"
+loadRecommendationsByExperimentNameSum_STATUS = "Metric Category: DB, Name: loadRecommendationsByExperimentName_sum, Value: 0.090203608"
+
 time_log_csv = "/tmp/time_log.csv"
 
 # DURATION - No. of days * 24.0 hrs
@@ -418,6 +445,79 @@ def time_diff_in_hours(interval_start_time, interval_end_time):
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
+
+def match_metrics(output_metrics):
+    api_pattern = re.compile(r'kruizeAPI_seconds_(count|sum){api="(\w+)",application="Kruize",method="(\w+)",}\s+([\d.]+)')
+    db_pattern = re.compile(r'kruizeDB_seconds_(count|sum){application="Kruize",method="(\w+)",}\s+([\d.]+)')
+    output_metrics = output_metrics.content.decode('utf-8')
+    api_matches = api_pattern.findall(output_metrics)
+    db_matches = db_pattern.findall(output_metrics)
+    match_metrics = []
+    for match in api_matches:
+        metric_type = match[0]
+        api_name = match[1]
+        http_method = match[2]
+        value = float(match[3])
+        match_metrics.append(('API', metric_type, api_name, http_method, value))
+
+    for match in db_matches:
+        metric_type = match[0]
+        method = match[1]
+        value = float(match[2])
+        match_metrics.append(('DB', metric_type, method, None, value))
+
+    metrics = []
+    for metric in match_metrics:
+        metric_category, metric_type, name, http_method, value = metric
+        metrics_str = f"Metric Category: {metric_category}, Name: {name}_{metric_type}, Value: {value}"
+        metrics.append(metrics_str)
+
+    assertions = [
+        ("createExperiment_count", createExperimentCount_STATUS, 0),
+        ("createExperiment_sum", createExperimentSum_STATUS, 0.5),
+        ("listRecommendations_count", listRecommendationsCount_STATUS, 0),
+        ("listRecommendations_sum", listRecommendationsSum_STATUS, 0.5),
+        ("listExperiments_count", listExperimentsCount_STATUS, 0),
+        ("listExperiments_sum", listExperimentsSum_STATUS, 0),
+        ("updateResults_count", updateResultsCount_STATUS, 0),
+        ("updateResults_sum", updateResultsSum_STATUS, 30),
+        ("addRecommendationToDB_count", addRecommendationToDBCount_STATUS, 0),
+        ("addRecommendationToDB_sum", addRecommendationToDBSum_STATUS, 0.5),
+        ("addResultsToDB_count", addResultsToDBCount_STATUS, 0),
+        ("addResultsToDB_sum", addResultsToDBSum_STATUS, 5),
+        ("loadAllRecommendations_count", loadAllRecommendationsCount_STATUS, 0),
+        ("loadAllRecommendations_sum", loadAllRecommendationsSum_STATUS, 0),
+        ("loadAllExperiments_count", loadAllExperimentsCount_STATUS, 0),
+        ("loadAllExperiments_sum", loadAllExperimentsSum_STATUS, 0),
+        ("addExperimentToDB_count", addExperimentToDBCount_STATUS, 0),
+        ("addExperimentToDB_sum", addExperimentToDBSum_STATUS, 0.5),
+        ("loadResultsByExperimentName_count", loadResultsByExperimentNameCount_STATUS, 0),
+        ("loadResultsByExperimentName_sum", loadResultsByExperimentNameSum_STATUS, 15),
+        ("loadExperimentByName_count", loadExperimentByNameCount_STATUS, 0),
+        ("loadExperimentByName_sum", loadExperimentByNameSum_STATUS, 2),
+        ("loadAllResults_count", loadAllResultsCount_STATUS, 0),
+        ("loadAllResults_sum", loadAllResultsSum_STATUS, 0),
+        ("loadRecommendationsByExperimentName_count", loadRecommendationsByExperimentNameCount_STATUS, 0),
+        ("loadRecommendationsByExperimentName_sum", loadRecommendationsByExperimentNameSum_STATUS, 0.5)
+    ]
+
+    for assertion in assertions:
+        variable_name, status_string, tolerance = assertion
+
+        found_metric = None
+        for metric in metrics:
+            metric_info = metric.split(",")
+            for info in metric_info:
+                if "Name:" in info:
+                    name_value = info.split(":")[-1].strip()
+                    if name_value == variable_name:
+                        found_metric = metric
+                        break
+
+        if found_metric is not None:
+            metric_value = float(found_metric.split("Value:")[-1].strip())
+            status_value = float(status_string.split("Value:")[-1].strip())
+            assert abs(metric_value - status_value) <= tolerance, f"{variable_name} assertion failed. Expected: {status_value}, Actual: {metric_value}, Tolerance: {tolerance}"
 
 def strip_double_quotes_for_field(json_file, field, filename):
 
