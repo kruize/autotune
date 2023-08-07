@@ -79,6 +79,8 @@ public class AnalyzerErrorConstants {
 		public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
 		public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
 		public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than "+ KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS +" seconds";
+		public static final String INCORRECT_TIMESTAMP_FORMAT = "Timestamp format is incorrect! It should be in this format : " + KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT;
+		public static final String INVALID_TIMESTAMP_YEAR = "Year should be greater than " + KruizeConstants.TimeUnitsExt.ACCEPTED_YEAR;
 
 	}
 
