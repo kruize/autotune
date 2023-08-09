@@ -21,6 +21,7 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.summary.NotificationsSummary;
 import com.autotune.analyzer.recommendations.summary.RecommendationSummary;
+import com.autotune.analyzer.recommendations.summary.Summary;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.serviceObjects.SummarizeAPIObject;
@@ -43,8 +44,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -83,15 +86,13 @@ public class Summarize extends HttpServlet {
                     clusterName = clusterName.trim();
                     if (nsName != null) {
                         nsName = nsName.trim();
-                        //TODO: Loading all recommendations from the DB in this case for now, need to update query
-                        experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                        experimentDBService.loadAllRecommendationsByClusterAndNSName(mKruizeExperimentMap, clusterName, nsName);
                     } else {
                         experimentDBService.loadAllRecommendationsByClusterName(mKruizeExperimentMap, clusterName);
                     }
                 } else if (nsName != null) {
                     nsName = nsName.trim();
-                    //TODO: Loading all recommendations from the DB in this case for now, need to update query
-                    experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                    experimentDBService.loadAllRecommendationsByNSName(mKruizeExperimentMap, nsName);
                 } else {
                     experimentDBService.loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                 }
@@ -103,6 +104,8 @@ public class Summarize extends HttpServlet {
             try {
                 // get the latest recommendations
                 recommendationList = ListRecommendations.buildAPIResponse(kruizeObjectList, false,true, null);
+                // sort the json based on cluster names
+                recommendationList = sortJson(recommendationList);
                 // convert the recommendation response to summarizeAPI Object
                 List<SummarizeAPIObject> summarizeAPIObjectList = Converters.KruizeObjectConverters.
                         convertListRecommendationAPIObjToSummarizeAPIObj(recommendationList, nsName, clusterName);
@@ -336,30 +339,42 @@ public class Summarize extends HttpServlet {
         }
         response.sendError(httpStatusCode, errorMsg);
     }
-    public void mergeClusterRecommendations(HashMap<String, HashMap<String, RecommendationSummary>> clusterRecommendationsSummary,
-                                     HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap) {
 
-        for (Map.Entry<String, HashMap<String, RecommendationSummary>> entry : recommendationsCategoryMap.entrySet()) {
-
-            String category = entry.getKey();
-            HashMap<String, RecommendationSummary> recommendationSummaryMap = entry.getValue();
-
-            if (clusterRecommendationsSummary.containsKey(category)) {
-
-                HashMap<String, RecommendationSummary> existing = clusterRecommendationsSummary.get(category);
-
-                for (String resource : existing.keySet()) {
-                    RecommendationSummary existingSummary = existing.get(resource);
-                    RecommendationSummary categorySummary = recommendationSummaryMap.get(resource);
-                    // Merge the summaries
-                    RecommendationSummary merged = mergeSummaries(existingSummary, categorySummary);
-                    // Put merged summary back
-                    existing.put(resource, merged);
-                }
-
-            } else {
-                clusterRecommendationsSummary.put(category, recommendationSummaryMap);
-            }
+    public RecommendationSummary getRecommendationPeriodType(String key, RecommendationSummary shortTermSummary,
+                                                             RecommendationSummary mediumTermSummary,
+                                                             RecommendationSummary longTermSummary,
+                                                             RecommendationSummary costBasedSummary,
+                                                             RecommendationSummary performanceBasedSummary,
+                                                             RecommendationSummary balancedSummary) {
+        RecommendationSummary recommendationSummary;
+        switch (key) {
+            case "short_term":
+                recommendationSummary = shortTermSummary;
+                break;
+            case "medium_term":
+                recommendationSummary = mediumTermSummary;
+                break;
+            case "long_term":
+                recommendationSummary = longTermSummary;
+                break;
+            case "cost":
+                recommendationSummary = costBasedSummary;
+                break;
+            case "performance":
+                recommendationSummary = performanceBasedSummary;
+                break;
+            default:
+                recommendationSummary = balancedSummary;
+                break;
         }
+        return recommendationSummary;
+    }
+
+    public static List<ListRecommendationsAPIObject> sortJson(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList) {
+
+        Comparator<ListRecommendationsAPIObject> clusterNameComparator = Comparator.comparing(ListRecommendationsAPIObject::getClusterName);
+        return listRecommendationsAPIObjectList.stream()
+                .sorted(clusterNameComparator)
+                .collect(Collectors.toList());
     }
 }

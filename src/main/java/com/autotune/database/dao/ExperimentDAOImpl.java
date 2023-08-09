@@ -10,6 +10,7 @@ import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.EntityManager;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -282,13 +283,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizeExperimentEntry> loadExperimentsByClusterAndNSName(String clusterName, String nsName) throws Exception {
-        List<KruizeExperimentEntry> entries = null;
+        List<KruizeExperimentEntry> entries;
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_CLUSTER_AND_NS_NAME, KruizeExperimentEntry.class)
-                    .setParameter("clusterName", clusterName)
-                    .setParameter("namespace", nsName)
-                    .list();
+            EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
+            String sql = "SELECT * FROM public.kruize_experiments WHERE ( cluster_name = '" + clusterName + "'"+
+                    " AND extended_data -> 'kubernetes_objects' @> '[{\"namespace\": \"" + nsName + "\"}]')";
+
+            jakarta.persistence.Query query = entityManager.createNativeQuery(sql, KruizeExperimentEntry.class);
+            entries = query.getResultList();
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());
             throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
@@ -303,9 +306,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         List<KruizeExperimentEntry> entries = null;
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_NS_NAME, KruizeExperimentEntry.class)
-                    .setParameter("namespace", nsName)
-                    .list();
+            EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
+            String sql = "SELECT * FROM public.kruize_experiments WHERE (extended_data -> 'kubernetes_objects' " +
+                    " @> '[{\"namespace\": \"" + nsName + "\"}]')";
+
+            jakarta.persistence.Query query = entityManager.createNativeQuery(sql, KruizeExperimentEntry.class);
+            entries = query.getResultList();
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());
             throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
