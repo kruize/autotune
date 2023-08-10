@@ -18,6 +18,9 @@ This is a planned usecase which is under active development. In this, the target
 
 # ****Use Case 1**: Autotune - Config Recommendation for a User Provided Performance Objective**
 
+Autotune accepts a user provided "slo" goal to optimize application performance. It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided slo. It then runs experiments with the help of a hyperparameter optimization framework to arrive at the most optimal values for the identified set of tunables to get a better result for the user provided slo.
+The trials provided by the HPO is fed to the Experiment Manager which deploys it to the application and then monitors the pods. After all the trials are completed, EM reports the result and generates the recommendation.
+
 **1.Using Bayesian Optimization to tune the OS**
 
 OS tuning settings are improved using Bayesian optimisation. Using the Node Tuning Operator, OpenShift enables the establishment of performance profiles for
