@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,7 +77,7 @@ public class Converters {
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
-                if(null != createExperimentAPIObject.getValidationData()){
+                if (null != createExperimentAPIObject.getValidationData()) {
                     //Validation already done and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
@@ -182,32 +181,33 @@ public class Converters {
             return listRecommendationsAPIObject;
         }
 
-		public static void getLatestResults(ContainerData containerData) {
-			if (null != containerData) {
-				HashMap<Timestamp, IntervalResults> results = containerData.getResults();
-				Timestamp latestTimestamp = null;
-				List<Timestamp> tempList = new ArrayList<>();
-				for (Timestamp timestamp : results.keySet()) {
-					if (null == latestTimestamp) {
-						latestTimestamp = timestamp;
-					} else {
-						if (timestamp.after(latestTimestamp)) {
-							tempList.add(latestTimestamp);
-							latestTimestamp = timestamp;
-						} else {
-							tempList.add(timestamp);
-						}
-					}
-				}
-				for (Timestamp timestamp : tempList) {
-					results.remove(timestamp);
-				}
+        public static void getLatestResults(ContainerData containerData) {
+            if (null != containerData) {
+                HashMap<Timestamp, IntervalResults> results = containerData.getResults();
+                Timestamp latestTimestamp = null;
+                List<Timestamp> tempList = new ArrayList<>();
+                for (Timestamp timestamp : results.keySet()) {
+                    if (null == latestTimestamp) {
+                        latestTimestamp = timestamp;
+                    } else {
+                        if (timestamp.after(latestTimestamp)) {
+                            tempList.add(latestTimestamp);
+                            latestTimestamp = timestamp;
+                        } else {
+                            tempList.add(timestamp);
+                        }
+                    }
+                }
+                for (Timestamp timestamp : tempList) {
+                    results.remove(timestamp);
+                }
                 containerData.setResults(results);
-			}
-		}
+            }
+        }
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
+            experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
             experimentResultData.setExperiment_name(updateResultsAPIObject.getExperimentName());

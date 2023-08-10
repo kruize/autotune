@@ -52,6 +52,10 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+
         for j in range(num_res):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
@@ -74,6 +78,28 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+            # Expecting that we have recommendations
+            if j > 96:
+                # Sleep for 1 sec to get recommendations
+                time.sleep(1)
+
+                response = list_recommendations(experiment_name)
+                if response.status_code == SUCCESS_200_STATUS_CODE:
+                    recommendation_json = response.json()
+                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+                    high_level_notifications = recommendation_section["notifications"]
+                    # Check if duration
+                    assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+
+                    data_section = recommendation_section["data"]
+
+                    short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+
+                    short_term_notifications = short_term_recommendation["notifications"]
+
+                    for notification in short_term_notifications.values():
+                        assert notification["type"] != "error"
 
         # sleep for a while before fetching recommendations
         time.sleep(20)
