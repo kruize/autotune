@@ -36,9 +36,6 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "kruize_performance_profiles")
 public class KruizePerformanceProfileEntry {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long performance_profile_id;
-    @Column(unique = true)
     private String name;
     private double profile_version;
     private String k8s_type;
