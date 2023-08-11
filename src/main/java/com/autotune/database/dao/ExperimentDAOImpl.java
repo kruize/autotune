@@ -388,8 +388,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .getResultList();
             }
-
-
         } catch (NoResultException e) {
             LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
@@ -399,7 +397,5 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
-
-
     }
 }
