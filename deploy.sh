@@ -109,32 +109,32 @@ function usage() {
 # Check if the cluster_type is one of icp or openshift
 function check_cluster_type() {
 	case "${cluster_type}" in
-	docker|minikube|openshift)
-		;;
+	docker | minikube | openshift) ;;
+
 	*)
 		echo "Error: unsupported cluster type: ${cluster_type}"
 		exit -1
+		;;
 	esac
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:m:n:o:p:stu:-: gopts
-do
+while getopts ac:d:i:k:m:n:o:p:stu:-: gopts; do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
-			timeout=*)
-				timeout=${OPTARG#*=}
-				if [ -z "${timeout}" ]; then
-					usage
-				fi
-				;;
-			*)
-				if [ "${OPTERR}" == 1 ] && [ "${OPTSPEC:0:1}" != ":" ]; then
-					echo "Unknown option --${OPTARG}" >&2
-					usage
-				fi
-				;;
+		timeout=*)
+			timeout=${OPTARG#*=}
+			if [ -z "${timeout}" ]; then
+				usage
+			fi
+			;;
+		*)
+			if [ "${OPTERR}" == 1 ] && [ "${OPTSPEC:0:1}" != ":" ]; then
+				echo "Unknown option --${OPTARG}" >&2
+				usage
+			fi
+			;;
 		esac
 		;;
 	a)
@@ -153,7 +153,7 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
-  m)
+	m)
 		target="${OPTARG}"
 		;;
 	n)
@@ -168,11 +168,12 @@ do
 	t)
 		setup=0
 		;;
-  u)
-    KRUIZE_UI_DOCKER_IMAGE="${OPTARG}"
-    ;;
+	u)
+		KRUIZE_UI_DOCKER_IMAGE="${OPTARG}"
+		;;
 	[?])
 		usage
+		;;
 	esac
 done
 
