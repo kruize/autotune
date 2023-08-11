@@ -55,14 +55,12 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
-    Map<String, PerformanceProfile> performanceProfilesMap;
+    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
 
-        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
-                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
         int totalResultsCount = 0;
         getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, totalResultsCount);
     }

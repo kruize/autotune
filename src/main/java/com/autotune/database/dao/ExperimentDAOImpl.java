@@ -6,6 +6,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.MetricsConfig;
@@ -104,6 +105,31 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
         } finally {
             if (null != timerAddRecDB) timerAddRecDB.stop(MetricsConfig.timerAddRecDB);
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizePerformanceProfileEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save performance profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save performance profile due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
         }
         return validationOutputData;
     }
@@ -215,6 +241,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception {
+        List<KruizePerformanceProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE, KruizePerformanceProfileEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Performance Profile  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Performance Profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    @Override
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
@@ -262,6 +300,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerLoadRecExpName) timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
         }
         return recommendationEntries;
+    }
+
+    @Override
+    public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
+        List<KruizePerformanceProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
+                    .setParameter("name", performanceProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
+            throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
+        }
+        return entries;
     }
 
     @Override

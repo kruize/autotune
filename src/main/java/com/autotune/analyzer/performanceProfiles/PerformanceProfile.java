@@ -26,15 +26,35 @@ import com.google.gson.annotations.SerializedName;
 
 public class PerformanceProfile {
 
-    private final  String name;
+    private String name;
 
-    private final double profile_version;
+    private double profile_version;
 
     @SerializedName("k8s_type")
-    private final String k8s_type;
+    private String k8s_type;
 
     @SerializedName("slo")
-    private final SloInfo sloInfo;
+    private SloInfo sloInfo;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setProfile_version(double profile_version) {
+        this.profile_version = profile_version;
+    }
+
+    public String getK8s_type() {
+        return k8s_type;
+    }
+
+    public void setK8s_type(String k8s_type) {
+        this.k8s_type = k8s_type;
+    }
+
+    public void setSloInfo(SloInfo sloInfo) {
+        this.sloInfo = sloInfo;
+    }
 
     public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
         this.name = name;

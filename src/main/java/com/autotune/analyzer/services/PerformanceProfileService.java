@@ -26,6 +26,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.database.service.ExperimentDBService;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -46,6 +47,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -59,14 +61,11 @@ public class PerformanceProfileService extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
-    Map<String, PerformanceProfile> performanceProfilesMap;
 
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
-                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     /**
@@ -80,13 +79,21 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
             ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
-                LOGGER.debug("Added Performance Profile : {} into the map with version: {}",
-                        performanceProfile.getName(), performanceProfile.getProfile_version());
-                sendSuccessResponse(response, "Performance Profile : "+performanceProfile.getName()+" created successfully.");
+                ValidationOutputData addedToDB;
+                addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
+                if (addedToDB.isSuccess()) {
+                    LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
+                            performanceProfile.getName(), performanceProfile.getProfile_version());
+                    sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getName() + " created successfully.");
+                }
+                else {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                }
             }
             else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
@@ -110,7 +117,14 @@ public class PerformanceProfileService extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
-        if (this.performanceProfilesMap.size() > 0) {
+        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+        // Fetch all profiles from the DB
+        try {
+            new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
+        } catch (Exception e) {
+            LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
+        }
+        if (performanceProfilesMap.size() > 0) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
