@@ -363,7 +363,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
                         .getSingleResult();
-            }else{
+            } else {
                 kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .getSingleResult();
@@ -378,4 +378,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeResultsEntry;
     }
+
+
 }
