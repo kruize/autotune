@@ -165,6 +165,12 @@ public class ExperimentResultValidation {
                         */
                         try {
                             LOGGER.debug("Kruize Object: {}", kruizeObject);
+                            // fetch the Performance Profile from the DB
+                            try {
+                                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                            } catch (Exception e) {
+                                LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
+                            }
                             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                             // validate the 'resultdata' with the performance profile
                             errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, resultData);

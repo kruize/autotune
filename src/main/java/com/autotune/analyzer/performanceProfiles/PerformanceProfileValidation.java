@@ -20,6 +20,7 @@ import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -90,6 +91,11 @@ public class PerformanceProfileValidation {
 
         // If the mandatory values are present,proceed for further validation else return the validation object directly
         if (validationOutputData.isSuccess()) {
+            try {
+                new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
+            }
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
             if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
