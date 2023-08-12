@@ -40,9 +40,10 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
 
         KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
 
-        Double parsedMeasurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
         IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         Double durationInSeconds = intervalResults.getDuration_in_seconds();
+        String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
+        Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
         // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
         double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
         double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
