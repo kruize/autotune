@@ -21,7 +21,6 @@ import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
@@ -62,6 +61,18 @@ public class UpdateRecommendations extends HttpServlet {
         super.init(config);
     }
 
+    /**
+     * Generates recommendations
+     *
+     * @param request  an {@link HttpServletRequest} object that
+     *                 contains the request the client has made
+     *                 of the servlet
+     * @param response an {@link HttpServletResponse} object that
+     *                 contains the response the servlet sends
+     *                 to the client
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Get the values from the request parameters
@@ -80,10 +91,9 @@ public class UpdateRecommendations extends HttpServlet {
             return;
         }
 
-        LOGGER.debug("experiment_name : {} and interval_end_time : {}", experiment_name, intervalEndTimeStr);
         // Convert interval_endtime to UTC date format
-        Timestamp interval_end_time = null ;
-        if (intervalEndTimeStr != null ) {
+        Timestamp interval_end_time = null;
+        if (intervalEndTimeStr != null) {
             if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
                 sendErrorResponse(
                         response,
