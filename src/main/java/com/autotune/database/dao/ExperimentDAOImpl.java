@@ -9,8 +9,10 @@ import com.autotune.database.table.KruizeExperimentEntry;
 import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.NoResultException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -18,6 +20,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
@@ -49,7 +52,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
         } finally {
-            if (null != timerAddExpDB)  timerAddExpDB.stop(MetricsConfig.timerAddExpDB);
+            if (null != timerAddExpDB) timerAddExpDB.stop(MetricsConfig.timerAddExpDB);
         }
         return validationOutputData;
     }
@@ -88,10 +91,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerAddRecDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
-                tx = session.beginTransaction();
-                session.persist(recommendationEntry);
-                tx.commit();
-                validationOutputData.setSuccess(true);
+                KruizeRecommendationEntry existingRecommendationEntry = loadRecommendationsByExperimentNameAndDate(recommendationEntry.getExperiment_name(), recommendationEntry.getInterval_end_time());
+                if (null == existingRecommendationEntry) {
+                    tx = session.beginTransaction();
+                    session.persist(recommendationEntry);
+                    tx.commit();
+                    validationOutputData.setSuccess(true);
+                } else {
+                    tx = session.beginTransaction();
+                    existingRecommendationEntry.setExtended_data(recommendationEntry.getExtended_data());
+                    session.merge(existingRecommendationEntry);
+                    tx.commit();
+                    validationOutputData.setSuccess(true);
+                }
             } catch (Exception e) {
                 LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
@@ -226,7 +238,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
         Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             recommendationEntries = session.createQuery(
                     DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS,
                     KruizeRecommendationEntry.class).list();
@@ -269,13 +281,21 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName) throws Exception {
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
         Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
-                    .setParameter("experimentName", experimentName).list();
+            if (null != limitRows && null != interval_end_time) {
+                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                        .setMaxResults(limitRows)
+                        .list();
+            } else {
+                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
+                        .setParameter("experimentName", experimentName).list();
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to load results due to: {}", e.getMessage());
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
@@ -289,7 +309,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception {
         List<KruizeRecommendationEntry> recommendationEntries = null;
         Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME, KruizeRecommendationEntry.class)
                     .setParameter("experimentName", experimentName).list();
         } catch (Exception e) {
@@ -313,4 +333,51 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
+
+    public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
+        KruizeRecommendationEntry recommendationEntries = null;
+        Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            recommendationEntries = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME, KruizeRecommendationEntry.class)
+                    .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            LOGGER.debug("Generating mew recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            recommendationEntries = null;
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadRecExpName) timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
+        }
+        return recommendationEntries;
+    }
+
+    @Override
+    public KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception {
+        KruizeResultsEntry kruizeResultsEntry = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            if (null != interval_end_time) {
+                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                        .getSingleResult();
+            } else {
+                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
+                        .getSingleResult();
+            }
+        } catch (NoResultException e) {
+            LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
+            kruizeResultsEntry = null;
+        } catch (Exception e) {
+            kruizeResultsEntry = null;
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        }
+        return kruizeResultsEntry;
+    }
+
+
 }

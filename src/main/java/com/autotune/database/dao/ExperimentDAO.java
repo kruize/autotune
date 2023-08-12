@@ -8,6 +8,7 @@ import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface ExperimentDAO {
@@ -46,12 +47,19 @@ public interface ExperimentDAO {
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
     // Load all results for a particular experimentName
-    List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName) throws Exception;
+    List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_start_time, Integer limitRows) throws Exception;
 
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
+
+    // Load all recommendations of a particular experiment and interval end Time
+    KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception;
+
+    // Get KruizeResult Record
+    KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception;
+
 
 }

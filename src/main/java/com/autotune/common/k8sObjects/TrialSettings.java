@@ -49,6 +49,11 @@ public class TrialSettings {
         this.measurement_durationMinutes = measurement_durationMinutes;
     }
 
+    public Double getMeasurement_durationMinutes_inDouble() {
+        String measurementDurationInMins = getMeasurement_durationMinutes();
+        return Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
+    }
+
     @Override
     public String toString() {
         return "TrialSettings{" +
