@@ -37,12 +37,14 @@ public class ExperimentNameExistValidator implements ConstraintValidator<Experim
     public boolean isValid(String experimentName, ConstraintValidatorContext context) {
         boolean success = false;
         String errorMessage = "";
-        // Retrieve the data from the database
-        try {
-            new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
-        } catch (Exception e) {
-            LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
-            errorMessage = String.format("failed to load from DB due to %s", e.getMessage());
+        if (!mainKruizeExperimentMAP.containsKey(experimentName)) {
+            // Retrieve the data from the database
+            try {
+                new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
+                errorMessage = String.format("failed to load from DB due to %s", e.getMessage());
+            }
         }
 
         if (mainKruizeExperimentMAP.containsKey(experimentName)) {

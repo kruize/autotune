@@ -34,65 +34,72 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         boolean success = false;
-        KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-        PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-        ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
-        String expName = kruizeObject.getExperimentName();
-        String errorMsg = "";
-        boolean kubeObjsMisMatch = false;
+        try {
+            KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+            String expName = kruizeObject.getExperimentName();
+            String errorMsg = "";
+            boolean kubeObjsMisMatch = false;
 
-        // Check if Kubernetes Object Type is matched
-        String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
-        String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
+            // Check if Kubernetes Object Type is matched
+            String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
+            String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
 
-        if (!kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
-            kubeObjsMisMatch = true;
-            errorMsg = errorMsg.concat(
-                    String.format(
-                            "Kubernetes Object Types MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
-                            kubeObjTypeInKruizeObject,
-                            kubeObjTypeInResultData,
-                            expName
-                    ));
-        }
+            if (!kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(
+                        String.format(
+                                "Kubernetes Object Types MisMatched. Expected Type: %s, Found: %s in Results for experiment: %s \n",
+                                kubeObjTypeInKruizeObject,
+                                kubeObjTypeInResultData,
+                                expName
+                        ));
+            }
 
-        // Check if Kubernetes Object Name is matched
-        String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
-        String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
+            // Check if Kubernetes Object Name is matched
+            String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
+            String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
 
-        if (!kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
-            kubeObjsMisMatch = true;
-            errorMsg = errorMsg.concat(
-                    String.format(
-                            "Kubernetes Object Names MisMatched. Expected Name: %s, Found: %s in Results for experiment: %s \n",
-                            kubeObjNameInKruizeObject,
-                            kubeObjNameInResultsData,
-                            expName
-                    ));
-        }
+            if (!kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(
+                        String.format(
+                                "Kubernetes Object Names MisMatched. Expected Name: %s, Found: %s in Results for experiment: %s \n",
+                                kubeObjNameInKruizeObject,
+                                kubeObjNameInResultsData,
+                                expName
+                        ));
+            }
 
-        // Check if Kubernetes Object NameSpace is matched
-        String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
-        String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
+            // Check if Kubernetes Object NameSpace is matched
+            String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
+            String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
-        if (!kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
-            kubeObjsMisMatch = true;
-            errorMsg = errorMsg.concat(
-                    String.format(
-                            "Kubernetes Object Namespaces MisMatched. Expected Namespace: %s, Found: %s in Results for experiment: %s \n",
-                            kubeObjNameSpaceInKruizeObject,
-                            kubeObjNameSpaceInResultsData,
-                            expName
-                    ));
-        }
+            if (!kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(
+                        String.format(
+                                "Kubernetes Object Namespaces MisMatched. Expected Namespace: %s, Found: %s in Results for experiment: %s \n",
+                                kubeObjNameSpaceInKruizeObject,
+                                kubeObjNameSpaceInResultsData,
+                                expName
+                        ));
+            }
 
-        if (kubeObjsMisMatch) {
+            if (kubeObjsMisMatch) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(errorMsg)
+                        .addPropertyNode("kubernetes_objects ")
+                        .addConstraintViolation();
+            } else {
+                success = true;
+            }
+        } catch (Exception e) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(errorMsg)
-                    .addPropertyNode("kubernetes_objects ")
+            context.buildConstraintViolationWithTemplate(e.getMessage())
+                    .addPropertyNode("Kubernetes Elements")
                     .addConstraintViolation();
-        } else {
-            success = true;
         }
 
         return success;
