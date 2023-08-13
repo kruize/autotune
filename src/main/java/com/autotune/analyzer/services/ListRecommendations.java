@@ -221,7 +221,7 @@ public class ListRecommendations extends HttpServlet {
         }
     }
 
-    protected static List<ListRecommendationsAPIObject> buildAPIResponse(List<KruizeObject> kruizeObjectList, boolean checkForTimestamp, boolean getLatest,
+    public static List<ListRecommendationsAPIObject> buildAPIResponse(List<KruizeObject> kruizeObjectList, boolean checkForTimestamp, boolean getLatest,
                                                                          Timestamp monitoringEndTimestamp) {
 
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();

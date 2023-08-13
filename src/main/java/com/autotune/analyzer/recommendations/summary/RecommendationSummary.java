@@ -15,15 +15,13 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations.summary;
 
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.services.Summarize;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Storage object for recommendation
@@ -81,20 +79,17 @@ public class RecommendationSummary {
     }
 
     // Merge existing values with new ones
-    public void mergeValues(RecommendationSummary newRecommendationSum) {
-        if (newRecommendationSum.getCurrentConfig() != null) {
-            this.currentConfig = newRecommendationSum.getCurrentConfig();
-        }
-        if (newRecommendationSum.getConfig() != null) {
-            this.config = newRecommendationSum.getConfig();
-        }
-        if (newRecommendationSum.getChange() != null) {
-            this.change = newRecommendationSum.change;
-        }
-        if (newRecommendationSum.notificationsSummary != null) {
-            this.notificationsSummary = newRecommendationSum.notificationsSummary;
-        }
+    public RecommendationSummary mergeSummaries(RecommendationSummary summary1, RecommendationSummary summary2) {
+        Summarize summarize = new Summarize();
+        RecommendationSummary mergedSummary = new RecommendationSummary();
+
+        mergedSummary.setCurrentConfig(summarize.mergeConfigItems(summary1.getCurrentConfig(), summary2.getCurrentConfig(), mergedSummary.getCurrentConfig()));
+        mergedSummary.setConfig(summarize.mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
+        mergedSummary.setChange(summarize.mergeChange(summary1, summary2, mergedSummary.getChange()));
+        mergedSummary.setNotificationsSummary(summary1.getNotificationsSummary().mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
+        return mergedSummary;
     }
+
 
     @Override
     public String toString() {

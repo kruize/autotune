@@ -56,9 +56,17 @@ public interface ExperimentDAO {
 
     List<String> loadClusterNames() throws Exception;
 
-    List<KruizeExperimentEntry> loadExperimentsByClusterAndNSName(String clusterName, String nsName) throws Exception;
-
-    List<KruizeExperimentEntry> loadExperimentsByNSName(String nsName) throws Exception;
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByNamespaceName(String namespaceName) throws Exception;
 
     List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentFromDBByClusterAndNamespaceName(String clusterName, String namespaceName) throws Exception;
+
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByClusterAndNamespaceName(String clusterName, String namespaceName) throws Exception;
+
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByClusterName(String clusterName) throws Exception;
+
+    List<String> loadNamespaceNames() throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByNamespaceName(String namespaceName) throws Exception;
 }

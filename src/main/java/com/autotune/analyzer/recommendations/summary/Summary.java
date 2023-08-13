@@ -10,6 +10,8 @@ public class Summary {
 
     private Namespaces namespaces;
     private Workloads workloads;
+    private Clusters clusters;
+    private Containers containers;
 
     public HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> getData() {
         return data;
@@ -17,10 +19,6 @@ public class Summary {
 
     public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data) {
         this.data = data;
-    }
-
-    public NotificationsSummary getNotificationsSummary() {
-        return notificationsSummary;
     }
 
     public void setNotificationsSummary(NotificationsSummary notificationsSummary) {
@@ -42,6 +40,21 @@ public class Summary {
         this.workloads = workloads;
     }
 
+    public Clusters getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(Clusters clusters) {
+        this.clusters = clusters;
+    }
+
+    public Containers getContainers() {
+        return containers;
+    }
+
+    public void setContainers(Containers containers) {
+        this.containers = containers;
+    }
     @Override
     public String toString() {
         return "Summary{" +
@@ -49,6 +62,8 @@ public class Summary {
                 ", notificationsSummary=" + notificationsSummary +
                 ", namespaces=" + namespaces +
                 ", workloads=" + workloads +
+                ", clusters=" + clusters +
+                ", containers=" + containers +
                 '}';
     }
 }

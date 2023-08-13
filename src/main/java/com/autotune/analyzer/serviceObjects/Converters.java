@@ -6,9 +6,8 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.recommendations.*;
-import com.autotune.analyzer.recommendations.summary.*;
-import com.autotune.analyzer.services.Summarize;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -26,14 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class Converters {
     private Converters() {
@@ -293,129 +288,6 @@ public class Converters {
 
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
-        }
-
-        public static List<SummarizeAPIObject> convertListRecommendationAPIObjToSummarizeAPIObj(List<ListRecommendationsAPIObject>
-                                                                                                        listRecommendationsAPIObjectList,
-                                                                                                String nsName, String clusterName) {
-            Summarize summarize = new Summarize();
-            Set<SummarizeAPIObject> summarizeAPIObjectsSet = new HashSet<>();
-            // Get the current system timestamp in UTC and set it for the response
-            Instant currentTime = Instant.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-            String formattedTime = currentTime.atZone(java.time.ZoneOffset.UTC).format(formatter);
-            Timestamp currentTimestamp = Timestamp.from(Instant.parse(formattedTime));
-
-            HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data = null;
-            HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = null;
-            HashMap<String, RecommendationSummary> recommendationsPeriodMap = null;
-            Set<String> namespaceSet = null;
-            NotificationsSummary allOuterNotificationsSummary = null;
-            Set<String> workloadsSet = null;
-            Summary summary = null;
-            RecommendationSummary shortTermSummary = null;
-            RecommendationSummary mediumTermSummary = null;
-            RecommendationSummary longTermSummary = null;
-            RecommendationSummary costBasedSummary = null;
-            RecommendationSummary performanceBasedSummary = null;
-            RecommendationSummary balancedSummary = null;
-
-            Map<String, SummarizeAPIObject> clusterToSummarizeAPIObjectMap = new HashMap<>();
-            SummarizeAPIObject currentSummarizeAPIObject = null;
-
-            for (ListRecommendationsAPIObject listRecommendationsAPIObject : listRecommendationsAPIObjectList) {
-                String currentClusterName = listRecommendationsAPIObject.getClusterName();
-                if (currentSummarizeAPIObject == null || !currentClusterName.equalsIgnoreCase(currentSummarizeAPIObject.getClusterName())) {
-                    currentSummarizeAPIObject = clusterToSummarizeAPIObjectMap.get(currentClusterName);
-                    if (currentSummarizeAPIObject == null) {
-                        currentSummarizeAPIObject = new SummarizeAPIObject();
-                        clusterToSummarizeAPIObjectMap.put(currentClusterName, currentSummarizeAPIObject);
-                    }
-                    // Reset fields for each new cluster to create new objects
-                    namespaceSet = new HashSet<>();
-                    workloadsSet = new HashSet<>();
-                    recommendationsCategoryMap = new HashMap<>();
-                    recommendationsPeriodMap = new HashMap<>();
-                    data = new HashMap<>();
-                    allOuterNotificationsSummary = new NotificationsSummary();
-                    summary = new Summary();
-                    shortTermSummary = new RecommendationSummary();
-                    mediumTermSummary = new RecommendationSummary();
-                    longTermSummary = new RecommendationSummary();
-                    costBasedSummary = new RecommendationSummary();
-                    performanceBasedSummary = new RecommendationSummary();
-                    balancedSummary = new RecommendationSummary();
-                }
-
-                LOGGER.info("cluster name = {}", listRecommendationsAPIObject.getClusterName());
-
-                for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
-                    LOGGER.debug("namespace = {}", kubernetesAPIObject.getNamespace());
-
-                    for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                        LOGGER.debug("container name = {}", containerAPIObject.getContainer_name());
-
-                        ContainerRecommendations containerRecommendations = containerAPIObject.getContainerRecommendations();
-
-                        for (Map.Entry<Timestamp, HashMap<String, HashMap<String, Recommendation>>> containerRecommendationMapEntry
-                                : containerRecommendations.getData().entrySet()) {
-                            for (Map.Entry<String, HashMap<String, Recommendation>> recommPeriodMapEntry :
-                                    containerRecommendationMapEntry.getValue().entrySet()) {
-                                LOGGER.debug("RecommendationType = {}", recommPeriodMapEntry.getKey());
-                                String recommendationPeriod = recommPeriodMapEntry.getKey();// duration, profile
-
-                                for (Map.Entry<String, Recommendation> recommendationsMapEntry : recommPeriodMapEntry.getValue().entrySet()) {
-                                    String key = recommendationsMapEntry.getKey();// short, medium, long or cost, performance, balanced
-                                    LOGGER.debug("RecommendationsPeriod = {}", key);
-                                    RecommendationSummary recommendationSummary = summarize.getRecommendationPeriodType(key, shortTermSummary,
-                                            mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
-                                    Recommendation recommendation = recommendationsMapEntry.getValue();
-                                    if (recommendation.getCurrentConfig() != null) {
-                                        RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
-                                        if (recommendationsPeriodMap.containsKey(key)) {
-                                            recommendationSummary = summarize.mergeSummaries(recommendationsPeriodMap.get(key), recommendationSummaryCurrent);
-                                        } else {
-                                            recommendationSummary = recommendationSummaryCurrent;
-                                        }
-                                        recommendationsPeriodMap.put(key, recommendationSummary);
-                                    }
-                                    LOGGER.debug("recommendationSummary currentConfig = {}", recommendationSummary.getCurrentConfig());
-                                }
-                                recommendationsCategoryMap.put(recommendationPeriod, recommendationsPeriodMap);
-                            }
-                        }
-                        // get the outer notifications summary here
-                        NotificationsSummary currentNotificationsSummary = summarize.calculateNotificationsSummary(containerRecommendations.getNotificationMap());
-                        if (allOuterNotificationsSummary != null) {
-                            allOuterNotificationsSummary = summarize.mergeNotificationsSummary(allOuterNotificationsSummary, currentNotificationsSummary);
-                        }
-                        else {
-                            allOuterNotificationsSummary = currentNotificationsSummary;
-                        }
-                    }
-                    workloadsSet.add(kubernetesAPIObject.getName());
-                    namespaceSet.add(kubernetesAPIObject.getNamespace());
-                }
-                data.put(currentTimestamp, recommendationsCategoryMap);
-                summary.setData(data);
-                // set the recommendations level notifications summary
-                summary.setNotificationsSummary(allOuterNotificationsSummary);
-                // set the namespaces/workloads object
-                if (clusterName == null && nsName != null) {
-                    Workloads workloads = new Workloads(workloadsSet.size(), new ArrayList<>(workloadsSet));
-                    summary.setWorkloads(workloads);
-                    currentSummarizeAPIObject.setNamespace(nsName);
-                } else {
-                    Namespaces namespaces = new Namespaces(namespaceSet.size(), new ArrayList<>(namespaceSet));
-                    summary.setNamespaces(namespaces);
-                }
-                currentSummarizeAPIObject.setSummary(summary);
-                currentSummarizeAPIObject.setClusterName(listRecommendationsAPIObject.getClusterName());
-                summarizeAPIObjectsSet.add(currentSummarizeAPIObject);
-            }
-            List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
-            summarizeAPIObjectList.addAll(summarizeAPIObjectsSet);
-            return summarizeAPIObjectList;
         }
     }
 }
