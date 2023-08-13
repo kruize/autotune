@@ -37,6 +37,7 @@ public class ServerContext {
     public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
+    public static final String UPDATE_RECOMMENDATIONS = ROOT_CONTEXT + "updateRecommendations";
     public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
     public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
     public static final String LIST_PERF_PROFILES = ROOT_CONTEXT + "listPerformanceProfiles";
@@ -47,6 +48,7 @@ public class ServerContext {
     public static final String SEARCH_SPACE_END_POINT = KRUIZE_SERVER_URL + SEARCH_SPACE;
     public static final String LIST_EXPERIMENTS_END_POINT = KRUIZE_SERVER_URL + LIST_EXPERIMENTS;
     public static final String UPDATE_RESULTS_END_POINT = KRUIZE_SERVER_URL + UPDATE_RESULTS;
+    public static final String UPDATE_RECOMMENDATIONS_END_POINT = KRUIZE_SERVER_URL + UPDATE_RECOMMENDATIONS;
 
     // HPO End Points
     public static final String HPO_SERVER_URL = "http://localhost:" + HPO_SERVER_PORT;
