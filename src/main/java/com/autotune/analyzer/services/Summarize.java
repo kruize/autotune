@@ -297,7 +297,7 @@ public class Summarize extends HttpServlet {
                                 RecommendationSummary recommendationSummary = summarize.getRecommendationPeriodType(key, shortTermSummary,
                                         mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
                                 Recommendation recommendation = recommendationsMapEntry.getValue();
-                                if (recommendation.getCurrentConfig() != null) {
+                                if (recommendation.getConfig() != null) {
                                     RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
                                     if (recommendationsPeriodMap.containsKey(key)) {
                                         recommendationSummary = recommendationSummaryCurrent.mergeSummaries(recommendationsPeriodMap.get(key), recommendationSummaryCurrent);
@@ -306,7 +306,6 @@ public class Summarize extends HttpServlet {
                                     }
                                     recommendationsPeriodMap.put(key, recommendationSummary);
                                 }
-                                LOGGER.debug("recommendationSummary currentConfig = {}", recommendationSummary.getCurrentConfig());
                             }
                             recommendationsCategoryMap.put(recommendationPeriod, recommendationsPeriodMap);
                         }
@@ -366,12 +365,9 @@ public class Summarize extends HttpServlet {
         for (ListRecommendationsAPIObject listRecommendationsAPIObject : listRecommendationsAPIObjectList) {
             String currentClusterName = listRecommendationsAPIObject.getClusterName();
             clustersSet.add(currentClusterName);
-            LOGGER.debug("cluster name = {}", currentClusterName);
             for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
                 String currentNamespace = kubernetesAPIObject.getNamespace();
-                LOGGER.debug("namespace = {}", currentNamespace);
                 for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                    LOGGER.debug("container name = {}", containerAPIObject.getContainer_name());
                     ContainerRecommendations containerRecommendations = containerAPIObject.getContainerRecommendations();
                     for (Map.Entry<Timestamp, HashMap<String, HashMap<String, Recommendation>>> containerRecommendationMapEntry
                             : containerRecommendations.getData().entrySet()) {
@@ -386,7 +382,7 @@ public class Summarize extends HttpServlet {
                                 RecommendationSummary recommendationSummary = summarize.getRecommendationPeriodType(key, shortTermSummary,
                                         mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
                                 Recommendation recommendation = recommendationsMapEntry.getValue();
-                                if (recommendation.getCurrentConfig() != null) {
+                                if (recommendation.getConfig() != null) {
                                     RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
                                     if (recommendationsPeriodMap.containsKey(key)) {
                                         recommendationSummary = recommendationSummaryCurrent.mergeSummaries(recommendationsPeriodMap.get(key), recommendationSummaryCurrent);
@@ -395,7 +391,6 @@ public class Summarize extends HttpServlet {
                                     }
                                     recommendationsPeriodMap.put(key, recommendationSummary);
                                 }
-                                LOGGER.debug("recommendationSummary currentConfig = {}", recommendationSummary.getCurrentConfig());
                             }
                             recommendationsCategoryMap.put(recommendationPeriod, recommendationsPeriodMap);
                         }
@@ -429,10 +424,15 @@ public class Summarize extends HttpServlet {
     }
     public RecommendationSummary convertToSummary(Recommendation recommendation) {
         RecommendationSummary summary = new RecommendationSummary();
-        summary.setCurrentConfig(recommendation.getCurrentConfig());
-        summary.setConfig(recommendation.getConfig());
-        summary.setChange(calculateChange(recommendation));
-        summary.setNotificationsSummary(calculateNotificationsSummary(recommendation.getNotifications()));
+        try {
+            summary.setCurrentConfig(recommendation.getCurrentConfig());
+            summary.setConfig(recommendation.getConfig());
+            summary.setChange(calculateChange(recommendation));
+            summary.setNotificationsSummary(calculateNotificationsSummary(recommendation.getNotifications()));
+        } catch (Exception e){
+            LOGGER.error("Exception occurred while converting recommendation to recommendationSummary: {}", e.getMessage());
+            e.getMessage();
+        }
         return summary;
     }
 
@@ -470,33 +470,38 @@ public class Summarize extends HttpServlet {
         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> decreaseConfig = changeMap.get(AnalyzerConstants.ResourceChange.decrease);
 
         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variationMap = new HashMap<>();
-        for (AnalyzerConstants.ResourceSetting resourceSetting : variationConfig.keySet()) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> variationItemMap = new HashMap<>();
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> increaseItemMap = increaseConfig.getOrDefault(resourceSetting, new HashMap<>());
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> decreaseItemMap = decreaseConfig.getOrDefault(resourceSetting, new HashMap<>());
+        try {
+            for (AnalyzerConstants.ResourceSetting resourceSetting : variationConfig.keySet()) {
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> variationItemMap = new HashMap<>();
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> increaseItemMap = increaseConfig.getOrDefault(resourceSetting, new HashMap<>());
+                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> decreaseItemMap = decreaseConfig.getOrDefault(resourceSetting, new HashMap<>());
 
-            for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : variationConfig.get(resourceSetting).entrySet()) {
-                AnalyzerConstants.RecommendationItem recommendationItem = entry.getKey();
-                RecommendationConfigItem variationConfigItem = entry.getValue();
+                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : variationConfig.get(resourceSetting).entrySet()) {
+                    AnalyzerConstants.RecommendationItem recommendationItem = entry.getKey();
+                    RecommendationConfigItem variationConfigItem = entry.getValue();
 
-                RecommendationConfigItem increaseConfigItem = increaseItemMap.get(recommendationItem);
-                if (increaseConfigItem == null) {
-                    increaseConfigItem = new RecommendationConfigItem(0.0, null);
+                    RecommendationConfigItem increaseConfigItem = increaseItemMap.get(recommendationItem);
+                    if (increaseConfigItem == null) {
+                        increaseConfigItem = new RecommendationConfigItem(0.0, null);
+                    }
+
+                    RecommendationConfigItem decreaseConfigItem = decreaseItemMap.get(recommendationItem);
+                    if (decreaseConfigItem == null) {
+                        decreaseConfigItem = new RecommendationConfigItem(0.0, null);
+                    }
+
+                    double variationValue = increaseConfigItem.getAmount() + decreaseConfigItem.getAmount();
+                    variationConfigItem.setAmount(variationValue);
+                    variationItemMap.put(recommendationItem, variationConfigItem);
                 }
 
-                RecommendationConfigItem decreaseConfigItem = decreaseItemMap.get(recommendationItem);
-                if (decreaseConfigItem == null) {
-                    decreaseConfigItem = new RecommendationConfigItem(0.0, null);
-                }
-
-                double variationValue = increaseConfigItem.getAmount() + decreaseConfigItem.getAmount();
-                variationConfigItem.setAmount(variationValue);
-                variationItemMap.put(recommendationItem, variationConfigItem);
+                variationMap.put(resourceSetting, variationItemMap);
             }
-
-            variationMap.put(resourceSetting, variationItemMap);
+            changeMap.put(AnalyzerConstants.ResourceChange.variation, variationMap);
+        } catch (Exception e){
+            LOGGER.error("Exception occurred while building Change object: {}", e.getMessage());
+            e.getMessage();
         }
-        changeMap.put(AnalyzerConstants.ResourceChange.variation, variationMap);
         return changeMap;
     }
 
@@ -530,8 +535,11 @@ public class Summarize extends HttpServlet {
             configMap = new HashMap<>();
         }
 
-        mergeConfigMap(configMap, config1);
-        mergeConfigMap(configMap, config2);
+        // if the incoming config is null, skip merging
+        if( config1 != null)
+            mergeConfigMap(configMap, config1);
+        if( config2 != null)
+            mergeConfigMap(configMap, config2);
 
         return configMap;
     }

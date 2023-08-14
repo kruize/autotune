@@ -82,11 +82,15 @@ public class RecommendationSummary {
     public RecommendationSummary mergeSummaries(RecommendationSummary summary1, RecommendationSummary summary2) {
         Summarize summarize = new Summarize();
         RecommendationSummary mergedSummary = new RecommendationSummary();
-
-        mergedSummary.setCurrentConfig(summarize.mergeConfigItems(summary1.getCurrentConfig(), summary2.getCurrentConfig(), mergedSummary.getCurrentConfig()));
-        mergedSummary.setConfig(summarize.mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
-        mergedSummary.setChange(summarize.mergeChange(summary1, summary2, mergedSummary.getChange()));
-        mergedSummary.setNotificationsSummary(summary1.getNotificationsSummary().mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
+        try {
+            mergedSummary.setCurrentConfig(summarize.mergeConfigItems(summary1.getCurrentConfig(), summary2.getCurrentConfig(), mergedSummary.getCurrentConfig()));
+            mergedSummary.setConfig(summarize.mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
+            mergedSummary.setChange(summarize.mergeChange(summary1, summary2, mergedSummary.getChange()));
+            mergedSummary.setNotificationsSummary(summary1.getNotificationsSummary().mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
+        } catch (Exception e){
+            System.out.println("Exception occurred while merging recommendations: "+ e.getMessage());
+            e.getMessage();
+        }
         return mergedSummary;
     }
 
