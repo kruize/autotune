@@ -13,6 +13,7 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -68,7 +69,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 session.persist(resultsEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
-            } catch (HibernateException e) {
+            } catch (PersistenceException ex) {
+                if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(
+                            String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
+                    );
+                } else {
+                    throw new Exception(ex.getMessage());
+                }
+            } catch (Exception e) {
                 LOGGER.error("Not able to save experiment due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
@@ -378,6 +388,4 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeResultsEntry;
     }
-
-
 }

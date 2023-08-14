@@ -60,9 +60,8 @@ public class UpdateResults extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        int totalResultsCount = 0;
-        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, totalResultsCount);
+        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
+                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     @Override
@@ -92,16 +91,6 @@ public class UpdateResults extends HttpServlet {
                         addedToDB = new ExperimentDBService().addResultsToDB(resultData);
                         if (addedToDB.isSuccess()) {
                             sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
-                            //ToDO add temp code and call system.gc for every 100 results
-                            int count = (int) getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
-                            count++;
-                            LOGGER.debug("totalResultsCount so far : {}", count);
-                            if (count >= AnalyzerConstants.GC_THRESHOLD_COUNT) {
-                                LOGGER.debug("Calling System GC");
-                                System.gc();
-                                count = 0;
-                            }
-                            getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, count);
                         } else {
                             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                         }

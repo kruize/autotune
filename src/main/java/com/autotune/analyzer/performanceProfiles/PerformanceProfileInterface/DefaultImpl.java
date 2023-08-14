@@ -16,19 +16,16 @@
 package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.*;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.result.ExperimentResultData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -43,10 +40,6 @@ public class DefaultImpl extends PerfProfileImpl {
         return "";
     }
 
-    @Override
-    public void generateRecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
-
-    }
 
     // TODO: Update these based on requirements, currently leaving Invalid as Default impl doesn't need engine
     @Override
@@ -58,5 +51,10 @@ public class DefaultImpl extends PerfProfileImpl {
     @Override
     public List<KruizeRecommendationEngine> getEngines() {
         return null;
+    }
+
+    @Override
+    public void generateRecommendation(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) {
+
     }
 }

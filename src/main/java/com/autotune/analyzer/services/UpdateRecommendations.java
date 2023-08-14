@@ -91,22 +91,19 @@ public class UpdateRecommendations extends HttpServlet {
             return;
         }
 
+        LOGGER.debug("experiment_name : {} and interval_end_time : {}", experiment_name, intervalEndTimeStr);
         // Convert interval_endtime to UTC date format
-        Timestamp interval_end_time = null;
-        if (intervalEndTimeStr != null) {
-            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
-                sendErrorResponse(
-                        response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
-                );
-                return;
-            }
-            //Check if data exist
-            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
+        if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
+            sendErrorResponse(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
+            );
+            return;
         }
-
+        Timestamp interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
+        //Check if data exist
         ExperimentResultData experimentResultData = null;
         try {
             experimentResultData = new ExperimentDBService().getExperimentResultData(experiment_name, interval_end_time);
@@ -123,31 +120,20 @@ public class UpdateRecommendations extends HttpServlet {
                 ExperimentDBService experimentDBService = new ExperimentDBService();
                 experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
                 KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                /*
-                    To restrict the number of rows in the result set, the Load results operation involves locating the appropriate method and configuring the desired limitation.
-                    It's important to note that in order for the Limit rows feature to function correctly,
-                    the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
-                 */
-                int limitRows = (int) ((
-                        KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
-                                KruizeConstants.DateFormats.MINUTES_FOR_DAY)
-                        / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
-                experimentDBService.loadResultsFromDBByName(mainKruizeExperimentMAP, experiment_name, interval_end_time, limitRows);
-                boolean recommendationCheck = new ExperimentInitiator().generateAndAddRecommendations(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
-                if (!recommendationCheck)
-                    LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
-                            experimentResultData.getExperiment_name(),
-                            experimentResultData.getIntervalEndTime());
+                new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, List.of(experimentResultData), null, interval_end_time);
+                boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
+                if (success)
+                    sendSuccessResponse(response, kruizeObject, interval_end_time);
                 else {
-                    boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
-                    if (success)
-                        sendSuccessResponse(response, kruizeObject, interval_end_time);
-                    else {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
-                    }
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
+                        experimentResultData.getExperiment_name(),
+                        experimentResultData.getIntervalEndTime());
+                sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                return;
             }
         } else {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
@@ -208,3 +194,4 @@ public class UpdateRecommendations extends HttpServlet {
         response.sendError(httpStatusCode, errorMsg);
     }
 }
+

@@ -49,6 +49,7 @@ public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDBService.class);
     private ExperimentDAO experimentDAO;
+
     public ExperimentDBService() {
         this.experimentDAO = new ExperimentDAOImpl();
     }
@@ -311,7 +312,7 @@ public class ExperimentDBService {
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
             List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
-            .convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+                    .convertPerformanceProfileEntryToPerformanceProfileObject(entries);
             if (!performanceProfiles.isEmpty()) {
                 for (PerformanceProfile performanceProfile : performanceProfiles) {
                     if (null != performanceProfile) {
