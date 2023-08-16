@@ -458,7 +458,7 @@ def compare_json_files(json_file1, json_file2):
         return False
 
 def get_kruize_pod(namespace):
-    command = f"kubectl get pod -n {namespace} | grep kruize | cut -d ' ' -f1"
+    command = f"kubectl get pod -n {namespace} | grep kruize | grep -v kruize-ui | cut -d ' ' -f1"
     # Execute the command and capture the output
     output = subprocess.check_output(command, shell=True)
     
