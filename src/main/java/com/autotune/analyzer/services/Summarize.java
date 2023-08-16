@@ -72,6 +72,7 @@ public class Summarize extends HttpServlet {
         String summarizeType = request.getParameter(KruizeConstants.JSONKeys.SUMMARIZE_TYPE);
         String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
         String namespaceName = request.getParameter(KruizeConstants.JSONKeys.NAMESPACE_NAME);
+        String fetchFromDB = request.getParameter(KruizeConstants.JSONKeys.FETCH_FROM_DB);
 
         // validate Query params
         Set<String> invalidParams = new HashSet<>();
@@ -84,16 +85,24 @@ public class Summarize extends HttpServlet {
             // Set default value if absent
             if (summarizeType == null || summarizeType.isEmpty())
                 summarizeType = KruizeConstants.JSONKeys.CLUSTER;
-            if (isValidSummarizeTypeValue(summarizeType)) {
+            // by default, db_flag will be false so the data will be fetched from cache only
+            if (fetchFromDB == null || fetchFromDB.isEmpty())
+                fetchFromDB = AnalyzerConstants.BooleanString.FALSE;
+            if (isValidValue(summarizeType, fetchFromDB)) {
                 // load recommendations based on params
                 try {
+                    if (fetchFromDB.equals(AnalyzerConstants.BooleanString.TRUE)) {
+                        clusterNamesListCached = new ArrayList<>();
+                        namespacesListCached = new ArrayList<>();
+                        clusterSummaryCacheMap = new HashMap<>();
+                        namespaceSummaryCacheMap = new HashMap<>();
+                    }
                     if (summarizeType.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER)) {
                         if (clusterName != null) {
                             clusterNamesListLocal.add(clusterName);
                         } else if (clusterNamesListCached.isEmpty()) {
                             // get all the unique cluster names
                             clusterNamesListLocal = new ExperimentDBService().loadClusterNames();
-
                             clusterNamesListCached = clusterNamesListLocal;
                         } else {
                             clusterNamesListLocal = clusterNamesListCached;
@@ -209,7 +218,6 @@ public class Summarize extends HttpServlet {
                 summarizeAPIObjectForCluster.setNamespace(namespaceName);
             } else {
                 if (clusterSummaryCacheMap.containsKey(clusterName) && clusterSummaryCacheMap.get(clusterName) != null) {
-                    LOGGER.info("VALUE ALREADY PRESENT FOR CLUSTER = {}", clusterName);
                     summarizeAPIObjectForCluster = clusterSummaryCacheMap.get(clusterName);
                     namespacesSummaryInCluster.add(summarizeAPIObjectForCluster);
                     continue;
@@ -254,8 +262,9 @@ public class Summarize extends HttpServlet {
         namespaceSummarization(recommendationList, summarizeAPIObjectForNamespace, namespaceName, clusterName);
     }
 
-    private boolean isValidSummarizeTypeValue(String value) {
-        return (value.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER) || value.equalsIgnoreCase(KruizeConstants.JSONKeys.NAMESPACE));
+    private boolean isValidValue(String summarizeTypeValue, String fetchFromDBValue) {
+        return (summarizeTypeValue.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER) || summarizeTypeValue.equalsIgnoreCase(KruizeConstants.JSONKeys.NAMESPACE)
+        && (fetchFromDBValue.equals(AnalyzerConstants.BooleanString.TRUE) || fetchFromDBValue.equals(AnalyzerConstants.BooleanString.FALSE)));
     }
 
     private void clusterSummarization(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList, SummarizeAPIObject summarizeAPIObjectForCluster, String namespaceName) {
@@ -294,11 +303,14 @@ public class Summarize extends HttpServlet {
                             for (Map.Entry<String, Recommendation> recommendationsMapEntry : recommPeriodMapEntry.getValue().entrySet()) {
                                 String key = recommendationsMapEntry.getKey();// short, medium, long or cost, performance, balanced
                                 LOGGER.debug("RecommendationsPeriod = {}", key);
-                                RecommendationSummary recommendationSummary = summarize.getRecommendationPeriodType(key, shortTermSummary,
-                                        mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
+                                RecommendationSummary recommendationSummary;// = summarize.getRecommendationPeriodType(key, shortTermSummary,
+                                        //mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
                                 Recommendation recommendation = recommendationsMapEntry.getValue();
+                                LOGGER.debug("Namespace = {}", kubernetesAPIObject.getNamespace());
+                                LOGGER.debug("Workload = {}", kubernetesAPIObject.getName());
+                                LOGGER.debug("Notifications = {}", recommendation.getNotifications());
                                 if (recommendation.getConfig() != null) {
-                                    RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
+                                    RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation, kubernetesAPIObject.getName());
                                     if (recommendationsPeriodMap.containsKey(key)) {
                                         recommendationSummary = recommendationSummaryCurrent.mergeSummaries(recommendationsPeriodMap.get(key), recommendationSummaryCurrent);
                                     } else {
@@ -339,7 +351,7 @@ public class Summarize extends HttpServlet {
     }
 
     private void namespaceSummarization(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList,
-                                                      SummarizeAPIObject summarizeAPIObjectForNamespace, String namespaceName, String clusterName) {
+                                        SummarizeAPIObject summarizeAPIObjectForNamespace, String namespaceName, String clusterName) {
         Summarize summarize = new Summarize();
         // Get the current system timestamp in UTC and set it for the response
         Timestamp currentTimestamp = Timestamp.from(Instant.now());
@@ -382,8 +394,11 @@ public class Summarize extends HttpServlet {
                                 RecommendationSummary recommendationSummary = summarize.getRecommendationPeriodType(key, shortTermSummary,
                                         mediumTermSummary, longTermSummary, costBasedSummary, performanceBasedSummary, balancedSummary);
                                 Recommendation recommendation = recommendationsMapEntry.getValue();
+                                LOGGER.debug("Namespace = {}", kubernetesAPIObject.getNamespace());
+                                LOGGER.debug("Workload = {}", kubernetesAPIObject.getName());
+                                LOGGER.debug("Notifications = {}", recommendation.getNotifications());
                                 if (recommendation.getConfig() != null) {
-                                    RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation);
+                                    RecommendationSummary recommendationSummaryCurrent = summarize.convertToSummary(recommendation, kubernetesAPIObject.getName());
                                     if (recommendationsPeriodMap.containsKey(key)) {
                                         recommendationSummary = recommendationSummaryCurrent.mergeSummaries(recommendationsPeriodMap.get(key), recommendationSummaryCurrent);
                                     } else {
@@ -422,13 +437,91 @@ public class Summarize extends HttpServlet {
             summarizeAPIObjectForNamespace.setSummary(summary);
         }
     }
-    public RecommendationSummary convertToSummary(Recommendation recommendation) {
+    private ActionSummary createActionSummaryObject(HashMap<Integer, RecommendationNotification> notificationMap, String workloadName,
+                                                    HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation) {
+
+        ActionSummary actionSummary = new ActionSummary();
+        // get the optimizable configs
+        if (notificationMap.isEmpty()) {
+            HashMap<AnalyzerConstants.RecommendationItem, Double> recommendationItemMap = new HashMap<>();
+            for (Map.Entry<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+                    settingEntry : variation.entrySet()) {
+                AnalyzerConstants.ResourceSetting resourceSetting = settingEntry.getKey();
+                if (resourceSetting.equals(AnalyzerConstants.ResourceSetting.requests)) {
+                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemMap = settingEntry.getValue();
+                    for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemEntry : itemMap.entrySet()) {
+                        AnalyzerConstants.RecommendationItem recommendationItem = itemEntry.getKey();
+                        RecommendationConfigItem configItem = itemEntry.getValue();
+                        double amount = configItem.getAmount();
+                        if (amount != 0.0)
+                            recommendationItemMap.put(recommendationItem, amount);
+                    }
+                }
+            }
+            if (recommendationItemMap.containsKey(AnalyzerConstants.RecommendationItem.cpu)) {
+                actionSummary.optimizable.cpu.count++;
+                actionSummary.optimizable.cpu.workloadNames.add(workloadName);
+                if (recommendationItemMap.containsKey(AnalyzerConstants.RecommendationItem.memory)) {
+                    actionSummary.optimizable.memory.count++;
+                    actionSummary.optimizable.memory.workloadNames.add(workloadName);
+                }
+            }
+        }
+
+        for (RecommendationNotification notification : notificationMap.values()) {
+            int code = notification.getCode();
+            ActionSummary.Section cpuSection = null;
+            ActionSummary.Section memorySection = null;
+
+            if (code == 323001 || code == 323002) {
+                cpuSection = actionSummary.idle.cpu;
+            } else if (code == 523001) {
+                cpuSection = actionSummary.critical.cpu;
+            } else if (code == 524001 || code == 524002) {
+                memorySection = actionSummary.critical.memory;
+            } else if (code == 323004 || code == 323005) {
+                cpuSection = actionSummary.optimized.cpu;
+            } else if (code == 324003 || code == 324004) {
+                memorySection = actionSummary.optimized.memory;
+            }
+
+            if (cpuSection != null && !cpuSection.workloadNames.contains(workloadName)) {
+                cpuSection.workloadNames.add(workloadName);
+                cpuSection.count++;
+            }
+            if (memorySection != null && !memorySection.workloadNames.contains(workloadName)) {
+                memorySection.workloadNames.add(workloadName);
+                memorySection.count++;
+            }
+        }
+
+        actionSummary.total.cpu.count = actionSummary.idle.cpu.count + actionSummary.optimized.cpu.count
+                + actionSummary.critical.cpu.count + actionSummary.optimizable.cpu.count;
+        actionSummary.total.memory.count = actionSummary.optimized.memory.count + actionSummary.critical.memory.count
+                + actionSummary.optimizable.memory.count;
+
+        actionSummary.total.cpu.workloadNames.addAll(actionSummary.idle.cpu.workloadNames);
+        actionSummary.total.cpu.workloadNames.addAll(actionSummary.optimized.cpu.workloadNames);
+        actionSummary.total.cpu.workloadNames.addAll(actionSummary.critical.cpu.workloadNames);
+        actionSummary.total.cpu.workloadNames.addAll(actionSummary.optimizable.cpu.workloadNames);
+
+        actionSummary.total.memory.workloadNames.addAll(actionSummary.idle.memory.workloadNames);
+        actionSummary.total.memory.workloadNames.addAll(actionSummary.optimized.memory.workloadNames);
+        actionSummary.total.memory.workloadNames.addAll(actionSummary.critical.memory.workloadNames);
+        actionSummary.total.memory.workloadNames.addAll(actionSummary.optimizable.memory.workloadNames);
+
+        LOGGER.debug("actionSummary = {}", actionSummary);
+        return actionSummary;
+    }
+
+    public RecommendationSummary convertToSummary(Recommendation recommendation, String workloadName) {
         RecommendationSummary summary = new RecommendationSummary();
         try {
             summary.setCurrentConfig(recommendation.getCurrentConfig());
             summary.setConfig(recommendation.getConfig());
             summary.setChange(calculateChange(recommendation));
             summary.setNotificationsSummary(calculateNotificationsSummary(recommendation.getNotifications()));
+            summary.setActionSummary(createActionSummaryObject(recommendation.getNotifications(), workloadName, recommendation.getVariation()));
         } catch (Exception e){
             LOGGER.error("Exception occurred while converting recommendation to recommendationSummary: {}", e.getMessage());
             e.getMessage();

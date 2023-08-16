@@ -1,12 +1,8 @@
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.analyzer.recommendations.summary.RecommendationSummary;
 import com.autotune.analyzer.recommendations.summary.Summary;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
-
-import java.sql.Timestamp;
-import java.util.HashMap;
 
 public class SummarizeAPIObject {
 

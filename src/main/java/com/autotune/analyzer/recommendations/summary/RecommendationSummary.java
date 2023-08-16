@@ -36,6 +36,15 @@ public class RecommendationSummary {
     @SerializedName(KruizeConstants.JSONKeys.CHANGE)
     private HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> change;
     private NotificationsSummary notificationsSummary;
+    private ActionSummary actionSummary;
+
+    public ActionSummary getActionSummary() {
+        return actionSummary;
+    }
+
+    public void setActionSummary(ActionSummary actionSummary) {
+        this.actionSummary = actionSummary;
+    }
 
     public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfig() {
         return currentConfig;
@@ -87,6 +96,7 @@ public class RecommendationSummary {
             mergedSummary.setConfig(summarize.mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
             mergedSummary.setChange(summarize.mergeChange(summary1, summary2, mergedSummary.getChange()));
             mergedSummary.setNotificationsSummary(summary1.getNotificationsSummary().mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
+            mergedSummary.setActionSummary(ActionSummary.merge(summary1.getActionSummary(), summary2.getActionSummary()));
         } catch (Exception e){
             System.out.println("Exception occurred while merging recommendations: "+ e.getMessage());
             e.getMessage();
@@ -102,6 +112,7 @@ public class RecommendationSummary {
                 ", config=" + config +
                 ", change=" + change +
                 ", notificationsSummary=" + notificationsSummary +
+                ", actionSummary=" + actionSummary +
                 '}';
     }
 }

@@ -81,6 +81,6 @@ public class KruizeSupportedTypes
 			"experiment_name", "results", "recommendations", "latest"
 	));
 	public static final Set<String> SUMMARIZE_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-			"cluster_name", "namespace_name", "summarize_type"
+			"cluster_name", "namespace_name", "summarize_type", "fetchFromDB"
 	));
 }

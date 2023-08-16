@@ -206,6 +206,7 @@ public class KruizeConstants {
         public static final String NAMESPACE_NAME = "namespace_name";
         public static final String SUMMARIZE_TYPE = "summarize_type";
         public static final String CLUSTER = "cluster";
+        public static final String FETCH_FROM_DB = "fetchFromDB";
 
         private JSONKeys() {
         }
