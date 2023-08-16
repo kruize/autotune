@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 
 /**
@@ -129,6 +130,10 @@ public class AnalyzerErrorConstants {
             public static final String INTERVAL_END_TIME_MANDATORY = KruizeConstants.JSONKeys.INTERVAL_END_TIME + " is mandatory";
             public static final String DATA_NOT_FOUND = "Data not found!";
 
+            public static final String TIME_COMPARE = "The Start time should precede the End time!";
+
+            public static final String TIME_GAP_LIMIT = String.format("The gap between the interval_start_time and interval_end_time must be within a maximum of %s days!", KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days);
+
             private UpdateRecommendationsAPI() {
             }
         }
@@ -146,6 +151,7 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_JSON_STRUCTURE_MAPPING_TO_CLASS = "The JSON Structure in the JSON NODE is invalid to be mapped with class - {}";
 
             private KruizeRecommendationError() {
+
 
             }
         }

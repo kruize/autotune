@@ -23,9 +23,11 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
@@ -44,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -78,6 +81,9 @@ public class UpdateRecommendations extends HttpServlet {
         // Get the values from the request parameters
         String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        Timestamp interval_end_time = null;
+        Timestamp interval_start_time = null;
 
         // Check if experiment_name is provided
         if (experiment_name == null || experiment_name.isEmpty()) {
@@ -91,8 +97,6 @@ public class UpdateRecommendations extends HttpServlet {
             return;
         }
 
-        LOGGER.debug("experiment_name : {} and interval_end_time : {}", experiment_name, intervalEndTimeStr);
-        // Convert interval_endtime to UTC date format
         if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
             sendErrorResponse(
                     response,
@@ -101,18 +105,53 @@ public class UpdateRecommendations extends HttpServlet {
                     String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
             );
             return;
+        } else {
+            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
         }
-        Timestamp interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
-        //Check if data exist
-        ExperimentResultData experimentResultData = null;
+
+        // Check if interval_start_time is provided
+        if (intervalStartTimeStr != null) {
+            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr)) {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStr)
+                );
+                return;
+            } else {
+                interval_start_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr);
+                int comparisonResult = interval_start_time.compareTo(interval_end_time);
+                if (comparisonResult >= 0) {
+                    // interval_start_time is after interval_end_time
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_COMPARE);
+                    return;
+                } else {
+                    // calculate difference between two dates
+                    long differenceInMillis = interval_end_time.getTime() - interval_start_time.getTime();
+                    long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+                    if (differenceInDays > KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days) {
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_GAP_LIMIT);
+                        return;
+                    }
+                }
+            }
+        }
+
+        LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+        List<ExperimentResultData> experimentResultDataList = null;
+
+
         try {
-            experimentResultData = new ExperimentDBService().getExperimentResultData(experiment_name, interval_end_time);
+            experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
         }
 
-        if (null != experimentResultData) {
+        if (experimentResultDataList.size() > 0) {
+
             //Load KruizeObject and generate recommendation
             Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
             try {
@@ -120,20 +159,24 @@ public class UpdateRecommendations extends HttpServlet {
                 ExperimentDBService experimentDBService = new ExperimentDBService();
                 experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
                 KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, List.of(experimentResultData), null, interval_end_time);
-                boolean success = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, Collections.singletonList(experimentResultData));
-                if (success)
+                new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
+                if (validationOutputData.isSuccess())
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                 else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA);
+                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
-                        experimentResultData.getExperiment_name(),
-                        experimentResultData.getIntervalEndTime());
+                LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
+                        experiment_name,
+                        interval_start_time,
+                        interval_end_time);
+
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
+
+
             }
         } else {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
@@ -194,4 +237,3 @@ public class UpdateRecommendations extends HttpServlet {
         response.sendError(httpStatusCode, errorMsg);
     }
 }
-
