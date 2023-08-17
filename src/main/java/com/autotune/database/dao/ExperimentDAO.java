@@ -19,6 +19,8 @@ public interface ExperimentDAO {
     // Add experiment results from local storage to DB and set status to Inprogress
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry);
 
+    public List<KruizeResultsEntry> addToDBAndFetchFailedResults(List<KruizeResultsEntry> kruizeResultsEntries);
+
     // Add recommendation  to DB
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry);
 
@@ -47,13 +49,16 @@ public interface ExperimentDAO {
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
     // Load all results for a particular experimentName
+
     List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_start_time, Integer limitRows) throws Exception;
 
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
+
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
+
 
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception;

@@ -491,6 +491,7 @@ public class DBHelpers {
                         updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
                         updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
                         updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
+                        updateResultsAPIObject.setErrorReasons(kruizeResultsEntry.getErrorReasons());
                         JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
                         JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
                         List<K8sObject> k8sObjectList = new ArrayList<>();

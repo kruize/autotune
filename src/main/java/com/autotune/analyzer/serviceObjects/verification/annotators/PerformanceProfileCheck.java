@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2023 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.experiment;
+package com.autotune.analyzer.serviceObjects.verification.annotators;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.autotune.analyzer.serviceObjects.verification.validators.PerformanceProfileValidator;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
-/**
- * Util class to validate input request related to Experiment Results for metrics collection.
- */
-public class ExperimentResultValidation {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentResultValidation.class);
+import java.lang.annotation.*;
+
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = PerformanceProfileValidator.class)
+@Documented
+public @interface PerformanceProfileCheck {
+    String message() default "";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 
 }
-
-
-
-

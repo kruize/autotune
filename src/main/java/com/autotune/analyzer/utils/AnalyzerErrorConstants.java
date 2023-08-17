@@ -73,9 +73,12 @@ public class AnalyzerErrorConstants {
         public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
         public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
-        public static final String UNSUPPORTED_EXPERIMENT = "Bulk entries are currently unsupported!";
+        public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
+        public static final String UNSUPPORTED_EXPERIMENT_RESULTS = String.format("At present, the system does not support bulk entries exceeding %s in quantity!", KruizeDeploymentInfo.bulk_update_results_limit);
+        public static final String UNSUPPORTED_BULK_KUBERNETES = "Bulk Kubernetes objects are currently unsupported!";
         public static final String DUPLICATE_EXPERIMENT = "Experiment name already exists: ";
-        public static final String WRONG_TIMESTAMP = "EndTimeStamp cannot be less than StartTimeStamp!";
+        public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
+
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
 
         private AutotuneObjectErrors() {
@@ -129,9 +132,7 @@ public class AnalyzerErrorConstants {
             public static final String EXPERIMENT_NAME_MANDATORY = KruizeConstants.JSONKeys.EXPERIMENT_NAME + " is mandatory";
             public static final String INTERVAL_END_TIME_MANDATORY = KruizeConstants.JSONKeys.INTERVAL_END_TIME + " is mandatory";
             public static final String DATA_NOT_FOUND = "Data not found!";
-
             public static final String TIME_COMPARE = "The Start time should precede the End time!";
-
             public static final String TIME_GAP_LIMIT = String.format("The gap between the interval_start_time and interval_end_time must be within a maximum of %s days!", KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days);
 
             private UpdateRecommendationsAPI() {

@@ -22,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 
@@ -76,9 +78,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     validationOutputData.setMessage(
                             String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
                     );
-
                 } else {
-
                     throw new Exception(ex.getMessage());
                 }
             } catch (Exception e) {
@@ -95,6 +95,49 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerAddResultsDB) timerAddResultsDB.stop(MetricsConfig.timerAddResultsDB);
         }
         return validationOutputData;
+    }
+
+    @Override
+    public List<KruizeResultsEntry> addToDBAndFetchFailedResults(List<KruizeResultsEntry> kruizeResultsEntries) {
+        List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
+        Transaction tx = null;
+        Timer.Sample timerAddResultsDB = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            for (KruizeResultsEntry entry : kruizeResultsEntries) {
+                try {
+                    session.merge(entry);
+                } catch (PersistenceException e) {
+                    entry.setErrorReasons(List.of(String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", entry.getExperiment_name(), new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT).format(entry.getInterval_start_time()),
+                            new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT).format(entry.getInterval_end_time()))));
+                    failedResultsEntries.add(entry);
+                } catch (Exception e) {
+                    entry.setErrorReasons(List.of(e.getMessage()));
+                    failedResultsEntries.add(entry);
+                }
+            }
+            tx.commit();
+            if (!failedResultsEntries.isEmpty()) {
+                //  find elements in kruizeResultsEntries but not in failedResultsEntries
+                List<KruizeResultsEntry> elementsInSuccessOnly = kruizeResultsEntries.stream()
+                        .filter(entry -> !failedResultsEntries.contains(entry))
+                        .collect(Collectors.toList());
+                tx = session.beginTransaction();
+                for (KruizeResultsEntry entry : elementsInSuccessOnly) {
+                    session.merge(entry);
+                }
+                tx.commit();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+            failedResultsEntries.addAll(kruizeResultsEntries);
+            failedResultsEntries.forEach((entry) -> {
+                entry.setErrorReasons(List.of(e.getMessage()));
+            });
+        } finally {
+            if (null != timerAddResultsDB) timerAddResultsDB.stop(MetricsConfig.timerAddResultsDB);
+        }
+        return failedResultsEntries;
     }
 
     @Override
@@ -335,18 +378,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
-        List<KruizePerformanceProfileEntry> entries = null;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
-                    .setParameter("name", performanceProfileName).list();
-        } catch (Exception e) {
-            LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
-            throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
-        }
-        return entries;
-    }
-
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
         Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
@@ -366,6 +397,20 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return recommendationEntries;
     }
+
+
+    public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
+        List<KruizePerformanceProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
+                    .setParameter("name", performanceProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
+            throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
 
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
@@ -388,6 +433,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .getResultList();
             }
+
+
         } catch (NoResultException e) {
             LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
@@ -397,5 +444,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
+
     }
 }

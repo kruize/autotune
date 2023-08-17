@@ -18,14 +18,14 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
-import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -45,7 +45,6 @@ import java.io.PrintWriter;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -61,11 +60,13 @@ public class PerformanceProfileService extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
-
+    private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
+        performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
+                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     /**
@@ -75,7 +76,6 @@ public class PerformanceProfileService extends HttpServlet {
      * @param response
      * @throws IOException
      */
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -84,21 +84,20 @@ public class PerformanceProfileService extends HttpServlet {
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
             ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
-                ValidationOutputData addedToDB;
-                addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
+                ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
+                    performanceProfilesMap.put(performanceProfile.getName(), performanceProfile);
+                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());
                     sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getName() + " created successfully.");
-                }
-                else {
+                } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                 }
-            }
-            else
+            } else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Validation failed: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Validation failed: " + e.getMessage());
         } catch (InvalidValueException e) {
             throw new RuntimeException(e);
         }
@@ -106,6 +105,7 @@ public class PerformanceProfileService extends HttpServlet {
 
     /**
      * Get List of Performance Profiles
+     *
      * @param req
      * @param response
      * @throws ServletException
@@ -117,7 +117,6 @@ public class PerformanceProfileService extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
-        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
         // Fetch all profiles from the DB
         try {
             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
@@ -136,9 +135,10 @@ public class PerformanceProfileService extends HttpServlet {
                         public boolean shouldSkipField(FieldAttributes f) {
                             return f.getDeclaringClass() == Metric.class && (
                                     f.getName().equals("trialSummaryResult")
-                                    || f.getName().equals("cycleDataMap")
-                                    );
+                                            || f.getName().equals("cycleDataMap")
+                            );
                         }
+
                         @Override
                         public boolean shouldSkipClass(Class<?> aClass) {
                             return false;
@@ -153,8 +153,10 @@ public class PerformanceProfileService extends HttpServlet {
         response.getWriter().close();
     }
 
-    /**TODO: Need to implement
+    /**
+     * TODO: Need to implement
      * Update Performance Profile
+     *
      * @param req
      * @param resp
      * @throws ServletException
@@ -165,8 +167,10 @@ public class PerformanceProfileService extends HttpServlet {
         super.doPut(req, resp);
     }
 
-    /**TODO: Need to implement
+    /**
+     * TODO: Need to implement
      * Delete Performance profile
+     *
      * @param req
      * @param resp
      * @throws ServletException
@@ -179,6 +183,7 @@ public class PerformanceProfileService extends HttpServlet {
 
     /**
      * Send success response in case of no errors or exceptions.
+     *
      * @param response
      * @param message
      * @throws IOException
@@ -200,6 +205,7 @@ public class PerformanceProfileService extends HttpServlet {
 
     /**
      * Send response containing corresponding error message in case of failures and exceptions
+     *
      * @param response
      * @param e
      * @param httpStatusCode

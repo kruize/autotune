@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.google.gson.Gson;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
@@ -23,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -41,9 +43,12 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String origMessage = (String) request.getAttribute("javax.servlet.error.message");
         int errorCode = response.getStatus();
+        List<UpdateResultsAPIObject> myList = (List<UpdateResultsAPIObject>) request.getAttribute("data");
+
+
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR")));
+                new Gson().toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList)));
         out.flush();
     }
 }

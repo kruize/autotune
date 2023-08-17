@@ -17,7 +17,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
@@ -81,6 +80,7 @@ public class UpdateRecommendations extends HttpServlet {
         // Get the values from the request parameters
         String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time = null;
         Timestamp interval_start_time = null;
@@ -96,7 +96,6 @@ public class UpdateRecommendations extends HttpServlet {
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
             return;
         }
-
         if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
             sendErrorResponse(
                     response,
@@ -108,6 +107,7 @@ public class UpdateRecommendations extends HttpServlet {
         } else {
             interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
         }
+
 
         // Check if interval_start_time is provided
         if (intervalStartTimeStr != null) {
@@ -139,12 +139,11 @@ public class UpdateRecommendations extends HttpServlet {
         }
 
         LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+
         List<ExperimentResultData> experimentResultDataList = null;
-
-
+        ExperimentResultData experimentResultData = null;
         try {
             experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
-
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
@@ -164,7 +163,9 @@ public class UpdateRecommendations extends HttpServlet {
                 if (validationOutputData.isSuccess())
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                 else {
+
                     sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
+
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -172,10 +173,8 @@ public class UpdateRecommendations extends HttpServlet {
                         experiment_name,
                         interval_start_time,
                         interval_end_time);
-
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
-
 
             }
         } else {

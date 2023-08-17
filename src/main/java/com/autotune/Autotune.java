@@ -21,7 +21,6 @@ import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.database.init.KruizeHibernateUtil;
-import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -34,8 +33,10 @@ import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +54,16 @@ public class Autotune {
         ServletContextHandler context = null;
 
         disableServerLogging();
+        // Create a thread pool with the desired number of threads
+        QueuedThreadPool threadPool = new QueuedThreadPool();
+        threadPool.setMaxThreads(KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
+        Server server = new Server(threadPool);
+        // Create a connector (e.g., HTTP)
+        ServerConnector connector = new ServerConnector(server);
+        connector.setPort(KRUIZE_SERVER_PORT);
+        // Set the connector to the server
+        server.addConnector(connector);
 
-        Server server = new Server(KRUIZE_SERVER_PORT);
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
         context.setErrorHandler(new KruizeErrorHandler());
@@ -74,7 +83,8 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException | MonitoringAgentNotFoundException e) {
+        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
+                 MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -105,6 +115,7 @@ public class Autotune {
 
         try {
             server.start();
+            server.join();
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");
             e.printStackTrace();
