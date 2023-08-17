@@ -58,6 +58,7 @@ public class Recommendation {
             notifications.put(notification.getCode(), notification);
     }
 
+
     public Recommendation() {
 
     }

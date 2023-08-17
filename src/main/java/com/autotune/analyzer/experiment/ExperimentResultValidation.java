@@ -15,16 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -44,7 +42,7 @@ public class ExperimentResultValidation {
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
     private Map<String, PerformanceProfile> performanceProfileMap;
 
-    public ExperimentResultValidation(Map<String, KruizeObject> mainKruizeExperimentMAP,Map<String, PerformanceProfile> performanceProfileMap) {
+    public ExperimentResultValidation(Map<String, KruizeObject> mainKruizeExperimentMAP, Map<String, PerformanceProfile> performanceProfileMap) {
         this.mainKruizeExperimentMAP = mainKruizeExperimentMAP;
         this.performanceProfileMap = performanceProfileMap;
     }
@@ -57,7 +55,7 @@ public class ExperimentResultValidation {
                 String expName = resultData.getExperiment_name();
                 if (null != expName && !expName.isEmpty() && null != resultData.getIntervalEndTime() && null != resultData.getIntervalStartTime()) {
                     try {
-                        new ExperimentDBService().loadExperimentAndResultsFromDBByName(mainKruizeExperimentMAP, expName);
+                        new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, expName);
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
                     }
@@ -76,12 +74,12 @@ public class ExperimentResultValidation {
                         Double durationInSeconds = intervalResults.getDuration_in_seconds();
                         String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
                         LOGGER.debug("Duration in seconds = {}", intervalResults.getDuration_in_seconds());
-                        if ( durationInSeconds < 0) {
+                        if (durationInSeconds < 0) {
                             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP);
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
                         } else {
-                            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length()-3));
+                            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
                             // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
                             double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
                             double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
@@ -141,24 +139,6 @@ public class ExperimentResultValidation {
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                             break;
                         }
-
-                        // check if resultData is present
-                        boolean isExist = false;
-                        for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-                            for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                                if (null != containerData.getResults()) {
-                                    if (null != containerData.getResults().get(resultData.getIntervalEndTime())) {
-                                        isExist = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (isExist) {
-                            errorMsg = errorMsg.concat(String.format("Experiment name : %s already contains result for timestamp : %s", resultData.getExperiment_name(), resultData.getIntervalEndTime()));
-                            resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_CONFLICT));
-                            break;
-                        }
                         /*
                          Fetch the performance profile from the Map corresponding to the name in the kruize object,
                          and then validate the Performance Profile data
@@ -181,8 +161,8 @@ public class ExperimentResultValidation {
                                 resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
                                 break;
                             }
-                        } catch (Exception  e) {
-                            LOGGER.error("Caught Exception: {}",e);
+                        } catch (Exception e) {
+                            LOGGER.error("Caught Exception: {}", e);
                             errorMsg = "Validation failed: " + e.getMessage();
                             proceed = false;
                             resultData.setValidationOutputData(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
@@ -211,6 +191,7 @@ public class ExperimentResultValidation {
             setErrorMessage("Validation failed: " + e.getMessage());
         }
     }
+
     public void markFailed(String message) {
         setSuccess(false);
         setErrorMessage(message);

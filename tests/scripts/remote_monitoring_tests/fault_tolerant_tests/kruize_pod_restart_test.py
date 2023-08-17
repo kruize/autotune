@@ -161,10 +161,6 @@ def main(argv):
             print("Restarting kruize failed!")
             failed = 1
             sys.exit(failed)
-        else:
-            # Create the performance profile as Kruize is restarted
-            perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
-            create_performance_profile(perf_profile_json_file)
 
         # Fetch listExperiments
         list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after_" + str(i) + ".json"

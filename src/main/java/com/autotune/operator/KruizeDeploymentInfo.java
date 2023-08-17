@@ -66,6 +66,8 @@ public class KruizeDeploymentInfo {
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
 
+    public static int generate_recommendations_date_range_limit_in_days = 15;
+
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;

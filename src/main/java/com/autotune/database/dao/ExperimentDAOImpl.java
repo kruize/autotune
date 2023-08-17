@@ -13,6 +13,7 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -71,7 +72,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 session.persist(resultsEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
-            } catch (HibernateException e) {
+            } catch (PersistenceException ex) {
+                if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(
+                            String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
+                    );
+
+                } else {
+
+                    throw new Exception(ex.getMessage());
+                }
+            } catch (Exception e) {
                 LOGGER.error("Not able to save experiment due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
@@ -358,28 +370,35 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public KruizeResultsEntry getKruizeResultsEntry(String experiment_name, Timestamp interval_end_time) throws Exception {
-        KruizeResultsEntry kruizeResultsEntry = null;
+    public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+        List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            if (null != interval_end_time) {
-                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
+
+            if (interval_start_time != null && interval_end_time != null) {
+                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, interval_start_time)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                        .getResultList();
+            } else if (interval_end_time != null) {
+                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getSingleResult();
+                        .getResultList();
             } else {
-                kruizeResultsEntry = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
+                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .getSingleResult();
+                        .getResultList();
             }
         } catch (NoResultException e) {
             LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
-            kruizeResultsEntry = null;
+            kruizeResultsEntryList = null;
         } catch (Exception e) {
-            kruizeResultsEntry = null;
+            kruizeResultsEntryList = null;
             LOGGER.error("Not able to load results due to: {}", e.getMessage());
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
-        return kruizeResultsEntry;
+        return kruizeResultsEntryList;
     }
 
 

@@ -15,17 +15,17 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.InvocationTargetException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -99,34 +99,18 @@ public class ExperimentInitiator {
     }
 
     // Generate recommendations and add it to the kruize object
-    public boolean generateAndAddRecommendations(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
-        if (null == experimentResultDataList)
-            return false;
-        if (experimentResultDataList.size() == 0)
-            return false;
-        for (ExperimentResultData experimentResultData: experimentResultDataList) {
-            // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
-            if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
-                LOGGER.error("Trying to locate Recommendation for non existent experiment: " +
-                        experimentResultData.getExperiment_name());
-                continue;
-            }
-            KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());
-            if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
-                try {
-                    PerfProfileInterface perfProfileInstance =
-                            (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
-                                    .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
-                                    .getDeclaredConstructor().newInstance();
-                    perfProfileInstance.generateRecommendation(kruizeObject, experimentResultData);
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-                    e.printStackTrace();
-                }
-            } else {
-                LOGGER.error("No Recommendation Engine mapping found for performance profile: " +
-                        kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");
-            }
+    public void generateAndAddRecommendations(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+        if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
+            PerfProfileInterface perfProfileInstance =
+                    (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
+                            .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
+                            .getDeclaredConstructor().newInstance();
+            perfProfileInstance.generateRecommendation(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+        } else {
+            throw new Exception("No Recommendation Engine mapping found for performance profile: " +
+                    kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");
         }
-        return true;
     }
+
+
 }
