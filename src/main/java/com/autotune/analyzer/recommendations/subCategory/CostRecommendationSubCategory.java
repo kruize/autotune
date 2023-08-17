@@ -18,18 +18,18 @@ package com.autotune.analyzer.recommendations.subCategory;
 
 import java.util.concurrent.TimeUnit;
 
-public class DurationBasedRecommendationSubCategory implements RecommendationSubCategory {
+public class CostRecommendationSubCategory implements RecommendationSubCategory {
     private String name;
     private int duration;
     private TimeUnit recommendationDurationUnits;
     private double durationUpperBound;
     private double durationLowerBound;
 
-    public DurationBasedRecommendationSubCategory(String name,
-                                                  int duration,
-                                                  TimeUnit recommendationDurationUnits,
-                                                  double durationUpperBound,
-                                                  double durationLowerBound) {
+    public CostRecommendationSubCategory(String name,
+                                         int duration,
+                                         TimeUnit recommendationDurationUnits,
+                                         double durationUpperBound,
+                                         double durationLowerBound) {
         this.name = name;
         this.duration = duration;
         this.recommendationDurationUnits = recommendationDurationUnits;
@@ -38,7 +38,7 @@ public class DurationBasedRecommendationSubCategory implements RecommendationSub
     }
 
     // Adding private constructor to avoid object creation without passing any attributes
-    private DurationBasedRecommendationSubCategory() {
+    private CostRecommendationSubCategory() {
 
     }
 

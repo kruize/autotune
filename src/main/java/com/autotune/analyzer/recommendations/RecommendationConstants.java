@@ -1,6 +1,6 @@
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
@@ -12,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 public class RecommendationConstants {
 
     public enum RecommendationCategory {
-        DURATION_BASED(
-                KruizeConstants.JSONKeys.DURATION_BASED,
-                new DurationBasedRecommendationSubCategory[]{
-                        new DurationBasedRecommendationSubCategory(
+        COST(
+                KruizeConstants.JSONKeys.COST,
+                new CostRecommendationSubCategory[]{
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
@@ -27,7 +27,7 @@ public class RecommendationConstants {
                                         .DurationBasedEngine.RecommendationDurationRanges
                                         .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
-                        new DurationBasedRecommendationSubCategory(
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
@@ -39,7 +39,7 @@ public class RecommendationConstants {
                                         .DurationBasedEngine.RecommendationDurationRanges
                                         .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
-                        new DurationBasedRecommendationSubCategory(
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
@@ -96,9 +96,9 @@ public class RecommendationConstants {
         }
     }
     public enum RecommendationNotification {
-        INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE(
-                RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
-                RecommendationConstants.RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+        INFO_COST_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
         INFO_NOT_ENOUGH_DATA(
@@ -288,11 +288,11 @@ public class RecommendationConstants {
 
         // Subsystem subsection: Default Engine
         // Range: 112000 - 112099
-        // Subsystem subsection: Duration Based Engine
+        // Subsystem subsection: Cost Engine
         // Range: 112100 - 112199
-        public static final int DURATION_BASED_ENGINE_START = 112100;
-        public static final int INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
-        public static final int DURATION_BASED_ENGINE_END = 112199;
+        public static final int COST_ENGINE_START = 112100;
+        public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int COST_ENGINE_END = 112199;
         // Subsystem subsection: Profile Based Engine
         // Range: 112200 - 112299
 
@@ -540,14 +540,14 @@ public class RecommendationConstants {
 
             CONTRADICTING_MAP.put(INFO_NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
 
-            // Contradicting Codes for DURATION_BASED_RECOMMENDATIONS_AVAILABLE
-            Integer[] CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = {
+            // Contradicting Codes for COST_RECOMMENDATIONS_AVAILABLE
+            Integer[] CODES_CONTRADICT_COST_RECOMMENDATIONS_AVAILABLE = {
                     INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
-                    Arrays.asList(CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE)
+                    INFO_COST_RECOMMENDATIONS_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_COST_RECOMMENDATIONS_AVAILABLE)
             );
 
             // Contradicting Codes for CPU_RECORDS_ARE_IDLE
@@ -658,7 +658,7 @@ public class RecommendationConstants {
 
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
@@ -697,7 +697,7 @@ public class RecommendationConstants {
 
         public static class EngineNames {
             public static String DEFAULT_NAME = "Default";
-            public static String DURATION_BASED = "Duration Based";
+            public static String COST = "Cost";
             public static String PROFILE_BASED = "Profile Based";
 
             private EngineNames() {
@@ -706,7 +706,7 @@ public class RecommendationConstants {
         }
 
         public static class EngineKeys {
-            public static String DURATION_BASED_KEY = "duration_based";
+            public static String COST_KEY = "cost";
             public static String PROFILE_BASED_KEY = "profile_based";
 
             private EngineKeys() {
