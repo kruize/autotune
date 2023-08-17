@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.ContainerData;
@@ -59,11 +59,11 @@ public class GenerateRecommendation {
                         HashMap<String, Recommendation> recommendationPeriodMap = new HashMap<>();
                         // TODO: Add all possible cases which are added in RecommendationCategory
                         switch (recommendationCategory) {
-                            case DURATION_BASED:
+                            case COST:
                                 for (RecommendationSubCategory recommendationSubCategory : recommendationCategory.getRecommendationSubCategories()) {
-                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
-                                    String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
-                                    int days = durationBasedRecommendationSubCategory.getDuration();
+                                    CostRecommendationSubCategory costRecommendationSubCategory = (CostRecommendationSubCategory) recommendationSubCategory;
+                                    String recPeriod = costRecommendationSubCategory.getSubCategory();
+                                    int days = costRecommendationSubCategory.getDuration();
                                     monitorStartDate = addDays(monitorEndDate, -1 * days);
                                     if (monitorStartDate.compareTo(minDate) >= 0 || days == 1) {
                                         Timestamp finalMonitorStartDate = monitorStartDate;
@@ -97,11 +97,11 @@ public class GenerateRecommendation {
                                 // This needs to be moved to common area after implementing other categories of recommedations
                                 recCatMap.put(recommendationCategory.getName(), recommendationPeriodMap);
                                 boolean notifyExist = false;
-                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE))
+                                if (containerData.getContainerRecommendations().getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE))
                                     notifyExist = true;
                                 if (!notifyExist) {
                                     RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            RecommendationConstants.RecommendationNotification.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE
+                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                                     );
                                     containerData.getContainerRecommendations().getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                 }
