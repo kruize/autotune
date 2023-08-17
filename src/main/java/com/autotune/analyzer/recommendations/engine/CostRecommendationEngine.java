@@ -279,11 +279,11 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, memUsageList);
+        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
