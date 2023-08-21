@@ -120,63 +120,69 @@ public class ListExperiments extends HttpServlet {
                 invalidParams.add(param);
             }
         }
-        if (invalidParams.isEmpty()) {
-            // Set default values if absent
-            if (results == null || results.isEmpty())
-                results = "false";
-            if (recommendations == null || recommendations.isEmpty())
-                recommendations = "false";
-            if (latest == null || latest.isEmpty())
-                latest = "true";
-            // Validate query parameter values
-            if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
-                try {
-                    // Fetch experiments data from the DB and check if the requested experiment exists
-                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
-                    // Check if experiment exists
-                    if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
-                        error = true;
-                        sendErrorResponse(
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
-                        );
-                    }
-                    if (!error) {
-                        // create Gson Object
-                        Gson gsonObj = createGsonObject();
-
-                        // Modify the JSON response here based on query params.
-                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
-                        if (gsonStr.isEmpty()) {
-                            gsonStr = generateDefaultResponse();
+        try {
+            if (invalidParams.isEmpty()) {
+                // Set default values if absent
+                if (results == null || results.isEmpty())
+                    results = "false";
+                if (recommendations == null || recommendations.isEmpty())
+                    recommendations = "false";
+                if (latest == null || latest.isEmpty())
+                    latest = "true";
+                // Validate query parameter values
+                if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
+                    try {
+                        // Fetch experiments data from the DB and check if the requested experiment exists
+                        loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                        // Check if experiment exists
+                        if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                            );
                         }
-                        response.getWriter().println(gsonStr);
-                        response.getWriter().close();
+                        if (!error) {
+                            // create Gson Object
+                            Gson gsonObj = createGsonObject();
+
+                            // Modify the JSON response here based on query params.
+                            gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                            if (gsonStr.isEmpty()) {
+                                gsonStr = generateDefaultResponse();
+                            }
+                            response.getWriter().println(gsonStr);
+                            response.getWriter().close();
+                            statusValue = "success";
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Exception: " + e.getMessage());
+                        e.printStackTrace();
+                        sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Exception: " + e.getMessage());
-                    e.printStackTrace();
-                    sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                } finally {
-                    if (null != timerListExp) timerListExp.stop(MetricsConfig.timerListExp);
+                } else {
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
+                    );
                 }
             } else {
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
-        } else {
-            sendErrorResponse(
-                    response,
-                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
-            );
+        } finally {
+            if (null != timerListExp) {
+                MetricsConfig.timerListExp = MetricsConfig.timerBListExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListExp.stop(MetricsConfig.timerListExp);
+            }
         }
     }
 

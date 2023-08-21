@@ -73,6 +73,7 @@ public class ListRecommendations extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerListRec = Timer.start(MetricsConfig.meterRegistry());
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -197,6 +198,7 @@ public class ListRecommendations extends HttpServlet {
                                                                             checkForTimestamp,
                                                                             monitoringEndTimestamp);
                         recommendationList.add(listRecommendationsAPIObject);
+                        statusValue = "success";
                     } catch (Exception e) {
                         LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                     }
@@ -233,7 +235,10 @@ public class ListRecommendations extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerListRec) timerListRec.stop(MetricsConfig.timerListRec);
+            if (null != timerListRec) {
+                MetricsConfig.timerListRec = MetricsConfig.timerBListRec.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListRec.stop(MetricsConfig.timerListRec);
+            }
         }
     }
 
