@@ -51,7 +51,7 @@ function get_kruize_pod_log() {
 
 	echo ""
 	echo "Fetch the kruize pod logs and store in ${log}..."
-	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | cut -d " " -f1)
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
