@@ -13,7 +13,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class MetricsConfig {
 
     private static MetricsConfig INSTANCE;
-    public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecommendations;
+    public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults;
     public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB;
@@ -31,7 +31,6 @@ public class MetricsConfig {
         timerListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listExperiments").tag("method","GET").register(meterRegistry);
         timerCreateExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","createExperiment").tag("method","POST").register(meterRegistry);
         timerUpdateResults = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","updateResults").tag("method","POST").register(meterRegistry);
-        timerUpdateRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","updateRecommendations").tag("method","POST").register(meterRegistry);
 
         timerLoadRecExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadRecommendationsByExperimentName").register(meterRegistry);
         timerLoadResultsExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadResultsByExperimentName").register(meterRegistry);

@@ -79,7 +79,6 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Timer.Sample timerUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
             // Get the values from the request parameters
             String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
@@ -189,8 +188,6 @@ public class UpdateRecommendations extends HttpServlet {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        }finally {
-            if (null != timerUpdateRecommendations) timerUpdateRecommendations.stop(MetricsConfig.timerUpdateRecommendations);
         }
     }
 
