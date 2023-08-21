@@ -67,12 +67,9 @@ The following are the available Kruize DB methods that you can monitor:
 
 - `addRecommendationToDB`: Method for adding a recommendation to the database.
 - `addResultsToDB`: Method for adding experiment results to the database.
-- `loadAllRecommendations`: Method for loading all recommendations from the database.
-- `loadAllExperiments`: Method for loading all experiments from the database.
 - `addExperimentToDB`: Method for adding an experiment to the database.
 - `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
 - `loadExperimentByName`: Method for loading an experiment by name.
-- `loadAllResults`: Method for loading all experiment results from the database.
 - `loadRecommendationsByExperimentName`: Method for loading recommendations by experiment name.
 
 ## Time taken for KruizeDB metrics
@@ -85,10 +82,10 @@ To monitor the performance of these methods, you can use the following metrics:
 
 Here are some sample metrics for the mentioned DB methods which can run in Prometheus:
 
-- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments", status="success"}`: Number of successful invocations of `loadAllExperiments` method.
-- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments", status="success"}`: Number of failed invocations of `loadAllExperiments` method.
-- `kruizeDB_seconds_sum{application="Kruize", method="loadAllExperiments", status="success"}`: Total time taken by the `loadAllExperiments` method which were success.
-- `kruizeDB_seconds_max{application="Kruize", method="loadAllExperiments", status="success"}`: Maximum time taken by the `loadAllExperiments` method which were success.
+- `kruizeDB_seconds_count{application="Kruize", method="addExperimentToDB", status="success"}`: Number of successful invocations of `addExperimentToDB` method.
+- `kruizeDB_seconds_count{application="Kruize", method="addExperimentToDB", status="failure"}`: Number of failed invocations of `addExperimentToDB` method.
+- `kruizeDB_seconds_sum{application="Kruize", method="addExperimentToDB", status="success"}`: Total time taken by the `addExperimentToDB` method which were success.
+- `kruizeDB_seconds_max{application="Kruize", method="addExperimentToDB", status="success"}`: Maximum time taken by the `addExperimentToDB` method which were success.
 
 By changing the value of the `method` label, you can gather metrics for other KruizeDB metrics.
 
