@@ -49,6 +49,9 @@ public class MetricsConfig {
         timerBAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addResultToDB");
         timerBAddBulkResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addBulkResultsToDBAndFetchFailedResults");
         timerBAddExpDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addExperimentToDB");
+        timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addPerformanceProfileToDB");
+        timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadPerformanceProfileByName");
+        timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllPerformanceProfiles");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

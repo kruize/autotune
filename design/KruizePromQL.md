@@ -74,6 +74,9 @@ The following are the available Kruize DB methods that you can monitor:
 - `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
 - `loadRecommendationsByExperimentName`: Method for loading recommendations by experiment name.
 - `loadRecommendationsByExperimentNameAndDate`: Method for loading recommendations by experiment name and date.
+- `addPerformanceProfileToDB`: Method to add performance profile to the database.
+- `loadPerformanceProfileByName`: Method to load a specific performance profile.
+- `loadAllPerformanceProfiles`: Method to load all performance profiles.
 
 ## Time taken for KruizeDB metrics
 
