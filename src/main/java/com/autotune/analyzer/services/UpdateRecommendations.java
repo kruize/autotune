@@ -28,11 +28,13 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,109 +79,118 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Get the values from the request parameters
-        String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
-        String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        Timer.Sample timerUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
+        try {
+            // Get the values from the request parameters
+            String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
+            String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
 
-        String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
-        Timestamp interval_end_time = null;
-        Timestamp interval_start_time = null;
+            String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+            Timestamp interval_end_time = null;
+            Timestamp interval_start_time = null;
 
-        // Check if experiment_name is provided
-        if (experiment_name == null || experiment_name.isEmpty()) {
-            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY);
-            return;
-        }
+            // Check if experiment_name is provided
+            if (experiment_name == null || experiment_name.isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY);
+                return;
+            }
 
-        // Check if interval_end_time is provided
-        if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
-            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
-            return;
-        }
-        if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
-            sendErrorResponse(
-                    response,
-                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
-            );
-            return;
-        } else {
-            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
-        }
-
-
-        // Check if interval_start_time is provided
-        if (intervalStartTimeStr != null) {
-            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr)) {
+            // Check if interval_end_time is provided
+            if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
+                return;
+            }
+            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
                 sendErrorResponse(
                         response,
                         new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStr)
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
                 );
                 return;
             } else {
-                interval_start_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr);
-                int comparisonResult = interval_start_time.compareTo(interval_end_time);
-                if (comparisonResult >= 0) {
-                    // interval_start_time is after interval_end_time
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_COMPARE);
+                interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
+            }
+
+
+            // Check if interval_start_time is provided
+            if (intervalStartTimeStr != null) {
+                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr)) {
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStr)
+                    );
                     return;
                 } else {
-                    // calculate difference between two dates
-                    long differenceInMillis = interval_end_time.getTime() - interval_start_time.getTime();
-                    long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
-                    if (differenceInDays > KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days) {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_GAP_LIMIT);
+                    interval_start_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr);
+                    int comparisonResult = interval_start_time.compareTo(interval_end_time);
+                    if (comparisonResult >= 0) {
+                        // interval_start_time is after interval_end_time
+                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_COMPARE);
                         return;
+                    } else {
+                        // calculate difference between two dates
+                        long differenceInMillis = interval_end_time.getTime() - interval_start_time.getTime();
+                        long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
+                        if (differenceInDays > KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days) {
+                            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_GAP_LIMIT);
+                            return;
+                        }
                     }
                 }
             }
-        }
 
-        LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+            LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
 
-        List<ExperimentResultData> experimentResultDataList = null;
-        ExperimentResultData experimentResultData = null;
-        try {
-            experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
-        } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            return;
-        }
-
-        if (experimentResultDataList.size() > 0) {
-
-            //Load KruizeObject and generate recommendation
-            Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
+            List<ExperimentResultData> experimentResultDataList = null;
+            ExperimentResultData experimentResultData = null;
             try {
-                //Load KruizeObject
-                ExperimentDBService experimentDBService = new ExperimentDBService();
-                experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-                KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
-                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
-                if (validationOutputData.isSuccess())
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
-                else {
+                experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+            } catch (Exception e) {
+                sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                return;
+            }
 
-                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
+            if (experimentResultDataList.size() > 0) {
+
+                //Load KruizeObject and generate recommendation
+                Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
+                try {
+                    //Load KruizeObject
+                    ExperimentDBService experimentDBService = new ExperimentDBService();
+                    experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                    KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+                    ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
+                    if (validationOutputData.isSuccess())
+                        sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    else {
+
+                        sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
+                            experiment_name,
+                            interval_start_time,
+                            interval_end_time);
+                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    return;
 
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
-                        experiment_name,
-                        interval_start_time,
-                        interval_end_time);
-                sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            } else {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
                 return;
-
             }
-        } else {
-            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
-            return;
+        }catch (Exception e){
+            LOGGER.error("Exception: " + e.getMessage());
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }finally {
+            if (null != timerUpdateRecommendations) timerUpdateRecommendations.stop(MetricsConfig.timerUpdateRecommendations);
         }
     }
 

@@ -56,7 +56,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
-    public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
+    public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {

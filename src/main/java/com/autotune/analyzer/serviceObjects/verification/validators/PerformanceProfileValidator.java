@@ -23,6 +23,7 @@ import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
 import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.database.service.ExperimentDBService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
@@ -47,7 +49,11 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
         */
         try {
             KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-            Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
+            if(UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+                ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
+                new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
+                UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
+            }
             PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             // validate the 'resultdata' with the performance profile
