@@ -10,6 +10,7 @@ The following are the available Kruize APIs that you can monitor:
 - `listRecommendations` (GET): API for listing recommendations.
 - `listExperiments` (GET): API for listing experiments.
 - `updateResults` (POST): API for updating experiment results.
+- `updateRecommendations` (POST): API for updating recommendations for an experiment.
 
 ## Time taken for KruizeAPI metrics
 
@@ -65,12 +66,14 @@ Sample Output:
 
 The following are the available Kruize DB methods that you can monitor:
 
-- `addRecommendationToDB`: Method for adding a recommendation to the database.
-- `addResultsToDB`: Method for adding experiment results to the database.
 - `addExperimentToDB`: Method for adding an experiment to the database.
-- `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
+- `addResultToDB`: Method for adding experiment results to the database.
+- `addBulkResultsToDBAndFetchFailedResults`: Method for adding bulk experiment results to the database and fetch the failed results.
+- `addRecommendationToDB`: Method for adding a recommendation to the database.
 - `loadExperimentByName`: Method for loading an experiment by name.
+- `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
 - `loadRecommendationsByExperimentName`: Method for loading recommendations by experiment name.
+- `loadRecommendationsByExperimentNameAndDate`: Method for loading recommendations by experiment name and date.
 
 ## Time taken for KruizeDB metrics
 

@@ -70,6 +70,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
+        String statusValue = "failure";
         Timer.Sample timerAddResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
@@ -111,7 +112,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeResultsEntry> addToDBAndFetchFailedResults(List<KruizeResultsEntry> kruizeResultsEntries) {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
         Transaction tx = null;
-        Timer.Sample timerAddResultsDB = Timer.start(MetricsConfig.meterRegistry());
+        String statusValue = "failure";
+        Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
@@ -127,6 +129,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
             }
             tx.commit();
+
             if (!failedResultsEntries.isEmpty()) {
                 //  find elements in kruizeResultsEntries but not in failedResultsEntries
                 List<KruizeResultsEntry> elementsInSuccessOnly = kruizeResultsEntries.stream()
@@ -138,6 +141,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
                 tx.commit();
             }
+            statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
             failedResultsEntries.addAll(kruizeResultsEntries);
@@ -145,7 +149,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 entry.setErrorReasons(List.of(e.getMessage()));
             });
         } finally {
-            if (null != timerAddResultsDB) timerAddResultsDB.stop(MetricsConfig.timerAddResultsDB);
+            if (null != timerAddBulkResultsDB) {
+                MetricsConfig.timerAddBulkResultsDB = MetricsConfig.timerBAddBulkResultsDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddBulkResultsDB.stop(MetricsConfig.timerAddBulkResultsDB);
+            }
         }
         return failedResultsEntries;
     }
@@ -164,6 +171,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.persist(recommendationEntry);
                     tx.commit();
                     validationOutputData.setSuccess(true);
+                    statusValue = "success";
                 } else {
                     tx = session.beginTransaction();
                     existingRecommendationEntry.setExtended_data(recommendationEntry.getExtended_data());
@@ -194,6 +202,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddPerfProfileDB = Timer.start(MetricsConfig.meterRegistry());
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
@@ -201,6 +211,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 session.persist(kruizePerformanceProfileEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
+                statusValue = "success";
             } catch (HibernateException e) {
                 LOGGER.error("Not able to save performance profile due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
@@ -212,6 +223,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to save performance profile due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddPerfProfileDB) {
+                MetricsConfig.timerAddPerfProfileDB = MetricsConfig.timerBAddPerfProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddPerfProfileDB.stop(MetricsConfig.timerAddPerfProfileDB);
+            }
         }
         return validationOutputData;
     }
@@ -340,12 +356,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllPerfProfiles = Timer.start(MetricsConfig.meterRegistry());
         List<KruizePerformanceProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE, KruizePerformanceProfileEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load Performance Profile  due to {}", e.getMessage());
             throw new Exception("Error while loading existing Performance Profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllPerfProfiles) {
+                MetricsConfig.timerLoadAllPerfProfiles = MetricsConfig.timerBLoadAllPerfProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllPerfProfiles.stop(MetricsConfig.timerLoadAllPerfProfiles);
+            }
         }
         return entries;
     }
@@ -428,12 +451,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
-        Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
+        String statusValue = "failure";
+        Timer.Sample timerLoadRecExpNameDate = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             recommendationEntries = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME, KruizeRecommendationEntry.class)
                     .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
                     .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
                     .getSingleResult();
+            statusValue = "success";
         } catch (NoResultException e) {
             LOGGER.debug("Generating mew recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
         } catch (Exception e) {
@@ -441,13 +466,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             recommendationEntries = null;
             throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
         } finally {
-            if (null != timerLoadRecExpName) timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
+            if (null != timerLoadRecExpNameDate) {
+                MetricsConfig.timerLoadRecExpNameDate = MetricsConfig.timerBLoadRecExpNameDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadRecExpNameDate.stop(MetricsConfig.timerLoadRecExpNameDate);
+            }
         }
         return recommendationEntries;
     }
 
 
     public List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadPerfProfileName = Timer.start(MetricsConfig.meterRegistry());
         List<KruizePerformanceProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME, KruizePerformanceProfileEntry.class)
@@ -455,6 +485,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Performance Profile {} due to {}", performanceProfileName, e.getMessage());
             throw new Exception("Error while loading existing profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadPerfProfileName) {
+                MetricsConfig.timerLoadPerfProfileName = MetricsConfig.timerBLoadPerfProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadPerfProfileName.stop(MetricsConfig.timerLoadPerfProfileName);
+            }
         }
         return entries;
     }
@@ -481,8 +516,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .getResultList();
             }
-
-
         } catch (NoResultException e) {
             LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
@@ -492,6 +525,5 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
-
     }
 }

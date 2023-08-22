@@ -14,14 +14,16 @@ import org.eclipse.jetty.util.thread.ThreadPool;
 public class MetricsConfig {
 
     private static MetricsConfig INSTANCE;
-    public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults;
-    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName;
+    public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecomendations;
+    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
-    public static Timer timerAddRecDB , timerAddResultsDB , timerAddExpDB;
-    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults;
-    public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName;
+    public static Timer timerAddRecDB , timerAddResultsDB , timerAddExpDB, timerAddBulkResultsDB;
+    public static Timer timerAddPerfProfileDB , timerLoadPerfProfileName , timerLoadAllPerfProfiles;
+    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations ;
+    public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
-    public static Timer.Builder timerBAddRecDB , timerBAddResultsDB , timerBAddExpDB;
+    public static Timer.Builder timerBAddRecDB, timerBAddResultsDB , timerBAddExpDB, timerBAddBulkResultsDB;
+    public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
     public static PrometheusMeterRegistry meterRegistry;
@@ -34,15 +36,18 @@ public class MetricsConfig {
         timerBListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listExperiments").tag("method","GET");
         timerBCreateExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","createExperiment").tag("method","POST");
         timerBUpdateResults = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","updateResults").tag("method","POST");
+        timerBUpdateRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","updateRecommendations").tag("method","POST");
 
         timerBLoadRecExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadRecommendationsByExperimentName");
+        timerBLoadRecExpNameDate = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadRecommendationsByExperimentNameAndDate");
         timerBLoadResultsExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadResultsByExperimentName");
         timerBLoadExpName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadExperimentByName");
         timerBLoadAllRec = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllRecommendations");
         timerBLoadAllExp = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllExperiments");
         timerBLoadAllResults = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllResults");
         timerBAddRecDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addRecommendationToDB");
-        timerBAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addResultsToDB");
+        timerBAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addResultToDB");
+        timerBAddBulkResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addBulkResultsToDBAndFetchFailedResults");
         timerBAddExpDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","addExperimentToDB");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
