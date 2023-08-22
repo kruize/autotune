@@ -8,7 +8,7 @@ import requests
 
 
 def loadData():
-    createdata = {"version":"1.0","experiment_name":"quarkus-resteasy-kruize-min-http-response-time-db_10","cluster_name":"cluster-one-division-bell","performance_profile":"resource-optimization-openshift","mode":"monitor","target_cluster":"remote","kubernetes_objects":[{"type":"deployment","name":"tfb-qrh-deployment_5","namespace":"default_5","containers":[{"container_image_name":"kruize/tfb-db:1.15","container_name":"tfb-server-0"},{"container_image_name":"kruize/tfb-qrh:1.13.2.F_et17","container_name":"tfb-server-1"}]}],"trial_settings":{"measurement_duration":"60min"},"recommendation_settings":{"threshold":"0.1"}}
+    createdata = {"version":"1.0","experiment_name":"quarkus-resteasy-kruize-min-http-response-time-db_10","cluster_name":"cluster-one-division-bell","performance_profile":"resource-optimization-openshift","mode":"monitor","target_cluster":"remote","kubernetes_objects":[{"type":"deployment","name":"tfb-qrh-deployment_5","namespace":"default_5","containers":[{"container_image_name":"kruize/tfb-db:1.15","container_name":"tfb-server-0"},{"container_image_name":"kruize/tfb-qrh:1.13.2.F_et17","container_name":"tfb-server-1"}]}],"trial_settings":{"measurement_duration":"15min"},"recommendation_settings":{"threshold":"0.1"}}
     data = {"version":"3.0","experiment_name":"quarkus-resteasy-kruize-min-http-response-time-db_4","interval_start_time":"2023-01-01T00:00:00.000Z","interval_end_time":"2023-01-01T00:00:00.000Z","kubernetes_objects":[{"type":"deployment","name":"tfb-qrh-deployment_5","namespace":"default_5","containers":[{"container_image_name":"kruize/tfb-db:1.15","container_name":"tfb-server-0","metrics":[{"name":"cpuRequest","results":{"aggregation_info":{"sum":None,"avg":0,"format":"cores"}}},{"name":"cpuLimit","results":{"aggregation_info":{"sum":None,"avg":0,"format":"cores"}}},{"name":"cpuUsage","results":{"aggregation_info":{"min":0,"max":0,"sum":0,"avg":0,"format":"cores"}}},{"name":"cpuThrottle","results":{"aggregation_info":{"sum":0,"max":0,"avg":0,"format":"cores"}}},{"name":"memoryRequest","results":{"aggregation_info":{"sum":260.85,"avg":50.21,"format":"MiB"}}},{"name":"memoryLimit","results":{"aggregation_info":{"sum":700,"avg":100,"format":"MiB"}}},{"name":"memoryUsage","results":{"aggregation_info":{"min":50.6,"max":198.5,"sum":298.5,"avg":40.1,"format":"MiB"}}},{"name":"memoryRSS","results":{"aggregation_info":{"min":50.6,"max":523.6,"sum":123.6,"avg":31.91,"format":"MiB"}}}]},{"container_image_name":"kruize/tfb-qrh:1.13.2.F_et17","container_name":"tfb-server-1","metrics":[{"name":"cpuRequest","results":{"aggregation_info":{"sum":4.4,"avg":1.1,"format":"cores"}}},{"name":"cpuLimit","results":{"aggregation_info":{"sum":2.0,"avg":0.5,"format":"cores"}}},{"name":"cpuUsage","results":{"aggregation_info":{"min":0.14,"max":0.84,"sum":0.84,"avg":0.12,"format":"cores"}}},{"name":"cpuThrottle","results":{"aggregation_info":{"sum":0.19,"max":0.09,"avg":0.045,"format":"cores"}}},{"name":"memoryRequest","results":{"aggregation_info":{"sum":250.85,"avg":50.21,"format":"MiB"}}},{"name":"memoryLimit","results":{"aggregation_info":{"sum":500,"avg":100,"format":"MiB"}}},{"name":"memoryUsage","results":{"aggregation_info":{"min":50.6,"max":198.5,"sum":198.5,"avg":40.1,"format":"MiB"}}},{"name":"memoryRSS","results":{"aggregation_info":{"min":50.6,"max":123.6,"sum":123.6,"avg":31.91,"format":"MiB"}}}]}]}]}
     profile_data = {"name":"resource-optimization-openshift","profile_version":1,"k8s_type":"openshift","slo":{"slo_class":"resource_usage","direction":"minimize","objective_function":{"function_type":"expression","expression":"cpuRequest"},"function_variables":[{"name":"cpuRequest","datasource":"prometheus","value_type":"double","kubernetes_object":"container","query":"kube_pod_container_resource_requests{pod=~'$DEPLOYMENT_NAME$-[^-]*-[^-]*$', container='$CONTAINER_NAME$', namespace='$NAMESPACE', resource='cpu', unit='core'}","aggregation_functions":[{"function":"avg","query":"avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"}]}]}}
     return (data, createdata, profile_data)
@@ -28,7 +28,7 @@ def updateRecommendation(experiment_name, endDate):
         else:
             print(
                 f'{payloadRecommendationURL} Request failed with status code {response.status_code}: {response.text}')
-            requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+            #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
     except requests.exceptions.Timeout:
         print('updateRecommendation Timeout occurred while connecting to')
     except requests.exceptions.RequestException as e:
@@ -44,13 +44,14 @@ def postResultsInBulk(expName, bulkData):
             pass
         else:
             print(f'Request failed with status code {expName} {response.status_code}: {response.text}')
-            requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+            #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
     except requests.exceptions.Timeout:
         print('Timeout occurred while connecting to')
     except requests.exceptions.RequestException as e:
         print('An error occurred while connecting to', e)
 
 if __name__ == "__main__":
+    debug = False
     # create an ArgumentParser object
     parser = argparse.ArgumentParser()
 
@@ -92,22 +93,24 @@ if __name__ == "__main__":
     if args.startdate:
         data['interval_end_time'] = args.startdate
 
-    print(createExpURL)
-    print(updateExpURL)
-    print(createProfileURL)
-    print("experiment_name : %s " % (expnameprfix))
-    print("Number of experiments to create : %s" % (expcount))
-    print("Number of results to create : %s" % (rescount))
-    print("startdate : %s" % (data['interval_end_time']))
-    print("minutes jump : %s" % (minutesjump))
+    if debug:
+        print(createExpURL)
+        print(updateExpURL)
+        print(createProfileURL)
+        print("experiment_name : %s " % (expnameprfix))
+        print("Number of experiments to create : %s" % (expcount))
+        print("Number of results to create : %s" % (rescount))
+        print("startdate : %s" % (data['interval_end_time']))
+        print("minutes jump : %s" % (minutesjump))
 
     #Create a performance profile
     profile_json_payload = json.dumps(profile_data)
     response = requests.post(createProfileURL, data=profile_json_payload, headers=headers)
     if response.status_code == 201:
-        print('Request successful!')
+        if debug: print('Request successful!')
+        if expcount > 10 : time.sleep(5)
     else:
-        print(f'Request failed with status code {response.status_code}: {response.text}')
+        if debug: print(f'Request failed with status code {response.status_code}: {response.text}')
 
     #Create experiment and post results
     start_time = time.time()
@@ -118,10 +121,12 @@ if __name__ == "__main__":
             createdata['experiment_name'] = experiment_name
             create_json_payload = json.dumps([createdata])
             #Create experiment
-            requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+            #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
             response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
             j = 0
-            if response.status_code == 201 or response.status_code == 409:
+            if args.startdate:
+                data['interval_end_time'] = args.startdate
+            if response.status_code == 201 or response.status_code == 409 or response.status_code == 400:
                 bulkdata = []
                 totalResultDates = []
                 for j in range(rescount):
