@@ -260,7 +260,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-config
-  namespace: monitoring
+  namespace: openshift-tuning
 data:
   nginx.conf: |
     events {}
