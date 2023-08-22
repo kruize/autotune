@@ -65,6 +65,7 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         try {
@@ -88,13 +89,17 @@ public class UpdateResults extends HttpServlet {
                 sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
                 sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                statusValue = "success";
             }
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerUpdateResults) timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
+            if (null != timerUpdateResults) {
+                MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
+            }
         }
     }
 

@@ -37,6 +37,7 @@ import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.Timer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -79,6 +80,8 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
+        Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
             // Get the values from the request parameters
             String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
@@ -163,12 +166,11 @@ public class UpdateRecommendations extends HttpServlet {
                     KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
                     new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
                     ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
-                    if (validationOutputData.isSuccess())
+                    if (validationOutputData.isSuccess()) {
                         sendSuccessResponse(response, kruizeObject, interval_end_time);
-                    else {
-
+                        statusValue = "success";
+                    } else {
                         sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
-
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -188,6 +190,11 @@ public class UpdateRecommendations extends HttpServlet {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerBUpdateRecommendations) {
+                MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
+            }
         }
     }
 

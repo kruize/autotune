@@ -10,6 +10,7 @@ The following are the available Kruize APIs that you can monitor:
 - `listRecommendations` (GET): API for listing recommendations.
 - `listExperiments` (GET): API for listing experiments.
 - `updateResults` (POST): API for updating experiment results.
+- `updateRecommendations` (POST): API for updating recommendations for an experiment.
 
 ## Time taken for KruizeAPI metrics
 
@@ -21,14 +22,15 @@ To monitor the performance of these APIs, you can use the following metrics:
 
 Here are some sample metrics for the mentioned APIs which can run in Prometheus:
 
-- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST"}`: Returns the count of invocations for the `createExperiment` API.
-- `kruizeAPI_seconds_sum{api="createExperiment", application="Kruize", method="POST"}`: Returns the sum of the time taken by the `createExperiment` API.
-- `kruizeAPI_seconds_max{api="createExperiment", application="Kruize", method="POST"}`: Returns the maximum time taken by the `createExperiment` API.
+- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the count of successful invocations for the `createExperiment` API.
+- `kruizeAPI_seconds_count{api="createExperiment", application="Kruize", method="POST", status="failure"}`: Returns the count of failed invocations for the `createExperiment` API.
+- `kruizeAPI_seconds_sum{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the sum of the time taken by the successful invocations of `createExperiment` API.
+- `kruizeAPI_seconds_max{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the maximum time taken by the successful invocation of `createExperiment` API.
 
 By changing the value of the `api` and `method` label, you can gather metrics for other Kruize APIs such as `listRecommendations`, `listExperiments`, and `updateResults`.
 
 Here is a sample command to collect the metric through `curl`
-- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_seconds_sum{api="listRecommendations", application="Kruize", method="GET"}' ${PROMETHEUS_URL} | jq` : 
+- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_seconds_sum{api="listRecommendations", application="Kruize", method="GET", status="success"}' ${PROMETHEUS_URL} | jq` : 
 Returns the sum of the time taken by `listRecommendations` API.
   
 Sample Output:
@@ -64,15 +66,17 @@ Sample Output:
 
 The following are the available Kruize DB methods that you can monitor:
 
-- `addRecommendationToDB`: Method for adding a recommendation to the database.
-- `addResultsToDB`: Method for adding experiment results to the database.
-- `loadAllRecommendations`: Method for loading all recommendations from the database.
-- `loadAllExperiments`: Method for loading all experiments from the database.
 - `addExperimentToDB`: Method for adding an experiment to the database.
-- `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
+- `addResultToDB`: Method for adding experiment results to the database.
+- `addBulkResultsToDBAndFetchFailedResults`: Method for adding bulk experiment results to the database and fetch the failed results.
+- `addRecommendationToDB`: Method for adding a recommendation to the database.
 - `loadExperimentByName`: Method for loading an experiment by name.
-- `loadAllResults`: Method for loading all experiment results from the database.
+- `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
 - `loadRecommendationsByExperimentName`: Method for loading recommendations by experiment name.
+- `loadRecommendationsByExperimentNameAndDate`: Method for loading recommendations by experiment name and date.
+- `addPerformanceProfileToDB`: Method to add performance profile to the database.
+- `loadPerformanceProfileByName`: Method to load a specific performance profile.
+- `loadAllPerformanceProfiles`: Method to load all performance profiles.
 
 ## Time taken for KruizeDB metrics
 
@@ -84,14 +88,15 @@ To monitor the performance of these methods, you can use the following metrics:
 
 Here are some sample metrics for the mentioned DB methods which can run in Prometheus:
 
-- `kruizeDB_seconds_count{application="Kruize", method="loadAllExperiments"}`: Number of times the `loadAllExperiments` method was called.
-- `kruizeDB_seconds_sum{application="Kruize", method="loadAllExperiments"}`: Total time taken by the `loadAllExperiments` method.
-- `kruizeDB_seconds_max{application="Kruize", method="loadAllExperiments"}`: Maximum time taken by the `loadAllExperiments` method.
+- `kruizeDB_seconds_count{application="Kruize", method="addExperimentToDB", status="success"}`: Number of successful invocations of `addExperimentToDB` method.
+- `kruizeDB_seconds_count{application="Kruize", method="addExperimentToDB", status="failure"}`: Number of failed invocations of `addExperimentToDB` method.
+- `kruizeDB_seconds_sum{application="Kruize", method="addExperimentToDB", status="success"}`: Total time taken by the `addExperimentToDB` method which were success.
+- `kruizeDB_seconds_max{application="Kruize", method="addExperimentToDB", status="success"}`: Maximum time taken by the `addExperimentToDB` method which were success.
 
 By changing the value of the `method` label, you can gather metrics for other KruizeDB metrics.
 
 Here is a sample command to collect the metric through `curl`
-- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeDB_seconds_sum{method="loadRecommendationsByExperimentName"}' ${PROMETHEUS_URL} | jq` :
+- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeDB_seconds_sum{application="Kruize", method="loadRecommendationsByExperimentName", status="success"}' ${PROMETHEUS_URL} | jq` :
   Returns the sum of the time taken by `loadRecommendationsByExperimentName` method.
 
 Sample Output:
