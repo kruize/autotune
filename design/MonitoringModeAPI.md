@@ -343,8 +343,8 @@ structure outlined below for handling duplicate records:
     "status": "ERROR",
     "data": [
         {
-            "interval_start_time": "Jan 1, 2024, 5:30:00 AM",
-            "interval_end_time": "Jan 1, 2024, 5:45:00 AM",
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
             "errors": [
                 {
                     "message": "experiment_name: may not be empty , version: may not be empty",
@@ -355,8 +355,8 @@ structure outlined below for handling duplicate records:
             ]
         },
         {
-            "interval_start_time": "Jan 1, 2023, 5:45:00 AM",
-            "interval_end_time": "Jan 1, 2023, 6:00:00 AM",
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
             "errors": [
                 {
                     "message": "An entry for this record already exists!",
@@ -369,8 +369,8 @@ structure outlined below for handling duplicate records:
             "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
         },
         {
-            "interval_start_time": "Jan 1, 2023, 6:00:00 AM",
-            "interval_end_time": "Jan 1, 2023, 6:15:00 AM",
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
             "errors": [
                 {
                     "message": "An entry for this record already exists!",
@@ -400,8 +400,8 @@ specific attribute causing the failures.
     "status": "ERROR",
     "data": [
         {
-            "interval_start_time": "Jan 1, 2023, 5:45:00 AM",
-            "interval_end_time": "Jan 1, 2023, 6:00:00 AM",
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
             "errors": [
                 {
                     "message": "An entry for this record already exists!",
@@ -414,8 +414,8 @@ specific attribute causing the failures.
             "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
         },
         {
-            "interval_start_time": "Jan 1, 2023, 6:00:00 AM",
-            "interval_end_time": "Jan 1, 2023, 6:15:00 AM",
+            "interval_start_time": "2023-01-01T00:30:00.000Z",
+            "interval_end_time": "2023-01-01T00:45:00.000Z",
             "errors": [
                 {
                     "message": "An entry for this record already exists!",
