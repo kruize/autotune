@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.verification.annotators.CompareDate;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
@@ -27,7 +28,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.List;
 
 @CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
@@ -50,7 +50,7 @@ public class UpdateResultsAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesAPIObjects;
 
-    private HashMap<Integer, String> errors;
+    private List<KruizeResponse> errors;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -76,11 +76,11 @@ public class UpdateResultsAPIObject extends BaseSO {
         this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
-    public HashMap<Integer, String> getErrors() {
+    public List<KruizeResponse> getErrors() {
         return errors;
     }
 
-    public void setErrors(HashMap<Integer, String> errors) {
+    public void setErrors(List<KruizeResponse> errors) {
         this.errors = errors;
     }
 

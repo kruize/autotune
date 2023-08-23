@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
 import com.autotune.analyzer.serviceObjects.Converters;
@@ -36,7 +37,10 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Initiates new experiment data validations and push into queue for worker to
@@ -49,26 +53,28 @@ public class ExperimentInitiator {
     List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
 
-    public static HashMap<Integer, String> getErrorMap(List<String> errorMessages) {
-        HashMap<Integer, String> errorMap;
+    public static List<KruizeResponse> getErrorMap(List<String> errorMessages) {
+        List<KruizeResponse> responses;
         if (null != errorMessages) {
-            errorMap = new HashMap<>();
+            responses = new ArrayList<>();
             errorMessages.forEach(
                     (errorText) -> {
                         if (AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.containsKey(errorText)) {
-                            errorMap.put(
-                                    AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText),
-                                    errorText
+                            responses.add(
+                                    new KruizeResponse(errorText, AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText), "", "ERROR", null)
                             );
+
                         } else {
-                            errorMap.put(HttpServletResponse.SC_BAD_REQUEST, errorText);
+                            responses.add(
+                                    new KruizeResponse(errorText, HttpServletResponse.SC_BAD_REQUEST, "", "ERROR", null)
+                            );
                         }
                     }
             );
         } else {
-            errorMap = null;
+            responses = null;
         }
-        return errorMap;
+        return responses;
     }
 
     /**

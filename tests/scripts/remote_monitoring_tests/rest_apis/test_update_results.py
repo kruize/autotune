@@ -484,9 +484,9 @@ def test_update_results_with_same_result(cluster_type):
     TIMESTAMP_PRESENT_MSG = 'An entry for this record already exists!'
 
     print(TIMESTAMP_PRESENT_MSG)
-    print(data['data'][0]['errors']["409"])
+    print(data['data'][0]['errors'][0]['message'])
     assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-    assert data['data'][0]['errors']["409"] == TIMESTAMP_PRESENT_MSG
+    assert data['data'][0]['errors'][0]['message'] == TIMESTAMP_PRESENT_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -534,12 +534,12 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
         assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-        assert data['data'][0]['errors']['400'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
+        assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
     else:
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
         assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-        assert data['data'][0]['errors']['400'] == INVALID_INTERVAL_DURATION_MSG
+        assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
