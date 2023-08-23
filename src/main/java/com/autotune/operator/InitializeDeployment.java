@@ -105,7 +105,10 @@ public class InitializeDeployment {
                     deploymentInfoField.set(null, deploymentInfoFieldValue);
                 else if (deploymentInfoField.getType() == Boolean.class)
                     deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
-                else
+                else if (deploymentInfoField.getType() == Integer.class) {
+                    assert deploymentInfoFieldValue != null;
+                    deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
+                } else
                     throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
             } catch (Exception e) {
                 LOGGER.warn("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
@@ -137,7 +140,7 @@ public class InitializeDeployment {
             //Override if env value set outside kruizeConfigJson
             String sysEnvValue = System.getenv(envName);
             if (null == sysEnvValue && null == envValue) {
-                message = message + ", nor not able to set via environment variable and set to null.";
+                message = message + ", nor not able to set via environment variable and set to null or default.";
             } else {
                 if (null != sysEnvValue && envValue == null) {
                     envValue = sysEnvValue;

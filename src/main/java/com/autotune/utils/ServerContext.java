@@ -22,6 +22,7 @@ package com.autotune.utils;
  */
 public class ServerContext {
     public static final int KRUIZE_SERVER_PORT = Integer.parseInt(System.getenv().getOrDefault("AUTOTUNE_SERVER_PORT", "8080"));
+    public static final int KRUIZE_HTTP_THREAD_POOL_COUNT = Integer.parseInt(System.getenv().getOrDefault("KRUIZE_HTTP_THREAD_POOL_COUNT", "10"));
     public static final int HPO_SERVER_PORT = 8085;
 
     // AnalyzerConstants end points

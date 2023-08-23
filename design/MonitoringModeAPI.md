@@ -68,11 +68,6 @@ see [Create Experiment](/design/CreateExperiment.md)
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
 
-**NOTE:** The update to results of a particular experiment should follow Time Series Order to get valid recommendations.
-
-**Eg:** after updating the results for time stamp `2022-01-23T18:25:43.511Z` you cannot add results previous to that
-timestamp
-
 * Mandatory parameters in the input JSON:
 
  ```
@@ -333,121 +328,107 @@ timestamp
 }
 ```
 
-## Experiments
-
-List experiments output JSON as follows:
-
-**Attributes:**
-
-| Param             | Possible options | Defaults | Description                                                                                                                                 | 
-|-------------------|------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `results`         | `true`, `false`  | `false`  | Passing results = true as the parameter to the API returns the latest results.                                                              |
-| `latest`          | `true`, `false`  | `true`   | Gets you the latest available results or recommendation if true, else returns all the results or recommendations                            |
-| `recommendations` | `true`, `false`  | `false`  | Passing recommendations = true as the parameter to the API returns the latest recommendations and no results                                |
-| `experiment_name` | Any string       | None     | Passing Experiment Name as the parameter to the API returns the results or recommendation or both of the particular experiment if it exists |
-
-**Request without Parameter**
-
-`GET /listExperiments`
-
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments`
-
-If no parameter is passed API returns all the experiment details.
+The UpdateResults API has been enhanced to support bulk uploads of up to 100 records at once. When all records are
+successfully processed, the API will return the same success response as depicted above. However, if any or all of the
+records encounter failures during processing, the response will differ. Additionally, please take note of the response
+structure outlined below for handling duplicate records:
 
 **Response**
 
 ```
-[
-  {
-    "version": "1.0",
-    "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
-    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
-    "cluster_name": "cluster-one-division-bell",
-    "mode": "monitor",
-    "target_cluster": "remote",
-    "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
-    "trial_settings": {
-      "measurement_duration": "15min"
-    },
-    "recommendation_settings": {
-      "threshold": "0.1"
-    },
-    "experiment_usecase_type": {
-      "remote_monitoring": true,
-      "local_monitoring": false,
-      "local_experiment": false
-    },
-    "validation_data": {
-      "success": true,
-      "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
-      "errorCode": 201
-    },
-    "kubernetes_objects": [
-      {
-        "type": "deployment",
-        "name": "tfb-qrh-deployment_0",
-        "namespace": "default_0",
-        "containers": {
-          "tfb-server-1": {
-            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server-1"
-          },
-          "tfb-server-0": {
-            "container_image_name": "kruize/tfb-db:1.15",
-            "container_name": "tfb-server-0"
-          }
+{
+    "message": "Out of a total of 3 records, 3 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
+            "errors": [
+                {
+                    "message": "experiment_name: may not be empty , version: may not be empty",
+                    "httpcode": 400,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ]
+        },
+        {
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        },
+        {
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
         }
-      }
     ]
-  },
-  ...
-  ...
-  ...
-  {
-    "version": "1.0",
-    "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
-    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
-    "cluster_name": "cluster-one-division-bell",
-    "mode": "monitor",
-    "target_cluster": "remote",
-    "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
-    "trial_settings": {
-      "measurement_duration": "15min"
-    },
-    "recommendation_settings": {
-      "threshold": "0.1"
-    },
-    "experiment_usecase_type": {
-      "remote_monitoring": true,
-      "local_monitoring": false,
-      "local_experiment": false
-    },
-    "validation_data": {
-      "success": true,
-      "message": "Registered successfully with Kruize! View registered experiments at /listExperiments",
-      "errorCode": 201
-    },
-    "kubernetes_objects": [
-      {
-        "type": "deployment",
-        "name": "tfb-qrh-deployment_1",
-        "namespace": "default_1",
-        "containers": {
-          "tfb-server-1": {
-            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server-1"
-          },
-          "tfb-server-0": {
-            "container_image_name": "kruize/tfb-db:1.15",
-            "container_name": "tfb-server-0"
-          }
+}
+```
+
+**Response**
+
+In the response below, among the three records, one record was successfully saved while the other two records failed.
+The failed records are indicated in the 'data' attribute using the 'error' attribute, allowing you to identify the
+specific attribute causing the failures.
+
+```
+{
+    "message": "Out of a total of 3 records, 2 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-01-01T00:15:00.000Z",
+            "interval_end_time": "2023-01-01T00:30:00.000Z",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        },
+        {
+            "interval_start_time": "2023-01-01T00:30:00.000Z",
+            "interval_end_time": "2023-01-01T00:45:00.000Z",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
         }
-      }
     ]
-  }
-]
+}
 ```
 
 **Request with experiment name parameter**
@@ -2314,3 +2295,171 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+
+## Update Recommendations API
+
+Generate the recommendations for a specific experiment based on provided parameters.
+
+**Request Parameters**
+
+| Parameter           | Type   | Required | Description                                                           |
+|---------------------|--------|----------|-----------------------------------------------------------------------|
+| experiment_name     | string | Yes      | The name of the experiment.                                           |
+| interval_end_time   | string | Yes      | The end time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ".   |
+| interval_start_time | string | optional | The start time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ". |
+
+The recommendation API requires two mandatory fields, namely "experiment_name" and "interval_end_time".
+By utilizing these parameters, the API generates recommendations based on short-term, medium-term, and long-term
+factors.
+For instance, if the long-term setting is configured for 15 days and the interval_end_time is set to "Jan 15 2023 00:00:
+00.000Z", the API retrieves data from the past 15 days, starting from January 1st. Using this data, the API generates
+three recommendations for Jan 15th 2023.
+
+If an optional interval_start_time is provided, the API generates recommendations for each date within the range of
+interval_start_time and interval_end_time. However, it is important to ensure that the difference between these dates
+does
+not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations beyond
+this threshold might require more time.
+
+**Request**
+
+`POST /updateRecommendations?experiment_name=?&interval_end_time=?`
+
+`POST /updateRecommendations?experiment_name=?&interval_end_time=?&interval_start_time=?`
+
+example
+
+`curl --location --request POST 'http://127.0.0.1:8080/updateRecommendations?interval_end_time=2023-01-02T00:15:00.000Z&experiment_name=temp_1'`
+
+success status code : 201
+
+**Response**
+
+The response will contain a array of JSON object with the updated recommendations for the specified experiment.
+
+Example Response Body:
+
+```json
+[
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_5",
+        "namespace": "default_5",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "notifications": {
+                "112101": {
+                  "type": "info",
+                  "message": "Duration Based Recommendations Available",
+                  "code": 112101
+                }
+              },
+              "data": {
+                "2023-01-02T00:15:00.000Z": {
+                  "duration_based": {
+                    "short_term": {
+                      "monitoring_start_time": "2023-01-01T00:15:00.000Z",
+                      "monitoring_end_time": "2023-01-02T00:15:00.000Z",
+                      "duration_in_hours": 24.0,
+                      "pods_count": 7,
+                      "confidence_level": 0.0,
+                      "config": {
+                        "limits": {
+                          "cpu": {
+                            "amount": 0.9299999999999999,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 238.2,
+                            "format": "MiB"
+                          }
+                        },
+                        "requests": {
+                          "cpu": {
+                            "amount": 0.9299999999999999,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 238.2,
+                            "format": "MiB"
+                          }
+                        }
+                      },
+                      "variation": {
+                        "limits": {
+                          "cpu": {
+                            "amount": 0.42999999999999994,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 138.2,
+                            "format": "MiB"
+                          }
+                        },
+                        "requests": {
+                          "cpu": {
+                            "amount": -0.17000000000000015,
+                            "format": "cores"
+                          },
+                          "memory": {
+                            "amount": 187.98999999999998,
+                            "format": "MiB"
+                          }
+                        }
+                      },
+                      "notifications": []
+                    },
+                    "medium_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "1.0",
+    "experiment_name": "temp_1"
+  }
+]
+```
+
+**Error Responses**
+
+| HTTP Status Code | Description                                                                                        |
+|------------------|----------------------------------------------------------------------------------------------------|
+| 400              | experiment_name is mandatory.                                                                      |
+| 400              | interval_end_time is mandatory.                                                                    |
+| 400              | Given timestamp - \" 2023-011-02T00:00:00.000Z \" is not a valid timestamp format.                 |
+| 400              | Data not found!.                                                                                   |
+| 400              | The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days! |
+| 400              | The Start time should precede the End time!                                                        |                                           |
+| 500              | Internal Server Error                                                                              |
+

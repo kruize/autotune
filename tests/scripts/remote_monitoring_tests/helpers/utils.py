@@ -1,4 +1,3 @@
-
 """
 Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
 
@@ -18,8 +17,8 @@ import csv
 import json
 import os
 import re
-import time
 import subprocess
+import time
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -30,20 +29,28 @@ ERROR_409_STATUS_CODE = 409
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
+UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
+CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
+UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
+UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
+UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND = 'Data not found!'
+UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
+UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
+UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
 
 # Kruize Recommendations Notification codes
-NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE  = "112101"
-NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA                           = "120001"
-NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE                      = "323001"
-NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO                      = "323002"
-NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE                 = "323003"
-NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO                   = "324001"
-NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE              = "324002"
-NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET                       = "523001"
-NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET                         = "423001"
-NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET                    = "524001"
-NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET                      = "524002"
+NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "112101"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE = "323003"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE = "324002"
+NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET = "523001"
+NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET = "423001"
+NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET = "524001"
+NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET = "524002"
 
 AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
 INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
@@ -72,7 +79,6 @@ MEMORY_LIMIT = "memoryLimit"
 MEMORY_USAGE = "memoryUsage"
 MEMORY_RSS = "memoryRSS"
 
-
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
@@ -87,74 +93,75 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "cluster_name": "cluster-one-division-bell",
-        "performance_profile": "resource-optimization-openshift",
-        "mode": "monitor",
-        "target_cluster": "remote",
-        "type": "deployment",
-        "name": "tfb-qrh-sample",
-        "namespace": "default",
-        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-        "container_name": "tfb-server",
-        "measurement_duration": "15min",
-        "threshold": "0.1"
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "type": "deployment",
+    "name": "tfb-qrh-sample",
+    "namespace": "default",
+    "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+    "container_name": "tfb-server",
+    "measurement_duration": "15min",
+    "threshold": "0.1"
 }
 
 # version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
-        "interval_start_time": "2022-01-23T18:25:43.511Z",
-        "interval_end_time": "2022-01-23T18:40:43.511Z",
-        "type": "deployment",
-        "name": "tfb-qrh-deployment",
-        "namespace": "default",
-        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-        "container_name": "tfb-server",
-        "cpuRequest_name": "cpuRequest",
-        "cpuRequest_sum": 4.4,
-        "cpuRequest_avg": 1.1,
-        "cpuRequest_format": "cores",
-        "cpuLimit_name": "cpuLimit",
-        "cpuLimit_sum": 5.4,
-        "cpuLimit_avg": 22.1,
-        "cpuLimit_format": "cores",
-        "cpuUsage_name": "cpuUsage",
-        "cpuUsage_sum": 3.4,
-        "cpuUsage_max": 2.4,
-        "cpuUsage_avg": 1.5,
-        "cpuUsage_min": 0.5,
-        "cpuUsage_format": "cores",
-        "cpuThrottle_name": "cpuThrottle",
-        "cpuThrottle_sum": 1.09,
-        "cpuThrottle_max": 0.09,
-        "cpuThrottle_avg": 0.045,
-        "cpuThrottle_format": "cores",
-        "memoryRequest_name": "memoryRequest",
-        "memoryRequest_sum": 250.85,
-        "memoryRequest_avg": 51.1,
-        "memoryRequest_format": "MiB",
-        "memoryLimit_name": "memoryLimit",
-        "memoryLimit_sum": 500,
-        "memoryLimit_avg": 100,
-        "memoryLimit_format": "MiB",
-        "memoryUsage_name": "memoryUsage",
-        "memoryUsage_sum": 298.5,
-        "memoryUsage_max": 198.4,
-        "memoryUsage_avg": 41.5,
-        "memoryUsage_min": 21.5,
-        "memoryUsage_format": "MiB",
-        "memoryRSS_name": "memoryRSS",
-        "memoryRSS_sum": 225.64,
-        "memoryRSS_max": 125.54,
-        "memoryRSS_avg": 46.5,
-        "memoryRSS_min": 26.5,
-        "memoryRSS_format": "MiB"
-    }
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.511Z",
+    "type": "deployment",
+    "name": "tfb-qrh-deployment",
+    "namespace": "default",
+    "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+    "container_name": "tfb-server",
+    "cpuRequest_name": "cpuRequest",
+    "cpuRequest_sum": 4.4,
+    "cpuRequest_avg": 1.1,
+    "cpuRequest_format": "cores",
+    "cpuLimit_name": "cpuLimit",
+    "cpuLimit_sum": 5.4,
+    "cpuLimit_avg": 22.1,
+    "cpuLimit_format": "cores",
+    "cpuUsage_name": "cpuUsage",
+    "cpuUsage_sum": 3.4,
+    "cpuUsage_max": 2.4,
+    "cpuUsage_avg": 1.5,
+    "cpuUsage_min": 0.5,
+    "cpuUsage_format": "cores",
+    "cpuThrottle_name": "cpuThrottle",
+    "cpuThrottle_sum": 1.09,
+    "cpuThrottle_max": 0.09,
+    "cpuThrottle_avg": 0.045,
+    "cpuThrottle_format": "cores",
+    "memoryRequest_name": "memoryRequest",
+    "memoryRequest_sum": 250.85,
+    "memoryRequest_avg": 51.1,
+    "memoryRequest_format": "MiB",
+    "memoryLimit_name": "memoryLimit",
+    "memoryLimit_sum": 500,
+    "memoryLimit_avg": 100,
+    "memoryLimit_format": "MiB",
+    "memoryUsage_name": "memoryUsage",
+    "memoryUsage_sum": 298.5,
+    "memoryUsage_max": 198.4,
+    "memoryUsage_avg": 41.5,
+    "memoryUsage_min": 21.5,
+    "memoryUsage_format": "MiB",
+    "memoryRSS_name": "memoryRSS",
+    "memoryRSS_sum": 225.64,
+    "memoryRSS_max": 125.54,
+    "memoryRSS_avg": 46.5,
+    "memoryRSS_min": 26.5,
+    "memoryRSS_format": "MiB"
+}
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
+
 
 def generate_test_data(csvfile, test_data):
     if os.path.isfile(csvfile):
@@ -174,15 +181,16 @@ def generate_test_data(csvfile, test_data):
                 data.append(test_name)
                 data.append(status_code)
                 for k in test_data:
-                    if  k != key :
-                            data.append(test_data[k])
+                    if k != key:
+                        data.append(test_data[k])
                     else:
-                        if any(re.findall(r'invalid.*sum|invalid.*max|invalid.*min|invalid.*avg', test_name, re.IGNORECASE)):
-                                data.append(-1)
+                        if any(re.findall(r'invalid.*sum|invalid.*max|invalid.*min|invalid.*avg', test_name,
+                                          re.IGNORECASE)):
+                            data.append(-1)
                         elif any(re.findall(r'blank.*sum|blank.*max|blank.*min|blank.*avg', test_name, re.IGNORECASE)):
-                                data.append("\"\"")
+                            data.append("\"\"")
                         else:
-                               data.append(test_type[t])
+                            data.append(test_type[t])
 
                 writer.writerow(data)
 
@@ -190,11 +198,13 @@ def generate_test_data(csvfile, test_data):
     test_data = read_test_data_from_csv(csvfile)
     return test_data
 
+
 def get_num_lines_in_csv(csv_filename):
     reader = csv.reader(open(csv_filename))
-    num_lines= len(list(reader))
+    num_lines = len(list(reader))
     print(num_lines)
     return num_lines
+
 
 def write_json_data_to_file(filename, data):
     """
@@ -207,6 +217,7 @@ def write_json_data_to_file(filename, data):
     except:
         return None
 
+
 def read_json_data_from_file(filename):
     """
     Helper to read Json file
@@ -218,18 +229,20 @@ def read_json_data_from_file(filename):
     except:
         return None
 
+
 def read_test_data_from_csv(csv_file):
     test_data = []
 
     with open(csv_file, newline='') as csvfile:
         data = csv.reader(csvfile, delimiter=',')
-        #next(data)  # skip header row
+        # next(data)  # skip header row
         for row in data:
             test_data.append(row)
 
     return test_data
 
-def generate_json(find_arr, json_file, filename, i, update_timestamps = False):
+
+def generate_json(find_arr, json_file, filename, i, update_timestamps=False):
     with open(json_file, 'r') as file:
         data = file.read()
 
@@ -243,44 +256,49 @@ def generate_json(find_arr, json_file, filename, i, update_timestamps = False):
         data = data.replace(find, replace)
 
         find = "2022-01-23T18:40:43.570Z"
-        replace = increment_timestamp(find, i) 
+        replace = increment_timestamp(find, i)
         data = data.replace(find, replace)
 
     with open(filename, 'w') as file:
         file.write(data)
 
+
 def increment_timestamp(input_timestamp, step):
     input_date = datetime.strptime(input_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
     minutes = 50 * step + 3600
     output_date = input_date + timedelta(minutes=minutes)
-    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
 
     return timestamp
+
 
 def increment_timestamp_by_given_mins(input_timestamp, minutes):
     input_date = datetime.strptime(input_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
     output_date = input_date + timedelta(minutes=minutes)
-    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+    timestamp = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
 
     return timestamp
 
+
 def get_datetime():
     my_datetime = datetime.today()
-    time_str = my_datetime.isoformat(timespec = 'milliseconds')
+    time_str = my_datetime.isoformat(timespec='milliseconds')
     time_str = time_str + "Z"
     return time_str
+
 
 def term_based_start_time(input_date_str, term):
     duration = {"short_term": 1, "medium_term": 7, "long_term": 15}
     input_date = datetime.strptime(input_date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
 
     output_date = input_date - timedelta(days=duration[term])
-    output_date_str = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+'Z'
+    output_date_str = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
 
     return output_date_str
 
-def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours = None, test_name = None):
 
+def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
+                       test_name=None):
     # Validate experiment
     assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
@@ -296,14 +314,15 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
             validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
                                     list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
     else:
-            update_results_kubernetes_obj = None
-            create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
-            list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
-            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
-                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+        update_results_kubernetes_obj = None
+        create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
+        list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
+        validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
-def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
 
+def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
     # Validate type, name, namespace
     if update_results_kubernetes_obj == None:
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
@@ -331,10 +350,13 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
         list_reco_container = None
 
         for j in range(list_reco_containers_length):
-            if list_reco_kubernetes_obj["containers"][j]["container_name"] == create_exp_kubernetes_obj["containers"][i]["container_name"]:
+            if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
+                    create_exp_kubernetes_obj["containers"][i]["container_name"]:
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours)
+                validate_container(update_results_container, update_results_json, list_reco_container,
+                                   expected_duration_in_hours)
+
 
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
     # Validate container image name and container name
@@ -342,7 +364,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
             f"Container image names did not match! Actual -  {list_reco_container['container_image_name']} Expected - {update_results_container['container_image_name']}"
 
-        assert list_reco_container["container_name"] == update_results_container["container_name"],\
+        assert list_reco_container["container_name"] == update_results_container["container_name"], \
             f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
     # Validate timestamps
@@ -363,11 +385,11 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 for term in duration_terms:
                     if check_if_recommendations_are_present(duration_based_obj[term]):
                         # Validate timestamps
-                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time,\
+                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time, \
                             f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time,\
+                        assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time, \
                             f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
@@ -384,10 +406,11 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
                                 duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
-                        print(f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours,\
+                        print(
+                            f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                        assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours, \
                             f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                        
+
                         # Validate recommendation config
                         validate_config(duration_based_obj[term]["config"])
             else:
@@ -399,13 +422,19 @@ def validate_container(update_results_container, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
+
 def validate_config(reco_config):
     usage_list = ["requests", "limits"]
     for usage in usage_list:
-        assert reco_config[usage]["cpu"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
-        assert reco_config[usage]["cpu"]["format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
-        assert reco_config[usage]["memory"]["amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
-        assert reco_config[usage]["memory"]["format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
+        assert reco_config[usage]["cpu"][
+                   "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
+        assert reco_config[usage]["cpu"][
+                   "format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
+        assert reco_config[usage]["memory"][
+                   "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
+        assert reco_config[usage]["memory"][
+                   "format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
+
 
 def check_if_recommendations_are_present(duration_based_obj):
     notifications = duration_based_obj["notifications"]
@@ -413,14 +442,15 @@ def check_if_recommendations_are_present(duration_based_obj):
         return False
     return True
 
+
 def time_diff_in_hours(interval_start_time, interval_end_time):
     start_date = datetime.strptime(interval_start_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     end_date = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     diff = end_date - start_date
     return round(diff.total_seconds() / 3600, 2)
 
-def strip_double_quotes_for_field(json_file, field, filename):
 
+def strip_double_quotes_for_field(json_file, field, filename):
     find = "\"{{" + field + "}}\""
     replace = "{{" + field + "}}"
     with open(json_file, 'r') as file:
@@ -431,6 +461,7 @@ def strip_double_quotes_for_field(json_file, field, filename):
         with open(filename, 'w') as file:
             file.write(data)
 
+
 def compare_json_files(json_file1, json_file2):
     with open(json_file1, "r") as f1:
         try:
@@ -438,14 +469,14 @@ def compare_json_files(json_file1, json_file2):
         except json.JSONDecodeError:
             print("Received JSONDecodeError")
             json_data1 = {}
-        
+
     with open(json_file2, "r") as f2:
         try:
             json_data2 = json.load(f2)
         except json.JSONDecodeError:
             print("Received JSONDecodeError")
             json_data2 = {}
-   
+
     if json_data1 and json_data2:
         if json_data1 == json_data2:
             print("The two JSON files are identical!")
@@ -457,18 +488,20 @@ def compare_json_files(json_file1, json_file2):
         print(f"JSON files are empty! Check the files {json_file1} and {json_file2}")
         return False
 
+
 def get_kruize_pod(namespace):
     command = f"kubectl get pod -n {namespace} | grep kruize | grep -v kruize-ui | cut -d ' ' -f1"
     # Execute the command and capture the output
     output = subprocess.check_output(command, shell=True)
-    
+
     pod_name = output.decode('utf-8')
     print(f"pod name = {pod_name}")
     return pod_name.rstrip()
 
+
 def delete_kruize_pod(namespace):
-    pod_name = get_kruize_pod(namespace) 
- 
+    pod_name = get_kruize_pod(namespace)
+
     command = f"kubectl delete pod {pod_name} -n {namespace}"
     print(command)
 
@@ -502,12 +535,14 @@ def check_pod_running(namespace, pod_name):
         print(f"Kruize Pod {pod_name} is now running")
         return True
 
+
 def get_index_of_metric(metrics: list, metric_name: str):
     for i, metric in enumerate(metrics):
         if metric["name"] == metric_name:
             return i
 
     return None
+
 
 def check_if_dict_has_same_keys(base_dict, test_dict):
     # Return false if the key set is not equal
@@ -520,6 +555,7 @@ def check_if_dict_has_same_keys(base_dict, test_dict):
         if isinstance(base_dict[key], dict) and isinstance(test_dict[key], dict):
             check_if_dict_has_same_keys(base_dict[key], test_dict[key])
     return True
+
 
 def validate_variation(current_config: dict, recommended_config: dict, variation_config: dict):
     # Check structure
@@ -568,11 +604,13 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
         if CPU_KEY in recommended_requests:
             if CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
                 current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
-            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
+                AMOUNT_KEY] - current_cpu_value
         if MEMORY_KEY in recommended_requests:
             if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
                 current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
-            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value
     if recommended_limits is not None:
         current_cpu_value = 0
         current_memory_value = 0
@@ -583,4 +621,5 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
         if MEMORY_KEY in recommended_limits:
             if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
                 current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
-            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][AMOUNT_KEY] - current_memory_value
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value

@@ -15,11 +15,12 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.queue.KruizeQueue;
 import com.autotune.common.trials.ExperimentTrial;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -147,7 +149,13 @@ public class InitiateListener implements ServletContextListener {
         /*
           Kruize Performance Profile configuration
          */
-        sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, PerformanceProfilesDeployment.performanceProfilesMap);
+        ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+        try {
+            new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
+        } catch (Exception e) {
+            LOGGER.error("Failed to load performance profile: {} ", e.getMessage());
+        }
+        sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
     }
 
     @Override

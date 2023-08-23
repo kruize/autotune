@@ -107,7 +107,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                 experiment_name,
                 interval_end_time,
                 limitRows);
-
         //TODO: Will be updated once algo is completed
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             if (null != kruizeObject && null != experimentResultData) {

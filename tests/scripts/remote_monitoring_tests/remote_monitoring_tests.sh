@@ -60,6 +60,7 @@ function remote_monitoring_tests() {
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		echo "Setting up kruize..." | tee -a ${LOG}
+		echo "${KRUIZE_SETUP_LOG}"
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
 	
@@ -117,7 +118,7 @@ function remote_monitoring_tests() {
 		popd > /dev/null
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
-		failed=$(grep -o -E '[0-9]+ failed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
+		failed=$(grep -o -E 'check the boxes to filter the results.*' ${TEST_DIR}/report-${test}.html | grep -o -E '[0-9]+ failed' | cut -d' ' -f1)
 		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
 
 		TESTS_PASSED=$(($TESTS_PASSED + $passed))

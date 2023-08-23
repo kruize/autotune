@@ -129,18 +129,18 @@ public class ExperimentDBService {
         }
     }
 
-
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
-        List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
-        if (null != entries && !entries.isEmpty()) {
-            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
-            if (!performanceProfiles.isEmpty()) {
-                performanceProfiles.forEach(performanceProfile ->
-                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
+        if (performanceProfileMap.isEmpty()) {
+            List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
+            if (null != entries && !entries.isEmpty()) {
+                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+                if (!performanceProfiles.isEmpty()) {
+                    performanceProfiles.forEach(performanceProfile ->
+                            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
+                }
             }
         }
     }
-
 
     public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
@@ -170,7 +170,6 @@ public class ExperimentDBService {
 
     public void loadRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-
         // Load Recommendations from DB and save to local
         List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByExperimentName(experimentName);
         if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
@@ -201,17 +200,18 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-    public ValidationOutputData addResultsToDB(ExperimentResultData resultData) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        KruizeResultsEntry kruizeResultsEntry = DBHelpers.Converters.KruizeObjectConverters.convertExperimentResultToExperimentResultsTable(resultData);
-        validationOutputData = experimentDAO.addResultsToDB(kruizeResultsEntry);
-        if (validationOutputData.isSuccess())
-            resultData.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-        else {
-            resultData.setStatus(AnalyzerConstants.ExperimentStatus.FAILED);
+    public List<UpdateResultsAPIObject> addResultsToDB(List<ExperimentResultData> resultDataList) {
+        List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
+        List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
+        for (ExperimentResultData resultData : resultDataList) {
+            KruizeResultsEntry kruizeResultsEntry = DBHelpers.Converters.KruizeObjectConverters.convertExperimentResultToExperimentResultsTable(resultData);
+            kruizeResultsEntryList.add(kruizeResultsEntry);
         }
-        return validationOutputData;
+        List<KruizeResultsEntry> failedResultsEntries = experimentDAO.addToDBAndFetchFailedResults(kruizeResultsEntryList);
+        failedUpdateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(failedResultsEntries);
+        return failedUpdateResultsAPIObjects;
     }
+
 
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
@@ -221,7 +221,6 @@ public class ExperimentDBService {
         if (experimentResultDataList.size() == 0) {
             return validationOutputData;
         }
-
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
             if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
@@ -244,8 +243,6 @@ public class ExperimentDBService {
         if (validationOutputData.getMessage().equals(""))
             validationOutputData.setSuccess(true);
         return validationOutputData;
-
-
     }
 
     public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
@@ -258,7 +255,6 @@ public class ExperimentDBService {
         }
         return validationOutputData;
     }
-
 
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
@@ -343,6 +339,7 @@ public class ExperimentDBService {
         // TODO   update into database
         return true;
     }
+
 
     public List<ExperimentResultData> getExperimentResultData(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<ExperimentResultData> experimentResultDataList = new ArrayList<>();

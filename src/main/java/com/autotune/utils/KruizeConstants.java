@@ -250,10 +250,10 @@ public class KruizeConstants {
 
     public static class TimeConv {
         public static final int NO_OF_MSECS_IN_SEC = 1000;
+        public static final int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 24;
-        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
 
         private TimeConv() {
         }
@@ -383,6 +383,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
      */
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
@@ -399,6 +400,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
      */
     public static final class KRUIZE_CONFIG_ENV_NAME {
         public static final String K8S_TYPE = "k8stype";
@@ -410,6 +412,7 @@ public class KruizeConstants {
         public static final String CLUSTER_TYPE = "clustertype";
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
+        public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";

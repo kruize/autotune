@@ -182,7 +182,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.17_rm
+          image: kruize/autotune_operator:0.0.18_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -260,7 +260,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-config
-  namespace: monitoring
+  namespace: openshift-tuning
 data:
   nginx.conf: |
     events {}

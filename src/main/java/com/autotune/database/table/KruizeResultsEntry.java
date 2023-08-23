@@ -21,6 +21,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * This is a Java class named KruizeResultsEntry annotated with JPA annotations.
@@ -46,6 +47,9 @@ public class KruizeResultsEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+
+    @Transient
+    private List<String> errorReasons;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -101,5 +105,13 @@ public class KruizeResultsEntry {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public List<String> getErrorReasons() {
+        return errorReasons;
+    }
+
+    public void setErrorReasons(List<String> errorReasons) {
+        this.errorReasons = errorReasons;
     }
 }
