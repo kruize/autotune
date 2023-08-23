@@ -16,7 +16,9 @@
 package com.autotune.analyzer.exceptions;
 
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 
@@ -24,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.List;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -44,11 +47,15 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
         String origMessage = (String) request.getAttribute("javax.servlet.error.message");
         int errorCode = response.getStatus();
         List<UpdateResultsAPIObject> myList = (List<UpdateResultsAPIObject>) request.getAttribute("data");
-
-
         PrintWriter out = response.getWriter();
-        out.append(
-                new Gson().toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList)));
+        Gson gsonObj = new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .create();
+        String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
+        out.append(gsonStr);
         out.flush();
     }
 }
