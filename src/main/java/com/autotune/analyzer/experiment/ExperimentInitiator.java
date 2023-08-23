@@ -37,10 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Initiates new experiment data validations and push into queue for worker to
@@ -56,19 +53,34 @@ public class ExperimentInitiator {
     public static List<KruizeResponse> getErrorMap(List<String> errorMessages) {
         List<KruizeResponse> responses;
         if (null != errorMessages) {
-            responses = new ArrayList<>();
+            HashMap<Integer, String> groupSimilarMap = new HashMap<Integer, String>();
             errorMessages.forEach(
                     (errorText) -> {
                         if (AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.containsKey(errorText)) {
-                            responses.add(
-                                    new KruizeResponse(errorText, AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText), "", "ERROR", null)
-                            );
-
+                            if (groupSimilarMap.containsKey(AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText))) {
+                                String errorMsg = groupSimilarMap.get(AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText));
+                                errorMsg = errorMsg + " , " + errorText;
+                                groupSimilarMap.put(AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText), errorMsg);
+                            } else {
+                                groupSimilarMap.put(AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText), errorText);
+                            }
                         } else {
-                            responses.add(
-                                    new KruizeResponse(errorText, HttpServletResponse.SC_BAD_REQUEST, "", "ERROR", null)
-                            );
+                            if (groupSimilarMap.containsKey(HttpServletResponse.SC_BAD_REQUEST)) {
+                                String errorMsg = groupSimilarMap.get(HttpServletResponse.SC_BAD_REQUEST);
+                                errorMsg = errorMsg + " , " + errorText;
+                                groupSimilarMap.put(HttpServletResponse.SC_BAD_REQUEST, errorMsg);
+                            } else {
+                                groupSimilarMap.put(HttpServletResponse.SC_BAD_REQUEST, errorText);
+                            }
                         }
+                    }
+            );
+            responses = new ArrayList<>();
+            groupSimilarMap.forEach((httpCode,errorText) ->
+                    {
+                        responses.add(
+                                new KruizeResponse(errorText, httpCode, "", "ERROR", null)
+                        );
                     }
             );
         } else {
