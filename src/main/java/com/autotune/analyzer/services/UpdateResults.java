@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -28,6 +29,7 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import io.micrometer.core.instrument.Timer;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,8 +85,23 @@ public class UpdateResults extends HttpServlet {
             ExperimentInitiator experimentInitiator = new ExperimentInitiator();
             experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
             List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
+            List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
             if (failureAPIObjs.size() > 0) {
-                request.setAttribute("data", failureAPIObjs);
+                failureAPIObjs.forEach(
+                        (failObj) -> {
+                            FailedUpdateResultsAPIObject failJSONObj = new FailedUpdateResultsAPIObject(
+                                    failObj.getApiVersion(),
+                                    failObj.getExperimentName(),
+                                    failObj.getStartTimestamp(),
+                                    failObj.getEndTimestamp(),
+                                    failObj.getErrors()
+                            );
+                            jsonObjectList.add(
+                                    failJSONObj
+                            );
+                        }
+                );
+                request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
                 sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
