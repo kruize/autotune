@@ -15,11 +15,13 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
@@ -32,6 +34,7 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -49,6 +52,30 @@ public class ExperimentInitiator {
     List<UpdateResultsAPIObject> successUpdateResultsAPIObjects = new ArrayList<>();
     List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
+
+    public static List<KruizeResponse> getErrorMap(List<String> errorMessages) {
+        List<KruizeResponse> responses;
+        if (null != errorMessages) {
+            responses = new ArrayList<>();
+            errorMessages.forEach(
+                    (errorText) -> {
+                        if (AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.containsKey(errorText)) {
+                            responses.add(
+                                    new KruizeResponse(errorText, AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText), "", "ERROR", null)
+                            );
+
+                        } else {
+                            responses.add(
+                                    new KruizeResponse(errorText, HttpServletResponse.SC_BAD_REQUEST, "", "ERROR", null)
+                            );
+                        }
+                    }
+            );
+        } else {
+            responses = null;
+        }
+        return responses;
+    }
 
     /**
      * Initiate Experiment validation
@@ -93,7 +120,6 @@ public class ExperimentInitiator {
         }
     }
 
-
     public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
         List<UpdateResultsAPIObject> failedDBObjects = new ArrayList<>();
         Validator validator = Validation.byProvider(HibernateValidator.class)
@@ -117,7 +143,7 @@ public class ExperimentInitiator {
                         errorReasons.add(violation.getMessage());
                     }
                 }
-                object.setErrorReasons(errorReasons);
+                object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
             }
         }

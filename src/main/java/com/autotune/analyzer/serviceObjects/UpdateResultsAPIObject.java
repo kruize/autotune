@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.serviceObjects.verification.annotators.CompareDate;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
@@ -28,7 +29,6 @@ import jakarta.validation.constraints.Size;
 
 import java.sql.Timestamp;
 import java.util.List;
-
 
 @CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
 @TimeDifferenceCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR)
@@ -50,7 +50,7 @@ public class UpdateResultsAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesAPIObjects;
 
-    private List<String> errorReasons;
+    private List<KruizeResponse> errors;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -76,12 +76,12 @@ public class UpdateResultsAPIObject extends BaseSO {
         this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
-    public List<String> getErrorReasons() {
-        return errorReasons;
+    public List<KruizeResponse> getErrors() {
+        return errors;
     }
 
-    public void setErrorReasons(List<String> errorReasons) {
-        this.errorReasons = errorReasons;
+    public void setErrors(List<KruizeResponse> errors) {
+        this.errors = errors;
     }
 
     @Override

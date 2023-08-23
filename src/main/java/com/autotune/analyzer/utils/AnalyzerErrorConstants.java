@@ -18,6 +18,9 @@ package com.autotune.analyzer.utils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+
 /**
  * Contains strings describing the errors encountered
  */
@@ -110,6 +113,16 @@ public class AnalyzerErrorConstants {
 
     public static final class APIErrors {
         private APIErrors() {
+
+        }
+
+        public static final class updateResultsAPI {
+            public static final String RESULTS_ALREADY_EXISTS = "An entry for this record already exists!";
+
+            public static final HashMap<String, Integer> ERROR_CODE_MAP = new HashMap<String, Integer>() {{
+                put(RESULTS_ALREADY_EXISTS, HttpServletResponse.SC_CONFLICT);
+            }};
+
 
         }
 

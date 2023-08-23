@@ -2,6 +2,7 @@ package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
@@ -120,8 +121,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 try {
                     session.merge(entry);
                 } catch (PersistenceException e) {
-                    entry.setErrorReasons(List.of(String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", entry.getExperiment_name(), new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT).format(entry.getInterval_start_time()),
-                            new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT).format(entry.getInterval_end_time()))));
+                    entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
                     failedResultsEntries.add(entry);
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
