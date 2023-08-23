@@ -332,7 +332,8 @@ The UpdateResults API has been enhanced to support bulk uploads of up to 100 rec
 successfully processed, the API will return the same success response as depicted above. However, if any or all of the
 records encounter failures during processing, the response will differ. Additionally, please take note of the response
 structure outlined below for handling duplicate records:
-Inside data key
+
+**Response**
 
 ```
 {
@@ -353,6 +354,51 @@ Inside data key
                 }
             ]
         },
+        {
+            "interval_start_time": "Jan 1, 2023, 5:45:00 AM",
+            "interval_end_time": "Jan 1, 2023, 6:00:00 AM",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        },
+        {
+            "interval_start_time": "Jan 1, 2023, 6:00:00 AM",
+            "interval_end_time": "Jan 1, 2023, 6:15:00 AM",
+            "errors": [
+                {
+                    "message": "An entry for this record already exists!",
+                    "httpcode": 409,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        }
+    ]
+}
+```
+
+**Response**
+
+In the response below, among the three records, one record was successfully saved while the other two records failed.
+The failed records are indicated in the 'data' attribute using the 'error' attribute, allowing you to identify the
+specific attribute causing the failures.
+
+```
+{
+    "message": "Out of a total of 3 records, 2 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
         {
             "interval_start_time": "Jan 1, 2023, 5:45:00 AM",
             "interval_end_time": "Jan 1, 2023, 6:00:00 AM",
