@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -171,7 +170,6 @@ public class ExperimentDBService {
 
     public void loadRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-
         // Load Recommendations from DB and save to local
         List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByExperimentName(experimentName);
         if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
@@ -245,8 +243,6 @@ public class ExperimentDBService {
         if (validationOutputData.getMessage().equals(""))
             validationOutputData.setSuccess(true);
         return validationOutputData;
-
-
     }
 
     public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
