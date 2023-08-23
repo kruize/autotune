@@ -33,10 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -175,6 +172,44 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
                         }
 
+                    }
+                }
+
+                /**
+                 * Identify timestamps that exhibit the "NOT_ENOUGH_DATA" status
+                 * for all three categories: short, medium, and long etc. Subsequently,
+                 * eliminate these timestamps from the k8sObject to prevent the data from being stored in the database.
+                 * As a result, when using the query parameter "listRecommendation?latest=false,"
+                 * only a collection of viable recommendations will be displayed
+                 */
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    for (ContainerData cd : k8sObject.getContainerDataMap().values()) {
+                        ContainerRecommendations cr = cd.getContainerRecommendations();
+                        List<Timestamp> emptyTimestamps = new ArrayList<>();
+                        for (Map.Entry<Timestamp, HashMap<String, HashMap<String, Recommendation>>> entry : cr.getData().entrySet()) {
+                            Timestamp timestampKey = entry.getKey();
+                            HashMap<String, HashMap<String, Recommendation>> durationPerfBasedValue = entry.getValue();
+                            Collection<HashMap<String, Recommendation>> shortMedLongList = durationPerfBasedValue.values();
+
+                            for (HashMap<String, Recommendation> recommendationHashMap : shortMedLongList) {
+                                int notEnoughDataCnt = 0;
+                                for (Recommendation recommendation : recommendationHashMap.values()) {
+                                    for (RecommendationNotification notification : recommendation.getNotifications().values()) {
+                                        if (notification.getMessage().equals(RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA)) {
+                                            notEnoughDataCnt = notEnoughDataCnt + 1;
+                                        }
+                                    }
+                                }
+                                if (notEnoughDataCnt == recommendationHashMap.size()) {
+                                    emptyTimestamps.add(timestampKey); // found timestamp with NOT_ENOUGH_DATA for all three category
+                                } else {
+                                    LOGGER.debug("timestamp: {} notEnoughDataCount : {} recommendation size() : {} ", timestampKey, notEnoughDataCnt, recommendationHashMap.size());
+                                }
+                            }
+                        }
+                        emptyTimestamps.forEach((timestamp -> {
+                            cr.getData().remove(timestamp);
+                        }));  // remove timestamp with NOT_ENOUGH_DATA for all three category
                     }
                 }
             }
