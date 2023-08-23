@@ -21,13 +21,19 @@ import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBHelpers;
@@ -40,10 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -231,6 +234,41 @@ public class ExperimentDBService {
                 continue;
             }
             KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());
+            /**
+             * Identify timestamps that exhibit the "NOT_ENOUGH_DATA" status
+             * for all three categories: short, medium, and long etc. Subsequently,
+             * eliminate these timestamps from the k8sObject to prevent the data from being stored in the database.
+             * As a result, when using the query parameter "listRecommendation?latest=false,"
+             * only a collection of viable recommendations will be displayed
+             */
+            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()){
+                for(ContainerData cd :k8sObject.getContainerDataMap().values()){
+                    ContainerRecommendations cr = cd.getContainerRecommendations();
+                    List<Timestamp> emptyTimestamps = new ArrayList<>();
+                    for (Map.Entry<Timestamp, HashMap<String, HashMap<String, Recommendation>>> entry : cr.getData().entrySet()) {
+                        Timestamp timestampKey = entry.getKey();
+                        HashMap<String, HashMap<String, Recommendation>> durationPerfBasedValue = entry.getValue();
+                        Collection<HashMap<String, Recommendation>> shortMedLongList = durationPerfBasedValue.values();
+
+                        for(HashMap<String, Recommendation> recommendationHashMap : shortMedLongList){
+                            int notEnoughDataCnt = 0;
+                            for (Recommendation recommendation : recommendationHashMap.values()){
+                                for (RecommendationNotification notification :recommendation.getNotifications().values()){
+                                    if (notification.getMessage().equals(RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA)){
+                                        notEnoughDataCnt = notEnoughDataCnt + 1;
+                                    }
+                                }
+                            }
+                            if(notEnoughDataCnt == recommendationHashMap.size()){
+                                emptyTimestamps.add(timestampKey); // found timestamp with NOT_ENOUGH_DATA for all three category
+                            }else {
+                                LOGGER.debug("timestamp: {} notEnoughDataCount : {} recommendation size() : {} ", timestampKey, notEnoughDataCnt , recommendationHashMap.size());
+                            }
+                        }
+                    }
+                    emptyTimestamps.forEach((timestamp -> {cr.getData().remove(timestamp);}));  // remove timestamp with NOT_ENOUGH_DATA for all three category
+                }
+            }
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
                     convertKruizeObjectTORecommendation(kruizeObject, experimentResultData);
             if (null != kr) {
@@ -245,8 +283,6 @@ public class ExperimentDBService {
         if (validationOutputData.getMessage().equals(""))
             validationOutputData.setSuccess(true);
         return validationOutputData;
-
-
     }
 
     public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
