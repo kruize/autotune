@@ -20,16 +20,16 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import io.micrometer.core.instrument.Timer;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -55,80 +58,65 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
-    Map<String, PerformanceProfile> performanceProfilesMap;
+    public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        this.performanceProfilesMap = (HashMap<String, PerformanceProfile>) getServletContext()
-                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
-        int totalResultsCount = 0;
-        getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, totalResultsCount);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         try {
+            performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
+                    .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
             // check for bulk entries and respond accordingly
-            if (updateResultsAPIObjects.size() > 1) {
-                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-            } else {
-                for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
-                    experimentResultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject));
-                }
-                ExperimentInitiator experimentInitiator = new ExperimentInitiator();
-                ValidationOutputData validationOutputData = experimentInitiator.validateAndUpdateResults(mKruizeExperimentMap, experimentResultDataList, performanceProfilesMap);
-                ExperimentResultData invalidKExperimentResultData = experimentResultDataList.stream().filter((rData) -> (!rData.getValidationOutputData().isSuccess())).findAny().orElse(null);
-                ValidationOutputData addedToDB = new ValidationOutputData(false, null, null);
-                if (null == invalidKExperimentResultData) {
-                    //  TODO savetoDB should move to queue and bulk upload not considered here
-                    for (ExperimentResultData resultData : experimentResultDataList) {
-                        addedToDB = new ExperimentDBService().addResultsToDB(resultData);
-                        if (addedToDB.isSuccess()) {
-                            sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
-                            //ToDO add temp code and call system.gc for every 100 results
-                            int count = (int)getServletContext().getAttribute(AnalyzerConstants.RESULTS_COUNT);
-                            count++;
-                            LOGGER.debug("totalResultsCount so far : {}", count);
-                            if (count >= AnalyzerConstants.GC_THRESHOLD_COUNT) {
-                                LOGGER.debug("Calling System GC");
-                                System.gc();
-                                count = 0;
-                            }
-                            getServletContext().setAttribute(AnalyzerConstants.RESULTS_COUNT, count);
-                        } else {
-                            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+            if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
+                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
+                sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
+                return;
+            }
+            ExperimentInitiator experimentInitiator = new ExperimentInitiator();
+            experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
+            List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
+            List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
+            if (failureAPIObjs.size() > 0) {
+                failureAPIObjs.forEach(
+                        (failObj) -> {
+                            FailedUpdateResultsAPIObject failJSONObj = new FailedUpdateResultsAPIObject(
+                                    failObj.getApiVersion(),
+                                    failObj.getExperimentName(),
+                                    failObj.getStartTimestamp(),
+                                    failObj.getEndTimestamp(),
+                                    failObj.getErrors()
+                            );
+                            jsonObjectList.add(
+                                    failJSONObj
+                            );
                         }
-                    }
-                } else {
-                    LOGGER.error("Failed to update results: " + invalidKExperimentResultData.getValidationOutputData().getMessage());
-                    sendErrorResponse(response, null, invalidKExperimentResultData.getValidationOutputData().getErrorCode(), invalidKExperimentResultData.getValidationOutputData().getMessage());
-                }
-
-                if (validationOutputData.isSuccess() && addedToDB.isSuccess()) {
-                    boolean recommendationCheck = experimentInitiator.generateAndAddRecommendations(mKruizeExperimentMap, experimentResultDataList);
-                    if (!recommendationCheck)
-                        LOGGER.error("Failed to create recommendation for experiment: %s and interval_end_time: %s",
-                                experimentResultDataList.get(0).getExperiment_name(),
-                                experimentResultDataList.get(0).getIntervalEndTime());
-                    else {
-                        new ExperimentDBService().addRecommendationToDB(mKruizeExperimentMap, experimentResultDataList);
-                    }
-                }
+                );
+                request.setAttribute("data", jsonObjectList);
+                String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
+                sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+            } else {
+                sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                statusValue = "success";
             }
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerUpdateResults) timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
+            if (null != timerUpdateResults) {
+                MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
+            }
         }
     }
 
@@ -145,7 +133,7 @@ public class UpdateResults extends HttpServlet {
         out.flush();
     }
 
-    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+    public void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
             LOGGER.error(e.toString());

@@ -18,6 +18,8 @@ package com.autotune.database.helper;
 
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
@@ -28,6 +30,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
@@ -44,6 +47,8 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.autotune.analyzer.experiment.ExperimentInitiator.getErrorMap;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -216,7 +221,7 @@ public class DBHelpers {
                                 containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                             } else {
                                 ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
-                                containerRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());  //TODO should we set version from DB or set version to Latest ?
+                                containerRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());
                                 if (null == containerRecommendations.getData()) {
                                     containerData.setContainerRecommendations(Utils.getClone(containerAPIObject.getContainerRecommendations(), ContainerRecommendations.class));
                                 } else {
@@ -488,6 +493,7 @@ public class DBHelpers {
                         updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
                         updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
                         updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
+                        updateResultsAPIObject.setErrors(getErrorMap(kruizeResultsEntry.getErrorReasons()));
                         JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
                         JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
                         List<K8sObject> k8sObjectList = new ArrayList<>();
@@ -600,6 +606,54 @@ public class DBHelpers {
                     return null;
                 return listRecommendationsAPIObjectList;
             }
+
+            public static KruizePerformanceProfileEntry convertPerfProfileObjToPerfProfileDBObj(PerformanceProfile performanceProfile) {
+                KruizePerformanceProfileEntry kruizePerformanceProfileEntry = null;
+                try {
+                    kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
+                    kruizePerformanceProfileEntry.setName(performanceProfile.getName());
+                    kruizePerformanceProfileEntry.setProfile_version(performanceProfile.getProfile_version());
+                    kruizePerformanceProfileEntry.setK8s_type(performanceProfile.getK8S_TYPE());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        kruizePerformanceProfileEntry.setSlo(
+                                objectMapper.readTree(new Gson().toJson(performanceProfile.getSloInfo())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating SLO data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting Performance Profile Object to PerformanceProfile table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizePerformanceProfileEntry;
+            }
+
+            public static List<PerformanceProfile> convertPerformanceProfileEntryToPerformanceProfileObject(List<KruizePerformanceProfileEntry> entries) throws Exception {
+                List<PerformanceProfile> performanceProfiles = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+                for (KruizePerformanceProfileEntry entry : entries) {
+                    try {
+                        JsonNode sloData = entry.getSlo();
+                        String slo_rawJson = sloData.toString();
+                        SloInfo sloInfo = new Gson().fromJson(slo_rawJson, SloInfo.class);
+                        PerformanceProfile performanceProfile = new PerformanceProfile(
+                                entry.getName(), entry.getProfile_version(), entry.getK8s_type(), sloInfo);
+                        performanceProfiles.add(performanceProfile);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from Performance Profile DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Performance Profiles loaded from DB.");
+
+                return performanceProfiles;
+            }
+
+
         }
     }
 }

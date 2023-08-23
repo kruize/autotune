@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.17_rm
+          image: kruize/autotune_operator:0.0.18_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -138,3 +138,72 @@ spec:
     - port: kruize-port
       interval: 30s
       path: /metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: openshift-tuning
+data:
+  nginx.conf: |
+    events {}
+    http {
+      upstream kruize-api {
+        server kruize:8080;
+      }
+
+      server {
+        listen 8080;
+        server_name localhost;
+
+        root   /usr/share/nginx/html;
+    
+        location ^~ /api/ {
+          rewrite ^/api(.*)$ $1 break;
+          proxy_pass http://kruize-api;
+        }
+    
+        location / {
+          index index.html;
+          error_page 404 =200 /index.html;
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize-ui-nginx-service
+  namespace: openshift-tuning
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: kruize-ui-nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kruize-ui-nginx-pod
+  namespace: openshift-tuning
+  labels:
+    app: kruize-ui-nginx
+spec:
+  containers:
+    - name: kruize-ui-nginx-container
+      image: quay.io/kruize/kruize-ui:0.0.1
+      imagePullPolicy: Always
+      env:
+        - name: KRUIZE_UI_ENV
+          value: "production"
+      volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+  volumes:
+    - name: nginx-config-volume
+      configMap:
+        name: nginx-config

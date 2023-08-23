@@ -28,192 +28,219 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 /**
  * Contains methods that are of general utility in the codebase
  */
-public class Utils
-{
-	private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
-	private Utils() { }
+public class Utils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
-	public static String generateID(Object object) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hash = digest.digest(object.toString().getBytes(StandardCharsets.UTF_8));
+    private Utils() {
+    }
 
-			StringBuffer hexString = new StringBuffer();
+    public static String generateID(Object object) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(object.toString().getBytes(StandardCharsets.UTF_8));
 
-			for (int i = 0; i < hash.length; i++) {
-				String hex = Integer.toHexString(0xff & hash[i]);
-				if (hex.length() == 1) hexString.append('0');
-				hexString.append(hex);
-			}
+            StringBuffer hexString = new StringBuffer();
 
-			return hexString.toString();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
 
-	public static AnalyzerConstants.K8S_OBJECT_TYPES getApproriateK8sObjectType(String objectType) {
-		if (null == objectType)
-			return null;
+            return hexString.toString();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
-		if (objectType.isEmpty() || objectType.isBlank())
-			return null;
+    public static AnalyzerConstants.K8S_OBJECT_TYPES getApproriateK8sObjectType(String objectType) {
+        if (null == objectType)
+            return null;
 
-		objectType = objectType.trim();
+        if (objectType.isEmpty() || objectType.isBlank())
+            return null;
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT;
+        objectType = objectType.trim();
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT_CONFIG))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT;
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.STATEFULSET;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT_CONFIG))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG;
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.REPLICASET))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.REPLICASET;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.STATEFULSET;
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.REPLICATION_CONTROLLER))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.REPLICATION_CONTROLLER;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.REPLICASET))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.REPLICASET;
 
-		if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET))
-			return AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.REPLICATION_CONTROLLER))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.REPLICATION_CONTROLLER;
 
-		return null;
-	}
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET))
+            return AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET;
 
-	public static String getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES objectType) {
-		if (null == objectType)
-			return null;
+        return null;
+    }
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT)
-			return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT;
+    public static String getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES objectType) {
+        if (null == objectType)
+            return null;
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG)
-			return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT_CONFIG;
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT)
+            return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT;
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.STATEFULSET)
-			return AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET;
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG)
+            return AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT_CONFIG;
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICASET)
-			return AnalyzerConstants.K8sObjectConstants.Types.REPLICASET;
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.STATEFULSET)
+            return AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET;
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICATION_CONTROLLER)
-			return AnalyzerConstants.K8sObjectConstants.Types.REPLICATION_CONTROLLER;
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICASET)
+            return AnalyzerConstants.K8sObjectConstants.Types.REPLICASET;
 
-		if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET)
-			return AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET;
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.REPLICATION_CONTROLLER)
+            return AnalyzerConstants.K8sObjectConstants.Types.REPLICATION_CONTROLLER;
 
-		return null;
-	}
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET)
+            return AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET;
 
-	public static AnalyzerConstants.MetricName getAppropriateMetricName(String metricName) {
-		if (null == metricName)
-			return null;
+        return null;
+    }
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_REQUEST))
-			return AnalyzerConstants.MetricName.cpuRequest;
+    public static AnalyzerConstants.MetricName getAppropriateMetricName(String metricName) {
+        if (null == metricName)
+            return null;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_LIMIT))
-			return AnalyzerConstants.MetricName.cpuLimit;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_REQUEST))
+            return AnalyzerConstants.MetricName.cpuRequest;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_USAGE))
-			return AnalyzerConstants.MetricName.cpuUsage;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_LIMIT))
+            return AnalyzerConstants.MetricName.cpuLimit;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_THROTTLE))
-			return AnalyzerConstants.MetricName.cpuThrottle;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_USAGE))
+            return AnalyzerConstants.MetricName.cpuUsage;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST))
-			return AnalyzerConstants.MetricName.memoryRequest;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.CPU_THROTTLE))
+            return AnalyzerConstants.MetricName.cpuThrottle;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT))
-			return AnalyzerConstants.MetricName.memoryLimit;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST))
+            return AnalyzerConstants.MetricName.memoryRequest;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_USAGE))
-			return AnalyzerConstants.MetricName.memoryUsage;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT))
+            return AnalyzerConstants.MetricName.memoryLimit;
 
-		if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_RSS))
-			return AnalyzerConstants.MetricName.memoryRSS;
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_USAGE))
+            return AnalyzerConstants.MetricName.memoryUsage;
 
-		return null;
-	}
+        if (metricName.equalsIgnoreCase(AnalyzerConstants.MetricNameConstants.MEMORY_RSS))
+            return AnalyzerConstants.MetricName.memoryRSS;
 
-	/**
-	 * Get a deep copy of an object
-	 *
-	 * CAUTION: Using this mechanism will have high impact on the performance. As
-	 * this causes performance degradation USE ONLY IF NECESSARY
-	 *
-	 * @param object
-	 * @return
-	 */
-	public static <T> T getClone(T object, Class<T> classMetadata) {
-		if (null == object)
-			return null;
-		Gson gson = new GsonBuilder()
-				.disableHtmlEscaping()
-				.setPrettyPrinting()
-				.enableComplexMapKeySerialization()
-				.registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-				.create();
+        return null;
+    }
 
-		String serialisedString = gson.toJson(object);
-		T returnObject = gson.fromJson(serialisedString, classMetadata);
-		return returnObject;
-	}
+    /**
+     * Get a deep copy of an object
+     * <p>
+     * CAUTION: Using this mechanism will have high impact on the performance. As
+     * this causes performance degradation USE ONLY IF NECESSARY
+     *
+     * @param object
+     * @return
+     */
+    public static <T> T getClone(T object, Class<T> classMetadata) {
+        if (null == object)
+            return null;
+        Gson gson = new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .create();
 
-	public static class DateUtils {
-		private DateUtils() {
+        String serialisedString = gson.toJson(object);
+        T returnObject = gson.fromJson(serialisedString, classMetadata);
+        return returnObject;
+    }
 
-		}
+    public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
+        if (object instanceof ContainerData) {
+            ExclusionStrategy strategy = new ExclusionStrategy() {
+                @Override
+                public boolean shouldSkipField(FieldAttributes field) {
+                    if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
+                        return true;
+                    }
+                    return false;
+                }
 
-		public static boolean isAValidDate(String format, String date) {
-			try {
-				if (null == format || null == date)
-					return false;
-				Date _unused = (new SimpleDateFormat(format)).parse(date);
-				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		}
+                @Override
+                public boolean shouldSkipClass(Class<?> clazz) {
+                    return false;
+                }
+            };
+            return strategy;
+        }
+        return null;
+    }
 
-		public static Date getDateFrom(String format, String date) {
-			try {
-				if (null == format || null == date)
-					return null;
-				Date convertedDate = (new SimpleDateFormat(format)).parse(date);
-				return convertedDate;
-			} catch (Exception e) {
-				return null;
-			}
-		}
-	}
+    public static class DateUtils {
+        private DateUtils() {
 
-	public static <T> ExclusionStrategy getExclusionStrategyFor(T object) {
-		if (object instanceof ContainerData) {
-			ExclusionStrategy strategy = new ExclusionStrategy() {
-				@Override
-				public boolean shouldSkipField(FieldAttributes field) {
-					if (field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results") || field.getName().equalsIgnoreCase("metrics"))) {
-						return true;
-					}
-					return false;
-				}
+        }
 
-				@Override
-				public boolean shouldSkipClass(Class<?> clazz) {
-					return false;
-				}
-			};
-			return strategy;
-		}
-		return null;
-	}
+        public static boolean isAValidDate(String format, String date) {
+            try {
+                if (null == format || null == date)
+                    return false;
+                SimpleDateFormat dateFormat = (new SimpleDateFormat(format));
+                dateFormat.setLenient(false);
+                Date parsedDate = dateFormat.parse(date);
+                return date.equals(dateFormat.format(parsedDate));
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        public static Date getDateFrom(String format, String date) {
+            try {
+                if (null == format || null == date)
+                    return null;
+                Date convertedDate = (new SimpleDateFormat(format)).parse(date);
+                return convertedDate;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        public static Timestamp getTimeStampFrom(String format, String date) {
+            try {
+                if (null == format || null == date)
+                    return null;
+                // Parse the timestamp string to LocalDateTime
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+                // Convert the timestamp to UTC
+                Instant desiredInstant = localDateTime.toInstant(ZoneOffset.UTC);
+                Timestamp convertedDate = Timestamp.from(desiredInstant);
+
+                return convertedDate;
+
+            } catch (Exception e) {
+                return null;
+            }
+        }
+    }
 }

@@ -127,14 +127,19 @@ def main(argv):
 
                 # Fetch the recommendations for all the experiments
                 latest = None
-                reco = list_recommendations(experiment_name, latest, interval_end_time)
-                filename = reco_json_dir + '/reco_' + str(res_num) + '_' +  str(exp_num) + '.json'
+                reco = update_recommendations(experiment_name, latest, interval_end_time)
+                filename = reco_json_dir + '/update_reco_' + str(res_num) + '_' +  str(exp_num) + '.json'
                 write_json_data_to_file(filename, reco.json())
 
         # Fetch listExperiments
         list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before_" + str(i) + ".json"
         response = list_experiments()
-        list_exp_json = response.json()
+        if response.status_code == SUCCESS_200_STATUS_CODE:
+           list_exp_json = response.json()
+        else:
+            print(f"listExperiments failed!")
+            failed = 1
+            sys.exit(1)
 
         write_json_data_to_file(list_exp_json_file_before, list_exp_json)
 
@@ -143,9 +148,13 @@ def main(argv):
         latest = "false"
         interval_end_time = None
         response = list_recommendations(experiment_name, latest, interval_end_time)
-        list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before_' + str(i) + '.json'
-        write_json_data_to_file(list_reco_json_file_before, response.json())
-
+        if response.status_code == SUCCESS_200_STATUS_CODE:
+            list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before_' + str(i) + '.json'
+            write_json_data_to_file(list_reco_json_file_before, response.json())
+        else:
+            print(f"listRecommendations for experiment name - ${experiment_name} failed!")
+            failed = 1
+            sys.exit(1)
 
         # Delete the kruize pod
         delete_kruize_pod(namespace)
@@ -161,15 +170,16 @@ def main(argv):
             print("Restarting kruize failed!")
             failed = 1
             sys.exit(failed)
-        else:
-            # Create the performance profile as Kruize is restarted
-            perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
-            create_performance_profile(perf_profile_json_file)
 
         # Fetch listExperiments
         list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after_" + str(i) + ".json"
         response = list_experiments()
-        list_exp_json = response.json()
+        if response.status_code == SUCCESS_200_STATUS_CODE:
+            list_exp_json = response.json()
+        else:
+            print(f"listExperiments failed!")
+            failed = 1
+            sys.exit(1)
 
         write_json_data_to_file(list_exp_json_file_after, list_exp_json)
 
@@ -177,8 +187,14 @@ def main(argv):
         latest = "false"
         interval_end_time = None
         response = list_recommendations(experiment_name, latest, interval_end_time)
-        list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after_' + str(i) + '.json'
-        write_json_data_to_file(list_reco_json_file_after, response.json())
+        if response.status_code == SUCCESS_200_STATUS_CODE:
+            list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after_' + str(i) + '.json'
+            write_json_data_to_file(list_reco_json_file_after, response.json())
+        else:
+            print(f"listRecommendations for experiment name - ${experiment_name} failed")
+            failed = 1
+            sys.exit(1)
+
 
         # Compare the listExperiments before and after kruize pod restart
         result = compare_json_files(list_exp_json_file_before, list_exp_json_file_after)

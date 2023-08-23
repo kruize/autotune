@@ -80,6 +80,7 @@ public class CreateExperiment extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerCreateExp = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
         try {
@@ -112,8 +113,10 @@ public class CreateExperiment extends HttpServlet {
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
-                    if (addedToDB.isSuccess())
+                    if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                        statusValue = "success";
+                    }
                     else {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                     }
@@ -127,7 +130,10 @@ public class CreateExperiment extends HttpServlet {
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         } finally {
-            if (null != timerCreateExp) timerCreateExp.stop(MetricsConfig.timerCreateExp);
+            if (null != timerCreateExp) {
+                MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerCreateExp.stop(MetricsConfig.timerCreateExp);
+            }
         }
     }
 

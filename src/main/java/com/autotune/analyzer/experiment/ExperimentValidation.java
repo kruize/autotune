@@ -46,6 +46,7 @@ public class ExperimentValidation {
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
+    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
     //Mandatory fields
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
@@ -103,7 +104,13 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
+                            // fetch the Performance Profile from the DB
+                            try {
+                                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                            } catch (Exception e) {
+                                LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
+                            }
+                            if (null == performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             } else
@@ -136,24 +143,28 @@ public class ExperimentValidation {
                 markFailed(validationOutputData.getMessage());
                 break;
             }
-            // set performance profile metrics in the kruize Object
-            PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
-            for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
-                if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
-                    metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
-            }
-            List<K8sObject> k8sObjectList = new ArrayList<>();
-            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-                for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                    containerDataMap.put(containerData.getContainer_name(), new ContainerData(
-                            containerData.getContainer_name(), containerData.getContainer_image_name(), new ContainerRecommendations(), metricsMap));
+            // set Performance Profile metrics in the Kruize Object
+            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            try {
+                HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
+                for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
+                    if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
+                        metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                 }
-                k8sObject.setContainerDataMap(containerDataMap);
-                k8sObjectList.add(k8sObject);
+                List<K8sObject> k8sObjectList = new ArrayList<>();
+                HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                        containerDataMap.put(containerData.getContainer_name(), new ContainerData(
+                                containerData.getContainer_name(), containerData.getContainer_image_name(), new ContainerRecommendations(), metricsMap));
+                    }
+                    k8sObject.setContainerDataMap(containerDataMap);
+                    k8sObjectList.add(k8sObject);
+                }
+                kruizeObject.setKubernetes_objects(k8sObjectList);
+            } catch (Exception e) {
+                LOGGER.error("Failed to set Performance Profile Metrics to the Kruize Object: {}", e.getMessage());
             }
-            kruizeObject.setKubernetes_objects(k8sObjectList);
         }
     }
 

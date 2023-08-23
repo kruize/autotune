@@ -16,7 +16,7 @@
 package com.autotune.database.table;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.database.helper.GenrateExperimentID;
+import com.autotune.database.helper.GenerateExperimentID;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -42,7 +42,7 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "kruize_experiments")
-@IdClass(GenrateExperimentID.class)
+@IdClass(GenerateExperimentID.class)
 public class KruizeExperimentEntry {
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
