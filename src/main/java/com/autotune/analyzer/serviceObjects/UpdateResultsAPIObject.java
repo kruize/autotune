@@ -27,8 +27,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
-
 
 @CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
 @TimeDifferenceCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR)
@@ -50,7 +50,7 @@ public class UpdateResultsAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesAPIObjects;
 
-    private List<String> errorReasons;
+    private HashMap<Integer, String> errors;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -76,12 +76,12 @@ public class UpdateResultsAPIObject extends BaseSO {
         this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
-    public List<String> getErrorReasons() {
-        return errorReasons;
+    public HashMap<Integer, String> getErrors() {
+        return errors;
     }
 
-    public void setErrorReasons(List<String> errorReasons) {
-        this.errorReasons = errorReasons;
+    public void setErrors(HashMap<Integer, String> errors) {
+        this.errors = errors;
     }
 
     @Override

@@ -48,6 +48,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.autotune.analyzer.experiment.ExperimentInitiator.getErrorMap;
+
 /**
  * Helper functions used by the DB to create entity objects.
  */
@@ -491,7 +493,7 @@ public class DBHelpers {
                         updateResultsAPIObject.setExperimentName(kruizeResultsEntry.getExperiment_name());
                         updateResultsAPIObject.setStartTimestamp(kruizeResultsEntry.getInterval_start_time());
                         updateResultsAPIObject.setEndTimestamp(kruizeResultsEntry.getInterval_end_time());
-                        updateResultsAPIObject.setErrorReasons(kruizeResultsEntry.getErrorReasons());
+                        updateResultsAPIObject.setErrors(getErrorMap(kruizeResultsEntry.getErrorReasons()));
                         JsonNode extendedDataNode = kruizeResultsEntry.getExtended_data();
                         JsonNode k8sObjectsNode = extendedDataNode.get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
                         List<K8sObject> k8sObjectList = new ArrayList<>();

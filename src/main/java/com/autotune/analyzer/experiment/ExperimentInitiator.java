@@ -20,6 +20,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.Per
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
@@ -32,12 +33,10 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Initiates new experiment data validations and push into queue for worker to
@@ -49,6 +48,28 @@ public class ExperimentInitiator {
     List<UpdateResultsAPIObject> successUpdateResultsAPIObjects = new ArrayList<>();
     List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
+
+    public static HashMap<Integer, String> getErrorMap(List<String> errorMessages) {
+        HashMap<Integer, String> errorMap;
+        if (null != errorMessages) {
+            errorMap = new HashMap<>();
+            errorMessages.forEach(
+                    (errorText) -> {
+                        if (AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.containsKey(errorText)) {
+                            errorMap.put(
+                                    AnalyzerErrorConstants.APIErrors.updateResultsAPI.ERROR_CODE_MAP.get(errorText),
+                                    errorText
+                            );
+                        } else {
+                            errorMap.put(HttpServletResponse.SC_BAD_REQUEST, errorText);
+                        }
+                    }
+            );
+        } else {
+            errorMap = null;
+        }
+        return errorMap;
+    }
 
     /**
      * Initiate Experiment validation
@@ -93,7 +114,6 @@ public class ExperimentInitiator {
         }
     }
 
-
     public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
         List<UpdateResultsAPIObject> failedDBObjects = new ArrayList<>();
         Validator validator = Validation.byProvider(HibernateValidator.class)
@@ -117,7 +137,7 @@ public class ExperimentInitiator {
                         errorReasons.add(violation.getMessage());
                     }
                 }
-                object.setErrorReasons(errorReasons);
+                object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
             }
         }
