@@ -105,7 +105,7 @@ def test_list_recommendations_without_parameters(cluster_type):
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
-    response = update_recommendations(experiment_name, start_time, end_time)
+    response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
@@ -351,7 +351,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         experiment_name = json_data[0]['experiment_name']
 
         # Update Recommendations
-        response = update_recommendations(experiment_name, start_time, end_time)
+        response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
@@ -439,7 +439,11 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    response = update_recommendations(experiment_name, top_5_dates[4].strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
+    for dateStr in top_5_dates:
+        update_recommendations(experiment_name, None,
+                               dateStr.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
+
+    response = update_recommendations(experiment_name, None,
                                       end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -574,19 +578,22 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     with open(result_json_file, 'r') as file:
         data = json.load(file)
 
-    # Step 2: Convert UTC strings to datetime objects
-    for item in data:
-        item['interval_start_time'] = datetime.strptime(item['interval_start_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
-        item['interval_end_time'] = datetime.strptime(item['interval_end_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
-
-    # Step 3: Find minimum start_time and maximum end_time
-    start_time = min(data, key=lambda x: x['interval_start_time'])['interval_start_time']
-    end_time = max(data, key=lambda x: x['interval_end_time'])['interval_end_time']
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    response = update_recommendations(experiment_name, start_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
+    # Step 2: Convert UTC strings to datetime objects
+    for item in data:
+        item['interval_start_time'] = datetime.strptime(item['interval_start_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        item['interval_end_time'] = datetime.strptime(item['interval_end_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        update_recommendations(experiment_name, None,
+                               item['interval_end_time'].strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
+
+    # Step 3: Find minimum start_time and maximum end_time
+    start_time = min(data, key=lambda x: x['interval_start_time'])['interval_start_time']
+    end_time = max(data, key=lambda x: x['interval_end_time'])['interval_end_time']
+
+    response = update_recommendations(experiment_name, None,
                                       end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -779,6 +786,8 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
+            update_recommendations(experiment_name, None, end_time)
+
             # Get the experiment name
             json_data = json.load(open(create_exp_json_file))
             experiment_name = json_data[0]['experiment_name']
@@ -788,7 +797,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
 
         list_of_result_json_arr.append(result_json_arr)
 
-        response = update_recommendations(experiment_name, interval_start_time, end_time)
+        response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
@@ -1031,7 +1040,7 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
             if j > 95:
-                response = update_recommendations(experiment_name, interval_start_time, end_time)
+                response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
@@ -1088,7 +1097,7 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                 short_term_notifications = short_term_recommendation["notifications"]
 
                 if j == 96:
-                    response = update_recommendations(experiment_name, interval_start_time, end_time)
+                    response = update_recommendations(experiment_name, None, end_time)
                     data = response.json()
                     assert response.status_code == SUCCESS_STATUS_CODE
                     assert data[0]['experiment_name'] == experiment_name

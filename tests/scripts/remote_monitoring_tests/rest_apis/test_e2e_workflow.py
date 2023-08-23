@@ -97,7 +97,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
                 item['interval_end_time'] = datetime.strptime(item['interval_end_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
             end_time = max(batch_deep_copy, key=lambda x: x['interval_end_time'])['interval_end_time']
             start_time = min(batch_deep_copy, key=lambda x: x['interval_start_time'])['interval_start_time']
-            response = update_recommendations(experiment_name, start_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z",
+            response = update_recommendations(experiment_name, None,
                                               end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
             data = response.json()
             assert response.status_code == SUCCESS_STATUS_CODE

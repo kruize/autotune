@@ -78,7 +78,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
 
             # Expecting that we have recommendations
             if j > 96:
-                response = update_recommendations(experiment_name, interval_start_time, end_time)
+                response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
@@ -98,7 +98,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                     for notification in short_term_notifications.values():
                         assert notification["type"] != "error"
 
-        response = update_recommendations(experiment_name, interval_start_time, end_time)
+        response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
@@ -317,7 +317,7 @@ def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     experiment_name = "test123"
     start_time = "2023-01-03T00:15:00.000Z"
     end_time = "2023-01-02T00:15:00.000Z"
-    response = update_recommendations(experiment_name, start_time, end_time)
+    response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME
@@ -332,7 +332,7 @@ def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     experiment_name = "test123"
     start_time = "2023-01-03T00:15:00.000Z"
     end_time = "2023-01-30T00:15:00.000Z"
-    response = update_recommendations(experiment_name, start_time, end_time)
+    response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR
