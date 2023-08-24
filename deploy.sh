@@ -79,7 +79,7 @@ target="autotune"
 timeout=-1
 
 # Test with the kruize docker image specified in the deployment yaml
-use_yaml_image=0
+use_yaml_build=0
 
 function ctrlc_handler() {
 	# Check if cluster type is docker
@@ -174,6 +174,7 @@ while getopts ac:d:i:k:m:n:o:p:stub-: gopts; do
 		;;
 	u)
 		KRUIZE_UI_DOCKER_IMAGE="${OPTARG}"
+		;;
 	b)
 		use_yaml_build=1
 		;;
