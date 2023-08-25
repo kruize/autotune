@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.HUNDREDTH_PERCENTILE;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.NINETY_FIFTH_PERCENTILE;
 
 public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
@@ -165,7 +164,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(HUNDREDTH_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
