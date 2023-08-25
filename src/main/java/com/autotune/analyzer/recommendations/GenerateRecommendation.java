@@ -106,7 +106,7 @@ public class GenerateRecommendation {
                                     containerData.getContainerRecommendations().getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                 }
                                 break;
-                            case PROFILE_BASED:
+                            case PERFORMANCE:
                                 // Need to be implemented
                                 break;
                         }
