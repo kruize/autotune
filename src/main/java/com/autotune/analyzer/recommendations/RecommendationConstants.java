@@ -698,7 +698,7 @@ public class RecommendationConstants {
         public static class EngineNames {
             public static String DEFAULT_NAME = "Default";
             public static String COST = "Cost";
-            public static String PROFILE_BASED = "Profile Based";
+            public static String PERFORMANCE_BASED = "Performance Based";
 
             private EngineNames() {
 
@@ -707,7 +707,7 @@ public class RecommendationConstants {
 
         public static class EngineKeys {
             public static String COST_KEY = "cost";
-            public static String PROFILE_BASED_KEY = "profile_based";
+            public static String PERFORMANCE_BASED_KEY = "performance";
 
             private EngineKeys() {
 

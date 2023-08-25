@@ -23,17 +23,17 @@ import com.autotune.common.data.result.ContainerData;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
-public class ProfileBasedRecommendationEngine implements KruizeRecommendationEngine{
+public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
     private String name;
     private String key;
     private RecommendationConstants.RecommendationCategory category;
 
-    public ProfileBasedRecommendationEngine() {
-        this.name = RecommendationConstants.RecommendationEngine.EngineNames.PROFILE_BASED;
-        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.PROFILE_BASED_KEY;
+    public PerformanceRecommendationEngine() {
+        this.name = RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE_BASED;
+        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.PERFORMANCE_BASED_KEY;
     }
 
-    public ProfileBasedRecommendationEngine(String name) {
+    public PerformanceRecommendationEngine(String name) {
         this.name = name;
     }
 
