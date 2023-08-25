@@ -49,6 +49,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
     public PerformanceRecommendationEngine() {
         this.name = RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE;
         this.key = RecommendationConstants.RecommendationEngine.EngineKeys.PERFORMANCE_BASED_KEY;
+        this.category = RecommendationConstants.RecommendationCategory.PERFORMANCE;
     }
 
     public PerformanceRecommendationEngine(String name) {
