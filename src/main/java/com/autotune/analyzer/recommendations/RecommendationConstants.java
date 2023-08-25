@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.PerformanceRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
@@ -54,7 +55,44 @@ public class RecommendationConstants {
                 }
         ),
         // Need to update with profile based sub categories
-        PROFILE_BASED(KruizeConstants.JSONKeys.PROFILE_BASED, null);
+        PERFORMANCE(KruizeConstants.JSONKeys.PERFORMANCE, new PerformanceRecommendationSubCategory[]{
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.SHORT_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.MEDIUM_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.LONG_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+        });
 
         private String name;
         private RecommendationSubCategory[] recommendationSubCategories;
@@ -100,6 +138,11 @@ public class RecommendationConstants {
                 RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationTypes.INFO
         ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
@@ -292,6 +335,7 @@ public class RecommendationConstants {
         // Range: 112100 - 112199
         public static final int COST_ENGINE_START = 112100;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int COST_ENGINE_END = 112199;
         // Subsystem subsection: Profile Based Engine
         // Range: 112200 - 112299
@@ -659,6 +703,7 @@ public class RecommendationConstants {
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
+        public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
@@ -698,7 +743,7 @@ public class RecommendationConstants {
         public static class EngineNames {
             public static String DEFAULT_NAME = "Default";
             public static String COST = "Cost";
-            public static String PERFORMANCE_BASED = "Performance Based";
+            public static String PERFORMANCE = "Performance";
 
             private EngineNames() {
 
