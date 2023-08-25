@@ -40,7 +40,7 @@ UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the inte
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
 
 # Kruize Recommendations Notification codes
-NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "112101"
+NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
@@ -67,7 +67,7 @@ CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
 CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
 CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
-INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -379,18 +379,18 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
-                duration_based_obj = list_reco_container["recommendations"]["data"][interval_end_time]["duration_based"]
+                cost_obj = list_reco_container["recommendations"]["data"][interval_end_time]["cost"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
-                    if check_if_recommendations_are_present(duration_based_obj[term]):
+                    if check_if_recommendations_are_present(cost_obj[term]):
                         # Validate timestamps
-                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time, \
-                            f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+                        assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                            f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                            f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                        assert cost_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                            f"actual = {cost_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
@@ -407,12 +407,12 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                 duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
                         print(
-                            f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            f"Actual = {cost_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                        assert cost_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {cost_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
                         # Validate recommendation config
-                        validate_config(duration_based_obj[term]["config"])
+                        validate_config(cost_obj[term]["config"])
             else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
@@ -436,8 +436,8 @@ def validate_config(reco_config):
                    "format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
 
 
-def check_if_recommendations_are_present(duration_based_obj):
-    notifications = duration_based_obj["notifications"]
+def check_if_recommendations_are_present(cost_obj):
+    notifications = cost_obj["notifications"]
     if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
         return False
     return True
