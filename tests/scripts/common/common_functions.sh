@@ -1760,7 +1760,7 @@ function get_autotune_pod_log() {
 
 	echo "target = $target"
 	if [ ${target} == "crc" ]; then
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | cut -d " " -f1)
 		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	else
 		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
