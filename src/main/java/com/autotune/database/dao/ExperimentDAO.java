@@ -52,6 +52,10 @@ public interface ExperimentDAO {
 
     List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_start_time, Integer limitRows) throws Exception;
 
+    int totalResultsByExperimentName(String experimentName, Timestamp interval_end_time) throws Exception;
+
+    List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp from_start_time, Timestamp from_end_time, Integer limitRows) throws Exception;
+
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 

@@ -116,7 +116,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                     }
                     List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
                     ko.setKubernetes_objects(k8sObjectList);
-                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getIntervalEndTime());
                 }
         );
         return true;

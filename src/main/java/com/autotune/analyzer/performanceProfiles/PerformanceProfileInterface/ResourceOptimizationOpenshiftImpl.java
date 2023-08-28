@@ -81,32 +81,15 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
     @Override
     public void generateRecommendation(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
-        /*
-            To restrict the number of rows in the result set, the Load results operation involves locating the appropriate method and configuring the desired limitation.
-            It's important to note that in order for the Limit rows feature to function correctly,
-            the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
-        */
+
         String experiment_name = kruizeObject.getExperimentName();
-        int limitRows = (int) ((
-                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
-                        KruizeConstants.DateFormats.MINUTES_FOR_DAY)
-                / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
-
-        if (null != interval_start_time) {
-            long diffMilliseconds = interval_end_time.getTime() - interval_start_time.getTime();
-            long minutes = diffMilliseconds / (60 * 1000);
-            int addToLimitRows = (int) (minutes / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
-            LOGGER.debug("add to limit rows set to {}", addToLimitRows);
-            limitRows = limitRows + addToLimitRows;
-        }
-        LOGGER.debug("Limit rows set to {}", limitRows);
-
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
                 experiment_name,
-                interval_end_time,
-                limitRows);
+                interval_start_time,
+                interval_end_time
+        );
         //TODO: Will be updated once algo is completed
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             if (null != kruizeObject && null != experimentResultData) {

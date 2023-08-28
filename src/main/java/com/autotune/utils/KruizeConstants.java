@@ -435,6 +435,8 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
 
+                public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 10 ;
+
                 private DurationAmount() {
 
                 }

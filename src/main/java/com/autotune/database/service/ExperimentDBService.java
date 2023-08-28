@@ -36,13 +36,12 @@ import com.autotune.database.table.KruizePerformanceProfileEntry;
 import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -142,10 +141,63 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
+    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+        /*
+             The general strategy involves initially attempting the optimal query; if the sum of durations is not matched, then considering an alternative suboptimal query.
+         */
+        // Convert the Timestamp to a Calendar instance in UTC time zone
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        Timestamp fromTime;
+        Timestamp toTime;
+        toTime = (interval_start_time == null) ? interval_end_time : interval_start_time;
+        cal.setTimeInMillis(toTime.getTime());
+        /*
+         * toTime Subtract (LONG_TERM_DURATION_DAYS +  THRESHOLD days)
+         * Incorporate a buffer period of "threshold days" to account for potential remote cluster downtime.
+         * This adjustment aims to align the cumulative hours' duration with LONG_TERM_DURATION_DAYS.
+         * Additionally, there's an added layer of coverage involving the utilization of a LIMIT.
+         * This measure ensures that the total duration in hours corresponds precisely to LONG_TERM_DURATION_DAYS.
+         */
+        cal.add(Calendar.DAY_OF_MONTH, -(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS +
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
+        // Get the new Timestamp after subtracting 10 days
+        fromTime = new Timestamp(cal.getTimeInMillis());
+        /*
+            To restrict the number of rows in the result set, the Load results operation involves locating the appropriate method and configuring the desired limitation.
+            It's important to note that in order for the Limit rows feature to function correctly,
+            the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
+        */
+        KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
+        int limitRows = (int) ((
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
+                        KruizeConstants.DateFormats.MINUTES_FOR_DAY)
+                / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+        LOGGER.debug("Limit rows set to {}", limitRows);
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load results from the DB and save to local
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, fromTime, toTime, limitRows);
+        /*
+            Determine whether the sum of durations matches the value of the long-term duration.
+            If they do not match, execute a query that selects all rows with interval_end_times less than a specified threshold.
+            The selection should be limited based on the formula: (LongTermDuration_days * 60 mins) / trailsettings.duration_in_mins.
+         */
+        double sum_of_duration_in_mins = 0.0;
+        for (KruizeResultsEntry entry : kruizeResultsEntries) {
+            sum_of_duration_in_mins += entry.getDuration_minutes();
+        }
+
+        if (sum_of_duration_in_mins < KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.DateFormats.MINUTES_FOR_DAY) {
+            int rowCount = experimentDAO.totalResultsByExperimentName(experimentName, interval_end_time);
+            if (rowCount > kruizeResultsEntries.size()) {
+                LOGGER.debug("The optimal query attempt was unsuccessful, prompting the exploration of an alternative suboptimal query.");
+                kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
+            } else {
+                LOGGER.debug("The optimal query attempt successful");
+            }
+        } else {
+            LOGGER.debug("The optimal query attempt successful");
+        }
+
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
             if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {

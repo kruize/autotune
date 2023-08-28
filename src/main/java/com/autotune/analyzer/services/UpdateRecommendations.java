@@ -37,7 +37,6 @@ import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.micrometer.core.instrument.Timer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -186,7 +185,7 @@ public class UpdateRecommendations extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
                 return;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -204,7 +203,6 @@ public class UpdateRecommendations extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
         try {
-            LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                     convertKruizeObjectToListRecommendationSO(
                             ko,
