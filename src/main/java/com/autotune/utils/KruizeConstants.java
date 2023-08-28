@@ -212,8 +212,8 @@ public class KruizeConstants {
         public static final String CRITICAL = "critical";
         public static final String OPTIMIZABLE = "optimizable";
         public static final String TOTAL = "total";
-        public static final String WORKLOADS = "workloads";
-        public static final String CLUSTERS = "clusters";
+        public static final String WORKLOAD_NAMES = "workload_names";
+        public static final String NAMES = "names";
 
         private JSONKeys() {
         }

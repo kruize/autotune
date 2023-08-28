@@ -63,7 +63,7 @@ public class Summarize extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
+        List<SummarizeAPIObject> summarizeAPIObjectList;
         String summarizeType = request.getParameter(KruizeConstants.JSONKeys.SUMMARIZE_TYPE);
         String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
         String namespaceName = request.getParameter(KruizeConstants.JSONKeys.NAMESPACE_NAME);
@@ -95,10 +95,10 @@ public class Summarize extends HttpServlet {
 
                     if (summarizeType.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER)) {
                         // do summarization based on cluster
-                        summarizeBasedOnClusters(namespacesWithClustersMap, namespaceName, clusterName, summarizeAPIObjectList);
+                        summarizeAPIObjectList = summarizeBasedOnClusters(namespacesWithClustersMap, namespaceName, clusterName);
                     } else {
                         // do summarization based on namespace
-                        summarizeBasedOnNamespaces(namespacesWithClustersMap, namespaceName, clusterName, summarizeAPIObjectList);
+                        summarizeAPIObjectList = summarizeBasedOnNamespaces(namespacesWithClustersMap,clusterName, namespaceName);
                     }
 
                     String gsonStr = "[]";
@@ -156,38 +156,44 @@ public class Summarize extends HttpServlet {
         }
     }
 
-    private void summarizeBasedOnClusters(HashMap<String, List<String>> namespacesWithClustersMapSorted,
-                                      String namespaceName, String clusterNameParam,
-                                      List<SummarizeAPIObject> namespacesSummaryInCluster) throws Exception {
-    Set<String> clusterNamesSet = getClusterNames(clusterNameParam, namespacesWithClustersMapSorted.keySet());
+    private List<SummarizeAPIObject> summarizeBasedOnClusters(HashMap<String, List<String>> namespacesWithClustersMapSorted,
+                                                              String namespaceName, String clusterNameParam) throws Exception {
+        Set<String> clusterNamesSet = getClusterNames(clusterNameParam, namespacesWithClustersMapSorted.keySet());
+        List<SummarizeAPIObject> namespacesSummaryInCluster = new ArrayList<>();
 
-    for (String clusterName : clusterNamesSet) {
-        SummarizeAPIObject summarizeFromCache = getSummaryFromCache(clusterName, clusterSummaryCacheMap);
-        if (summarizeFromCache != null) {
-            namespacesSummaryInCluster.add(summarizeFromCache);
-            continue;
-        }
-        SummarizeAPIObject summarizeClusterObject = new SummarizeAPIObject();
-        summarization(clusterName, namespaceName, summarizeClusterObject, namespacesSummaryInCluster);
-        clusterSummaryCacheMap.put(clusterName, summarizeClusterObject);
-    }
-}
-    private void summarizeBasedOnNamespaces(HashMap<String, List<String>> namespacesWithClustersMapSorted,
-                                            String clusterName, String namespaceNameParam,
-                                            List<SummarizeAPIObject> namespacesSummaryInCluster) throws Exception {
-        Set<String> uniqueNamespaces = getUniqueNamespaces(namespaceNameParam, namespacesWithClustersMapSorted);
-
-        for (String namespaceName : uniqueNamespaces) {
-            SummarizeAPIObject summarizeFromCache = getSummaryFromCache(namespaceName, namespaceSummaryCacheMap);
-            if (summarizeFromCache != null) {
-                namespacesSummaryInCluster.add(summarizeFromCache);
-                continue;
+        for (String clusterName : clusterNamesSet) {
+            if (namespaceName == null) {
+                SummarizeAPIObject summarizeFromCache = getSummaryFromCache(clusterName, clusterSummaryCacheMap);
+                if (summarizeFromCache != null) {
+                    namespacesSummaryInCluster.add(summarizeFromCache);
+                    continue;
+                }
             }
-
-            SummarizeAPIObject summarizeNamespaceObject = new SummarizeAPIObject();
-            summarization(clusterName, namespaceName, summarizeNamespaceObject, namespacesSummaryInCluster);
-            namespaceSummaryCacheMap.put(namespaceName, summarizeNamespaceObject);
+            SummarizeAPIObject summarizeClusterObject = new SummarizeAPIObject();
+            summarization(KruizeConstants.JSONKeys.CLUSTER_NAME, clusterName, namespaceName, summarizeClusterObject, namespacesSummaryInCluster);
+            if(namespaceName == null)
+                clusterSummaryCacheMap.put(clusterName, summarizeClusterObject);
         }
+        return namespacesSummaryInCluster;
+    }
+    private List<SummarizeAPIObject> summarizeBasedOnNamespaces(HashMap<String, List<String>> namespacesWithClustersMapSorted,
+                                                                String clusterName, String namespaceNameParam) throws Exception {
+        Set<String> uniqueNamespaces = getUniqueNamespaces(namespaceNameParam, namespacesWithClustersMapSorted);
+        List<SummarizeAPIObject> clusterSummaryInNamespace = new ArrayList<>();
+        for (String namespaceName : uniqueNamespaces) {
+            if (clusterName == null) {
+                SummarizeAPIObject summarizeFromCache = getSummaryFromCache(namespaceName, namespaceSummaryCacheMap);
+                if (summarizeFromCache != null) {
+                    clusterSummaryInNamespace.add(summarizeFromCache);
+                    continue;
+                }
+            }
+            SummarizeAPIObject summarizeNamespaceObject = new SummarizeAPIObject();
+            summarization(KruizeConstants.JSONKeys.NAMESPACE_NAME, clusterName, namespaceName, summarizeNamespaceObject, clusterSummaryInNamespace);
+            if(clusterName == null)
+                namespaceSummaryCacheMap.put(namespaceName, summarizeNamespaceObject);
+        }
+        return clusterSummaryInNamespace;
     }
     private Set<String> getClusterNames(String clusterNameParam, Set<String> allClusterNames) {
         return clusterNameParam == null ? allClusterNames : Collections.singleton(clusterNameParam);
@@ -204,7 +210,7 @@ public class Summarize extends HttpServlet {
         }
     }
 
-    private void summarization(String clusterName, String namespaceName,
+    private void summarization(String summarizeType, String clusterName, String namespaceName,
                                SummarizeAPIObject summarizeObject,
                                List<SummarizeAPIObject> namespacesSummaryInCluster) throws Exception {
         HashMap<String, KruizeObject> recommendationsMap = loadDBRecommendations(clusterName, namespaceName);
@@ -217,12 +223,16 @@ public class Summarize extends HttpServlet {
 
         if (!recommendationsMap.isEmpty()) {
             List<ListRecommendationsAPIObject> recommendations = buildRecommendationsList(kruizeObjectList);
-            if (namespaceName == null) {
-                clusterSummarization(recommendations, summarizeObject, clusterName, currentTimestamp);
+            if (summarizeType.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER_NAME)) {
+                clusterSummarization(recommendations, summarizeObject, namespaceName, currentTimestamp);
                 summarizeObject.setClusterName(clusterName);
+                if (namespaceName != null)
+                    summarizeObject.setNamespace(namespaceName);
             } else {
                 namespaceSummarization(recommendations, summarizeObject, namespaceName, clusterName, currentTimestamp);
                 summarizeObject.setNamespace(namespaceName);
+                if (clusterName != null)
+                    summarizeObject.setClusterName(clusterName);
             }
             namespacesSummaryInCluster.add(summarizeObject);
         }
@@ -252,8 +262,8 @@ public class Summarize extends HttpServlet {
         HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data = new HashMap<>();
         HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = new HashMap<>();
         HashMap<String, RecommendationSummary> recommendationsPeriodMap = new HashMap<>();
-        HashMap<String, ResourceInfo> namespaces = new HashMap<>();
-        HashMap<String, ResourceInfo> workloads = new HashMap<>();
+        HashMap<String, Object> namespaces = new HashMap<>();
+        HashMap<String, Object> workloads = new HashMap<>();
         NotificationsSummary allOuterNotificationsSummary = null;
         Set<String> namespaceSet = new HashSet<>();
         Set<String> workloadsSet = new HashSet<>();
@@ -316,12 +326,12 @@ public class Summarize extends HttpServlet {
             summarizeAPIObjectForCluster.setNotificationsSummary(allOuterNotificationsSummary);
             // set the namespaces object
             if (namespaceName == null) {
-                resourceInfo = new ResourceInfo(namespaceSet.size(), namespaceSet);
-                namespaces.put(KruizeConstants.JSONKeys.NAMESPACES, resourceInfo);
+                namespaces.put(KruizeConstants.JSONKeys.COUNT, namespaceSet.size());
+                namespaces.put(KruizeConstants.JSONKeys.NAMES, namespaceSet);
                 summarizeAPIObjectForCluster.setNamespaces(namespaces);
             }
-            resourceInfo = new ResourceInfo(workloadsSet.size(), workloadsSet);
-            workloads.put(KruizeConstants.JSONKeys.WORKLOADS, resourceInfo);
+            workloads.put(KruizeConstants.JSONKeys.COUNT, workloadsSet.size());
+            workloads.put(KruizeConstants.JSONKeys.NAMES, workloadsSet);
             summarizeAPIObjectForCluster.setWorkloads(workloads);
 
             // set the top level action summary
@@ -344,9 +354,9 @@ public class Summarize extends HttpServlet {
         HashMap<String, HashMap<String, RecommendationSummary>> recommendationsCategoryMap = new HashMap<>();
         HashMap<String, RecommendationSummary> recommendationsPeriodMap = new HashMap<>();
         NotificationsSummary allOuterNotificationsSummary = null;
-        HashMap<String, ResourceInfo> workloads = new HashMap<>();
-        HashMap<String, ResourceInfo> containers = new HashMap<>();
-        HashMap<String, ResourceInfo> clusters = new HashMap<>();
+        HashMap<String, Object> workloads = new HashMap<>();
+        HashMap<String, Object>  containers = new HashMap<>();
+        HashMap<String, Object>  clusters = new HashMap<>();
 
         Set<String> workloadsSet = new HashSet<>();
         Set<String> clustersSet = new HashSet<>();
@@ -408,17 +418,18 @@ public class Summarize extends HttpServlet {
             summarizeAPIObjectForNamespace.setNotificationsSummary(allOuterNotificationsSummary);
 
             // set the workloads
-            resourceInfo = new ResourceInfo(workloadsSet.size(), workloadsSet);
-            workloads.put(KruizeConstants.JSONKeys.WORKLOADS, resourceInfo);
+            workloads.put(KruizeConstants.JSONKeys.COUNT, workloadsSet.size());
+            workloads.put(KruizeConstants.JSONKeys.NAMES, workloadsSet);
             summarizeAPIObjectForNamespace.setWorkloads(workloads);
+            // set clusters and namespaces
             if (clusterName != null && namespaceName != null) {
-                resourceInfo = new ResourceInfo(containersSet.size(), containersSet);
-                containers.put(KruizeConstants.JSONKeys.CONTAINERS, resourceInfo);
+                containers.put(KruizeConstants.JSONKeys.COUNT, containersSet.size());
+                containers.put(KruizeConstants.JSONKeys.NAMES, containersSet);
                 summarizeAPIObjectForNamespace.setContainers(containers);
             } else if (clusterName == null) {
-                resourceInfo = new ResourceInfo(clustersSet.size(), clustersSet);
-                clusters.put(KruizeConstants.JSONKeys.CLUSTERS, resourceInfo);
-                summarizeAPIObjectForNamespace.setContainers(clusters);
+                clusters.put(KruizeConstants.JSONKeys.COUNT, clustersSet.size());
+                clusters.put(KruizeConstants.JSONKeys.NAMES, clustersSet);
+                summarizeAPIObjectForNamespace.setClusters(clusters);
             }
             // set the top level action summary
             resourceInfo = new ResourceInfo(workloadsWithoutRecommendation.size(), workloadsWithoutRecommendation);
@@ -841,7 +852,9 @@ public class Summarize extends HttpServlet {
                         RecommendationConfigItem existingItem = changeMapExisting.get(change).get(setting).get(item);
                         RecommendationConfigItem currentItem = changeMapCurrent.get(change).get(setting).get(item);
                         if (existingItem != null && currentItem != null) {
-                            RecommendationConfigItem mergedItem = new RecommendationConfigItem(existingItem.getAmount() + currentItem.getAmount());
+                            Double mergedAmount = existingItem.getAmount() + currentItem.getAmount();
+                            String format = existingItem.getFormat();
+                            RecommendationConfigItem mergedItem = new RecommendationConfigItem(mergedAmount, format);
                             mergedMap.get(change).get(setting).put(item, mergedItem);
                         } else if (existingItem != null) {
                             mergedMap.get(change).get(setting).put(item, existingItem);

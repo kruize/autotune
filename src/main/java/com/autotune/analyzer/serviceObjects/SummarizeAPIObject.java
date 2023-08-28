@@ -16,7 +16,9 @@
 
 package com.autotune.analyzer.serviceObjects;
 
-import com.autotune.analyzer.recommendations.summary.*;
+import com.autotune.analyzer.recommendations.summary.NotificationsSummary;
+import com.autotune.analyzer.recommendations.summary.ResourceInfo;
+import com.autotune.analyzer.recommendations.summary.Summary;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -39,10 +41,10 @@ public class SummarizeAPIObject {
     @SerializedName("action_summary")
     HashMap<String, HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo>> actionSummaryTopLevel;
 
-    private HashMap<String,ResourceInfo> namespaces;
-    private HashMap<String,ResourceInfo> workloads;
-    private HashMap<String,ResourceInfo> clusters;
-    private HashMap<String,ResourceInfo> containers;
+    private HashMap<String, Object> namespaces;
+    private HashMap<String, Object> workloads;
+    private HashMap<String, Object> clusters;
+    private HashMap<String, Object> containers;
 
     public String getClusterName() {
         return clusterName;
@@ -84,35 +86,35 @@ public class SummarizeAPIObject {
         this.actionSummaryTopLevel = actionSummaryTopLevel;
     }
 
-    public HashMap<String, ResourceInfo> getNamespaces() {
-        return namespaces;
-    }
-
-    public void setNamespaces(HashMap<String, ResourceInfo> namespaces) {
-        this.namespaces = namespaces;
-    }
-
-    public HashMap<String, ResourceInfo> getWorkloads() {
+    public HashMap<String, Object> getWorkloads() {
         return workloads;
     }
 
-    public void setWorkloads(HashMap<String, ResourceInfo> workloads) {
+    public void setWorkloads(HashMap<String, Object> workloads) {
         this.workloads = workloads;
     }
 
-    public HashMap<String, ResourceInfo> getClusters() {
+    public HashMap<String, Object> getNamespaces() {
+        return namespaces;
+    }
+
+    public void setNamespaces(HashMap<String, Object> namespaces) {
+        this.namespaces = namespaces;
+    }
+
+    public HashMap<String, Object> getClusters() {
         return clusters;
     }
 
-    public void setClusters(HashMap<String, ResourceInfo> clusters) {
+    public void setClusters(HashMap<String, Object> clusters) {
         this.clusters = clusters;
     }
 
-    public HashMap<String, ResourceInfo> getContainers() {
+    public HashMap<String, Object> getContainers() {
         return containers;
     }
 
-    public void setContainers(HashMap<String, ResourceInfo> containers) {
+    public void setContainers(HashMap<String, Object> containers) {
         this.containers = containers;
     }
 

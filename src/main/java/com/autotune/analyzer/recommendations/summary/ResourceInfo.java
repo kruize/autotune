@@ -15,11 +15,15 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations.summary;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public class ResourceInfo {
     private int count;
+    @SerializedName(KruizeConstants.JSONKeys.WORKLOAD_NAMES)
     private Set<String> workloadNames;
 
 
