@@ -33,6 +33,9 @@ public class RecommendationConfigItem {
 
     }
 
+    public RecommendationConfigItem(Double amount) {
+        this.amount = amount;
+    }
     public String getErrorMsg() {
         return errorMsg;
     }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2023 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.autotune.analyzer.services.Summarize;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
@@ -29,13 +31,17 @@ import java.util.HashMap;
 
 public class RecommendationSummary {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationSummary.class);
+
     @SerializedName(KruizeConstants.JSONKeys.CURRENT)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
     @SerializedName(KruizeConstants.JSONKeys.CHANGE)
     private HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> change;
+    @SerializedName("notifications_summary")
     private NotificationsSummary notificationsSummary;
+    @SerializedName("action_summary")
     private ActionSummary actionSummary;
 
     public ActionSummary getActionSummary() {
@@ -78,28 +84,18 @@ public class RecommendationSummary {
         this.notificationsSummary = notificationsSummary;
     }
 
-
-    // Check if the Recommendation object is empty
-    public boolean isEmpty() {
-        return this.currentConfig == null &&
-                this.config == null &&
-                this.change == null &&
-                this.notificationsSummary == null;
-    }
-
     // Merge existing values with new ones
-    public RecommendationSummary mergeSummaries(RecommendationSummary summary1, RecommendationSummary summary2) {
+    public RecommendationSummary mergeSummaries(RecommendationSummary existingSummary, RecommendationSummary currentSummary) {
         Summarize summarize = new Summarize();
         RecommendationSummary mergedSummary = new RecommendationSummary();
         try {
-            mergedSummary.setCurrentConfig(summarize.mergeConfigItems(summary1.getCurrentConfig(), summary2.getCurrentConfig(), mergedSummary.getCurrentConfig()));
-            mergedSummary.setConfig(summarize.mergeConfigItems(summary1.getConfig(), summary2.getConfig(), mergedSummary.getConfig()));
-            mergedSummary.setChange(summarize.mergeChange(summary1, summary2, mergedSummary.getChange()));
-            mergedSummary.setNotificationsSummary(summary1.getNotificationsSummary().mergeNotificationsSummary(summary1.getNotificationsSummary(), summary2.getNotificationsSummary()));
-            mergedSummary.setActionSummary(ActionSummary.merge(summary1.getActionSummary(), summary2.getActionSummary()));
+            mergedSummary.setCurrentConfig(summarize.mergeConfigItems(existingSummary.getCurrentConfig(), currentSummary.getCurrentConfig(), mergedSummary.getCurrentConfig()));
+            mergedSummary.setConfig(summarize.mergeConfigItems(existingSummary.getConfig(), currentSummary.getConfig(), mergedSummary.getConfig()));
+            mergedSummary.setChange(summarize.mergeChangeObjects(existingSummary, currentSummary));
+            mergedSummary.setNotificationsSummary(existingSummary.getNotificationsSummary().mergeNotificationsSummary(existingSummary.getNotificationsSummary(), currentSummary.getNotificationsSummary()));
+            mergedSummary.setActionSummary(existingSummary.getActionSummary().merge(currentSummary.getActionSummary()));
         } catch (Exception e){
-            System.out.println("Exception occurred while merging recommendations: "+ e.getMessage());
-            e.getMessage();
+            LOGGER.error("Exception occurred while merging recommendations: {}", e.getMessage());
         }
         return mergedSummary;
     }

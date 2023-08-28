@@ -63,6 +63,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class ListRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ListRecommendations.class);
+    static String statusValue = "failure";
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -71,7 +72,6 @@ public class ListRecommendations extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String statusValue = "failure";
         Timer.Sample timerListRec = Timer.start(MetricsConfig.meterRegistry());
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -185,23 +185,6 @@ public class ListRecommendations extends HttpServlet {
                 }
             }
             if (!error) {
-                List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
-                for (KruizeObject ko : kruizeObjectList) {
-                    try {
-                        LOGGER.debug(ko.getKubernetes_objects().toString());
-                        ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                                                                        convertKruizeObjectToListRecommendationSO(
-                                                                            ko,
-                                                                            getLatest,
-                                                                            checkForTimestamp,
-                                                                            monitoringEndTimestamp);
-                        recommendationList.add(listRecommendationsAPIObject);
-                        statusValue = "success";
-                    } catch (Exception e) {
-                        LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
-                    }
-                }
-
                 List<ListRecommendationsAPIObject> recommendationList = buildAPIResponse(kruizeObjectList,
                         checkForTimestamp, getLatest, monitoringEndTimestamp);
                 ExclusionStrategy strategy = new ExclusionStrategy() {
@@ -256,6 +239,7 @@ public class ListRecommendations extends HttpServlet {
                                 checkForTimestamp,
                                 monitoringEndTimestamp);
                 recommendationList.add(listRecommendationsAPIObject);
+                statusValue = "success";
             } catch (Exception e) {
                 LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
             }

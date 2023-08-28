@@ -207,6 +207,13 @@ public class KruizeConstants {
         public static final String SUMMARIZE_TYPE = "summarize_type";
         public static final String CLUSTER = "cluster";
         public static final String FETCH_FROM_DB = "fetchFromDB";
+        public static final String IDLE = "idle";
+        public static final String OPTIMIZED = "optimized";
+        public static final String CRITICAL = "critical";
+        public static final String OPTIMIZABLE = "optimizable";
+        public static final String TOTAL = "total";
+        public static final String WORKLOADS = "workloads";
+        public static final String CLUSTERS = "clusters";
 
         private JSONKeys() {
         }

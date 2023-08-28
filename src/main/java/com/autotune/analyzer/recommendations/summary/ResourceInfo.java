@@ -13,27 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-
 package com.autotune.analyzer.recommendations.summary;
 
-import java.sql.Timestamp;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Summary {
-    private HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data;
+public class ResourceInfo {
+    private int count;
+    private Set<String> workloadNames;
 
-    public HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> getData() {
-        return data;
+
+    public ResourceInfo(int count, Set<String> workloadNames) {
+        this.count = count;
+        this.workloadNames = workloadNames;
     }
 
-    public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data) {
-        this.data = data;
+    public ResourceInfo() {
+        this.count = 0;
+        this.workloadNames = new HashSet<>();
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public Set<String> getWorkloadNames() {
+        return workloadNames;
+    }
+
+    public void setWorkloadNames(Set<String> workloadNames) {
+        this.workloadNames = workloadNames;
     }
 
     @Override
     public String toString() {
-        return "Summary{" +
-                "data=" + data +
+        return "ResourceInfo{" +
+                "count=" + count +
+                ", workloadNames=" + workloadNames +
                 '}';
     }
 }
