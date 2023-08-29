@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 
 /**
- * Storage object for recommendation
+ * Storage object for recommendation summary
  */
 
 public class RecommendationSummary {

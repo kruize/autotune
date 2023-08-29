@@ -68,7 +68,7 @@ public interface ExperimentDAO {
     List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
 
-    List<String> loadClusterNames() throws Exception;
+    List<String> loadAllClusterNames() throws Exception;
 
     List<KruizeRecommendationEntry> loadRecommendationsFromDBByNamespaceName(String namespaceName, List<KruizeExperimentEntry> entries) throws Exception;
 
@@ -82,5 +82,5 @@ public interface ExperimentDAO {
 
     List<KruizeExperimentEntry> loadExperimentsByNamespaceName(String namespaceName) throws Exception;
 
-    HashMap<String, List<String>> loadNamespacesByClusterNames() throws Exception;
+    HashMap<String, List<String>> loadAllClusterNamespaceAssociation() throws Exception;
 }

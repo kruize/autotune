@@ -499,7 +499,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
-        List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
+        List<KruizeResultsEntry> kruizeResultsEntryList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
 
             if (interval_start_time != null && interval_end_time != null) {
@@ -532,7 +532,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
 
     @Override
-    public List<String> loadClusterNames() throws Exception {
+    public List<String> loadAllClusterNames() throws Exception {
         List<String> distinctClusterNames;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             Query<String> query = session.createQuery(DBConstants.SQLQUERY.SELECT_DISTINCT_CLUSTER_NAMES_FROM_EXPERIMENTS,
@@ -553,11 +553,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             experimentNames.add(entry.getExperiment_name());
         }
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            String sql = "SELECT * FROM public.kruize_recommendations WHERE (extended_data -> 'kubernetes_objects' " +
-                    " @> '[{\"namespace\": \"" + namespaceName + "\"}]') AND experiment_name IN (:experimentNames) " +
-                    "ORDER by interval_end_time DESC LIMIT :limit";
 
-            ScrollableResults<KruizeRecommendationEntry> results = session.createNativeQuery(sql, KruizeRecommendationEntry.class)
+            String namespaceFilter = "[{\"namespace\": \"" + namespaceName + "\"}]";    //TODO: need to think of a better way to set up this query
+
+            ScrollableResults<KruizeRecommendationEntry> results = session.createNativeQuery(SELECT_FROM_RECOMMENDATIONS_BY_NAMESPACE_NAME, KruizeRecommendationEntry.class)
+                    .setParameter("namespaceFilter", namespaceFilter)
                     .setParameterList("experimentNames", experimentNames)
                     .setParameter("limit", experimentNames.size())
                     .scroll();
@@ -592,10 +592,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public List<KruizeExperimentEntry> loadExperimentFromDBByClusterAndNamespaceName(String clusterName, String namespaceName) throws Exception {
         List<KruizeExperimentEntry> entries = new ArrayList<>();
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            String sql = "SELECT * FROM public.kruize_experiments WHERE ( cluster_name = '" + clusterName + "'"+
-                    " AND extended_data -> 'kubernetes_objects' @> '[{\"namespace\": \"" + namespaceName + "\"}]')";
 
-            ScrollableResults<KruizeExperimentEntry> results = session.createNativeQuery(sql, KruizeExperimentEntry.class)
+            String namespaceFilter = "[{\"namespace\": \"" + namespaceName + "\"}]";    //TODO: need to think of a better way to set up this query
+
+            ScrollableResults<KruizeExperimentEntry> results = session.createNativeQuery(SELECT_FROM_EXPERIMENTS_BY_NAMESPACE_AND_CLUSTER_NAME, KruizeExperimentEntry.class)
+                    .setParameter("clusterName", clusterName)
+                    .setParameter("namespaceFilter", namespaceFilter)
                     .setMaxResults(BATCH_SIZE)
                     .scroll();
             while (results.next()) {
@@ -620,13 +622,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         for (KruizeExperimentEntry entry : entries) {
             experimentNames.add(entry.getExperiment_name());
         }
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()){
-            String sql = "SELECT * FROM public.kruize_recommendations WHERE ( cluster_name = :clusterName " +
-                    "AND extended_data -> 'kubernetes_objects' @> '[{\"namespace\": \"" + namespaceName + "\"}]') " +
-                    "AND experiment_name IN (:experimentNames) ORDER by interval_end_time DESC LIMIT :limit";
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
 
-            ScrollableResults<KruizeRecommendationEntry> results = session.createNativeQuery(sql, KruizeRecommendationEntry.class)
+            String namespaceFilter = "[{\"namespace\": \"" + namespaceName + "\"}]";    //TODO: need to think of a better way to set up this query
+
+            ScrollableResults<KruizeRecommendationEntry> results = session.createNativeQuery(SELECT_FROM_RECOMMENDATIONS_BY_NAMESPACE_AND_CLUSTER_NAME, KruizeRecommendationEntry.class)
                     .setParameter("clusterName", clusterName)
+                    .setParameter("namespaceFilter", namespaceFilter)
                     .setParameterList("experimentNames", experimentNames)
                     .setParameter("limit", experimentNames.size())
                     .scroll();
@@ -675,10 +677,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         List<KruizeExperimentEntry> entries;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
-            String sql = "SELECT * FROM public.kruize_experiments WHERE (extended_data -> 'kubernetes_objects' " +
-                    " @> '[{\"namespace\": \"" + namespaceName + "\"}]')";
+            String namespaceFilter = "[{\"namespace\": \"" + namespaceName + "\"}]";    //TODO: need to think of a better way to set up this query
 
-            jakarta.persistence.Query query = entityManager.createNativeQuery(sql, KruizeExperimentEntry.class);
+            jakarta.persistence.Query query = entityManager.createNativeQuery(SELECT_FROM_EXPERIMENTS_BY_NAMESPACE_NAME, KruizeExperimentEntry.class)
+                    .setParameter("namespaceFilter", namespaceFilter);
             entries = query.getResultList();
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());
@@ -688,15 +690,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public HashMap<String, List<String>> loadNamespacesByClusterNames() throws Exception {
+    public HashMap<String, List<String>> loadAllClusterNamespaceAssociation() throws Exception {
         HashMap<String, List<String>> entries = new HashMap<>();
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
-            String sql = "SELECT cluster_name, JSON_AGG(DISTINCT extended_data->'kubernetes_objects'->0->'namespace') as namespaces " +
-                    "FROM kruize_recommendations " +
-                    "GROUP BY cluster_name";
 
-            Query query = (Query) entityManager.createNativeQuery(sql);
+            Query query = (Query) entityManager.createNativeQuery(SELECT_CLUSTERS_AND_NAMESPACE_FROM_RECOMMENDATIONS);
             List<Object[]> results = query.getResultList();
 
             for (Object[] result : results) {

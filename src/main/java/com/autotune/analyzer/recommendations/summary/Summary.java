@@ -19,6 +19,9 @@ package com.autotune.analyzer.recommendations.summary;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
+/**
+ * stores the summarized recommendation data
+ */
 public class Summary {
     private HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data;
 

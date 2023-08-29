@@ -23,6 +23,18 @@ public class DBConstants {
         public static final String SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME = "from KruizePerformanceProfileEntry k WHERE k.name = :name";
 
         public static final String SELECT_DISTINCT_CLUSTER_NAMES_FROM_EXPERIMENTS = "SELECT DISTINCT cluster_name " + SELECT_FROM_EXPERIMENTS ;
+        public static final String SELECT_FROM_RECOMMENDATIONS_BY_NAMESPACE_NAME = "SELECT * FROM public.kruize_recommendations WHERE (extended_data -> " +
+                "'kubernetes_objects' @> cast(:namespaceFilter as jsonb)) AND experiment_name IN (:experimentNames) ORDER by interval_end_time DESC LIMIT :limit";
+        public static final String SELECT_FROM_EXPERIMENTS_BY_NAMESPACE_NAME = "SELECT * FROM public.kruize_experiments WHERE (extended_data -> " +
+                "'kubernetes_objects' @> cast(:namespaceFilter as jsonb))";
+        public static final String SELECT_FROM_RECOMMENDATIONS_BY_NAMESPACE_AND_CLUSTER_NAME = "SELECT * FROM public.kruize_recommendations WHERE (cluster_name = :clusterName " +
+                "AND extended_data -> 'kubernetes_objects' @> cast(:namespaceFilter as jsonb)) AND experiment_name IN (:experimentNames) " +
+                "ORDER by interval_end_time DESC LIMIT :limit";
+        public static final String SELECT_FROM_EXPERIMENTS_BY_NAMESPACE_AND_CLUSTER_NAME = "SELECT * FROM public.kruize_experiments WHERE (cluster_name = :clusterName " +
+                "AND extended_data -> 'kubernetes_objects' @> cast(:namespaceFilter as jsonb))";
+        public static final String SELECT_CLUSTERS_AND_NAMESPACE_FROM_RECOMMENDATIONS = "SELECT cluster_name, JSON_AGG(DISTINCT extended_data->'kubernetes_objects'->0->'namespace') as namespaces " +
+                "FROM kruize_recommendations GROUP BY cluster_name";
+
 
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";

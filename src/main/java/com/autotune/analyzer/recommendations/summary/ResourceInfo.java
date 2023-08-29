@@ -21,6 +21,9 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Stores the count and list of names of various JSON objects
+ */
 public class ResourceInfo {
     private int count;
     @SerializedName(KruizeConstants.JSONKeys.WORKLOAD_NAMES)

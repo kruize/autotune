@@ -22,6 +22,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
+/**
+ * stores the summary of the actions to be displayed to the user
+ */
 public class ActionSummary {
     @SerializedName(KruizeConstants.JSONKeys.IDLE)
     private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> idle;

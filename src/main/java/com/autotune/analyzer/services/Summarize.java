@@ -18,7 +18,10 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.summary.*;
-import com.autotune.analyzer.serviceObjects.*;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.serviceObjects.SummarizeAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -47,6 +50,9 @@ import java.util.stream.Stream;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
+/**
+ * Rest API to build and return the summarized response based on the parameters passed.
+ */
 public class Summarize extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(Summarize.class);
     HashMap<String, SummarizeAPIObject> clusterSummaryCacheMap = new HashMap<>();
@@ -57,19 +63,26 @@ public class Summarize extends HttpServlet {
         super.init(config);
     }
 
+    /**
+     * Handles HTTP GET requests for retrieving summarized API objects based on query parameters.
+     * @param request
+     * @param response
+     * @throws IOException
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Timer.Sample timerListRec = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        List<SummarizeAPIObject> summarizeAPIObjectList;
+        List<SummarizeAPIObject> summarizeAPIObjectList = new ArrayList<>();
+        // Extract query parameters from the request
         String summarizeType = request.getParameter(KruizeConstants.JSONKeys.SUMMARIZE_TYPE);
         String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
         String namespaceName = request.getParameter(KruizeConstants.JSONKeys.NAMESPACE_NAME);
         String fetchFromDB = request.getParameter(KruizeConstants.JSONKeys.FETCH_FROM_DB);
 
-        // validate Query params
+        // Validate Query params
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
             if (!KruizeSupportedTypes.SUMMARIZE_PARAMS_SUPPORTED.contains(param)) {
@@ -77,28 +90,31 @@ public class Summarize extends HttpServlet {
             }
         }
         if (invalidParams.isEmpty()) {
-            // Set default value if absent
+            // Set default values if absent
             if (summarizeType == null || summarizeType.isEmpty())
                 summarizeType = KruizeConstants.JSONKeys.CLUSTER;
-            // by default, db_flag will be false so the data will be fetched from cache only
+            // by default, fetchFromDB will be false so the data will be fetched from cache only
             if (fetchFromDB == null || fetchFromDB.isEmpty())
                 fetchFromDB = AnalyzerConstants.BooleanString.FALSE;
             if (isValidValue(summarizeType, fetchFromDB)) {
                 // load recommendations based on params
                 try {
+                    // Reset cache maps if fetching from the database
                     if (fetchFromDB.equals(AnalyzerConstants.BooleanString.TRUE)) {
                         clusterSummaryCacheMap = new HashMap<>();
                         namespaceSummaryCacheMap = new HashMap<>();
                     }
-                    // get the clusters and namespaces
-                    HashMap<String, List<String>> namespacesWithClustersMap = new ExperimentDBService().loadNamespacesByClusterNames();
+                    // Load namespaces with clusters from the database
+                    HashMap<String, List<String>> ClusterNamespaceAssociationMap = new ExperimentDBService().loadAllClusterNamespaceAssociationMap();
 
                     if (summarizeType.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER)) {
-                        // do summarization based on cluster
-                        summarizeAPIObjectList = summarizeBasedOnClusters(namespacesWithClustersMap, namespaceName, clusterName);
+                        // Summarize based on cluster
+                        summarizeAPIObjectList = summarizeBasedOnClusters(ClusterNamespaceAssociationMap, namespaceName, clusterName);
+                    } else if (summarizeType.equalsIgnoreCase(KruizeConstants.JSONKeys.NAMESPACE)){
+                        // Summarize based on namespace
+                        summarizeAPIObjectList = summarizeBasedOnNamespaces(ClusterNamespaceAssociationMap, clusterName, namespaceName);
                     } else {
-                        // do summarization based on namespace
-                        summarizeAPIObjectList = summarizeBasedOnNamespaces(namespacesWithClustersMap,clusterName, namespaceName);
+                        LOGGER.error("Summarize Type: {} not supported!", summarizeType);
                     }
 
                     String gsonStr = "[]";
@@ -136,10 +152,60 @@ public class Summarize extends HttpServlet {
         }
     }
 
+    /**
+     * Checks if the provided values for summarizeType and fetchFromDB are valid.
+     *
+     * @param summarizeTypeValue The value of the summarizeType parameter.
+     * @param fetchFromDBValue   The value of the fetchFromDB parameter.
+     * @return True if both summarizeTypeValue and fetchFromDBValue are valid; otherwise, false.
+     */
     private boolean isValidValue(String summarizeTypeValue, String fetchFromDBValue) {
         return (summarizeTypeValue.equalsIgnoreCase(KruizeConstants.JSONKeys.CLUSTER) || summarizeTypeValue.equalsIgnoreCase(KruizeConstants.JSONKeys.NAMESPACE)
-        && (fetchFromDBValue.equals(AnalyzerConstants.BooleanString.TRUE) || fetchFromDBValue.equals(AnalyzerConstants.BooleanString.FALSE)));
+                && (fetchFromDBValue.equals(AnalyzerConstants.BooleanString.TRUE) || fetchFromDBValue.equals(AnalyzerConstants.BooleanString.FALSE)));
     }
+
+    /**
+     * Retrieves a set of cluster names based on the provided clusterName parameter.
+     * If the clusterName parameter is null, returns the entire set of allClusterNames.
+     * Otherwise, returns a set containing only the provided clusterNameParam.
+     *
+     * @param clusterNameParam The specific cluster name to retrieve, or null if all cluster names are desired.
+     * @param allClusterNames  The set of all available cluster names.
+     * @return A set of cluster names based on the provided parameter, or the full set of allClusterNames if clusterNameParam is null.
+     */
+    private Set<String> getClusterNames(String clusterNameParam, Set<String> allClusterNames) {
+        return clusterNameParam == null ? allClusterNames : Collections.singleton(clusterNameParam);
+    }
+
+    /**
+     * Retrieves a set of unique namespace names based on the provided namespaceName parameter.
+     * If the namespaceName parameter is null, returns a set containing all unique namespaces from namespacesWithClustersMapSorted.
+     * Otherwise, returns a set containing only the provided namespaceNameParam.
+     *
+     * @param namespaceNameParam           The specific namespace name to retrieve, or null if all unique namespaces are desired.
+     * @param ClusterNamespaceAssociationMap A mapping of cluster names to lists of associated namespace names.
+     * @return A set of unique namespace names based on the provided parameter, or a set of all unique namespaces if namespaceNameParam is null.
+     */
+    private Set<String> getUniqueNamespaces(String namespaceNameParam, HashMap<String, List<String>> ClusterNamespaceAssociationMap) {
+        if (namespaceNameParam == null) {
+            Set<String> uniqueNamespaces = new HashSet<>();
+            for (List<String> namespaces : ClusterNamespaceAssociationMap.values()) {
+                uniqueNamespaces.addAll(namespaces);
+            }
+            return uniqueNamespaces;
+        } else {
+            return Collections.singleton(namespaceNameParam);
+        }
+    }
+
+    /**
+     * Loads experiments and recommendations from the database based on the provided parameters.
+     *
+     * @param recommendationsMap A map to store loaded recommendations.
+     * @param clusterName        The specific cluster name to filter by, or null if not specified.
+     * @param namespaceName      The specific namespace name to filter by, or null if not specified.
+     * @throws Exception If an error occurs while loading data from the database.
+     */
     private void loadDBBasedOnParams(HashMap<String, KruizeObject> recommendationsMap,
                                      String clusterName, String namespaceName) throws Exception {
 
@@ -156,9 +222,18 @@ public class Summarize extends HttpServlet {
         }
     }
 
-    private List<SummarizeAPIObject> summarizeBasedOnClusters(HashMap<String, List<String>> namespacesWithClustersMapSorted,
+    /**
+     * Summarizes API objects based on cluster names and optional namespace filtering.
+     *
+     * @param ClusterNamespaceAssociationMap A mapping of cluster names to lists of associated namespace names.
+     * @param namespaceName                 The specific namespace name to filter by, or null if not specified.
+     * @param clusterNameParam              The specific cluster name to summarize, or null if not specified.
+     * @return A list of SummarizeAPIObject representing the summarized data for the specified clusters and namespace.
+     * @throws Exception If an error occurs during summarization or data retrieval.
+     */
+    private List<SummarizeAPIObject> summarizeBasedOnClusters(HashMap<String, List<String>> ClusterNamespaceAssociationMap,
                                                               String namespaceName, String clusterNameParam) throws Exception {
-        Set<String> clusterNamesSet = getClusterNames(clusterNameParam, namespacesWithClustersMapSorted.keySet());
+        Set<String> clusterNamesSet = getClusterNames(clusterNameParam, ClusterNamespaceAssociationMap.keySet());
         List<SummarizeAPIObject> namespacesSummaryInCluster = new ArrayList<>();
 
         for (String clusterName : clusterNamesSet) {
@@ -171,14 +246,24 @@ public class Summarize extends HttpServlet {
             }
             SummarizeAPIObject summarizeClusterObject = new SummarizeAPIObject();
             summarization(KruizeConstants.JSONKeys.CLUSTER_NAME, clusterName, namespaceName, summarizeClusterObject, namespacesSummaryInCluster);
-            if(namespaceName == null)
+            if (namespaceName == null)
                 clusterSummaryCacheMap.put(clusterName, summarizeClusterObject);
         }
         return namespacesSummaryInCluster;
     }
-    private List<SummarizeAPIObject> summarizeBasedOnNamespaces(HashMap<String, List<String>> namespacesWithClustersMapSorted,
+
+    /**
+     * Summarizes API objects based on namespace names and optional cluster names filtering.
+     *
+     * @param ClusterNamespaceAssociationMap A mapping of cluster names to lists of associated namespace names.
+     * @param namespaceNameParam                 The specific namespace name to filter by, or null if not specified.
+     * @param clusterName              The specific cluster name to summarize, or null if not specified.
+     * @return A list of SummarizeAPIObject representing the summarized data for the specified clusters and namespace.
+     * @throws Exception If an error occurs during summarization or data retrieval.
+     */
+    private List<SummarizeAPIObject> summarizeBasedOnNamespaces(HashMap<String, List<String>> ClusterNamespaceAssociationMap,
                                                                 String clusterName, String namespaceNameParam) throws Exception {
-        Set<String> uniqueNamespaces = getUniqueNamespaces(namespaceNameParam, namespacesWithClustersMapSorted);
+        Set<String> uniqueNamespaces = getUniqueNamespaces(namespaceNameParam, ClusterNamespaceAssociationMap);
         List<SummarizeAPIObject> clusterSummaryInNamespace = new ArrayList<>();
         for (String namespaceName : uniqueNamespaces) {
             if (clusterName == null) {
@@ -190,26 +275,22 @@ public class Summarize extends HttpServlet {
             }
             SummarizeAPIObject summarizeNamespaceObject = new SummarizeAPIObject();
             summarization(KruizeConstants.JSONKeys.NAMESPACE_NAME, clusterName, namespaceName, summarizeNamespaceObject, clusterSummaryInNamespace);
-            if(clusterName == null)
+            if (clusterName == null)
                 namespaceSummaryCacheMap.put(namespaceName, summarizeNamespaceObject);
         }
         return clusterSummaryInNamespace;
     }
-    private Set<String> getClusterNames(String clusterNameParam, Set<String> allClusterNames) {
-        return clusterNameParam == null ? allClusterNames : Collections.singleton(clusterNameParam);
-    }
-    private Set<String> getUniqueNamespaces(String namespaceNameParam, HashMap<String, List<String>> namespacesWithClustersMapSorted) {
-        if (namespaceNameParam == null) {
-            Set<String> uniqueNamespaces = new HashSet<>();
-            for (List<String> namespaces : namespacesWithClustersMapSorted.values()) {
-                uniqueNamespaces.addAll(namespaces);
-            }
-            return uniqueNamespaces;
-        } else {
-            return Collections.singleton(namespaceNameParam);
-        }
-    }
 
+    /**
+     * Performs summarization of API objects based on the provided summarizeType, cluster name, and namespace name.
+     *
+     * @param summarizeType            The type of summarization ("cluster" or "namespace").
+     * @param clusterName              The specific cluster name to summarize, or null if not specified.
+     * @param namespaceName            The specific namespace name to summarize, or null if not specified.
+     * @param summarizeObject          The SummarizeAPIObject to populate with summarized data.
+     * @param namespacesSummaryInCluster A list to which the populated summarizeObject will be added.
+     * @throws Exception If an error occurs during summarization or data retrieval.
+     */
     private void summarization(String summarizeType, String clusterName, String namespaceName,
                                SummarizeAPIObject summarizeObject,
                                List<SummarizeAPIObject> namespacesSummaryInCluster) throws Exception {
@@ -238,24 +319,14 @@ public class Summarize extends HttpServlet {
         }
     }
 
-    private List<ListRecommendationsAPIObject> buildRecommendationsList(List<KruizeObject> kruizeObjects) {
-        return ListRecommendations.buildAPIResponse(kruizeObjects, false, true, null);
-    }
-
-    private SummarizeAPIObject getSummaryFromCache(String id, Map<String, SummarizeAPIObject> cacheMap) {
-        if (cacheMap.containsKey(id) && cacheMap.get(id) != null) {
-            return cacheMap.get(id);
-        }
-        return null;
-    }
-    private HashMap<String, KruizeObject> loadDBRecommendations(String clusterName, String namespaceName) throws Exception {
-
-        HashMap<String, KruizeObject> recommendationsMap = new HashMap<>();
-        // load data from the DB based on the params
-        loadDBBasedOnParams(recommendationsMap, clusterName, namespaceName);
-        return recommendationsMap;
-    }
-
+    /**
+     * Performs summarization of Kubernetes API objects at the cluster level and populates the SummarizeAPIObject.
+     *
+     * @param listRecommendationsAPIObjectList A list of ListRecommendationsAPIObject containing recommendations for various Kubernetes API objects.
+     * @param summarizeAPIObjectForCluster     The SummarizeAPIObject to populate with the summarized data.
+     * @param namespaceName                   The specific namespace name to filter by, or null if not specified.
+     * @param currentTimestamp                The current timestamp in UTC used for the response.
+     */
     private void clusterSummarization(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList, SummarizeAPIObject summarizeAPIObjectForCluster,
                                       String namespaceName, Timestamp currentTimestamp) {
         Summarize summarize = new Summarize();
@@ -303,8 +374,7 @@ public class Summarize extends HttpServlet {
                     NotificationsSummary currentNotificationsSummary = summarize.calculateNotificationsSummary(containerRecommendations.getNotificationMap());
                     if (allOuterNotificationsSummary != null) {
                         allOuterNotificationsSummary = currentNotificationsSummary.mergeNotificationsSummary(allOuterNotificationsSummary, currentNotificationsSummary);
-                    }
-                    else {
+                    } else {
                         allOuterNotificationsSummary = currentNotificationsSummary;
                     }
 
@@ -346,6 +416,16 @@ public class Summarize extends HttpServlet {
             summarizeAPIObjectForCluster.setSummary(summary);
         }
     }
+
+    /**
+     * Performs summarization of Kubernetes API objects at the namespace level and populates the SummarizeAPIObject.
+     *
+     * @param listRecommendationsAPIObjectList A list of ListRecommendationsAPIObject containing recommendations for various Kubernetes API objects.
+     * @param summarizeAPIObjectForNamespace   The SummarizeAPIObject to populate with the summarized data.
+     * @param namespaceName                   The specific namespace name to filter by, or null if not specified.
+     * @param clusterName                     The specific cluster name to filter by, or null if not specified.
+     * @param currentTimestamp                The current timestamp in UTC used for the response.
+     */
     private void namespaceSummarization(List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList,
                                         SummarizeAPIObject summarizeAPIObjectForNamespace, String namespaceName, String clusterName,
                                         Timestamp currentTimestamp) {
@@ -355,8 +435,8 @@ public class Summarize extends HttpServlet {
         HashMap<String, RecommendationSummary> recommendationsPeriodMap = new HashMap<>();
         NotificationsSummary allOuterNotificationsSummary = null;
         HashMap<String, Object> workloads = new HashMap<>();
-        HashMap<String, Object>  containers = new HashMap<>();
-        HashMap<String, Object>  clusters = new HashMap<>();
+        HashMap<String, Object> containers = new HashMap<>();
+        HashMap<String, Object> clusters = new HashMap<>();
 
         Set<String> workloadsSet = new HashSet<>();
         Set<String> clustersSet = new HashSet<>();
@@ -442,9 +522,58 @@ public class Summarize extends HttpServlet {
             summarizeAPIObjectForNamespace.setSummary(summary);
         }
     }
+
+    /**
+     * Builds a list of ListRecommendationsAPIObject from a list of KruizeObject.
+     *
+     * @param kruizeObjects The list of KruizeObject to build recommendations from.
+     * @return A list of ListRecommendationsAPIObject containing recommendations based on the provided KruizeObject list.
+     */
+    private List<ListRecommendationsAPIObject> buildRecommendationsList(List<KruizeObject> kruizeObjects) {
+        return ListRecommendations.buildAPIResponse(kruizeObjects, false, true, null);
+    }
+
+    /**
+     * Retrieves a SummarizeAPIObject from the provided cacheMap using the specified id.
+     *
+     * @param id       The id used as the key to retrieve the SummarizeAPIObject from the cache.
+     * @param cacheMap The map representing the cache containing SummarizeAPIObject instances.
+     * @return The SummarizeAPIObject associated with the provided id in the cacheMap, or null if not found.
+     */
+    private SummarizeAPIObject getSummaryFromCache(String id, Map<String, SummarizeAPIObject> cacheMap) {
+        if (cacheMap.containsKey(id) && cacheMap.get(id) != null) {
+            return cacheMap.get(id);
+        }
+        return null;
+    }
+
+    /**
+     * Loads KruizeObject recommendations from the database based on the provided cluster and namespace names.
+     *
+     * @param clusterName   The specific cluster name to filter by, or null if not specified.
+     * @param namespaceName The specific namespace name to filter by, or null if not specified.
+     * @return A HashMap containing KruizeObject recommendations loaded from the database.
+     * @throws Exception If an error occurs while loading data from the database.
+     */
+    private HashMap<String, KruizeObject> loadDBRecommendations(String clusterName, String namespaceName) throws Exception {
+
+        HashMap<String, KruizeObject> recommendationsMap = new HashMap<>();
+        // load data from the DB based on the params
+        loadDBBasedOnParams(recommendationsMap, clusterName, namespaceName);
+        return recommendationsMap;
+    }
+
+    /**
+     * Creates an ActionSummary object based on the provided notification map, variation map, and workload name.
+     *
+     * @param notificationMap A map containing recommendation notifications.
+     * @param variation       A map representing the variation of recommendation items.
+     * @param workloadName    The name of the workload associated with the ActionSummary.
+     * @return An ActionSummary object containing summarized information about recommendations and notifications.
+     */
     private ActionSummary createActionSummaryObject(HashMap<Integer, RecommendationNotification> notificationMap,
                                                     HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
-                                                    RecommendationConfigItem>> variation , String workloadName) {
+                                                            RecommendationConfigItem>> variation, String workloadName) {
 
         ActionSummary actionSummary = new ActionSummary();
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> optimizable = new HashMap<>();
@@ -654,6 +783,13 @@ public class Summarize extends HttpServlet {
         return actionSummary;
     }
 
+    /**
+     * Converts a Recommendation into a RecommendationSummary object containing summarized information.
+     *
+     * @param recommendation The Recommendation object to be converted.
+     * @param workloadName   The name of the workload associated with the Recommendation.
+     * @return A RecommendationSummary object containing summarized information about the Recommendation.
+     */
     public RecommendationSummary convertToSummary(Recommendation recommendation, String workloadName) {
         RecommendationSummary summary = new RecommendationSummary();
         try {
@@ -686,11 +822,18 @@ public class Summarize extends HttpServlet {
             summary.setChange(calculateChange(recommendation));
             summary.setNotificationsSummary(calculateNotificationsSummary(recommendation.getNotifications()));
             summary.setActionSummary(createActionSummaryObject(recommendation.getNotifications(), recommendation.getVariation(), workloadName));
-        } catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("Exception occurred while converting recommendation to recommendationSummary: {}", e.getMessage());
         }
         return summary;
     }
+
+    /**
+     * Calculates and populates a change map based on the provided Recommendation object's variation.
+     *
+     * @param recommendation The Recommendation object to calculate changes for.
+     * @return A change map containing information about increases, decreases, and variations in resource settings.
+     */
     private HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting,
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> calculateChange(Recommendation recommendation) {
         HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
@@ -733,6 +876,11 @@ public class Summarize extends HttpServlet {
         return changeMap;
     }
 
+    /**
+     * Populates the provided change map with default values for the change objects.
+     *
+     * @param changeMap The change map to populate with default values.
+     */
     private void setDefaultValuesForChangeObject(HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting,
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMap) {
         for (AnalyzerConstants.ResourceChange change : AnalyzerConstants.ResourceChange.values()) {
@@ -757,6 +905,12 @@ public class Summarize extends HttpServlet {
         }
     }
 
+    /**
+     * Calculates the summary of different types of recommendations notifications.
+     *
+     * @param notifications The map containing recommendation notifications.
+     * @return The summary of notifications categorized by type.
+     */
     public NotificationsSummary calculateNotificationsSummary(HashMap<Integer, RecommendationNotification> notifications) {
         NotificationsSummary summary = new NotificationsSummary();
         int infoCount = 0;
@@ -783,6 +937,14 @@ public class Summarize extends HttpServlet {
         return summary;
     }
 
+    /**
+     * Merges two configuration maps and populates a target configuration map with the merged values.
+     *
+     * @param config1    The first configuration map to be merged.
+     * @param config2    The second configuration map to be merged.
+     * @param configMap  The target configuration map to populate with merged values.
+     * @return The merged configuration map.
+     */
     public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> mergeConfigItems(
             HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config1,
             HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config2,
@@ -792,16 +954,22 @@ public class Summarize extends HttpServlet {
         }
 
         // if the incoming config is null, skip merging
-        if( config1 != null) {
+        if (config1 != null) {
             mergeConfigObjects(configMap, config1);
         }
-        if( config2 != null) {
+        if (config2 != null) {
             mergeConfigObjects(configMap, config2);
         }
 
         return configMap;
     }
 
+    /**
+     * Merges two configuration maps and populates a target configuration map with the merged values.
+     *
+     * @param targetMap  The target configuration map to populate with merged values.
+     * @param sourceMap  The source configuration map to merge into the target map.
+     */
     private void mergeConfigObjects(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
             RecommendationConfigItem>> targetMap, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
             RecommendationConfigItem>> sourceMap) {
@@ -824,6 +992,13 @@ public class Summarize extends HttpServlet {
         }
     }
 
+    /**
+     * Merges two sets of change objects representing resource change details from different recommendation summaries.
+     *
+     * @param existingSummary The existing recommendation summary to merge from.
+     * @param currentSummary  The current recommendation summary to merge from.
+     * @return A merged map of resource change objects.
+     */
     public HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
             RecommendationConfigItem>>> mergeChangeObjects(RecommendationSummary existingSummary, RecommendationSummary currentSummary) {
         HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
@@ -831,15 +1006,23 @@ public class Summarize extends HttpServlet {
         HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
                 RecommendationConfigItem>>> changeMapCurrent = currentSummary.getChange();
 
-        return mergeMaps(changeMapExisting, changeMapCurrent);
+        return mergeChangeObjectMaps(changeMapExisting, changeMapCurrent);
     }
+
+    /**
+     * Merges two maps of change objects representing resource change details from different recommendation summaries.
+     *
+     * @param changeMapExisting The map of change objects from the existing recommendation summary.
+     * @param changeMapCurrent  The map of change objects from the current recommendation summary.
+     * @return A merged map of resource change objects.
+     */
     public static HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting,
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> mergeMaps(HashMap<AnalyzerConstants.ResourceChange,
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> mergeChangeObjectMaps(HashMap<AnalyzerConstants.ResourceChange,
             HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> changeMapExisting,
-                                                                                                HashMap<AnalyzerConstants.ResourceChange,
+                                                                                                            HashMap<AnalyzerConstants.ResourceChange,
                                                                                                         HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                                HashMap<AnalyzerConstants.RecommendationItem,
-                                                                                                        RecommendationConfigItem>>> changeMapCurrent) {
+                                                                                                                HashMap<AnalyzerConstants.RecommendationItem,
+                                                                                                                        RecommendationConfigItem>>> changeMapCurrent) {
 
         HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
                 RecommendationConfigItem>>> mergedMap = new HashMap<>();
@@ -869,8 +1052,14 @@ public class Summarize extends HttpServlet {
         }
         return mergedMap;
     }
+    /**
+     * Sets default values for a configuration map of recommendation items.
+     *
+     * @param config The configuration map to set default values for.
+     * @return The configuration map with default values populated.
+     */
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
-    setDefaultValuesForConfigs(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,RecommendationConfigItem>> config) {
+    setDefaultValuesForConfigs(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
         if (config == null) {
             config = new HashMap<>();
             // Initialize inner maps

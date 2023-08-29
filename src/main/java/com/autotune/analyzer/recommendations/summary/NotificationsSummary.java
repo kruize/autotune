@@ -16,6 +16,9 @@
 
 package com.autotune.analyzer.recommendations.summary;
 
+/**
+ * stores the summary of all the notifications based on the summarization type
+ */
 public class NotificationsSummary {
 
   private int info;

@@ -34,6 +34,9 @@ import java.util.List;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
+/**
+ * Rest API used to list cluster names.
+ */
 public class ListClusters extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListClusters.class);
 
@@ -42,6 +45,13 @@ public class ListClusters extends HttpServlet {
         super.init(config);
     }
 
+    /**
+     * Handles HTTP GET requests for retrieving a list of cluster names from the database.
+     *
+     * @param request  The HttpServletRequest object representing the incoming HTTP request.
+     * @param response The HttpServletResponse object representing the outgoing HTTP response.
+     * @throws IOException If an I/O error occurs while handling the request or response.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
@@ -52,7 +62,7 @@ public class ListClusters extends HttpServlet {
 
         // get cluster list from the DB and send JSON array as the response
         try {
-            clusterNamesList = new ExperimentDBService().loadClusterNames();
+            clusterNamesList = new ExperimentDBService().loadAllClusterNames();
             Gson gson = new Gson();
             JsonArray jsonArray = gson.toJsonTree(clusterNamesList).getAsJsonArray();
             response.getWriter().println(jsonArray.toString());
@@ -65,6 +75,7 @@ public class ListClusters extends HttpServlet {
         }
 
     }
+
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
