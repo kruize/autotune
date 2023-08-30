@@ -36,8 +36,8 @@ public class ActionSummary {
     private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> optimizable;
     @SerializedName(KruizeConstants.JSONKeys.ERROR)
     private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> error;
-    @SerializedName(KruizeConstants.JSONKeys.INFO)
-    private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> info;
+    @SerializedName(KruizeConstants.JSONKeys.NO_DATA)
+    private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> noData;
     @SerializedName(KruizeConstants.JSONKeys.TOTAL)
     private HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> total;
 
@@ -47,7 +47,7 @@ public class ActionSummary {
         this.critical = new HashMap<>();
         this.optimizable = new HashMap<>();
         this.error = new HashMap<>();
-        this.info = new HashMap<>();
+        this.noData = new HashMap<>();
         this.total = new HashMap<>();
     }
 
@@ -91,12 +91,12 @@ public class ActionSummary {
         this.error = error;
     }
 
-    public HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> getInfo() {
-        return info;
+    public HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> getNoData() {
+        return noData;
     }
 
-    public void setInfo(HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> info) {
-        this.info = info;
+    public void setNoData(HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> noData) {
+        this.noData = noData;
     }
 
     public HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> getTotal() {
@@ -113,7 +113,7 @@ public class ActionSummary {
         mergeMap(critical, other.getCritical());
         mergeMap(optimizable, other.getOptimizable());
         mergeMap(error, other.getError());
-        mergeMap(info, other.getInfo());
+        mergeMap(noData, other.getNoData());
         mergeMap(total, other.getTotal());
         return this;
     }
@@ -140,7 +140,7 @@ public class ActionSummary {
                 ", critical=" + critical +
                 ", optimizable=" + optimizable +
                 ", error=" + error +
-                ", info=" + info +
+                ", info=" + noData +
                 ", total=" + total +
                 '}';
     }

@@ -214,6 +214,7 @@ public class KruizeConstants {
         public static final String TOTAL = "total";
         public static final String WORKLOAD_NAMES = "workload_names";
         public static final String NAMES = "names";
+        public static final String NO_DATA = "no_data";
 
         private JSONKeys() {
         }

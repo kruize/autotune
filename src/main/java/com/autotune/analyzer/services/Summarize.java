@@ -406,10 +406,10 @@ public class Summarize extends HttpServlet {
 
             // set the top level action summary
             resourceInfo = new ResourceInfo(workloadsWithoutRecommendation.size(), workloadsWithoutRecommendation);
-            HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> info = new HashMap<>();
-            info.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, resourceInfo);
+            HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> noData = new HashMap<>();
+            noData.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, resourceInfo);
             HashMap<String, HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo>> actionSummaryTopLevel = new HashMap<>();
-            actionSummaryTopLevel.put(KruizeConstants.JSONKeys.INFO, info);
+            actionSummaryTopLevel.put(KruizeConstants.JSONKeys.NO_DATA, noData);
 
             summarizeAPIObjectForCluster.setActionSummaryTopLevel(actionSummaryTopLevel);
 
@@ -513,10 +513,10 @@ public class Summarize extends HttpServlet {
             }
             // set the top level action summary
             resourceInfo = new ResourceInfo(workloadsWithoutRecommendation.size(), workloadsWithoutRecommendation);
-            HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> info = new HashMap<>();
-            info.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, resourceInfo);
+            HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> noData = new HashMap<>();
+            noData.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, resourceInfo);
             HashMap<String, HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo>> actionSummaryTopLevel = new HashMap<>();
-            actionSummaryTopLevel.put(KruizeConstants.JSONKeys.INFO, info);
+            actionSummaryTopLevel.put(KruizeConstants.JSONKeys.NO_DATA, noData);
 
             summarizeAPIObjectForNamespace.setActionSummaryTopLevel(actionSummaryTopLevel);
             summarizeAPIObjectForNamespace.setSummary(summary);
@@ -580,7 +580,7 @@ public class Summarize extends HttpServlet {
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> idle = new HashMap<>();
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> error = new HashMap<>();
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> optimized = new HashMap<>();
-        HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> info = new HashMap<>();
+        HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> noData = new HashMap<>();
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> critical = new HashMap<>();
         HashMap<AnalyzerConstants.ActionSummaryRecommendationItem, ResourceInfo> total = new HashMap<>();
 
@@ -601,7 +601,8 @@ public class Summarize extends HttpServlet {
         memoryErrorValues.add(RecommendationConstants.NotificationCodes.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
         memoryErrorValues.add(RecommendationConstants.NotificationCodes.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
 
-        LOGGER.debug("Workload = {}", workloadName);
+        LOGGER.info("Workload = {}", workloadName);
+        LOGGER.info("Notifications = {}", notificationMap.values());
         // set the actionSummary as optimizable in case of no notifications
         try {
             if (notificationMap.isEmpty()) {
@@ -612,11 +613,16 @@ public class Summarize extends HttpServlet {
                     if (resourceSetting.equals(AnalyzerConstants.ResourceSetting.requests)) {
                         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemMap = settingEntry.getValue();
                         for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> itemEntry : itemMap.entrySet()) {
-                            AnalyzerConstants.RecommendationItem recommendationItem = itemEntry.getKey();
-                            RecommendationConfigItem configItem = itemEntry.getValue();
-                            double amount = configItem.getAmount();
-                            if (amount != 0.0)
-                                recommendationItemMap.put(recommendationItem, amount);
+                            RecommendationConfigItem cpuConfig = itemMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                            RecommendationConfigItem memoryConfig = itemMap.get(AnalyzerConstants.RecommendationItem.memory);
+
+                            if (cpuConfig != null && memoryConfig != null) {
+                                if (cpuConfig.getAmount() != null && cpuConfig.getAmount() != 0 &&
+                                        memoryConfig.getAmount() != null && memoryConfig.getAmount() != 0) {
+                                    recommendationItemMap.put(AnalyzerConstants.RecommendationItem.cpu, cpuConfig.getAmount());
+                                    recommendationItemMap.put(AnalyzerConstants.RecommendationItem.memory, memoryConfig.getAmount());
+                                }
+                            }
                         }
                     }
                 }
@@ -654,8 +660,14 @@ public class Summarize extends HttpServlet {
                     cpuSection.setCount(cpuSection.getWorkloadNames().size());
                     critical.put(AnalyzerConstants.ActionSummaryRecommendationItem.cpu, cpuSection);
                     actionSummary.setCritical(critical);
-                } else if (code == RecommendationConstants.NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE ||
-                        code == RecommendationConstants.NotificationCodes.NOTICE_CPU_RECORDS_ARE_ZERO) {
+                } else if (code == RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_REQUEST_NOT_SET ||
+                        code == RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET) {
+                    memorySection = new ResourceInfo();
+                    memorySection.getWorkloadNames().add(workloadName);
+                    memorySection.setCount(memorySection.getWorkloadNames().size());
+                    critical.put(AnalyzerConstants.ActionSummaryRecommendationItem.memory, memorySection);
+                    actionSummary.setCritical(critical);
+                } else if (code == RecommendationConstants.NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE) {
                     cpuSection = new ResourceInfo();
                     cpuSection.getWorkloadNames().add(workloadName);
                     cpuSection.setCount(cpuSection.getWorkloadNames().size());
@@ -675,7 +687,6 @@ public class Summarize extends HttpServlet {
                     optimizable.put(AnalyzerConstants.ActionSummaryRecommendationItem.cpu, cpuSection);
                     actionSummary.setOptimizable(optimizable);
                 } else if (cpuErrorValues.contains(code)) {
-                    System.out.println("at 575");
                     cpuSection = new ResourceInfo();
                     cpuSection.getWorkloadNames().add(workloadName);
                     cpuSection.setCount(cpuSection.getWorkloadNames().size());
@@ -686,27 +697,21 @@ public class Summarize extends HttpServlet {
                     memorySection = new ResourceInfo();
                     memorySection.getWorkloadNames().add(workloadName);
                     memorySection.setCount(memorySection.getWorkloadNames().size());
-                    optimizable.put(AnalyzerConstants.ActionSummaryRecommendationItem.memory, memorySection);
-                    actionSummary.setOptimizable(optimizable);
-                } else if (code == RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_REQUEST_NOT_SET ||
-                        code == RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET) {
-                    memorySection = new ResourceInfo();
-                    memorySection.getWorkloadNames().add(workloadName);
-                    memorySection.setCount(memorySection.getWorkloadNames().size());
-                    critical.put(AnalyzerConstants.ActionSummaryRecommendationItem.memory, memorySection);
-                    actionSummary.setCritical(critical);
-                } else if (memoryErrorValues.contains(code)) {
+                    optimized.put(AnalyzerConstants.ActionSummaryRecommendationItem.memory, memorySection);
+                    actionSummary.setOptimized(optimized);
+                }  else if (memoryErrorValues.contains(code)) {
                     memorySection = new ResourceInfo();
                     memorySection.getWorkloadNames().add(workloadName);
                     memorySection.setCount(memorySection.getWorkloadNames().size());
                     error.put(AnalyzerConstants.ActionSummaryRecommendationItem.memory, memorySection);
                     actionSummary.setError(error);
-                } else if (code == RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA) {
+                } else if (code == RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA ||
+                        code == RecommendationConstants.NotificationCodes.NOTICE_CPU_RECORDS_ARE_ZERO) {
                     generalSection = new ResourceInfo();
                     generalSection.getWorkloadNames().add(workloadName);
                     generalSection.setCount(generalSection.getWorkloadNames().size());
-                    info.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, generalSection);
-                    actionSummary.setInfo(info);
+                    noData.put(AnalyzerConstants.ActionSummaryRecommendationItem.general, generalSection);
+                    actionSummary.setNoData(noData);
                 } else if (commonErrorValues.contains(code)) {
                     generalSection = new ResourceInfo();
                     generalSection.getWorkloadNames().add(workloadName);
@@ -743,7 +748,7 @@ public class Summarize extends HttpServlet {
         try {
             Set<String> allCpuWorkloads = Optional.of(actionSummary).stream()
                     .flatMap(summary -> Stream.of(summary.getIdle(), summary.getOptimized(), summary.getCritical(),
-                            summary.getOptimizable(), summary.getError(), summary.getInfo()))
+                            summary.getOptimizable(), summary.getError(), summary.getNoData()))
                     .flatMap(map -> Optional.ofNullable(map.get(AnalyzerConstants.ActionSummaryRecommendationItem.cpu))
                             .stream().flatMap(item -> item.getWorkloadNames().stream()))
                     .collect(Collectors.toCollection(HashSet::new));
@@ -753,7 +758,7 @@ public class Summarize extends HttpServlet {
 
             Set<String> allMemoryWorkloads = Optional.of(actionSummary).stream()
                     .flatMap(summary -> Stream.of(summary.getIdle(), summary.getOptimized(), summary.getCritical(),
-                            summary.getOptimizable(), summary.getError(), summary.getInfo()))
+                            summary.getOptimizable(), summary.getError(), summary.getNoData()))
                     .flatMap(map -> Optional.ofNullable(map.get(AnalyzerConstants.ActionSummaryRecommendationItem.memory))
                             .stream().flatMap(item -> item.getWorkloadNames().stream()))
                     .collect(Collectors.toCollection(HashSet::new));
@@ -763,7 +768,7 @@ public class Summarize extends HttpServlet {
 
             Set<String> allGeneralWorkloads = Optional.of(actionSummary).stream()
                     .flatMap(summary -> Stream.of(summary.getIdle(), summary.getOptimized(), summary.getCritical(),
-                            summary.getOptimizable(), summary.getError(), summary.getInfo()))
+                            summary.getOptimizable(), summary.getError(), summary.getNoData()))
                     .flatMap(map -> Optional.ofNullable(map.get(AnalyzerConstants.ActionSummaryRecommendationItem.general))
                             .stream().flatMap(item -> item.getWorkloadNames().stream()))
                     .collect(Collectors.toCollection(HashSet::new));
