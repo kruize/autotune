@@ -20,6 +20,7 @@ import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
 import com.autotune.analyzer.recommendations.subCategory.PerformanceRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -1082,6 +1083,39 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
             }
         }
         return resultRecommendation;
+    }
+
+    @Override
+    public MappedRecommendationForEngine generateRecommendation(ContainerData containerData,
+                                                                Timestamp monitoringEndTime,
+                                                                RecommendationSettings recommendationSettings,
+                                                                HashMap<AnalyzerConstants.ResourceSetting,
+                                                                        HashMap<AnalyzerConstants.RecommendationItem,
+                                                                                RecommendationConfigItem>> currentConfigMap,
+                                                                Double durationInHrs) {
+        RecommendationConfigItem currentCPURequest = null;
+        RecommendationConfigItem currentCPULimit = null;
+        RecommendationConfigItem currentMemRequest = null;
+        RecommendationConfigItem currentMemLimit = null;
+
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            }
+        }
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            }
+        }
     }
 
     @Override

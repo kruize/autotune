@@ -130,9 +130,14 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
 
                         ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
+                        // Just to make sure the container recommendations object is not empty
+                        if (null == containerRecommendations) {
+                            containerRecommendations = new ContainerRecommendations();
+                        }
                         // Get the engine recommendation map for a time stamp if it exists else create one
                         HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
                                 = containerRecommendations.getData();
+
                         if (null == timestampBasedRecommendationMap) {
                             timestampBasedRecommendationMap = new HashMap<Timestamp, MappedRecommendationForTimestamp>();
                         }
@@ -143,6 +148,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         } else {
                             timestampRecommendation = new MappedRecommendationForTimestamp();
                         }
+
                         HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
                         HashMap<Integer, RecommendationConstants.RecommendationNotification> notificationHashMap = new HashMap<>();
                         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
@@ -226,10 +232,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                 if (null == recommendationHashMap || recommendationHashMap.isEmpty())
                                     continue;
 
-                                // Just to make sure the container recommendations object is not empty
-                                if (null == containerRecommendations) {
-                                    containerRecommendations = new ContainerRecommendations();
-                                }
+
                                 // check if notification exists
                                 boolean notificationExist = false;
                                 if (isCostEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE)) {
