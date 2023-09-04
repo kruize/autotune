@@ -17,16 +17,16 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.engine.CostRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.PerformanceRecommendationEngine;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
@@ -128,79 +128,142 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         Timestamp monitoringEndTime = containerDataResultData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                         // Get the ContainerData from the KruizeObject and not from ResultData
                         ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
-                        for (KruizeRecommendationEngine engine : getEngines()) {
-                            boolean isCostEngine = false;
-                            boolean isPerfEngine = false;
 
-                            if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
-                                isCostEngine = true;
-                            if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
-                                isPerfEngine = true;
+                        ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
+                        // Get the engine recommendation map for a time stamp if it exists else create one
+                        HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
+                                = containerRecommendations.getData();
+                        if (null == timestampBasedRecommendationMap) {
+                            timestampBasedRecommendationMap = new HashMap<Timestamp, MappedRecommendationForTimestamp>();
+                        }
+                        // check if engines map exists else create one
+                        MappedRecommendationForTimestamp timestampRecommendation = null;
+                        if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+                            timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
+                        } else {
+                            timestampRecommendation = new MappedRecommendationForTimestamp();
+                        }
+                        HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
+                        HashMap<Integer, RecommendationConstants.RecommendationNotification> notificationHashMap = new HashMap<>();
+                        timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+                        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
 
-                            // Check if minimum data available to generate recommendation
-                            if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
-                                continue;
+                        ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
 
-                            // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                            HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, recommendationSettings);
-                            if (null == recommendationHashMap || recommendationHashMap.isEmpty())
-                                continue;
-                            ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
-                            // Just to make sure the container recommendations object is not empty
-                            if (null == containerRecommendations) {
-                                containerRecommendations = new ContainerRecommendations();
-                            }
-                            // check if notification exists
-                            boolean notificationExist = false;
-                            if (isCostEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE)) {
-                                notificationExist = true;
-                            } else if (isPerfEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE))
-                                notificationExist = true;
+                        // Create Current Requests Map
+                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
 
-                            // If there is no notification add one
-                            if (!notificationExist) {
-                                if (isCostEngine) {
-                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                    );
-                                    containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                        // Create Current Limits Map
+                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+
+                        for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
+                            for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+                                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(intervalResultsHashMap,
+                                                                    monitoringEndTime,
+                                                                    resourceSetting,
+                                                                    recommendationItem,
+                                                                    notifications);
+
+                                if (null == configItem)
+                                    continue;
+                                // Need to set appropriate notifications
+                                if (null == configItem.getAmount())
+                                    continue;
+                                // Need to set appropriate notifications
+                                if (null == configItem.getFormat())
+                                    continue;
+                                // Need to set appropriate notifications
+                                if (configItem.getAmount() <= 0.0)
+                                    continue;
+                                // Need to set appropriate notifications
+                                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank())
+                                    continue;
+
+                                if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                                    currentRequestsMap.put(recommendationItem, configItem);
                                 }
-                                if (isPerfEngine) {
-                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                            RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                                    );
-                                    containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                                    currentLimitsMap.put(recommendationItem, configItem);
                                 }
                             }
-
-                            // Get the engine recommendation map for a time stamp if it exists else create one
-                            HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> timestampBasedRecommendationMap
-                                    = containerRecommendations.getData();
-                            if (null == timestampBasedRecommendationMap) {
-                                timestampBasedRecommendationMap = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
-                            }
-                            // check if engines map exists else create one
-                            HashMap<String, HashMap<String, Recommendation>> enginesRecommendationMap = null;
-                            if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
-                                enginesRecommendationMap = timestampBasedRecommendationMap.get(monitoringEndTime);
-                            } else {
-                                enginesRecommendationMap = new HashMap<String, HashMap<String, Recommendation>>();
-                            }
-                            // put recommendations tagging to engine
-                            enginesRecommendationMap.put(engine.getEngineKey(), recommendationHashMap);
-                            // put recommendations tagging to timestamp
-                            timestampBasedRecommendationMap.put(monitoringEndTime, enginesRecommendationMap);
-                            // set the data object to map
-                            containerRecommendations.setData(timestampBasedRecommendationMap);
-                            // set the container recommendations in container object
-                            containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
                         }
 
+                        // Iterate over notifications and set to recommendations
+                        for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
+                            if (!notificationHashMap.containsKey(recommendationNotification.getCode()))
+                                notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                        }
+                        timestampRecommendation.setHigherLevelNotificationMap(notificationHashMap);
+
+                        // Check if map is not empty and set requests map to current config
+                        if (!currentRequestsMap.isEmpty()) {
+                            currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+                        }
+
+                        // Check if map is not empty and set limits map to current config
+                        if (!currentLimitsMap.isEmpty()) {
+                            currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+                        }
+
+                        for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
+                            String term = recommendationTerm.getValue();
+                            int duration = recommendationTerm.getDuration();
+                            for (KruizeRecommendationEngine engine : getEngines()) {
+                                boolean isCostEngine = false;
+                                boolean isPerfEngine = false;
+
+                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
+                                    isCostEngine = true;
+                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
+                                    isPerfEngine = true;
+
+                                // Check if minimum data available to generate recommendation
+                                if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
+                                    continue;
+
+                                // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
+                                HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, recommendationSettings);
+                                if (null == recommendationHashMap || recommendationHashMap.isEmpty())
+                                    continue;
+
+                                // Just to make sure the container recommendations object is not empty
+                                if (null == containerRecommendations) {
+                                    containerRecommendations = new ContainerRecommendations();
+                                }
+                                // check if notification exists
+                                boolean notificationExist = false;
+                                if (isCostEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE)) {
+                                    notificationExist = true;
+                                } else if (isPerfEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE))
+                                    notificationExist = true;
+
+                                // If there is no notification add one
+                                if (!notificationExist) {
+                                    if (isCostEngine) {
+                                        RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                                RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                                        );
+                                        containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                    }
+                                    if (isPerfEngine) {
+                                        RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                                RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                                        );
+                                        containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                    }
+                                }
+                            }
+                        }
+
+                        // put recommendations tagging to timestamp
+                        timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+                        // set the data object to map
+                        containerRecommendations.setData(timestampBasedRecommendationMap);
+                        // set the container recommendations in container object
+                        containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
                     }
                 }
             }
         }
     }
-
-
 }
