@@ -21,7 +21,10 @@ import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.engine.CostRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.PerformanceRecommendationEngine;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTerm;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
@@ -211,9 +214,13 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
                         }
 
+                        timestampRecommendation.setCurrentConfig(currentConfig);
+
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
                             int duration = recommendationTerm.getDuration();
+                            MappedRecommendationForTerm mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
+
                             for (KruizeRecommendationEngine engine : getEngines()) {
                                 boolean isCostEngine = false;
                                 boolean isPerfEngine = false;
@@ -228,8 +235,15 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     continue;
 
                                 // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                                HashMap<String, Recommendation> recommendationHashMap = engine.generateRecommendation(containerDataKruizeObject, monitoringEndTime, recommendationSettings);
-                                if (null == recommendationHashMap || recommendationHashMap.isEmpty())
+                                MappedRecommendationForEngine recommendationHashMap = engine.generateRecommendation(
+                                        containerDataKruizeObject,
+                                        monitoringEndTime,
+                                        term,
+                                        recommendationSettings,
+                                        currentConfig,
+                                        Double.valueOf(String.valueOf(duration)));
+
+                                if (null == recommendationHashMap)
                                     continue;
 
 
