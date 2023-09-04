@@ -86,4 +86,10 @@ public class MappedRecommendationForTimestamp {
     public void setRecommendationForTermHashMap(HashMap<String, MappedRecommendationForTerm> recommendationForTermHashMap) {
         this.recommendationForTermHashMap = recommendationForTermHashMap;
     }
+
+    public void setRecommendationForTermHashMap(String term, MappedRecommendationForTerm mappedRecommendationForTerm) {
+        if (null != term && null != mappedRecommendationForTerm) {
+            this.recommendationForTermHashMap.put(term, mappedRecommendationForTerm);
+        }
+    }
 }

@@ -219,8 +219,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
                             int duration = recommendationTerm.getDuration();
-                            MappedRecommendationForTerm mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
-
+                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
                             for (KruizeRecommendationEngine engine : getEngines()) {
                                 boolean isCostEngine = false;
                                 boolean isPerfEngine = false;
@@ -235,7 +234,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     continue;
 
                                 // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                                MappedRecommendationForEngine recommendationHashMap = engine.generateRecommendation(
+                                MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
                                         containerDataKruizeObject,
                                         monitoringEndTime,
                                         term,
@@ -243,7 +242,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                         currentConfig,
                                         Double.valueOf(String.valueOf(duration)));
 
-                                if (null == recommendationHashMap)
+                                if (null == mappedRecommendationForEngine)
                                     continue;
 
 
@@ -269,7 +268,10 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                         containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
                                     }
                                 }
+
+                                mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
                             }
+                            timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
 
                         // put recommendations tagging to timestamp

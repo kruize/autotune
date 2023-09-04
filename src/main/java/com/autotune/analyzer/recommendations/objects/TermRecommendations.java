@@ -63,6 +63,12 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         this.recommendationForEngineHashMap = recommendationForEngineHashMap;
     }
 
+    public void setRecommendationForEngineHashMap(String engineName, MappedRecommendationForEngine mappedRecommendationForEngine) {
+        if (null != engineName && null != mappedRecommendationForEngine) {
+            this.recommendationForEngineHashMap.put(engineName, mappedRecommendationForEngine);
+        }
+    }
+
     public MappedRecommendationForEngine getCostRecommendations() {
         if (null != this.recommendationForEngineHashMap && this.recommendationForEngineHashMap.containsKey(KruizeConstants.JSONKeys.COST))
             return this.recommendationForEngineHashMap.get(KruizeConstants.JSONKeys.COST);
