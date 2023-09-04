@@ -30,9 +30,9 @@ public interface KruizeRecommendationEngine {
     public String getEngineName();
     public String getEngineKey();
     public RecommendationConstants.RecommendationCategory getEngineCategory();
-    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, RecommendationSettings recommendationSettings);
     public MappedRecommendationForEngine generateRecommendation(ContainerData containerData,
                                                                 Timestamp monitoringEndTime,
+                                                                String recPeriod,
                                                                 RecommendationSettings recommendationSettings,
                                                                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
                                                                 Double durationInHrs);
