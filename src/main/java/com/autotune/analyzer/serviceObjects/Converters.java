@@ -8,6 +8,7 @@ import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -114,7 +115,7 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
                                         = clonedContainerData.getContainerRecommendations().getData();
                                 if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
                                     List<Timestamp> tempList = new ArrayList<>();
@@ -137,7 +138,7 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
                                         = clonedContainerData.getContainerRecommendations().getData();
                                 Timestamp latestTimestamp = null;
                                 List<Timestamp> tempList = new ArrayList<>();
@@ -204,7 +205,7 @@ public class Converters {
 							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
 							ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
 							if (null != clonedContainerData) {
-								HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+								HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();
 								Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTimestamp);
 								Timestamp givenTimestamp = new Timestamp(medDate.getTime());
 								if (recommendations.containsKey(givenTimestamp)) {
@@ -259,7 +260,7 @@ public class Converters {
         public static ContainerData getLatestRecommendations(ContainerData containerData) {
 			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
 			if (null != clonedContainerData) {
-				HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+				HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();
 				Timestamp latestTimestamp = null;
 				List<Timestamp> tempList = new ArrayList<>();
 				for (Timestamp timestamp : recommendations.keySet()) {
