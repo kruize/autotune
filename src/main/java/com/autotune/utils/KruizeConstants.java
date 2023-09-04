@@ -189,6 +189,7 @@ public class KruizeConstants {
         public static final String INTERVAL_START_TIME = "interval_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String DURATION_IN_MINUTES = "duration_in_minutes";
+        public static final String DURATION_IN_HOURS = "duration_in_hours";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
@@ -203,6 +204,9 @@ public class KruizeConstants {
         public static final String PROFILE_BASED = "profile_based";
         public static final String COST = "cost";
         public static final String PERFORMANCE = "performance";
+        public static final String RECOMMENDATION_TERMS = "recommendation_terms";
+        public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
+        public static final String CONFIDENCE_LEVEL = "confidence_level";
 
         private JSONKeys() {
         }

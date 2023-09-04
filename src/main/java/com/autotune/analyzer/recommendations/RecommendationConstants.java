@@ -133,6 +133,33 @@ public class RecommendationConstants {
             return severity;
         }
     }
+
+    public enum RecommendationTerms {
+        SHORT_TERM (KruizeConstants.JSONKeys.SHORT_TERM, 24),
+        MEDIUM_TERM (KruizeConstants.JSONKeys.MEDIUM_TERM, 24 * 7),
+        LONG_TERM (KruizeConstants.JSONKeys.LONG_TERM, 24 * 15);
+
+        private String value;
+        private int durationInHrs;
+        private RecommendationTerms(String value, int durationInHrs){
+            this.value = value;
+            this.durationInHrs = durationInHrs;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public int getDuration() {
+            return durationInHrs;
+        }
+
+        // Setter for custom duration
+        public void setDuration(int durationInHrs) {
+            this.durationInHrs = durationInHrs;
+        }
+    }
+
     public enum RecommendationNotification {
         INFO_COST_RECOMMENDATIONS_AVAILABLE(
                 RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
