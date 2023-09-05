@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExperimentNameExistValidator implements ConstraintValidator<ExperimentNameExist, String> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentNameExistValidator.class);
-    static Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
-
+    public static ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
 
     // You can inject your database access/repository here to fetch the data
 
