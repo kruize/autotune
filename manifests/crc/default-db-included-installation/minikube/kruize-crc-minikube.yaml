@@ -54,7 +54,7 @@ spec:
             - name: POSTGRES_USER
               value: admin
             - name: POSTGRES_DB
-              value: kruizeDB2
+              value: kruizeDB
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -93,7 +93,7 @@ data:
         "adminPassword": "admin",
         "adminUsername": "admin",
         "hostname": "postgres-service",
-        "name": "kruizeDB2",
+        "name": "kruizeDB",
         "password": "admin",
         "port": 5432,
         "sslMode": "require",
