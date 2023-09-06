@@ -35,12 +35,11 @@ import java.util.List;
                 columnList = "experiment_name",
                 unique = false))
 public class KruizeResultsEntry {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long interval_id;
     private String version;
+    @Id
     private String experiment_name;
     private Timestamp interval_start_time;
+    @Id
     private Timestamp interval_end_time;
     private double duration_minutes;
     @JdbcTypeCode(SqlTypes.JSON)

@@ -21,5 +21,14 @@ public class DBConstants {
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME = "DELETE FROM KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName";
+        public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000Z') TO ('%s-%s-%s 23:59:59');";
+    }
+
+    public static final class TABLE_NAMES {
+        public static final String KRUIZE_EXPERIMENTS = "kruize_experiments";
+        public static final String KRUIZE_RESULTS = "kruize_results";
+        public static final String KRUIZE_RECOMMENDATIONS = "kruize_recommendations";
+        public static final String KRUIZE_PERFORMANCE_PROFILES = "kruize_performance_profiles";
+
     }
 }

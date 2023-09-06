@@ -188,8 +188,8 @@
                             <name>Autotune</name>
                         </program>
                         <program>
-                            <mainClass>com.autotune.database.livenessProbe.TestDBConnection</mainClass>
-                            <name>TestDBConnection</name>
+                            <mainClass>com.autotune.jobs.CreateKruizeDBElements</mainClass>
+                            <name>CreateKruizeDBElements</name>
                         </program>
                     </programs>
                 </configuration>

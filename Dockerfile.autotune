@@ -39,6 +39,7 @@ RUN mvn -f pom.xml install dependency:copy-dependencies
 # Now copy the sources and compile and package them
 COPY src $AUTOTUNE_HOME/src/autotune/src/
 RUN mvn -f pom.xml clean package
+COPY migrations target/bin/migrations
 
 # Create a jlinked JRE specific to the App
 RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-path $AUTOTUNE_HOME/java/openjdk/jmods --add-modules java.base,java.compiler,java.desktop,java.logging,java.management,java.naming,java.security.jgss,java.sql,java.xml,jdk.compiler,jdk.httpserver,jdk.unsupported,jdk.crypto.ec --exclude-files=**java_**.properties,**J9TraceFormat**.dat,**OMRTraceFormat**.dat,**j9ddr**.dat,**public_suffix_list**.dat --output jre
@@ -93,4 +94,4 @@ EXPOSE 8080
 ENV JAVA_HOME=${AUTOTUNE_HOME}/app/jre \
     PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH"
 
-ENTRYPOINT bash target/bin/Autotune
+ENTRYPOINT bash target/bin/CreateKruizeDBElements & bash target/bin/Autotune

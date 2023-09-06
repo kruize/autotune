@@ -54,7 +54,7 @@ spec:
             - name: POSTGRES_USER
               value: admin
             - name: POSTGRES_DB
-              value: kruizeDB
+              value: kruizeDB2
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -93,7 +93,7 @@ data:
         "adminPassword": "admin",
         "adminUsername": "admin",
         "hostname": "postgres-service",
-        "name": "kruizeDB",
+        "name": "kruizeDB2",
         "password": "admin",
         "port": 5432,
         "sslMode": "require",
@@ -117,7 +117,7 @@ data:
         "c3p0maxsize": 5,
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
-        "hbm2ddlauto": "update",
+        "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
       }

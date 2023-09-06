@@ -23,10 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 
@@ -40,20 +41,24 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Transaction tx = null;
         String statusValue = "failure";
         Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            try {
-                tx = session.beginTransaction();
-                session.persist(kruizeExperimentEntry);
-                tx.commit();
-                validationOutputData.setSuccess(true);
-                statusValue = "success";
-            } catch (HibernateException e) {
-                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-                if (tx != null) tx.rollback();
-                e.printStackTrace();
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage(e.getMessage());
-                //todo save error to API_ERROR_LOG
+        try {
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS);
+            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                try {
+                    tx = session.beginTransaction();
+                    session.persist(kruizeExperimentEntry);
+                    tx.commit();
+                    validationOutputData.setSuccess(true);
+                    statusValue = "success";
+                } catch (HibernateException e) {
+                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    if (tx != null) tx.rollback();
+                    e.printStackTrace();
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(e.getMessage());
+                    //todo save error to API_ERROR_LOG
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
@@ -65,6 +70,30 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return validationOutputData;
+    }
+
+    @Override
+    public void addPartitions(String tableName) {
+        Transaction tx;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            // Create a YearMonth object and get the current month and current year
+            YearMonth yearMonth = YearMonth.now();
+            String month = String.format("%02d", yearMonth.getMonthValue());
+            String year = String.valueOf(yearMonth.getYear());
+
+            // Get the last day of the month
+            int lastDayOfMonth = yearMonth.lengthOfMonth();
+            IntStream.range(1, lastDayOfMonth).forEach(i -> {
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                        year, month, i, year, month, i);
+                session.createNativeQuery(daterange).executeUpdate();
+            });
+
+            tx.commit();
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
+        }
     }
 
     @Override
