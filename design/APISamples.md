@@ -2,39 +2,39 @@ This doc has the sample list Recommendation API response for Notification Code.
 
 **List of Notification codes:**
 
-|   CODE    |   TYPE  |                           MESSAGE                            |
-|:---------:|:-------:|:------------------------------------------------------------:|
-|  112101   |  INFO   |      Duration Based Recommendations Available                |
-|  120001   |  INFO   |      There is not enough data available to generate a recommendation     |
-|  221001   |   ERROR   |       Number of pods cannot be zero                          |
-|  221002   |   ERROR   |       Number of pods cannot be negative                      |
-|  221003   |   ERROR   |       Duration hours cannot be zero                           |
-|  221004   |   ERROR   |       Duration hours cannot be negative                       |
-|  223001   |   ERROR   |       Amount field is missing in the CPU Section              |
-|  223002   |   ERROR   |       Invalid Amount in CPU Section                           |
-|  223003   |   ERROR   |       Format field is missing in CPU Section                  |
-|  223004   |   ERROR   |       Invalid Format in CPU Section                           |
-|  224001   |   ERROR   |       Amount field is missing in the Memory Section           |
-|  224002   |   ERROR   |       Invalid Amount in Memory Section                        |
-|  224003   |   ERROR   |       Format field is missing in Memory Section               |
-|  224004   |   ERROR   |       Invalid Format in Memory Section                        |
-|  323001   | NOTICE |       CPU Usage is less than a millicore, No CPU Recommendations can be generated |
-|  323002   | NOTICE |       CPU usage is zero, No CPU Recommendations can be generated |
-|  323003   | NOTICE |       CPU metrics are not available, No CPU Recommendations can be generated |
-|  323004   | NOTICE |  Workload is optimised wrt CPU REQUESTS, no changes needed  |
-|  323005   | NOTICE |  Workload is optimised wrt CPU LIMITS, no changes needed    |
-|  324001   | NOTICE |       Memory usage is zero, No Memory Recommendations can be generated |
-|  324002   | NOTICE |       Memory metrics are not available, No Memory Recommendations can be generated |
-|  324003   | NOTICE |  Workload is optimised wrt MEMORY REQUESTS, no changes needed  |
-|  324004   | NOTICE |  Workload is optimised wrt MEMORY LIMITS, no changes needed  |
-|  423001   | WARNING |      CPU Limit Not Set                                      |
-|  523001   | CRITICAL |     CPU Request Not Set                                      |
-|  524001   | CRITICAL |     Memory Request Not Set                                   |
-|  524002   | CRITICAL |     Memory Limit Not Set                                     |
+|   CODE    |   TYPE  |                                   MESSAGE                                    |
+|:---------:|:-------:|:----------------------------------------------------------------------------:|
+|  112101   |  INFO   |                        Cost Recommendations Available                        |
+|  120001   |  INFO   |       There is not enough data available to generate a recommendation        |
+|  221001   |   ERROR   |                        Number of pods cannot be zero                         |
+|  221002   |   ERROR   |                      Number of pods cannot be negative                       |
+|  221003   |   ERROR   |                        Duration hours cannot be zero                         |
+|  221004   |   ERROR   |                      Duration hours cannot be negative                       |
+|  223001   |   ERROR   |                  Amount field is missing in the CPU Section                  |
+|  223002   |   ERROR   |                        Invalid Amount in CPU Section                         |
+|  223003   |   ERROR   |                    Format field is missing in CPU Section                    |
+|  223004   |   ERROR   |                        Invalid Format in CPU Section                         |
+|  224001   |   ERROR   |                Amount field is missing in the Memory Section                 |
+|  224002   |   ERROR   |                       Invalid Amount in Memory Section                       |
+|  224003   |   ERROR   |                  Format field is missing in Memory Section                   |
+|  224004   |   ERROR   |                       Invalid Format in Memory Section                       |
+|  323001   | NOTICE | CPU Usage is less than a millicore, No CPU Recommendations can be generated  |
+|  323002   | NOTICE |          CPU usage is zero, No CPU Recommendations can be generated          |
+|  323003   | NOTICE |    CPU metrics are not available, No CPU Recommendations can be generated    |
+|  323004   | NOTICE |          Workload is optimised wrt CPU REQUESTS, no changes needed           |
+|  323005   | NOTICE |           Workload is optimised wrt CPU LIMITS, no changes needed            |
+|  324001   | NOTICE |       Memory usage is zero, No Memory Recommendations can be generated       |
+|  324002   | NOTICE | Memory metrics are not available, No Memory Recommendations can be generated |
+|  324003   | NOTICE |         Workload is optimised wrt MEMORY REQUESTS, no changes needed         |
+|  324004   | NOTICE |          Workload is optimised wrt MEMORY LIMITS, no changes needed          |
+|  423001   | WARNING |                              CPU Limit Not Set                               |
+|  523001   | CRITICAL |                             CPU Request Not Set                              |
+|  524001   | CRITICAL |                            Memory Request Not Set                            |
+|  524002   | CRITICAL |                             Memory Limit Not Set                             |
 
 
 **_Code: 112101
-Message: Duration Based Recommendations Available._**
+Message: Cost Recommendations Available._**
 
 ```
 {
@@ -52,13 +52,13 @@ Message: Duration Based Recommendations Available._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T01:02:46.356Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T01:02:46.356Z",
                                         "monitoring_end_time": "2023-06-15T01:02:46.356Z",
@@ -221,13 +221,13 @@ Message: CPU usage is less than one millicore, No CPU Recommendations can be gen
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T01:00:26.200Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T01:00:26.200Z",
                                         "monitoring_end_time": "2023-06-15T01:00:26.200Z",
@@ -346,13 +346,13 @@ Message: CPU usage is zero, No CPU Recommendations can be generated._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T00:59:50.724Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T00:59:50.724Z",
                                         "monitoring_end_time": "2023-06-15T00:59:50.724Z",
@@ -466,13 +466,13 @@ Message: Workload is optimised wrt CPU REQUESTS, no changes needed_**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-07-03T16:56:25.073Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-07-02T16:56:25.073Z",
                                         "monitoring_end_time": "2023-07-03T16:56:25.073Z",
@@ -599,13 +599,13 @@ Message: Workload is optimised wrt CPU LIMITS, no changes needed_**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-07-03T17:12:33.407Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-07-02T17:12:33.407Z",
                                         "monitoring_end_time": "2023-07-03T17:12:33.407Z",
@@ -734,13 +734,13 @@ Message: Memory usage is zero, No Memory Recommendations can be generated._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T01:01:32.356Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T01:01:32.356Z",
                                         "monitoring_end_time": "2023-06-15T01:01:32.356Z",
@@ -854,13 +854,13 @@ Message: Workload is optimised wrt MEMORY REQUESTS, no changes needed_**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-07-03T16:18:06.269Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-07-02T16:18:06.269Z",
                                         "monitoring_end_time": "2023-07-03T16:18:06.269Z",
@@ -987,13 +987,13 @@ Message: Workload is optimised wrt MEMORY LIMITS, no changes needed_**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-07-03T16:18:53.028Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-07-02T16:18:53.028Z",
                                         "monitoring_end_time": "2023-07-03T16:18:53.028Z",
@@ -1120,13 +1120,13 @@ Message: CPU Request Not Set._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T00:56:27.893Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T00:56:27.893Z",
                                         "monitoring_end_time": "2023-06-15T00:56:27.893Z",
@@ -1257,13 +1257,13 @@ Message: CPU Limit Not Set._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T00:56:27.893Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T00:56:27.893Z",
                                         "monitoring_end_time": "2023-06-15T00:56:27.893Z",
@@ -1394,13 +1394,13 @@ Message: Memory Request Not Set._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T00:57:51.561Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T00:57:51.561Z",
                                         "monitoring_end_time": "2023-06-15T00:57:51.561Z",
@@ -1531,13 +1531,13 @@ Message: Memory Limit Not Set._**
                         "notifications": {
                             "112101": {
                                 "type": "info",
-                                "message": "Duration Based Recommendations Available",
+                                "message": "Cost Recommendations Available",
                                 "code": 112101
                             }
                         },
                         "data": {
                             "2023-06-15T00:58:50.033Z": {
-                                "duration_based": {
+                                "cost": {
                                     "short_term": {
                                         "monitoring_start_time": "2023-06-14T00:58:50.033Z",
                                         "monitoring_end_time": "2023-06-15T00:58:50.033Z",

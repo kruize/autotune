@@ -110,7 +110,7 @@ def test_list_recommendations_without_parameters(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-               'message'] == 'Duration Based Recommendations Available'
+               'message'] == 'Cost Recommendations Available'
 
     # Get the experiment name
     experiment_name = None
@@ -356,7 +356,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
         assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Duration Based Recommendations Available'
+                   'message'] == 'Cost Recommendations Available'
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -449,7 +449,7 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-               'message'] == 'Duration Based Recommendations Available'
+               'message'] == 'Cost Recommendations Available'
 
     response = list_recommendations(experiment_name, latest)
 
@@ -599,7 +599,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-               'message'] == 'Duration Based Recommendations Available'
+               'message'] == 'Cost Recommendations Available'
 
     latest = None
     response = list_recommendations(experiment_name, latest, monitoring_end_time)
@@ -802,7 +802,7 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
         assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Duration Based Recommendations Available'
+                   'message'] == 'Cost Recommendations Available'
     experiment_name = None
     response = list_recommendations(experiment_name, latest)
 
@@ -1076,13 +1076,13 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                 high_level_notifications = recommendation_section["notifications"]
 
                 # Check if duration
-                assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                assert INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
                 data_section = recommendation_section["data"]
                 # Check if recommendation exists
                 assert str(end_time) in data_section
 
-                short_term_recommendation = data_section[str(end_time)]["duration_based"]["short_term"]
+                short_term_recommendation = data_section[str(end_time)]["cost"]["short_term"]
 
                 assert "variation" in short_term_recommendation
                 assert "config" in short_term_recommendation
@@ -1103,7 +1103,7 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                     assert data[0]['experiment_name'] == experiment_name
                     assert \
                         data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                            'message'] == 'Duration Based Recommendations Available'
+                            'message'] == 'Cost Recommendations Available'
                     # Expected notifications in short term recommendation
                     # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
                     # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"

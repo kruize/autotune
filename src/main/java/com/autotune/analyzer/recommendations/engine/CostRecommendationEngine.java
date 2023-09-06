@@ -20,7 +20,7 @@ import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -37,27 +37,26 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.HUNDREDTH_PERCENTILE;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.NINETY_EIGHTH_PERCENTILE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
-public class DurationBasedRecommendationEngine implements KruizeRecommendationEngine {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DurationBasedRecommendationEngine.class);
+public class CostRecommendationEngine implements KruizeRecommendationEngine {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CostRecommendationEngine.class);
     private String name;
     private String key;
     private RecommendationConstants.RecommendationCategory category;
 
-    public DurationBasedRecommendationEngine() {
-        this.name = RecommendationConstants.RecommendationEngine.EngineNames.DURATION_BASED;
-        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.DURATION_BASED_KEY;
-        this.category = RecommendationConstants.RecommendationCategory.DURATION_BASED;
+    public CostRecommendationEngine() {
+        this.name = RecommendationConstants.RecommendationEngine.EngineNames.COST;
+        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.COST_KEY;
+        this.category = RecommendationConstants.RecommendationCategory.COST;
     }
 
-    public DurationBasedRecommendationEngine(String name) {
+    public CostRecommendationEngine(String name) {
         this.name = name;
     }
 
     private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
+                                                    CostRecommendationSubCategory costRecommendationSubCategory,
                                                     Timestamp endTime) {
 
         // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
@@ -70,7 +69,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             if (!timestamp.after(endTime)) {
                 if (sortedResultsHashMap.containsKey(timestamp)) {
                     sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                    if (sum >= costRecommendationSubCategory.getGetDurationLowerBound()) {
                         // Storing the timestamp value in startTimestamp variable to return
                         intervalEndTime = timestamp;
                         break;
@@ -165,7 +164,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(NINETY_EIGHTH_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
@@ -959,11 +958,11 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         // Create a new map for returning the result
         HashMap<String, Recommendation> resultRecommendation = new HashMap<String, Recommendation>();
         for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
-            String recPeriod = durationBasedRecommendationSubCategory.getSubCategory();
-            int days = durationBasedRecommendationSubCategory.getDuration();
+            CostRecommendationSubCategory costRecommendationSubCategory = (CostRecommendationSubCategory) recommendationSubCategory;
+            String recPeriod = costRecommendationSubCategory.getSubCategory();
+            int days = costRecommendationSubCategory.getDuration();
             Timestamp monitoringStartTime = getMonitoringStartTime(resultsMap,
-                    durationBasedRecommendationSubCategory,
+                    costRecommendationSubCategory,
                     monitoringEndTime);
             if (null != monitoringStartTime) {
 
@@ -1096,12 +1095,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
             return false;
         }
         // Initiate to the first sub category available
-        DurationBasedRecommendationSubCategory categoryToConsider = (DurationBasedRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
+        CostRecommendationSubCategory categoryToConsider = (CostRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
         // Loop over categories to set the least category
         for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
-            if (durationBasedRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
-                categoryToConsider = durationBasedRecommendationSubCategory;
+            CostRecommendationSubCategory costRecommendationSubCategory = (CostRecommendationSubCategory) recommendationSubCategory;
+            if (costRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
+                categoryToConsider = costRecommendationSubCategory;
             }
         }
         // Set bounds to check if we get minimum requirement satisfied

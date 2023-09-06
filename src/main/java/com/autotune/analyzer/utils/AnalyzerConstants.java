@@ -17,15 +17,9 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
