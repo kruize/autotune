@@ -10,6 +10,11 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class MappedRecommendationForTimestamp {
+
+    public MappedRecommendationForTimestamp() {
+
+    }
+
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationConstants.RecommendationNotification> higherLevelNotificationMap;
 
@@ -89,6 +94,8 @@ public class MappedRecommendationForTimestamp {
 
     public void setRecommendationForTermHashMap(String term, MappedRecommendationForTerm mappedRecommendationForTerm) {
         if (null != term && null != mappedRecommendationForTerm) {
+            if (null == this.recommendationForTermHashMap)
+                this.recommendationForTermHashMap = new HashMap<>();
             this.recommendationForTermHashMap.put(term, mappedRecommendationForTerm);
         }
     }

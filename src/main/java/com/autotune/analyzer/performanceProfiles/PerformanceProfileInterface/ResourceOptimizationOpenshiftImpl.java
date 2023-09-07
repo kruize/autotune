@@ -175,18 +175,30 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                                 if (null == configItem)
                                     continue;
-                                // Need to set appropriate notifications
-                                if (null == configItem.getAmount())
-                                    continue;
-                                // Need to set appropriate notifications
-                                if (null == configItem.getFormat())
-                                    continue;
-                                // Need to set appropriate notifications
-                                if (configItem.getAmount() <= 0.0)
-                                    continue;
-                                // Need to set appropriate notifications
-                                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank())
-                                    continue;
+                                if (null == configItem.getAmount()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
+                                }
+                                if (null == configItem.getFormat()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
+                                }
+                                if (configItem.getAmount() <= 0.0) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
+                                }
+                                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
+                                }
 
                                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                                     currentRequestsMap.put(recommendationItem, configItem);
@@ -219,6 +231,9 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
                             int duration = recommendationTerm.getDuration();
+
+                            // TODO: Add check for min data
+
                             TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
                             for (KruizeRecommendationEngine engine : getEngines()) {
                                 boolean isCostEngine = false;
@@ -230,6 +245,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     isPerfEngine = true;
 
                                 // Check if minimum data available to generate recommendation
+                                // will be deprecated as min data check now happens at term level
                                 if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
                                     continue;
 

@@ -9,6 +9,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 
 public class MappedRecommendationForEngine {
+
+    public MappedRecommendationForEngine() {
+
+    }
+
     @SerializedName(KruizeConstants.JSONKeys.PODS_COUNT)
     private int podsCount;
     @SerializedName(KruizeConstants.JSONKeys.CONFIDENCE_LEVEL)

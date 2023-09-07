@@ -8,6 +8,10 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class TermRecommendations implements MappedRecommendationForTerm {
+
+    public TermRecommendations() {
+    }
+
     @SerializedName(KruizeConstants.JSONKeys.DURATION_IN_HOURS)
     private int durationInHrs;
 
@@ -65,6 +69,8 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public void setRecommendationForEngineHashMap(String engineName, MappedRecommendationForEngine mappedRecommendationForEngine) {
         if (null != engineName && null != mappedRecommendationForEngine) {
+            if (null == this.recommendationForEngineHashMap)
+                this.recommendationForEngineHashMap = new HashMap<>();
             this.recommendationForEngineHashMap.put(engineName, mappedRecommendationForEngine);
         }
     }

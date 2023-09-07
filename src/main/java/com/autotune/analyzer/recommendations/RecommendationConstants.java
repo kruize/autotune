@@ -304,7 +304,7 @@ public class RecommendationConstants {
 
 
         private int code;
-        private String msg;
+        private String message;
         private RecommendationConstants.RecommendationNotificationTypes type;
 
         private RecommendationNotification (
@@ -313,7 +313,7 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationTypes type
         ) {
             this.code = code;
-            this.msg = msg;
+            this.message = msg;
             this.type = type;
         }
 
@@ -321,8 +321,8 @@ public class RecommendationConstants {
             return code;
         }
 
-        public String getMsg() {
-            return msg;
+        public String getMessage() {
+            return message;
         }
 
         public RecommendationConstants.RecommendationNotificationTypes getType() {
