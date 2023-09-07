@@ -180,24 +180,28 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
                                     else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
+                                    continue;
                                 }
                                 if (null == configItem.getFormat()) {
                                     if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                                     else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
+                                    continue;
                                 }
                                 if (configItem.getAmount() <= 0.0) {
                                     if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                                     else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
+                                    continue;
                                 }
                                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
                                     if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                                     else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
                                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
+                                    continue;
                                 }
 
                                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {

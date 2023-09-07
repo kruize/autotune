@@ -25,7 +25,7 @@ public class MappedRecommendationForTimestamp {
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
 
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_TERMS)
-    private HashMap<String, MappedRecommendationForTerm> recommendationForTermHashMap;
+    private HashMap<String, TermRecommendations> recommendationForTermHashMap;
 
     public HashMap<Integer, RecommendationConstants.RecommendationNotification> getHigherLevelNotificationMap() {
         return higherLevelNotificationMap;
@@ -51,13 +51,13 @@ public class MappedRecommendationForTimestamp {
         this.currentConfig = currentConfig;
     }
 
-    public MappedRecommendationForTerm getShortTermRecommendations() {
+    public TermRecommendations getShortTermRecommendations() {
         if (null != this.recommendationForTermHashMap && this.recommendationForTermHashMap.containsKey(KruizeConstants.JSONKeys.SHORT_TERM))
             return this.recommendationForTermHashMap.get(KruizeConstants.JSONKeys.SHORT_TERM);
         return null;
     }
 
-    public void setShortTermRecommendations(MappedRecommendationForTerm shortTermRecommendations) {
+    public void setShortTermRecommendations(TermRecommendations shortTermRecommendations) {
         if (null != shortTermRecommendations && null != recommendationForTermHashMap)
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.SHORT_TERM, shortTermRecommendations);
     }
@@ -68,7 +68,7 @@ public class MappedRecommendationForTimestamp {
         return null;
     }
 
-    public void setMediumTermRecommendations(MappedRecommendationForTerm mediumTermRecommendations) {
+    public void setMediumTermRecommendations(TermRecommendations mediumTermRecommendations) {
         if (null != mediumTermRecommendations && null != recommendationForTermHashMap)
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.MEDIUM_TERM, mediumTermRecommendations);
     }
@@ -79,20 +79,20 @@ public class MappedRecommendationForTimestamp {
         return null;
     }
 
-    public void setLongTermRecommendations(MappedRecommendationForTerm longTermRecommendations) {
+    public void setLongTermRecommendations(TermRecommendations longTermRecommendations) {
         if (null != longTermRecommendations && null != recommendationForTermHashMap)
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.LONG_TERM, longTermRecommendations);
     }
 
-    public HashMap<String, MappedRecommendationForTerm> getRecommendationForTermHashMap() {
+    public HashMap<String, TermRecommendations> getRecommendationForTermHashMap() {
         return recommendationForTermHashMap;
     }
 
-    public void setRecommendationForTermHashMap(HashMap<String, MappedRecommendationForTerm> recommendationForTermHashMap) {
+    public void setRecommendationForTermHashMap(HashMap<String, TermRecommendations> recommendationForTermHashMap) {
         this.recommendationForTermHashMap = recommendationForTermHashMap;
     }
 
-    public void setRecommendationForTermHashMap(String term, MappedRecommendationForTerm mappedRecommendationForTerm) {
+    public void setRecommendationForTermHashMap(String term, TermRecommendations mappedRecommendationForTerm) {
         if (null != term && null != mappedRecommendationForTerm) {
             if (null == this.recommendationForTermHashMap)
                 this.recommendationForTermHashMap = new HashMap<>();

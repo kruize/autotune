@@ -768,9 +768,9 @@ public class RecommendationConstants {
         }
 
         public static class EngineNames {
-            public static String DEFAULT_NAME = "Default";
-            public static String COST = "Cost";
-            public static String PERFORMANCE = "Performance";
+            public static String DEFAULT_NAME = "default";
+            public static String COST = "cost";
+            public static String PERFORMANCE = "performance";
 
             private EngineNames() {
 
