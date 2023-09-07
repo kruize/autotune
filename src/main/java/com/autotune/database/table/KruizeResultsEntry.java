@@ -41,6 +41,7 @@ public class KruizeResultsEntry {
     private Timestamp interval_start_time;
     @Id
     private Timestamp interval_end_time;
+    private String cluster_name;
     private double duration_minutes;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
@@ -112,5 +113,13 @@ public class KruizeResultsEntry {
 
     public void setErrorReasons(List<String> errorReasons) {
         this.errorReasons = errorReasons;
+    }
+
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 }
