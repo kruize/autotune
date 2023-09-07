@@ -92,7 +92,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
                 // Get the last day of the month
                 int lastDayOfMonth = yearMonth.lengthOfMonth();
-                IntStream.range(1, lastDayOfMonth).forEach(i -> {
+                IntStream.range(1, lastDayOfMonth + 1).forEach(i -> {
                     String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
                             year, month, i, year, month, i);
                     session.createNativeQuery(daterange).executeUpdate();
