@@ -18,12 +18,15 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,8 +45,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
         try {
-            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS);
-            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS);
+            // Fixing the partition type to 'by_month'
+            String partitionType = DBConstants.PARTITION_TYPES.BY_MONTH;
+            YearMonth yearMonth = YearMonth.now();
+            String month = String.format("%02d", yearMonth.getMonthValue());
+            String year = String.valueOf(yearMonth.getYear());
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, month, year, partitionType);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, month, year, partitionType);
             try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                 try {
                     tx = session.beginTransaction();
@@ -73,22 +81,36 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public void addPartitions(String tableName) {
+    public void addPartitions(String tableName, String month, String year, String partitionType) {
         Transaction tx;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
             // Create a YearMonth object and get the current month and current year
-            YearMonth yearMonth = YearMonth.now();
-            String month = String.format("%02d", yearMonth.getMonthValue());
-            String year = String.valueOf(yearMonth.getYear());
+            YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
 
-            // Get the last day of the month
-            int lastDayOfMonth = yearMonth.lengthOfMonth();
-            IntStream.range(1, lastDayOfMonth).forEach(i -> {
-                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                        year, month, i, year, month, i);
+            // check the partition type and create corresponding query
+            if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
+                // Get the last day of the month
+                int lastDayOfMonth = yearMonth.lengthOfMonth();
+                IntStream.range(1, lastDayOfMonth).forEach(i -> {
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                            year, month, i, year, month, i);
+                    session.createNativeQuery(daterange).executeUpdate();
+                });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
+                    IntStream.range(1, 15).forEach(i -> {
+                        String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                                year, month, i, year, month, i);
+                        session.createNativeQuery(daterange).executeUpdate();
+                    });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
+                        year, month, 1, year, month, 1);
                 session.createNativeQuery(daterange).executeUpdate();
-            });
+            } else {
+                LOGGER.error("Invalid Partition Type");
+                throw new Exception("Invalid Partition Type");
+            }
 
             tx.commit();
         } catch (Exception e) {
@@ -148,28 +170,54 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
                 try {
-                    session.merge(entry);
+                    session.persist(entry);
+                    session.flush();
                 } catch (PersistenceException e) {
-                    entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
-                    failedResultsEntries.add(entry);
+                    ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
+                    String message = constraintViolationException.getCause().getMessage();
+                    LOGGER.error(message);
+                    if (message.contains("duplicate key value")) {
+                        entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
+                        failedResultsEntries.add(entry);
+                    } else if (message.contains("no partition of relation")) {
+                        try {
+                            LOGGER.info("Create partition and retry !");
+                            tx.commit();
+                            tx = session.beginTransaction();
+                            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
+                            // Get the current year and month
+                            YearMonth yearMonth = YearMonth.from(localDateTime);
+                            // Format the month with a leading zero if it's a single digit
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM");
+                            // Format the year and month
+                            String formattedYear = String.valueOf(yearMonth.getYear());
+                            String formattedMonth = yearMonth.format(formatter);
+                            // Fixing the partition type to 'by_month'
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            session.persist(entry);
+                            session.flush();
+                        } catch (Exception partitionException) {
+                            LOGGER.error(partitionException.getMessage());
+                            entry.setErrorReasons(List.of(partitionException.getMessage()));
+                            failedResultsEntries.add(entry);
+                        }
+                    } else {
+                        entry.setErrorReasons(List.of(e.getMessage()));
+                        failedResultsEntries.add(entry);
+                    }
+                    tx.commit();
+                    tx = session.beginTransaction();
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
                     failedResultsEntries.add(entry);
+                    tx.commit();
+                    tx = session.beginTransaction();
                 }
             }
             tx.commit();
 
-            if (!failedResultsEntries.isEmpty()) {
-                //  find elements in kruizeResultsEntries but not in failedResultsEntries
-                List<KruizeResultsEntry> elementsInSuccessOnly = kruizeResultsEntries.stream()
-                        .filter(entry -> !failedResultsEntries.contains(entry))
-                        .collect(Collectors.toList());
-                tx = session.beginTransaction();
-                for (KruizeResultsEntry entry : elementsInSuccessOnly) {
-                    session.merge(entry);
-                }
-                tx.commit();
-            }
+
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());

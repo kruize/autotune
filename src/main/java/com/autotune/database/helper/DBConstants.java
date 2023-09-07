@@ -42,4 +42,11 @@ public class DBConstants {
         public static final String KRUIZE_PERFORMANCE_PROFILES = "kruize_performance_profiles";
 
     }
+
+    public static final class PARTITION_TYPES {
+        public static final String BY_MONTH = "by_month";
+        public static final String BY_15_DAYS = "by_fifteen_days";
+        public static final String BY_DAY = "by_day";
+    }
+
 }
