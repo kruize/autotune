@@ -65,7 +65,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     e.printStackTrace();
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(e.getMessage());
-                    //todo save error to API_ERROR_LOG
+                    //TODO: save error to API_ERROR_LOG
                 }
             }
         } catch (Exception e) {
@@ -98,7 +98,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.createNativeQuery(daterange).executeUpdate();
                 });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
-                    IntStream.range(1, 15).forEach(i -> {
+                    IntStream.range(1, 16).forEach(i -> {
                         String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
                                 year, month, i, year, month, i);
                         session.createNativeQuery(daterange).executeUpdate();

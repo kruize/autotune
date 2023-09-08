@@ -94,4 +94,4 @@ EXPOSE 8080
 ENV JAVA_HOME=${AUTOTUNE_HOME}/app/jre \
     PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH"
 
-ENTRYPOINT bash target/bin/CreateKruizeDBElements & bash target/bin/Autotune
+ENTRYPOINT bash target/bin/Autotune

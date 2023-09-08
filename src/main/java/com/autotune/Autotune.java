@@ -38,11 +38,15 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
+import java.io.*;
 import java.util.EnumSet;
+import java.util.Scanner;
 
 import static com.autotune.utils.ServerContext.*;
 
@@ -88,6 +92,10 @@ public class Autotune {
             e.printStackTrace();
             System.exit(1);
         }
+
+        // Read and execute the DDLs here
+        executeDDLs();
+
         if (KruizeDeploymentInfo.settings_save_to_db) {
             Session session = null;
             try {
@@ -145,4 +153,46 @@ public class Autotune {
         Analyzer.start(contextHandler);
         ExperimentManager.launch(contextHandler);
     }
+
+    private static void executeDDLs() {
+        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+        Session session = null;
+        try {
+            session = factory.openSession();
+            File sqlFile = new File("target/bin/migrations/kruize_experiments_ddl.sql");
+            Scanner scanner = new Scanner(sqlFile);
+            Transaction transaction = session.beginTransaction();
+
+            while (scanner.hasNextLine()) {
+                String sqlStatement = scanner.nextLine();
+                if (sqlStatement.startsWith("#") || sqlStatement.startsWith("-")) {
+                    continue;
+                } else {
+                    try {
+                        session.createNativeQuery(sqlStatement).executeUpdate();
+                    } catch (Exception e) {
+                        if (e.getMessage().contains("add constraint")) {
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                        } else {
+                            LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                        }
+                        transaction.commit();
+                        transaction = session.beginTransaction();
+                    }
+                }
+            }
+
+            transaction.commit();
+
+            scanner.close();
+            LOGGER.info("DB creation successful !");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            if (null != session) session.close(); // Close the Hibernate session when you're done
+        }
+
+        LOGGER.info("DB Liveliness probe connection successful!");
+    }
+
 }
