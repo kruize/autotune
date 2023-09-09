@@ -135,15 +135,35 @@ public class RecommendationConstants {
     }
 
     public enum RecommendationTerms {
-        SHORT_TERM (KruizeConstants.JSONKeys.SHORT_TERM, 24),
-        MEDIUM_TERM (KruizeConstants.JSONKeys.MEDIUM_TERM, 24 * 7),
-        LONG_TERM (KruizeConstants.JSONKeys.LONG_TERM, 24 * 15);
+        SHORT_TERM (KruizeConstants.JSONKeys.SHORT_TERM, 24, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
+        MEDIUM_TERM (KruizeConstants.JSONKeys.MEDIUM_TERM, 24 * 7,KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
+        LONG_TERM (KruizeConstants.JSONKeys.LONG_TERM, 24 * 15, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS);
 
         private String value;
         private int durationInHrs;
-        private RecommendationTerms(String value, int durationInHrs){
+
+        private double upperBound;
+        private double lowerBound;
+        private RecommendationTerms(String value, int durationInHrs, double upperBound, double lowerBound){
             this.value = value;
             this.durationInHrs = durationInHrs;
+            this.upperBound = upperBound;
+            this.lowerBound = lowerBound;
         }
 
         public String getValue() {
@@ -157,6 +177,14 @@ public class RecommendationConstants {
         // Setter for custom duration
         public void setDuration(int durationInHrs) {
             this.durationInHrs = durationInHrs;
+        }
+
+        public double getLowerBound() {
+            return this.lowerBound;
+        }
+
+        public double getUpperBound() {
+            return this.upperBound;
         }
     }
 

@@ -242,58 +242,53 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
-                            // Check if atleast one term is available for recommendations
-                            // Else populate a notification stating not enough data
-                            ArrayList<KruizeRecommendationEngine> availableEnginesList = new ArrayList<>();
+                            // Check if there is min data for the term
+                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
+                                RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                                mappedRecommendationForTerm.addNotification(recommendationNotification);
+                                continue;
+                            }
+
                             for (KruizeRecommendationEngine engine : getEngines()) {
-                                if (engine.checkIfMinDataAvailable(containerDataKruizeObject)) {
-                                    availableEnginesList.add(engine);
+                                boolean isCostEngine = false;
+                                boolean isPerfEngine = false;
+
+                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
+                                    isCostEngine = true;
+                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
+                                    isPerfEngine = true;
+
+                                // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
+                                MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
+                                        containerDataKruizeObject,
+                                        monitoringEndTime,
+                                        term,
+                                        recommendationSettings,
+                                        currentConfig,
+                                        Double.valueOf(String.valueOf(duration)));
+
+                                if (null == mappedRecommendationForEngine)
+                                    continue;
+
+                                RecommendationNotification recommendationNotification = null;
+                                if (isCostEngine) {
+                                    recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                                    );
                                 }
+
+                                if (isPerfEngine) {
+                                    recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                                    );
+                                }
+
+                                if (null != recommendationNotification) {
+                                    termLevelNotifications.add(recommendationNotification);
+                                }
+                                mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
                             }
 
-                            if (availableEnginesList.isEmpty()) {
-                                termLevelNotifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA));
-                            } else {
-                                for (KruizeRecommendationEngine engine : availableEnginesList) {
-                                    boolean isCostEngine = false;
-                                    boolean isPerfEngine = false;
-
-                                    if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
-                                        isCostEngine = true;
-                                    if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
-                                        isPerfEngine = true;
-
-                                    // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                                    MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
-                                            containerDataKruizeObject,
-                                            monitoringEndTime,
-                                            term,
-                                            recommendationSettings,
-                                            currentConfig,
-                                            Double.valueOf(String.valueOf(duration)));
-
-                                    if (null == mappedRecommendationForEngine)
-                                        continue;
-
-                                    RecommendationNotification recommendationNotification = null;
-                                    if (isCostEngine) {
-                                        recommendationNotification = new RecommendationNotification(
-                                                RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                        );
-                                    }
-
-                                    if (isPerfEngine) {
-                                        recommendationNotification = new RecommendationNotification(
-                                                RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                                        );
-                                    }
-
-                                    if (null != recommendationNotification) {
-                                        termLevelNotifications.add(recommendationNotification);
-                                    }
-                                    mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
-                                }
-                            }
 
                             for (RecommendationNotification recommendationNotification: termLevelNotifications) {
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
