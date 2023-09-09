@@ -2,6 +2,7 @@ package com.autotune.analyzer.recommendations.objects;
 
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -16,7 +17,7 @@ public class MappedRecommendationForTimestamp {
     }
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private HashMap<Integer, RecommendationConstants.RecommendationNotification> higherLevelNotificationMap;
+    private HashMap<Integer, RecommendationNotification> higherLevelNotificationMap;
 
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_END_TIME)
     private Timestamp monitoringEndTime;
@@ -27,11 +28,11 @@ public class MappedRecommendationForTimestamp {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_TERMS)
     private HashMap<String, TermRecommendations> recommendationForTermHashMap;
 
-    public HashMap<Integer, RecommendationConstants.RecommendationNotification> getHigherLevelNotificationMap() {
+    public HashMap<Integer, RecommendationNotification> getHigherLevelNotificationMap() {
         return higherLevelNotificationMap;
     }
 
-    public void setHigherLevelNotificationMap(HashMap<Integer, RecommendationConstants.RecommendationNotification> higherLevelNotificationMap) {
+    public void setHigherLevelNotificationMap(HashMap<Integer, RecommendationNotification> higherLevelNotificationMap) {
         this.higherLevelNotificationMap = higherLevelNotificationMap;
     }
 
