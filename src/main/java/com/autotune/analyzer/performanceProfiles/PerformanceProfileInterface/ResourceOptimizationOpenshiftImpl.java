@@ -127,6 +127,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             continue;
                         if (containerDataResultData.getResults().isEmpty())
                             continue;
+                        HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
                         // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
                         Timestamp monitoringEndTime = containerDataResultData.getResults().keySet().stream().max(Timestamp::compareTo).get();
                         // Get the ContainerData from the KruizeObject and not from ResultData
@@ -136,6 +137,12 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // Just to make sure the container recommendations object is not empty
                         if (null == containerRecommendations) {
                             containerRecommendations = new ContainerRecommendations();
+                        } else {
+                            // set the Recommendations object level notifications
+                            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+                            notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                            containerRecommendations.setNotificationMap(notificationHashMap);
+                            notificationHashMap = new HashMap<>();
                         }
                         // Get the engine recommendation map for a time stamp if it exists else create one
                         HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
@@ -153,7 +160,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
-                        HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
                         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
                         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
 
@@ -218,7 +224,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             if (!notificationHashMap.containsKey(recommendationNotification.getCode()))
                                 notificationHashMap.put(recommendationNotification.getCode(), new RecommendationNotification(recommendationNotification));
                         }
-                        timestampRecommendation.setHigherLevelNotificationMap(notificationHashMap);
 
                         // Check if map is not empty and set requests map to current config
                         if (!currentRequestsMap.isEmpty()) {
@@ -231,81 +236,111 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         timestampRecommendation.setCurrentConfig(currentConfig);
+                        List<String> recommendationTermList = new ArrayList<>();
 
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
+                            LOGGER.debug("term = {}", term);
                             int duration = recommendationTerm.getDuration();
 
                             // TODO: Add check for min data
 
-                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
+                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
 
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
-                            // Check if there is min data for the term
+                            // Check if there is min data available for the term
                             if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
-                                RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                                RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                        RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
-                                continue;
-                            }
+                            } else {
+                                recommendationTermList.add(term);
+                                mappedRecommendationForTerm.setDurationInHrs(recommendationTerm.getDuration());
+                                Timestamp monitoringStartTime = null;
+                                for (KruizeRecommendationEngine engine : getEngines()) {
+                                    boolean isCostEngine = false;
+                                    boolean isPerfEngine = false;
 
-                            Timestamp monitoringStartTime = null;
-                            for (KruizeRecommendationEngine engine : getEngines()) {
-                                boolean isCostEngine = false;
-                                boolean isPerfEngine = false;
+                                    if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST)) {
+                                        isCostEngine = true;
+                                    }
+                                    if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE)) {
+                                        isPerfEngine = true;
+                                    }
 
-                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
-                                    isCostEngine = true;
-                                if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
-                                    isPerfEngine = true;
+                                    // Get the results
+                                    HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
+                                    monitoringStartTime = getMonitoringStartTime(resultsMap,
+                                            monitoringEndTime,
+                                            Double.valueOf(String.valueOf(duration)));
 
-                                // Get the results
-                                HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
-                                monitoringStartTime = getMonitoringStartTime(resultsMap,
-                                        monitoringEndTime,
-                                        Double.valueOf(String.valueOf(duration)));
+                                    // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
+                                    MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
+                                            monitoringStartTime,
+                                            containerDataKruizeObject,
+                                            monitoringEndTime,
+                                            term,
+                                            recommendationSettings,
+                                            currentConfig,
+                                            Double.valueOf(String.valueOf(duration)));
 
-                                // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                                MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
-                                        monitoringStartTime,
-                                        containerDataKruizeObject,
-                                        monitoringEndTime,
-                                        term,
-                                        recommendationSettings,
-                                        currentConfig,
-                                        Double.valueOf(String.valueOf(duration)));
+                                    if (null == mappedRecommendationForEngine)
+                                        continue;
 
-                                if (null == mappedRecommendationForEngine)
-                                    continue;
+                                    RecommendationNotification recommendationNotification = null;
+                                    if (isCostEngine) {
+                                        recommendationNotification = new RecommendationNotification(
+                                                RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                                        );
+                                    }
 
-                                RecommendationNotification recommendationNotification = null;
-                                if (isCostEngine) {
-                                    recommendationNotification = new RecommendationNotification(
-                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                    );
+                                    if (isPerfEngine) {
+                                        recommendationNotification = new RecommendationNotification(
+                                                RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                                        );
+                                    }
+
+                                    if (null != recommendationNotification) {
+                                        termLevelNotifications.add(recommendationNotification);
+                                    } else {
+                                        recommendationNotification = new RecommendationNotification(
+                                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
+                                        );
+                                        termLevelNotifications.add(recommendationNotification);
+                                    }
+                                    mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
                                 }
 
-                                if (isPerfEngine) {
-                                    recommendationNotification = new RecommendationNotification(
-                                            RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                                    );
+                                for (RecommendationNotification recommendationNotification : termLevelNotifications) {
+                                    mappedRecommendationForTerm.addNotification(recommendationNotification);
                                 }
+                                mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
 
-                                if (null != recommendationNotification) {
-                                    termLevelNotifications.add(recommendationNotification);
-                                }
-                                mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
                             }
-
-
-                            for (RecommendationNotification recommendationNotification : termLevelNotifications) {
-                                mappedRecommendationForTerm.addNotification(recommendationNotification);
-                            }
-                            LOGGER.debug("monitoringEndTime = {}", monitoringEndTime);
-                            mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
-
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
+                        // build timestamp level notifications
+                        RecommendationNotification recommendationNotification;
+                        if (!recommendationTermList.isEmpty()) {
+                            for (String term : recommendationTermList) {
+                                if (term.equalsIgnoreCase("short_term")) {
+                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
+                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                                } else if (term.equalsIgnoreCase("medium_term")) {
+                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
+                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                                } else {
+                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
+                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                                }
+                            }
+                        } else {
+                            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                            notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                        }
+                        // set timestamp level notifications
+                        timestampRecommendation.setHigherLevelNotificationMap(notificationHashMap);
 
                         // put recommendations tagging to timestamp
                         timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);

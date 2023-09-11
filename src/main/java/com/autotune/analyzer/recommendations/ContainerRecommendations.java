@@ -63,6 +63,10 @@ public class ContainerRecommendations {
         this.version = version;
     }
 
+    public void setNotificationMap(HashMap<Integer, RecommendationNotification> notificationMap) {
+        this.notificationMap = notificationMap;
+    }
+
     @Override
     public String toString() {
         return "ContainerRecommendations{" +

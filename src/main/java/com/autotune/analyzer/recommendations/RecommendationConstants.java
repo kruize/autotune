@@ -189,6 +189,26 @@ public class RecommendationConstants {
     }
 
     public enum RecommendationNotification {
+        INFO_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
         INFO_COST_RECOMMENDATIONS_AVAILABLE(
                 RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
@@ -389,6 +409,10 @@ public class RecommendationConstants {
         // Subsystem subsection: Cost Engine
         // Range: 112100 - 112199
         public static final int COST_ENGINE_START = 112100;
+        public static final int INFO_RECOMMENDATIONS_AVAILABLE = 111000; // TODO: need to discuss the code
+        public static final int INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = 111101; // TODO: need to discuss the code
+        public static final int INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = 111102; // TODO: need to discuss the code
+        public static final int INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE = 111103; // TODO: need to discuss the code;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int COST_ENGINE_END = 112199;
@@ -759,6 +783,10 @@ public class RecommendationConstants {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
+        public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
+        public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
+        public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
+        public static final String LONG_TERM_RECOMMENDATIONS_AVAILABLE = "Long Term Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";

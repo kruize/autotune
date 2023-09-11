@@ -43,6 +43,10 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         return this.durationInHrs;
     }
 
+    public void setDurationInHrs(int durationInHrs) {
+        this.durationInHrs = durationInHrs;
+    }
+
     @Override
     public MappedRecommendationForEngine getRecommendationByEngine(String EngineName) {
         return null;
