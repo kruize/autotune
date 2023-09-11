@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.objects;
 
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -8,6 +9,10 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class TermRecommendations implements MappedRecommendationForTerm {
+
+    public TermRecommendations() {
+    }
+
     @SerializedName(KruizeConstants.JSONKeys.DURATION_IN_HOURS)
     private int durationInHrs;
 
@@ -15,7 +20,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         this.durationInHrs = recommendationTerm.getDuration();
     }
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
-    private HashMap<Integer, RecommendationConstants.RecommendationNotification> termLevelNotificationMap;
+    private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
 
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
@@ -24,7 +29,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     private HashMap<String, MappedRecommendationForEngine> recommendationForEngineHashMap;
 
     @Override
-    public HashMap<Integer, RecommendationConstants.RecommendationNotification> getNotifications() {
+    public HashMap<Integer, RecommendationNotification> getNotifications() {
         return this.termLevelNotificationMap;
     }
 
@@ -43,11 +48,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         return null;
     }
 
-    public HashMap<Integer, RecommendationConstants.RecommendationNotification> getTermLevelNotificationMap() {
-        return termLevelNotificationMap;
-    }
-
-    public void setTermLevelNotificationMap(HashMap<Integer, RecommendationConstants.RecommendationNotification> termLevelNotificationMap) {
+    public void setTermLevelNotificationMap(HashMap<Integer, RecommendationNotification> termLevelNotificationMap) {
         this.termLevelNotificationMap = termLevelNotificationMap;
     }
 
@@ -65,6 +66,8 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public void setRecommendationForEngineHashMap(String engineName, MappedRecommendationForEngine mappedRecommendationForEngine) {
         if (null != engineName && null != mappedRecommendationForEngine) {
+            if (null == this.recommendationForEngineHashMap)
+                this.recommendationForEngineHashMap = new HashMap<>();
             this.recommendationForEngineHashMap.put(engineName, mappedRecommendationForEngine);
         }
     }
@@ -79,5 +82,13 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         if (null != this.recommendationForEngineHashMap && this.recommendationForEngineHashMap.containsKey(KruizeConstants.JSONKeys.PERFORMANCE))
             return this.recommendationForEngineHashMap.get(KruizeConstants.JSONKeys.PERFORMANCE);
         return null;
+    }
+
+    public void addNotification(RecommendationNotification recommendationNotification) {
+        if (null == this.termLevelNotificationMap)
+            this.termLevelNotificationMap = new HashMap<>();
+
+        if (null != recommendationNotification)
+            this.termLevelNotificationMap.put(recommendationNotification.getCode(), recommendationNotification);
     }
 }

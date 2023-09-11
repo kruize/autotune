@@ -37,5 +37,4 @@ public interface KruizeRecommendationEngine {
                                                                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
                                                                 Double durationInHrs);
     public void validateRecommendations();
-    public boolean checkIfMinDataAvailable(ContainerData containerData);
 }

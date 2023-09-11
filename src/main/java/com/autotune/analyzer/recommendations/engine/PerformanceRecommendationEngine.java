@@ -1057,32 +1057,4 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
     public void validateRecommendations() {
 
     }
-
-    @Override
-    public boolean checkIfMinDataAvailable(ContainerData containerData) {
-        // Check if data available
-        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
-            return false;
-        }
-        // Initiate to the first sub category available
-        PerformanceRecommendationSubCategory categoryToConsider = (PerformanceRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
-        // Loop over categories to set the least category
-        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            PerformanceRecommendationSubCategory performanceRecommendationSubCategory = (PerformanceRecommendationSubCategory) recommendationSubCategory;
-            if (performanceRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
-                categoryToConsider = performanceRecommendationSubCategory;
-            }
-        }
-        // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = categoryToConsider.getGetDurationLowerBound();
-        double sum = 0.0;
-        // Loop over the data to check if there is min data available
-        for (IntervalResults intervalResults : containerData.getResults().values()) {
-            sum = sum + intervalResults.getDurationInMinutes();
-            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-            if (sum >= lowerBound)
-                return true;
-        }
-        return false;
-    }
 }

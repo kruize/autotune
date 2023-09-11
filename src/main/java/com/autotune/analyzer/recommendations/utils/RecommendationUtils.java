@@ -2,8 +2,11 @@ package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 
 import java.sql.Timestamp;
@@ -89,5 +92,24 @@ public class RecommendationUtils {
                 );
             }
         }
+    }
+
+    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, RecommendationConstants.RecommendationTerms recommendationTerms) {
+        // Check if data available
+        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
+            return false;
+        }
+
+        // Set bounds to check if we get minimum requirement satisfied
+        double lowerBound = recommendationTerms.getLowerBound();
+        double sum = 0.0;
+        // Loop over the data to check if there is min data available
+        for (IntervalResults intervalResults : containerData.getResults().values()) {
+            sum = sum + intervalResults.getDurationInMinutes();
+            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
+            if (sum >= lowerBound)
+                return true;
+        }
+        return false;
     }
 }

@@ -153,7 +153,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
-                        HashMap<Integer, RecommendationConstants.RecommendationNotification> notificationHashMap = new HashMap<>();
+                        HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
                         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
                         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
 
@@ -175,18 +175,34 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                                 if (null == configItem)
                                     continue;
-                                // Need to set appropriate notifications
-                                if (null == configItem.getAmount())
+                                if (null == configItem.getAmount()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                                     continue;
-                                // Need to set appropriate notifications
-                                if (null == configItem.getFormat())
+                                }
+                                if (null == configItem.getFormat()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                                     continue;
-                                // Need to set appropriate notifications
-                                if (configItem.getAmount() <= 0.0)
+                                }
+                                if (configItem.getAmount() <= 0.0) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                                     continue;
-                                // Need to set appropriate notifications
-                                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank())
+                                }
+                                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
+                                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
+                                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                                     continue;
+                                }
 
                                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                                     currentRequestsMap.put(recommendationItem, configItem);
@@ -200,7 +216,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // Iterate over notifications and set to recommendations
                         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
                             if (!notificationHashMap.containsKey(recommendationNotification.getCode()))
-                                notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                                notificationHashMap.put(recommendationNotification.getCode(), new RecommendationNotification(recommendationNotification));
                         }
                         timestampRecommendation.setHigherLevelNotificationMap(notificationHashMap);
 
@@ -219,7 +235,20 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
                             int duration = recommendationTerm.getDuration();
+
+                            // TODO: Add check for min data
+
                             TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
+
+                            ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
+
+                            // Check if there is min data for the term
+                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
+                                RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                                mappedRecommendationForTerm.addNotification(recommendationNotification);
+                                continue;
+                            }
+
                             for (KruizeRecommendationEngine engine : getEngines()) {
                                 boolean isCostEngine = false;
                                 boolean isPerfEngine = false;
@@ -228,10 +257,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     isCostEngine = true;
                                 if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
                                     isPerfEngine = true;
-
-                                // Check if minimum data available to generate recommendation
-                                if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
-                                    continue;
 
                                 // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                                 MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
@@ -245,32 +270,30 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                 if (null == mappedRecommendationForEngine)
                                     continue;
 
-
-                                // check if notification exists
-                                boolean notificationExist = false;
-                                if (isCostEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE)) {
-                                    notificationExist = true;
-                                } else if (isPerfEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE))
-                                    notificationExist = true;
-
-                                // If there is no notification add one
-                                if (!notificationExist) {
-                                    if (isCostEngine) {
-                                        RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                                RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                        );
-                                        containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
-                                    }
-                                    if (isPerfEngine) {
-                                        RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                                RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                                        );
-                                        containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
-                                    }
+                                RecommendationNotification recommendationNotification = null;
+                                if (isCostEngine) {
+                                    recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                                    );
                                 }
 
+                                if (isPerfEngine) {
+                                    recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                                    );
+                                }
+
+                                if (null != recommendationNotification) {
+                                    termLevelNotifications.add(recommendationNotification);
+                                }
                                 mappedRecommendationForTerm.setRecommendationForEngineHashMap(engine.getEngineName(), mappedRecommendationForEngine);
                             }
+
+
+                            for (RecommendationNotification recommendationNotification: termLevelNotifications) {
+                                mappedRecommendationForTerm.addNotification(recommendationNotification);
+                            }
+
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
 
