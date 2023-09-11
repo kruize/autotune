@@ -187,10 +187,6 @@
                             <mainClass>com.autotune.Autotune</mainClass>
                             <name>Autotune</name>
                         </program>
-                        <program>
-                            <mainClass>com.autotune.jobs.CreateKruizeDBElements</mainClass>
-                            <name>CreateKruizeDBElements</name>
-                        </program>
                     </programs>
                 </configuration>
                 <executions>

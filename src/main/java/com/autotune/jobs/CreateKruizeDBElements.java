@@ -27,42 +27,6 @@ public class CreateKruizeDBElements {
             e.printStackTrace();
             System.exit(1);
         }
-        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-        Session session = null;
-        try {
-            session = factory.openSession();
-            File sqlFile = new File("target/bin/migrations/kruize_experiments_ddl.sql");
-            Scanner scanner = new Scanner(sqlFile);
-            Transaction transaction = session.beginTransaction();
-
-            while (scanner.hasNextLine()) {
-                String sqlStatement = scanner.nextLine();
-                if (sqlStatement.startsWith("#") || sqlStatement.startsWith("-")) {
-                    continue;
-                } else {
-                    try {
-                        session.createNativeQuery(sqlStatement).executeUpdate();
-                    } catch (Exception e) {
-                        if (e.getMessage().contains("add constraint")) {
-                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
-                        } else {
-                            LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
-                        }
-                        transaction.commit();
-                        transaction = session.beginTransaction();
-                    }
-                }
-            }
-
-            transaction.commit();
-
-            scanner.close();
-            LOGGER.info("DB creation successful !");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            if (null != session) session.close(); // Close the Hibernate session when you're done
-        }
 
         LOGGER.info("DB Liveliness probe connection successful!");
     }

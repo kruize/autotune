@@ -181,15 +181,15 @@ public class Autotune {
                     }
                 }
             }
-
             transaction.commit();
-
             scanner.close();
             LOGGER.info("DB creation successful !");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while trying to read the DDL file: {}", e.getMessage());
+            if (null != session) session.close(); // Close the Hibernate session
+            System.exit(1);
         } finally {
-            if (null != session) session.close(); // Close the Hibernate session when you're done
+            if (null != session) session.close(); // Close the Hibernate session
         }
 
         LOGGER.info("DB Liveliness probe connection successful!");
