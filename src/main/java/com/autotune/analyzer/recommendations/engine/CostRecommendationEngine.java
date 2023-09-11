@@ -16,13 +16,10 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -54,36 +51,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
 
     public CostRecommendationEngine(String name) {
         this.name = name;
-    }
-
-    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    Timestamp endTime,
-                                                    Double durationInHrs) {
-
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
-                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
-        try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
-        } catch (NullPointerException npe) {
-            return null;
-        }
     }
 
     /**
@@ -929,7 +896,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
     }
 
     @Override
-    public MappedRecommendationForEngine generateRecommendation(ContainerData containerData,
+    public MappedRecommendationForEngine generateRecommendation(Timestamp monitoringStartTime, ContainerData containerData,
                                                                 Timestamp monitoringEndTime,
                                                                 String recPeriod,
                                                                 RecommendationSettings recommendationSettings,
@@ -955,12 +922,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         } else {
             LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
         }
-
-        // Get the results
-        HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
-        Timestamp monitoringStartTime = getMonitoringStartTime(resultsMap,
-                monitoringEndTime,
-                durationInHrs);
 
         RecommendationConfigItem currentCPURequest = null;
         RecommendationConfigItem currentCPULimit = null;

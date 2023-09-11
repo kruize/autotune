@@ -17,12 +17,14 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.recommendations.*;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.engine.CostRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.PerformanceRecommendationEngine;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
-import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTerm;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
@@ -37,10 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -249,6 +249,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                 continue;
                             }
 
+                            Timestamp monitoringStartTime = null;
                             for (KruizeRecommendationEngine engine : getEngines()) {
                                 boolean isCostEngine = false;
                                 boolean isPerfEngine = false;
@@ -258,8 +259,15 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                 if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
                                     isPerfEngine = true;
 
+                                // Get the results
+                                HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
+                                monitoringStartTime = getMonitoringStartTime(resultsMap,
+                                        monitoringEndTime,
+                                        Double.valueOf(String.valueOf(duration)));
+
                                 // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                                 MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
+                                        monitoringStartTime,
                                         containerDataKruizeObject,
                                         monitoringEndTime,
                                         term,
@@ -290,9 +298,11 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             }
 
 
-                            for (RecommendationNotification recommendationNotification: termLevelNotifications) {
+                            for (RecommendationNotification recommendationNotification : termLevelNotifications) {
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
                             }
+                            LOGGER.debug("monitoringEndTime = {}", monitoringEndTime);
+                            mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
 
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
@@ -306,6 +316,36 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                     }
                 }
             }
+        }
+    }
+
+    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
+                                                    Timestamp endTime,
+                                                    Double durationInHrs) {
+
+        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
+        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
+        sortedResultsHashMap.putAll(resultsHashMap);
+
+        double sum = 0.0;
+        Timestamp intervalEndTime = null;
+        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
+            if (!timestamp.after(endTime)) {
+                if (sortedResultsHashMap.containsKey(timestamp)) {
+                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
+                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
+                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
+                        // Storing the timestamp value in startTimestamp variable to return
+                        intervalEndTime = timestamp;
+                        break;
+                    }
+                }
+            }
+        }
+        try {
+            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+        } catch (NullPointerException npe) {
+            return null;
         }
     }
 }
