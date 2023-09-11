@@ -20,6 +20,8 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.InitializeDeployment;
@@ -45,6 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Scanner;
 
@@ -159,7 +163,8 @@ public class Autotune {
         Session session = null;
         try {
             session = factory.openSession();
-            File sqlFile = new File("target/bin/migrations/kruize_experiments_ddl.sql");
+            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, AnalyzerConstants.DDL);
+            File sqlFile = sqlFilePath.toFile();
             Scanner scanner = new Scanner(sqlFile);
             Transaction transaction = session.beginTransaction();
 
@@ -171,7 +176,7 @@ public class Autotune {
                     try {
                         session.createNativeQuery(sqlStatement).executeUpdate();
                     } catch (Exception e) {
-                        if (e.getMessage().contains("add constraint")) {
+                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
                             LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
                         } else {
                             LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
@@ -183,7 +188,7 @@ public class Autotune {
             }
             transaction.commit();
             scanner.close();
-            LOGGER.info("DB creation successful !");
+            LOGGER.info(DBConstants.DB_MESSAGES.DB_CREATION_SUCCESS);
         } catch (Exception e) {
             LOGGER.error("Exception occurred while trying to read the DDL file: {}", e.getMessage());
             if (null != session) session.close(); // Close the Hibernate session
@@ -192,7 +197,7 @@ public class Autotune {
             if (null != session) session.close(); // Close the Hibernate session
         }
 
-        LOGGER.info("DB Liveliness probe connection successful!");
+        LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
     }
 
 }

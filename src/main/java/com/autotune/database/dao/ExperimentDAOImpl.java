@@ -29,7 +29,6 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
@@ -108,8 +107,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         year, month, 1, year, month, 1);
                 session.createNativeQuery(daterange).executeUpdate();
             } else {
-                LOGGER.error("Invalid Partition Type");
-                throw new Exception("Invalid Partition Type");
+                LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                throw new Exception(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
             }
 
             tx.commit();
@@ -135,7 +134,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(
-                            String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
+                            String.format(DBConstants.DB_MESSAGES.RECORD_ALREADY_EXISTS, resultsEntry.getExperiment_name(),
+                                    resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
                     );
                 } else {
                     throw new Exception(ex.getMessage());
@@ -176,12 +176,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
                     String message = constraintViolationException.getCause().getMessage();
                     LOGGER.error(message);
-                    if (message.contains("duplicate key value")) {
+                    if (message.contains(DBConstants.DB_MESSAGES.DUPLICATE_KEY)) {
                         entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
                         failedResultsEntries.add(entry);
-                    } else if (message.contains("no partition of relation")) {
+                    } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
                         try {
-                            LOGGER.info("Create partition and retry !");
+                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
                             tx.commit();
                             tx = session.beginTransaction();
                             LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
@@ -599,7 +599,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .getResultList();
             }
         } catch (NoResultException e) {
-            LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
+            LOGGER.error(DBConstants.DB_MESSAGES.DATA_NOT_FOUND_KRUIZE_RESULTS, experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
         } catch (Exception e) {
             kruizeResultsEntryList = null;
