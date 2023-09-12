@@ -259,7 +259,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                             // TODO: Add check for min data
 
-                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
+                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
 
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
@@ -269,7 +269,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
                             } else {
-                                mappedRecommendationForTerm.setDurationInHrs(recommendationTerm.getDuration());
                                 Timestamp monitoringStartTime = null;
                                 for (KruizeRecommendationEngine engine : getEngines()) {
                                     boolean isCostEngine = false;
