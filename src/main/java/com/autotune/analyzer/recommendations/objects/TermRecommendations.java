@@ -14,7 +14,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     }
 
     @SerializedName(KruizeConstants.JSONKeys.DURATION_IN_HOURS)
-    private int durationInHrs;
+    private double durationInHrs;
 
     public TermRecommendations(RecommendationConstants.RecommendationTerms recommendationTerm) {
         this.durationInHrs = recommendationTerm.getDuration();
@@ -39,11 +39,11 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     }
 
     @Override
-    public int getDurationInHrs() {
+    public double getDurationInHrs() {
         return this.durationInHrs;
     }
 
-    public void setDurationInHrs(int durationInHrs) {
+    public void setDurationInHrs(double durationInHrs) {
         this.durationInHrs = durationInHrs;
     }
 

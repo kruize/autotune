@@ -127,23 +127,38 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             continue;
                         if (containerDataResultData.getResults().isEmpty())
                             continue;
-                        HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
-                        // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
-                        Timestamp monitoringEndTime = containerDataResultData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+
                         // Get the ContainerData from the KruizeObject and not from ResultData
                         ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
+
+                        containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
+                        HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
+                        // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
+                        Timestamp monitoringEndTime = containerDataKruizeObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
 
                         ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
                         // Just to make sure the container recommendations object is not empty
                         if (null == containerRecommendations) {
                             containerRecommendations = new ContainerRecommendations();
-                        } else {
-                            // set the Recommendations object level notifications
-                            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
-                            notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
-                            containerRecommendations.setNotificationMap(notificationHashMap);
-                            notificationHashMap = new HashMap<>();
                         }
+
+                        HashMap<Integer, RecommendationNotification> recommendationLevelNM = containerRecommendations.getNotificationMap();
+                        if (null == recommendationLevelNM) {
+                            recommendationLevelNM = new HashMap<>();
+                        }
+
+                        // Check for min data before setting notifications
+                        // Check for atleast short term
+                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
+                            RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                    RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
+                            );
+                            recommendationLevelNM.put(recommendationNotification.getCode(), recommendationNotification);
+                            continue;
+                        }
+
+                        boolean recommendationAvailable = false;
+
                         // Get the engine recommendation map for a time stamp if it exists else create one
                         HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
                                 = containerRecommendations.getData();
@@ -221,8 +236,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                         // Iterate over notifications and set to recommendations
                         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
-                            if (!notificationHashMap.containsKey(recommendationNotification.getCode()))
-                                notificationHashMap.put(recommendationNotification.getCode(), new RecommendationNotification(recommendationNotification));
+                            timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
                         }
 
                         // Check if map is not empty and set requests map to current config
@@ -236,12 +250,12 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         timestampRecommendation.setCurrentConfig(currentConfig);
-                        List<String> recommendationTermList = new ArrayList<>();
 
+                        boolean termLevelRecommendationExist = false;
                         for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
                             String term = recommendationTerm.getValue();
                             LOGGER.debug("term = {}", term);
-                            int duration = recommendationTerm.getDuration();
+                            double duration = recommendationTerm.getDuration();
 
                             // TODO: Add check for min data
 
@@ -255,7 +269,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
                             } else {
-                                recommendationTermList.add(term);
                                 mappedRecommendationForTerm.setDurationInHrs(recommendationTerm.getDuration());
                                 Timestamp monitoringStartTime = null;
                                 for (KruizeRecommendationEngine engine : getEngines()) {
@@ -271,7 +284,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                                     // Get the results
                                     HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
-                                    monitoringStartTime = getMonitoringStartTime(resultsMap,
+                                    monitoringStartTime = RecommendationUtils.getMonitoringStartTime(resultsMap,
                                             monitoringEndTime,
                                             Double.valueOf(String.valueOf(duration)));
 
@@ -288,14 +301,26 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     if (null == mappedRecommendationForEngine)
                                         continue;
 
+                                    // Set term level notification available
+                                    termLevelRecommendationExist = true;
+
+                                    // Adding the term level recommendation availability after confirming the recommendation exists
+                                    RecommendationNotification rn = RecommendationUtils.getNotificationForTermAvailability(recommendationTerm);
+                                    if (null != rn)
+                                        timestampRecommendation.addNotification(rn);
+
                                     RecommendationNotification recommendationNotification = null;
                                     if (isCostEngine) {
+                                        // Setting it as atleast one recomemndation available
+                                        recommendationAvailable = true;
                                         recommendationNotification = new RecommendationNotification(
                                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                                         );
                                     }
 
                                     if (isPerfEngine) {
+                                        // Setting it as atleast one recomemndation available
+                                        recommendationAvailable = true;
                                         recommendationNotification = new RecommendationNotification(
                                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                                         );
@@ -320,30 +345,21 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             }
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
-                        // build timestamp level notifications
-                        RecommendationNotification recommendationNotification;
-                        if (!recommendationTermList.isEmpty()) {
-                            for (String term : recommendationTermList) {
-                                if (term.equalsIgnoreCase("short_term")) {
-                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
-                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
-                                } else if (term.equalsIgnoreCase("medium_term")) {
-                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
-                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
-                                } else {
-                                    recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
-                                    notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
-                                }
-                            }
-                        } else {
-                            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-                            notificationHashMap.put(recommendationNotification.getCode(), recommendationNotification);
+                        if (!termLevelRecommendationExist) {
+                            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                            timestampRecommendation.addNotification(recommendationNotification);
                         }
-                        // set timestamp level notifications
-                        timestampRecommendation.setHigherLevelNotificationMap(notificationHashMap);
 
                         // put recommendations tagging to timestamp
                         timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+
+                        if (recommendationAvailable) {
+                            // set the Recommendations object level notifications
+                            RecommendationNotification rn = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+                            recommendationLevelNM.put(rn.getCode(), rn);
+                        }
+
+                        containerRecommendations.setNotificationMap(recommendationLevelNM);
                         // set the data object to map
                         containerRecommendations.setData(timestampBasedRecommendationMap);
                         // set the container recommendations in container object
@@ -351,36 +367,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                     }
                 }
             }
-        }
-    }
-
-    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    Timestamp endTime,
-                                                    Double durationInHrs) {
-
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
-                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
-        try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
-        } catch (NullPointerException npe) {
-            return null;
         }
     }
 }

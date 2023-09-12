@@ -100,4 +100,12 @@ public class MappedRecommendationForTimestamp {
             this.recommendationForTermHashMap.put(term, mappedRecommendationForTerm);
         }
     }
+
+    public void addNotification(RecommendationNotification recommendationNotification) {
+        if (null == this.higherLevelNotificationMap)
+            this.higherLevelNotificationMap = new HashMap<>();
+        if (null != recommendationNotification)
+            if (!this.higherLevelNotificationMap.containsKey(recommendationNotification.getCode()))
+                this.higherLevelNotificationMap.put(recommendationNotification.getCode(), recommendationNotification);
+    }
 }

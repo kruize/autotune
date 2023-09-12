@@ -2,17 +2,17 @@ package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class RecommendationUtils {
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
@@ -111,5 +111,47 @@ public class RecommendationUtils {
                 return true;
         }
         return false;
+    }
+
+    public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
+                                                    Timestamp endTime,
+                                                    Double durationInHrs) {
+
+        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
+        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
+        sortedResultsHashMap.putAll(resultsHashMap);
+
+        double sum = 0.0;
+        Timestamp intervalEndTime = null;
+        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
+            if (!timestamp.after(endTime)) {
+                if (sortedResultsHashMap.containsKey(timestamp)) {
+                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
+                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
+                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
+                        // Storing the timestamp value in startTimestamp variable to return
+                        intervalEndTime = timestamp;
+                        break;
+                    }
+                }
+            }
+        }
+        try {
+            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+        } catch (NullPointerException npe) {
+            return null;
+        }
+    }
+
+    public static RecommendationNotification getNotificationForTermAvailability(RecommendationConstants.RecommendationTerms recommendationTerm) {
+        RecommendationNotification recommendationNotification = null;
+        if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.SHORT_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.MEDIUM_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())){
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
+        }
+        return recommendationNotification;
     }
 }

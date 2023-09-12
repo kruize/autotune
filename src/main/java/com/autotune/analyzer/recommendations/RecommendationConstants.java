@@ -155,7 +155,7 @@ public class RecommendationConstants {
                         .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS);
 
         private String value;
-        private int durationInHrs;
+        private double durationInHrs;
 
         private double upperBound;
         private double lowerBound;
@@ -170,7 +170,7 @@ public class RecommendationConstants {
             return value;
         }
 
-        public int getDuration() {
+        public double getDuration() {
             return durationInHrs;
         }
 
