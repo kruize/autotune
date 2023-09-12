@@ -202,6 +202,7 @@ public class KruizeConstants {
         public static final String DURATION_BASED = "duration_based";
         public static final String PROFILE_BASED = "profile_based";
         public static final String COST = "cost";
+        public static final String PERFORMANCE = "performance";
 
         private JSONKeys() {
         }

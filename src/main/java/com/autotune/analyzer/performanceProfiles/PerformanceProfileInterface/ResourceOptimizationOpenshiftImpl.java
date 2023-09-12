@@ -23,6 +23,7 @@ import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.engine.CostRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
+import com.autotune.analyzer.recommendations.engine.PerformanceRecommendationEngine;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -57,6 +58,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
         CostRecommendationEngine costRecommendationEngine = new CostRecommendationEngine();
         // TODO: Create profile based engine
         AnalyzerConstants.RegisterRecommendationEngineStatus _unused_status = registerEngine(costRecommendationEngine);
+        PerformanceRecommendationEngine performanceRecommendationEngine =  new PerformanceRecommendationEngine();
+        _unused_status = registerEngine(performanceRecommendationEngine);
         // TODO: Add profile based once recommendation algos are available
     }
 
@@ -126,6 +129,14 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // Get the ContainerData from the KruizeObject and not from ResultData
                         ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
                         for (KruizeRecommendationEngine engine : getEngines()) {
+                            boolean isCostEngine = false;
+                            boolean isPerfEngine = false;
+
+                            if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST))
+                                isCostEngine = true;
+                            if (engine.getEngineName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE))
+                                isPerfEngine = true;
+
                             // Check if minimum data available to generate recommendation
                             if (!engine.checkIfMinDataAvailable(containerDataKruizeObject))
                                 continue;
@@ -141,15 +152,25 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             }
                             // check if notification exists
                             boolean notificationExist = false;
-                            if (containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE))
+                            if (isCostEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE)) {
+                                notificationExist = true;
+                            } else if (isPerfEngine && containerRecommendations.getNotificationMap().containsKey(RecommendationConstants.NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE))
                                 notificationExist = true;
 
                             // If there is no notification add one
                             if (!notificationExist) {
-                                RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                        RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                );
-                                containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                if (isCostEngine) {
+                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                                    );
+                                    containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                }
+                                if (isPerfEngine) {
+                                    RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                            RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                                    );
+                                    containerRecommendations.getNotificationMap().put(recommendationNotification.getCode(), recommendationNotification);
+                                }
                             }
 
                             // Get the engine recommendation map for a time stamp if it exists else create one
