@@ -35,10 +35,10 @@ data:
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
-        "c3p0minsize": 2,
-        "c3p0maxsize": 5,
+        "c3p0minsize": 10,
+        "c3p0maxsize": 50,
         "c3p0timeout": 300,
-        "c3p0maxstatements": 50,
+        "c3p0maxstatements": 500,
         "hbm2ddlauto": "update",
         "showsql": "false",
         "timezone": "UTC"
