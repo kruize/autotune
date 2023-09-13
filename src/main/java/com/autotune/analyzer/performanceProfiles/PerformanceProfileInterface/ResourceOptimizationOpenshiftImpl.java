@@ -131,7 +131,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         // Get the ContainerData from the KruizeObject and not from ResultData
                         ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
 
-                        containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
                         HashMap<Integer, RecommendationNotification> notificationHashMap = new HashMap<>();
                         // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
                         Timestamp monitoringEndTime = containerDataKruizeObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
@@ -297,20 +296,22 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                             currentConfig,
                                             Double.valueOf(String.valueOf(duration)));
 
-                                    if (null == mappedRecommendationForEngine)
+                                    if (null == mappedRecommendationForEngine) {
                                         continue;
+                                    }
 
                                     // Set term level notification available
                                     termLevelRecommendationExist = true;
 
                                     // Adding the term level recommendation availability after confirming the recommendation exists
                                     RecommendationNotification rn = RecommendationUtils.getNotificationForTermAvailability(recommendationTerm);
-                                    if (null != rn)
+                                    if (null != rn) {
                                         timestampRecommendation.addNotification(rn);
+                                    }
 
                                     RecommendationNotification recommendationNotification = null;
                                     if (isCostEngine) {
-                                        // Setting it as atleast one recomemndation available
+                                        // Setting it as at least one recommendation available
                                         recommendationAvailable = true;
                                         recommendationNotification = new RecommendationNotification(
                                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
@@ -318,7 +319,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     }
 
                                     if (isPerfEngine) {
-                                        // Setting it as atleast one recomemndation available
+                                        // Setting it as at least one recommendation available
                                         recommendationAvailable = true;
                                         recommendationNotification = new RecommendationNotification(
                                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.HUNDREDTH_PERCENTILE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
 public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
@@ -135,7 +135,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(HUNDREDTH_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
@@ -250,11 +250,11 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
+        Double memRecUsage = CommonUtils.percentile(PERFORMANCE_MEMORY_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(PERFORMANCE_MEMORY_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 

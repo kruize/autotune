@@ -214,6 +214,11 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
+        INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationTypes.INFO
+        ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,

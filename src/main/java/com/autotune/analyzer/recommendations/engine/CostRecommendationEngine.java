@@ -133,7 +133,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(COST_CPU_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
@@ -248,11 +248,11 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
+        Double memRecUsage = CommonUtils.percentile(COST_MEMORY_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(COST_MEMORY_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
