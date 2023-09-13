@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
-import java.io.*;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -91,14 +91,13 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
+            // Read and execute the DDLs here
+            executeDDLs();
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
-
-        // Read and execute the DDLs here
-        executeDDLs();
 
         if (KruizeDeploymentInfo.settings_save_to_db) {
             Session session = null;
@@ -158,7 +157,7 @@ public class Autotune {
         ExperimentManager.launch(contextHandler);
     }
 
-    private static void executeDDLs() {
+    private static void executeDDLs() throws Exception {
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = null;
         try {
@@ -191,8 +190,7 @@ public class Autotune {
             LOGGER.info(DBConstants.DB_MESSAGES.DB_CREATION_SUCCESS);
         } catch (Exception e) {
             LOGGER.error("Exception occurred while trying to read the DDL file: {}", e.getMessage());
-            if (null != session) session.close(); // Close the Hibernate session
-            System.exit(1);
+            throw new Exception(e);
         } finally {
             if (null != session) session.close(); // Close the Hibernate session
         }

@@ -62,8 +62,6 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
-    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
-
 
     @Override
     public void init(ServletConfig config) throws ServletException {
