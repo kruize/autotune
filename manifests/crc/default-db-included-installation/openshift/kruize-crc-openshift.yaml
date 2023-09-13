@@ -3,25 +3,6 @@ kind: Namespace
 metadata:
   name: openshift-tuning
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kruize-sa
-  namespace: openshift-tuning
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: autotune-scc-crb
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:anyuid
-subjects:
-  - kind: ServiceAccount
-    name: kruize-sa
-    namespace: openshift-tuning
----
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -41,7 +22,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 1Gi # Sets PV Volume
+    storage: 20Gi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -60,7 +41,7 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 1Gi  # Sets volume size
+      storage: 20Gi  # Sets volume size
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -95,7 +76,7 @@ data:
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
         "c3p0minsize": 2,
-        "c3p0maxsize": 5,
+        "c3p0maxsize": 50,
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "update",
@@ -103,6 +84,16 @@ data:
         "timezone": "UTC"
       }
     }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: openshift-tuning
+data:
+  POSTGRESQL_USER: admin
+  POSTGRESQL_PASSWORD: admin
+  POSTGRESQL_DATABASE: kruizeDB
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -121,25 +112,18 @@ spec:
       labels:
         app: postgres
     spec:
-      serviceAccountName: kruize-sa
       containers:
         - name: postgres
-          image: postgres:15.2
+          image: image-registry.openshift-image-registry.svc:5000/openshift/postgresql
           imagePullPolicy: IfNotPresent
-          env:
-            - name: POSTGRES_PASSWORD
-              value: admin
-            - name: POSTGRES_USER
-              value: admin
-            - name: POSTGRES_DB
-              value: kruizeDB
-            - name: PGDATA
-              value: /var/lib/pg_data
+          envFrom:
+            - configMapRef:
+                name: postgres-config
           ports:
             - containerPort: 5432
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/pgsql/data
+              mountPath: /home/pgdata
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
@@ -179,7 +163,6 @@ spec:
         app: kruize
         name: kruize
     spec:
-      serviceAccountName: kruize-sa
       containers:
         - name: kruize
           image: kruize/autotune_operator:0.0.18_rm
