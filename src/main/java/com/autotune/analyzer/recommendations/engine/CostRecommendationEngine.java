@@ -16,12 +16,10 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -53,35 +51,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
 
     public CostRecommendationEngine(String name) {
         this.name = name;
-    }
-
-    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    CostRecommendationSubCategory costRecommendationSubCategory,
-                                                    Timestamp endTime) {
-
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= costRecommendationSubCategory.getGetDurationLowerBound()) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
-        try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
-        } catch (NullPointerException npe) {
-            return null;
-        }
     }
 
     /**
@@ -164,7 +133,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(NINETY_FIFTH_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(COST_CPU_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
@@ -279,11 +248,11 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(HUNDREDTH_PERCENTILE, memUsageList);
+        Double memRecUsage = CommonUtils.percentile(COST_MEMORY_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(HUNDREDTH_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(COST_MEMORY_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
@@ -432,7 +401,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
      * @param internalMapToPopulate
      */
     private boolean populateRecommendation(String recommendationTerm,
-                                           Recommendation recommendation,
+                                           MappedRecommendationForEngine recommendation,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
                                            int numPods, double hours, double cpuThreshold, double memoryThreshold) {
@@ -538,8 +507,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             notifications.add(recommendationNotification);
             LOGGER.error("Duration hours cannot be negative");
             isSuccess = false;
-        } else {
-            recommendation.setDuration_in_hours(hours);
         }
 
         RecommendationConfigItem recommendationCpuRequest = null;
@@ -910,11 +877,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
         }
 
-        // Set Current Config
-        if (!currentConfig.isEmpty()) {
-            recommendation.setCurrentConfig(currentConfig);
-        }
-
         // Set Request variation map
         if (!requestsVariationMap.isEmpty()) {
             variation.put(AnalyzerConstants.ResourceSetting.requests, requestsVariationMap);
@@ -934,7 +896,15 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
     }
 
     @Override
-    public HashMap<String, Recommendation> generateRecommendation(ContainerData containerData, Timestamp monitoringEndTime, RecommendationSettings recommendationSettings) {
+    public MappedRecommendationForEngine generateRecommendation(Timestamp monitoringStartTime, ContainerData containerData,
+                                                                Timestamp monitoringEndTime,
+                                                                String recPeriod,
+                                                                RecommendationSettings recommendationSettings,
+                                                                HashMap<AnalyzerConstants.ResourceSetting,
+                                                                        HashMap<AnalyzerConstants.RecommendationItem,
+                                                                                RecommendationConfigItem>> currentConfigMap,
+                                                                Double durationInHrs) {
+        MappedRecommendationForEngine mappedRecommendationForEngine = new MappedRecommendationForEngine();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
         // Set Memory threshold to default
@@ -953,166 +923,98 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
         }
 
-        // Get the results
-        HashMap<Timestamp, IntervalResults> resultsMap = containerData.getResults();
-        // Create a new map for returning the result
-        HashMap<String, Recommendation> resultRecommendation = new HashMap<String, Recommendation>();
-        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            CostRecommendationSubCategory costRecommendationSubCategory = (CostRecommendationSubCategory) recommendationSubCategory;
-            String recPeriod = costRecommendationSubCategory.getSubCategory();
-            int days = costRecommendationSubCategory.getDuration();
-            Timestamp monitoringStartTime = getMonitoringStartTime(resultsMap,
-                    costRecommendationSubCategory,
-                    monitoringEndTime);
-            if (null != monitoringStartTime) {
+        RecommendationConfigItem currentCPURequest = null;
+        RecommendationConfigItem currentCPULimit = null;
+        RecommendationConfigItem currentMemRequest = null;
+        RecommendationConfigItem currentMemLimit = null;
 
-                Timestamp finalMonitoringStartTime = monitoringStartTime;
-                // Set the timestamp to extract
-                Timestamp timestampToExtract = monitoringEndTime;
-
-                Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
-                        .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
-                                && (x.getKey().compareTo(monitoringEndTime) <= 0))))
-                        .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-
-                Recommendation recommendation = new Recommendation(monitoringStartTime, monitoringEndTime);
-
-                // Set number of pods
-                int numPods = getNumPods(filteredResultsMap);
-
-
-                // Set Duration in hours
-                double hours = days * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
-
-
-                // Pass Notification object to all callers to update the notifications required
-                ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();
-
-                // Get the Recommendation Items
-                RecommendationConfigItem recommendationCpuRequest = getCPURequestRecommendation(
-                        filteredResultsMap,
-                        monitoringEndTime,
-                        notifications);
-                RecommendationConfigItem recommendationMemRequest = getMemoryRequestRecommendation(
-                        filteredResultsMap,
-                        monitoringEndTime,
-                        notifications);
-
-                // Get the Recommendation Items
-                // Calling requests on limits as we are maintaining limits and requests as same
-                // Maintaining different flow for both of them even though if they are same as in future we might have
-                // a different implementation for both and this avoids confusion
-                RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
-                RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
-
-                // Current CPU Request
-                RecommendationConfigItem currentCpuRequest = getCurrentValue(filteredResultsMap,
-                        timestampToExtract,
-                        AnalyzerConstants.ResourceSetting.requests,
-                        AnalyzerConstants.RecommendationItem.cpu,
-                        notifications);
-
-                // Current Memory Request
-                RecommendationConfigItem currentMemRequest = getCurrentValue(filteredResultsMap,
-                        timestampToExtract,
-                        AnalyzerConstants.ResourceSetting.requests,
-                        AnalyzerConstants.RecommendationItem.memory,
-                        notifications);
-
-                // Current CPU Limit
-                RecommendationConfigItem currentCpuLimit = getCurrentValue(filteredResultsMap,
-                        timestampToExtract,
-                        AnalyzerConstants.ResourceSetting.limits,
-                        AnalyzerConstants.RecommendationItem.cpu,
-                        notifications);
-
-                // Current Memory Limit
-                RecommendationConfigItem currentMemLimit = getCurrentValue(filteredResultsMap,
-                        timestampToExtract,
-                        AnalyzerConstants.ResourceSetting.limits,
-                        AnalyzerConstants.RecommendationItem.memory,
-                        notifications);
-
-                // Create an internal map to send data to populate
-                HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<String, RecommendationConfigItem>();
-                // Add current values
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentCpuRequest);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentCpuLimit);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentMemRequest);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentMemLimit);
-                // Add recommended values
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, recommendationCpuRequest);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
-                internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
-
-                // Call the populate method to validate and populate the recommendation object
-                boolean isSuccess = populateRecommendation(
-                        recPeriod,
-                        recommendation,
-                        notifications,
-                        internalMapToPopulate,
-                        numPods,
-                        hours,
-                        cpuThreshold,
-                        memoryThreshold
-                );
-
-                // Use success in future if you want to avoid sending the recommendations
-                if (!isSuccess) {
-                    // Handle the issue accordingly
-
-                    // Currently, it's unused as we are adding notification for every error we encounter
-                    // Also stopping the recommendation process is not advisable as the API USER need to know it via
-                    // Notifications and check the logs for what went wrong
-                }
-
-                // Iterate over notifications and set to recommendations
-                for (RecommendationNotification recommendationNotification : notifications) {
-                    recommendation.addNotification(recommendationNotification);
-                }
-
-                // Set Recommendations
-                resultRecommendation.put(recPeriod, recommendation);
-            } else {
-                RecommendationNotification notification = new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-                resultRecommendation.put(recPeriod, new Recommendation(notification));
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
             }
         }
-        return resultRecommendation;
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            }
+        }
+        if (null != monitoringStartTime) {
+            Timestamp finalMonitoringStartTime = monitoringStartTime;
+            // Set the timestamp to extract
+            Timestamp timestampToExtract = monitoringEndTime;
+
+            Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
+                    .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
+                            && (x.getKey().compareTo(monitoringEndTime) <= 0))))
+                    .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+            // Set number of pods
+            int numPods = getNumPods(filteredResultsMap);
+
+            mappedRecommendationForEngine.setPodsCount(numPods);
+
+            // Pass Notification object to all callers to update the notifications required
+            ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();
+
+            // Get the Recommendation Items
+            RecommendationConfigItem recommendationCpuRequest = getCPURequestRecommendation(
+                    filteredResultsMap,
+                    monitoringEndTime,
+                    notifications);
+            RecommendationConfigItem recommendationMemRequest = getMemoryRequestRecommendation(
+                    filteredResultsMap,
+                    monitoringEndTime,
+                    notifications);
+
+            // Get the Recommendation Items
+            // Calling requests on limits as we are maintaining limits and requests as same
+            // Maintaining different flow for both of them even though if they are same as in future we might have
+            // a different implementation for both and this avoids confusion
+            RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
+            RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
+
+            // Create an internal map to send data to populate
+            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<String, RecommendationConfigItem>();
+            // Add current values
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentCPURequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentCPURequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentMemRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentMemLimit);
+            // Add recommended values
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, recommendationCpuRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
+
+            // Call the populate method to validate and populate the recommendation object
+            boolean isSuccess = populateRecommendation(
+                    recPeriod,
+                    mappedRecommendationForEngine,
+                    notifications,
+                    internalMapToPopulate,
+                    numPods,
+                    durationInHrs,
+                    cpuThreshold,
+                    memoryThreshold
+            );
+        }  else {
+            RecommendationNotification notification = new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+
+        }
+        return mappedRecommendationForEngine;
     }
 
     @Override
     public void validateRecommendations() {
 
-    }
-
-    @Override
-    public boolean checkIfMinDataAvailable(ContainerData containerData) {
-        // Check if data available
-        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
-            return false;
-        }
-        // Initiate to the first sub category available
-        CostRecommendationSubCategory categoryToConsider = (CostRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
-        // Loop over categories to set the least category
-        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            CostRecommendationSubCategory costRecommendationSubCategory = (CostRecommendationSubCategory) recommendationSubCategory;
-            if (costRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
-                categoryToConsider = costRecommendationSubCategory;
-            }
-        }
-        // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = categoryToConsider.getGetDurationLowerBound();
-        double sum = 0.0;
-        // Loop over the data to check if there is min data available
-        for (IntervalResults intervalResults : containerData.getResults().values()) {
-            sum = sum + intervalResults.getDurationInMinutes();
-            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-            if (sum >= lowerBound)
-                return true;
-        }
-        return false;
     }
 }
