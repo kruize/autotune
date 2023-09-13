@@ -943,13 +943,13 @@ Returns the latest recommendations of all the experiments
               "notifications": {
                 "112101": {
                     "type": "info",
-                    "message": "Duration Based Recommendations Available",
+                    "message": "Cost Recommendations Available",
                     "code": 112101
                 }
               },
               "data": {
                 "2023-04-02T08:00:00.680Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T06:45:00.000Z",
                       "monitoring_end_time": "2023-04-02T08:00:00.680Z",
@@ -1202,13 +1202,13 @@ Returns all the recommendations of all the experiments
               "notifications": {
                 "112101": {
                     "type": "info",
-                    "message": "Duration Based Recommendations Available",
+                    "message": "Cost Recommendations Available",
                     "code": 112101
                 }
               },
               "data": {
                 "2023-04-02T06:00:00.770Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T04:45:00.000Z",
                       "monitoring_end_time": "2023-04-02T06:00:00.770Z",
@@ -1311,7 +1311,7 @@ Returns all the recommendations of all the experiments
                 ...
                 ...
                 "2023-04-02T04:30:00.000Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T03:15:00.000Z",
                       "monitoring_end_time": "2023-04-02T04:30:00.000Z",
@@ -1558,13 +1558,13 @@ If no parameter is passed API returns all the latest recommendations available f
                             "notifications": {
                                 "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available",
+                                    "message": "Cost Recommendations Available",
                                     "code": 112101
                                 }
                             },
                             "data": {
                                 "2022-12-21T00:40:17.000Z": {
-                                    "duration_based": {
+                                    "cost": {
                                         "short_term": {
                                             "monitoring_start_time": "2022-12-20T00:40:17.000Z",
                                             "monitoring_end_time": "2022-12-21T00:40:17.000Z",
@@ -1718,13 +1718,13 @@ Returns the latest result of that experiment
                             "notifications": {
                                 "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available",
+                                    "message": "Cost Recommendations Available",
                                     "code": 112101
                                 }
                             },
                             "data": {
                                 "2022-12-21T00:40:17.000Z": {
-                                    "duration_based": {
+                                    "cost": {
                                         "short_term": {
                                             "monitoring_start_time": "2022-12-20T00:40:17.000Z",
                                             "monitoring_end_time": "2022-12-21T00:40:17.000Z",
@@ -1877,13 +1877,13 @@ Returns all the results of that experiment
                             "notifications": {
                                 "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available",
+                                    "message": "Cost Recommendations Available",
                                     "code": 112101
                                 }
                             },
                             "data": {
                                 "2022-12-20T17:55:05.000Z": {
-                                    "duration_based": {
+                                    "cost": {
                                         "short_term": {
                                             "monitoring_start_time": "2022-12-19T17:55:05.000Z",
                                             "monitoring_end_time": "2022-12-20T17:55:05.000Z",
@@ -1983,7 +1983,7 @@ Returns all the results of that experiment
                                     }
                                 },
                                 "2022-12-21T00:10:16.000Z": {
-                                    "duration_based": {
+                                    "cost": {
                                         "short_term": {
                                             "monitoring_start_time": "2022-12-20T00:10:16.000Z",
                                             "monitoring_end_time": "2022-12-21T00:10:16.000Z",
@@ -2138,13 +2138,13 @@ Time - `2022-12-20T17:55:05.000Z`**
                             "notifications": {
                                 "112101": {
                                     "type": "info",
-                                    "message": "Duration Based Recommendations Available",
+                                    "message": "Cost Recommendations Available",
                                     "code": 112101
                                 }
                             },
                             "data": {
                                 "2022-12-20T17:55:05.000Z": {
-                                    "duration_based": {
+                                    "cost": {
                                         "short_term": {
                                             "monitoring_start_time": "2022-12-19T17:55:05.000Z",
                                             "monitoring_end_time": "2022-12-20T17:55:05.000Z",

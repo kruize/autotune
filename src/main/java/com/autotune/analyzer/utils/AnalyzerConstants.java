@@ -17,15 +17,9 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -521,6 +515,10 @@ public class AnalyzerConstants {
         public static final Integer NINETY_EIGHTH_PERCENTILE = 98;
         public static final Integer NINETY_NINTH_PERCENTILE = 99;
         public static final Integer HUNDREDTH_PERCENTILE = 100;
+        public static final Integer COST_CPU_PERCENTILE = 60;
+        public static final Integer COST_MEMORY_PERCENTILE = 100;
+        public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
+        public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
     }
 
     public static final class BooleanString {

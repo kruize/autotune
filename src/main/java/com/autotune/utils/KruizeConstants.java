@@ -189,6 +189,7 @@ public class KruizeConstants {
         public static final String INTERVAL_START_TIME = "interval_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String DURATION_IN_MINUTES = "duration_in_minutes";
+        public static final String DURATION_IN_HOURS = "duration_in_hours";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
@@ -201,6 +202,11 @@ public class KruizeConstants {
         public static final String NOTIFICATIONS = "notifications";
         public static final String DURATION_BASED = "duration_based";
         public static final String PROFILE_BASED = "profile_based";
+        public static final String COST = "cost";
+        public static final String PERFORMANCE = "performance";
+        public static final String RECOMMENDATION_TERMS = "recommendation_terms";
+        public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
+        public static final String CONFIDENCE_LEVEL = "confidence_level";
 
         private JSONKeys() {
         }
@@ -443,7 +449,7 @@ public class KruizeConstants {
             public static final class RecommendationDurationRanges {
                 private static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 /* SHORT TERM */
-                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                public static final double  SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;

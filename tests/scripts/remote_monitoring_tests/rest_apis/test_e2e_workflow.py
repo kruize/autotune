@@ -103,7 +103,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data[0]['experiment_name'] == experiment_name
             assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                       'message'] == 'Duration Based Recommendations Available'
+                       'message'] == 'Cost Recommendations Available'
             response = list_recommendations(experiment_name)
             if response.status_code == SUCCESS_200_STATUS_CODE:
                 recommendation_json = response.json()
@@ -111,10 +111,10 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
                     "recommendations"]
                 high_level_notifications = recommendation_section["notifications"]
                 # Check if duration
-                assert INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                assert INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
                 data_section = recommendation_section["data"]
                 short_term_recommendation = \
-                    data_section[end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"]["duration_based"]["short_term"]
+                    data_section[end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"]["cost"]["short_term"]
                 short_term_notifications = short_term_recommendation["notifications"]
                 for notification in short_term_notifications.values():
                     assert notification["type"] != "error"

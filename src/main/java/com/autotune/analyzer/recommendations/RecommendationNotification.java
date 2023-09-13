@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.annotations.json.Exclude;
 
 public class RecommendationNotification {
@@ -26,7 +25,7 @@ public class RecommendationNotification {
 
     public RecommendationNotification(RecommendationConstants.RecommendationNotification recommendationNotification) {
         this.type = recommendationNotification.getType().getName();
-        this.message = recommendationNotification.getMsg();
+        this.message = recommendationNotification.getMessage();
         this.code = recommendationNotification.getCode();
     }
     public RecommendationNotification() {

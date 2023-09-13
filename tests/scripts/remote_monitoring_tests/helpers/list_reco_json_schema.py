@@ -65,7 +65,7 @@ list_reco_json_schema = {
                           "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
                             "type": "object",
                             "properties": {
-                              "duration_based": {
+                              "cost": {
                                 "type": "object",
                                 "properties": {
                                   "short_term": {
@@ -1403,7 +1403,7 @@ list_reco_json_schema = {
                               }
                             },
                             "required": [
-                              "duration_based"
+                              "cost"
                             ]
                           }
                         },
