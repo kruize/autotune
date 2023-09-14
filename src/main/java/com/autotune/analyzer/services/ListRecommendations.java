@@ -79,6 +79,7 @@ public class ListRecommendations extends HttpServlet {
         // Set the character encoding of the request to UTF-8
         request.setCharacterEncoding(CHARACTER_ENCODING);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         Timestamp monitoringEndTimestamp = null;
@@ -146,7 +147,13 @@ public class ListRecommendations extends HttpServlet {
                             String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
                     );
                 }
-            } else {
+            }else if(null != clusterName){
+                try {
+                    new ExperimentDBService().loadExperimentAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved cluster {} failed: {} ", clusterName, e.getMessage());
+                }
+            }else {
                 try {
                     new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                 } catch (Exception e) {

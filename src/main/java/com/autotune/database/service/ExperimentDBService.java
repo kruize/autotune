@@ -319,6 +319,11 @@ public class ExperimentDBService {
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
 
+    public void loadExperimentAndRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception{
+        loadExperimentFromDBByClusterName(mainKruizeExperimentMap, clusterName);
+        loadRecommendationsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
+    }
+
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
