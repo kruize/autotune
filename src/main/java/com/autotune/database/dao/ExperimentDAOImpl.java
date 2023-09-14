@@ -583,6 +583,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return recommendationEntries;
     }
 
+    public List<KruizeRecommendationEntry> loadRecommendationsByClusterName(String clusterName) throws Exception {
+        List<KruizeRecommendationEntry> recommendationEntries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RECOMMENDATIONS_BY_CLUSTER_NAME, KruizeRecommendationEntry.class)
+                    .setParameter("clusterName", clusterName).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
+            throw new Exception("Error while loading existing recommendations from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadRecExpName) {
+                MetricsConfig.timerLoadRecExpName = MetricsConfig.timerBLoadRecExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadRecExpName.stop(MetricsConfig.timerLoadRecExpName);
+            }
+        }
+        return recommendationEntries;
+    }
+
     @Override
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;

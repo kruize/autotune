@@ -190,6 +190,28 @@ public class ExperimentDBService {
             }
         }
     }
+    ///
+    public void loadRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByClusterName(clusterName);
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
 
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
@@ -328,6 +350,7 @@ public class ExperimentDBService {
             }
         }
     }
+
 
 
 
