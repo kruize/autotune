@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -397,6 +396,46 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp from_start_time, Timestamp from_end_time, Integer limitRows) throws Exception {
+        List<KruizeResultsEntry> kruizeResultsEntries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT, KruizeResultsEntry.class)
+                    .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, from_start_time)
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, from_end_time)
+                    .setMaxResults(limitRows)
+                    .list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadResultsExpName) {
+                MetricsConfig.timerLoadResultsExpName = MetricsConfig.timerBLoadResultsExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadResultsExpName.stop(MetricsConfig.timerLoadResultsExpName);
+            }
+        }
+        return kruizeResultsEntries;
+    }
+
+    @Override
+    public int totalResultsByExperimentName(String experimentName, Timestamp interval_end_time) throws Exception {
+        Long count = 0L;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_GET_COUNT, Long.class);
+            query.setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName);
+            query.setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+            count = query.getSingleResult();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        }
+        return count.intValue();
+    }
+
+    @Override
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
@@ -404,7 +443,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             if (null != limitRows && null != interval_end_time) {
-                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE, KruizeResultsEntry.class)
+                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_AND_LIMIT, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
                         .setMaxResults(limitRows)
