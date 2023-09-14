@@ -48,8 +48,10 @@ public interface ExperimentDAO {
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
-    // Load all results for a particular experimentName
+    //Load all experiments of a particular clusterName
+    List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception;
 
+    // Load all results for a particular experimentName
     List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
     // Load all recommendations of a particular experiment

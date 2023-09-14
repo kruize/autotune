@@ -149,7 +149,7 @@ public class ListRecommendations extends HttpServlet {
                 }
             }else if(null != clusterName){
                 try {
-                    new ExperimentDBService().loadExperimentAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
+                    new ExperimentDBService().loadExperimentsAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved cluster {} failed: {} ", clusterName, e.getMessage());
                 }

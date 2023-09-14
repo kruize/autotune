@@ -500,6 +500,28 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS_BY_CLUSTER_NAME, KruizeExperimentEntry.class)
+                    .setParameter("clusterName", clusterName).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load cluster {} due to {}", clusterName, e.getMessage());
+            throw new Exception("Error while loading existing experiments of specified cluster from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+
+        }
+        return entries;
+    }
 
     @Override
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
