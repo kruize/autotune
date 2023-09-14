@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -60,6 +61,8 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
+    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -146,10 +149,20 @@ public class UpdateRecommendations extends HttpServlet {
 
             LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
 
-            List<ExperimentResultData> experimentResultDataList = null;
+            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             ExperimentResultData experimentResultData = null;
             try {
-                experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+                String clusterName = null;
+                if (mainKruizeExperimentMAP.containsKey(experiment_name)) {
+                    clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
+                } else {
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                    if (null != mainKruizeExperimentMAP.get(experiment_name)) {
+                        clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
+                    }
+                }
+                if (null != clusterName)
+                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, clusterName, interval_start_time, interval_end_time);   // Todo this object is not required
             } catch (Exception e) {
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
