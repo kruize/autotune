@@ -29,15 +29,22 @@ import java.util.List;
  */
 @Entity
 @Table(name = "kruize_results",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"experiment_name", "interval_start_time", "interval_end_time"})},
-        indexes = @Index(
-                name = "idx_result_experiment_name",
-                columnList = "experiment_name",
-                unique = false))
+        indexes = {
+                @Index(
+                        name = "idx_result_experiment_name",
+                        columnList = "experiment_name"),
+                @Index(
+                        name = "idx_result_cluster_name",
+                        columnList = "experiment_name"),
+                @Index(
+                        name = "idx_result_interval_end_time",
+                        columnList = "interval_end_time")
+        })
 public class KruizeResultsEntry {
     private String version;
     @Id
     private String experiment_name;
+    private String cluster_name;
     private Timestamp interval_start_time;
     @Id
     private Timestamp interval_end_time;
@@ -105,6 +112,13 @@ public class KruizeResultsEntry {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 
     public List<String> getErrorReasons() {

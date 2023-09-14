@@ -77,3 +77,41 @@
 |  523001  | CRITICAL |        CPU_REQUEST_NOT_SET         |          Specifies that the CPU Requests are not set for the pod         |                CPU Request Not Set               |    DATA USER     |
 |  524001  | CRITICAL |      MEMORY_REQUEST_NOT_SET       |         Specifies that the Memory Requests are not set for the pod        |              Memory Request Not Set             |    DATA USER     |
 |  524002  | CRITICAL |      MEMORY_LIMIT_NOT_SET         |          Specifies that the Memory Limits are not set for the pod         |               Memory Limit Not Set              |    DATA USER     |
+
+
+# Notification Scope
+
+| **Notification Id** | **Type** | **Notification Short Representation** | **Recommendations Object level** | **Timestamp level** | **Term level** | **Engine level** |
+|---------------------|:--------:|:-------------------------------------:|:--------------------------------:|:-------------------:|:--------------:|:----------------:|
+| 111000              |   INFO   |       RECOMMENDATIONS_AVAILABLE       |                1                 |          0          |       0        |        0         |
+| 120001              |   INFO   |            NOT_ENOUGH_DATA            |                1                 |          0          |       1        |        0         |
+| 423001              | WARNING  |           CPU_LIMIT_NOT_SET           |                0                 |          1          |       0        |        0         |
+| 523001              | CRITICAL |          CPU_REQUEST_NOT_SET          |                0                 |          1          |       0        |        0         |
+| 524001              | CRITICAL |        MEMORY_REQUEST_NOT_SET         |                0                 |          1          |       0        |        0         |
+| 524002              | CRITICAL |         MEMORY_LIMIT_NOT_SET          |                0                 |          1          |       0        |        0         |
+| 223001              |  ERROR   |     AMOUNT_MISSING_IN_CPU_SECTION     |                0                 |          1          |       0        |        1         |
+| 223002              |  ERROR   |     INVALID_AMOUNT_IN_CPU_SECTION     |                0                 |          1          |       0        |        1         |
+| 224001              |  ERROR   |   AMOUNT_MISSING_IN_MEMORY_SECTION    |                0                 |          1          |       0        |        1         |
+| 224002              |  ERROR   |   INVALID_AMOUNT_IN_MEMORY_SECTION    |                0                 |          1          |       0        |        1         |
+| 111101              |   INFO   | SHORT_TERM_RECOMMENDATIONS_AVAILABLE  |                0                 |          1          |       0        |        0         |
+| 111102              |   INFO   | MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE |                0                 |          1          |       0        |        0         |
+| 111103              |   INFO   |  LONG_TERM_RECOMMENDATIONS_AVAILABLE  |                0                 |          1          |       0        |        0         |
+| 112101              |   INFO   |    COST_RECOMMENDATIONS_AVAILABLE     |                0                 |          0          |       1        |        0         |
+| 112102              |   INFO   | PERFORMANCE_RECOMMENDATION_AVAILABLE  |                0                 |          0          |       1        |        0         |
+| 223003              |  ERROR   |     FORMAT_MISSING_IN_CPU_SECTION     |                0                 |          1          |       1        |        0         |
+| 223004              |  ERROR   |     INVALID_FORMAT_IN_CPU_SECTION     |                0                 |          1          |       1        |        0         |
+| 224003              |  ERROR   |   FORMAT_MISSING_IN_MEMORY_SECTION    |                0                 |          1          |       1        |        0         |
+| 224004              |  ERROR   |   INVALID_FORMAT_IN_MEMORY_SECTION    |                0                 |          1          |       1        |        0         |
+| 323001              |  NOTICE  |         CPU_RECORDS_ARE_IDLE          |                0                 |          0          |       1        |        0         |
+| 323002              |  NOTICE  |         CPU_RECORDS_ARE_ZERO          |                0                 |          0          |       1        |        0         |
+| 323003              |  NOTICE  |       CPU_RECORDS_NOT_AVAILABLE       |                0                 |          0          |       1        |        0         |
+| 324001              |  NOTICE  |        MEMORY_RECORDS_ARE_ZERO        |                0                 |          0          |       1        |        0         |
+| 324002              |  NOTICE  |     MEMORY_RECORDS_NOT_AVAILABLE      |                0                 |          0          |       1        |        0         |
+| 221003              |  ERROR   |         HOURS_CANNOT_BE_ZERO          |                0                 |          0          |       1        |        0         |
+| 221004              |  ERROR   |       HOURS_CANNOT_BE_NEGATIVE        |                0                 |          0          |       1        |        0         |
+| 323004              |  NOTICE  |        CPU_REQUESTS_OPTIMISED         |                0                 |          0          |       0        |        1         |
+| 323005              |  NOTICE  |         CPU_LIMITS_OPTIMISED          |                0                 |          0          |       0        |        1         |
+| 324003              |  NOTICE  |       MEMORY_REQUESTS_OPTIMISED       |                0                 |          0          |       0        |        1         |
+| 324004              |  NOTICE  |        MEMORY_LIMITS_OPTIMISED        |                0                 |          0          |       0        |        1         |
+| 221001              |  ERROR   |        NUM_PODS_CANNOT_BE_ZERO        |                0                 |          0          |       0        |        1         |
+| 221002              |  ERROR   |      NUM_PODS_CANNOT_BE_NEGATIVE      |                0                 |          0          |       0        |        1         |
