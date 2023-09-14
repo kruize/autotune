@@ -29,8 +29,6 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
@@ -48,8 +46,8 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
          and then validate the Performance Profile data
         */
         try {
-            KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-            if(UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+            KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
                 new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
                 UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);

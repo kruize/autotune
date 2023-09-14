@@ -18,15 +18,18 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 
@@ -40,20 +43,29 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Transaction tx = null;
         String statusValue = "failure";
         Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            try {
-                tx = session.beginTransaction();
-                session.persist(kruizeExperimentEntry);
-                tx.commit();
-                validationOutputData.setSuccess(true);
-                statusValue = "success";
-            } catch (HibernateException e) {
-                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-                if (tx != null) tx.rollback();
-                e.printStackTrace();
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage(e.getMessage());
-                //todo save error to API_ERROR_LOG
+        try {
+            // Fixing the partition type to 'by_month'
+            String partitionType = DBConstants.PARTITION_TYPES.BY_MONTH;
+            YearMonth yearMonth = YearMonth.now();
+            String month = String.format("%02d", yearMonth.getMonthValue());
+            String year = String.valueOf(yearMonth.getYear());
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, month, year, partitionType);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, month, year, partitionType);
+            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                try {
+                    tx = session.beginTransaction();
+                    session.persist(kruizeExperimentEntry);
+                    tx.commit();
+                    validationOutputData.setSuccess(true);
+                    statusValue = "success";
+                } catch (HibernateException e) {
+                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    if (tx != null) tx.rollback();
+                    e.printStackTrace();
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(e.getMessage());
+                    //TODO: save error to API_ERROR_LOG
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
@@ -65,6 +77,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return validationOutputData;
+    }
+
+    @Override
+    public void addPartitions(String tableName, String month, String year, String partitionType) {
+        Transaction tx;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            // Create a YearMonth object and get the current month and current year
+            YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
+
+            // check the partition type and create corresponding query
+            if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
+                // Get the last day of the month
+                int lastDayOfMonth = yearMonth.lengthOfMonth();
+                IntStream.range(1, lastDayOfMonth + 1).forEach(i -> {
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                            year, month, i, year, month, i);
+                    session.createNativeQuery(daterange).executeUpdate();
+                });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
+                    IntStream.range(1, 16).forEach(i -> {
+                        String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                                year, month, i, year, month, i);
+                        session.createNativeQuery(daterange).executeUpdate();
+                    });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
+                        year, month, 1, year, month, 1);
+                session.createNativeQuery(daterange).executeUpdate();
+            } else {
+                LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                throw new Exception(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+            }
+
+            tx.commit();
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -84,7 +134,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(
-                            String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
+                            String.format(DBConstants.DB_MESSAGES.RECORD_ALREADY_EXISTS, resultsEntry.getExperiment_name(),
+                                    resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
                     );
                 } else {
                     throw new Exception(ex.getMessage());
@@ -119,28 +170,54 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
                 try {
-                    session.merge(entry);
+                    session.persist(entry);
+                    session.flush();
                 } catch (PersistenceException e) {
-                    entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
-                    failedResultsEntries.add(entry);
+                    ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
+                    String message = constraintViolationException.getCause().getMessage();
+                    LOGGER.error(message);
+                    if (message.contains(DBConstants.DB_MESSAGES.DUPLICATE_KEY)) {
+                        entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
+                        failedResultsEntries.add(entry);
+                    } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
+                        try {
+                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                            tx.commit();
+                            tx = session.beginTransaction();
+                            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
+                            // Get the current year and month
+                            YearMonth yearMonth = YearMonth.from(localDateTime);
+                            // Format the month with a leading zero if it's a single digit
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM");
+                            // Format the year and month
+                            String formattedYear = String.valueOf(yearMonth.getYear());
+                            String formattedMonth = yearMonth.format(formatter);
+                            // Fixing the partition type to 'by_month'
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            session.persist(entry);
+                            session.flush();
+                        } catch (Exception partitionException) {
+                            LOGGER.error(partitionException.getMessage());
+                            entry.setErrorReasons(List.of(partitionException.getMessage()));
+                            failedResultsEntries.add(entry);
+                        }
+                    } else {
+                        entry.setErrorReasons(List.of(e.getMessage()));
+                        failedResultsEntries.add(entry);
+                    }
+                    tx.commit();
+                    tx = session.beginTransaction();
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
                     failedResultsEntries.add(entry);
+                    tx.commit();
+                    tx = session.beginTransaction();
                 }
             }
             tx.commit();
 
-            if (!failedResultsEntries.isEmpty()) {
-                //  find elements in kruizeResultsEntries but not in failedResultsEntries
-                List<KruizeResultsEntry> elementsInSuccessOnly = kruizeResultsEntries.stream()
-                        .filter(entry -> !failedResultsEntries.contains(entry))
-                        .collect(Collectors.toList());
-                tx = session.beginTransaction();
-                for (KruizeResultsEntry entry : elementsInSuccessOnly) {
-                    session.merge(entry);
-                }
-                tx.commit();
-            }
+
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
@@ -522,7 +599,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         .getResultList();
             }
         } catch (NoResultException e) {
-            LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
+            LOGGER.error(DBConstants.DB_MESSAGES.DATA_NOT_FOUND_KRUIZE_RESULTS, experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
         } catch (Exception e) {
             kruizeResultsEntryList = null;

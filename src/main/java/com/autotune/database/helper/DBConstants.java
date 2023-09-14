@@ -32,5 +32,34 @@ public class DBConstants {
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME = "DELETE FROM KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName";
+        public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000Z') TO ('%s-%s-%s 23:59:59');";
     }
+
+    public static final class TABLE_NAMES {
+        public static final String KRUIZE_EXPERIMENTS = "kruize_experiments";
+        public static final String KRUIZE_RESULTS = "kruize_results";
+        public static final String KRUIZE_RECOMMENDATIONS = "kruize_recommendations";
+        public static final String KRUIZE_PERFORMANCE_PROFILES = "kruize_performance_profiles";
+
+    }
+
+    public static final class PARTITION_TYPES {
+        public static final String BY_MONTH = "by_month";
+        public static final String BY_15_DAYS = "by_fifteen_days";
+        public static final String BY_DAY = "by_day";
+    }
+    public static final class DB_MESSAGES {
+        public static final String RECORD_ALREADY_EXISTS = "A record with the name %s already exists within the timestamp range starting from %s and ending on %s.";
+        public static final String DUPLICATE_KEY = "duplicate key value";
+        public static final String NO_PARTITION_RELATION = "no partition of relation";
+        public static final String CREATE_PARTITION_RETRY = "Create partition and retry !";
+        public static final String INVALID_PARTITION_TYPE = "Invalid Partition Type";
+        public static final String DATA_NOT_FOUND_KRUIZE_RESULTS = "Data not found in kruizeResultsEntry for exp_name : {} interval_end_time : {} ";
+        public static final String ADD_CONSTRAINT = "add constraint";
+        public static final String DB_CREATION_SUCCESS = "DB creation successful !";
+        public static final String DB_LIVELINESS_PROBE_SUCCESS = "DB Liveliness probe connection successful!";
+
+    }
+
+
 }
