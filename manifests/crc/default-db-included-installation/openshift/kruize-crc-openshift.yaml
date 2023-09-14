@@ -135,6 +135,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/pg_data
+          resources:
+            requests:
+              memory: "10Gi"
+              cpu: "2"
+            limits:
+              memory: "30Gi"
+              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
