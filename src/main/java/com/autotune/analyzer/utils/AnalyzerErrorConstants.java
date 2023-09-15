@@ -144,6 +144,8 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_EXPERIMENT_NAME_MSG = "Given experiment name - \" %s \" is not valid";
             public static final String INVALID_QUERY_PARAM = "The query param(s) - \" %s \" is/are invalid";
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_CLUSTER_NAME_EXCPTN = "Invalid Cluster Name";
+            public static final String INVALID_CLUSTER_NAME_MSG = "Given cluster name - \" %s \" is not valid";
 
             private ListRecommendationsAPI() {
 

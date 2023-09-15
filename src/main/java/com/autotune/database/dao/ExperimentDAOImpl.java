@@ -561,6 +561,36 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeResultsEntries;
     }
+    @Override
+    public List<KruizeResultsEntry> loadResultsByClusterName(String clusterName, Timestamp interval_end_time, Integer limitRows) throws Exception {
+        // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
+        List<KruizeResultsEntry> kruizeResultsEntries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            if (null != limitRows && null != interval_end_time) {
+                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_CLUSTER_NAME_AND_DATE_RANGE, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, clusterName)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
+                        .setMaxResults(limitRows)
+                        .list();
+                statusValue = "success";
+            } else {
+                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_CLUSTER_NAME, KruizeResultsEntry.class)
+                        .setParameter("clsuterName", clusterName).list();
+                statusValue = "success";
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to load results due to: {}", e.getMessage());
+            throw new Exception("Error while loading results from the database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadResultsExpName) {
+                MetricsConfig.timerLoadResultsExpName = MetricsConfig.timerBLoadResultsExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadResultsExpName.stop(MetricsConfig.timerLoadResultsExpName);
+            }
+        }
+        return kruizeResultsEntries;
+    }
 
     @Override
     public List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception {

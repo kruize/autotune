@@ -153,6 +153,47 @@ public class ListRecommendations extends HttpServlet {
                 } catch (Exception e) {
                     LOGGER.error("Loading saved cluster {} failed: {} ", clusterName, e.getMessage());
                 }
+                // Check if cluster exists
+                if (mKruizeExperimentMap.containsKey(clusterName)) {
+                    // Check if timestamp is passed
+                    if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                        monitoringEndTime = monitoringEndTime.trim();
+                        if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                            Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                            monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
+                            // Check if timestamp exists in recommendations
+                            boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(clusterName), monitoringEndTime);
+                            if (timestampExists) {
+                                checkForTimestamp = true;
+                            } else {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
+                                );
+                            }
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
+                            );
+                        }
+                    }
+                    kruizeObjectList.add(mKruizeExperimentMap.get(clusterName));
+                } else {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_CLUSTER_NAME_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_CLUSTER_NAME_MSG, clusterName)
+                    );
+                }
             }else {
                 try {
                     new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
