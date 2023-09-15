@@ -44,13 +44,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
         try {
-            // Fixing the partition type to 'by_month'
-            String partitionType = DBConstants.PARTITION_TYPES.BY_MONTH;
-            YearMonth yearMonth = YearMonth.now();
-            String month = String.format("%02d", yearMonth.getMonthValue());
-            String year = String.valueOf(yearMonth.getYear());
-            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, month, year, partitionType);
-            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, month, year, partitionType);
             try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                 try {
                     tx = session.beginTransaction();
@@ -80,7 +73,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public void addPartitions(String tableName, String month, String year, String partitionType) {
+    public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) {
         Transaction tx;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
@@ -91,7 +84,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
                 // Get the last day of the month
                 int lastDayOfMonth = yearMonth.lengthOfMonth();
-                IntStream.range(1, lastDayOfMonth + 1).forEach(i -> {
+                IntStream.range(dayOfTheMonth, lastDayOfMonth + 1).forEach(i -> {
                     String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
                             year, month, String.format("%02d", i), year, month, String.format("%02d", i));
                     session.createNativeQuery(daterange).executeUpdate();
@@ -192,9 +185,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             // Format the year and month
                             String formattedYear = String.valueOf(yearMonth.getYear());
                             String formattedMonth = yearMonth.format(formatter);
+                            int dayOfTheMonth = localDateTime.getDayOfMonth();
                             // Fixing the partition type to 'by_month'
-                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
-                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
