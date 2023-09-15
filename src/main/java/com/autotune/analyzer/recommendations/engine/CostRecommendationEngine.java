@@ -34,6 +34,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
@@ -481,21 +483,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         boolean isVariationMemoryLimitAvailable = false;
 
 
-        if (numPods == 0) {
-            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
-            notifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be zero");
-            isSuccess = false;
-        } else if (numPods < 0) {
-            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
-            notifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be negative");
-            isSuccess = false;
-        } else {
-            recommendation.setPodsCount(numPods);
-        }
-
-
         // Set Hours
         if (hours == 0.0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_ZERO);
@@ -775,6 +762,22 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemLimit);
         }
 
+        // build the engine level notifications here
+        ArrayList<RecommendationNotification> engineNotifications = new ArrayList<>();
+        if (numPods == 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
+            engineNotifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be zero");
+            isSuccess = false;
+        } else if (numPods < 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
+            engineNotifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be negative");
+            isSuccess = false;
+        } else {
+            recommendation.setPodsCount(numPods);
+        }
+
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
             if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0) {
@@ -790,7 +793,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     // Remove from Variation
                     requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -809,7 +812,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     // Remove from Variation
                     limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -828,7 +831,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     // Remove from Variation
                     requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -847,9 +850,14 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     // Remove from Variation
                     limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
+        }
+
+        // set the engine level notifications here
+        for (RecommendationNotification recommendationNotification : engineNotifications) {
+            recommendation.addNotification(recommendationNotification);
         }
 
         // Set Request Map
@@ -1008,7 +1016,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         }  else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-
+            mappedRecommendationForEngine.addNotification(notification);
         }
         return mappedRecommendationForEngine;
     }

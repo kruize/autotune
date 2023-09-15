@@ -34,6 +34,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
@@ -777,6 +779,22 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
             limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemLimit);
         }
 
+        // build the engine level notifications here
+        ArrayList<RecommendationNotification> engineNotifications = new ArrayList<>();
+        if (numPods == 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
+            engineNotifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be zero");
+            isSuccess = false;
+        } else if (numPods < 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
+            engineNotifications.add(recommendationNotification);
+            LOGGER.error("Number of pods cannot be negative");
+            isSuccess = false;
+        } else {
+            recommendation.setPodsCount(numPods);
+        }
+
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
             if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0) {
@@ -792,7 +810,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     // Remove from Variation
                     requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -811,7 +829,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     // Remove from Variation
                     limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -830,7 +848,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     // Remove from Variation
                     requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
         }
@@ -849,9 +867,14 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     // Remove from Variation
                     limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
-                    notifications.add(recommendationNotification);
+                    engineNotifications.add(recommendationNotification);
                 }
             }
+        }
+
+        // set the engine level notifications here
+        for (RecommendationNotification recommendationNotification : engineNotifications) {
+            recommendation.addNotification(recommendationNotification);
         }
 
         // Set Request Map

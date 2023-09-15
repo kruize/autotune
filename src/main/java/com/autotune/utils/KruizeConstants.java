@@ -254,6 +254,8 @@ public class KruizeConstants {
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 24;
+        public static int NO_OF_HOURS_IN_7_DAYS = 168;
+        public static int NO_OF_HOURS_15_DAYS = 360;
 
         private TimeConv() {
         }
