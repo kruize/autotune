@@ -20,6 +20,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
@@ -48,6 +49,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -146,25 +148,32 @@ public class UpdateRecommendations extends HttpServlet {
 
             LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
 
-            List<ExperimentResultData> experimentResultDataList = null;
+            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             ExperimentResultData experimentResultData = null;
+            Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
             try {
-                experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+                String clusterName = null;
+                if (mainKruizeExperimentMAP.containsKey(experiment_name)) {
+                    clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
+                } else {
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                    request.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, mainKruizeExperimentMAP);
+                    if (null != mainKruizeExperimentMAP.get(experiment_name)) {
+                        clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
+                    }
+                }
+                if (null != clusterName)
+                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, clusterName, interval_start_time, interval_end_time);   // Todo this object is not required
             } catch (Exception e) {
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
 
             if (experimentResultDataList.size() > 0) {
-
-                //Load KruizeObject and generate recommendation
-                Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
+                //generate recommendation
                 try {
-                    //Load KruizeObject
-                    ExperimentDBService experimentDBService = new ExperimentDBService();
-                    experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
                     KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                     ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
                     if (validationOutputData.isSuccess()) {
                         sendSuccessResponse(response, kruizeObject, interval_end_time);
@@ -202,7 +211,7 @@ public class UpdateRecommendations extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
-        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
             LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.

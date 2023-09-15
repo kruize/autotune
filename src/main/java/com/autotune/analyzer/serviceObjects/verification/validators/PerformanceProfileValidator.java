@@ -48,8 +48,8 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
          and then validate the Performance Profile data
         */
         try {
-            KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-            if(UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+            KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
                 new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
                 UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
