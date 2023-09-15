@@ -33,9 +33,9 @@ CLUSTER_TYPE=minikube
 DEPLOYMENT_NAME=kruize
 CONTAINER_NAME=kruize
 NAMESPACE=monitoring
-users=1000
+users=100
 rampup=200
-num_res=100
+num_res=30
 loop=1
 
 RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
@@ -58,7 +58,7 @@ function get_kruize_pod_log() {
 
 	echo ""
 	echo "Fetch the kruize pod logs and store in ${log}..."
-	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | cut -d " " -f1)
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 

@@ -15,12 +15,12 @@
           </elementProp>
           <elementProp name="port" elementType="Argument">
             <stringProp name="Argument.name">port</stringProp>
-            <stringProp name="Argument.value">${__P(port,32565)}</stringProp>
+            <stringProp name="Argument.value">${__P(port,31915)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="users" elementType="Argument">
             <stringProp name="Argument.name">users</stringProp>
-            <stringProp name="Argument.value">${__P(users,10000)}</stringProp>
+            <stringProp name="Argument.value">${__P(users,100)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="rampup" elementType="Argument">
@@ -40,7 +40,7 @@
           </elementProp>
           <elementProp name="num_res" elementType="Argument">
             <stringProp name="Argument.name">num_res</stringProp>
-            <stringProp name="Argument.value">${__P(num_res,100)}</stringProp>
+            <stringProp name="Argument.value">${__P(num_res,30)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="start_time" elementType="Argument">
@@ -191,123 +191,66 @@
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Results" enabled="true">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler Create bulk update results" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">
+def threadNum = ${__threadNum}
+
+// Read JSON from file
+def inputFile = new File(&quot;./json/input.json&quot;)
+def jsonSlurper = new groovy.json.JsonSlurper()
+def dataTemplate = jsonSlurper.parseText(inputFile.text)
+def exp = dataTemplate[0].experiment_name 
+
+def jsonArray = []
+
+
+def currentTime = Calendar.getInstance()
+def startTime = currentTime.clone()
+def endTime = currentTime.clone()
+endTime.add(Calendar.MINUTE, 15)
+
+// Use SimpleDateFormat to format the date-time
+def dateFormat = new java.text.SimpleDateFormat(&quot;yyyy-MM-dd&apos;T&apos;HH:mm:ss.SSS&apos;Z&apos;&quot;)
+
+if (dataTemplate &amp;&amp; dataTemplate.size() &gt; 0) {
+for (int i = 1; i &lt;= 100; i++) {
+    
+    def data = dataTemplate[0]?.clone()   
+
+    data.experiment_name = &quot;quarkus-resteasy-kruize-min-http-response-time-db-&quot; + threadNum
+    data.kubernetes_objects[0].name = &quot;tfb-qrh-deployment-&quot; + threadNum
+    data.kubernetes_objects[0].namespace = &quot;default-&quot; + threadNum
+
+    data.interval_start_time = dateFormat.format(startTime.time)
+    data.interval_end_time = dateFormat.format(endTime.time)
+    
+    startTime = endTime.clone()
+    endTime.add(Calendar.MINUTE, 15)   
+        
+    jsonArray.add(data)
+
+    if (i == 100)
+    		props.put(&quot;e_time_&quot; + threadNum, data.interval_end_time)    		
+}
+}
+
+def requestBody = new groovy.json.JsonBuilder(jsonArray).toPrettyString()
+
+vars.put(&quot;requestBody&quot;, requestBody)
+</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Bulk update Results" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">[&#xd;
-  {&#xd;
-    &quot;version&quot;: &quot;1.0&quot;,&#xd;
-    &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
-    &quot;interval_start_time&quot;: &quot;${start_time}&quot;,&#xd;
-    &quot;interval_end_time&quot;: &quot;${end_time}&quot;,&#xd;
-    &quot;kubernetes_objects&quot;: [&#xd;
-      {&#xd;
-        &quot;type&quot;: &quot;deployment&quot;,&#xd;
-        &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
-        &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
-        &quot;containers&quot;: [&#xd;
-          {&#xd;
-            &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
-            &quot;container_name&quot;: &quot;tfb-server-1&quot;,&#xd;
-            &quot;metrics&quot;: [&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuRequest&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 4.4,&#xd;
-                    &quot;avg&quot;: 1.1,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuLimit&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 2.0,&#xd;
-                    &quot;avg&quot;: 0.5,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuUsage&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 0.14,&#xd;
-                    &quot;max&quot;: 0.84,&#xd;
-                    &quot;sum&quot;: 0.84,&#xd;
-                    &quot;avg&quot;: 0.12,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuThrottle&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 0.19,&#xd;
-                    &quot;max&quot;: 0.09,&#xd;
-                    &quot;avg&quot;: 0.045,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryRequest&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 250.85,&#xd;
-                    &quot;avg&quot;: 50.21,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryLimit&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 500,&#xd;
-                    &quot;avg&quot;: 100,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryUsage&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 50.6,&#xd;
-                    &quot;max&quot;: 198.50,&#xd;
-                    &quot;sum&quot;: 198.50,&#xd;
-                    &quot;avg&quot;: 40.1,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryRSS&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 50.6,&#xd;
-                    &quot;max&quot;: 123.6,&#xd;
-                    &quot;sum&quot;: 123.6,&#xd;
-                    &quot;avg&quot;: 31.91,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              }&#xd;
-            ]&#xd;
-          }&#xd;
-        ]&#xd;
-      }&#xd;
-    ]&#xd;
-  }&#xd;
-]&#xd;
-</stringProp>
+                <stringProp name="Argument.value">${requestBody}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -375,10 +318,88 @@
           </ResultCollector>
           <hashTree/>
         </hashTree>
-        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-          <stringProp name="ConstantTimer.delay">200</stringProp>
-        </ConstantTimer>
-        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Recommendations" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="experiment_name" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">experiment_name</stringProp>
+              </elementProp>
+              <elementProp name="interval_end_time" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${__P(e_time_${__threadNum})}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">interval_end_time</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/updateRecommendations</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="List Recommendations by exp name" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
@@ -470,7 +491,7 @@
           </ResponseAssertion>
           <hashTree/>
           <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-            <stringProp name="ConstantTimer.delay">200</stringProp>
+            <stringProp name="ConstantTimer.delay">10</stringProp>
           </ConstantTimer>
           <hashTree/>
           <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Regular Expression Extractor" enabled="true">
@@ -483,7 +504,7 @@
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler Save recommendation" enabled="true">
           <stringProp name="cacheKey">true</stringProp>
           <stringProp name="filename"></stringProp>
           <stringProp name="parameters"></stringProp>
@@ -497,7 +518,7 @@ FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons/reco&quot; + Str
         </JSR223Sampler>
         <hashTree/>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Update Results - List Recommendations loop" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Bulk Update Results - Update Reco - List Recommendations loop" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
@@ -511,138 +532,68 @@ FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons/reco&quot; + Str
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>
       <hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler Create bulk update results again" enabled="true">
           <stringProp name="cacheKey">true</stringProp>
           <stringProp name="filename"></stringProp>
           <stringProp name="parameters"></stringProp>
-          <stringProp name="script">import org.apache.commons.io.FileUtils;
-import java.io.File;
+          <stringProp name="script">
+def threadNum = ${__threadNum}
 
-String loop = vars.get(&quot;repeat&quot;);
-String logdir = vars.get(&quot;logdir&quot;);
-int threadNum = ctx.getThreadNum();
-FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons_&quot; + loop + &quot;/reco&quot; + String.valueOf(threadNum) + &quot;.json&quot;), vars.get(&quot;myResponse&quot;));
+// Read JSON from file
+def inputFile = new File(&quot;./json/input.json&quot;)
+def jsonSlurper = new groovy.json.JsonSlurper()
+def dataTemplate = jsonSlurper.parseText(inputFile.text)
+def exp = dataTemplate[0].experiment_name
+
+def jsonArray = []
+
+def currentTime = Calendar.getInstance()
+def startTime = currentTime.clone()
+def endTime = currentTime.clone()
+
+def minutesToAdd = 1500
+
+startTime.add(Calendar.MINUTE, minutesToAdd)
+endTime.add(Calendar.MINUTE, minutesToAdd + 15)
+
+// Use SimpleDateFormat to format the date-time
+def dateFormat = new java.text.SimpleDateFormat(&quot;yyyy-MM-dd&apos;T&apos;HH:mm:ss.SSS&apos;Z&apos;&quot;)
+
+for (int i = 1; i &lt;= 100; i++) {
+
+    def data = dataTemplate[0].clone()   
+
+    data.experiment_name = &quot;quarkus-resteasy-kruize-min-http-response-time-db-&quot; + threadNum
+    data.kubernetes_objects[0].name = &quot;tfb-qrh-deployment-&quot; + threadNum
+    data.kubernetes_objects[0].namespace = &quot;default-&quot; + threadNum
+
+    data.interval_start_time = dateFormat.format(startTime.time)
+    data.interval_end_time = dateFormat.format(endTime.time)
+    
+    startTime = endTime.clone()
+    endTime.add(Calendar.MINUTE, 15)   
+    
+    jsonArray.add(data)
+ 
+    if (i == 100)
+    		props.put(&quot;e_time_&quot; + threadNum, data.interval_end_time)    		
+    	
+}
+
+def requestBody = new groovy.json.JsonBuilder(jsonArray).toPrettyString()
+
+vars.put(&quot;requestBody&quot;, requestBody)
 </stringProp>
-          <stringProp name="scriptLanguage">java</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Results Again" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Bulk update Results Again" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">[&#xd;
-  {&#xd;
-    &quot;version&quot;: &quot;1.0&quot;,&#xd;
-    &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
-    &quot;interval_start_time&quot;: &quot;${start_time}&quot;,&#xd;
-    &quot;interval_end_time&quot;: &quot;${end_time}&quot;,&#xd;
-    &quot;kubernetes_objects&quot;: [&#xd;
-      {&#xd;
-        &quot;type&quot;: &quot;deployment&quot;,&#xd;
-        &quot;name&quot;: &quot;tfb-qrh-deployment-${__threadNum}&quot;,&#xd;
-        &quot;namespace&quot;: &quot;default-${__threadNum}&quot;,&#xd;
-        &quot;containers&quot;: [&#xd;
-          {&#xd;
-            &quot;container_image_name&quot;: &quot;kruize/tfb-qrh:1.13.2.F_et17&quot;,&#xd;
-            &quot;container_name&quot;: &quot;tfb-server-1&quot;,&#xd;
-            &quot;metrics&quot;: [&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuRequest&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 4.4,&#xd;
-                    &quot;avg&quot;: 1.1,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuLimit&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 2.0,&#xd;
-                    &quot;avg&quot;: 0.5,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuUsage&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 0.14,&#xd;
-                    &quot;max&quot;: 0.84,&#xd;
-                    &quot;sum&quot;: 0.84,&#xd;
-                    &quot;avg&quot;: 0.12,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;cpuThrottle&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 0.19,&#xd;
-                    &quot;max&quot;: 0.09,&#xd;
-                    &quot;avg&quot;: 0.045,&#xd;
-                    &quot;format&quot;: &quot;cores&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryRequest&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 250.85,&#xd;
-                    &quot;avg&quot;: 50.21,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryLimit&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;sum&quot;: 500,&#xd;
-                    &quot;avg&quot;: 100,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryUsage&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 50.6,&#xd;
-                    &quot;max&quot;: 198.50,&#xd;
-                    &quot;sum&quot;: 198.50,&#xd;
-                    &quot;avg&quot;: 40.1,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              },&#xd;
-              {&#xd;
-                &quot;name&quot;: &quot;memoryRSS&quot;,&#xd;
-                &quot;results&quot;: {&#xd;
-                  &quot;aggregation_info&quot;: {&#xd;
-                    &quot;min&quot;: 50.6,&#xd;
-                    &quot;max&quot;: 123.6,&#xd;
-                    &quot;sum&quot;: 123.6,&#xd;
-                    &quot;avg&quot;: 31.91,&#xd;
-                    &quot;format&quot;: &quot;MiB&quot;&#xd;
-                  }&#xd;
-                }&#xd;
-              }&#xd;
-            ]&#xd;
-          }&#xd;
-        ]&#xd;
-      }&#xd;
-    ]&#xd;
-  }&#xd;
-]&#xd;
-</stringProp>
+                <stringProp name="Argument.value">${requestBody}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -709,40 +660,87 @@ FileUtils.writeStringToFile(new File(logdir + &quot;/reco_jsons_&quot; + loop + 
             <stringProp name="filename"></stringProp>
           </ResultCollector>
           <hashTree/>
-          <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="JSR223 PreProcessor" enabled="true">
-            <stringProp name="cacheKey">true</stringProp>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Update Recommendations Again" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="experiment_name" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">experiment_name</stringProp>
+              </elementProp>
+              <elementProp name="interval_end_time" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${__P(e_time_${__threadNum})}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">interval_end_time</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain"></stringProp>
+          <stringProp name="HTTPSampler.port"></stringProp>
+          <stringProp name="HTTPSampler.protocol"></stringProp>
+          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+          <stringProp name="HTTPSampler.path">/updateRecommendations</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49587">201</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <sentBytes>true</sentBytes>
+                <url>true</url>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+                <connectTime>true</connectTime>
+              </value>
+            </objProp>
             <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-
-String timeString = vars.get(&quot;start_time&quot;);
-
-Instant instant = Instant.parse(timeString);
-
-LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
-LocalDateTime startDateTime = dateTime.plusMinutes(15);
-DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd&apos;T&apos;HH:mm:ss.SSS&apos;Z&apos;&quot;);
-String startTimeString = startDateTime.format(formatter);
-
-vars.put(&quot;start_time&quot;, startTimeString);
-
-// Add 15 minutes to the newTime object
-
-Instant instant = Instant.parse(startTimeString);
-
-dateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
-LocalDateTime endDateTime = dateTime.plusMinutes(15);
-String endTimeString = endDateTime.format(formatter);
-
-
-// Store the new time in a JMeter variable
-vars.put(&quot;end_time&quot;, endTimeString);
-</stringProp>
-            <stringProp name="scriptLanguage">java</stringProp>
-          </JSR223PreProcessor>
+          </ResultCollector>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="List Recommendations Again" enabled="true">
@@ -772,10 +770,6 @@ vars.put(&quot;end_time&quot;, endTimeString);
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-            <stringProp name="ConstantTimer.delay">1000</stringProp>
-          </ConstantTimer>
-          <hashTree/>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
               <stringProp name="49586">200</stringProp>
