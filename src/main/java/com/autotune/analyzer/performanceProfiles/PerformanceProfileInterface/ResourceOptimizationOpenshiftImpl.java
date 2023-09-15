@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.*;
 
+import static com.autotune.utils.KruizeConstants.TimeConv.*;
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -147,7 +148,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         // Check for min data before setting notifications
-                        // Check for atleast short term
+                        // Check for at least short term
                         if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
                                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
@@ -258,7 +259,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                             // TODO: Add check for min data
 
-                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations(recommendationTerm);
+                            TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
 
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
@@ -341,8 +342,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                                 }
                                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
-
                             }
+                            setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm);
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
                         if (!termLevelRecommendationExist) {
@@ -366,6 +367,29 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
                     }
                 }
+            }
+        }
+    }
+
+    private void setDurationBasedOnTerm(ContainerData containerDataKruizeObject, TermRecommendations mappedRecommendationForTerm, RecommendationConstants.RecommendationTerms recommendationTerm) {
+
+        double durationSummation = Double.valueOf(RecommendationUtils.getDurationSummation(containerDataKruizeObject) / NO_OF_MINUTES_PER_HOUR);
+        durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
+        if (durationSummation <= NO_OF_HOURS_PER_DAY) {
+            mappedRecommendationForTerm.setDurationInHrs(durationSummation);
+        } else if (durationSummation <= NO_OF_HOURS_IN_7_DAYS) {
+            if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.SHORT_TERM.getValue())) {
+                mappedRecommendationForTerm.setDurationInHrs(NO_OF_HOURS_PER_DAY);
+            } else {
+                mappedRecommendationForTerm.setDurationInHrs(durationSummation);
+            }
+        } else {
+            if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.SHORT_TERM.getValue())) {
+                mappedRecommendationForTerm.setDurationInHrs(NO_OF_HOURS_PER_DAY);
+            } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.MEDIUM_TERM.getValue())) {
+                mappedRecommendationForTerm.setDurationInHrs(NO_OF_HOURS_IN_7_DAYS);
+            } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())) {
+                mappedRecommendationForTerm.setDurationInHrs(Math.min(NO_OF_HOURS_15_DAYS, durationSummation));
             }
         }
     }

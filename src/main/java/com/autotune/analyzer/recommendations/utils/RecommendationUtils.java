@@ -102,15 +102,21 @@ public class RecommendationUtils {
 
         // Set bounds to check if we get minimum requirement satisfied
         double lowerBound = recommendationTerms.getLowerBound();
-        double sum = 0.0;
+        double sum = getDurationSummation(containerData);
+        // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
+        if (sum >= lowerBound)
+            return true;
+
+        return false;
+    }
+
+    public static double getDurationSummation(ContainerData containerData) {
         // Loop over the data to check if there is min data available
+        double sum = 0.0;
         for (IntervalResults intervalResults : containerData.getResults().values()) {
             sum = sum + intervalResults.getDurationInMinutes();
-            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-            if (sum >= lowerBound)
-                return true;
         }
-        return false;
+        return sum;
     }
 
     public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,

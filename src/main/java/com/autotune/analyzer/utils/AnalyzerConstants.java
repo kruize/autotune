@@ -515,10 +515,6 @@ public class AnalyzerConstants {
         public static final Integer NINETY_EIGHTH_PERCENTILE = 98;
         public static final Integer NINETY_NINTH_PERCENTILE = 99;
         public static final Integer HUNDREDTH_PERCENTILE = 100;
-        public static final Integer COST_CPU_PERCENTILE = 60;
-        public static final Integer COST_MEMORY_PERCENTILE = 100;
-        public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
-        public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
     }
 
     public static final class BooleanString {

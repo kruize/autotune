@@ -869,5 +869,12 @@ public class RecommendationConstants {
             public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
             public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
         }
+        public static class PercentileConstants {
+            public static final Integer COST_CPU_PERCENTILE = 60;
+            public static final Integer COST_MEMORY_PERCENTILE = 100;
+            public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
+            public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
+
+        }
     }
 }
