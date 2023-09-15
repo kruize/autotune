@@ -14,10 +14,9 @@ public class DBConstants {
                         " k.interval_end_time <= :%s ORDER BY k.interval_end_time DESC",
                 KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT = String.format("from KruizeResultsEntry k " +
-                        "WHERE  k.cluster_name = :%s and k.experiment_name = :%s and " +
-                        "k.interval_start_time >= :%s and k.interval_end_time <= :%s " +
+                        "WHERE  k.cluster_name = :%s and k.experiment_name = :%s and k.interval_end_time <= :%s " +
                         "ORDER BY k.interval_end_time DESC",
-                KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_START_TIME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+                KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME = String.format("from KruizeResultsEntry k " +
                         "WHERE k.cluster_name = :%s and k.experiment_name = :%s and k.interval_start_time >= :%s and " +
                         "k.interval_end_time <= :%s",
@@ -32,7 +31,7 @@ public class DBConstants {
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME = "DELETE FROM KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName";
-        public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000Z') TO ('%s-%s-%s 23:59:59');";
+        public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000') TO ('%s-%s-%s 23:59:59');";
     }
 
     public static final class TABLE_NAMES {

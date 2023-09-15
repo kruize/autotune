@@ -93,18 +93,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 int lastDayOfMonth = yearMonth.lengthOfMonth();
                 IntStream.range(1, lastDayOfMonth + 1).forEach(i -> {
                     String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                            year, month, i, year, month, i);
+                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
                     session.createNativeQuery(daterange).executeUpdate();
                 });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
                     IntStream.range(1, 16).forEach(i -> {
                         String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                                year, month, i, year, month, i);
+                                year, month, String.format("%02d", i), year, month, String.format("%02d", i));
                         session.createNativeQuery(daterange).executeUpdate();
                     });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
                 String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
-                        year, month, 1, year, month, 1);
+                        year, month, String.format("%02d", 1), year, month, String.format("%02d", 1));
                 session.createNativeQuery(daterange).executeUpdate();
             } else {
                 LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
