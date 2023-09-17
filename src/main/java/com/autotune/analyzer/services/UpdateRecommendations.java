@@ -65,7 +65,7 @@ public class UpdateRecommendations extends HttpServlet {
     private static ScheduledExecutorService executorService = Executors.newScheduledThreadPool(20);
 
     static {
-        executorService.scheduleAtFixedRate(UpdateRecommendations::newEvent, 0, 0, TimeUnit.MILLISECONDS);
+        executorService.scheduleAtFixedRate(UpdateRecommendations::newEvent, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     private static void newEvent() {
