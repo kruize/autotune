@@ -94,11 +94,11 @@ data:
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
-        "c3p0minsize": 2,
-        "c3p0maxsize": 5,
+        "c3p0minsize": 5,
+        "c3p0maxsize": 10,
         "c3p0timeout": 300,
-        "c3p0maxstatements": 50,
-        "hbm2ddlauto": "update",
+        "c3p0maxstatements": 100,
+        "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
       }
@@ -135,6 +135,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/pg_data
+          resources:
+            requests:
+              memory: "10Gi"
+              cpu: "2"
+            limits:
+              memory: "30Gi"
+              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -169,7 +176,7 @@ metadata:
     app: kruize
   namespace: openshift-tuning
 spec:
-  replicas: 1
+  replicas: 10
   selector:
     matchLabels:
       name: kruize
@@ -201,9 +208,10 @@ spec:
           resources:
             requests:
               memory: "4Gi"
-              cpu: "4"
+              cpu: "2"
             limits:
               memory: "8Gi"
+              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080

@@ -35,7 +35,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         boolean success = false;
         try {
-            KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
             PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             String expName = kruizeObject.getExperimentName();

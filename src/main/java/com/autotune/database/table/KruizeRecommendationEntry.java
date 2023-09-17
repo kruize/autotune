@@ -23,11 +23,10 @@ import java.sql.Timestamp;
                 unique = false)
 })
 public class KruizeRecommendationEntry {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long recommendation_id;
     private String version;
+    @Id
     private String experiment_name;
+    @Id
     private Timestamp interval_end_time;
     private String cluster_name;
     @JdbcTypeCode(SqlTypes.JSON)

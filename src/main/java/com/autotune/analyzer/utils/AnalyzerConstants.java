@@ -89,6 +89,9 @@ public class AnalyzerConstants {
     public static final String PERSISTANCE_STORAGE = "persistance_storage";
     public static final String RESULTS_COUNT = "results_count";
     public static final int GC_THRESHOLD_COUNT = 100;
+    public static final String TARGET = "target/bin";
+    public static final String MIGRATIONS = "migrations";
+    public static final String DDL = "kruize_experiments_ddl.sql";
 
 
     private AnalyzerConstants() {
