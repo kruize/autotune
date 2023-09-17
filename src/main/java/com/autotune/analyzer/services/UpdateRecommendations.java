@@ -157,7 +157,6 @@ public class UpdateRecommendations extends HttpServlet {
                     clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
                 } else {
                     new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-                    request.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, mainKruizeExperimentMAP);
                     if (null != mainKruizeExperimentMAP.get(experiment_name)) {
                         clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
                     }
