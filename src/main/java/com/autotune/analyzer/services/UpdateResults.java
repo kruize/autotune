@@ -59,6 +59,7 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -69,10 +70,8 @@ public class UpdateResults extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+        mainKruizeExperimentMAP = new ConcurrentHashMap<String, KruizeObject>();
         try {
-            performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
-                    .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
