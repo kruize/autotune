@@ -516,7 +516,7 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (numPods == 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
-            LOGGER.debug("Number of pods cannot be zero");
+            LOGGER.debug("Number of pods cannot be zero");  //
             isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
