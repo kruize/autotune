@@ -487,12 +487,12 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         if (hours == 0.0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
-            LOGGER.error("Duration hours cannot be zero");
+            LOGGER.debug("Duration hours cannot be zero");
             isSuccess = false;
         } else if (hours < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_NEGATIVE);
             notifications.add(recommendationNotification);
-            LOGGER.error("Duration hours cannot be negative");
+            LOGGER.debug("Duration hours cannot be negative");
             isSuccess = false;
         }
 
@@ -767,12 +767,12 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         if (numPods == 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
             engineNotifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be zero");
+            LOGGER.debug("Number of pods cannot be zero");
             isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
             engineNotifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be negative");
+            LOGGER.debug("Number of pods cannot be negative");
             isSuccess = false;
         } else {
             recommendation.setPodsCount(numPods);
