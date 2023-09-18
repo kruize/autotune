@@ -94,26 +94,30 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
             the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
         */
         String experiment_name = kruizeObject.getExperimentName();
-        int limitRows = (int) ((
+        int theoriticalLimitRows = (int) ((
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
                         KruizeConstants.DateFormats.MINUTES_FOR_DAY)
                 / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
+
+        // Adding a 10% of value to make sure there are enough data points to gather the duration required
+        // Will be deprecated once we extract exact number of rows from DB based on duration in minutes needed for each term
+        int practicalLimitRows = RecommendationUtils.getThreshold(theoriticalLimitRows, 10, true);
 
         if (null != interval_start_time) {
             long diffMilliseconds = interval_end_time.getTime() - interval_start_time.getTime();
             long minutes = diffMilliseconds / (60 * 1000);
             int addToLimitRows = (int) (minutes / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
             LOGGER.debug("add to limit rows set to {}", addToLimitRows);
-            limitRows = limitRows + addToLimitRows;
+            practicalLimitRows = practicalLimitRows + addToLimitRows;
         }
-        LOGGER.debug("Limit rows set to {}", limitRows);
+        LOGGER.debug("Limit rows set to {}", practicalLimitRows);
 
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
                 experiment_name,
                 interval_end_time,
-                limitRows);
+                practicalLimitRows);
         //TODO: Will be updated once algo is completed
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             if (null != kruizeObject && null != experimentResultData) {
