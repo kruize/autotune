@@ -10,7 +10,6 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,25 +45,23 @@ public class CreatePartition {
                 new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, 1, DBConstants.PARTITION_TYPES.BY_MONTH);
                 new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, 1, DBConstants.PARTITION_TYPES.BY_MONTH);
                 statusValue = "success";
+                tx.commit();
+                LOGGER.info("Partition creation successful!");
             } catch (Exception partitionException) {
                 LOGGER.error(partitionException.getMessage());
-            } finally {
                 tx.commit();
+            } finally {
                 if (null != timerAddBulkResultsDB) {
                     MetricsConfig.timerAddBulkResultsDB = MetricsConfig.timerBAddBulkResultsDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                     timerAddBulkResultsDB.stop(MetricsConfig.timerAddBulkResultsDB);
                 }
             }
+
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
-        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
-
-        Session session = factory.openSession();
-
-        session.close();
         LOGGER.info("DB Liveliness probe connection successful!");
     }
 }
