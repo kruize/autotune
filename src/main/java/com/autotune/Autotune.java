@@ -125,8 +125,11 @@ public class Autotune {
         }
 
         try {
-            server.start();
-            server.join();
+            String startAutotune = System.getenv("START_AUTOTUNE");
+            if (startAutotune == null || startAutotune.equalsIgnoreCase("true")) {
+                server.start();
+                server.join();
+            }
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");
             e.printStackTrace();

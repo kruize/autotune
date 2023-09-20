@@ -123,6 +123,27 @@ data:
       }
     }
 ---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: create-partition-cronjob
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruize
+              image: kruize/autotune_operator:0.0.18_rm
+              imagePullPolicy: IfNotPresent
+              command: ["CreatePartition"]
+              args: [""]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+          restartPolicy: OnFailure
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -77,7 +77,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Transaction tx;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
-            // Create a YearMonth object and get the current month and current year
+            // Create a YearMonth object
             YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
 
             // check the partition type and create corresponding query
@@ -169,37 +169,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
                     String message = constraintViolationException.getCause().getMessage();
                     LOGGER.error(message);
-                    if (message.contains(DBConstants.DB_MESSAGES.DUPLICATE_KEY)) {
-                        entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
-                        failedResultsEntries.add(entry);
-                    } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
-                        try {
-                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
-                            tx.commit();
-                            tx = session.beginTransaction();
-                            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
-                            // Get the current year and month
-                            YearMonth yearMonth = YearMonth.from(localDateTime);
-                            // Format the month with a leading zero if it's a single digit
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM");
-                            // Format the year and month
-                            String formattedYear = String.valueOf(yearMonth.getYear());
-                            String formattedMonth = yearMonth.format(formatter);
-                            int dayOfTheMonth = localDateTime.getDayOfMonth();
-                            // Fixing the partition type to 'by_month'
-                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
-                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
-                            session.persist(entry);
-                            session.flush();
-                        } catch (Exception partitionException) {
-                            LOGGER.error(partitionException.getMessage());
-                            entry.setErrorReasons(List.of(partitionException.getMessage()));
-                            failedResultsEntries.add(entry);
-                        }
-                    } else {
-                        entry.setErrorReasons(List.of(e.getMessage()));
-                        failedResultsEntries.add(entry);
-                    }
                     tx.commit();
                     tx = session.beginTransaction();
                 } catch (Exception e) {
@@ -210,8 +179,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
             }
             tx.commit();
-
-
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
