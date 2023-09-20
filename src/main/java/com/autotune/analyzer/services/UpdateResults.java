@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
@@ -29,7 +28,6 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import io.micrometer.core.instrument.Timer;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +42,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -59,7 +56,6 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -70,7 +66,6 @@ public class UpdateResults extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        mainKruizeExperimentMAP = new ConcurrentHashMap<String, KruizeObject>();
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();

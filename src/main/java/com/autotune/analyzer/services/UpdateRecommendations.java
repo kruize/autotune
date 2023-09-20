@@ -20,7 +20,6 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
@@ -38,7 +37,6 @@ import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.micrometer.core.instrument.Timer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -48,7 +46,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -151,18 +152,18 @@ public class UpdateRecommendations extends HttpServlet {
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             ExperimentResultData experimentResultData = null;
             Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+            KruizeObject kruizeObject = null;
             try {
-                String clusterName = null;
-                if (mainKruizeExperimentMAP.containsKey(experiment_name)) {
-                    clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
-                } else {
-                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-                    if (null != mainKruizeExperimentMAP.get(experiment_name)) {
-                        clusterName = mainKruizeExperimentMAP.get(experiment_name).getClusterName();
-                    }
+                new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                if (null != mainKruizeExperimentMAP.get(experiment_name)) {
+                    kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
                 }
-                if (null != clusterName)
-                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, clusterName, interval_start_time, interval_end_time);   // Todo this object is not required
+                if (null != kruizeObject)
+                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
+                else {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found : experiment_name doesn't exist - %s", experiment_name));
+                    return;
+                }
             } catch (Exception e) {
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
@@ -171,7 +172,6 @@ public class UpdateRecommendations extends HttpServlet {
             if (experimentResultDataList.size() > 0) {
                 //generate recommendation
                 try {
-                    KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
                     new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                     ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
                     if (validationOutputData.isSuccess()) {
@@ -191,10 +191,10 @@ public class UpdateRecommendations extends HttpServlet {
 
                 }
             } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found : interval_end_time doesn't exist - %s", intervalEndTimeStr));
                 return;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -253,6 +253,7 @@ public class UpdateRecommendations extends HttpServlet {
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
+            e.printStackTrace();
             LOGGER.error(e.toString());
             if (null == errorMsg) errorMsg = e.getMessage();
         }

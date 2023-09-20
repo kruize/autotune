@@ -29,8 +29,6 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
@@ -48,13 +46,19 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
          and then validate the Performance Profile data
         */
         try {
-            KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
             if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
                 new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
                 UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
             }
-            PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = null;
+            if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+                performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            } else {
+                throw new Exception(String.format("Not Found : Performance Profile doesn't exist - %s", kruizeObject.getPerformanceProfile()));
+            }
+
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             // validate the 'resultdata' with the performance profile
             String errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, resultData);
@@ -66,10 +70,11 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
                         .addPropertyNode("Performance profile")
                         .addConstraintViolation();
             }
+
         } catch (Exception e) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Performance profile")
+                    .addPropertyNode("")
                     .addConstraintViolation();
         }
         return success;

@@ -41,6 +41,8 @@ public class ExperimentResultData {
     private ValidationOutputData validationOutputData;
     private List<K8sObject> kubernetes_objects;
 
+    private String cluster_name;
+
 
     public String getExperiment_name() {
         return experiment_name;
@@ -140,5 +142,13 @@ public class ExperimentResultData {
     @Override
     public int hashCode() {
         return Objects.hash(experiment_name, intervalEndTime);
+    }
+
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 }

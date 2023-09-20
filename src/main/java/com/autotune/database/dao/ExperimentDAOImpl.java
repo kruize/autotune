@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
+import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
@@ -90,11 +92,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.createNativeQuery(daterange).executeUpdate();
                 });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
-                    IntStream.range(1, 16).forEach(i -> {
-                        String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                                year, month, String.format("%02d", i), year, month, String.format("%02d", i));
-                        session.createNativeQuery(daterange).executeUpdate();
-                    });
+                IntStream.range(1, 16).forEach(i -> {
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                    session.createNativeQuery(daterange).executeUpdate();
+                });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
                 String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
                         year, month, String.format("%02d", 1), year, month, String.format("%02d", 1));
@@ -166,10 +168,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.persist(entry);
                     session.flush();
                 } catch (PersistenceException e) {
-                    ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
-                    String message = constraintViolationException.getCause().getMessage();
+                    ConstraintViolationException constraintViolationException = null;
+                    String message = "";
+                    if (null != e.getCause()) {
+                        constraintViolationException = (ConstraintViolationException) e.getCause();
+                        message = constraintViolationException.getCause().getMessage();
+                    } else {
+                        message = e.getMessage();
+                    }
                     LOGGER.error(message);
-                    if (message.contains(DBConstants.DB_MESSAGES.DUPLICATE_KEY)) {
+                    if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
                         entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
                         failedResultsEntries.add(entry);
                     } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
@@ -187,7 +195,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             String formattedMonth = yearMonth.format(formatter);
                             int dayOfTheMonth = localDateTime.getDayOfMonth();
                             // Fixing the partition type to 'by_month'
-                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth, formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
                             addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
                             session.persist(entry);
                             session.flush();
