@@ -2463,3 +2463,125 @@ Example Response Body:
 | 400              | The Start time should precede the End time!                                                        |                                           |
 | 500              | Internal Server Error                                                                              |
 
+---
+
+## Implementing Retry Mechanism for Kruize API Consumers
+
+When consuming a REST API, it's essential to handle scenarios where the API may respond with errors or encounter
+temporary issues such as a 504 Gateway Timeout. To ensure robustness and reliability, implementing a retry mechanism
+with exponential backoff is a good practice. In this guide, we'll discuss how to implement a retry mechanism with at
+least three attempts for the following scenarios:
+
+```POST /createExperiment```
+
+If the API responds with "Profile Name not found," implement retry logic.
+
+```
+{
+    "message": "Performance Profile doesn't exist : resource-optimization-openshift",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+
+```POST /updateResults```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "Profile_name not found"
+
+Implement retry logic.
+
+```
+{
+    "message": "Out of a total of 2 records, 1 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-04-01T00:00:00.000Z",
+            "interval_end_time": "2023-04-01T00:15:00.000Z",
+            "errors": [
+                {
+                    "message": "Not Found : experiment_name doesn't exist - quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
+                    "httpcode": 400,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1_1"
+        }
+    ]
+}
+```
+
+```
+{
+    "message": "Out of a total of 2 records, 1 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-04-01T00:00:00.000Z",
+            "interval_end_time": "2023-04-01T00:15:00.000Z",
+            "errors": [
+                {
+                    "message": "Not Found : Performance Profile doesn't exist - resource-optimization-openshift",
+                    "httpcode": 400,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        }
+    ]
+}
+```
+
+```POST /updateRecommendations?interval_end_time=&experiment_name=```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "interval_end_time not found"
+
+Implement retry logic.
+
+```
+{
+    "message": "Not Found : experiment_name doesn't exist - quarkus-resteasy-kruize-min-http-response-time-db_1_2",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+
+```
+{
+    "message": "Not Found : interval_end_time doesn't exist - 2023-02-02T00:00:00.000Z",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+
+```POST /*```
+
+- Common Scenario
+
+If any of the APIs respond with a "504 Gateway Timeout" error, implement retry logic.
+
+**Retry Mechanism with Exponential Backoff**
+
+The retry mechanism should follow these steps:
+
+- Send the initial API request.
+- If the response indicates an error condition (as mentioned above), initiate the retry logic.
+- Perform a maximum of three retry attempts.
+- Use exponential backoff with jitter to determine the delay before each retry.
