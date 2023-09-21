@@ -23,7 +23,6 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -304,7 +303,7 @@ public class DBHelpers {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setVersion(experimentResultData.getVersion());
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
-                    kruizeResultsEntry.setCluster_name(UpdateResults.mainKruizeExperimentMAP.get(experimentResultData.getExperiment_name()).getClusterName());
+                    kruizeResultsEntry.setCluster_name(experimentResultData.getCluster_name());
                     kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
                     kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
                     kruizeResultsEntry.setDuration_minutes(
@@ -323,6 +322,7 @@ public class DBHelpers {
                     } catch (JsonProcessingException e) {
                         throw new Exception("Error while creating Extended data due to : " + e.getMessage());
                     }
+
                 } catch (Exception e) {
                     kruizeResultsEntry = null;
                     LOGGER.error("Error while converting ExperimentResultData to ExperimentResultsTable due to {}", e.getMessage());

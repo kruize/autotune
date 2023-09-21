@@ -16,6 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.CompareDate;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
@@ -51,6 +52,8 @@ public class UpdateResultsAPIObject extends BaseSO {
     private List<KubernetesAPIObject> kubernetesAPIObjects;
 
     private List<KruizeResponse> errors;
+
+    private KruizeObject kruizeObject;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -93,12 +96,18 @@ public class UpdateResultsAPIObject extends BaseSO {
                 '}';
     }
 
+    public KruizeObject getKruizeObject() {
+        return kruizeObject;
+    }
+
+    public void setKruizeObject(KruizeObject kruizeObject) {
+        this.kruizeObject = kruizeObject;
+    }
+
     public interface EvaluateRemainingConstraints {
     }
 
-    @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, ExperimentNameExistValidation.class, EvaluateRemainingConstraints.class})
+    @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, EvaluateRemainingConstraints.class})
     public interface FullValidationSequence {
     }
-
-
 }

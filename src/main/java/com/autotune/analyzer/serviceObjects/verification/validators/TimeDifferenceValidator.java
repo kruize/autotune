@@ -19,7 +19,6 @@ package com.autotune.analyzer.serviceObjects.verification.validators;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.TimeDifferenceCheck;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 import jakarta.validation.ConstraintValidator;
@@ -38,18 +37,25 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         boolean success = false;
-
-        KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-
-        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
-        Double durationInSeconds = intervalResults.getDuration_in_seconds();
-        String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
-        Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
-        // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
-        double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
-        double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
-        if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
-            success = true;
+        try {
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
+            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
+            Double durationInSeconds = intervalResults.getDuration_in_seconds();
+            String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
+            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
+            // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
+            double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
+            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
+            if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
+                success = true;
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate(e.getMessage())
+                    .addPropertyNode("Time : ")
+                    .addConstraintViolation();
+        }
 
         return success;
     }

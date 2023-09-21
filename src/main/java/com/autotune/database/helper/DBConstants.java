@@ -47,9 +47,11 @@ public class DBConstants {
         public static final String BY_15_DAYS = "by_fifteen_days";
         public static final String BY_DAY = "by_day";
     }
+
     public static final class DB_MESSAGES {
         public static final String RECORD_ALREADY_EXISTS = "A record with the name %s already exists within the timestamp range starting from %s and ending on %s.";
         public static final String DUPLICATE_KEY = "duplicate key value";
+        public static final String DUPLICATE_KEY_ALT = "A different object with the same identifier value was already associated with the session";
         public static final String NO_PARTITION_RELATION = "no partition of relation";
         public static final String CREATE_PARTITION_RETRY = "Create partition and retry !";
         public static final String INVALID_PARTITION_TYPE = "Invalid Partition Type";
