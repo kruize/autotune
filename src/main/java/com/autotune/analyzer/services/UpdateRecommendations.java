@@ -161,7 +161,7 @@ public class UpdateRecommendations extends HttpServlet {
                 if (null != kruizeObject)
                     experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
                 else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found : experiment_name doesn't exist - %s", experiment_name));
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found:experiment_name does not exist:%s", experiment_name));
                     return;
                 }
             } catch (Exception e) {
@@ -191,7 +191,7 @@ public class UpdateRecommendations extends HttpServlet {
 
                 }
             } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found : interval_end_time doesn't exist - %s", intervalEndTimeStr));
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found:interval_end_time does not exist:%s", intervalEndTimeStr));
                 return;
             }
         } catch (Exception e) {

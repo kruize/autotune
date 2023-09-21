@@ -2478,7 +2478,7 @@ If the API responds with "Profile Name not found," implement retry logic.
 
 ```
 {
-    "message": "Performance Profile doesn't exist : resource-optimization-openshift",
+    "message": "Not Found:performance_profile does not exist:resource-optimization-openshift",
     "httpcode": 400,
     "documentationLink": "",
     "status": "ERROR"
@@ -2506,7 +2506,7 @@ Implement retry logic.
             "interval_end_time": "2023-04-01T00:15:00.000Z",
             "errors": [
                 {
-                    "message": "Not Found : experiment_name doesn't exist - quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
+                    "message": "Not Found:experiment_name does not exist:quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
                     "httpcode": 400,
                     "documentationLink": "",
                     "status": "ERROR"
@@ -2531,7 +2531,7 @@ Implement retry logic.
             "interval_end_time": "2023-04-01T00:15:00.000Z",
             "errors": [
                 {
-                    "message": "Not Found : Performance Profile doesn't exist - resource-optimization-openshift",
+                    "message": "Not Found:Performance Profile does not exist:resource-optimization-openshift",
                     "httpcode": 400,
                     "documentationLink": "",
                     "status": "ERROR"
@@ -2555,7 +2555,7 @@ Implement retry logic.
 
 ```
 {
-    "message": "Not Found : experiment_name doesn't exist - quarkus-resteasy-kruize-min-http-response-time-db_1_2",
+    "message": "Not Found:experiment_name does not exist:quarkus-resteasy-kruize-min-http-response-time-db_1_2",
     "httpcode": 400,
     "documentationLink": "",
     "status": "ERROR"

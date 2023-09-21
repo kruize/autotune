@@ -171,7 +171,7 @@ public class ExperimentInitiator {
                 }
             } else {
                 List<String> errorReasons = new ArrayList<>();
-                errorReasons.add(String.format("Not Found : experiment_name doesn't exist - %s", experimentName));
+                errorReasons.add(String.format("Not Found:experiment_name does not exist:%s", experimentName));
                 object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
             }

@@ -56,7 +56,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             } else {
-                throw new Exception(String.format("Not Found : Performance Profile doesn't exist - %s", kruizeObject.getPerformanceProfile()));
+                throw new Exception(String.format("Not Found:performance_profile does not exist:%s", kruizeObject.getPerformanceProfile()));
             }
 
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
