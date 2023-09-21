@@ -307,3 +307,31 @@ def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluste
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND%(experiment_name)
 
+@pytest.mark.skip(reason="Not enabled interval_start_time yet")
+def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
+    '''
+        Update recommendation with start time precede end time.
+    '''
+    form_kruize_url(cluster_type)
+    experiment_name = "test123"
+    start_time = "2023-01-03T00:15:00.000Z"
+    end_time = "2023-01-02T00:15:00.000Z"
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME
+
+
+@pytest.mark.skip(reason="Not enabled interval_start_time yet")
+def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
+    '''
+        Update recommendation with start time and end time having difference more than 15 days.
+    '''
+    form_kruize_url(cluster_type)
+    experiment_name = "test123"
+    start_time = "2023-01-03T00:15:00.000Z"
+    end_time = "2023-01-30T00:15:00.000Z"
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR
