@@ -40,6 +40,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
+
 /**
  * Initiates new experiment data validations and push into queue for worker to
  * execute task.
@@ -171,7 +173,7 @@ public class ExperimentInitiator {
                 }
             } else {
                 List<String> errorReasons = new ArrayList<>();
-                errorReasons.add(String.format("Not Found:experiment_name does not exist:%s", experimentName));
+                errorReasons.add(String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName));
                 object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
             }

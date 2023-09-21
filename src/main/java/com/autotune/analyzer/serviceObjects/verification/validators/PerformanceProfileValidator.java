@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
+
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
 
@@ -56,7 +58,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             } else {
-                throw new Exception(String.format("Not Found:performance_profile does not exist:%s", kruizeObject.getPerformanceProfile()));
+                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
             }
 
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);

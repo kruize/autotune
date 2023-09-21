@@ -55,6 +55,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_INTERVAL_END_TIME;
 
 /**
  *
@@ -161,7 +163,7 @@ public class UpdateRecommendations extends HttpServlet {
                 if (null != kruizeObject)
                     experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
                 else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found:experiment_name does not exist:%s", experiment_name));
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_EXPERIMENT_NAME, experiment_name));
                     return;
                 }
             } catch (Exception e) {
@@ -191,7 +193,7 @@ public class UpdateRecommendations extends HttpServlet {
 
                 }
             } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("Not Found:interval_end_time does not exist:%s", intervalEndTimeStr));
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr));
                 return;
             }
         } catch (Exception e) {
