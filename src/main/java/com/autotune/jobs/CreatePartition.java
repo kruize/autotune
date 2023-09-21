@@ -27,23 +27,14 @@ public class CreatePartition {
         Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try {
             InitializeDeployment.setup_deployment_info();
-
             // create partitions
             try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                 tx = session.beginTransaction();
                 // Get the current year and month
-                YearMonth yearMonth = YearMonth.now();
-                int year = yearMonth.getYear();
-                int month = yearMonth.getMonthValue() + 1; // increment by one as we need to create the partition for the next month
-                if (month > 12) {
-                    month = 1;
-                    year += 1;
-                }
-                String formattedMonth = String.format("%02d", month);
-                String formattedYear = String.valueOf(year);
+                YearMonth yearMonth = new ExperimentDAOImpl().buildDateForNextMonth(YearMonth.now());
                 // Fixing the partition type to 'by_month'
-                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, formattedMonth,formattedYear, 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, formattedMonth, formattedYear, 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()),String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()),String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
                 statusValue = "success";
                 tx.commit();
                 LOGGER.info("Partition creation successful!");

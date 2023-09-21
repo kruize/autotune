@@ -185,41 +185,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
                             tx.commit();
                             tx = session.beginTransaction();
-                            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
-                            LocalDateTime newDateTime;
-                            int dayOfTheMonth = localDateTime.getDayOfMonth();
-                            // Get the current date
-                            if (dayOfTheMonth < DBConstants.PARTITION_TYPES.PARTITION_DAY) {
-                                // Subtract 15 days from the current date
-                                newDateTime = localDateTime.minus(DBConstants.PARTITION_TYPES.LAST_N_DAYS, ChronoUnit.DAYS);
-                                // Check if the start date is not within the same month
-                                if (newDateTime.getMonth() != localDateTime.getMonth()) {
-                                    newDateTime = localDateTime.minusDays(DBConstants.PARTITION_TYPES.LAST_N_DAYS);
-                                    LOGGER.debug("newDateTime: {}" , newDateTime);
-                                    addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
-                                    addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
-                                }
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-
-                            } else {
-                                // create the partitions for the rest of the days for the current month
-                                // Fixing the partition type to 'by_month'
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
-
-                                // create the partitions for the next month
-                                // Get the current year and month
-                                YearMonth yearMonth = YearMonth.now();
-                                int year = yearMonth.getYear();
-                                int month = yearMonth.getMonthValue() + 1; // increment by one as we need to create the partition for the next month
-                                if (month > 12) {
-                                    month = 1;
-                                    year += 1;
-                                }
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", month),String.valueOf(year), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-                                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", month),String.valueOf(year), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-                            }
+                            // create partitions based on entry object
+                            createPartitions(entry);
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
@@ -255,6 +222,43 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return failedResultsEntries;
+    }
+
+    private void createPartitions(KruizeResultsEntry entry) {
+        try {
+            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
+            LocalDateTime newDateTime;
+            int dayOfTheMonth = localDateTime.getDayOfMonth();
+            // Subtract 15 days from the current date
+            newDateTime = localDateTime.minus(DBConstants.PARTITION_TYPES.LAST_N_DAYS, ChronoUnit.DAYS);
+            // Check if the start date is not within the same month and adjust the date accordingly
+            if (newDateTime.getMonth() != localDateTime.getMonth()) {
+                newDateTime = localDateTime.minusDays(DBConstants.PARTITION_TYPES.LAST_N_DAYS);
+                LOGGER.debug("newDateTime: {}", newDateTime);
+            }
+            // create partition for the previous 15 days
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+
+            // check the dayOfTheMonth and create partitions accordingly
+            if (dayOfTheMonth < DBConstants.PARTITION_TYPES.PARTITION_DAY) {
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            } else {
+                // create the partitions for the rest of the days for the current month
+                // Fixing the partition type to 'by_month'
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+
+                // create the partitions for the next month
+                YearMonth yearMonth = buildDateForNextMonth(YearMonth.of(localDateTime.getYear(), localDateTime.getMonthValue()));
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while creating partitions: ");
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -630,5 +634,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
+    }
+
+    public YearMonth buildDateForNextMonth(YearMonth yearMonth) {
+        int year = yearMonth.getYear();
+        int month = yearMonth.getMonthValue() + 1; // increment by one as we need to create the partition for the next month
+        if (month > 12) {
+            month = 1;
+            year += 1;
+        }
+        yearMonth = YearMonth.of(year, month);
+        return yearMonth;
     }
 }

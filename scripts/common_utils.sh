@@ -97,16 +97,16 @@ kruize_crc_start() {
 				prev=$3;
 				print
 			} else if ($1=="image:" && prev=="kruizecronjob") {
-        $2=image_name;
-        printf"              %s %s\n", $1, $2;
-      } else if ($1=="image:" && prev=="kruize") {
+				$2=image_name;
+				printf"              %s %s\n", $1, $2;
+	  		} else if ($1=="image:" && prev=="kruize") {
 				$2=image_name;
 				printf"          %s %s\n", $1, $2;
 			} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {
-        $2=ui_image_name;
-        printf"      %s %s\n", $1, $2;
+				$2=ui_image_name;
+				printf"      %s %s\n", $1, $2;
       } else { print }
-		 }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
+  }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
 	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
 	check_running kruize ${autotune_ns} kruize-ui
 	if [ "${err}" != "0" ]; then
