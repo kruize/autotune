@@ -187,6 +187,10 @@
                             <mainClass>com.autotune.Autotune</mainClass>
                             <name>Autotune</name>
                         </program>
+                        <program>
+                            <mainClass>com.autotune.jobs.CreatePartition</mainClass>
+                            <name>CreatePartition</name>
+                        </program>
                     </programs>
                 </configuration>
                 <executions>

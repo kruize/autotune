@@ -96,7 +96,10 @@ kruize_crc_start() {
 			if ($2=="name:") {
 				prev=$3;
 				print
-			} else if ($1=="image:" && prev=="kruize") {
+			} else if ($1=="image:" && prev=="kruizecronjob") {
+        $2=image_name;
+        printf"              %s %s\n", $1, $2;
+      } else if ($1=="image:" && prev=="kruize") {
 				$2=image_name;
 				printf"          %s %s\n", $1, $2;
 			} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {

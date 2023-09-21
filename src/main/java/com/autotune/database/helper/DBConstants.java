@@ -46,6 +46,8 @@ public class DBConstants {
         public static final String BY_MONTH = "by_month";
         public static final String BY_15_DAYS = "by_fifteen_days";
         public static final String BY_DAY = "by_day";
+        public static final int PARTITION_DAY = 25;
+        public static final int LAST_N_DAYS = 15;
     }
 
     public static final class DB_MESSAGES {
