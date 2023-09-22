@@ -176,13 +176,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     } else {
                         message = e.getMessage();
                     }
-                    LOGGER.error(message);
+                    LOGGER.debug(message);
                     if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
                         entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
                         failedResultsEntries.add(entry);
                     } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
                         try {
-                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                            LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
                             tx.commit();
                             tx = session.beginTransaction();
                             // create partitions based on entry object
@@ -190,7 +190,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
-                            LOGGER.error(partitionException.getMessage());
+                            LOGGER.debug(partitionException.getMessage());
                             entry.setErrorReasons(List.of(partitionException.getMessage()));
                             failedResultsEntries.add(entry);
                         }

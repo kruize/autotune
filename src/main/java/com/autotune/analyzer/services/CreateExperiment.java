@@ -121,7 +121,7 @@ public class CreateExperiment extends HttpServlet {
                         sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                     }
                 } else {
-                    LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidation_data().getMessage());
+                    LOGGER.debug("Failed to create experiment: {}", invalidKruizeObject.getValidation_data().getMessage());
                     sendErrorResponse(response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
                 }
             }
