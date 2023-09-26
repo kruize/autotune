@@ -22,7 +22,9 @@ import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.serviceObjects.*;
+import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -227,7 +229,7 @@ public class DBHelpers {
                                 } else {
                                     containerRecommendations.getNotificationMap().clear();
                                     containerRecommendations.getNotificationMap().putAll(containerAPIObject.getContainerRecommendations().getNotificationMap());
-                                    HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data = containerRecommendations.getData();
+                                    HashMap<Timestamp, MappedRecommendationForTimestamp> data = containerRecommendations.getData();
                                     data.putAll(containerAPIObject.getContainerRecommendations().getData());
                                 }
                             }
@@ -303,6 +305,7 @@ public class DBHelpers {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setVersion(experimentResultData.getVersion());
                     kruizeResultsEntry.setExperiment_name(experimentResultData.getExperiment_name());
+                    kruizeResultsEntry.setCluster_name(UpdateResults.mainKruizeExperimentMAP.get(experimentResultData.getExperiment_name()).getClusterName());
                     kruizeResultsEntry.setInterval_start_time(experimentResultData.getIntervalStartTime());
                     kruizeResultsEntry.setInterval_end_time(experimentResultData.getIntervalEndTime());
                     kruizeResultsEntry.setDuration_minutes(
@@ -357,7 +360,7 @@ public class DBHelpers {
                             continue;
                         if (clonedContainerData.getContainerRecommendations().getData().isEmpty())
                             continue;
-                        HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                        HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
                                 = clonedContainerData.getContainerRecommendations().getData();
                         if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
                             matchFound = true;
@@ -652,8 +655,6 @@ public class DBHelpers {
 
                 return performanceProfiles;
             }
-
-
         }
     }
 }

@@ -19,6 +19,7 @@ package com.autotune.analyzer.serviceObjects.verification.validators;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.TimeDifferenceCheck;
+import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 import jakarta.validation.ConstraintValidator;
@@ -38,7 +39,7 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         boolean success = false;
 
-        KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+        KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
 
         IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         Double durationInSeconds = intervalResults.getDuration_in_seconds();

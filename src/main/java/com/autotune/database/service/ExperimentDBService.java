@@ -127,8 +127,9 @@ public class ExperimentDBService {
 
     public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
         // Load results from the DB and save to local
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, kruizeObject.getClusterName(), interval_end_time, limitRows);
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
             if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
@@ -310,9 +311,9 @@ public class ExperimentDBService {
     }
 
 
-    public List<ExperimentResultData> getExperimentResultData(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+    public List<ExperimentResultData> getExperimentResultData(String experiment_name, String clusterName, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-        List<KruizeResultsEntry> kruizeResultsEntryList = experimentDAO.getKruizeResultsEntry(experiment_name, interval_start_time, interval_end_time);
+        List<KruizeResultsEntry> kruizeResultsEntryList = experimentDAO.getKruizeResultsEntry(experiment_name, clusterName, interval_start_time, interval_end_time);
         if (null != kruizeResultsEntryList) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntryList);
             for (UpdateResultsAPIObject updateObject : updateResultsAPIObjects) {

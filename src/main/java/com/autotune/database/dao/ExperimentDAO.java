@@ -51,7 +51,7 @@ public interface ExperimentDAO {
 
     // Load all results for a particular experimentName
 
-    List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_start_time, Integer limitRows) throws Exception;
+    List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp interval_start_time, Integer limitRows) throws Exception;
 
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
@@ -62,11 +62,12 @@ public interface ExperimentDAO {
 
 
     // Load all recommendations of a particular experiment and interval end Time
-    KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception;
+    KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
 
     // Get KruizeResult Record
-    List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
+    List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
+    public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
     List<String> loadAllClusterNames() throws Exception;
 

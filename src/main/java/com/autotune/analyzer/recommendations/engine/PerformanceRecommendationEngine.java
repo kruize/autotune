@@ -34,26 +34,28 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
-public class CostRecommendationEngine implements KruizeRecommendationEngine {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CostRecommendationEngine.class);
+public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
+    private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
     private String name;
     private String key;
     private RecommendationConstants.RecommendationCategory category;
 
-    public CostRecommendationEngine() {
-        this.name = RecommendationConstants.RecommendationEngine.EngineNames.COST;
-        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.COST_KEY;
-        this.category = RecommendationConstants.RecommendationCategory.COST;
+    public PerformanceRecommendationEngine() {
+        this.name = RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE;
+        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.PERFORMANCE_BASED_KEY;
+        this.category = RecommendationConstants.RecommendationCategory.PERFORMANCE;
     }
 
-    public CostRecommendationEngine(String name) {
+    public PerformanceRecommendationEngine(String name) {
         this.name = name;
     }
+
 
     /**
      * Calculate the number of pods being used as per the latest results
@@ -135,7 +137,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(COST_CPU_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuUsageList);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
@@ -250,11 +252,11 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 .collect(Collectors.toList());
 
         // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(COST_MEMORY_PERCENTILE, memUsageList);
+        Double memRecUsage = CommonUtils.percentile(PERFORMANCE_MEMORY_PERCENTILE, memUsageList);
         Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
 
         // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(COST_MEMORY_PERCENTILE, spikeList);
+        Double memRecSpike = CommonUtils.percentile(PERFORMANCE_MEMORY_PERCENTILE, spikeList);
         memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
         Double memRecSpikeBuf = memRecUsage + memRecSpike;
 
@@ -483,16 +485,31 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         boolean isVariationMemoryLimitAvailable = false;
 
 
+        if (numPods == 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
+            notifications.add(recommendationNotification);
+            LOGGER.debug("Number of pods cannot be zero");
+            isSuccess = false;
+        } else if (numPods < 0) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
+            notifications.add(recommendationNotification);
+            LOGGER.debug("Number of pods cannot be negative");
+            isSuccess = false;
+        } else {
+            recommendation.setPodsCount(numPods);
+        }
+
+
         // Set Hours
         if (hours == 0.0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
-            LOGGER.debug("Duration hours cannot be zero");
+            LOGGER.error("Duration hours cannot be zero");
             isSuccess = false;
         } else if (hours < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_NEGATIVE);
             notifications.add(recommendationNotification);
-            LOGGER.debug("Duration hours cannot be negative");
+            LOGGER.error("Duration hours cannot be negative");
             isSuccess = false;
         }
 
@@ -1016,7 +1033,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         }  else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            mappedRecommendationForEngine.addNotification(notification);
+
         }
         return mappedRecommendationForEngine;
     }

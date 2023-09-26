@@ -1,4 +1,4 @@
 pytest
 requests
 jinja2
-pytest-html
+pytest-html==3.2.0
