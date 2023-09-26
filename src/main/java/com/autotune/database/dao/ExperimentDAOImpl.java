@@ -177,7 +177,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     } else {
                         message = e.getMessage();
                     }
-                    LOGGER.error(message);
+                    LOGGER.debug(message);
                     if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
                         entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
                         failedResultsEntries.add(entry);
