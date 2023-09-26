@@ -565,16 +565,23 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
         String statusValue = "failure";
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
+
         Timer.Sample timerLoadRecExpNameDate = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            recommendationEntries = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME, KruizeRecommendationEntry.class)
-                    .setParameter(CLUSTER_NAME, cluster_name)
+            Query<KruizeRecommendationEntry> kruizeRecommendationEntryQuery = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME + clusterCondtionSql, KruizeRecommendationEntry.class)
                     .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                    .getSingleResult();
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+            if (cluster_name != null)
+                kruizeRecommendationEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+            recommendationEntries = kruizeRecommendationEntryQuery.getSingleResult();
             statusValue = "success";
         } catch (NoResultException e) {
-            LOGGER.debug("Generating mew recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
+            LOGGER.debug("Generating new recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             recommendationEntries = null;
