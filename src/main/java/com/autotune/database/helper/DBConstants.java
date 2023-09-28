@@ -15,7 +15,7 @@ public class DBConstants {
                                 "k.interval_end_time >= :%s and " +
                                 "k.interval_end_time <= :%s ",
                         KruizeConstants.JSONKeys.EXPERIMENT_NAME,
-                        KruizeConstants.JSONKeys.INTERVAL_START_TIME,
+                        KruizeConstants.JSONKeys.CALCULATED_START_TIME,
                         KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME = String.format("from KruizeResultsEntry k " +
                         "WHERE k.experiment_name = :%s and k.interval_start_time >= :%s and " +

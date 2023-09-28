@@ -502,7 +502,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name,  Timestamp interval_start_time,Timestamp interval_end_time) throws Exception {
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name,  Timestamp calculated_start_time,Timestamp interval_end_time) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
         String statusValue = "failure";
@@ -512,13 +512,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         else
             clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
         Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
-        LOGGER.debug("startTime : {} , endTime : {}",interval_start_time,interval_end_time);
-        LOGGER.debug(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT + clusterCondtionSql);
+        LOGGER.debug("startTime : {} , endTime : {}",calculated_start_time,interval_end_time);
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            if (null != interval_start_time && null != interval_end_time) {
+            if (null != calculated_start_time && null != interval_end_time) {
                 Query<KruizeResultsEntry> kruizeResultsEntryQuery = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT + clusterCondtionSql , KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, interval_start_time)
+                        .setParameter(KruizeConstants.JSONKeys.CALCULATED_START_TIME, calculated_start_time)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
                 if (cluster_name != null)
                     kruizeResultsEntryQuery.setParameter(CLUSTER_NAME, cluster_name);

@@ -187,6 +187,8 @@ public class KruizeConstants {
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String INTERVAL_START_TIME = "interval_start_time";
+
+        public static final String CALCULATED_START_TIME = "calculated_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String DURATION_IN_MINUTES = "duration_in_minutes";
         public static final String DURATION_IN_HOURS = "duration_in_hours";
