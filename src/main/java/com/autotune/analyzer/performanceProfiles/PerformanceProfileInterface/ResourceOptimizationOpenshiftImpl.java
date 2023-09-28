@@ -93,13 +93,13 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
         cal.add(Calendar.DAY_OF_MONTH, -(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS +
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
         // Get the new Timestamp after subtracting 10 days
-        interval_start_time = new Timestamp(cal.getTimeInMillis());
+        Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         String experiment_name = kruizeObject.getExperimentName();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
                 experiment_name,
-                interval_start_time,interval_end_time);
+                calculated_start_time,interval_end_time);
         //TODO: Will be updated once algo is completed
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             if (null != kruizeObject && null != experimentResultData) {
