@@ -252,6 +252,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: create-partition-cronjob
+  namespace: openshift-tuning
 spec:
   schedule: "0 0 25 * *" # Run on 25th of every month at midnight
   jobTemplate:
@@ -269,7 +270,7 @@ spec:
                 - sh
                 - -c
                 - |
-                  chmod +x /home/autotune/app/target/bin/CreatePartition && /home/autotune/app/target/bin/CreatePartition
+                  /home/autotune/app/target/bin/CreatePartition
               args: [ "" ]
               env:
                 - name: START_AUTOTUNE
