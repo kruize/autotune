@@ -6,7 +6,7 @@ Documentation still in progress stay tuned.
 **Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
 2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
 
-### Resource Analysis Terms and Defaults
+## Resource Analysis Terms and Defaults
 
 When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and fine-tuning resource allocation.
 
@@ -17,6 +17,33 @@ Below are the default terms used in resource analysis, along with their respecti
 | Short      | 1 day    | 6 hours   |
 | Medium     | 7 days   | 6 hours   |
 | Long       | 15 days  | 6 hours   |
+
+**Short Term**
+
+    Duration: 24 hours
+    Threshold: 6 hours
+
+**Duration**: The "duration" in the short-term analysis refers to the amount of historical data taken into account when assessing resource utilization. In this case, it covers the most recent 24 hours of data.
+
+**Threshold**: The "threshold" is an additional buffer period. It encompasses the 24-hour duration and extends an extra six hours. This buffer accommodates any potential data gaps or misses within the 24-hour window, ensuring a comprehensive analysis.
+
+**Medium Term**
+
+    Duration: 7 days
+    Threshold: 6 hours
+
+**Duration**: The "duration" for the medium-term analysis extends further into the past, considering resource data from the last seven days. It provides a broader perspective on resource trends and utilization.
+
+**Threshold**: Similar to the short term, the "threshold" for the medium term includes an extra buffer of six hours. This buffer complements the seven-day duration, accounting for any data discrepancies or gaps within that timeframe.
+
+**Long Term**
+
+    Duration: 15 days
+    Threshold: 6 hours
+
+**Duration**: The "duration" in the long-term analysis offers insights into resource utilization over a more extended period, encompassing data from the last 15 days. This extended timeframe allows for a comprehensive evaluation of resource patterns.
+
+**Threshold**: Like the short and medium terms, the "threshold" for the long term includes a buffer period of six hours. This buffer enhances the 15-day duration, ensuring that any missing or delayed data is considered during the analysis.
 
 
 ## CreateExperiment
