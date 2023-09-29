@@ -207,6 +207,20 @@ public class KruizeConstants {
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
+        public static final String CHANGE = "change";
+        public static final String SUMMARY = "summary";
+        public static final String NAMESPACE_NAME = "namespace_name";
+        public static final String SUMMARIZE_TYPE = "summarize_type";
+        public static final String CLUSTER = "cluster";
+        public static final String FETCH_FROM_DB = "fetchFromDB";
+        public static final String IDLE = "idle";
+        public static final String OPTIMIZED = "optimized";
+        public static final String CRITICAL = "critical";
+        public static final String OPTIMIZABLE = "optimizable";
+        public static final String TOTAL = "total";
+        public static final String WORKLOAD_NAMES = "workload_names";
+        public static final String NAMES = "names";
+        public static final String NO_DATA = "no_data";
 
         private JSONKeys() {
         }

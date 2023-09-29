@@ -9,6 +9,7 @@ import com.autotune.database.table.KruizeRecommendationEntry;
 import com.autotune.database.table.KruizeResultsEntry;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 
 public interface ExperimentDAO {
@@ -68,4 +69,19 @@ public interface ExperimentDAO {
 
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
+    List<String> loadAllClusterNames() throws Exception;
+
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByNamespaceName(String namespaceName, List<KruizeExperimentEntry> entries) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByClusterName(String clusterName) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentFromDBByClusterAndNamespaceName(String clusterName, String namespaceName) throws Exception;
+
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByClusterAndNamespaceName(String clusterName, String namespaceName, List<KruizeExperimentEntry> entries) throws Exception;
+
+    List<KruizeRecommendationEntry> loadRecommendationsFromDBByClusterName(String clusterName, List<KruizeExperimentEntry> entries) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentsByNamespaceName(String namespaceName) throws Exception;
+
+    HashMap<String, List<String>> loadAllClusterNamespaceAssociation() throws Exception;
 }

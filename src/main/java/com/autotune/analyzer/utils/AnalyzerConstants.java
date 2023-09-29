@@ -129,6 +129,12 @@ public class AnalyzerConstants {
         limits
     }
 
+    public enum ResourceChange {
+        increase,
+        decrease,
+        variation
+    }
+
     public enum PersistenceType {
         LOCAL,              //Store only local  , Default
         HYBRID,             //Store data both in db and local
@@ -530,5 +536,11 @@ public class AnalyzerConstants {
         private BooleanString() {
 
         }
+    }
+
+    public enum ActionSummaryRecommendationItem {
+        cpu,
+        memory,
+        general
     }
 }

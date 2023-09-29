@@ -40,9 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -111,22 +109,7 @@ public class ExperimentDBService {
 
         // Load Recommendations from DB and save to local
         List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadAllRecommendations();
-        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
-            List<ListRecommendationsAPIObject> recommendationsAPIObjects
-                    = null;
-            try {
-                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
-                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
-            } catch (InvalidConversionOfRecommendationEntryException e) {
-                e.printStackTrace();
-            }
-            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
-
-                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
-                        recommendationsAPIObjects,
-                        true);
-            }
-        }
+        saveDBRecommendationsDataToLocal(mainKruizeExperimentMap, experimentInterface, recommendationEntries);
     }
 
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
@@ -173,21 +156,7 @@ public class ExperimentDBService {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load Recommendations from DB and save to local
         List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByExperimentName(experimentName);
-        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
-            List<ListRecommendationsAPIObject> recommendationsAPIObjects
-                    = null;
-            try {
-                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
-                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
-            } catch (InvalidConversionOfRecommendationEntryException e) {
-                e.printStackTrace();
-            }
-            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
-                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
-                        recommendationsAPIObjects,
-                        true);
-            }
-        }
+        saveDBRecommendationsDataToLocal(mainKruizeExperimentMap, experimentInterface, recommendationEntries);
     }
 
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
@@ -354,5 +323,153 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
+    }
+
+    public List<String> loadAllClusterNames() throws Exception {
+        return experimentDAO.loadAllClusterNames();
+    }
+
+    public void loadExperimentsAndRecommendationsByClusterAndNamespaceName(Map<String, KruizeObject> mKruizeExperimentMap,
+                                                                           String clusterName, String namespaceName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentFromDBByClusterAndNamespaceName(clusterName, namespaceName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("unable to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+
+        loadRecommendationsFromDBByClusterAndNamespaceName(mKruizeExperimentMap, clusterName, namespaceName, entries);
+    }
+
+    private void loadRecommendationsFromDBByClusterAndNamespaceName(Map<String, KruizeObject> mKruizeExperimentMap, String clusterName,
+                                                                    String namespaceName, List<KruizeExperimentEntry> entries) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsFromDBByClusterAndNamespaceName(
+                clusterName, namespaceName, entries);
+        saveDBRecommendationsDataToLocal(mKruizeExperimentMap, experimentInterface, recommendationEntries);
+    }
+
+    public void loadExperimentsAndRecommendationsByClusterName(Map<String, KruizeObject> mKruizeExperimentMap, String clusterName) throws Exception {
+        // Load experiments from DB and save to local
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = null;
+        try {
+             entries = experimentDAO.loadExperimentsByClusterName(clusterName);
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while loading experiments from the DB: {}", e.getMessage());
+        }
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("Unable to load Experiment with cluster name " + clusterName + "  from the DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+
+        // load recommendations for the experiments fetched in the above step
+        loadRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName, entries);
+    }
+
+    private void loadRecommendationsFromDBByClusterName(Map<String, KruizeObject> mKruizeExperimentMap, String clusterName,
+                                                        List<KruizeExperimentEntry> entries) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeRecommendationEntry> recommendationEntries = null;
+        // Load Recommendations from DB and save to local
+        try {
+            recommendationEntries = experimentDAO.loadRecommendationsFromDBByClusterName(clusterName, entries);
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while fetching recommendations by cluster name: {}", e.getMessage());
+        }
+        saveDBRecommendationsDataToLocal(mKruizeExperimentMap, experimentInterface, recommendationEntries);
+    }
+
+    private void saveDBRecommendationsDataToLocal(Map<String, KruizeObject> mKruizeExperimentMap, ExperimentInterface experimentInterface, List<KruizeRecommendationEntry> recommendationEntries) {
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
+    public void loadExperimentsAndRecommendationsByNamespaceName(Map<String, KruizeObject> mKruizeExperimentMap, String namespaceName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentsByNamespaceName(namespaceName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("Unable to load Experiment with namespace name " + namespaceName + "  from the DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+
+        loadRecommendationsFromDBByNamespaceName(mKruizeExperimentMap, namespaceName, entries);
+    }
+
+    private void loadRecommendationsFromDBByNamespaceName(Map<String, KruizeObject> mKruizeExperimentMap, String namespaceName, List<KruizeExperimentEntry> entries) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsFromDBByNamespaceName(namespaceName, entries);
+        saveDBRecommendationsDataToLocal(mKruizeExperimentMap, experimentInterface, recommendationEntries);
+    }
+
+    public HashMap<String, List<String>> loadAllClusterNamespaceAssociationMap() throws Exception {
+        return experimentDAO.loadAllClusterNamespaceAssociation();
     }
 }

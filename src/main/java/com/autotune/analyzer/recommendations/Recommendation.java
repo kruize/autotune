@@ -150,6 +150,8 @@ public class Recommendation {
                 ", confidence_level=" + confidence_level +
                 ", config=" + config +
                 ", current=" + currentConfig +
+                ", variation=" + variation +
+                ", notifications=" + notifications +
                 '}';
     }
 }
