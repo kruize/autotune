@@ -10,9 +10,6 @@ Documentation still in progress stay tuned.
 
 1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
   - [Terms, Duration & Threshold Table](#terms-duration--threshold-table)
-  - [Short Term](#short-term)
-  - [Medium Term](#medium-term)
-  - [Long Term](#long-term)
 
 2. [API's](#apis)
   - [Create Experiment API](#create-experiment-api)
@@ -57,35 +54,10 @@ Below are the default terms used in resource analysis, along with their respecti
 | Medium     | 7 days   | 6 hours   |
 | Long       | 15 days  | 6 hours   |
 
-<a name="short-term"></a>
-##### Short Term
+**Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when assessing resource utilization.
 
-    Duration: 24 hours
-    Threshold: 6 hours
+**Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
 
-**Duration**: The "duration" in the short-term analysis refers to the amount of historical data taken into account when assessing resource utilization. In this case, it covers the most recent 24 hours of data.
-
-**Threshold**: The "threshold" is an additional buffer period. It encompasses the 24-hour duration and extends an extra six hours. This buffer accommodates any potential data gaps or misses within the 24-hour window, ensuring a comprehensive analysis.
-
-<a name="medium-term"></a>
-##### Medium Term
-
-    Duration: 7 days
-    Threshold: 6 hours
-
-**Duration**: The "duration" for the medium-term analysis extends further into the past, considering resource data from the last seven days. It provides a broader perspective on resource trends and utilization.
-
-**Threshold**: Similar to the short term, the "threshold" for the medium term includes an extra buffer of six hours. This buffer complements the seven-day duration, accounting for any data discrepancies or gaps within that timeframe.
-
-<a name="long-term"></a>
-##### Long Term
-
-    Duration: 15 days
-    Threshold: 6 hours
-
-**Duration**: The "duration" in the long-term analysis offers insights into resource utilization over a more extended period, encompassing data from the last 15 days. This extended timeframe allows for a comprehensive evaluation of resource patterns.
-
-**Threshold**: Like the short and medium terms, the "threshold" for the long term includes a buffer period of six hours. This buffer enhances the 15-day duration, ensuring that any missing or delayed data is considered during the analysis.
 
 <a name="apis"></a>
 ## API's 
