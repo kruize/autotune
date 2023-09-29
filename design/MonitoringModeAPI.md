@@ -97,7 +97,12 @@ see [Update results](/design/UpdateResults.md)
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updateResults`
 
-```
+<details>
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
 [
   {
     "version": "1.0",
@@ -329,12 +334,17 @@ see [Update results](/design/UpdateResults.md)
     ]
   }
 ]
-
 ```
+</details>
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Updated metrics results successfully with Autotune. View update results at /listExperiments",
     "httpcode": 201,
@@ -342,6 +352,8 @@ see [Update results](/design/UpdateResults.md)
     "status": "SUCCESS"
 }
 ```
+</details>
+
 
 The UpdateResults API has been enhanced to support bulk uploads of up to 100 records at once. When all records are
 successfully processed, the API will return the same success response as depicted above. However, if any or all of the
@@ -350,7 +362,12 @@ structure outlined below for handling duplicate records:
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Out of a total of 3 records, 3 failed to save",
     "httpcode": 400,
@@ -400,6 +417,8 @@ structure outlined below for handling duplicate records:
     ]
 }
 ```
+</details>
+
 
 **Response**
 
@@ -407,7 +426,12 @@ In the response below, among the three records, one record was successfully save
 The failed records are indicated in the 'data' attribute using the 'error' attribute, allowing you to identify the
 specific attribute causing the failures.
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Out of a total of 3 records, 2 failed to save",
     "httpcode": 400,
@@ -445,6 +469,9 @@ specific attribute causing the failures.
     ]
 }
 ```
+</details>
+
+## List Experiments
 
 **Request with experiment name parameter**
 
@@ -466,7 +493,12 @@ Returns the latest result of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -649,6 +681,9 @@ Returns the latest result of all the experiments
 ]
 ```
 
+</details>
+
+
 <br>
 
 **Request with results set to true and with experiment name parameter**
@@ -670,7 +705,12 @@ Returns all the results of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -897,6 +937,9 @@ Returns all the results of all the experiments
 ]
 ```
 
+</details>
+
+
 <br>
 
 **Request with results set to true, latest set to false and with experiment name parameter**
@@ -917,7 +960,12 @@ Returns the latest recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -1156,6 +1204,9 @@ Returns the latest recommendations of all the experiments
 ]
 ```
 
+</details>
+
+
 <br><br>
 **Request with recommendations set to true with experiment name parameter**
 
@@ -1176,7 +1227,12 @@ Returns all the recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -1453,6 +1509,9 @@ Returns all the recommendations of all the experiments
 ]
 ```
 
+</details>
+
+
 <br><br>
 **Request with recommendations set to true, latest set to false and with experiment name parameter**
 
@@ -1487,7 +1546,7 @@ name parameter**
 
 Returns all the recommendations and all the results of the specified experiment.
 
-## Recommendations
+## List Recommendations
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
@@ -1511,7 +1570,12 @@ If no parameter is passed API returns all the latest recommendations available f
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
     {
         "cluster_name": "cluster-one-division-bell",
@@ -1705,6 +1769,9 @@ If no parameter is passed API returns all the latest recommendations available f
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter**
 
 `GET /listRecommendations`
@@ -1715,7 +1782,12 @@ Returns the latest result of that experiment
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
     {
         "cluster_name": "cluster-one-division-bell",
@@ -1864,6 +1936,9 @@ Returns the latest result of that experiment
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter and latest set to false**
 
 `GET /listRecommendations`
@@ -1874,7 +1949,12 @@ Returns all the results of that experiment
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
     {
         "cluster_name": "cluster-one-division-bell",
@@ -2124,6 +2204,9 @@ Returns all the results of that experiment
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter and monitoring end time set to a valid timestamp**
 
 `GET /listRecommendations`
@@ -2135,7 +2218,13 @@ Returns the recommendation at a particular timestamp if it exists
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End
 Time - `2022-12-20T17:55:05.000Z`**
 
-```
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
     {
         "cluster_name": "cluster-one-division-bell",
@@ -2270,13 +2359,17 @@ Time - `2022-12-20T17:55:05.000Z`**
 ]
 ```
 
+</details>
+
+
 ### Invalid Scenarios:
 
-**Invalid experiment name**
+<details>
+<summary><b>Invalid experiment name</b></summary>
 
 `experiment_name=stub-experiment`
 
-```
+```json
 {
     "message": "Given experiment name - \" stub-experiment \" is not valid",
     "httpcode": 400,
@@ -2284,12 +2377,14 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
 
-**Invalid Timestamp format**
+<details>
+<summary><b>Invalid Timestamp format</b></summary>
 
 `monitoring_end_time=Tony Stark` (Invalid Timestamp)
 
-```
+```json
 {
     "message": "Given timestamp - \" Tony Stark \" is not a valid timestamp format",
     "httpcode": 400,
@@ -2297,12 +2392,15 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
 
-**Non Existing Timestamp**
+
+<details>
+<summary><b>Non Existing Timestamp</b></summary>
 
 `monitoring_end_time=2022-12-20T17:55:07.000Z`
 
-```
+```json
 {
     "message": "Recommendation for timestamp - \" 2022-12-20T17:55:07.000Z \" does not exist",
     "httpcode": 400,
@@ -2310,6 +2408,10 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
+
+
+
 
 ## Update Recommendations API
 
@@ -2352,7 +2454,8 @@ success status code : 201
 
 The response will contain a array of JSON object with the updated recommendations for the specified experiment.
 
-Example Response Body:
+<details>
+<summary><b>Example Response Body</b></summary>
 
 ```json
 [
@@ -2466,6 +2569,10 @@ Example Response Body:
 ]
 ```
 
+</details>
+
+
+
 **Error Responses**
 
 | HTTP Status Code | Description                                                                                        |
@@ -2491,7 +2598,12 @@ least three attempts for the following scenarios:
 
 If the API responds with "Profile Name not found," implement retry logic.
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
     "httpcode": 400,
@@ -2499,6 +2611,8 @@ If the API responds with "Profile Name not found," implement retry logic.
     "status": "ERROR"
 }
 ```
+
+</details>
 
 ```POST /updateResults```
 
@@ -2509,7 +2623,12 @@ If the API responds with:
 
 Implement retry logic.
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Out of a total of 2 records, 1 failed to save",
     "httpcode": 400,
@@ -2534,7 +2653,7 @@ Implement retry logic.
 }
 ```
 
-```
+```json
 {
     "message": "Out of a total of 2 records, 1 failed to save",
     "httpcode": 400,
@@ -2559,6 +2678,10 @@ Implement retry logic.
 }
 ```
 
+</details>
+
+
+
 ```POST /updateRecommendations?interval_end_time=&experiment_name=```
 
 If the API responds with:
@@ -2568,7 +2691,12 @@ If the API responds with:
 
 Implement retry logic.
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_2",
     "httpcode": 400,
@@ -2577,7 +2705,7 @@ Implement retry logic.
 }
 ```
 
-```
+```json
 {
     "message": "Not Found: interval_end_time does not exist: 2023-02-02T00:00:00.000Z",
     "httpcode": 400,
@@ -2585,6 +2713,9 @@ Implement retry logic.
     "status": "ERROR"
 }
 ```
+</details>
+
+
 
 ```POST /*```
 
