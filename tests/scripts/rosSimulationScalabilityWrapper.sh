@@ -45,6 +45,15 @@ while [[ $# -gt 0 ]]; do
             interval_hours="$2"
             shift 2
             ;;
+        --clientthread)
+            client_thread="$2"
+            shift 2
+            ;;
+	--prometheusserver)
+            prometheus_server="$2"
+            shift 2
+            ;;
+
         *)
             echo "Unknown option: $1"
             exit 1
@@ -67,13 +76,18 @@ for (( i = 0; i < $iterations; i++ )); do
     current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
     # Build the full command
-    full_command="python3 -u bulkScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix}"
 
     # Execute the command
     echo "Executing: $full_command"
     eval "$full_command"
 
     # Wait for the command to complete before moving to the next iteration
+    wait
+
+    echo "Collecting kruize metrics"
+    metrics_command="python3 get_kruize_metrics.py -c openshift -s ${prometheus_server} -p true -t 360m -r kruizeMetrics-${client_thread}.csv"
+    eval "${metrics_command}"
     wait
 
     # Sleep for a short duration to avoid flooding the system with too many requests

@@ -112,6 +112,10 @@ if __name__ == "__main__":
     else:
         if debug: print(f'Request failed with status code {response.status_code}: {response.text}')
 
+    createExp_time = 0.0
+    bulkDataPost_time = 0.0
+    updateRec_time = 0.0
+
     #Create experiment and post results
     start_time = time.time()
     for i in range(1, expcount + 1):
@@ -122,7 +126,9 @@ if __name__ == "__main__":
             create_json_payload = json.dumps([createdata])
             #Create experiment
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
+            createExp_start_time = time.time()
             response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
+            createExp_elapsed_time = time.time() -createExp_start_time
             j = 0
             if args.startdate:
                 data['interval_end_time'] = args.startdate
@@ -140,10 +146,14 @@ if __name__ == "__main__":
                     data['interval_start_time'] = interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     data['interval_end_time'] = interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     bulkdata.append(copy.deepcopy(data))
+                bulkDataPost_start_time = time.time()
                 postResultsInBulk(experiment_name, bulkdata)
+                bulkDataPost_elapsed_time = time.time() - bulkDataPost_start_time
                 # Get the maximum datetime object
                 max_datetime = max(totalResultDates)
+                updateRec_start_time = time.time()
                 updateRecommendation(experiment_name, max_datetime,)
+                updateRec_elapsed_time = time.time() - updateRec_start_time
             else:
                 print(f'Request failed with status code {response.status_code}: {response.text}')
         except requests.exceptions.Timeout:
@@ -152,8 +162,20 @@ if __name__ == "__main__":
             print('An error occurred while connecting to', e)
         except Exception as e:
             print('An error occurred ', e)
+        createExp_time += createExp_elapsed_time
+        bulkDataPost_time += bulkDataPost_elapsed_time
+        updateRec_time += updateRec_elapsed_time
 
     elapsed_time = time.time() - start_time
     hours, rem = divmod(elapsed_time, 3600)
     minutes, seconds = divmod(rem, 60)
     print("Time elapsed: {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+    hours, rem = divmod(createExp_time, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("createExp elapsed time: {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+    hours, rem = divmod(bulkDataPost_time, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("bulkDataPost elapsed time: {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+    hours, rem = divmod(updateRec_time, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("updateRec elapsed time: {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
