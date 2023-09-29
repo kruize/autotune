@@ -6,6 +6,19 @@ Documentation still in progress stay tuned.
 **Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
 2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
 
+### Resource Analysis Terms and Defaults
+
+When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and fine-tuning resource allocation.
+
+Below are the default terms used in resource analysis, along with their respective durations and thresholds:
+
+| Term       | Duration | Threshold |
+|------------|----------|-----------|
+| Short      | 1 day    | 6 hours   |
+| Medium     | 7 days   | 6 hours   |
+| Long       | 15 days  | 6 hours   |
+
+
 ## CreateExperiment
 
 This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
