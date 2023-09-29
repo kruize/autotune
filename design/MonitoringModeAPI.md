@@ -16,7 +16,13 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperiment`
 
-```
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
 [
   {
     "version": "1.0",
@@ -51,10 +57,17 @@ see [Create Experiment](/design/CreateExperiment.md)
   }
 ]
 ```
+</details>
+
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Experiment registered successfully with Autotune. View registered experiments at /listExperiments",
     "httpcode": 201,
@@ -62,6 +75,8 @@ see [Create Experiment](/design/CreateExperiment.md)
     "status": "SUCCESS"
 }
 ```
+</details>
+
 
 ## Update Metric Results
 
