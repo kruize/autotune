@@ -11,8 +11,12 @@ public class DBConstants {
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT =
                 String.format("from KruizeResultsEntry k " +
-                                "WHERE k.experiment_name = :%s and k.interval_end_time <= :%s ",
-                        KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+                                "WHERE k.experiment_name = :%s and " +
+                                "k.interval_end_time >= :%s and " +
+                                "k.interval_end_time <= :%s ",
+                        KruizeConstants.JSONKeys.EXPERIMENT_NAME,
+                        KruizeConstants.JSONKeys.CALCULATED_START_TIME,
+                        KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME = String.format("from KruizeResultsEntry k " +
                         "WHERE k.experiment_name = :%s and k.interval_start_time >= :%s and " +
                         "k.interval_end_time <= :%s ",
