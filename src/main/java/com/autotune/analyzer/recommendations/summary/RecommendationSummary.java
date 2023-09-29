@@ -30,19 +30,20 @@ import java.util.HashMap;
  */
 
 public class RecommendationSummary {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationSummary.class);
-
-    @SerializedName(KruizeConstants.JSONKeys.CURRENT)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
-    @SerializedName(KruizeConstants.JSONKeys.CONFIG)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
-    @SerializedName(KruizeConstants.JSONKeys.CHANGE)
-    private HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> change;
+    @SerializedName("recommendation_engines")
+    private HashMap<String, RecommendationEngineSummary> recommendationEngineSummaryHashMap;
     @SerializedName("notifications_summary")
     private NotificationsSummary notificationsSummary;
     @SerializedName("action_summary")
     private ActionSummary actionSummary;
+
+    public HashMap<String, RecommendationEngineSummary> getRecommendationEngineSummaryHashMap() {
+        return recommendationEngineSummaryHashMap;
+    }
+
+    public void setRecommendationEngineSummaryHashMap(HashMap<String, RecommendationEngineSummary> recommendationEngineSummaryHashMap) {
+        this.recommendationEngineSummaryHashMap = recommendationEngineSummaryHashMap;
+    }
 
     public ActionSummary getActionSummary() {
         return actionSummary;
@@ -50,30 +51,6 @@ public class RecommendationSummary {
 
     public void setActionSummary(ActionSummary actionSummary) {
         this.actionSummary = actionSummary;
-    }
-
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfig() {
-        return currentConfig;
-    }
-
-    public void setCurrentConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig) {
-        this.currentConfig = currentConfig;
-    }
-
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getConfig() {
-        return config;
-    }
-
-    public void setConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
-        this.config = config;
-    }
-
-    public HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> getChange() {
-        return change;
-    }
-
-    public void setChange(HashMap<AnalyzerConstants.ResourceChange, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>> change) {
-        this.change = change;
     }
 
     public NotificationsSummary getNotificationsSummary() {
@@ -84,29 +61,10 @@ public class RecommendationSummary {
         this.notificationsSummary = notificationsSummary;
     }
 
-    // Merge existing values with new ones
-    public RecommendationSummary mergeSummaries(RecommendationSummary existingSummary, RecommendationSummary currentSummary) {
-        Summarize summarize = new Summarize();
-        RecommendationSummary mergedSummary = new RecommendationSummary();
-        try {
-            mergedSummary.setCurrentConfig(summarize.mergeConfigItems(existingSummary.getCurrentConfig(), currentSummary.getCurrentConfig(), mergedSummary.getCurrentConfig()));
-            mergedSummary.setConfig(summarize.mergeConfigItems(existingSummary.getConfig(), currentSummary.getConfig(), mergedSummary.getConfig()));
-            mergedSummary.setChange(summarize.mergeChangeObjects(existingSummary, currentSummary));
-            mergedSummary.setNotificationsSummary(existingSummary.getNotificationsSummary().mergeNotificationsSummary(existingSummary.getNotificationsSummary(), currentSummary.getNotificationsSummary()));
-            mergedSummary.setActionSummary(existingSummary.getActionSummary().merge(currentSummary.getActionSummary()));
-        } catch (Exception e){
-            LOGGER.error("Exception occurred while merging recommendations: {}", e.getMessage());
-        }
-        return mergedSummary;
-    }
-
-
     @Override
     public String toString() {
         return "RecommendationSummary{" +
-                "currentConfig=" + currentConfig +
-                ", config=" + config +
-                ", change=" + change +
+                "recommendationEngineSummaryHashMap=" + recommendationEngineSummaryHashMap +
                 ", notificationsSummary=" + notificationsSummary +
                 ", actionSummary=" + actionSummary +
                 '}';

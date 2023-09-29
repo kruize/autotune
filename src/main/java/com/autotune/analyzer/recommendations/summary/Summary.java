@@ -23,13 +23,13 @@ import java.util.HashMap;
  * stores the summarized recommendation data
  */
 public class Summary {
-    private HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data;
+    private HashMap<Timestamp, RecommendationTimestampLevelSummary> data;
 
-    public HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> getData() {
+    public HashMap<Timestamp, RecommendationTimestampLevelSummary> getData() {
         return data;
     }
 
-    public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, RecommendationSummary>>> data) {
+    public void setData(HashMap<Timestamp, RecommendationTimestampLevelSummary> data) {
         this.data = data;
     }
 

@@ -32,6 +32,8 @@ public class DBConstants {
         public static final String SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME = "from KruizePerformanceProfileEntry k WHERE k.name = :name";
 
         public static final String SELECT_DISTINCT_CLUSTER_NAMES_FROM_EXPERIMENTS = "SELECT DISTINCT cluster_name " + SELECT_FROM_EXPERIMENTS ;
+        public static final String SELECT_FROM_RECOMMENDATIONS_BY_CLUSTER_NAME = "from KruizeRecommendationEntry k WHERE k.cluster_name = :clusterName " +
+                "and k.experiment_name IN :experimentList ORDER by interval_end_time DESC LIMIT :limit";
         public static final String SELECT_FROM_RECOMMENDATIONS_BY_NAMESPACE_NAME = "SELECT * FROM public.kruize_recommendations WHERE (extended_data -> " +
                 "'kubernetes_objects' @> cast(:namespaceFilter as jsonb)) AND experiment_name IN (:experimentNames) ORDER by interval_end_time DESC LIMIT :limit";
         public static final String SELECT_FROM_EXPERIMENTS_BY_NAMESPACE_NAME = "SELECT * FROM public.kruize_experiments WHERE (extended_data -> " +

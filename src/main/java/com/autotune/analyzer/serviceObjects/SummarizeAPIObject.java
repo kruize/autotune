@@ -25,7 +25,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
-public class SummarizeAPIObject {
+public class SummarizeAPIObject extends BaseSO {
 
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
