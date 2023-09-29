@@ -219,6 +219,7 @@ def main(argv):
     global queries_map
     global getOneDataPoint
     global resultsfile
+    global namespace
 
     try:
         opts, args = getopt.getopt(argv,"h:c:s:d:t:q:p:r:")
