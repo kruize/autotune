@@ -6,11 +6,50 @@ Documentation still in progress stay tuned.
 **Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
 2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
 
+# Table of Contents
+
+1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
+  - [Terms, Duration & Threshold Table](#terms-duration--threshold-table)
+  - [Short Term](#short-term)
+  - [Medium Term](#medium-term)
+  - [Long Term](#long-term)
+
+2. [API's](#apis)
+  - [Create Experiment API](#create-experiment-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [Update Results API](#update-results-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+      
+  - [List Experiments API](#list-experiments-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [List Recommendations API](#list-recommendations-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [Update Recommendations API](#update-recommendations-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+    
+<a name="resource-analysis-terms-and-defaults"></a>
 ## Resource Analysis Terms and Defaults
 
 When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and fine-tuning resource allocation.
 
 Below are the default terms used in resource analysis, along with their respective durations and thresholds:
+
+<a name="terms-duration--threshold-table"></a>
+### Terms, Duration & Threshold Table
 
 | Term       | Duration | Threshold |
 |------------|----------|-----------|
@@ -18,7 +57,8 @@ Below are the default terms used in resource analysis, along with their respecti
 | Medium     | 7 days   | 6 hours   |
 | Long       | 15 days  | 6 hours   |
 
-**Short Term**
+<a name="short-term"></a>
+##### Short Term
 
     Duration: 24 hours
     Threshold: 6 hours
@@ -27,7 +67,8 @@ Below are the default terms used in resource analysis, along with their respecti
 
 **Threshold**: The "threshold" is an additional buffer period. It encompasses the 24-hour duration and extends an extra six hours. This buffer accommodates any potential data gaps or misses within the 24-hour window, ensuring a comprehensive analysis.
 
-**Medium Term**
+<a name="medium-term"></a>
+##### Medium Term
 
     Duration: 7 days
     Threshold: 6 hours
@@ -36,7 +77,8 @@ Below are the default terms used in resource analysis, along with their respecti
 
 **Threshold**: Similar to the short term, the "threshold" for the medium term includes an extra buffer of six hours. This buffer complements the seven-day duration, accounting for any data discrepancies or gaps within that timeframe.
 
-**Long Term**
+<a name="long-term"></a>
+##### Long Term
 
     Duration: 15 days
     Threshold: 6 hours
@@ -45,8 +87,12 @@ Below are the default terms used in resource analysis, along with their respecti
 
 **Threshold**: Like the short and medium terms, the "threshold" for the long term includes a buffer period of six hours. This buffer enhances the 15-day duration, ensuring that any missing or delayed data is considered during the analysis.
 
+<a name="apis"></a>
+## API's 
 
-## CreateExperiment
+<a name="create-experiment-api"></a>
+### Create Experiment API
+
 
 This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
 see [Create Experiment](/design/CreateExperiment.md)
@@ -117,8 +163,8 @@ see [Create Experiment](/design/CreateExperiment.md)
 ```
 </details>
 
-
-## Update Metric Results
+<a name="update-results-api"></a>
+### Update Results API
 
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
@@ -511,7 +557,8 @@ specific attribute causing the failures.
 ```
 </details>
 
-## List Experiments
+<a name="list-experiments-api"></a>
+## List Experiments API
 
 **Request with experiment name parameter**
 
@@ -1586,7 +1633,8 @@ name parameter**
 
 Returns all the recommendations and all the results of the specified experiment.
 
-## List Recommendations
+<a name="list-recommendations-api"></a>
+### List Recommendations API
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
@@ -2452,8 +2500,8 @@ Time - `2022-12-20T17:55:05.000Z`**
 
 
 
-
-## Update Recommendations API
+<a name="update-recommendations-api"></a>
+### Update Recommendations API
 
 Generate the recommendations for a specific experiment based on provided parameters.
 
