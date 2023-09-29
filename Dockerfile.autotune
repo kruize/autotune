@@ -90,7 +90,7 @@ COPY --chown=${UID}:0 --from=mvnbuild-jdk17 ${AUTOTUNE_HOME}/src/autotune/jre/ $
 COPY --chown=${UID}:0 --from=mvnbuild-jdk17 ${AUTOTUNE_HOME}/src/autotune/target/ ${AUTOTUNE_HOME}/app/target/
 
 # Grant execute permission
-RUN chmod -R +x $AUTOTUNE_HOME/app/target
+RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/
 
 EXPOSE 8080
 
