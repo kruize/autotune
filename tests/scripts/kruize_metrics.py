@@ -163,42 +163,41 @@ def run_queries(map_type):
 
 
 def write_header_to_csv(filename):
-    with open(filename, 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=csv_headers)
-        writer.writeheader()
+    if not os.path.exists(filename) or os.path.getsize(filename) == 0:
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=csv_headers)
+            writer.writeheader()
 
-def job(queries_type,outputfile):
+def job(queries_type,outputdir):
     now_utc = datetime.utcnow()
     timestamp_utc = now_utc.isoformat()
     if queries_type == "increase":
+        outputfile = os.path.join(outputdir, "increase_" + resultsfile)
         print("RUNNING THE JOB TO COLLECT KRUIZE INCREASE METRICS..")
         results_map = run_queries("increase")
     elif queries_type == "total":
+        outputfile = os.path.join(outputdir, "total_" + resultsfile)
         print("RUNNING THE JOB TO COLLECT KRUIZE TOTAL METRICS..")
         results_map = run_queries("total")
     results_map['timestamp'] = timestamp_utc
+    write_header_to_csv(outputfile)
     with open(outputfile, 'a') as f:
         writer = csv.DictWriter(f, fieldnames=csv_headers)
         writer.writerow(results_map)
 
 def schedule_job(queries_type):
-    if queries_type == "increase":
-        outputfile="kruizemetrics_increase.csv"
-    elif queries_type == "total":
-        outputfile="kruizemetrics_total.csv"
-    write_header_to_csv(outputfile)
+    outputdir = "results"
+    if not os.path.exists(outputdir):
+        os.mkdir(outputdir)
     numeric_time = int(time_duration[:-1])
     time_in_seconds = numeric_time * 60
     if getOneDataPoint == "true":
-        output_directory = "./results/"
-        outputfile = os.path.join(output_directory, "increase_" + resultsfile)
-        job("increase",outputfile)
-        outputfile = os.path.join(output_directory, "total_" + resultsfile)
-        job("total",outputfile)
+        job("increase",outputdir)
+        job("total",outputdir)
     else:
         if duration is None:
             while True:
-                job(queries_type,outputfile)
+                job(queries_type,outputdir)
                 print("Sleep for ",time_in_seconds, " seconds")
                 time.sleep(time_in_seconds)
         else:
@@ -206,7 +205,7 @@ def schedule_job(queries_type):
             end = now + timedelta(hours=duration)
             while now < end:
                 now = datetime.utcnow()
-                job(queries_type,outputfile) 
+                job(queries_type,outputdir) 
                 print("Sleep for ",time_in_seconds, " seconds")
                 time.sleep(time_in_seconds) 
 
@@ -253,6 +252,8 @@ def main(argv):
         duration = None
     if '-p' not in sys.argv:
         getOneDataPoint = "false"
+    if '-r' not in sys.argv:
+        resultsfile = "kruizemetrics.csv"
 
     if cluster_type == "openshift":
         namespace = "openshift-tuning"
