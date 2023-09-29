@@ -22,8 +22,9 @@ from datetime import datetime, timedelta
 import subprocess
 import sys, getopt
 import threading
+import os
 
-csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success"]
+csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size"]
 
 queries_map_total = {
         "listRecommendations_count_success": "sum((kruizeAPI_count{api=\"listRecommendations\",application=\"Kruize\",status=\"success\"}))",
@@ -74,7 +75,54 @@ queries_map_total = {
         "addPerformanceProfileToDB_sum_success": "sum((kruizeDB_sum{method=\"addPerformanceProfileToDB\",application=\"Kruize\",status=\"success\"}))",
         "loadPerformanceProfileByName_sum_success": "sum((kruizeDB_sum{method=\"loadPerformanceProfileByName\",application=\"Kruize\",status=\"success\"}))",
         "loadAllPerformanceProfiles_sum_success": "sum((kruizeDB_sum{method=\"loadAllPerformanceProfiles\",application=\"Kruize\",status=\"success\"}))",
+        "listRecommendations_sum_failure": "sum((kruizeAPI_sum{api=\"listRecommendations\",application=\"Kruize\",status=\"failure\"}))",
+        "listExperiments_sum_failure": "sum((kruizeAPI_sum{api=\"listExperiments\",application=\"Kruize\",status=\"failure\"}))",
+        "createExperiment_sum_failure": "sum((kruizeAPI_sum{api=\"createExperiment\",application=\"Kruize\",status=\"failure\"}))",
+        "updateResults_sum_failure": "sum((kruizeAPI_sum{api=\"updateResults\",application=\"Kruize\",status=\"failure\"}))",
+        "updateRecommendations_sum_failure": "sum((kruizeAPI_sum{api=\"updateRecommendations\",application=\"Kruize\",status=\"failure\"}))",
+        "loadRecommendationsByExperimentName_sum_failure": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
+        "loadRecommendationsByExperimentNameAndDate_sum_failure": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"failure\"}))",
+        "loadResultsByExperimentName_sum_failure": "sum((kruizeDB_sum{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
+        "loadExperimentByName_sum_failure": "sum((kruizeDB_sum{method=\"loadExperimentByName\",application=\"Kruize\",status=\"failure\"}))",
+        "addRecommendationToDB_sum_failure": "sum((kruizeDB_sum{method=\"addRecommendationToDB\",application=\"Kruize\",status=\"failure\"}))",
+        "addResultToDB_sum_failure": "sum((kruizeDB_sum{method=\"addResultToDB\",application=\"Kruize\",status=\"failure\"}))",
+        "addBulkResultsToDBAndFetchFailedResults_sum_failure": "sum((kruizeDB_sum{method=\"addBulkResultsToDBAndFetchFailedResults\",application=\"Kruize\",status=\"failure\"}))",
+        "addExperimentToDB_sum_failure": "sum((kruizeDB_sum{method=\"addExperimentToDB\",application=\"Kruize\",status=\"failure\"}))",
+        "addPerformanceProfileToDB_sum_failure": "sum((kruizeDB_sum{method=\"addPerformanceProfileToDB\",application=\"Kruize\",status=\"failure\"}))",
+        "loadPerformanceProfileByName_sum_failure": "sum((kruizeDB_sum{method=\"loadPerformanceProfileByName\",application=\"Kruize\",status=\"failure\"}))",
+        "loadAllPerformanceProfiles_sum_failure": "sum((kruizeDB_sum{method=\"loadAllPerformanceProfiles\",application=\"Kruize\",status=\"failure\"}))",
+        "loadAllRecommendations_sum_failure": "sum((kruizeDB_sum{method=\"loadAllRecommendations\",application=\"Kruize\",status=\"failure\"}))",
+        "loadAllExperiments_sum_failure": "sum((kruizeDB_sum{method=\"loadAllExperiments\",application=\"Kruize\",status=\"failure\"}))",
+        "loadAllResults_sum_failure": "sum((kruizeDB_sum{method=\"loadAllResults\",application=\"Kruize\",status=\"failure\"}))",
+        "loadAllRecommendations_sum_success": "sum((kruizeDB_sum{method=\"loadAllRecommendations\",application=\"Kruize\",status=\"success\"}))",
+        "loadAllExperiments_sum_success": "sum((kruizeDB_sum{method=\"loadAllExperiments\",application=\"Kruize\",status=\"success\"}))",
+        "loadAllResults_sum_success": "sum((kruizeDB_sum{method=\"loadAllResults\",application=\"Kruize\",status=\"success\"}))",
+        "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}))",
+        "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}[6h])))",
+        "kruize_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}))",
+        "kruize_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}[6h])))",
         }
+
+def get_postgresql_metrics(namespace):
+    try:
+        pod_name = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace, "--selector=app=postgres", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
+        pod_name = pod_name.strip("'")
+    except subprocess.CalledProcessError as e:
+        return f"Error getting pod name: {e}"
+    # Queries
+    PG_DB = "kruizeDB"
+    PG_USER = "admin"
+    KRUIZE_RESULTS_QUERY = f"psql -U {PG_USER} -d {PG_DB} -c \"select count(*) from kruize_results;\""
+    DB_SIZE_QUERY = f"psql -U {PG_USER} -d {PG_DB} -c \"SELECT pg_size_pretty(pg_database_size('{PG_DB}'));\""
+    try:
+        kruize_results = subprocess.check_output(["kubectl", "exec", "-it", pod_name, "-n", namespace, "--", "/bin/sh", "-c", KRUIZE_RESULTS_QUERY], universal_newlines=True)
+        db_size = subprocess.check_output(["kubectl", "exec", "-it", pod_name, "-n", namespace, "--", "/bin/sh", "-c", DB_SIZE_QUERY], universal_newlines=True)
+        # Extract numeric values
+        kruize_results_numeric = ''.join(kruize_results.split()).split('-')[-1].split('(')[0]
+        db_size_numeric = ''.join(db_size.split()).split('-')[-1].split('(')[0]
+        return kruize_results_numeric,db_size_numeric
+    except subprocess.CalledProcessError as e:
+        return f"Error executing queries: {e}"
 
 def run_queries(map_type):
     TOKEN = 'TOKEN'
@@ -106,8 +154,11 @@ def run_queries(map_type):
                 if "value" in results_data[key]["result"][0]:
                     results_map[key] = results_data[key]["result"][0]["value"][1]
             # Uncomment else part to debug which query is not working.
-            #else:
-            #    print(f"Failed to run query '{query}' with status code {response.status_code}")
+            else:
+                print(f"Failed to run query '{query}' with status code {response.status_code}")
+    kruize_results, db_size = get_postgresql_metrics(namespace)
+    results_map["kruize_results"] = kruize_results
+    results_map["db_size"] = db_size
     return results_map
 
 
@@ -138,20 +189,26 @@ def schedule_job(queries_type):
     write_header_to_csv(outputfile)
     numeric_time = int(time_duration[:-1])
     time_in_seconds = numeric_time * 60
-    if duration is None:
-        while True:
-            job(queries_type,outputfile)
-            print("Sleep for ",time_in_seconds, " seconds")
-            time.sleep(time_in_seconds)
+    if getOneDataPoint == "true":
+        output_directory = "./results/"
+        outputfile = os.path.join(output_directory, "increase_" + resultsfile)
+        job("increase",outputfile)
+        outputfile = os.path.join(output_directory, "total_" + resultsfile)
+        job("total",outputfile)
     else:
-        now = datetime.utcnow()
-        end = now + timedelta(hours=duration)
-
-        while now < end:
+        if duration is None:
+            while True:
+                job(queries_type,outputfile)
+                print("Sleep for ",time_in_seconds, " seconds")
+                time.sleep(time_in_seconds)
+        else:
             now = datetime.utcnow()
-            job(queries_type,outputfile) 
-            print("Sleep for ",time_in_seconds, " seconds")
-            time.sleep(time_in_seconds) 
+            end = now + timedelta(hours=duration)
+            while now < end:
+                now = datetime.utcnow()
+                job(queries_type,outputfile) 
+                print("Sleep for ",time_in_seconds, " seconds")
+                time.sleep(time_in_seconds) 
 
 def main(argv):
     global duration
@@ -160,9 +217,11 @@ def main(argv):
     global clusterResults
     global time_duration 
     global queries_map
+    global getOneDataPoint
+    global resultsfile
 
     try:
-        opts, args = getopt.getopt(argv,"h:c:s:d:t:q:")
+        opts, args = getopt.getopt(argv,"h:c:s:d:t:q:p:r:")
     except getopt.GetoptError:
         print("kruize_metrics.py -c <cluster type> -s <server>")
         sys.exit(2)
@@ -180,6 +239,10 @@ def main(argv):
             time_duration = arg
         elif opt == '-q':
             queries_type = arg
+        elif opt == '-p':
+            getOneDataPoint = arg
+        elif opt == '-r':
+            resultsfile = arg
             
     if '-t' not in sys.argv:
         time_duration = "60m"
@@ -187,6 +250,13 @@ def main(argv):
         queries_type = "increase"
     if '-d' not in sys.argv:
         duration = None
+    if '-p' not in sys.argv:
+        getOneDataPoint = "false"
+
+    if cluster_type == "openshift":
+        namespace = "openshift-tuning"
+    else:
+        namespace = "monitoring"
 
     queries_map = {
             "listRecommendations_count_success": f"sum(increase(kruizeAPI_count{{api=\"listRecommendations\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
@@ -237,6 +307,10 @@ def main(argv):
             "addPerformanceProfileToDB_sum_success": f"sum(increase(kruizeDB_sum{{method=\"addPerformanceProfileToDB\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadPerformanceProfileByName_sum_success": f"sum(increase(kruizeDB_sum{{method=\"loadPerformanceProfileByName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadAllPerformanceProfiles_sum_success": f"sum(increase(kruizeDB_sum{{method=\"loadAllPerformanceProfiles\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
+            "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}))",
+            "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}"f"[{time_duration}])))",
+            "kruize_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}))",
+            "kruize_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}"f"[{time_duration}])))",
         }
     
     # Create a thread to run the job scheduler
