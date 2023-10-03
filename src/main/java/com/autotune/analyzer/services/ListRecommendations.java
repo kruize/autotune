@@ -154,7 +154,7 @@ public class ListRecommendations extends HttpServlet {
                     LOGGER.error("Loading saved cluster {} failed: {} ", clusterName, e.getMessage());
                 }
                 // Check if cluster exists
-                if (mKruizeExperimentMap.containsKey(clusterName)) {
+                if (!mKruizeExperimentMap.isEmpty()) {
                     // Check if timestamp is passed
                     if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
                         monitoringEndTime = monitoringEndTime.trim();
@@ -162,10 +162,14 @@ public class ListRecommendations extends HttpServlet {
                             Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
                             monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
                             // Check if timestamp exists in recommendations
-                            boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(clusterName), monitoringEndTime);
-                            if (timestampExists) {
-                                checkForTimestamp = true;
-                            } else {
+                            for (String expName : mKruizeExperimentMap.keySet()) {
+                                boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(expName), monitoringEndTime);
+                                if (timestampExists) {
+                                    kruizeObjectList.add(mKruizeExperimentMap.get(expName));
+                                    checkForTimestamp = true;
+                                }
+                            }
+                            if (kruizeObjectList.isEmpty()) {
                                 error = true;
                                 sendErrorResponse(
                                         response,
@@ -183,8 +187,10 @@ public class ListRecommendations extends HttpServlet {
                                     String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
                             );
                         }
+                    } else {
+                        // Add all experiments to list
+                        kruizeObjectList.addAll(mKruizeExperimentMap.values());
                     }
-                    kruizeObjectList.add(mKruizeExperimentMap.get(clusterName));
                 } else {
                     error = true;
                     sendErrorResponse(
