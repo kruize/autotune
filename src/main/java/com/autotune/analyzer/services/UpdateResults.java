@@ -56,14 +56,10 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        mainKruizeExperimentMAP = (ConcurrentHashMap<String, KruizeObject>) config.getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
-        if (mainKruizeExperimentMAP == null)
-            mainKruizeExperimentMAP = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -83,8 +79,6 @@ public class UpdateResults extends HttpServlet {
             ExperimentInitiator experimentInitiator = new ExperimentInitiator();
             experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
             List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
-            if (initialSize != mainKruizeExperimentMAP.size())
-                request.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, mainKruizeExperimentMAP);
             List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
             if (failureAPIObjs.size() > 0) {
                 failureAPIObjs.forEach(

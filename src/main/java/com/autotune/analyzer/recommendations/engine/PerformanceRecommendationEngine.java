@@ -41,7 +41,7 @@ import static com.autotune.analyzer.recommendations.RecommendationConstants.Reco
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
-public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
+public class PerformanceRecommendationEngine implements KruizeRecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
     private String name;
     private String key;
@@ -57,38 +57,6 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         this.name = name;
     }
 
-    private static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory,
-                                                    Timestamp endTime) {
-
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        Timestamp thresholdTime = calculateThresholdTimeBasedOnTerm(durationBasedRecommendationSubCategory, endTime);
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (timestamp.before(thresholdTime)) {
-                    // Breaking condition not met so we can be sure that data is not sufficient hence return null
-                    return null;
-                }
-                sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
-                    // Storing the timestamp value in startTimestamp variable to return
-                    intervalEndTime = timestamp;
-                    break;
-                }
-
-            }
-        }
-        try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
-        } catch (NullPointerException npe) {
-            return null;
-        }
-    }
 
     /**
      * Calculate the number of pods being used as per the latest results
@@ -522,7 +490,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
             LOGGER.debug("Number of pods cannot be zero");
-           isSuccess = false;
+            isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
             notifications.add(recommendationNotification);
@@ -1063,7 +1031,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     cpuThreshold,
                     memoryThreshold
             );
-        }  else {
+        } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
 
@@ -1074,71 +1042,5 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
     @Override
     public void validateRecommendations() {
 
-    }
-
-    @Override
-    public boolean checkIfMinDataAvailable(ContainerData containerData) {
-        // Check if data available
-        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
-            return false;
-        }
-        // Initiate to the first sub category available
-        DurationBasedRecommendationSubCategory categoryToConsider = (DurationBasedRecommendationSubCategory) this.category.getRecommendationSubCategories()[0];
-        // Loop over categories to set the least category
-        for (RecommendationSubCategory recommendationSubCategory : this.category.getRecommendationSubCategories()) {
-            DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory = (DurationBasedRecommendationSubCategory) recommendationSubCategory;
-            if (durationBasedRecommendationSubCategory.getDuration() < categoryToConsider.getDuration()) {
-                categoryToConsider = durationBasedRecommendationSubCategory;
-            }
-        }
-        // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = categoryToConsider.getGetDurationLowerBound();
-        double sum = 0.0;
-        // Loop over the data to check if there is min data available
-        for (IntervalResults intervalResults : containerData.getResults().values()) {
-            sum = sum + intervalResults.getDurationInMinutes();
-            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-            if (sum >= lowerBound)
-                return true;
-        }
-        return false;
-    }
-
-    private static Timestamp calculateThresholdTimeBasedOnTerm(DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory, Timestamp endTime) {
-        // Check for null
-        if (null == durationBasedRecommendationSubCategory || null == endTime)
-            return null;
-        // Initialise threshold time
-        Timestamp thresholdTime = null;
-
-        // Extract the duration as count
-        int count = durationBasedRecommendationSubCategory.getDuration();
-        // Extract units
-        TimeUnit units = durationBasedRecommendationSubCategory.getRecommendationDurationUnits();
-
-        // Assuming units is hours by default
-        int totalDurationInHrs = count;
-
-        // Checking if it's days
-        if (units == TimeUnit.DAYS) {
-            totalDurationInHrs = count * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
-        }
-        // TODO: Add checks for other timeunits like minutes, weeks & months if needed later
-
-        // Add Threshold based on term
-        if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM))
-            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_SHORT_TERM;
-        else if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM))
-            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_MEDIUM_TERM;
-        else if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM))
-            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_LONG_TERM;
-
-        // Remove the number of hours from end time
-        long endTimeMillis = endTime.getTime();
-        long startTimeMillis = endTimeMillis - TimeUnit.HOURS.toMillis(totalDurationInHrs);
-
-        thresholdTime = new Timestamp(startTimeMillis);
-
-        return thresholdTime;
     }
 }
