@@ -151,7 +151,7 @@ public class ListRecommendations extends HttpServlet {
                 try {
                     new ExperimentDBService().loadExperimentsAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
                 } catch (Exception e) {
-                    LOGGER.error("Loading saved cluster {} failed: {} ", clusterName, e.getMessage());
+                    LOGGER.error("Loading experiments and recommendations based on cluster {} failed: {} ", clusterName, e.getMessage());
                 }
                 // Check if cluster exists
                 if (!mKruizeExperimentMap.isEmpty()) {

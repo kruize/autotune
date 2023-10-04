@@ -344,7 +344,7 @@ public class ExperimentDBService {
                     }
                 }
                 if (failureThreshHold > 0 && failureCount == failureThreshHold) {
-                    throw new Exception("Experiments of cluster " + clusterName + " unable to load from DB.");
+                    throw new Exception("Failed to load experiments for cluster " + clusterName + " from the database. No valid experiments found.");
                 }
                 experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
             }

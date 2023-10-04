@@ -511,7 +511,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     .setParameter("clusterName", clusterName).list();
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Not able to load cluster {} due to {}", clusterName, e.getMessage());
+            LOGGER.error("Not able to load experiments of cluster {} due to {}", clusterName, e.getMessage());
             throw new Exception("Error while loading existing experiments of specified cluster from database due to : " + e.getMessage());
         } finally {
             if (null != timerLoadExpName) {
