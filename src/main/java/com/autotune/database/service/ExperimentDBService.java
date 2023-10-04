@@ -399,7 +399,7 @@ public class ExperimentDBService {
         loadExperimentsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
         loadResultsFromDBByClusterName(mainKruizeExperimentMap, clusterName, null, null);
     }
-    public void loadExperimentsAndRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception{
+    public void loadExperimentsAndRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
         loadExperimentsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
         loadRecommendationsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
     }

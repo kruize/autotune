@@ -147,7 +147,7 @@ public class ListRecommendations extends HttpServlet {
                             String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
                     );
                 }
-            }else if(null != clusterName){
+            } else if (null != clusterName) {
                 try {
                     new ExperimentDBService().loadExperimentsAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
                 } catch (Exception e) {
@@ -200,7 +200,7 @@ public class ListRecommendations extends HttpServlet {
                             String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_CLUSTER_NAME_MSG, clusterName)
                     );
                 }
-            }else {
+            } else {
                 try {
                     new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                 } catch (Exception e) {
