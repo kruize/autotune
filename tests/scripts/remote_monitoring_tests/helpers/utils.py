@@ -379,18 +379,18 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
-                cost_obj = list_reco_container["recommendations"]["data"][interval_end_time]["cost"]
+                terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
-                    if check_if_recommendations_are_present(cost_obj[term]):
-                        # Validate timestamps
-                        assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
-                            f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+                    if check_if_recommendations_are_present(terms_obj[term]):
+                        # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                        # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                        #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert cost_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                            f"actual = {cost_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
@@ -407,12 +407,23 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                 duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
                         print(
-                            f"Actual = {cost_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
                         assert cost_obj[term]["duration_in_hours"] == duration_in_hours, \
                             f"Duration in hours did not match! Actual = {cost_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
-                        # Validate recommendation config
-                        validate_config(cost_obj[term]["config"])
+                        # Get engine objects
+                        engines_list = ["cost", "performance"]
+
+                        # Extract recommendation engine objects
+                        recommendation_engines_object = None
+                        if "recommendation_engines" in terms_obj[term]:
+                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                        if None != recommendation_engines_object:
+                            for engine_entry in engines_list:
+                                if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    validate_config(engine_obj["config"])
+
             else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
