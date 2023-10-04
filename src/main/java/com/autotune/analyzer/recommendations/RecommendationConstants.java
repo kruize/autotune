@@ -777,6 +777,10 @@ public class RecommendationConstants {
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
         public static final Double DEFAULT_CPU_THRESHOLD = 0.1;
         public static final Double DEFAULT_MEMORY_THRESHOLD = 0.1;
+
+        public static final int THRESHOLD_HRS_SHORT_TERM = 6;
+        public static final int THRESHOLD_HRS_MEDIUM_TERM = 6;
+        public static final int THRESHOLD_HRS_LONG_TERM = 6;
     }
 
     public static final class RecommendationNotificationMsgConstant {

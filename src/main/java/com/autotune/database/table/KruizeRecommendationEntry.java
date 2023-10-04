@@ -14,10 +14,6 @@ import java.sql.Timestamp;
                 columnList = "experiment_name",
                 unique = false),
         @Index(
-                name = "idx_recommendation_cluster_name",
-                columnList = "cluster_name",
-                unique = false),
-        @Index(
                 name = "idx_recommendation_interval_end_time",
                 columnList = "interval_end_time",
                 unique = false)
