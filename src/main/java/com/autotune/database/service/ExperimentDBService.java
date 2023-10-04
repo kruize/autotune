@@ -190,32 +190,7 @@ public class ExperimentDBService {
             }
         }
     }
-    // Todo - confirm if experimentResultData to be changed to clusterResultData
-    public void loadResultsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName, Timestamp interval_end_time, Integer limitRows) throws Exception {
-        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-        // Load results from the DB and save to local
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByClusterName(clusterName, interval_end_time, limitRows);
-        if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
-            List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
-            if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
-                List<ExperimentResultData> resultDataList = new ArrayList<>();
-                for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
-                    try {
-                        ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
-                        if (experimentResultData != null)
-                            resultDataList.add(experimentResultData);
-                        else
-                            LOGGER.warn("Converted experimentResultData is null");
-                    } catch (IllegalArgumentException e) {
-                        LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
-                    } catch (Exception e) {
-                        LOGGER.error("Unexpected error: {}", e.getMessage());
-                    }
-                }
-                experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
-            }
-        }
-    }
+
     public void loadRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load Recommendations from DB and save to local
@@ -394,11 +369,6 @@ public class ExperimentDBService {
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
 
-    public void loadExperimentsAndResultsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
-
-        loadExperimentsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
-        loadResultsFromDBByClusterName(mainKruizeExperimentMap, clusterName, null, null);
-    }
     public void loadExperimentsAndRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
         loadExperimentsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
         loadRecommendationsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
