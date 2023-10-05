@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
@@ -43,7 +42,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -58,25 +56,17 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMAP;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        mainKruizeExperimentMAP = (ConcurrentHashMap<String, KruizeObject>) config.getServletContext().getAttribute(AnalyzerConstants.EXPERIMENT_MAP);
-        if (mainKruizeExperimentMAP == null)
-            mainKruizeExperimentMAP = new ConcurrentHashMap<>();
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         try {
-            int initialSize = mainKruizeExperimentMAP.size();
-            performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
-                    .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
@@ -89,8 +79,6 @@ public class UpdateResults extends HttpServlet {
             ExperimentInitiator experimentInitiator = new ExperimentInitiator();
             experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
             List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
-            if (initialSize != mainKruizeExperimentMAP.size())
-                request.getServletContext().setAttribute(AnalyzerConstants.EXPERIMENT_MAP, mainKruizeExperimentMAP);
             List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
             if (failureAPIObjs.size() > 0) {
                 failureAPIObjs.forEach(

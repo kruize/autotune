@@ -34,9 +34,6 @@ import java.util.List;
                         name = "idx_result_experiment_name",
                         columnList = "experiment_name"),
                 @Index(
-                        name = "idx_result_cluster_name",
-                        columnList = "experiment_name"),
-                @Index(
                         name = "idx_result_interval_end_time",
                         columnList = "interval_end_time")
         })

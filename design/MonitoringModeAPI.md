@@ -6,7 +6,65 @@ Documentation still in progress stay tuned.
 **Note :**  The ISO 8601 standard underpins all timestamp formats. An example of a valid timestamp in this format is
 2022-01-23T18:25:43.511Z, which represents January 23, 2022, at 18:25:43.511 UTC.
 
-## CreateExperiment
+# Table of Contents
+
+1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
+  - [Terms, Duration & Threshold Table](#terms-duration--threshold-table)
+
+2. [API's](#apis)
+  - [Create Experiment API](#create-experiment-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [Update Results API](#update-results-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+      
+  - [List Experiments API](#list-experiments-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [List Recommendations API](#list-recommendations-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+  - [Update Recommendations API](#update-recommendations-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+    
+<a name="resource-analysis-terms-and-defaults"></a>
+## Resource Analysis Terms and Defaults
+
+When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and fine-tuning resource allocation.
+
+Below are the default terms used in resource analysis, along with their respective durations and thresholds:
+
+<a name="terms-duration--threshold-table"></a>
+### Terms, Duration & Threshold Table
+
+| Term       | Duration | Threshold |
+|------------|----------|-----------|
+| Short      | 1 day    | 6 hours   |
+| Medium     | 7 days   | 6 hours   |
+| Long       | 15 days  | 6 hours   |
+
+**Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when assessing resource utilization.
+
+**Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
+
+
+<a name="apis"></a>
+## API's 
+
+<a name="create-experiment-api"></a>
+### Create Experiment API
+
 
 This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
 see [Create Experiment](/design/CreateExperiment.md)
@@ -16,7 +74,13 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createExperiment`
 
-```
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
 [
   {
     "version": "1.0",
@@ -51,10 +115,17 @@ see [Create Experiment](/design/CreateExperiment.md)
   }
 ]
 ```
+</details>
+
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Experiment registered successfully with Autotune. View registered experiments at /listExperiments",
     "httpcode": 201,
@@ -62,8 +133,10 @@ see [Create Experiment](/design/CreateExperiment.md)
     "status": "SUCCESS"
 }
 ```
+</details>
 
-## Update Metric Results
+<a name="update-results-api"></a>
+### Update Results API
 
 Update metric results using input JSON as follows. For a more detailed guide,
 see [Update results](/design/UpdateResults.md)
@@ -82,7 +155,12 @@ see [Update results](/design/UpdateResults.md)
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updateResults`
 
-```
+<details>
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
 [
   {
     "version": "1.0",
@@ -314,12 +392,17 @@ see [Update results](/design/UpdateResults.md)
     ]
   }
 ]
-
 ```
+</details>
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Updated metrics results successfully with Autotune. View update results at /listExperiments",
     "httpcode": 201,
@@ -327,6 +410,8 @@ see [Update results](/design/UpdateResults.md)
     "status": "SUCCESS"
 }
 ```
+</details>
+
 
 The UpdateResults API has been enhanced to support bulk uploads of up to 100 records at once. When all records are
 successfully processed, the API will return the same success response as depicted above. However, if any or all of the
@@ -335,7 +420,12 @@ structure outlined below for handling duplicate records:
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Out of a total of 3 records, 3 failed to save",
     "httpcode": 400,
@@ -385,6 +475,8 @@ structure outlined below for handling duplicate records:
     ]
 }
 ```
+</details>
+
 
 **Response**
 
@@ -392,7 +484,12 @@ In the response below, among the three records, one record was successfully save
 The failed records are indicated in the 'data' attribute using the 'error' attribute, allowing you to identify the
 specific attribute causing the failures.
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 {
     "message": "Out of a total of 3 records, 2 failed to save",
     "httpcode": 400,
@@ -430,6 +527,10 @@ specific attribute causing the failures.
     ]
 }
 ```
+</details>
+
+<a name="list-experiments-api"></a>
+## List Experiments API
 
 **Request with experiment name parameter**
 
@@ -451,7 +552,12 @@ Returns the latest result of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -634,6 +740,9 @@ Returns the latest result of all the experiments
 ]
 ```
 
+</details>
+
+
 <br>
 
 **Request with results set to true and with experiment name parameter**
@@ -655,7 +764,12 @@ Returns all the results of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -882,6 +996,9 @@ Returns all the results of all the experiments
 ]
 ```
 
+</details>
+
+
 <br>
 
 **Request with results set to true, latest set to false and with experiment name parameter**
@@ -902,7 +1019,12 @@ Returns the latest recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -1141,6 +1263,9 @@ Returns the latest recommendations of all the experiments
 ]
 ```
 
+</details>
+
+
 <br><br>
 **Request with recommendations set to true with experiment name parameter**
 
@@ -1161,7 +1286,12 @@ Returns all the recommendations of all the experiments
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "version": "1.0",
@@ -1438,6 +1568,9 @@ Returns all the recommendations of all the experiments
 ]
 ```
 
+</details>
+
+
 <br><br>
 **Request with recommendations set to true, latest set to false and with experiment name parameter**
 
@@ -1472,7 +1605,8 @@ name parameter**
 
 Returns all the recommendations and all the results of the specified experiment.
 
-## Recommendations
+<a name="list-recommendations-api"></a>
+### List Recommendations API
 
 List recommendations output JSON as follows. Some parameters like CPU limit , ENV are optional.
 
@@ -1496,7 +1630,12 @@ If no parameter is passed API returns all the latest recommendations available f
 
 **Response**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "experiment_name": "experiment_1",
@@ -1899,6 +2038,9 @@ If no parameter is passed API returns all the latest recommendations available f
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter**
 
 `GET /listRecommendations`
@@ -1909,7 +2051,12 @@ Returns the latest result of that experiment
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "cluster_name": "cluster-one-division-bell",
@@ -2129,6 +2276,9 @@ Returns the latest result of that experiment
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter and latest set to false**
 
 `GET /listRecommendations`
@@ -2139,7 +2289,12 @@ Returns all the results of that experiment
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0`**
 
-```
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "cluster_name": "cluster-one-division-bell",
@@ -2482,6 +2637,9 @@ Returns all the results of that experiment
 ]
 ```
 
+</details>
+
+
 **Request with experiment name parameter and monitoring end time set to a valid timestamp**
 
 `GET /listRecommendations`
@@ -2493,7 +2651,13 @@ Returns the recommendation at a particular timestamp if it exists
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End
 Time - `2022-12-20T17:55:05.000Z`**
 
-```
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
 [
   {
     "cluster_name": "cluster-one-division-bell",
@@ -2698,13 +2862,17 @@ Time - `2022-12-20T17:55:05.000Z`**
 ]
 ```
 
+</details>
+
+
 ### Invalid Scenarios:
 
-**Invalid experiment name**
+<details>
+<summary><b>Invalid experiment name</b></summary>
 
 `experiment_name=stub-experiment`
 
-```
+```json
 {
     "message": "Given experiment name - \" stub-experiment \" is not valid",
     "httpcode": 400,
@@ -2712,12 +2880,14 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
 
-**Invalid Timestamp format**
+<details>
+<summary><b>Invalid Timestamp format</b></summary>
 
 `monitoring_end_time=Tony Stark` (Invalid Timestamp)
 
-```
+```json
 {
     "message": "Given timestamp - \" Tony Stark \" is not a valid timestamp format",
     "httpcode": 400,
@@ -2725,12 +2895,15 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
 
-**Non Existing Timestamp**
+
+<details>
+<summary><b>Non Existing Timestamp</b></summary>
 
 `monitoring_end_time=2022-12-20T17:55:07.000Z`
 
-```
+```json
 {
     "message": "Recommendation for timestamp - \" 2022-12-20T17:55:07.000Z \" does not exist",
     "httpcode": 400,
@@ -2738,8 +2911,12 @@ Time - `2022-12-20T17:55:05.000Z`**
     "status": "ERROR"
 }
 ```
+</details>
 
-## Update Recommendations API
+
+
+<a name="update-recommendations-api"></a>
+### Update Recommendations API
 
 Generate the recommendations for a specific experiment based on provided parameters.
 
@@ -2780,7 +2957,8 @@ success status code : 201
 
 The response will contain a array of JSON object with the updated recommendations for the specified experiment.
 
-Example Response Body:
+<details>
+<summary><b>Example Response Body</b></summary>
 
 ```json
 [
@@ -2894,6 +3072,10 @@ Example Response Body:
 ]
 ```
 
+</details>
+
+
+
 **Error Responses**
 
 | HTTP Status Code | Description                                                                                        |
@@ -2906,3 +3088,149 @@ Example Response Body:
 | 400              | The Start time should precede the End time!                                                        |                                           |
 | 500              | Internal Server Error                                                                              |
 
+---
+
+## Implementing Retry Mechanism for Kruize API Consumers
+
+When consuming a REST API, it's essential to handle scenarios where the API may respond with errors or encounter
+temporary issues such as a 504 Gateway Timeout. To ensure robustness and reliability, implementing a retry mechanism
+with exponential backoff is a good practice. In this guide, we'll discuss how to implement a retry mechanism with at
+least three attempts for the following scenarios:
+
+```POST /createExperiment```
+
+If the API responds with "Profile Name not found," implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+    "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+
+</details>
+
+```POST /updateResults```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "Profile_name not found"
+
+Implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+    "message": "Out of a total of 2 records, 1 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-04-01T00:00:00.000Z",
+            "interval_end_time": "2023-04-01T00:15:00.000Z",
+            "errors": [
+                {
+                    "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
+                    "httpcode": 400,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1_1"
+        }
+    ]
+}
+```
+
+```json
+{
+    "message": "Out of a total of 2 records, 1 failed to save",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR",
+    "data": [
+        {
+            "interval_start_time": "2023-04-01T00:00:00.000Z",
+            "interval_end_time": "2023-04-01T00:15:00.000Z",
+            "errors": [
+                {
+                    "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
+                    "httpcode": 400,
+                    "documentationLink": "",
+                    "status": "ERROR"
+                }
+            ],
+            "version": "3.0",
+            "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+        }
+    ]
+}
+```
+
+</details>
+
+
+
+```POST /updateRecommendations?interval_end_time=&experiment_name=```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "interval_end_time not found"
+
+Implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+    "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_2",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+
+```json
+{
+    "message": "Not Found: interval_end_time does not exist: 2023-02-02T00:00:00.000Z",
+    "httpcode": 400,
+    "documentationLink": "",
+    "status": "ERROR"
+}
+```
+</details>
+
+
+
+```POST /*```
+
+- Common Scenario
+
+If any of the APIs respond with a "504 Gateway Timeout" error, implement retry logic.
+
+**Retry Mechanism with Exponential Backoff**
+
+The retry mechanism should follow these steps:
+
+- Send the initial API request.
+- If the response indicates an error condition (as mentioned above), initiate the retry logic.
+- Perform a maximum of three retry attempts.
+- Use exponential backoff with jitter to determine the delay before each retry.

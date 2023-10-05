@@ -26,6 +26,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
+
     @Override
     public void initialize(KubernetesElementsCheck constraintAnnotation) {
         ConstraintValidator.super.initialize(constraintAnnotation);
@@ -34,8 +35,9 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         boolean success = false;
+        String errorMessage = "";
         try {
-            KruizeObject kruizeObject = UpdateResults.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
             PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             String expName = kruizeObject.getExperimentName();
@@ -95,6 +97,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             } else {
                 success = true;
             }
+
         } catch (Exception e) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(e.getMessage())

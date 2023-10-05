@@ -16,10 +16,10 @@ import java.util.*;
 
 public class RecommendationUtils {
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
-                                                            Timestamp timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting resourceSetting,
-                                                            AnalyzerConstants.RecommendationItem recommendationItem,
-                                                            ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
+                                                           Timestamp timestampToExtract,
+                                                           AnalyzerConstants.ResourceSetting resourceSetting,
+                                                           AnalyzerConstants.RecommendationItem recommendationItem,
+                                                           ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
         Double currentValue = null;
         String format = null;
         RecommendationConfigItem recommendationConfigItem = null;
@@ -120,8 +120,8 @@ public class RecommendationUtils {
     }
 
     public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                    Timestamp endTime,
-                                                    Double durationInHrs) {
+                                                   Timestamp endTime,
+                                                   Double durationInHrs) {
 
         // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
         TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
@@ -155,17 +155,12 @@ public class RecommendationUtils {
             recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
         } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.MEDIUM_TERM.getValue())) {
             recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
-        } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())){
+        } else if (recommendationTerm.getValue().equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())) {
             recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
         }
         return recommendationNotification;
     }
 
-    public static int getThreshold(int value, int failoverPercentage, boolean direction) {
-        if (direction) {
-            return Math.round(value + value * (failoverPercentage / 100.0f));
-        } else {
-            return Math.round(value - value * (failoverPercentage / 100.0f));
-        }
-    }
+
 }
+

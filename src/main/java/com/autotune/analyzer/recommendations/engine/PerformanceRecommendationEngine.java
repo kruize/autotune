@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
@@ -40,7 +41,7 @@ import static com.autotune.analyzer.recommendations.RecommendationConstants.Reco
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
 import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
-public class PerformanceRecommendationEngine implements KruizeRecommendationEngine{
+public class PerformanceRecommendationEngine implements KruizeRecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
     private String name;
     private String key;
@@ -1030,7 +1031,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     cpuThreshold,
                     memoryThreshold
             );
-        }  else {
+        } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
 
