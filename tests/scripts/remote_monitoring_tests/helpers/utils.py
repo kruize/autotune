@@ -68,6 +68,7 @@ CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
 CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
 INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -408,8 +409,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
 
                         print(
                             f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert cost_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {cost_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
