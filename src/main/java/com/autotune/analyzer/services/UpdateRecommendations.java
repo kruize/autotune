@@ -86,8 +86,7 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        requestCount++;
-        int calCount = requestCount ;
+        int calCount = requestCount++ ;
         LOGGER.debug("UpdateRecommendations API request count: {}" , calCount);
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
