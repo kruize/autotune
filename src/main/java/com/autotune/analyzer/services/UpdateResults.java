@@ -56,7 +56,7 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    private int requestCount = 0;
+    private static int requestCount = 0;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -66,7 +66,7 @@ public class UpdateResults extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         requestCount++;
-        int calCount = requestCount + 1;
+        int calCount = requestCount;
         LOGGER.debug("updateResults API request count: {}" , calCount);
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());

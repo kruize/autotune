@@ -65,7 +65,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectE
 public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
-    private int requestCount = 0;
+    private static int requestCount = 0;
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
