@@ -1075,21 +1075,31 @@ def test_list_recommendations_notification_codes(cluster_type: str):
 
                 high_level_notifications = recommendation_section["notifications"]
 
-                # Check if duration
+                # Check for Recommendation level notifications
                 assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
                 data_section = recommendation_section["data"]
                 # Check if recommendation exists
                 assert str(end_time) in data_section
+                # Check for timestamp level notifications
+                timestamp_level_notifications = data_section[str(end_time)]["notifications"]
+                assert INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE in timestamp_level_notifications
 
-                short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]["recommendation_engines"]
+                # Check for current recommendation
+                recommendation_current = None
+                if "current" in data_section[str(end_time)]:
+                    recommendation_current = data_section[str(end_time)]["current"]
 
-                assert "variation" in short_term_recommendation
-                assert "config" in short_term_recommendation
+                short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
 
-                short_term_recommendation_current = None
-                if "current" in short_term_recommendation:
-                    short_term_recommendation_current = short_term_recommendation["current"]
+                if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+                    assert "variation" in short_term_recommendation["recommendation_engines"]["cost"]
+                    assert "config" in short_term_recommendation["recommendation_engines"]["cost"]
+
+                if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+                    assert "variation" in short_term_recommendation["recommendation_engines"]["performance"]
+                    assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
+
 
                 short_term_recommendation_config = short_term_recommendation["config"]
                 short_term_recommendation_variation = short_term_recommendation["variation"]
@@ -1163,22 +1173,22 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                     assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
                 elif j == 109:
                     # Expecting CPU request variation is available
-                    validate_variation(current_config=short_term_recommendation_current,
+                    validate_variation(current_config=recommendation_current,
                                        recommended_config=short_term_recommendation_config,
                                        variation_config=short_term_recommendation_variation)
                 elif j == 110:
                     # Expecting CPU limit variation is available
-                    validate_variation(current_config=short_term_recommendation_current,
+                    validate_variation(current_config=recommendation_current,
                                        recommended_config=short_term_recommendation_config,
                                        variation_config=short_term_recommendation_variation)
                 elif j == 111:
                     # Expecting Memory request variation is available
-                    validate_variation(current_config=short_term_recommendation_current,
+                    validate_variation(current_config=recommendation_current,
                                        recommended_config=short_term_recommendation_config,
                                        variation_config=short_term_recommendation_variation)
                 elif j == 112:
                     # Expecting Memory limit variation is available
-                    validate_variation(current_config=short_term_recommendation_current,
+                    validate_variation(current_config=recommendation_current,
                                        recommended_config=short_term_recommendation_config,
                                        variation_config=short_term_recommendation_variation)
 
