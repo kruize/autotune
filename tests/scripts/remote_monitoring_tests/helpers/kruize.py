@@ -138,27 +138,34 @@ def update_recommendations(experiment_name, startTime, endTime):
 
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
-# Input Parameters: experiment name, flag indicating latest result and monitoring end time
-def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None):
+# Input Parameters: experiment name, cluster name, flag indicating latest result and monitoring end time
+def list_recommendations(experiment_name=None, cluster_name=None, latest=None, monitoring_end_time=None):
     PARAMS = ""
     print("\nListing the recommendations...")
     url = URL + "/listRecommendations"
     print("URL = ", url)
 
-    if experiment_name == None:
-        if latest == None and monitoring_end_time == None:
-            response = requests.get(url)
-        elif latest != None:
-            PARAMS = {'latest': latest}
-        elif monitoring_end_time != None:
-            PARAMS = {'monitoring_end_time': monitoring_end_time}
-    else:
+    if experiment_name != None:
         if latest == None and monitoring_end_time == None:
             PARAMS = {'experiment_name': experiment_name}
         elif latest != None:
             PARAMS = {'experiment_name': experiment_name, 'latest': latest}
         elif monitoring_end_time != None:
             PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time': monitoring_end_time}
+    elif cluster_name != None:
+        if latest == None and monitoring_end_time == None:
+            PARAMS = {'cluster_name': cluster_name}
+        elif latest != None:
+            PARAMS = {'cluster_name': cluster_name, 'latest': latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'cluster_name': cluster_name, 'monitoring_end_time': monitoring_end_time}
+    else:
+        if latest == None and monitoring_end_time == None:
+            response = requests.get(url)
+        elif latest != None:
+            PARAMS = {'latest': latest}
+        elif monitoring_end_time != None:
+            PARAMS = {'monitoring_end_time': monitoring_end_time}
 
     print("PARAMS = ", PARAMS)
     response = requests.get(url=url, params=PARAMS)
