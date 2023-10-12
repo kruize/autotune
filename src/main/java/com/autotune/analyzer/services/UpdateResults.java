@@ -66,15 +66,15 @@ public class UpdateResults extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int calCount = requestCount++;
-        LOGGER.debug("updateResults API request count: {}" , calCount);
+        LOGGER.debug("updateResults API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            LOGGER.debug("updateResults API request payload for requestID {} is {}",calCount,inputData);
+            LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
-            LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}",calCount,updateResultsAPIObjects.size());
+            LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
@@ -102,20 +102,20 @@ public class UpdateResults extends HttpServlet {
                 );
                 request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                LOGGER.debug("updateResults API request payload for requestID {} failed",calCount);
+                LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
                 sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
-                LOGGER.debug("updateResults API request payload for requestID {} success",calCount);
+                LOGGER.debug("updateResults API request payload for requestID {} success", calCount);
                 sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 statusValue = "success";
             }
         } catch (Exception e) {
-            LOGGER.debug("updateResults API request payload for requestID {} failed",calCount);
+            LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            LOGGER.debug("updateResults API request payload for requestID {} completed",calCount);
+            LOGGER.debug("updateResults API request payload for requestID {} completed", calCount);
             if (null != timerUpdateResults) {
                 MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerUpdateResults.stop(MetricsConfig.timerUpdateResults);

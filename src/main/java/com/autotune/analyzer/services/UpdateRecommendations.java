@@ -66,6 +66,7 @@ public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
     private static int requestCount = 0;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -86,8 +87,8 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int calCount = requestCount++ ;
-        LOGGER.debug("UpdateRecommendations API request count: {}" , calCount);
+        int calCount = requestCount++;
+        LOGGER.debug("UpdateRecommendations API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
@@ -151,7 +152,7 @@ public class UpdateRecommendations extends HttpServlet {
                     }
                 }
             }
-            LOGGER.debug("UpdateRecommendations API request count: {} experiment_name : {} and interval_start_time : {} and interval_end_time : {} " , calCount , experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+            LOGGER.debug("UpdateRecommendations API request count: {} experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", calCount, experiment_name, intervalStartTimeStr, intervalEndTimeStr);
             LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
 
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
@@ -166,12 +167,12 @@ public class UpdateRecommendations extends HttpServlet {
                 if (null != kruizeObject)
                     experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
                 else {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_EXPERIMENT_NAME, experiment_name));
                     return;
                 }
             } catch (Exception e) {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
@@ -182,15 +183,15 @@ public class UpdateRecommendations extends HttpServlet {
                     new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                     ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
                     if (validationOutputData.isSuccess()) {
-                        LOGGER.debug("UpdateRecommendations API request count: {} success" , calCount);
+                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                         sendSuccessResponse(response, kruizeObject, interval_end_time);
                         statusValue = "success";
                     } else {
-                        LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                         sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
                     }
                 } catch (Exception e) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                     e.printStackTrace();
                     LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
                             experiment_name,
@@ -201,17 +202,17 @@ public class UpdateRecommendations extends HttpServlet {
 
                 }
             } else {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr));
                 return;
             }
         } catch (Exception e) {
-            LOGGER.debug("UpdateRecommendations API request count: {} failed" , calCount);
+            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            LOGGER.debug("UpdateRecommendations API request count: {} completed" , calCount);
+            LOGGER.debug("UpdateRecommendations API request count: {} completed", calCount);
             if (null != timerBUpdateRecommendations) {
                 MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
