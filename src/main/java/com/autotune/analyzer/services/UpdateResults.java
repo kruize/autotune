@@ -65,7 +65,7 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int calCount = requestCount++;
+        int calCount = ++requestCount;
         LOGGER.debug("updateResults API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
