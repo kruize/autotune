@@ -70,6 +70,8 @@ public class UpdateResults extends HttpServlet {
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         try {
+            // Set the character encoding of the request to UTF-8
+            request.setCharacterEncoding(CHARACTER_ENCODING);
             String inputData = request.getReader().lines().collect(Collectors.joining());
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();

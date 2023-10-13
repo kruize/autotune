@@ -24,8 +24,11 @@ import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.ExperimentResultData;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
 
     @Override
     public void initialize(KubernetesElementsCheck constraintAnnotation) {
@@ -34,6 +37,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("KubernetesElementsValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         String errorMessage = "";
         try {
@@ -99,12 +103,14 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
         } catch (Exception e) {
+            LOGGER.debug(e.getMessage());
+            e.printStackTrace();
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(e.getMessage())
                     .addPropertyNode("Kubernetes Elements")
                     .addConstraintViolation();
         }
-
+        LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
     }
 }

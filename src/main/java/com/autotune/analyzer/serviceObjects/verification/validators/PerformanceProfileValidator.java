@@ -42,6 +42,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("PerformanceProfileValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         /*
          Fetch the performance profile from the Map corresponding to the name in the kruize object,
@@ -74,11 +75,14 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
+            LOGGER.debug(e.getMessage());
+            e.printStackTrace();
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(e.getMessage())
                     .addPropertyNode("")
                     .addConstraintViolation();
         }
+        LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;
     }
 }

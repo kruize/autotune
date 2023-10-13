@@ -155,19 +155,29 @@ public class ExperimentInitiator {
             }
             if (mainKruizeExperimentMAP.containsKey(experimentName)) {
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
-                Set<ConstraintViolation<UpdateResultsAPIObject>> violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
-                if (violations.isEmpty()) {
-                    successUpdateResultsAPIObjects.add(object);
-                } else {
-                    List<String> errorReasons = new ArrayList<>();
-                    for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
-                        String propertyPath = violation.getPropertyPath().toString();
-                        if (null != propertyPath && propertyPath.length() != 0) {
-                            errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
-                        } else {
-                            errorReasons.add(violation.getMessage());
+                Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
+                try {
+                    violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
+                    if (violations.isEmpty()) {
+                        successUpdateResultsAPIObjects.add(object);
+                    } else {
+                        List<String> errorReasons = new ArrayList<>();
+                        for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
+                            String propertyPath = violation.getPropertyPath().toString();
+                            if (null != propertyPath && propertyPath.length() != 0) {
+                                errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
+                            } else {
+                                errorReasons.add(violation.getMessage());
+                            }
                         }
+                        object.setErrors(getErrorMap(errorReasons));
+                        failedUpdateResultsAPIObjects.add(object);
                     }
+                } catch (Exception e) {
+                    LOGGER.debug(e.getMessage());
+                    e.printStackTrace();
+                    List<String> errorReasons = new ArrayList<>();
+                    errorReasons.add(String.format("%s%s", e.getMessage(), experimentName));
                     object.setErrors(getErrorMap(errorReasons));
                     failedUpdateResultsAPIObjects.add(object);
                 }
