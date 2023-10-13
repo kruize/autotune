@@ -92,6 +92,8 @@ public class UpdateRecommendations extends HttpServlet {
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
+            // Set the character encoding of the request to UTF-8
+            request.setCharacterEncoding(CHARACTER_ENCODING);
             // Get the values from the request parameters
             String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
