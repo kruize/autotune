@@ -36,6 +36,7 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("TimeDifferenceValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
@@ -56,7 +57,7 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
                     .addPropertyNode("Time : ")
                     .addConstraintViolation();
         }
-
+        LOGGER.debug("TimeDifferenceValidator success : {}", success);
         return success;
     }
 }
