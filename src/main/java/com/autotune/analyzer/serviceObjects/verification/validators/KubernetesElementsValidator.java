@@ -103,12 +103,18 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
         } catch (Exception e) {
-            LOGGER.debug(e.getMessage());
-            e.printStackTrace();
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Kubernetes Elements")
-                    .addConstraintViolation();
+            if (null != e.getMessage()) {
+                LOGGER.debug(e.getMessage());
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Kubernetes Elements")
+                        .addConstraintViolation();
+            }else{
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null values not allowed")
+                        .addPropertyNode("Kubernetes Elements")
+                        .addConstraintViolation();
+            }
         }
         LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
