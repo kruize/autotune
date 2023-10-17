@@ -50,12 +50,19 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
             if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
                 success = true;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            e.printStackTrace();
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Time : ")
-                    .addConstraintViolation();
+            if (null != e.getMessage()) {
+                LOGGER.error(e.getMessage());
+                e.printStackTrace();
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Time : ")
+                        .addConstraintViolation();
+            }else{
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null values not allowed")
+                        .addPropertyNode("Time : ")
+                        .addConstraintViolation();
+            }
         }
         LOGGER.debug("TimeDifferenceValidator success : {}", success);
         return success;

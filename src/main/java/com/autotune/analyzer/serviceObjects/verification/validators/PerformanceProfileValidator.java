@@ -75,12 +75,18 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
-            LOGGER.debug(e.getMessage());
-            e.printStackTrace();
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("")
-                    .addConstraintViolation();
+            if (null != e.getMessage()) {
+                LOGGER.debug(e.getMessage());
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            }else{
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null values not allowed")
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            }
         }
         LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;
