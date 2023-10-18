@@ -26,6 +26,9 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 
 public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferenceCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimeDifferenceValidator.class);
@@ -50,14 +53,14 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
             if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
                 success = true;
         } catch (Exception e) {
-            if (null != e.getMessage()) {
-                LOGGER.error(e.getMessage());
-                e.printStackTrace();
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(e.getMessage())
-                        .addPropertyNode("Time : ")
-                        .addConstraintViolation();
-            }else{
+            if ((e instanceof NullPointerException) || (null == e.getMessage())) {
+                success = true;
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                String stackTrace = sw.toString();
+                LOGGER.warn(stackTrace);
+            } else {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("Null values not allowed")
                         .addPropertyNode("Time : ")

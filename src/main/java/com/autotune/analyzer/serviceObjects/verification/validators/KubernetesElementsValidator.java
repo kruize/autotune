@@ -27,6 +27,9 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
 
@@ -101,20 +104,21 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             } else {
                 success = true;
             }
-
         } catch (Exception e) {
-            if (null != e.getMessage()) {
-                LOGGER.debug(e.getMessage());
+            if ((e instanceof NullPointerException) || (null == e.getMessage())) {
+                success = true;
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                String stackTrace = sw.toString();
+                LOGGER.warn(stackTrace);
+            } else {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(e.getMessage())
                         .addPropertyNode("Kubernetes Elements")
                         .addConstraintViolation();
-            }else{
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("Null values not allowed")
-                        .addPropertyNode("Kubernetes Elements")
-                        .addConstraintViolation();
             }
+
         }
         LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
