@@ -77,7 +77,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
-            if ((e instanceof NullPointerException) || (null == e.getMessage())) {
+            if ((e instanceof NullPointerException) && (null == e.getMessage())) {
                 success = true;
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
