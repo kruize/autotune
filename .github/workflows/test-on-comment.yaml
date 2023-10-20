@@ -3,28 +3,49 @@ name: Kruize Remote monitoring functional tests
 on:
   issue_comment:
     types: [created]
+    issue_type: [pull_request]
+    branch: [master, mvp_demo, remote_monitoring]
   pull_request_review:
     types: [submitted]
 
 jobs:
   functest:
 
-    # Only run this if the user asked us to
-    if: github.event.comment.body == 'run functional tests'
+    if: contains(github.event.comment.body, 'run functional tests')
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - name: Debug Comment Content
+        run: echo "Comment :${{ github.event.comment.body }}"
+
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
           minikube version: 'v1.16.0'
           kubernetes version: 'v1.19.2'
+
       - name: Build crc
         run: |
           echo Build crc
           ./build.sh -i autotune_operator:test_build
           docker images | grep autotune
+
       - name: Install Prometheus on minikube
         run: |
           echo Install Prometheus on minikube
@@ -60,3 +81,11 @@ jobs:
            name: kruize_test_results
            path: ./kruize_test_results.tar
            retention-days: 2
+
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
