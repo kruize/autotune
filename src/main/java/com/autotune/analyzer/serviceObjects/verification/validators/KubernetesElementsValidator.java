@@ -15,8 +15,13 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects.verification.validators;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
+import com.autotune.analyzer.services.UpdateResults;
+import com.autotune.common.data.result.ExperimentResultData;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -39,7 +44,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         boolean success = false;
         String errorMessage = "";
         try {
-            /*KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
             PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             String expName = kruizeObject.getExperimentName();
@@ -98,25 +103,25 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                         .addConstraintViolation();
             } else {
                 success = true;
-            }*/
-            throw new NullPointerException(null);
+            }
         } catch (Exception e) {
-            if ((e instanceof NullPointerException) && (null == e.getMessage())) {
-                LOGGER.error(e.toString());
-                e.printStackTrace();
-                success = true;
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                String stackTrace = sw.toString();
-                LOGGER.warn(stackTrace);
-            } else {
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(e.getMessage())
                         .addPropertyNode("Kubernetes Elements")
                         .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("Kubernetes Elements")
+                        .addConstraintViolation();
             }
-
         }
         LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;

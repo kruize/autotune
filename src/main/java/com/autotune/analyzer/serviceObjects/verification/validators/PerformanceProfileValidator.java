@@ -77,17 +77,20 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
-            if ((e instanceof NullPointerException) && (null == e.getMessage())) {
-                success = true;
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                String stackTrace = sw.toString();
-                LOGGER.warn(stackTrace);
-            } else {
-                LOGGER.debug(e.getMessage());
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
                         .addPropertyNode("")
                         .addConstraintViolation();
             }

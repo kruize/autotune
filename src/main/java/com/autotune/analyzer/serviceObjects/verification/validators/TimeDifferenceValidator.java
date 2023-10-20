@@ -53,17 +53,21 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
             if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
                 success = true;
         } catch (Exception e) {
-            if ((e instanceof NullPointerException) && (null == e.getMessage())) {
-                success = true;
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                String stackTrace = sw.toString();
-                LOGGER.warn(stackTrace);
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Time")
+                        .addConstraintViolation();
             } else {
                 context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("Null values not allowed")
-                        .addPropertyNode("Time : ")
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("Time")
                         .addConstraintViolation();
             }
         }
