@@ -12,7 +12,7 @@ tunables:
   - name: memoryRequest
     value_type: double
     upper_bound: '300 Mi'
-    lower_bound: GM
+    lower_bound: 'G'
     queries:
     - datasource: 'prometheus'
       query: 'container_memory_working_set_bytes{$CONTAINER_LABEL$="", $POD_LABEL$="$POD$"}'

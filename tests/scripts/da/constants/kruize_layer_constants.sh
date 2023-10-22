@@ -156,6 +156,7 @@ tunable_upper_bound_testcases=("blank-tunable-upper-bound"
 "null-tunable-upper-bound"
 "char-tunable-upper-bound"
 "zero-tunable-upper-bound"
+"integer-tunable-upper-bound"
 "valid-tunable-upper-bound")
 
 # tests for tunable lower bound
@@ -166,6 +167,7 @@ tunable_lower_bound_testcases=("blank-tunable-lower-bound"
 "null-tunable-lower-bound"
 "char-tunable-lower-bound"
 "zero-tunable-lower-bound"
+"integer-tunable-lower-bound"
 "valid-tunable-lower-bound")
 
 # tests for step
@@ -452,53 +454,63 @@ tunable_value_type_expected_log_msgs=([blank-tunable-value-type]='Validation fro
 
 # Expected autotune object for tunable upper bound
 declare -A tunable_upper_bound_autotune_objects
-tunable_upper_bound_autotune_objects=([blank-tunable-upper-bound]='false'
-[invalid-tunable-upper-bound]='true'
-[no-tunable-upper-bound]='false'
-[no-tunable-upper-bound-value]='false'
-[null-tunable-upper-bound]='false'
-[char-tunable-upper-bound]='false'
+tunable_upper_bound_autotune_objects=([blank-tunable-upper-bound]='true'
+[invalid-tunable-upper-bound]='false'
+[no-tunable-upper-bound]='true'
+[no-tunable-upper-bound-value]='true'
+[null-tunable-upper-bound]='true'
+[char-tunable-upper-bound]='true'
 [zero-tunable-upper-bound]='true'
+[integer-tunable-upper-bound]='false'
 [valid-tunable-upper-bound]='true')
+
 
 # Expected log message for tunable-upper-bound
 declare -A tunable_upper_bound_expected_log_msgs
+memory_tuneable="memoryRequest"
 tunable_upper_bound_yaml_path="${yaml_path}/${kruize_layer_tests[11]}"
 tunable_upper_bound_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "upper_bound" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-invalid_upper_bound_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].upper_bound): invalid type for com.recommender.v1.KruizeLayer.tunables.upper_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
-tunable_upper_bound_expected_log_msgs=([blank-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/blank-tunable-upper-bound.yaml'"'${invalid_upper_bound_error}''
-[invalid-tunable-upper-bound]=''${invalid_bound_exception}''
-[no-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/no-tunable-upper-bound.yaml'"'${tunable_upper_bound_kubectl_error}''
-[no-tunable-upper-bound-value]='error: error validating "'${tunable_upper_bound_yaml_path}/no-tunable-upper-bound-value.yaml'"'${tunable_upper_bound_kubectl_error}''
-[null-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/null-tunable-upper-bound.yaml'"'${tunable_upper_bound_kubectl_error}''
-[char-tunable-upper-bound]='error: error validating "'${tunable_upper_bound_yaml_path}/char-tunable-upper-bound.yaml'"'${invalid_upper_bound_error}''
-[zero-tunable-upper-bound]=''${invalid_bound_exception}''
-[valid-tunable-upper-bound]=''${kruize_layer_obj_create_msg}' valid-tunable-upper-bound')
+invalid_upper_bound_error='The KruizeLayer "invalid-tunable-upper-bound" is invalid:'
+tunable_upper_bound_expected_log_msgs=([blank-tunable-upper-bound]=''${invalid_bound_exception}': Bounds value(s) are empty'
+[invalid-tunable-upper-bound]=''${invalid_upper_bound_error}''
+[no-tunable-upper-bound]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[integer-tunable-upper-bound]='The KruizeLayer "integer-tunable-upper-bound" is invalid:'
+[no-tunable-upper-bound-value]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[null-tunable-upper-bound]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[char-tunable-upper-bound]=''${invalid_bound_exception}': Error: Upper bound value is not a valid number'
+[zero-tunable-upper-bound]=''${invalid_bound_exception}': ERROR: Tunable: '${memory_tuneable}' has invalid bounds;'
+[valid-tunable-upper-bound]='Added autotuneconfig valid-tunable-upper-bound')
+
 
 # Expected autotune object for tunable lower bound
 declare -A tunable_lower_bound_autotune_objects
-tunable_lower_bound_autotune_objects=([blank-tunable-lower-bound]='false'
-[invalid-tunable-lower-bound]='true'
-[no-tunable-lower-bound]='false'
-[no-tunable-lower-bound-value]='false'
-[null-tunable-lower-bound]='false'
-[char-tunable-lower-bound]='false'
+invalid_lower_bound_error='The KruizeLayer "invalid-tunable-lower-bound" is invalid:'
+tunable_lower_bound_autotune_objects=([blank-tunable-lower-bound]='true'
+[invalid-tunable-lower-bound]='false'
+[no-tunable-lower-bound]='true'
+[no-tunable-lower-bound-value]='true'
+[null-tunable-lower-bound]='true'
+[char-tunable-lower-bound]='true'
 [zero-tunable-lower-bound]='true'
+[integer-tunable-lower-bound]='false'
+[zero-tunable-nonstring-lower-bound]='true'
 [valid-tunable-lower-bound]='true')
 
 # Expected log message for tunable-lower-bound
 declare -A tunable_lower_bound_expected_log_msgs
+memory_tuneable="memoryRequest"
 tunable_lower_bound_yaml_path="${yaml_path}/${kruize_layer_tests[12]}"
 tunable_lower_bound_kubectl_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\]): missing required field "lower_bound" in com.recommender.v1.KruizeLayer.tunables; if you choose to ignore these errors, turn validation off with --validate=false'
-invalid_lower_bound_error=': error validating data: ValidationError(KruizeLayer.tunables\[0\].lower_bound): invalid type for com.recommender.v1.KruizeLayer.tunables.lower_bound: got "string", expected "number"; if you choose to ignore these errors, turn validation off with --validate=false'
-tunable_lower_bound_expected_log_msgs=([blank-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/blank-tunable-lower-bound.yaml'"'${invalid_lower_bound_error}''
-[invalid-tunable-lower-bound]=''${invalid_bound_exception}''
-[no-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/no-tunable-lower-bound.yaml'"'${tunable_lower_bound_kubectl_error}''
-[no-tunable-lower-bound-value]='error: error validating "'${tunable_lower_bound_yaml_path}/no-tunable-lower-bound-value.yaml'"'${tunable_lower_bound_kubectl_error}''
-[null-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/null-tunable-lower-bound.yaml'"'${tunable_lower_bound_kubectl_error}''
-[char-tunable-lower-bound]='error: error validating "'${tunable_lower_bound_yaml_path}/char-tunable-lower-bound.yaml'"'${invalid_lower_bound_error}''
-[zero-tunable-lower-bound]=''${kruize_layer_obj_create_msg}' zero-tunable-lower-bound'
-[valid-tunable-lower-bound]=''${kruize_layer_obj_create_msg}' valid-tunable-lower-bound')
+invalid_lower_bound_error='The KruizeLayer "invalid-tunable-lower-bound" is invalid:'
+tunable_lower_bound_expected_log_msgs=([blank-tunable-lower-bound]=''${invalid_bound_exception}': Bounds value(s) are empty'
+[invalid-tunable-lower-bound]=''${invalid_lower_bound_error}''
+[no-tunable-lower-bound]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[no-tunable-lower-bound-value]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[null-tunable-lower-bound]=''${invalid_bound_exception}': Bounds value(s) cannot be null'
+[char-tunable-lower-bound]=''${invalid_bound_exception}': Error: Lower bound value is not a valid number'
+[zero-tunable-lower-bound]='Test yet to be decided'
+[integer-tunable-lower-bound]='The KruizeLayer "integer-tunable-lower-bound" is invalid:'
+[valid-tunable-lower-bound]='Added autotuneconfig valid-tunable-lower-bound')
 
 # Expected autotune object for step
 declare -A step_autotune_objects
