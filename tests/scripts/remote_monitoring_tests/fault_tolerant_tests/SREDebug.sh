@@ -1,6 +1,4 @@
 #!/bin/bash
-#todo add count results and recommendations
-#todo Consider %clustername%
 # Function to display the usage instructions.
 usage() {
   echo "Usage: $0 -h <host> -p <port> -d <dbname> -U <username> -W <password> -e <cluster_name> -s <monitoring_start_time YYYY-MM-DD HH:MM:SS> -t <monitoring_end_time YYYY-MM-DD HH:MM:SS> -n <day to debug default 1 days>"
