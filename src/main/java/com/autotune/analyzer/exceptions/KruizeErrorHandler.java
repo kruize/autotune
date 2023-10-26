@@ -58,7 +58,11 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .create();
         String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
-        if (errorCode != HttpServletResponse.SC_CONFLICT) {
+
+        // suppress error in case of duplicate records entry and show errors for all other failed cases.
+        if (errorCode == HttpServletResponse.SC_CONFLICT) {
+            LOGGER.debug(gsonStr);
+        } else {
             LOGGER.error(gsonStr);
         }
         out.append(gsonStr);

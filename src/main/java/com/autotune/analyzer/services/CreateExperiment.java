@@ -204,6 +204,7 @@ public class CreateExperiment extends HttpServlet {
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        // check for the input request data to debug issues, if any
         LOGGER.debug(inputRequestPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
