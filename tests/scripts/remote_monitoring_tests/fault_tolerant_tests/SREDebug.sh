@@ -18,6 +18,7 @@ generate_json() {
     local duration_sum_minutes="$8"
     local days="$9"
     local missing_dates="${10}"
+    local last_recommendation_date="${11}"
 
     # Construct the JSON object
     cat <<EOF
@@ -31,6 +32,7 @@ generate_json() {
       "to_date": "$to_date",
       "results_count": $results_count,
       "recommendations_count": $recommendations_count,
+      "last_recommendation_date" : "$last_recommendation_date",
       "duration_sum_minutes": $duration_sum_minutes,
       "missing_dates": [$missing_dates]
     }
@@ -105,7 +107,7 @@ for experiment_name in "${experiments_array[@]}"; do
     minDate="${dates[0]}"
     maxDate="${dates[1]}"
     if [[ "$min_max_dates" == "|" ]]; then
-      finalOutput+=$(generate_json $experiment_name "" "" "" "" "0" "0" "0" $days_to_debug)" , "
+      finalOutput+=$(generate_json $experiment_name "" "" "" "" "0" "0" "0" $days_to_debug "" "")" , "
     else
       if [ -n "$days_to_debug" ]; then
         minCalculatedDate=$(date -u -d "$maxDate $days_to_debug day ago" "+%Y-%m-%d %H:%M:%S")
@@ -117,6 +119,8 @@ for experiment_name in "${experiments_array[@]}"; do
       results_count=$(PGPASSWORD="$password" $psql -t -A -c "SELECT count(*) FROM public.kruize_results WHERE experiment_name='$experiment_name' and interval_start_time >= '$minCalculatedDate' and interval_end_time <= '$maxDate'")
       #Query find recommendations count
       recommendations_count=$(PGPASSWORD="$password" $psql -t -A -c "SELECT count(*) FROM public.kruize_recommendations WHERE experiment_name='$experiment_name' and interval_end_time >= '$minCalculatedDate' and interval_end_time <= '$maxDate'")
+      #Query find last recommendations date
+      last_recommendation_date=$(PGPASSWORD="$password" $psql -t -A -c "SELECT max(interval_end_time) FROM public.kruize_recommendations WHERE experiment_name='$experiment_name' and interval_end_time >= '$minCalculatedDate' and interval_end_time <= '$maxDate'")
       # Query to get the sum of duration_minutes
       duration_sum=$(PGPASSWORD="$password" $psql -t -A -c "SELECT sum(duration_minutes) FROM public.kruize_results WHERE experiment_name='$experiment_name' and interval_start_time >= '$minCalculatedDate' and interval_end_time <= '$maxDate'")
       # Generate a list of dates to check
@@ -153,7 +157,7 @@ for experiment_name in "${experiments_array[@]}"; do
       # Remove the trailing comma
       missing_dates_in_String=${missing_dates_in_String%,}
 
-      finalOutput+=$(generate_json $experiment_name "${minDate}" "$maxDate" "$minCalculatedDate" "$maxDate" "$results_count" "$recommendations_count" $duration_sum $days_to_debug "$missing_dates_in_String" )" , "
+      finalOutput+=$(generate_json $experiment_name "${minDate}" "$maxDate" "$minCalculatedDate" "$maxDate" "$results_count" "$recommendations_count" $duration_sum $days_to_debug "$missing_dates_in_String" "$last_recommendation_date" )" , "
     fi
 done
 echo "["
