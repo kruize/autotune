@@ -191,7 +191,9 @@ public class ExperimentInitiator {
         List<ExperimentResultData> resultDataList = new ArrayList<>();
         successUpdateResultsAPIObjects.forEach(
                 (successObj) -> {
-                    resultDataList.add(Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(successObj));
+                    ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(successObj);
+                    if (experimentResultData.getValidationOutputData().isSuccess())
+                        resultDataList.add(experimentResultData);
                 }
         );
 

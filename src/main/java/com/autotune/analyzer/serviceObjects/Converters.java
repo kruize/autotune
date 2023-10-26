@@ -9,6 +9,8 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -311,6 +313,8 @@ public class Converters {
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
+            String errorMsg = "";
+            experimentResultData.setValidationOutputData(new ValidationOutputData(true, errorMsg, 200));
             experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
@@ -327,6 +331,16 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                    if (containerAPIObject.getMetrics() == null) {
+                        errorMsg = errorMsg.concat(String.format(
+                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
+                                containerAPIObject.getContainer_name(),
+                                updateResultsAPIObject.getExperimentName()
+                        ));
+                        ValidationOutputData validationOutputData = new ValidationOutputData(false, errorMsg, 400);
+                        experimentResultData.setValidationOutputData(validationOutputData);
+                        continue;
+                    }
                     for (Metric metric : containerAPIObject.getMetrics()) {
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();
