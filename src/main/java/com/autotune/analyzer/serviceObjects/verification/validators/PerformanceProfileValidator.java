@@ -29,6 +29,8 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
@@ -75,18 +77,24 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
             if (null != e.getMessage()) {
-                LOGGER.debug(e.getMessage());
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(e.getMessage())
                         .addPropertyNode("")
                         .addConstraintViolation();
-            }else{
+            } else {
                 context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("Null values not allowed")
+                context.buildConstraintViolationWithTemplate("Null value found")
                         .addPropertyNode("")
                         .addConstraintViolation();
             }
+
         }
         LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;

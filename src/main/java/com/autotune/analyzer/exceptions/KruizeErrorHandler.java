@@ -21,6 +21,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +41,8 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
  * documentation link
  */
 public class KruizeErrorHandler extends ErrorPageErrorHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeErrorHandler.class);
+
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         baseRequest.setMethod("GET");
@@ -50,11 +54,11 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
         PrintWriter out = response.getWriter();
         Gson gsonObj = new GsonBuilder()
                 .disableHtmlEscaping()
-                .setPrettyPrinting()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .create();
         String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
+        LOGGER.error(gsonStr);
         out.append(gsonStr);
         out.flush();
     }

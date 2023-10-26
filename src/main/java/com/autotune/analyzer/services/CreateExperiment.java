@@ -83,16 +83,16 @@ public class CreateExperiment extends HttpServlet {
         String statusValue = "failure";
         Timer.Sample timerCreateExp = Timer.start(MetricsConfig.meterRegistry());
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
-        ;
+        String inputData = "";
         try {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
-            String inputData = request.getReader().lines().collect(Collectors.joining());
+            inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
@@ -120,17 +120,17 @@ public class CreateExperiment extends HttpServlet {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
                     } else {
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                     }
                 } else {
                     LOGGER.error("Failed to create experiment: {}", invalidKruizeObject.getValidation_data().getMessage());
-                    sendErrorResponse(response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
+                    sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+            sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         } finally {
             if (null != timerCreateExp) {
                 MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
@@ -150,13 +150,13 @@ public class CreateExperiment extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
-
+        String inputData = "";
         try {
-            String inputData = request.getReader().lines().collect(Collectors.joining());
+            inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
@@ -181,7 +181,7 @@ public class CreateExperiment extends HttpServlet {
                 sendSuccessResponse(response, "Experiment deleted successfully.");
             }
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -198,13 +198,14 @@ public class CreateExperiment extends HttpServlet {
         out.flush();
     }
 
-    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+    public void sendErrorResponse(String inputRequestPayload, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
             LOGGER.error(e.toString());
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        LOGGER.error(inputRequestPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
 }
