@@ -192,6 +192,7 @@ public class ExperimentInitiator {
         successUpdateResultsAPIObjects.forEach(
                 (successObj) -> {
                     ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(successObj);
+                    // add result data only if the validation succeeds
                     if (experimentResultData.getValidationOutputData().isSuccess())
                         resultDataList.add(experimentResultData);
                 }

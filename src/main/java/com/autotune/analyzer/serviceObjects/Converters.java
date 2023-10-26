@@ -314,6 +314,7 @@ public class Converters {
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
             String errorMsg = "";
+            // validation is set to be true by default
             experimentResultData.setValidationOutputData(new ValidationOutputData(true, errorMsg, 200));
             experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
@@ -331,6 +332,7 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                    // if the metrics data is not present, set corresponding validation message and skip adding the current container data
                     if (containerAPIObject.getMetrics() == null) {
                         errorMsg = errorMsg.concat(String.format(
                                 AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
