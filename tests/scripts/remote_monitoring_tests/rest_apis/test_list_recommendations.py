@@ -1101,10 +1101,8 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                     assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
 
 
-                short_term_recommendation_config = short_term_recommendation["config"]
-                short_term_recommendation_variation = short_term_recommendation["variation"]
-
-                short_term_notifications = short_term_recommendation["notifications"]
+                short_term_recommendation_config = short_term_recommendation["recommendation_engines"]["cost"]["config"]
+                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"]["variation"]
 
                 if j == 96:
                     response = update_recommendations(experiment_name, None, end_time)
@@ -1112,65 +1110,65 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                     assert response.status_code == SUCCESS_STATUS_CODE
                     assert data[0]['experiment_name'] == experiment_name
                     assert \
-                        data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                            'message'] == 'Cost Recommendations Available'
+                        data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                            'message'] == 'Recommendations Are Available'
                     # Expected notifications in short term recommendation
                     # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
                     # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
                     # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
                     # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
-                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
-                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
-                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
-                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
+                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in timestamp_level_notifications
+                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in timestamp_level_notifications
+                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in timestamp_level_notifications
+                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in timestamp_level_notifications
                 elif j == 97:
                     # Expected notifications in short term recommendation
                     # CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
-                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_CPU_REQUEST_NOT_SET_CODE in timestamp_level_notifications
                 elif j == 98:
                     # Expected notifications in short term recommendation
                     # WARNING_CPU_LIMIT_NOT_SET_CODE = "423001"
-                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in short_term_notifications
+                    assert WARNING_CPU_LIMIT_NOT_SET_CODE in timestamp_level_notifications
                 elif j == 99:
                     # Expected notifications in short term recommendation
                     # CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
-                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_MEMORY_REQUEST_NOT_SET_CODE in timestamp_level_notifications
                 elif j == 100:
                     # Expected notifications in short term recommendation
                     # CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
-                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in short_term_notifications
+                    assert CRITICAL_MEMORY_LIMIT_NOT_SET_CODE in timestamp_level_notifications
                 elif j == 101:
                     # Expected notifications in short term recommendation
                     # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
-                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
+                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in timestamp_level_notifications
                 elif j == 102:
                     # Expected notifications in short term recommendation
                     # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
-                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in timestamp_level_notifications
                 elif j == 103:
                     # Expected notifications in short term recommendation
                     # INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
-                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in short_term_notifications
+                    assert INVALID_AMOUNT_IN_CPU_SECTION_CODE in timestamp_level_notifications
                 elif j == 104:
                     # Expected notifications in short term recommendation
                     # INVALID_AMOUNT_IN_MEMORY_SECTION_CODE = "224002"
-                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                    assert INVALID_AMOUNT_IN_MEMORY_SECTION_CODE in timestamp_level_notifications
                 elif j == 105:
                     # Expected notifications in short term recommendation
                     # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
-                    assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
+                    assert FORMAT_MISSING_IN_CPU_SECTION_CODE in timestamp_level_notifications
                 elif j == 106:
                     # Expected notifications in short term recommendation
                     # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
-                    assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                    assert FORMAT_MISSING_IN_MEMORY_SECTION_CODE in timestamp_level_notifications
                 elif j == 107:
                     # Expected notifications in short term recommendation
                     # INVALID_FORMAT_IN_CPU_SECTION_CODE = "223004"
-                    assert INVALID_FORMAT_IN_CPU_SECTION_CODE in short_term_notifications
+                    assert FORMAT_MISSING_IN_CPU_SECTION_CODE in timestamp_level_notifications
                 elif j == 108:
                     # Expected notifications in short term recommendation
                     # INVALID_FORMAT_IN_MEMORY_SECTION_CODE = "224004"
-                    assert INVALID_FORMAT_IN_MEMORY_SECTION_CODE in short_term_notifications
+                    assert FORMAT_MISSING_IN_MEMORY_SECTION_CODE in timestamp_level_notifications
                 elif j == 109:
                     # Expecting CPU request variation is available
                     validate_variation(current_config=recommendation_current,
