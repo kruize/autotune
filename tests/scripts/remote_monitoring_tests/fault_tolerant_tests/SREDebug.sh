@@ -113,6 +113,15 @@ for experiment_name in "${experiments_array[@]}"; do
         days_to_debug=1
         minCalculatedDate=$(date -u -d "$maxDate 1 day ago" "+%Y-%m-%d %H:%M:%S")
       fi
+      if [ -n "$monitoring_start_time" ]; then
+        # Convert the date strings to Unix timestamps
+        timestamp1=$(date -d "$monitoring_start_time" +%s)
+        timestamp2=$(date -d "$minCalculatedDate" +%s)
+        if [ "$timestamp2" -le "$timestamp1" ]; then
+          minCalculatedDate=$monitoring_start_time
+        fi
+      fi
+
       #Query find results count
       results_count=$(PGPASSWORD="$password" $psql -t -A -c "SELECT count(*) FROM public.kruize_results WHERE experiment_name='$experiment_name' and interval_start_time >= '$minCalculatedDate' and interval_end_time <= '$maxDate'")
       #Query find recommendations count
