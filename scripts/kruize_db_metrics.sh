@@ -163,8 +163,9 @@ for experiment_name in "${experiments_array[@]}"; do
       done
       # Remove the trailing comma
       missing_dates_in_String=${missing_dates_in_String%,}
-
-      finalOutput+=$(generate_json $experiment_name "${minDate}" "$maxDate" "$minCalculatedDate" "$maxDate" "$results_count" "$recommendations_count" $duration_sum $days_to_debug "$missing_dates_in_String" "$last_recommendation_date" )" , "
+      temp=$(generate_json $experiment_name "${minDate}" "$maxDate" "$minCalculatedDate" "$maxDate" "$results_count" "$recommendations_count" $duration_sum $days_to_debug "$missing_dates_in_String" "$last_recommendation_date" )" , "
+      echo $temp
+      finalOutput+="$temp"
     fi
 done
 echo "["
