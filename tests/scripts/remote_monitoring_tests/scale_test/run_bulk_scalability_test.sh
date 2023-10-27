@@ -8,11 +8,13 @@ results_count=24
 minutes_jump=15
 initial_start_date="2023-08-01T00:00:00.000Z"
 interval_hours=6
+query_db_interval=5
 
 function usage() {
 	echo
 	echo "Usage: ./run_scalability_test.sh -c cluster_type[minikube|openshift (default - openshift)] [-a IP] [-p PORT] [-u No. of experiments per client (default - 250)]"
-        echo "	     [-d No. of days of results (default - 2)] [-n No. of clients] [-m results duration interval] [-i interval hours] [-s Initial start date][-r <resultsdir path>]"
+	echo "	     [-d No. of days of results (default - 2)] [-n No. of clients] [-m results duration interval in mins (default - 15)] [-i interval hours (default - 6)]"
+        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>]"
 	exit -1
 }
 
@@ -31,8 +33,9 @@ function query_db() {
 		else
 			echo "Day $days_completed completed, Day $day_in_progress in progress"
 		fi
-
-		sleep 300
+		
+		sleep_time=$((query_db_interval * 60))
+		sleep ${sleep_time}
 	done
 
 }
@@ -53,6 +56,9 @@ function execution_time() {
 			echo "6 hours" > ${exec_time_log}
 		else
 			j=$((${i}/4))
+			if [ ${j} > ${num_days_of _res} ]; then
+				break;
+			fi
 			if [ ${i} == 4 ]; then
 				echo "${j} day" >> ${exec_time_log}
 			else
@@ -66,7 +72,7 @@ function execution_time() {
 }
 
 
-while getopts c:a:p:r:u:n:d:m:i:s:h gopts
+while getopts c:a:p:r:u:n:d:m:i:s:q:h gopts
 do
 	case ${gopts} in
 	c)
@@ -95,6 +101,9 @@ do
 		;;
 	i)
 		interval_hours="${OPTARG}"		
+		;;
+	q)
+		query_db_interval="${OPTARG}"
 		;;
 	s)
 		initial_start_date="${OPTARG}"		
@@ -125,7 +134,7 @@ do
 	name="scaletest${num_exps}-${num_days_of_res}days-${loop}"
 	logfile="${SCALE_LOG_DIR}/${name}.log"
 	echo "logfile = $logfile"
-	sleep 5
+
 	nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name scaletest${num_exps}-${num_days_of_res}days-${loop} --count ${num_exps},${results_count} --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
 
 	pid_array+=($!)
@@ -176,7 +185,7 @@ while [[ ${expected_results_count} != ${actual_results_count} ]]; do
 	if [ ${j} == 2 ]; then
 		break
 	else
-		sleep 10
+		sleep 5
 	fi
 	j=$((${j} + 1))
 done
