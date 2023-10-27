@@ -232,16 +232,16 @@ function deploy_autotune() {
 			namespace="monitoring"
 		fi
 		echo "Namespace = $namespace"
-		service="autotune"
 		if [ ${target} == "crc" ]; then
 			service="kruize"
-		fi
-		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
-		echo "autotune_pod = $autotune_pod"
-		if [ ${target} == "crc" ]; then
+			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | cut -d " " -f1)
+			echo "autotune_pod = $autotune_pod"
 			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
 		else
+			service="autotune"
+			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
+			echo "autotune_pod = $autotune_pod"
 			echo "kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 			kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
 		fi
