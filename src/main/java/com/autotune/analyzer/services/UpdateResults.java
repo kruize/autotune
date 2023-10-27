@@ -148,7 +148,7 @@ public class UpdateResults extends HttpServlet {
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
-        LOGGER.error("UpdateRequestsAPI  input pay load {} ", inputPayload);
+        LOGGER.debug("UpdateRequestsAPI  input pay load {} ", inputPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
 }
