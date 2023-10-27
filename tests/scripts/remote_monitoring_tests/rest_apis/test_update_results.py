@@ -20,7 +20,8 @@ missing_metrics = [
     ("Missing_metrics_single_res_single_container", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_container.json", "Out of a total of 1 records, 1 failed to save", "Metric data is not present for container"),
     ("Missing_metrics_single_res_all_containers", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_containers.json", "Out of a total of 1 records, 1 failed to save", "Metric data is not present for container"),
     ("Missing_metrics_bulk_res_single_container", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_container.json", "Out of a total of 100 records, 1 failed to save", "Metric data is not present for container"),
-    ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "Metric data is not present for container")
+    ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "Metric data is not present for container"),
+    ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
 ]
 
 
