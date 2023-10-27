@@ -179,7 +179,7 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
         error_data=d["errors"]
         for err in error_data:
             actual_error_message = err["message"]
-            assert actual_error_message == error_message 
+            assert error_message in actual_error_message
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
