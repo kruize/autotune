@@ -37,7 +37,6 @@ import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.micrometer.core.instrument.Timer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -47,11 +46,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_INTERVAL_END_TIME;
 
 /**
  *
@@ -60,6 +65,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
+    private static int requestCount = 0;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -70,7 +76,8 @@ public class UpdateRecommendations extends HttpServlet {
      * Generates recommendations
      *
      * @param request  an {@link HttpServletRequest} object that
-     *                 contains the request the client has made
+     *                 contains
+     *                 the request the client has made
      *                 of the servlet
      * @param response an {@link HttpServletResponse} object that
      *                 contains the response the servlet sends
@@ -80,9 +87,13 @@ public class UpdateRecommendations extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int calCount = ++requestCount;
+        LOGGER.debug("UpdateRecommendations API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
+            // Set the character encoding of the request to UTF-8
+            request.setCharacterEncoding(CHARACTER_ENCODING);
             // Get the values from the request parameters
             String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
@@ -143,36 +154,46 @@ public class UpdateRecommendations extends HttpServlet {
                     }
                 }
             }
-
+            LOGGER.debug("UpdateRecommendations API request count: {} experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", calCount, experiment_name, intervalStartTimeStr, intervalEndTimeStr);
             LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
 
-            List<ExperimentResultData> experimentResultDataList = null;
+            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             ExperimentResultData experimentResultData = null;
+            Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+            KruizeObject kruizeObject = null;
             try {
-                experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, interval_start_time, interval_end_time);
+                new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+                if (null != mainKruizeExperimentMAP.get(experiment_name)) {
+                    kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                }
+                if (null != kruizeObject)
+                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
+                else {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_EXPERIMENT_NAME, experiment_name));
+                    return;
+                }
             } catch (Exception e) {
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
 
             if (experimentResultDataList.size() > 0) {
-
-                //Load KruizeObject and generate recommendation
-                Map<String, KruizeObject> mainKruizeExperimentMAP = new HashMap<>();
+                //generate recommendation
                 try {
-                    //Load KruizeObject
-                    ExperimentDBService experimentDBService = new ExperimentDBService();
-                    experimentDBService.loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-                    KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                     ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
                     if (validationOutputData.isSuccess()) {
+                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                         sendSuccessResponse(response, kruizeObject, interval_end_time);
                         statusValue = "success";
                     } else {
+                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                         sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
                     }
                 } catch (Exception e) {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
                     e.printStackTrace();
                     LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
                             experiment_name,
@@ -183,14 +204,17 @@ public class UpdateRecommendations extends HttpServlet {
 
                 }
             } else {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.DATA_NOT_FOUND);
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr));
                 return;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
+            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
+            LOGGER.debug("UpdateRecommendations API request count: {} completed", calCount);
             if (null != timerBUpdateRecommendations) {
                 MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
@@ -202,7 +226,7 @@ public class UpdateRecommendations extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
-        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
             LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
@@ -245,6 +269,7 @@ public class UpdateRecommendations extends HttpServlet {
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
+            e.printStackTrace();
             LOGGER.error(e.toString());
             if (null == errorMsg) errorMsg = e.getMessage();
         }

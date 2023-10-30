@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
@@ -66,16 +67,20 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         double sum = 0.0;
         Timestamp intervalEndTime = null;
+        Timestamp thresholdTime = calculateThresholdTimeBasedOnTerm(durationBasedRecommendationSubCategory, endTime);
         for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
             if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
+                if (timestamp.before(thresholdTime)) {
+                    // Breaking condition not met so we can be sure that data is not sufficient hence return null
+                    return null;
                 }
+                sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
+                if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
+                    // Storing the timestamp value in startTimestamp variable to return
+                    intervalEndTime = timestamp;
+                    break;
+                }
+
             }
         }
         try {
@@ -516,12 +521,12 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
         if (numPods == 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be zero");
+            LOGGER.debug("Number of pods cannot be zero");  //
             isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
             notifications.add(recommendationNotification);
-            LOGGER.error("Number of pods cannot be negative");
+            LOGGER.debug("Number of pods cannot be negative");
             isSuccess = false;
         } else {
             recommendation.setPodsCount(numPods);
@@ -1115,5 +1120,43 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
                 return true;
         }
         return false;
+    }
+
+    private static Timestamp calculateThresholdTimeBasedOnTerm(DurationBasedRecommendationSubCategory durationBasedRecommendationSubCategory, Timestamp endTime) {
+        // Check for null
+        if (null == durationBasedRecommendationSubCategory || null == endTime)
+            return null;
+        // Initialise threshold time
+        Timestamp thresholdTime = null;
+
+        // Extract the duration as count
+        int count = durationBasedRecommendationSubCategory.getDuration();
+        // Extract units
+        TimeUnit units = durationBasedRecommendationSubCategory.getRecommendationDurationUnits();
+
+        // Assuming units is hours by default
+        int totalDurationInHrs = count;
+
+        // Checking if it's days
+        if (units == TimeUnit.DAYS) {
+            totalDurationInHrs = count * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
+        }
+        // TODO: Add checks for other timeunits like minutes, weeks & months if needed later
+
+        // Add Threshold based on term
+        if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM))
+            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_SHORT_TERM;
+        else if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM))
+            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_MEDIUM_TERM;
+        else if (durationBasedRecommendationSubCategory.getSubCategory().equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM))
+            totalDurationInHrs = totalDurationInHrs + THRESHOLD_HRS_LONG_TERM;
+
+        // Remove the number of hours from end time
+        long endTimeMillis = endTime.getTime();
+        long startTimeMillis = endTimeMillis - TimeUnit.HOURS.toMillis(totalDurationInHrs);
+
+        thresholdTime = new Timestamp(startTimeMillis);
+
+        return thresholdTime;
     }
 }

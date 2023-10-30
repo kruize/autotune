@@ -1,0 +1,25 @@
+[
+  {
+    "version": "1.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+	  {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -20,6 +20,8 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.InitializeDeployment;
@@ -38,11 +40,17 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Scanner;
 
 import static com.autotune.utils.ServerContext.*;
 
@@ -83,11 +91,14 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
+            // Read and execute the DDLs here
+            executeDDLs();
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
+
         if (KruizeDeploymentInfo.settings_save_to_db) {
             Session session = null;
             try {
@@ -114,8 +125,11 @@ public class Autotune {
         }
 
         try {
-            server.start();
-            server.join();
+            String startAutotune = System.getenv("START_AUTOTUNE");
+            if (startAutotune == null || startAutotune.equalsIgnoreCase("true")) {
+                server.start();
+                server.join();
+            }
         } catch (Exception e) {
             LOGGER.error("Could not start the server!");
             e.printStackTrace();
@@ -145,4 +159,46 @@ public class Autotune {
         Analyzer.start(contextHandler);
         ExperimentManager.launch(contextHandler);
     }
+
+    private static void executeDDLs() throws Exception {
+        SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
+        Session session = null;
+        try {
+            session = factory.openSession();
+            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, AnalyzerConstants.DDL);
+            File sqlFile = sqlFilePath.toFile();
+            Scanner scanner = new Scanner(sqlFile);
+            Transaction transaction = session.beginTransaction();
+
+            while (scanner.hasNextLine()) {
+                String sqlStatement = scanner.nextLine();
+                if (sqlStatement.startsWith("#") || sqlStatement.startsWith("-")) {
+                    continue;
+                } else {
+                    try {
+                        session.createNativeQuery(sqlStatement).executeUpdate();
+                    } catch (Exception e) {
+                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                        } else {
+                            LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                        }
+                        transaction.commit();
+                        transaction = session.beginTransaction();
+                    }
+                }
+            }
+            transaction.commit();
+            scanner.close();
+            LOGGER.info(DBConstants.DB_MESSAGES.DB_CREATION_SUCCESS);
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while trying to read the DDL file: {}", e.getMessage());
+            throw new Exception(e);
+        } finally {
+            if (null != session) session.close(); // Close the Hibernate session
+        }
+
+        LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
+    }
+
 }

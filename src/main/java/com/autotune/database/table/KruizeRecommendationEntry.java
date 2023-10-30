@@ -14,20 +14,15 @@ import java.sql.Timestamp;
                 columnList = "experiment_name",
                 unique = false),
         @Index(
-                name = "idx_recommendation_cluster_name",
-                columnList = "cluster_name",
-                unique = false),
-        @Index(
                 name = "idx_recommendation_interval_end_time",
                 columnList = "interval_end_time",
                 unique = false)
 })
 public class KruizeRecommendationEntry {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long recommendation_id;
     private String version;
+    @Id
     private String experiment_name;
+    @Id
     private Timestamp interval_end_time;
     private String cluster_name;
     @JdbcTypeCode(SqlTypes.JSON)

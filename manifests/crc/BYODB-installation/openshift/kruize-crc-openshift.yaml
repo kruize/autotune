@@ -35,11 +35,11 @@ data:
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
-        "c3p0minsize": 2,
-        "c3p0maxsize": 5,
+        "c3p0minsize": 5,
+        "c3p0maxsize": 10,
         "c3p0timeout": 300,
-        "c3p0maxstatements": 50,
-        "hbm2ddlauto": "update",
+        "c3p0maxstatements": 100,
+        "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
       }
@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.18_rm
+          image: kruize/autotune_operator:0.0.19.4_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -194,7 +194,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.1
+      image: quay.io/kruize/kruize-ui:0.0.2
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV

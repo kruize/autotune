@@ -9,6 +9,8 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -181,109 +183,108 @@ public class Converters {
             }
             return listRecommendationsAPIObject;
         }
-		public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
-				KruizeObject kruizeObject,
-				boolean getLatest,
-				boolean checkForTimestamp,
-				String monitoringEndTimestamp) {
-			ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
-			try {
-				listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
-				listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
-				listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
-				List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
-				KubernetesAPIObject kubernetesAPIObject;
-				for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-					kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
-					HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-					List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
-					for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-						ContainerAPIObject containerAPIObject;
-						// if a Time stamp is passed it holds the priority than latest
-						if (checkForTimestamp) {
-							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
-							ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-							if (null != clonedContainerData) {
-								HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
-								Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTimestamp);
-								Timestamp givenTimestamp = new Timestamp(medDate.getTime());
-								if (recommendations.containsKey(givenTimestamp)) {
-									List<Timestamp> tempList = new ArrayList<>();
-									for (Timestamp timestamp : recommendations.keySet()) {
-										if (!timestamp.equals(givenTimestamp))
-											tempList.add(timestamp);
-									}
-									for (Timestamp timestamp : tempList) {
-										recommendations.remove(timestamp);
-									}
-									clonedContainerData.getContainerRecommendations().setData(recommendations);
-									containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-											clonedContainerData.getContainer_image_name(),
-											clonedContainerData.getContainerRecommendations(),
-											new ArrayList<>(clonedContainerData.getMetrics().values()));
-									containerAPIObjects.add(containerAPIObject);
-								}
-							}
-						} else if (getLatest) {
-							// This step causes a performance degradation, need to be replaced with a better flow of creating SO's
-							containerData = getLatestRecommendations(containerData);
-							containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
-									containerData.getContainer_image_name(),
-									containerData.getContainerRecommendations(),
-									new ArrayList<>(containerData.getMetrics().values()));
-							containerAPIObjects.add(containerAPIObject);
-						} else {
-							containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
-									containerData.getContainer_image_name(),
-									containerData.getContainerRecommendations(),
-									new ArrayList<>(containerData.getMetrics().values()));
-							containerAPIObjects.add(containerAPIObject);
-							containerDataMap.put(containerData.getContainer_name(), containerData);
-						}
-					}
-					kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
-					kubernetesAPIObjects.add(kubernetesAPIObject);
-				}
-				listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return listRecommendationsAPIObject;
-		}
+
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
+                KruizeObject kruizeObject,
+                boolean getLatest,
+                boolean checkForTimestamp,
+                String monitoringEndTimestamp) {
+            ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+            try {
+                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
+                listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
+                List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
+                KubernetesAPIObject kubernetesAPIObject;
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
+                    HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+                    List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
+                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                        ContainerAPIObject containerAPIObject;
+                        // if a Time stamp is passed it holds the priority than latest
+                        if (checkForTimestamp) {
+                            // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
+                            ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+                            if (null != clonedContainerData) {
+                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+                                Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTimestamp);
+                                Timestamp givenTimestamp = new Timestamp(medDate.getTime());
+                                if (recommendations.containsKey(givenTimestamp)) {
+                                    List<Timestamp> tempList = new ArrayList<>();
+                                    for (Timestamp timestamp : recommendations.keySet()) {
+                                        if (!timestamp.equals(givenTimestamp))
+                                            tempList.add(timestamp);
+                                    }
+                                    for (Timestamp timestamp : tempList) {
+                                        recommendations.remove(timestamp);
+                                    }
+                                    clonedContainerData.getContainerRecommendations().setData(recommendations);
+                                    containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+                                            clonedContainerData.getContainer_image_name(),
+                                            clonedContainerData.getContainerRecommendations(),
+                                            new ArrayList<>(clonedContainerData.getMetrics().values()));
+                                    containerAPIObjects.add(containerAPIObject);
+                                }
+                            }
+                        } else if (getLatest) {
+                            // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
+                            containerData = getLatestRecommendations(containerData);
+                            containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+                                    containerData.getContainer_image_name(),
+                                    containerData.getContainerRecommendations(),
+                                    new ArrayList<>(containerData.getMetrics().values()));
+                            containerAPIObjects.add(containerAPIObject);
+                        } else {
+                            containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
+                                    containerData.getContainer_image_name(),
+                                    containerData.getContainerRecommendations(),
+                                    new ArrayList<>(containerData.getMetrics().values()));
+                            containerAPIObjects.add(containerAPIObject);
+                            containerDataMap.put(containerData.getContainer_name(), containerData);
+                        }
+                    }
+                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+                    kubernetesAPIObjects.add(kubernetesAPIObject);
+                }
+                listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return listRecommendationsAPIObject;
+        }
 
         /**
-         *
          * @param containerData
          * @return
          */
         public static ContainerData getLatestRecommendations(ContainerData containerData) {
-			ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-			if (null != clonedContainerData) {
-				HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
-				Timestamp latestTimestamp = null;
-				List<Timestamp> tempList = new ArrayList<>();
-				for (Timestamp timestamp : recommendations.keySet()) {
-					if (null == latestTimestamp) {
-						latestTimestamp = timestamp;
-					} else {
-						if (timestamp.after(latestTimestamp)) {
-							tempList.add(latestTimestamp);
-							latestTimestamp = timestamp;
-						} else {
-							tempList.add(timestamp);
-						}
-					}
-				}
-				for (Timestamp timestamp : tempList) {
-					recommendations.remove(timestamp);
-				}
-				clonedContainerData.getContainerRecommendations().setData(recommendations);
-			}
-			return clonedContainerData;
-		}
+            ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+            if (null != clonedContainerData) {
+                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+                Timestamp latestTimestamp = null;
+                List<Timestamp> tempList = new ArrayList<>();
+                for (Timestamp timestamp : recommendations.keySet()) {
+                    if (null == latestTimestamp) {
+                        latestTimestamp = timestamp;
+                    } else {
+                        if (timestamp.after(latestTimestamp)) {
+                            tempList.add(latestTimestamp);
+                            latestTimestamp = timestamp;
+                        } else {
+                            tempList.add(timestamp);
+                        }
+                    }
+                }
+                for (Timestamp timestamp : tempList) {
+                    recommendations.remove(timestamp);
+                }
+                clonedContainerData.getContainerRecommendations().setData(recommendations);
+            }
+            return clonedContainerData;
+        }
 
         /**
-         *
          * @param containerData
          */
         public static void getLatestResults(ContainerData containerData) {
@@ -312,10 +313,14 @@ public class Converters {
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
+            String errorMsg = "";
+            // validation is set to be true by default
+            experimentResultData.setValidationOutputData(new ValidationOutputData(true, errorMsg, 200));
             experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
             experimentResultData.setExperiment_name(updateResultsAPIObject.getExperimentName());
+            experimentResultData.setCluster_name(updateResultsAPIObject.getKruizeObject().getClusterName());
             List<KubernetesAPIObject> kubernetesAPIObjectList = updateResultsAPIObject.getKubernetesObjects();
             List<K8sObject> k8sObjectList = new ArrayList<>();
             for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectList) {
@@ -327,6 +332,17 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                    // if the metrics data is not present, set corresponding validation message and skip adding the current container data
+                    if (containerAPIObject.getMetrics() == null) {
+                        errorMsg = errorMsg.concat(String.format(
+                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
+                                containerAPIObject.getContainer_name(),
+                                updateResultsAPIObject.getExperimentName()
+                        ));
+                        ValidationOutputData validationOutputData = new ValidationOutputData(false, errorMsg, 400);
+                        experimentResultData.setValidationOutputData(validationOutputData);
+                        continue;
+                    }
                     for (Metric metric : containerAPIObject.getMetrics()) {
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();

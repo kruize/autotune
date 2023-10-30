@@ -94,11 +94,11 @@ data:
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
-        "c3p0minsize": 2,
-        "c3p0maxsize": 5,
+        "c3p0minsize": 5,
+        "c3p0maxsize": 10,
         "c3p0timeout": 300,
-        "c3p0maxstatements": 50,
-        "hbm2ddlauto": "update",
+        "c3p0maxstatements": 100,
+        "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
       }
@@ -135,6 +135,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/pg_data
+          resources:
+            requests:
+              memory: "10Gi"
+              cpu: "2"
+            limits:
+              memory: "30Gi"
+              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -182,7 +189,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.18_rm
+          image: kruize/autotune_operator:0.0.19.4_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -201,9 +208,10 @@ spec:
           resources:
             requests:
               memory: "4Gi"
-              cpu: "4"
+              cpu: "2"
             limits:
               memory: "8Gi"
+              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -239,6 +247,47 @@ spec:
     - name: kruize-port
       port: 8080
       targetPort: 8080
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: create-partition-cronjob
+  namespace: openshift-tuning
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizecronjob
+              image: kruize/autotune_operator:0.0.19.4_rm
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/CreatePartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -311,7 +360,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.1
+      image: quay.io/kruize/kruize-ui:0.0.2
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV

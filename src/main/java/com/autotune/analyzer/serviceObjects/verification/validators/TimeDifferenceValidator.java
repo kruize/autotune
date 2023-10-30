@@ -26,6 +26,9 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 
 public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferenceCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimeDifferenceValidator.class);
@@ -36,20 +39,39 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("TimeDifferenceValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
-
-        KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-
-        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
-        Double durationInSeconds = intervalResults.getDuration_in_seconds();
-        String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
-        Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
-        // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
-        double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
-        double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
-        if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
-            success = true;
-
+        try {
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
+            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
+            Double durationInSeconds = intervalResults.getDuration_in_seconds();
+            String measurementDurationInMins = kruizeObject.getTrial_settings().getMeasurement_durationMinutes();
+            Double parsedMeasurementDuration = Double.parseDouble(measurementDurationInMins.substring(0, measurementDurationInMins.length() - 3));
+            // Calculate the lower and upper bounds for the acceptable range i.e. +-5 seconds
+            double lowerRange = Math.abs((parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS));
+            double upperRange = (parsedMeasurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE) + (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS);
+            if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
+                success = true;
+        } catch (Exception e) {
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Time")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("Time")
+                        .addConstraintViolation();
+            }
+        }
+        LOGGER.debug("TimeDifferenceValidator success : {}", success);
         return success;
     }
 }

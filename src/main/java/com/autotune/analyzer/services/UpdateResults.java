@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
@@ -29,7 +28,6 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import io.micrometer.core.instrument.Timer;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +42,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -59,6 +56,7 @@ public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+    private static int requestCount = 0;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -67,19 +65,23 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int calCount = ++requestCount;
+        LOGGER.debug("updateResults API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+        String inputData = "";
         try {
-            performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
-                    .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
-            String inputData = request.getReader().lines().collect(Collectors.joining());
+            // Set the character encoding of the request to UTF-8
+            request.setCharacterEncoding(CHARACTER_ENCODING);
+            inputData = request.getReader().lines().collect(Collectors.joining());
+            LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
+            LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
-                sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
                 return;
             }
             ExperimentInitiator experimentInitiator = new ExperimentInitiator();
@@ -103,16 +105,20 @@ public class UpdateResults extends HttpServlet {
                 );
                 request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                sendErrorResponse(request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+                LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
+                LOGGER.debug("updateResults API request payload for requestID {} success", calCount);
                 sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 statusValue = "success";
             }
         } catch (Exception e) {
+            LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
+            LOGGER.debug("updateResults API request payload for requestID {} completed", calCount);
             if (null != timerUpdateResults) {
                 MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
@@ -125,21 +131,24 @@ public class UpdateResults extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
+        String successOutput = new Gson().toJson(
+                new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
+        );
+        LOGGER.debug(successOutput);
         out.append(
-                new Gson().toJson(
-                        new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
-                )
+                successOutput
         );
         out.flush();
     }
 
-    public void sendErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+    public void sendErrorResponse(String inputPayload, HttpServletRequest request, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
             LOGGER.error(e.toString());
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        LOGGER.debug("UpdateRequestsAPI  input pay load {} ", inputPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
 }

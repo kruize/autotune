@@ -23,6 +23,7 @@ import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.engine.DurationBasedRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -33,10 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Util class to validate the performance profile metrics with the experiment results metrics.
@@ -82,31 +80,26 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     @Override
     public void generateRecommendation(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         /*
-            To restrict the number of rows in the result set, the Load results operation involves locating the appropriate method and configuring the desired limitation.
-            It's important to note that in order for the Limit rows feature to function correctly,
-            the CreateExperiment API must adhere strictly to the trail settings' measurement duration and should not allow arbitrary values
+             The general strategy involves initially attempting the optimal query;
         */
-        String experiment_name = kruizeObject.getExperimentName();
-        int limitRows = (int) ((
-                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS *
-                        KruizeConstants.DateFormats.MINUTES_FOR_DAY)
-                / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
-
-        if (null != interval_start_time) {
-            long diffMilliseconds = interval_end_time.getTime() - interval_start_time.getTime();
-            long minutes = diffMilliseconds / (60 * 1000);
-            int addToLimitRows = (int) (minutes / kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble());
-            LOGGER.debug("add to limit rows set to {}", addToLimitRows);
-            limitRows = limitRows + addToLimitRows;
-        }
-        LOGGER.debug("Limit rows set to {}", limitRows);
-
+        // Convert the Timestamp to a Calendar instance in UTC time zone
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTimeInMillis(interval_end_time.getTime());
+        /*
+         * interval_start_time Subtract (LONG_TERM_DURATION_DAYS +  THRESHOLD days)
+         * Incorporate a buffer period of "threshold days" to account for potential remote cluster downtime.
+         * This adjustment aims to align the cumulative hours' duration with LONG_TERM_DURATION_DAYS.
+         */
+        cal.add(Calendar.DAY_OF_MONTH, -(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS +
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
+        // Get the new Timestamp after subtracting 10 days
+        Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
+        String experiment_name = kruizeObject.getExperimentName();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
                 experiment_name,
-                interval_end_time,
-                limitRows);
+                calculated_start_time,interval_end_time);
         //TODO: Will be updated once algo is completed
         for (ExperimentResultData experimentResultData : experimentResultDataList) {
             if (null != kruizeObject && null != experimentResultData) {

@@ -16,7 +16,7 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.7 as mvnbuild-jdk17
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8 as mvnbuild-jdk17
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
@@ -39,6 +39,7 @@ RUN mvn -f pom.xml install dependency:copy-dependencies
 # Now copy the sources and compile and package them
 COPY src $AUTOTUNE_HOME/src/autotune/src/
 RUN mvn -f pom.xml clean package
+COPY migrations target/bin/migrations
 
 # Create a jlinked JRE specific to the App
 RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-path $AUTOTUNE_HOME/java/openjdk/jmods --add-modules java.base,java.compiler,java.desktop,java.logging,java.management,java.naming,java.security.jgss,java.sql,java.xml,jdk.compiler,jdk.httpserver,jdk.unsupported,jdk.crypto.ec --exclude-files=**java_**.properties,**J9TraceFormat**.dat,**OMRTraceFormat**.dat,**j9ddr**.dat,**public_suffix_list**.dat --output jre
@@ -47,7 +48,7 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 #            Runtime Docker Image
 ##########################################################
 # Use ubi-minimal as the base image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.7
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
 
 ARG AUTOTUNE_VERSION
 ARG USER=autotune
@@ -87,6 +88,9 @@ USER ${UID}
 COPY --chown=${UID}:0 --from=mvnbuild-jdk17 ${AUTOTUNE_HOME}/src/autotune/jre/ ${AUTOTUNE_HOME}/app/jre/
 # Copy the app binaries
 COPY --chown=${UID}:0 --from=mvnbuild-jdk17 ${AUTOTUNE_HOME}/src/autotune/target/ ${AUTOTUNE_HOME}/app/target/
+
+# Grant execute permission
+RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/
 
 EXPOSE 8080
 

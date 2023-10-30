@@ -38,6 +38,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
 /**
  * Initiates new experiment data validations and push into queue for worker to
@@ -76,7 +79,7 @@ public class ExperimentInitiator {
                     }
             );
             responses = new ArrayList<>();
-            groupSimilarMap.forEach((httpCode,errorText) ->
+            groupSimilarMap.forEach((httpCode, errorText) ->
                     {
                         responses.add(
                                 new KruizeResponse(errorText, httpCode, "", "ERROR", null)
@@ -140,21 +143,47 @@ public class ExperimentInitiator {
                 .failFast(false)
                 .buildValidatorFactory()
                 .getValidator();
-
+        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<String, KruizeObject>();
         for (UpdateResultsAPIObject object : updateResultsAPIObjects) {
-            Set<ConstraintViolation<UpdateResultsAPIObject>> violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
-            if (violations.isEmpty()) {
-                successUpdateResultsAPIObjects.add(object);
+            String experimentName = object.getExperimentName();
+            if (!mainKruizeExperimentMAP.containsKey(experimentName)) {
+                try {
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName); // TODO try to avoid DB
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                }
+            }
+            if (mainKruizeExperimentMAP.containsKey(experimentName)) {
+                object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
+                Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
+                try {
+                    violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
+                    if (violations.isEmpty()) {
+                        successUpdateResultsAPIObjects.add(object);
+                    } else {
+                        List<String> errorReasons = new ArrayList<>();
+                        for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
+                            String propertyPath = violation.getPropertyPath().toString();
+                            if (null != propertyPath && propertyPath.length() != 0) {
+                                errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
+                            } else {
+                                errorReasons.add(violation.getMessage());
+                            }
+                        }
+                        object.setErrors(getErrorMap(errorReasons));
+                        failedUpdateResultsAPIObjects.add(object);
+                    }
+                } catch (Exception e) {
+                    LOGGER.debug(e.getMessage());
+                    e.printStackTrace();
+                    List<String> errorReasons = new ArrayList<>();
+                    errorReasons.add(String.format("%s%s", e.getMessage(), experimentName));
+                    object.setErrors(getErrorMap(errorReasons));
+                    failedUpdateResultsAPIObjects.add(object);
+                }
             } else {
                 List<String> errorReasons = new ArrayList<>();
-                for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
-                    String propertyPath = violation.getPropertyPath().toString();
-                    if (null != propertyPath && propertyPath.length() != 0) {
-                        errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
-                    } else {
-                        errorReasons.add(violation.getMessage());
-                    }
-                }
+                errorReasons.add(String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName));
                 object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
             }

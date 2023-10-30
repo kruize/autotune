@@ -18,17 +18,23 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
+import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -40,20 +46,22 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Transaction tx = null;
         String statusValue = "failure";
         Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            try {
-                tx = session.beginTransaction();
-                session.persist(kruizeExperimentEntry);
-                tx.commit();
-                validationOutputData.setSuccess(true);
-                statusValue = "success";
-            } catch (HibernateException e) {
-                LOGGER.error("Not able to save experiment due to {}", e.getMessage());
-                if (tx != null) tx.rollback();
-                e.printStackTrace();
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage(e.getMessage());
-                //todo save error to API_ERROR_LOG
+        try {
+            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                try {
+                    tx = session.beginTransaction();
+                    session.persist(kruizeExperimentEntry);
+                    tx.commit();
+                    validationOutputData.setSuccess(true);
+                    statusValue = "success";
+                } catch (HibernateException e) {
+                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    if (tx != null) tx.rollback();
+                    e.printStackTrace();
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(e.getMessage());
+                    //TODO: save error to API_ERROR_LOG
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
@@ -65,6 +73,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return validationOutputData;
+    }
+
+    @Override
+    public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) {
+        Transaction tx;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            // Create a YearMonth object
+            YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
+
+            // check the partition type and create corresponding query
+            if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
+                // Get the last day of the month
+                int lastDayOfMonth = yearMonth.lengthOfMonth();
+                IntStream.range(dayOfTheMonth, lastDayOfMonth + 1).forEach(i -> {
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                    session.createNativeQuery(daterange).executeUpdate();
+                });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
+                IntStream.range(1, 16).forEach(i -> {
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                    session.createNativeQuery(daterange).executeUpdate();
+                });
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
+                        year, month, String.format("%02d", 1), year, month, String.format("%02d", 1));
+                session.createNativeQuery(daterange).executeUpdate();
+            } else {
+                LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                throw new Exception(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+            }
+
+            tx.commit();
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -84,7 +130,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(
-                            String.format("A record with the name %s already exists within the timestamp range starting from %s and ending on %s.", resultsEntry.getExperiment_name(), resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
+                            String.format(DBConstants.DB_MESSAGES.RECORD_ALREADY_EXISTS, resultsEntry.getExperiment_name(),
+                                    resultsEntry.getInterval_start_time(), resultsEntry.getInterval_end_time())
                     );
                 } else {
                     throw new Exception(ex.getMessage());
@@ -119,28 +166,49 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
                 try {
-                    session.merge(entry);
+                    session.persist(entry);
+                    session.flush();
                 } catch (PersistenceException e) {
-                    entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
-                    failedResultsEntries.add(entry);
+                    ConstraintViolationException constraintViolationException = null;
+                    String message = "";
+                    if (null != e.getCause()) {
+                        constraintViolationException = (ConstraintViolationException) e.getCause();
+                        message = constraintViolationException.getCause().getMessage();
+                    } else {
+                        message = e.getMessage();
+                    }
+                    LOGGER.debug(message);
+                    if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
+                        entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
+                        failedResultsEntries.add(entry);
+                    } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
+                        try {
+                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                            tx.commit();
+                            tx = session.beginTransaction();
+                            // create partitions based on entry object
+                            createPartitions(entry);
+                            session.persist(entry);
+                            session.flush();
+                        } catch (Exception partitionException) {
+                            LOGGER.error(partitionException.getMessage());
+                            entry.setErrorReasons(List.of(partitionException.getMessage()));
+                            failedResultsEntries.add(entry);
+                        }
+                    } else {
+                        entry.setErrorReasons(List.of(e.getMessage()));
+                        failedResultsEntries.add(entry);
+                    }
+                    tx.commit();
+                    tx = session.beginTransaction();
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
                     failedResultsEntries.add(entry);
+                    tx.commit();
+                    tx = session.beginTransaction();
                 }
             }
             tx.commit();
-
-            if (!failedResultsEntries.isEmpty()) {
-                //  find elements in kruizeResultsEntries but not in failedResultsEntries
-                List<KruizeResultsEntry> elementsInSuccessOnly = kruizeResultsEntries.stream()
-                        .filter(entry -> !failedResultsEntries.contains(entry))
-                        .collect(Collectors.toList());
-                tx = session.beginTransaction();
-                for (KruizeResultsEntry entry : elementsInSuccessOnly) {
-                    session.merge(entry);
-                }
-                tx.commit();
-            }
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
@@ -157,6 +225,43 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return failedResultsEntries;
     }
 
+    private void createPartitions(KruizeResultsEntry entry) {
+        try {
+            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
+            LocalDateTime newDateTime;
+            int dayOfTheMonth = localDateTime.getDayOfMonth();
+            // Subtract 15 days from the current date
+            newDateTime = localDateTime.minus(DBConstants.PARTITION_TYPES.LAST_N_DAYS, ChronoUnit.DAYS);
+            // Check if the start date is not within the same month and adjust the date accordingly
+            if (newDateTime.getMonth() != localDateTime.getMonth()) {
+                newDateTime = localDateTime.minusDays(DBConstants.PARTITION_TYPES.LAST_N_DAYS);
+                LOGGER.debug("newDateTime: {}", newDateTime);
+            }
+            // create partition for the previous 15 days
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+
+            // check the dayOfTheMonth and create partitions accordingly
+            if (dayOfTheMonth < DBConstants.PARTITION_TYPES.PARTITION_DAY) {
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            } else {
+                // create the partitions for the rest of the days for the current month
+                // Fixing the partition type to 'by_month'
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+
+                // create the partitions for the next month
+                YearMonth yearMonth = buildDateForNextMonth(YearMonth.of(localDateTime.getYear(), localDateTime.getMonthValue()));
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while creating partitions: ");
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
@@ -165,7 +270,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerAddRecDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
-                KruizeRecommendationEntry existingRecommendationEntry = loadRecommendationsByExperimentNameAndDate(recommendationEntry.getExperiment_name(), recommendationEntry.getInterval_end_time());
+                KruizeRecommendationEntry existingRecommendationEntry = loadRecommendationsByExperimentNameAndDate(recommendationEntry.getExperiment_name(), recommendationEntry.getCluster_name(), recommendationEntry.getInterval_end_time());
                 if (null == existingRecommendationEntry) {
                     tx = session.beginTransaction();
                     session.persist(recommendationEntry);
@@ -397,18 +502,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name,  Timestamp calculated_start_time,Timestamp interval_end_time) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
         String statusValue = "failure";
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
         Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        LOGGER.debug("startTime : {} , endTime : {}",calculated_start_time,interval_end_time);
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            if (null != limitRows && null != interval_end_time) {
-                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE, KruizeResultsEntry.class)
+            if (null != calculated_start_time && null != interval_end_time) {
+                Query<KruizeResultsEntry> kruizeResultsEntryQuery = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT + clusterCondtionSql , KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .setMaxResults(limitRows)
-                        .list();
+                        .setParameter(KruizeConstants.JSONKeys.CALCULATED_START_TIME, calculated_start_time)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+                if (cluster_name != null)
+                    kruizeResultsEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+                kruizeResultsEntries = kruizeResultsEntryQuery.list();
                 statusValue = "success";
             } else {
                 kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
@@ -449,18 +562,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, Timestamp interval_end_time) throws Exception {
+    public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
         String statusValue = "failure";
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
+
         Timer.Sample timerLoadRecExpNameDate = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            recommendationEntries = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME, KruizeRecommendationEntry.class)
+            Query<KruizeRecommendationEntry> kruizeRecommendationEntryQuery = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME + clusterCondtionSql, KruizeRecommendationEntry.class)
                     .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                    .getSingleResult();
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+            if (cluster_name != null)
+                kruizeRecommendationEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+            recommendationEntries = kruizeRecommendationEntryQuery.getSingleResult();
             statusValue = "success";
         } catch (NoResultException e) {
-            LOGGER.debug("Generating mew recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
+            LOGGER.debug("Generating new recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             recommendationEntries = null;
@@ -496,28 +617,33 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
 
     @Override
-    public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+    public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-
+            Query<KruizeResultsEntry> kruizeResultsEntryQuery = null;
             if (interval_start_time != null && interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME, KruizeResultsEntry.class)
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, interval_start_time)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
             } else if (interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
             } else {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .getResultList();
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name);
             }
+            if (cluster_name != null)
+                kruizeResultsEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+            kruizeResultsEntryList = kruizeResultsEntryQuery.getResultList();
         } catch (NoResultException e) {
-            LOGGER.error("Data not found in kruizeResultsEntry for exp_name:{} interval_end_time:{} ", experiment_name, interval_end_time);
+            LOGGER.error(DBConstants.DB_MESSAGES.DATA_NOT_FOUND_KRUIZE_RESULTS, experiment_name, interval_end_time);
             kruizeResultsEntryList = null;
         } catch (Exception e) {
             kruizeResultsEntryList = null;
@@ -525,5 +651,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading results from the database due to : " + e.getMessage());
         }
         return kruizeResultsEntryList;
+    }
+
+    public YearMonth buildDateForNextMonth(YearMonth yearMonth) {
+        int year = yearMonth.getYear();
+        int month = yearMonth.getMonthValue() + 1; // increment by one as we need to create the partition for the next month
+        if (month > 12) {
+            month = 1;
+            year += 1;
+        }
+        yearMonth = YearMonth.of(year, month);
+        return yearMonth;
     }
 }

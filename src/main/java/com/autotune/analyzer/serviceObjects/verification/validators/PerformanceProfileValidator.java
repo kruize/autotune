@@ -29,9 +29,11 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
@@ -42,19 +44,26 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("PerformanceProfileValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         /*
          Fetch the performance profile from the Map corresponding to the name in the kruize object,
          and then validate the Performance Profile data
         */
         try {
-            KruizeObject kruizeObject = ExperimentNameExistValidator.mainKruizeExperimentMAP.get(updateResultsAPIObject.getExperimentName());
-            if(UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+            KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
+            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
                 ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
                 new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
                 UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
             }
-            PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = null;
+            if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
+                performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            } else {
+                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
+            }
+
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             // validate the 'resultdata' with the performance profile
             String errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, resultData);
@@ -66,12 +75,28 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
                         .addPropertyNode("Performance profile")
                         .addConstraintViolation();
             }
+
         } catch (Exception e) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Performance profile")
-                    .addConstraintViolation();
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            }
+
         }
+        LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;
     }
 }

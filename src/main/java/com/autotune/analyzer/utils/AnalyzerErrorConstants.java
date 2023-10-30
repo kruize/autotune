@@ -75,7 +75,9 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_SLO_DATA = "No Performance Profile or SLO data is Present!";
         public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
-        public static final String MISSING_PERF_PROFILE = "Performance Profile doesn't exist : ";
+        public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
+        public static final String MISSING_EXPERIMENT_NAME = "Not Found: experiment_name does not exist: ";
+        public static final String MISSING_INTERVAL_END_TIME = "Not Found: interval_end_time does not exist: ";
         public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
         public static final String UNSUPPORTED_EXPERIMENT_RESULTS = String.format("At present, the system does not support bulk entries exceeding %s in quantity!", KruizeDeploymentInfo.bulk_update_results_limit);
         public static final String UNSUPPORTED_BULK_KUBERNETES = "Bulk Kubernetes objects are currently unsupported!";
@@ -83,6 +85,7 @@ public class AnalyzerErrorConstants {
         public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
 
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
+        public static final String MISSING_METRICS = "Metric data is not present for container : %s for experiment: %s. ";
 
         private AutotuneObjectErrors() {
         }

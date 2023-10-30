@@ -142,15 +142,17 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp interval_end_time, Integer limitRows) throws Exception {
+    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName,  Timestamp calculated_start_time,Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
         // Load results from the DB and save to local
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, interval_end_time, limitRows);
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, kruizeObject.getClusterName(), calculated_start_time , interval_end_time);
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
             if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
                 List<ExperimentResultData> resultDataList = new ArrayList<>();
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
+                    updateResultsAPIObject.setKruizeObject(kruizeObject);
                     try {
                         ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
                         if (experimentResultData != null)
@@ -203,11 +205,16 @@ public class ExperimentDBService {
     public List<UpdateResultsAPIObject> addResultsToDB(List<ExperimentResultData> resultDataList) {
         List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
         List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
+        List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
         for (ExperimentResultData resultData : resultDataList) {
             KruizeResultsEntry kruizeResultsEntry = DBHelpers.Converters.KruizeObjectConverters.convertExperimentResultToExperimentResultsTable(resultData);
-            kruizeResultsEntryList.add(kruizeResultsEntry);
+            if (null != kruizeResultsEntry.getErrorReasons() && kruizeResultsEntry.getErrorReasons().size() > 0) {
+                failedResultsEntries.add(kruizeResultsEntry);
+            } else {
+                kruizeResultsEntryList.add(kruizeResultsEntry);
+            }
         }
-        List<KruizeResultsEntry> failedResultsEntries = experimentDAO.addToDBAndFetchFailedResults(kruizeResultsEntryList);
+        failedResultsEntries.addAll(experimentDAO.addToDBAndFetchFailedResults(kruizeResultsEntryList));
         failedUpdateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(failedResultsEntries);
         return failedUpdateResultsAPIObjects;
     }
@@ -341,12 +348,13 @@ public class ExperimentDBService {
     }
 
 
-    public List<ExperimentResultData> getExperimentResultData(String experiment_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+    public List<ExperimentResultData> getExperimentResultData(String experiment_name, KruizeObject kruizeObject, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-        List<KruizeResultsEntry> kruizeResultsEntryList = experimentDAO.getKruizeResultsEntry(experiment_name, interval_start_time, interval_end_time);
+        List<KruizeResultsEntry> kruizeResultsEntryList = experimentDAO.getKruizeResultsEntry(experiment_name, kruizeObject.getClusterName(), interval_start_time, interval_end_time);
         if (null != kruizeResultsEntryList) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntryList);
             for (UpdateResultsAPIObject updateObject : updateResultsAPIObjects) {
+                updateObject.setKruizeObject(kruizeObject);
                 experimentResultDataList.add(
                         Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateObject)
                 );
