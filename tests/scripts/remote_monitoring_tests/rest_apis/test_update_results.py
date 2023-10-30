@@ -16,6 +16,14 @@ interval_end_times = [
     ("valid_plus_30s", "2022-01-23T18:41:13.511Z")
 ]
 
+missing_metrics = [
+    ("Missing_metrics_single_res_single_container", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_container.json", "Out of a total of 1 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_single_res_all_containers", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_containers.json", "Out of a total of 1 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_bulk_res_single_container", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_container.json", "Out of a total of 100 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
+]
+
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
@@ -131,6 +139,54 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
+def test_update_results_with_missing_metrics_section(test_name, result_json_file, expected_message, error_message, cluster_type):
+    """
+    Test Description: This test validates update results for a valid experiment
+                      by updating results with entire metrics section missing
+    """
+    input_json_file = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    print("**************************")
+    print(data['message'])
+    print("**************************")
+
+    # add assertion of expected message
+    assert data['message'] == expected_message 
+
+    # add assertion of expected error message
+    msg_data=data['data']
+    for d in msg_data:
+        error_data=d["errors"]
+        for err in error_data:
+            actual_error_message = err["message"]
+            if test_name == "Missing_metrics_bulk_res_few_containers" and d["interval_end_time"] == "2023-04-13T23:29:20.982Z":
+                error_message = "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"
+            if test_name == "Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing" and d["interval_end_time"] == "2023-04-13T23:44:20.982Z" or d["interval_end_time"] == "2023-04-13T23:59:20.982Z":
+                error_message = "Performance profile: Missing one of the following mandatory parameters for experiment - quarkus-resteasy-kruize-min-http-response-time-db : [cpuUsage, memoryUsage, memoryRSS]"
+            assert error_message in actual_error_message
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_valid_results_after_create_exp(cluster_type):

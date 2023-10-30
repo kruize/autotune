@@ -32,6 +32,7 @@ public class CompareDateValidator implements ConstraintValidator<CompareDate, Up
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("CompareDateValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         try {
             if (null != updateResultsAPIObject.getStartTimestamp() && null != updateResultsAPIObject.getEndTimestamp()) {
@@ -43,6 +44,7 @@ public class CompareDateValidator implements ConstraintValidator<CompareDate, Up
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+        LOGGER.debug("CompareDateValidator success : {}", success);
         return success;
     }
 }

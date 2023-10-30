@@ -29,6 +29,8 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
@@ -42,6 +44,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("PerformanceProfileValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         /*
          Fetch the performance profile from the Map corresponding to the name in the kruize object,
@@ -74,11 +77,26 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
         } catch (Exception e) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("")
-                    .addConstraintViolation();
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("")
+                        .addConstraintViolation();
+            }
+
         }
+        LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;
     }
 }
