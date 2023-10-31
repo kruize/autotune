@@ -143,7 +143,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.19_rm
+          image: kruize/autotune_operator:0.0.19.4_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -199,6 +199,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: create-partition-cronjob
+  namespace: monitoring
 spec:
   schedule: "0 0 25 * *" # Run on 25th of every month at midnight
   jobTemplate:
@@ -207,7 +208,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.19_rm
+              image: kruize/autotune_operator:0.0.19.4_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -216,7 +217,7 @@ spec:
                 - sh
                 - -c
                 - |
-                  chmod +x /home/autotune/app/target/bin/CreatePartition && /home/autotune/app/target/bin/CreatePartition
+                  /home/autotune/app/target/bin/CreatePartition
               args: [ "" ]
               env:
                 - name: START_AUTOTUNE

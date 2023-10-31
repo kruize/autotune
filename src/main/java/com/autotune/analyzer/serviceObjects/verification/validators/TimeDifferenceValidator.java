@@ -26,6 +26,9 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 
 public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferenceCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(TimeDifferenceValidator.class);
@@ -36,6 +39,7 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("TimeDifferenceValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
@@ -49,14 +53,25 @@ public class TimeDifferenceValidator implements ConstraintValidator<TimeDifferen
             if ((durationInSeconds >= lowerRange && durationInSeconds <= upperRange))
                 success = true;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            e.printStackTrace();
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Time : ")
-                    .addConstraintViolation();
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Time")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("Time")
+                        .addConstraintViolation();
+            }
         }
-
+        LOGGER.debug("TimeDifferenceValidator success : {}", success);
         return success;
     }
 }

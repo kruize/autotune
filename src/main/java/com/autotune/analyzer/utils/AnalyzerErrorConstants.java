@@ -85,6 +85,7 @@ public class AnalyzerErrorConstants {
         public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
 
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
+        public static final String MISSING_METRICS = "Metric data is not present for container : %s for experiment: %s. ";
 
         private AutotuneObjectErrors() {
         }

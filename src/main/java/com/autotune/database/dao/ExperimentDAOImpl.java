@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
+import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -501,19 +502,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp interval_end_time, Integer limitRows) throws Exception {
+    public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name,  Timestamp calculated_start_time,Timestamp interval_end_time) throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
         String statusValue = "failure";
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
         Timer.Sample timerLoadResultsExpName = Timer.start(MetricsConfig.meterRegistry());
+        LOGGER.debug("startTime : {} , endTime : {}",calculated_start_time,interval_end_time);
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            if (null != limitRows && null != interval_end_time) {
-                kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, cluster_name)
+            if (null != calculated_start_time && null != interval_end_time) {
+                Query<KruizeResultsEntry> kruizeResultsEntryQuery = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT + clusterCondtionSql , KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .setMaxResults(limitRows)
-                        .list();
+                        .setParameter(KruizeConstants.JSONKeys.CALCULATED_START_TIME, calculated_start_time)
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+                if (cluster_name != null)
+                    kruizeResultsEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+                kruizeResultsEntries = kruizeResultsEntryQuery.list();
                 statusValue = "success";
             } else {
                 kruizeResultsEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_RESULTS_BY_EXP_NAME, KruizeResultsEntry.class)
@@ -557,16 +565,23 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     public KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception {
         KruizeRecommendationEntry recommendationEntries = null;
         String statusValue = "failure";
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
+
         Timer.Sample timerLoadRecExpNameDate = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            recommendationEntries = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME, KruizeRecommendationEntry.class)
-                    .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, cluster_name)
+            Query<KruizeRecommendationEntry> kruizeRecommendationEntryQuery = session.createQuery(SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME + clusterCondtionSql, KruizeRecommendationEntry.class)
                     .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experimentName)
-                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                    .getSingleResult();
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
+            if (cluster_name != null)
+                kruizeRecommendationEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+            recommendationEntries = kruizeRecommendationEntryQuery.getSingleResult();
             statusValue = "success";
         } catch (NoResultException e) {
-            LOGGER.debug("Generating mew recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
+            LOGGER.debug("Generating new recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             recommendationEntries = null;
@@ -604,27 +619,29 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();
+        String clusterCondtionSql = "";
+        if (cluster_name != null)
+            clusterCondtionSql = String.format(" and k.%s = :%s ", KruizeConstants.JSONKeys.CLUSTER_NAME, KruizeConstants.JSONKeys.CLUSTER_NAME);
+        else
+            clusterCondtionSql = String.format(" and k.%s is null ", KruizeConstants.JSONKeys.CLUSTER_NAME);
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-
+            Query<KruizeResultsEntry> kruizeResultsEntryQuery = null;
             if (interval_start_time != null && interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, cluster_name)
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
                         .setParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME, interval_start_time)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
             } else if (interval_end_time != null) {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, cluster_name)
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
                         .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time)
-                        .getResultList();
+                        .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, interval_end_time);
             } else {
-                kruizeResultsEntryList = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME, KruizeResultsEntry.class)
-                        .setParameter(KruizeConstants.JSONKeys.CLUSTER_NAME, cluster_name)
-                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name)
-                        .getResultList();
+                kruizeResultsEntryQuery = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_MAX_END_TIME + clusterCondtionSql, KruizeResultsEntry.class)
+                        .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, experiment_name);
             }
+            if (cluster_name != null)
+                kruizeResultsEntryQuery.setParameter(CLUSTER_NAME, cluster_name);
+            kruizeResultsEntryList = kruizeResultsEntryQuery.getResultList();
         } catch (NoResultException e) {
             LOGGER.error(DBConstants.DB_MESSAGES.DATA_NOT_FOUND_KRUIZE_RESULTS, experiment_name, interval_end_time);
             kruizeResultsEntryList = null;

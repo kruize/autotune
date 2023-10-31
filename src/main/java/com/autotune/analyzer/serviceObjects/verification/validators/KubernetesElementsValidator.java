@@ -24,8 +24,14 @@ import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.ExperimentResultData;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
 
     @Override
     public void initialize(KubernetesElementsCheck constraintAnnotation) {
@@ -34,6 +40,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
     @Override
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
+        LOGGER.debug("KubernetesElementsValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         String errorMessage = "";
         try {
@@ -88,6 +95,11 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                                 expName
                         ));
             }
+            // check if result data is valid
+            if (!resultData.getValidationOutputData().isSuccess()) {
+                kubeObjsMisMatch = true;
+                errorMsg = resultData.getValidationOutputData().getMessage();
+            }
 
             if (kubeObjsMisMatch) {
                 context.disableDefaultConstraintViolation();
@@ -97,14 +109,26 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             } else {
                 success = true;
             }
-
         } catch (Exception e) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(e.getMessage())
-                    .addPropertyNode("Kubernetes Elements")
-                    .addConstraintViolation();
+            LOGGER.error(e.toString());
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+            LOGGER.debug(stackTrace);
+            if (null != e.getMessage()) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(e.getMessage())
+                        .addPropertyNode("Kubernetes Elements")
+                        .addConstraintViolation();
+            } else {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("Null value found")
+                        .addPropertyNode("Kubernetes Elements")
+                        .addConstraintViolation();
+            }
         }
-
+        LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
     }
 }
