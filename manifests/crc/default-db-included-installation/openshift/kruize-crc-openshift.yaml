@@ -124,7 +124,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: postgres
-          image: postgres:15.2
+          image: quay.io/enterprisedb/postgresql
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
