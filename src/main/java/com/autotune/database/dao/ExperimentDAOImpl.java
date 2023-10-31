@@ -191,7 +191,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
-                            LOGGER.debug(partitionException.getMessage());
+                            LOGGER.error(partitionException.getMessage());
                             entry.setErrorReasons(List.of(partitionException.getMessage()));
                             failedResultsEntries.add(entry);
                         }
