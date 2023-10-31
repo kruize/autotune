@@ -355,8 +355,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Cost Recommendations Available'
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE][
+                   'message'] == COST_RECOMMENDATIONS_AVAILABLE
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -801,8 +801,8 @@ def test_list_recommendations_with_only_latest(latest, cluster_type):
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Cost Recommendations Available'
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE][
+                   'message'] == COST_RECOMMENDATIONS_AVAILABLE
     experiment_name = None
     response = list_recommendations(experiment_name, latest)
 

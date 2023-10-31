@@ -207,8 +207,8 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
-                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
-                           'message'] == 'Recommendations Are Available'
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                           'message'] == RECOMMENDATIONS_AVAILABLE
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
@@ -227,8 +227,8 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
-                   'message'] == 'Recommendations Are Available'
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                   'message'] == RECOMMENDATIONS_AVAILABLE
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
