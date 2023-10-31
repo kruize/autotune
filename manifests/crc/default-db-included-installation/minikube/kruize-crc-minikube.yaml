@@ -46,7 +46,7 @@ spec:
       #  runAsUser: 1000
       containers:
         - name: postgres
-          image: quay.io/enterprisedb/postgresql
+          image: quay.io/enterprisedb/postgresql:16-postgis-multilang
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
