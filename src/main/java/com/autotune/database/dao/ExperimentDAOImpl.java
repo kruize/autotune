@@ -183,7 +183,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         failedResultsEntries.add(entry);
                     } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
                         try {
-                            LOGGER.info(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                            LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
                             tx.commit();
                             tx = session.beginTransaction();
                             // create partitions based on entry object
