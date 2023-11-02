@@ -1,4 +1,19 @@
 #!/bin/bash
+#
+# Copyright (c) 2023, 2023 IBM Corporation, RedHat and others.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 cluster_type="openshift"
 num_exps=250
@@ -19,11 +34,14 @@ function usage() {
 }
 
 function query_db() {
+
 	while(true); do
+		# Obtain the no. of experiments and results from the db
 		exp_count=$(kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 		results_count=$(kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
+		# Print the scalability test progress
 		echo "Exps = $exp_count Results = $results_count"
 		days_completed=$((${results_count} / (96 * ${num_exps} * ${num_clients})))
 		day_in_progress=$(($days_completed + 1))
@@ -49,6 +67,7 @@ function execution_time() {
 
 	cd $scale_log_dir
 
+	# Capture the execution time taken for uploading the specified number of days of results
 	for i in ${time_arr[@]}; do
 		time_option="-m${i}"
 		echo "" >> ${exec_time_log}
@@ -56,7 +75,7 @@ function execution_time() {
 			echo "6 hours" > ${exec_time_log}
 		else
 			j=$((${i}/4))
-			if [ ${j} > ${num_days_of _res} ]; then
+			if [ ${j} > ${num_days_of_res} ]; then
 				break;
 			fi
 			if [ ${i} == 4 ]; then
@@ -123,7 +142,6 @@ mkdir -p "${SCALE_LOG_DIR}"
 echo "SCALE_LOG_DIR = $SCALE_LOG_DIR"
 
 # Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
-#prometheus_server="kruiz.dsal.lab.eng.tlv2.redhat.com"
 prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
 
 echo "Prometheus server = $prometheus_server"
@@ -171,6 +189,7 @@ sleep 5
 echo ""
 echo "Capturing execution time in ${exec_time_log}...done"
 
+# Compare the expected results count in the db with the actual results count
 actual_results_count=$(kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
