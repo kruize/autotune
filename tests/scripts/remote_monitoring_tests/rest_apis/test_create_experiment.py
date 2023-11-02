@@ -18,11 +18,12 @@ mandatory_fields = [
     ("container_image_name", ERROR_STATUS_CODE, ERROR_STATUS),
     ("container_name", ERROR_STATUS_CODE, ERROR_STATUS),
     ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
-    ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
     ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
     ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
     ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("threshold", ERROR_STATUS_CODE, ERROR_STATUS),
     ("trial_settings", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("measurement_duration", ERROR_STATUS_CODE, ERROR_STATUS),
     ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
     ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
@@ -413,6 +414,14 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
         json_data[0].pop("selector", None)
     elif field == "container_name":
         json_data[0]["kubernetes_objects"][0]["containers"][0].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
+    elif field == "threshold":
+        json_data[0]["recommendation_settings"].pop(field, None)
+        json_data[0].pop("slo", None)
+        json_data[0].pop("selector", None)
+    elif field == "measurement_duration":
+        json_data[0]["trial_settings"].pop(field, None)
         json_data[0].pop("slo", None)
         json_data[0].pop("selector", None)
     else:
