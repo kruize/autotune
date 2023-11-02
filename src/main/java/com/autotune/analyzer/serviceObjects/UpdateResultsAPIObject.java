@@ -33,7 +33,7 @@ import java.util.List;
 
 @CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
 @TimeDifferenceCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR)
-@PerformanceProfileCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class)
+@PerformanceProfileCheck(groups = UpdateResultsAPIObject.EvaluatePerformanceProfileConstraints.class)
 @KubernetesElementsCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class)
 public class UpdateResultsAPIObject extends BaseSO {
 
@@ -106,8 +106,10 @@ public class UpdateResultsAPIObject extends BaseSO {
 
     public interface EvaluateRemainingConstraints {
     }
+    public interface EvaluatePerformanceProfileConstraints {
+    }
 
-    @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, EvaluateRemainingConstraints.class})
+    @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, EvaluatePerformanceProfileConstraints.class, EvaluateRemainingConstraints.class})
     public interface FullValidationSequence {
     }
 }
