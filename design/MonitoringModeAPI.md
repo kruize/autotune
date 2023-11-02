@@ -59,6 +59,35 @@ Below are the default terms used in resource analysis, along with their respecti
 **Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
 
 
+### Profile Algorithm's (How Kruize calculate's the recommendations)
+**Profile:**
+
+This column represents different profiles or criteria that the recommendation algorithm takes into account when making recommendations.
+
+**CPU (Percentile):**
+
+It indicates the percentile value for the timeseries CPU usage data that the algorithm considers for each profile.
+
+**Memory (Percentile):**
+
+Similarly, this column denotes the percentile value for the timeseries memory usage data that is used by the algorithm for each profile.
+
+
+#### Profiles
+
+**Cost Profile:**
+For the "Cost" profile, Kruize's recommendation algorithm will consider the 60th percentile for CPU usage and the 100th percentile for memory usage when making recommendations. This means that cost-related recommendations will be based on CPU usage that falls at or above the 60th percentile and memory usage at the 100th percentile.
+
+**Performance Profile:**
+In the "Performance" profile, the algorithm takes into account the 98th percentile for CPU usage and the 100th percentile for memory usage. Consequently, recommendations related to performance will be generated when CPU usage is at or above the 98th percentile, and memory usage is at the 100th percentile.
+
+
+| Profile     | CPU (Percentile) | Memory (percentile) |
+|-------------|------------------|---------------------|
+| Cost        | 60 th            | 100 th              |
+| Performance | 98 th            | 100 th              |
+
+
 <a name="apis"></a>
 ## API's 
 
