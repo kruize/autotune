@@ -213,12 +213,6 @@ if [ ! -z "${testcase}" ]; then
 	fi
 fi
 
-#if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-#	if [ ${testsuite} != "remote_monitoring_tests" ]; then
-#		AUTOTUNE_DOCKER_IMAGE="${AUTOTUNE_IMAGE}"
-#	fi
-#fi
-
 # check for benchmarks directory path
 if [ ! "${testsuite}" == "remote_monitoring_tests" ]; then
 	if [ -z "${APP_REPO}" ]; then
