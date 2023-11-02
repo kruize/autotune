@@ -140,7 +140,7 @@ public class ExperimentInitiator {
         Validator validator = Validation.byProvider(HibernateValidator.class)
                 .configure()
                 .messageInterpolator(new ParameterMessageInterpolator())
-                .failFast(false)
+                .failFast(true)
                 .buildValidatorFactory()
                 .getValidator();
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<String, KruizeObject>();

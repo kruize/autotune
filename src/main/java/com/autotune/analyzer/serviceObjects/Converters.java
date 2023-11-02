@@ -6,13 +6,9 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -29,7 +25,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -319,9 +314,6 @@ public class Converters {
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
-            String errorMsg = "";
-            // validation is set to be true by default
-            experimentResultData.setValidationOutputData(new ValidationOutputData(true, errorMsg, 200));
             experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
@@ -338,25 +330,7 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                    // if the metrics data is not present, set corresponding validation message and skip adding the current container data
-                    if (containerAPIObject.getMetrics() == null) {
-                        errorMsg = errorMsg.concat(String.format(
-                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
-                                containerAPIObject.getContainer_name(),
-                                updateResultsAPIObject.getExperimentName()
-                        ));
-                        ValidationOutputData validationOutputData = new ValidationOutputData(false, errorMsg, 400);
-                        experimentResultData.setValidationOutputData(validationOutputData);
-                        continue;
-                    }
                     for (Metric metric : containerAPIObject.getMetrics()) {
-                        // validate the metric values
-                        errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
-                        if (!errorMsg.isBlank()) {
-                            experimentResultData.setValidationOutputData(new ValidationOutputData(false, errorMsg,
-                                    HttpServletResponse.SC_BAD_REQUEST));
-                            return experimentResultData;
-                        }
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();
                         metricResults.setName(metric.getName());
