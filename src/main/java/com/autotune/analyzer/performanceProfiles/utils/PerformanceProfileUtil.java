@@ -214,7 +214,10 @@ public class PerformanceProfileUtil {
                     break;
                 }
             } else if (key.equals("format")) {
-                String stringValue = (String) value;
+                String stringValue = null;
+                if (value instanceof String) {
+                    stringValue = (String) value;
+                }
                 if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
                     LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
                     errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
