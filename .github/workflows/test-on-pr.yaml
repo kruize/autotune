@@ -170,13 +170,13 @@ jobs:
         if: always()
         run: |
           cd ${GITHUB_WORKSPACE}
-          tar cvf crc_results.tar kruize_test_results
+          tar cvf crc_manifest_results.tar kruize_test_results
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: crc-results
-          path: ./crc_results.tar
+          name: crc-manifest-results
+          path: ./crc_manifest_results.tar
           retention-days: 2
 
