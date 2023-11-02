@@ -16,10 +16,14 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.google.gson.annotations.SerializedName;
+import org.hibernate.validator.constraints.NotBlank;
+
 
 public abstract class BaseSO {
+    @NotBlank(groups = InitialValidation.class)
     @SerializedName("version")
     private String apiVersion;
+    @NotBlank(groups = InitialValidation.class)
     @SerializedName("experiment_name")
     private String experimentName;
 
@@ -38,4 +42,8 @@ public abstract class BaseSO {
     public void setExperimentName(String experimentName) {
         this.experimentName = experimentName;
     }
+
+    public interface InitialValidation {
+    }
+
 }

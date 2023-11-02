@@ -133,7 +133,7 @@ public class PerformanceProfileUtil {
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {
         performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
-        LOGGER.info("Added PerformanceProfile: {} ",performanceProfile.getName());
+        LOGGER.debug("Added PerformanceProfile: {} ",performanceProfile.getName());
     }
 
     /**

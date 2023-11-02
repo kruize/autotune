@@ -9,7 +9,7 @@ from helpers.utils import *
 
 total_exps = 10
 
-exp_name = "quarkus-resteasy-kruize-min-http-response-time-db"
+exp_name = "quarkus-exp"
 kubernetes_object_name = "tfb-qrh-deployment"
 kubernetes_object_namespace = "default"
 container_image_name = "kruize/tfb-qrh:1.13.2.F_et17"
@@ -163,6 +163,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
         csvreader = csv.DictReader(csvfile)
 
         for row in csvreader:
+            type_index = 0
             container_metrics = []
 
             if row["cpu_request_avg_container"]:
@@ -330,7 +331,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                     with open(result_json_file, "w") as json_file:
                         json.dump(single_row_json_data, json_file, indent=4)
 
-                single_row_json_data = []
+                    single_row_json_data = []
 
                 if type_index < num_obj_types-1:
                     type_index += 1

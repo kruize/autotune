@@ -29,6 +29,8 @@ import java.util.Objects;
  */
 public class ExperimentResultData {
     private String experiment_name;
+
+    private String version;
     private String trialNumber;
     @SerializedName("INTERVAL_START_TIME")
     private Timestamp intervalStartTime;
@@ -38,6 +40,8 @@ public class ExperimentResultData {
     private AnalyzerConstants.ExperimentStatus status;
     private ValidationOutputData validationOutputData;
     private List<K8sObject> kubernetes_objects;
+
+    private String cluster_name;
 
 
     public String getExperiment_name() {
@@ -105,6 +109,14 @@ public class ExperimentResultData {
         this.kubernetes_objects = kubernetes_objects;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     @Override
     public String toString() {
         return "ExperimentResultData{" +
@@ -130,5 +142,13 @@ public class ExperimentResultData {
     @Override
     public int hashCode() {
         return Objects.hash(experiment_name, intervalEndTime);
+    }
+
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 }

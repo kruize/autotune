@@ -232,16 +232,16 @@ function deploy_autotune() {
 			namespace="monitoring"
 		fi
 		echo "Namespace = $namespace"
-		service="autotune"
 		if [ ${target} == "crc" ]; then
 			service="kruize"
-		fi
-		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
-		echo "autotune_pod = $autotune_pod"
-		if [ ${target} == "crc" ]; then
+			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | cut -d " " -f1)
+			echo "autotune_pod = $autotune_pod"
 			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
 		else
+			service="autotune"
+			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
+			echo "autotune_pod = $autotune_pod"
 			echo "kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 			kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
 		fi
@@ -681,15 +681,12 @@ function form_curl_cmd() {
 	case $cluster_type in
 	   openshift)
 		NAMESPACE="openshift-tuning"
+		oc expose svc/${service} -n ${NAMESPACE}
 
-        	AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-
-        	echo "PORT = $AUTOTUNE_PORT"
-
-		SERVER_IP=$(kubectl get pods -l=app=${service} -o wide -n openshift-tuning -o=custom-columns=NODE:.spec.nodeName --no-headers)
+		SERVER_IP=($(oc status --namespace=${NAMESPACE} | grep ${service} | grep port | cut -d " " -f1 | cut -d "/" -f3))
 	        echo "IP = $SERVER_IP"
 
-		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		AUTOTUNE_URL="http://${SERVER_IP}"
 		;;
 	   minikube)
 		NAMESPACE="monitoring"
@@ -1763,7 +1760,7 @@ function get_autotune_pod_log() {
 
 	echo "target = $target"
 	if [ ${target} == "crc" ]; then
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | cut -d " " -f1)
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | cut -d " " -f1)
 		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	else
 		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)

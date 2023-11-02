@@ -15,19 +15,45 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.verification.annotators.CompareDate;
+import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
+import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
+import com.autotune.analyzer.serviceObjects.verification.annotators.TimeDifferenceCheck;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
+import jakarta.validation.GroupSequence;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-public class UpdateResultsAPIObject extends BaseSO{
+@CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
+@TimeDifferenceCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR)
+@PerformanceProfileCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class)
+@KubernetesElementsCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class)
+public class UpdateResultsAPIObject extends BaseSO {
+
+    @NotNull(groups = InitialValidation.class)
     @SerializedName(KruizeConstants.JSONKeys.INTERVAL_START_TIME)
     public Timestamp startTimestamp;
+
+
+    @NotNull(groups = InitialValidation.class)
     @SerializedName(KruizeConstants.JSONKeys.INTERVAL_END_TIME)
     public Timestamp endTimestamp;
+
+    @NotNull(groups = InitialValidation.class)
+    @Size(min = 1, max = 1, message = AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_BULK_KUBERNETES)
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesAPIObjects;
+
+    private List<KruizeResponse> errors;
+
+    private KruizeObject kruizeObject;
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -53,6 +79,14 @@ public class UpdateResultsAPIObject extends BaseSO{
         this.kubernetesAPIObjects = kubernetesAPIObjects;
     }
 
+    public List<KruizeResponse> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<KruizeResponse> errors) {
+        this.errors = errors;
+    }
+
     @Override
     public String toString() {
         return "UpdateResultsAPIObject{" +
@@ -60,5 +94,20 @@ public class UpdateResultsAPIObject extends BaseSO{
                 ", endTimestamp=" + endTimestamp +
                 ", kubernetesAPIObjects=" + kubernetesAPIObjects +
                 '}';
+    }
+
+    public KruizeObject getKruizeObject() {
+        return kruizeObject;
+    }
+
+    public void setKruizeObject(KruizeObject kruizeObject) {
+        this.kruizeObject = kruizeObject;
+    }
+
+    public interface EvaluateRemainingConstraints {
+    }
+
+    @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, EvaluateRemainingConstraints.class})
+    public interface FullValidationSequence {
     }
 }

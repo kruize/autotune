@@ -17,25 +17,24 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +52,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import com.autotune.utils.MetricsConfig;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -73,15 +71,19 @@ public class ListRecommendations extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerListRec = Timer.start(MetricsConfig.meterRegistry());
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
+        // Set the character encoding of the request to UTF-8
+        request.setCharacterEncoding(CHARACTER_ENCODING);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         Timestamp monitoringEndTimestamp = null;
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+        ;
 
         boolean getLatest = true;
         boolean checkForTimestamp = false;
@@ -92,7 +94,7 @@ public class ListRecommendations extends HttpServlet {
         ) {
             getLatest = false;
         }
-        List<KruizeObject> kruizeObjectList =  new ArrayList<>();
+        List<KruizeObject> kruizeObjectList = new ArrayList<>();
         try {
             // Check if experiment name is passed
             if (null != experimentName) {
@@ -191,12 +193,13 @@ public class ListRecommendations extends HttpServlet {
                     try {
                         LOGGER.debug(ko.getKubernetes_objects().toString());
                         ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                                                                        convertKruizeObjectToListRecommendationSO(
-                                                                            ko,
-                                                                            getLatest,
-                                                                            checkForTimestamp,
-                                                                            monitoringEndTimestamp);
+                                convertKruizeObjectToListRecommendationSO(
+                                        ko,
+                                        getLatest,
+                                        checkForTimestamp,
+                                        monitoringEndTimestamp);
                         recommendationList.add(listRecommendationsAPIObject);
+                        statusValue = "success";
                     } catch (Exception e) {
                         LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
                     }
@@ -206,7 +209,7 @@ public class ListRecommendations extends HttpServlet {
                     @Override
                     public boolean shouldSkipField(FieldAttributes field) {
                         return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                                || ( field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+                                || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
                     }
 
                     @Override
@@ -233,7 +236,10 @@ public class ListRecommendations extends HttpServlet {
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerListRec) timerListRec.stop(MetricsConfig.timerListRec);
+            if (null != timerListRec) {
+                MetricsConfig.timerListRec = MetricsConfig.timerBListRec.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListRec.stop(MetricsConfig.timerListRec);
+            }
         }
     }
 

@@ -72,6 +72,29 @@ public class ListExperiments extends HttpServlet {
     ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
     KubernetesServices kubernetesServices = null;
 
+    private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        List<K8sObject> k8sObjectList = new ArrayList<>();
+        for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjects) {
+            K8sObject k8sObject = new K8sObject(
+                    kubernetesAPIObject.getName(),
+                    kubernetesAPIObject.getType(),
+                    kubernetesAPIObject.getNamespace()
+            );
+            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                ContainerData containerData = new ContainerData(
+                        containerAPIObject.getContainer_name(),
+                        containerAPIObject.getContainer_image_name(),
+                        containerAPIObject.getContainerRecommendations(),
+                        null);
+                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
+            }
+            k8sObject.setContainerDataMap(containerDataMap);
+            k8sObjectList.add(k8sObject);
+        }
+        return k8sObjectList;
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -79,6 +102,7 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String statusValue = "failure";
         Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
@@ -90,7 +114,6 @@ public class ListExperiments extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
-
         // validate Query params
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
@@ -98,64 +121,69 @@ public class ListExperiments extends HttpServlet {
                 invalidParams.add(param);
             }
         }
-        if (invalidParams.isEmpty()) {
-            // Set default values if absent
-            if (results == null || results.isEmpty())
-                results = "false";
-            if (recommendations == null || recommendations.isEmpty())
-                recommendations = "false";
-            if (latest == null || latest.isEmpty())
-                latest = "true";
-
-            // Validate query parameter values
-            if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
-                try {
-                    // Fetch experiments data from the DB and check if the requested experiment exists
-                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
-                    // Check if experiment exists
-                    if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
-                        error = true;
-                        sendErrorResponse(
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
-                        );
-                    }
-                    if (!error) {
-                        // create Gson Object
-                        Gson gsonObj = createGsonObject();
-
-                        // Modify the JSON response here based on query params.
-                        gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
-                        if (gsonStr.isEmpty()) {
-                            gsonStr = generateDefaultResponse();
+        try {
+            if (invalidParams.isEmpty()) {
+                // Set default values if absent
+                if (results == null || results.isEmpty())
+                    results = "false";
+                if (recommendations == null || recommendations.isEmpty())
+                    recommendations = "false";
+                if (latest == null || latest.isEmpty())
+                    latest = "true";
+                // Validate query parameter values
+                if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
+                    try {
+                        // Fetch experiments data from the DB and check if the requested experiment exists
+                        loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                        // Check if experiment exists
+                        if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                            );
                         }
-                        response.getWriter().println(gsonStr);
-                        response.getWriter().close();
+                        if (!error) {
+                            // create Gson Object
+                            Gson gsonObj = createGsonObject();
+
+                            // Modify the JSON response here based on query params.
+                            gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                            if (gsonStr.isEmpty()) {
+                                gsonStr = generateDefaultResponse();
+                            }
+                            response.getWriter().println(gsonStr);
+                            response.getWriter().close();
+                            statusValue = "success";
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Exception: " + e.getMessage());
+                        e.printStackTrace();
+                        sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Exception: " + e.getMessage());
-                    e.printStackTrace();
-                    sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                } finally {
-                    if (null != timerListExp) timerListExp.stop(MetricsConfig.timerListExp);
+                } else {
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
+                    );
                 }
             } else {
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
-        } else {
-            sendErrorResponse(
-                    response,
-                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
-            );
+        } finally {
+            if (null != timerListExp) {
+                MetricsConfig.timerListExp = MetricsConfig.timerBListExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListExp.stop(MetricsConfig.timerListExp);
+            }
         }
     }
 
@@ -187,6 +215,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
         }
     }
+
     private Gson createGsonObject() {
         return new GsonBuilder()
                 .disableHtmlEscaping()
@@ -204,6 +233,7 @@ public class ListExperiments extends HttpServlet {
                                         f.getName().equalsIgnoreCase("metrics")
                                 );
                     }
+
                     @Override
                     public boolean shouldSkipClass(Class<?> aClass) {
                         return false;
@@ -252,7 +282,7 @@ public class ListExperiments extends HttpServlet {
             try {
                 if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE) && recommendations.equalsIgnoreCase(
                         AnalyzerConstants.BooleanString.TRUE)) {
-                // Case: results=true , recommendations=true
+                    // Case: results=true , recommendations=true
                     // fetch results and recomm. from the DB
                     loadRecommendations(mKruizeExperimentMap, experimentName);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
@@ -292,7 +322,7 @@ public class ListExperiments extends HttpServlet {
             if (experimentName == null || experimentName.isEmpty())
                 new ExperimentDBService().loadAllResults(mKruizeExperimentMap);
             else
-                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName);
+                new ExperimentDBService().loadResultsFromDBByName(mKruizeExperimentMap, experimentName, null, null);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved results data: {} ", e.getMessage());
@@ -324,6 +354,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Unsupported Object passed!");
 
     }
+
     private void getLatestResults(Map<String, KruizeObject> mKruizeExperimentMap) {
         try {
             for (Map.Entry<String, KruizeObject> entry : mKruizeExperimentMap.entrySet()) {
@@ -342,6 +373,7 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Exception occurred while fetching results for the : {}", npe.getMessage());
         }
     }
+
     private void buildRecommendationsResponse(Map<String, KruizeObject> mKruizeExperimentMap, String latest) {
         boolean getLatest = Boolean.parseBoolean(latest);
         for (KruizeObject ko : mKruizeExperimentMap.values()) {
@@ -352,7 +384,7 @@ public class ListExperiments extends HttpServlet {
                                 ko,
                                 getLatest,
                                 false,
-                                null);
+                                (String) null);
 
                 mergeRecommendationsInKruizeObject(listRecommendationsAPIObject, ko);
             } catch (Exception e) {
@@ -361,32 +393,8 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-
     private void mergeRecommendationsInKruizeObject(ListRecommendationsAPIObject listRecommendationsAPIObject, KruizeObject ko) {
         ko.setKubernetes_objects(convertKubernetesAPIObjectListToK8sObjectList(listRecommendationsAPIObject.getKubernetesObjects()));
-    }
-
-    private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
-        List<K8sObject> k8sObjectList = new ArrayList<>();
-        for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjects) {
-            K8sObject k8sObject = new K8sObject(
-                    kubernetesAPIObject.getName(),
-                    kubernetesAPIObject.getType(),
-                    kubernetesAPIObject.getNamespace()
-            );
-            HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                ContainerData containerData = new ContainerData(
-                        containerAPIObject.getContainer_name(),
-                        containerAPIObject.getContainer_image_name(),
-                        containerAPIObject.getContainerRecommendations(),
-                        null);
-                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
-            }
-            k8sObject.setContainerDataMap(containerDataMap);
-            k8sObjectList.add(k8sObject);
-        }
-        return k8sObjectList;
     }
 
     //TODO this function no more used.

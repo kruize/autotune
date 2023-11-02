@@ -6,7 +6,7 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.0.15_mvp</version>
+    <version>0.0.19.4_mvp</version>
     <properties>
         <fabric8-version>4.13.0</fabric8-version>
         <org-json-version>20201115</org-json-version>
@@ -23,6 +23,7 @@
         <postgresql-version>42.3.1</postgresql-version>
         <hibernatecore-version>6.1.7.Final</hibernatecore-version>
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
+        <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
     </properties>
     <dependencies>
@@ -155,6 +156,12 @@
             <version>${hibernatecp30-version}</version>
         </dependency>
         <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-Validator}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
             <version>${micrometer-version}</version>
@@ -181,8 +188,8 @@
                             <name>Autotune</name>
                         </program>
                         <program>
-                            <mainClass>com.autotune.database.livenessProbe.TestDBConnection</mainClass>
-                            <name>TestDBConnection</name>
+                            <mainClass>com.autotune.jobs.CreatePartition</mainClass>
+                            <name>CreatePartition</name>
                         </program>
                     </programs>
                 </configuration>

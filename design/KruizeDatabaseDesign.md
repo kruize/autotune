@@ -361,12 +361,10 @@ GROUP BY id;
 
 ---
 
-
 The entity called Kruize_results is used to store the metric results of a previously created experiment, and this data
 is either sent through an external system or retrieved from a data source such as Prometheus or Thanos in order to
 generate recommendations. The columns in this entity include the version, experiment name, start and end timestamps for
 monitoring, duration in minutes, extended data, and metadata.
-
 
 <table>
   <tr>
@@ -382,7 +380,7 @@ monitoring, duration in minutes, extended data, and metadata.
    </td>
    <td>string
    </td>
-   <td>The version of the create experiment json template.
+   <td>The version of the update result json template.
    </td>
   </tr>
   <tr>
@@ -442,6 +440,12 @@ monitoring, duration in minutes, extended data, and metadata.
    </td>
   </tr>
 </table>
+
+Following index added
+
+```
+CREATE INDEX idx_result_experiment_name ON public.kruize_results USING btree (experiment_name)
+```
 
 ### Experiment_results API
 
@@ -617,7 +621,6 @@ Where r.experiment_name = e.experiment_name
 The purpose of this entity is to store the recommendations generated for each experiment, with the Kubernetes objects
 tree stored in the extended_data column, where the recommendations are stored on a per-container basis
 
-
 <table>
   <tr>
    <td><strong>Attribute</strong>
@@ -632,7 +635,7 @@ tree stored in the extended_data column, where the recommendations are stored on
    </td>
    <td>string
    </td>
-   <td>The version of the create experiment json template.
+   <td>The version of the recommendations json template.
    </td>
   </tr>
   <tr>
@@ -668,6 +671,14 @@ tree stored in the extended_data column, where the recommendations are stored on
    </td>
   </tr>
 </table>
+
+Following index added
+
+```
+CREATE INDEX idx_recommendation_cluster_name ON public.kruize_recommendations USING btree (cluster_name)
+CREATE INDEX idx_recommendation_experiment_name ON public.kruize_recommendations USING btree (experiment_name)
+CREATE INDEX idx_recommendation_interval_end_time ON public.kruize_recommendations USING btree (interval_end_time)
+```
 
 ### Recommendation API
 

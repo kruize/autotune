@@ -21,6 +21,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * This is a Java class named KruizeResultsEntry annotated with JPA annotations.
@@ -28,20 +29,30 @@ import java.sql.Timestamp;
  */
 @Entity
 @Table(name = "kruize_results",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"experiment_name", "interval_start_time", "interval_end_time"})})
+        indexes = {
+                @Index(
+                        name = "idx_result_experiment_name",
+                        columnList = "experiment_name"),
+                @Index(
+                        name = "idx_result_interval_end_time",
+                        columnList = "interval_end_time")
+        })
 public class KruizeResultsEntry {
+    private String version;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long interval_id;
-
     private String experiment_name;
+    private String cluster_name;
     private Timestamp interval_start_time;
+    @Id
     private Timestamp interval_end_time;
     private double duration_minutes;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+
+    @Transient
+    private List<String> errorReasons;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -89,5 +100,29 @@ public class KruizeResultsEntry {
 
     public void setMeta_data(JsonNode meta_data) {
         this.meta_data = meta_data;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public List<String> getErrorReasons() {
+        return errorReasons;
+    }
+
+    public void setErrorReasons(List<String> errorReasons) {
+        this.errorReasons = errorReasons;
+    }
+
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 }

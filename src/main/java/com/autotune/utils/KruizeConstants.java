@@ -28,6 +28,23 @@ public class KruizeConstants {
     private KruizeConstants() {
     }
 
+
+    public static enum KRUIZE_RECOMMENDATION_API_VERSION {
+        V1_0("1.0"),
+        LATEST("1.0");
+        private final String versionNumber;
+
+        KRUIZE_RECOMMENDATION_API_VERSION(String versionNumber) {
+            this.versionNumber = versionNumber;
+        }
+
+        public String getVersionNumber() {
+            return versionNumber;
+        }
+
+    }
+
+
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */
@@ -109,6 +126,7 @@ public class KruizeConstants {
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
         public static final String CONFIG = "config";
+        public static final String CURRENT = "current";
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String DATASOURCE = "datasource";
@@ -169,8 +187,11 @@ public class KruizeConstants {
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String INTERVAL_START_TIME = "interval_start_time";
+
+        public static final String CALCULATED_START_TIME = "calculated_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String DURATION_IN_MINUTES = "duration_in_minutes";
+        public static final String DURATION_IN_HOURS = "duration_in_hours";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
@@ -183,6 +204,11 @@ public class KruizeConstants {
         public static final String NOTIFICATIONS = "notifications";
         public static final String DURATION_BASED = "duration_based";
         public static final String PROFILE_BASED = "profile_based";
+        public static final String COST = "cost";
+        public static final String PERFORMANCE = "performance";
+        public static final String RECOMMENDATION_TERMS = "recommendation_terms";
+        public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
+        public static final String CONFIDENCE_LEVEL = "confidence_level";
 
         private JSONKeys() {
         }
@@ -226,10 +252,12 @@ public class KruizeConstants {
 
     public static class TimeConv {
         public static final int NO_OF_MSECS_IN_SEC = 1000;
+        public static final int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 24;
-        public static int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
+        public static int NO_OF_HOURS_IN_7_DAYS = 168;
+        public static int NO_OF_HOURS_15_DAYS = 360;
 
         private TimeConv() {
         }
@@ -347,6 +375,8 @@ public class KruizeConstants {
     public static final class DateFormats {
         public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         public static final String DB_EXTRACTION_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+        public static final long MILLI_SECONDS_FOR_DAY = 24 * 60 * 60 * 1000;
+        public static final long MINUTES_FOR_DAY = 24 * 60;
 
         private DateFormats() {
 
@@ -357,6 +387,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
      */
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
@@ -373,6 +404,7 @@ public class KruizeConstants {
      * In order to assign values to the static variables of KruizeDeploymentInfo
      * using Java reflection, the class variables are utilized, and therefore,
      * if any new variables are added, their corresponding declaration is necessary.
+     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
      */
     public static final class KRUIZE_CONFIG_ENV_NAME {
         public static final String K8S_TYPE = "k8stype";
@@ -384,6 +416,7 @@ public class KruizeConstants {
         public static final String CLUSTER_TYPE = "clustertype";
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
+        public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
@@ -408,39 +441,36 @@ public class KruizeConstants {
             }
 
             public static final class DurationAmount {
-                private DurationAmount() {
-
-                }
-
                 public static final int SHORT_TERM_DURATION_DAYS = 1;
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
+                public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 2;
+                private DurationAmount() {
+
+                }
             }
 
             public static final class RecommendationDurationRanges {
-                private RecommendationDurationRanges() {
-
-                }
-
                 private static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 /* SHORT TERM */
-                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                public static final double  SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
-
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
-
                 /* MEDIUM TERM */
                 public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.MEDIUM_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
-
                 /* LONG TERM */
                 public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+
+                private RecommendationDurationRanges() {
+
+                }
 
             }
         }

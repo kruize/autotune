@@ -13,13 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.analyzer.serviceObjects.verification.annotators;
 
-package com.autotune.analyzer.recommendations.subCategory;
 
-public class ProfileBasedRecommendationSubCategory implements RecommendationSubCategory {
-    // TODO: Need to be implemented
-    @Override
-    public String getSubCategory() {
-        return null;
-    }
+import com.autotune.analyzer.serviceObjects.verification.validators.CompareDateValidator;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
+import java.lang.annotation.*;
+
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = CompareDateValidator.class)
+@Documented
+public @interface CompareDate {
+    String message() default AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP;
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }

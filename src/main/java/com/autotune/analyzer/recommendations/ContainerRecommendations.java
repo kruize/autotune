@@ -16,25 +16,26 @@
 
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.HashMap;
 
 public class ContainerRecommendations {
+    private String version;
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationMap;
     @SerializedName(KruizeConstants.JSONKeys.DATA)
-    private HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data;
+    private HashMap<Timestamp, MappedRecommendationForTimestamp> data;
 
     public ContainerRecommendations() {
         this.notificationMap = new HashMap<Integer, RecommendationNotification>();
-        this.data = new HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>>();
-
+        this.data = new HashMap<Timestamp, MappedRecommendationForTimestamp>();
+        this.version = KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber();
         RecommendationNotification recommendationNotification = new RecommendationNotification(
-                AnalyzerConstants.RecommendationNotification.NOT_ENOUGH_DATA
+                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
         );
         this.notificationMap.put(recommendationNotification.getCode(), recommendationNotification);
     }
@@ -43,18 +44,28 @@ public class ContainerRecommendations {
         return notificationMap;
     }
 
-    public HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> getData() {
+    public HashMap<Timestamp, MappedRecommendationForTimestamp> getData() {
         return data;
     }
 
-    public void setData(HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> data) {
+    public void setData(HashMap<Timestamp, MappedRecommendationForTimestamp> data) {
         if (!data.isEmpty())
-            if (this.notificationMap.containsKey(AnalyzerConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA))
-                this.notificationMap.remove(AnalyzerConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA);
+            if (this.notificationMap.containsKey(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA))
+                this.notificationMap.remove(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA);
         this.data = data;
     }
 
+    public String getVersion() {
+        return version;
+    }
 
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setNotificationMap(HashMap<Integer, RecommendationNotification> notificationMap) {
+        this.notificationMap = notificationMap;
+    }
 
     @Override
     public String toString() {

@@ -26,7 +26,6 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.helper.DBHelpers;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

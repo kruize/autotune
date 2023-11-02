@@ -16,13 +16,13 @@
 package com.autotune.analyzer.kruizeObject;
 
 public class RecommendationSettings {
-    private String threshold;
+    private Double threshold;
 
-    public String getThreshold() {
+    public Double getThreshold() {
         return threshold;
     }
 
-    public void setThreshold(String threshold) {
+    public void setThreshold(Double threshold) {
         this.threshold = threshold;
     }
 
