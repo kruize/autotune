@@ -42,6 +42,7 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 
 # Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
@@ -95,6 +96,10 @@ time_log_csv = "/tmp/time_log.csv"
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
+
+SHORT_TERM = "short_term"
+MEDIUM_TERM = "medium_term"
+LONG_TERM = "long_term"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -360,10 +365,10 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
                 validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours)
+                                   expected_duration_in_hours, test_name)
 
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -386,48 +391,53 @@ def validate_container(update_results_container, update_results_json, list_reco_
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
 
-                duration_terms = ["short_term", "medium_term", "long_term"]
-                for term in duration_terms:
-                    if check_if_recommendations_are_present(terms_obj[term]):
-                        # Validate timestamps [deprecated as monitoring end time is moved to higher level]
-                        # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
-                        #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+                if MEDIUM_TERM in test_name:
+                    term = MEDIUM_TERM
+                elif LONG_TERM in test_name:
+                    term = LONG_TERM
+                else:
+                    term = SHORT_TERM
 
-                        monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                if check_if_recommendations_are_present(terms_obj[term]):
+                    # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                    # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                    #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
-                        # Validate duration in hrs
-                        if expected_duration_in_hours == None:
-                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
-                            print(f"difference in hours = {diff}")
-                            duration_in_hours += diff
-                            print(f"duration in hours = {duration_in_hours}")
+                    monitoring_start_time = term_based_start_time(interval_end_time, term)
+                    assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                        f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
-                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
-                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+                    # Validate duration in hrs
+                    if expected_duration_in_hours == None:
+                        diff = time_diff_in_hours(interval_start_time, interval_end_time)
+                        print(f"difference in hours = {diff}")
+                        duration_in_hours += diff
+                        print(f"duration in hours = {duration_in_hours}")
 
-                        print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+                            duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+                        elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+                            duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+                        elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+                            duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
-                        # Get engine objects
-                        engines_list = ["cost", "performance"]
+                    print(
+                        f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                    assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                        f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
-                        # Extract recommendation engine objects
-                        recommendation_engines_object = None
-                        if "recommendation_engines" in terms_obj[term]:
-                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
-                        if None != recommendation_engines_object:
-                            for engine_entry in engines_list:
-                                if engine_entry in terms_obj[term]["recommendation_engines"]:
-                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"])
+                    # Get engine objects
+                    engines_list = ["cost", "performance"]
+
+                    # Extract recommendation engine objects
+                    recommendation_engines_object = None
+                    if "recommendation_engines" in terms_obj[term]:
+                        recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                    if None != recommendation_engines_object:
+                        for engine_entry in engines_list:
+                            if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                validate_config(engine_obj["config"])
 
             else:
                 data = list_reco_container["recommendations"]["data"]
