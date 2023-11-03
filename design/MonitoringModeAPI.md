@@ -59,6 +59,35 @@ Below are the default terms used in resource analysis, along with their respecti
 **Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
 
 
+### Profile Algorithm's (How Kruize calculate's the recommendations)
+**Profile:**
+
+This column represents different profiles or criteria that the recommendation algorithm takes into account when making recommendations.
+
+**CPU (Percentile):**
+
+It indicates the percentile value for the timeseries CPU usage data that the algorithm considers for each profile.
+
+**Memory (Percentile):**
+
+Similarly, this column denotes the percentile value for the timeseries memory usage data that is used by the algorithm for each profile.
+
+
+#### Profiles
+
+**Cost Profile:**
+For the "Cost" profile, Kruize's recommendation algorithm will consider the 60th percentile for CPU usage and the 100th percentile for memory usage when making recommendations. This means that cost-related recommendations will be based on CPU usage that falls at or above the 60th percentile and memory usage at the 100th percentile.
+
+**Performance Profile:**
+In the "Performance" profile, the algorithm takes into account the 98th percentile for CPU usage and the 100th percentile for memory usage. Consequently, recommendations related to performance will be generated when CPU usage is at or above the 98th percentile, and memory usage is at the 100th percentile.
+
+
+| Profile     | CPU (Percentile) | Memory (percentile) |
+|-------------|------------------|---------------------|
+| Cost        | 60 th            | 100 th              |
+| Performance | 98 th            | 100 th              |
+
+
 <a name="apis"></a>
 ## API's 
 
@@ -83,7 +112,7 @@ see [Create Experiment](/design/CreateExperiment.md)
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
@@ -163,7 +192,7 @@ see [Update results](/design/UpdateResults.md)
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.602Z",
@@ -560,7 +589,7 @@ Returns the latest result of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -695,7 +724,7 @@ Returns the latest result of all the experiments
   ...
   ...
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
@@ -772,7 +801,7 @@ Returns all the results of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1027,7 +1056,7 @@ Returns the latest recommendations of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1065,13 +1094,13 @@ Returns the latest recommendations of all the experiments
               "notifications": {
                 "112101": {
                     "type": "info",
-                    "message": "Duration Based Recommendations Available",
+                    "message": "Cost Recommendations Available",
                     "code": 112101
                 }
               },
               "data": {
                 "2023-04-02T08:00:00.680Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T06:45:00.000Z",
                       "monitoring_end_time": "2023-04-02T08:00:00.680Z",
@@ -1196,7 +1225,7 @@ Returns the latest recommendations of all the experiments
   ...
   ...
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
@@ -1294,7 +1323,7 @@ Returns all the recommendations of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1332,13 +1361,13 @@ Returns all the recommendations of all the experiments
               "notifications": {
                 "112101": {
                     "type": "info",
-                    "message": "Duration Based Recommendations Available",
+                    "message": "Cost Recommendations Available",
                     "code": 112101
                 }
               },
               "data": {
                 "2023-04-02T06:00:00.770Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T04:45:00.000Z",
                       "monitoring_end_time": "2023-04-02T06:00:00.770Z",
@@ -1441,7 +1470,7 @@ Returns all the recommendations of all the experiments
                 ...
                 ...
                 "2023-04-02T04:30:00.000Z": {
-                  "duration_based": {
+                  "cost": {
                     "short_term": {
                       "monitoring_start_time": "2023-04-01T03:15:00.000Z",
                       "monitoring_end_time": "2023-04-02T04:30:00.000Z",
@@ -1637,195 +1666,404 @@ If no parameter is passed API returns all the latest recommendations available f
 
 ```json
 [
-    {
-        "cluster_name": "cluster-one-division-bell",
-        "kubernetes_objects": [
-            {
-                "type": "deployment",
-                "name": "tfb-qrh-deployment_3",
-                "namespace": "default_3",
-                "containers": [
-                    {
-                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-1",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "120001": {
-                                    "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation.",
-                                    "code": 120001
-                                }
-                            },
-                            "data": {}
-                        }
-                    },
-                    {
-                        "container_image_name": "kruize/tfb-db:1.15",
-                        "container_name": "tfb-server-0",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "120001": {
-                                    "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation.",
-                                    "code": 120001
-                                }
-                            },
-                            "data": {}
-                        }
+  {
+    "experiment_name": "experiment_1",
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_0",
+        "namespace": "default_0",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2023-04-02T13:30:00.680Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
                     }
-                ]
-            }
-        ],
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_3"
-    },
-    {
-        "cluster_name": "cluster-one-division-bell",
-        "kubernetes_objects": [
-            {
-                "type": "deployment",
-                "name": "tfb-qrh-deployment_0",
-                "namespace": "default_0",
-                "containers": [
-                    {
-                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-1",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "112101": {
-                                    "type": "info",
-                                    "message": "Duration Based Recommendations Available",
-                                    "code": 112101
-                                }
+                  },
+                  "monitoring_end_time": "2023-04-02T13:30:00.680Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 50.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 5.37,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 100.0,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 0.5,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-04-01T12:00:00.000Z",
+                      "duration_in_hours": 24.0,
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
                             },
-                            "data": {
-                                "2022-12-21T00:40:17.000Z": {
-                                    "duration_based": {
-                                        "short_term": {
-                                            "monitoring_start_time": "2022-12-20T00:40:17.000Z",
-                                            "monitoring_end_time": "2022-12-21T00:40:17.000Z",
-                                            "duration_in_hours": 9.0,
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "current": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 490.93,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.46,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 712.21,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.54,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "config": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "variation": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 707.0540000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.22,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 485.7740000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.14,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "notifications": {}
-                                        },
-                                        "medium_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        },
-                                        "long_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
                             }
-                        }
-                    },
-                    {
-                        "container_image_name": "kruize/tfb-db:1.15",
-                        "container_name": "tfb-server-0",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "120001": {
-                                    "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation.",
-                                    "code": 120001
-                                }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              }
                             },
-                            "data": {}
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
                         }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 143.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 240.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
                     }
-                ]
+                  }
+                }
+              }
             }
-        ],
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
-    }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "experiment_name": "experiment_2",
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_2",
+        "namespace": "default_2",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2023-04-02T13:30:00.680Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    }
+                  },
+                  "monitoring_end_time": "2023-04-02T13:30:00.680Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 50.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 5.37,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 100.0,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 0.5,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-04-01T12:00:00.000Z",
+                      "duration_in_hours": 24.0,
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 143.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 240.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
 ]
 ```
 
@@ -1849,150 +2087,221 @@ Returns the latest result of that experiment
 
 ```json
 [
-    {
-        "cluster_name": "cluster-one-division-bell",
-        "kubernetes_objects": [
-            {
-                "type": "deployment",
-                "name": "tfb-qrh-deployment_0",
-                "namespace": "default_0",
-                "containers": [
-                    {
-                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-1",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "112101": {
-                                    "type": "info",
-                                    "message": "Duration Based Recommendations Available",
-                                    "code": 112101
-                                }
-                            },
-                            "data": {
-                                "2022-12-21T00:40:17.000Z": {
-                                    "duration_based": {
-                                        "short_term": {
-                                            "monitoring_start_time": "2022-12-20T00:40:17.000Z",
-                                            "monitoring_end_time": "2022-12-21T00:40:17.000Z",
-                                            "duration_in_hours": 9.0,
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "current": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 490.93,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.46,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 712.21,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.54,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "config": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "variation": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 707.0540000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.22,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 485.7740000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.14,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "notifications": {}
-                                        },
-                                        "medium_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        },
-                                        "long_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "container_image_name": "kruize/tfb-db:1.15",
-                        "container_name": "tfb-server-0",
-                        "recommendations": {
-                            "notifications": {
-                                "120001": {
-                                    "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation.",
-                                    "code": 120001
-                                }
-                            },
-                            "data": {}
-                        }
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_0",
+        "namespace": "default_0",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2023-04-02T13:30:00.680Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
                     }
-                ]
+                  },
+                  "monitoring_end_time": "2023-04-02T13:30:00.680Z",
+                  "current": {
+                    "requests": {
+                      "cpu": {
+                        "amount": 5.37,
+                        "format": "cores"
+                      },
+                      "memory": {
+                        "amount": 50.21,
+                        "format": "MiB"
+                      }
+                    },
+                    "limits": {
+                      "cpu": {
+                        "amount": 0.5,
+                        "format": "cores"
+                      },
+                      "memory": {
+                        "amount": 100.0,
+                        "format": "MiB"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-04-01T12:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": -4.44,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 27,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 2.45,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 2.45,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "cpu": {
+                                "amount": -2.92,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": -2.92,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          }
+                        },
+                        "notifications": {}
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
-        ],
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
-    }
+          },
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "120001": {
+                  "type": "info",
+                  "message": "There is not enough data available to generate a recommendation.",
+                  "code": 120001
+                }
+              },
+              "data": {}
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
+  }
 ]
 ```
 
@@ -2016,251 +2325,344 @@ Returns all the results of that experiment
 
 ```json
 [
-    {
-        "cluster_name": "cluster-one-division-bell",
-        "kubernetes_objects": [
-            {
-                "type": "deployment",
-                "name": "tfb-qrh-deployment_0",
-                "namespace": "default_0",
-                "containers": [
-                    {
-                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-1",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "112101": {
-                                    "type": "info",
-                                    "message": "Duration Based Recommendations Available",
-                                    "code": 112101
-                                }
-                            },
-                            "data": {
-                                "2022-12-20T17:55:05.000Z": {
-                                    "duration_based": {
-                                        "short_term": {
-                                            "monitoring_start_time": "2022-12-19T17:55:05.000Z",
-                                            "monitoring_end_time": "2022-12-20T17:55:05.000Z",
-                                            "duration_in_hours": 2.25,
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "current": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 490.93,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.46,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 712.21,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.54,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "config": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "variation": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 707.0540000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.22,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 485.7740000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.14,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "notifications": {}
-                                        },
-                                        "medium_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        },
-                                        "long_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                "2022-12-21T00:10:16.000Z": {
-                                    "duration_based": {
-                                        "short_term": {
-                                            "monitoring_start_time": "2022-12-20T00:10:16.000Z",
-                                            "monitoring_end_time": "2022-12-21T00:10:16.000Z",
-                                            "duration_in_hours": 8.5,
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "current": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 490.93,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.46,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 712.21,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.54,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "config": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "variation": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 707.0540000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.22,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 485.7740000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.14,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "notifications": {}
-                                        },
-                                        "medium_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        },
-                                        "long_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "container_image_name": "kruize/tfb-db:1.15",
-                        "container_name": "tfb-server-0",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "120001": {
-                                    "type": "info",
-                                    "message": "There is not enough data available to generate a recommendation.",
-                                    "code": 120001
-                                }
-                            },
-                            "data": {}
-                        }
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_0",
+        "namespace": "default_0",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2022-12-20T17:55:05.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
                     }
-                ]
+                  },
+                  "monitoring_end_time": "2022-12-20T17:55:05.000Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 490.93,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.46,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 712.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.54,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "monitoring_start_time": "2022-12-19T17:55:05.000Z",
+                      "duration_in_hours": 2.25,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 707.0540000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.22,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 485.7740000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.14,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 140.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 240.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                },
+                "2022-12-21T00:10:16.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    }
+                  },
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 490.93,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.46,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 712.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.54,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "monitoring_end_time": "2022-12-21T00:10:16.000Z",
+                  "recommendation_terms": {
+                    "short_term": {
+                      "monitoring_start_time": "2022-12-20T00:10:16.000Z",
+                      "duration_in_hours": 8.5,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 707.0540000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.22,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 485.7740000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.14,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 707.0540000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.22,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 485.7740000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.14,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "pods_count": 0,
+                      "confidence_level": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
-        ],
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
-    }
+          },
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "120001": {
+                  "type": "info",
+                  "message": "There is not enough data available to generate a recommendation.",
+                  "code": 120001
+                }
+              },
+              "data": {}
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
+  }
 ]
 ```
 
@@ -2286,136 +2688,206 @@ Time - `2022-12-20T17:55:05.000Z`**
 
 ```json
 [
-    {
-        "cluster_name": "cluster-one-division-bell",
-        "kubernetes_objects": [
-            {
-                "type": "deployment",
-                "name": "tfb-qrh-deployment_0",
-                "namespace": "default_0",
-                "containers": [
-                    {
-                        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-                        "container_name": "tfb-server-1",
-                        "recommendations": {
-                            "version" : "1.0",
-                            "notifications": {
-                                "112101": {
-                                    "type": "info",
-                                    "message": "Duration Based Recommendations Available",
-                                    "code": 112101
-                                }
-                            },
-                            "data": {
-                                "2022-12-20T17:55:05.000Z": {
-                                    "duration_based": {
-                                        "short_term": {
-                                            "monitoring_start_time": "2022-12-19T17:55:05.000Z",
-                                            "monitoring_end_time": "2022-12-20T17:55:05.000Z",
-                                            "duration_in_hours": 2.25,
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "current": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 490.93,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.46,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 712.21,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 1.54,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "config": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 1197.9840000000002,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 7.68,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "variation": {
-                                                "requests": {
-                                                    "memory": {
-                                                        "amount": 707.0540000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.22,
-                                                        "format": "cores"
-                                                    }
-                                                },
-                                                "limits": {
-                                                    "memory": {
-                                                        "amount": 485.7740000000001,
-                                                        "format": "MiB"
-                                                    },
-                                                    "cpu": {
-                                                        "amount": 6.14,
-                                                        "format": "cores"
-                                                    }
-                                                }
-                                            },
-                                            "notifications": {}
-                                        },
-                                        "medium_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        },
-                                        "long_term": {
-                                            "pods_count": 0,
-                                            "confidence_level": 0.0,
-                                            "notifications": {
-                                                "120001": {
-                                                    "type": "info",
-                                                    "message": "There is not enough data available to generate a recommendation.",
-                                                    "code": 120001
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_0",
+        "namespace": "default_0",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "v2.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2022-12-20T17:55:05.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
                     }
-                ]
+                  },
+                  "monitoring_end_time": "2022-12-20T17:55:05.000Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 490.93,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.46,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 712.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.54,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 2.25,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2022-12-19T17:55:05.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 707.0540000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.22,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 485.7740000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.14,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 1197.9840000000002,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 7.68,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 707.0540000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.22,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 485.7740000000001,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 6.14,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 0.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
-        ],
-        "version": "1.0",
-        "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
-    }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
+  }
 ]
 ```
 
@@ -2623,7 +3095,7 @@ The response will contain a array of JSON object with the updated recommendation
         ]
       }
     ],
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "temp_1"
   }
 ]

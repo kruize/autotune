@@ -15,18 +15,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  get_pr:
+     uses: ./.github/workflows/get-pr-number.yaml
+     
   # This workflow contains three jobs called "build job" , "deploy autotune" and "deploy crc"
   build_job:
+    needs: get_pr
     # The type of runner that the job will run on
     runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        run: |
+          echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
+        
       - name: Build monitoring
         run: |
           echo Build monitoring
-          ./build.sh -i autotune_operator:test -o autotune_optuna:test
+          ./build.sh -i autotune_operator:pr_${{ env.PR_NUMBER }} -o autotune_optuna:pr_${{ env.PR_NUMBER }}
           docker images | grep autotune
       - name: docker login
         uses: docker/login-action@v2
@@ -35,17 +43,21 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:test kruize/autotune_operator:test
-          docker push kruize/autotune_operator:test
+          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker push kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
 
   deploy_autotune:
     # The type of runner that the job will run on
-    needs: build_job
+    needs: [build_job, get_pr]
+       
     runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        run: |
+          echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -57,13 +69,14 @@ jobs:
           kubectl get pods -n kube-system
       - name: Install Prometheus on minikube
         run: |
-          echo Install Prometheus on minikube  
+          echo Install Prometheus on minikube
           cd scripts
           ./prometheus_on_minikube.sh -as    
       - name: Deploy kruize in experiment mode
         run: |
           echo Deploy Kruize in experiment mode
-          ./deploy.sh -c minikube -i kruize/autotune_operator:test      
+          echo "PR_NUMBER = ${{ env.PR_NUMBER }}"
+          ./deploy.sh -c minikube -i kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
           sleep 20
       - name: Capture ffdc logs
         if: always()
@@ -85,12 +98,15 @@ jobs:
 
   deploy_crc:
     # The type of runner that the job will run on
-    needs: build_job
+    needs: [build_job, get_pr]
     runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+      - name: Get PR number
+        run: |
+           echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.3.0
         with:
@@ -102,7 +118,7 @@ jobs:
           kubectl get pods -n kube-system
       - name: Install Prometheus on minikube
         run: |
-          echo Install Prometheus on minikube  
+          echo Install Prometheus on minikube
           cd scripts
           ./prometheus_on_minikube.sh -as
       - name: Deploy Kruize in crc mode
@@ -113,7 +129,8 @@ jobs:
           sed -e "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml.old > ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
-          ./test_autotune.sh -c minikube -i kruize/autotune_operator:test --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          echo "PR_NUMBER = ${{ env.PR_NUMBER }}"
+          ./test_autotune.sh -c minikube -i kruize/autotune_operator:pr_${{ env.PR_NUMBER }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |

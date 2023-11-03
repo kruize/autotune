@@ -19,6 +19,7 @@ package com.autotune.analyzer.serviceObjects.verification.validators;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.TimeDifferenceCheck;
+import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 import jakarta.validation.ConstraintValidator;

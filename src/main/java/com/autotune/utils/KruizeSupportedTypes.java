@@ -76,6 +76,9 @@ public class KruizeSupportedTypes
 
 	public static final Set<String> KUBERNETES_OBJECTS_SUPPORTED =
 			new HashSet<>(Arrays.asList("deployment", "pod", "container"));
+	
+  public static final Set<String> SUPPORTED_FORMATS =
+			new HashSet<>(Arrays.asList("cores", "MiB"));
 
 	public static final Set<String> QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
 			"experiment_name", "results", "recommendations", "latest"

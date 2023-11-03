@@ -18,11 +18,9 @@ package com.autotune.analyzer.serviceObjects.verification.validators;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
 import com.autotune.analyzer.services.UpdateResults;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -64,9 +62,8 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
                 throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
             }
 
-            ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
-            // validate the 'resultdata' with the performance profile
-            String errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, resultData);
+            // validate the results value present in the updateResultsAPIObject
+            String errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
             if (null == errorMsg || errorMsg.isEmpty()) {
                 success = true;
             } else {

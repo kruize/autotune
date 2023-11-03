@@ -95,11 +95,6 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                                 expName
                         ));
             }
-            // check if result data is valid
-            if (!resultData.getValidationOutputData().isSuccess()) {
-                kubeObjsMisMatch = true;
-                errorMsg = resultData.getValidationOutputData().getMessage();
-            }
 
             if (kubeObjsMisMatch) {
                 context.disableDefaultConstraintViolation();

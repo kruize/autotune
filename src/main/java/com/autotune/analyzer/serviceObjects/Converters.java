@@ -7,9 +7,8 @@ import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -99,7 +98,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -116,7 +115,7 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
                                         = clonedContainerData.getContainerRecommendations().getData();
                                 if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
                                     List<Timestamp> tempList = new ArrayList<>();
@@ -139,7 +138,7 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations
+                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
                                         = clonedContainerData.getContainerRecommendations().getData();
                                 Timestamp latestTimestamp = null;
                                 List<Timestamp> tempList = new ArrayList<>();
@@ -191,7 +190,7 @@ public class Converters {
                 String monitoringEndTimestamp) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -207,7 +206,7 @@ public class Converters {
                             // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
                             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                             if (null != clonedContainerData) {
-                                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();
                                 Date medDate = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTimestamp);
                                 Timestamp givenTimestamp = new Timestamp(medDate.getTime());
                                 if (recommendations.containsKey(givenTimestamp)) {
@@ -254,6 +253,7 @@ public class Converters {
             return listRecommendationsAPIObject;
         }
 
+
         /**
          * @param containerData
          * @return
@@ -261,7 +261,7 @@ public class Converters {
         public static ContainerData getLatestRecommendations(ContainerData containerData) {
             ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
             if (null != clonedContainerData) {
-                HashMap<Timestamp, HashMap<String, HashMap<String, Recommendation>>> recommendations = clonedContainerData.getContainerRecommendations().getData();
+                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();
                 Timestamp latestTimestamp = null;
                 List<Timestamp> tempList = new ArrayList<>();
                 for (Timestamp timestamp : recommendations.keySet()) {
@@ -283,6 +283,7 @@ public class Converters {
             }
             return clonedContainerData;
         }
+
 
         /**
          * @param containerData
@@ -313,9 +314,6 @@ public class Converters {
 
         public static ExperimentResultData convertUpdateResultsAPIObjToExperimentResultData(UpdateResultsAPIObject updateResultsAPIObject) {
             ExperimentResultData experimentResultData = new ExperimentResultData();
-            String errorMsg = "";
-            // validation is set to be true by default
-            experimentResultData.setValidationOutputData(new ValidationOutputData(true, errorMsg, 200));
             experimentResultData.setVersion(updateResultsAPIObject.getApiVersion());
             experimentResultData.setIntervalStartTime(updateResultsAPIObject.getStartTimestamp());
             experimentResultData.setIntervalEndTime(updateResultsAPIObject.getEndTimestamp());
@@ -332,17 +330,6 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                    // if the metrics data is not present, set corresponding validation message and skip adding the current container data
-                    if (containerAPIObject.getMetrics() == null) {
-                        errorMsg = errorMsg.concat(String.format(
-                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
-                                containerAPIObject.getContainer_name(),
-                                updateResultsAPIObject.getExperimentName()
-                        ));
-                        ValidationOutputData validationOutputData = new ValidationOutputData(false, errorMsg, 400);
-                        experimentResultData.setValidationOutputData(validationOutputData);
-                        continue;
-                    }
                     for (Metric metric : containerAPIObject.getMetrics()) {
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();
@@ -360,6 +347,7 @@ public class Converters {
                 k8sObjectList.add(k8sObject);
             }
             experimentResultData.setKubernetes_objects(k8sObjectList);
+            experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));
             return experimentResultData;
         }
 

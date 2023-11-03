@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.subCategory.DurationBasedRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
+import com.autotune.analyzer.recommendations.subCategory.PerformanceRecommendationSubCategory;
 import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
@@ -12,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 public class RecommendationConstants {
 
     public enum RecommendationCategory {
-        DURATION_BASED(
-                KruizeConstants.JSONKeys.DURATION_BASED,
-                new DurationBasedRecommendationSubCategory[]{
-                        new DurationBasedRecommendationSubCategory(
+        COST(
+                KruizeConstants.JSONKeys.COST,
+                new CostRecommendationSubCategory[]{
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.SHORT_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
@@ -27,7 +28,7 @@ public class RecommendationConstants {
                                         .DurationBasedEngine.RecommendationDurationRanges
                                         .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
-                        new DurationBasedRecommendationSubCategory(
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.MEDIUM_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
@@ -39,7 +40,7 @@ public class RecommendationConstants {
                                         .DurationBasedEngine.RecommendationDurationRanges
                                         .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
                         ),
-                        new DurationBasedRecommendationSubCategory(
+                        new CostRecommendationSubCategory(
                                 KruizeConstants.JSONKeys.LONG_TERM,
                                 KruizeConstants.RecommendationEngineConstants
                                         .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
@@ -54,7 +55,44 @@ public class RecommendationConstants {
                 }
         ),
         // Need to update with profile based sub categories
-        PROFILE_BASED(KruizeConstants.JSONKeys.PROFILE_BASED, null);
+        PERFORMANCE(KruizeConstants.JSONKeys.PERFORMANCE, new PerformanceRecommendationSubCategory[]{
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.SHORT_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.MEDIUM_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+                new PerformanceRecommendationSubCategory(
+                        KruizeConstants.JSONKeys.LONG_TERM,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                        TimeUnit.DAYS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        KruizeConstants.RecommendationEngineConstants
+                                .DurationBasedEngine.RecommendationDurationRanges
+                                .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
+                ),
+        });
 
         private String name;
         private RecommendationSubCategory[] recommendationSubCategories;
@@ -95,11 +133,91 @@ public class RecommendationConstants {
             return severity;
         }
     }
+
+    public enum RecommendationTerms {
+        SHORT_TERM (KruizeConstants.JSONKeys.SHORT_TERM, 24, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
+        MEDIUM_TERM (KruizeConstants.JSONKeys.MEDIUM_TERM, 24 * 7,KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
+        LONG_TERM (KruizeConstants.JSONKeys.LONG_TERM, 24 * 15, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.RecommendationDurationRanges
+                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.RecommendationDurationRanges
+                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS);
+
+        private String value;
+        private double durationInHrs;
+
+        private double upperBound;
+        private double lowerBound;
+        private RecommendationTerms(String value, int durationInHrs, double upperBound, double lowerBound){
+            this.value = value;
+            this.durationInHrs = durationInHrs;
+            this.upperBound = upperBound;
+            this.lowerBound = lowerBound;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public double getDuration() {
+            return durationInHrs;
+        }
+
+        // Setter for custom duration
+        public void setDuration(int durationInHrs) {
+            this.durationInHrs = durationInHrs;
+        }
+
+        public double getLowerBound() {
+            return this.lowerBound;
+        }
+
+        public double getUpperBound() {
+            return this.upperBound;
+        }
+    }
+
     public enum RecommendationNotification {
-        INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE(
-                RecommendationConstants.NotificationCodes.INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
-                RecommendationConstants.RecommendationNotificationMsgConstant.DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
+        INFO_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_COST_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationTypes.INFO
         ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
@@ -234,7 +352,7 @@ public class RecommendationConstants {
 
 
         private int code;
-        private String msg;
+        private String message;
         private RecommendationConstants.RecommendationNotificationTypes type;
 
         private RecommendationNotification (
@@ -243,7 +361,7 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationTypes type
         ) {
             this.code = code;
-            this.msg = msg;
+            this.message = msg;
             this.type = type;
         }
 
@@ -251,8 +369,8 @@ public class RecommendationConstants {
             return code;
         }
 
-        public String getMsg() {
-            return msg;
+        public String getMessage() {
+            return message;
         }
 
         public RecommendationConstants.RecommendationNotificationTypes getType() {
@@ -288,11 +406,16 @@ public class RecommendationConstants {
 
         // Subsystem subsection: Default Engine
         // Range: 112000 - 112099
-        // Subsystem subsection: Duration Based Engine
+        // Subsystem subsection: Cost Engine
         // Range: 112100 - 112199
-        public static final int DURATION_BASED_ENGINE_START = 112100;
-        public static final int INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = 112101;
-        public static final int DURATION_BASED_ENGINE_END = 112199;
+        public static final int COST_ENGINE_START = 112100;
+        public static final int INFO_RECOMMENDATIONS_AVAILABLE = 111000; // TODO: need to discuss the code
+        public static final int INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = 111101; // TODO: need to discuss the code
+        public static final int INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = 111102; // TODO: need to discuss the code
+        public static final int INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE = 111103; // TODO: need to discuss the code;
+        public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
+        public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
+        public static final int COST_ENGINE_END = 112199;
         // Subsystem subsection: Profile Based Engine
         // Range: 112200 - 112299
 
@@ -540,14 +663,14 @@ public class RecommendationConstants {
 
             CONTRADICTING_MAP.put(INFO_NOT_ENOUGH_DATA, Arrays.asList(CODES_CONTRADICT_NOT_ENOUGH_DATA));
 
-            // Contradicting Codes for DURATION_BASED_RECOMMENDATIONS_AVAILABLE
-            Integer[] CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = {
+            // Contradicting Codes for COST_RECOMMENDATIONS_AVAILABLE
+            Integer[] CODES_CONTRADICT_COST_RECOMMENDATIONS_AVAILABLE = {
                     INFO_NOT_ENOUGH_DATA
             };
 
             CONTRADICTING_MAP.put(
-                    INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE,
-                    Arrays.asList(CODES_CONTRADICT_DURATION_BASED_RECOMMENDATIONS_AVAILABLE)
+                    INFO_COST_RECOMMENDATIONS_AVAILABLE,
+                    Arrays.asList(CODES_CONTRADICT_COST_RECOMMENDATIONS_AVAILABLE)
             );
 
             // Contradicting Codes for CPU_RECORDS_ARE_IDLE
@@ -662,7 +785,12 @@ public class RecommendationConstants {
 
     public static final class RecommendationNotificationMsgConstant {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
-        public static final String DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "Duration Based Recommendations Available";
+        public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
+        public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
+        public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
+        public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
+        public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
+        public static final String LONG_TERM_RECOMMENDATIONS_AVAILABLE = "Long Term Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
@@ -700,9 +828,9 @@ public class RecommendationConstants {
         }
 
         public static class EngineNames {
-            public static String DEFAULT_NAME = "Default";
-            public static String DURATION_BASED = "Duration Based";
-            public static String PROFILE_BASED = "Profile Based";
+            public static String DEFAULT_NAME = "default";
+            public static String COST = "cost";
+            public static String PERFORMANCE = "performance";
 
             private EngineNames() {
 
@@ -710,8 +838,8 @@ public class RecommendationConstants {
         }
 
         public static class EngineKeys {
-            public static String DURATION_BASED_KEY = "duration_based";
-            public static String PROFILE_BASED_KEY = "profile_based";
+            public static String COST_KEY = "cost";
+            public static String PERFORMANCE_BASED_KEY = "performance";
 
             private EngineKeys() {
 
@@ -744,6 +872,13 @@ public class RecommendationConstants {
             public static final String RECOMMENDED_MEMORY_REQUEST = "RECOMMENDED_MEMORY_REQUEST";
             public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
             public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
+        }
+        public static class PercentileConstants {
+            public static final Integer COST_CPU_PERCENTILE = 60;
+            public static final Integer COST_MEMORY_PERCENTILE = 100;
+            public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
+            public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
+
         }
     }
 }

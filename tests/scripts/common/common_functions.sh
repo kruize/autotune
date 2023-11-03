@@ -190,7 +190,7 @@ function deploy_autotune() {
 		if [ ${target} == "autotune" ]; then
 			cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP} -m ${target}"
 		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -m ${target}"
+			cmd="./deploy.sh -c ${cluster_type} -m ${target} -b"
 		fi
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then

@@ -176,7 +176,7 @@ metadata:
     app: kruize
   namespace: openshift-tuning
 spec:
-  replicas: 1
+  replicas: 10
   selector:
     matchLabels:
       name: kruize
@@ -189,7 +189,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.19.4_rm
+          image: kruize/autotune_operator:0.0.20_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -261,7 +261,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.19.4_rm
+              image: kruize/autotune_operator:0.0.20_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -360,7 +360,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.2
+      image: quay.io/kruize/kruize-ui:0.0.3
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV

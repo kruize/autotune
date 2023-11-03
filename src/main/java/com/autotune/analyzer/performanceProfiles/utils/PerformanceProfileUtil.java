@@ -17,16 +17,15 @@ package com.autotune.analyzer.performanceProfiles.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfileValidation;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.data.result.IntervalResults;
-import com.autotune.common.k8sObjects.K8sObject;
-import com.google.gson.Gson;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +63,11 @@ public class PerformanceProfileUtil {
 
     /**
      * @param performanceProfile
-     * @param experimentResultData
+     * @param updateResultsAPIObject
      * @return
      */
-    public static String validateResults(PerformanceProfile performanceProfile, ExperimentResultData experimentResultData) {
+    public static String validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
+
         String errorMsg = "";
         List<AnalyzerConstants.MetricName> mandatoryFields = Arrays.asList(
                 AnalyzerConstants.MetricName.cpuUsage,
@@ -88,48 +88,62 @@ public class PerformanceProfileUtil {
         }
 
         // Get the metrics data from the Kruize Object
-        for (K8sObject k8sObject : experimentResultData.getKubernetes_objects()) {
-            for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                HashMap<AnalyzerConstants.MetricName, Metric> metrics = containerData.getMetrics();
-                List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = metrics.keySet().stream().toList();
-                LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
-                LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
-                if (!kruizeFunctionVariablesList.containsAll(mandatoryFields)) {
-                    errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", experimentResultData.getExperiment_name(), mandatoryFields));
-                    break;
+        for (KubernetesAPIObject kubernetesAPIObject : updateResultsAPIObject.getKubernetesObjects()) {
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                // if the metrics data is not present, set corresponding validation message and skip adding the current container data
+                if (containerAPIObject.getMetrics() == null) {
+                    errorMsg = errorMsg.concat(String.format(
+                            AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
+                            containerAPIObject.getContainer_name(),
+                            updateResultsAPIObject.getExperimentName()
+                    ));
+                    continue;
                 }
-                for (IntervalResults intervalResults : containerData.getResults().values()) {
-                    for (MetricResults metricResults : intervalResults.getMetricResultsMap().values()) {
+                List<Metric> metrics = containerAPIObject.getMetrics();
+                List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = new ArrayList<>();
+                for (Metric metric : metrics) {
+                    try {
+                        // validate the metric values
+                        errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
+                        if (!errorMsg.isBlank()) {
+                            break;
+                        }
+                        AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
+                        kruizeFunctionVariablesList.add(metricName);
+                        MetricResults metricResults = metric.getMetricResult();
                         Map<String, Object> aggrInfoClassAsMap;
                         if (!perfProfileAggrFunctions.isEmpty()) {
-                            try {
-                                aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                errorMsg = validateAggFunction(aggrInfoClassAsMap.keySet(), perfProfileAggrFunctions);
-                                if (!errorMsg.isBlank()) {
-                                    errorMsg = errorMsg.concat(String.format("for the experiment : %s"
-                                            , experimentResultData.getExperiment_name()));
+                                try {
+                                    aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                                    errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
+                                    if (!errorMsg.isBlank()) {
+                                        errorMsg = errorMsg.concat(String.format(" for the experiment : %s"
+                                                , updateResultsAPIObject.getExperimentName()));
+                                        break;
+                                    }
+                                } catch(IllegalAccessException | InvocationTargetException e){
+                                    throw new RuntimeException(e);
+                                }
+                            } else{
+                                // check if query is also absent
+                                if (queryList.isEmpty()) {
+                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
                                     break;
                                 }
-                            } catch(IllegalAccessException | InvocationTargetException e){
-                                throw new RuntimeException(e);
                             }
-                        } else{
-                            // check if query is also absent
-                            if (queryList.isEmpty()) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
-                                break;
-                            }
-                        }
-                        // check if the 'value' is present in the result JSON
-                        if (null == metricResults.getValue()) {
-                            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metricResults.getName()));
-                        }
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.error("Error occurred in metrics validation: " + errorMsg);
                     }
-                    if (!errorMsg.isBlank())
-                        break;
                 }
                 if (!errorMsg.isBlank())
                     break;
+
+                LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
+                LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
+                if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
+                    errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", updateResultsAPIObject.getExperimentName(), mandatoryFields));
+                    break;
+                }
             }
         }
         return errorMsg;
@@ -143,13 +157,13 @@ public class PerformanceProfileUtil {
     /**
      * Validates the aggregation function objects against the aggregationInfoResult metrics
      *
-     * @param keySet
+     * @param aggrInfoClassAsMap
      * @param perfProfileAggrFunctions
      * @return
      */
-    private static String validateAggFunction(Set<String> keySet, List<String> perfProfileAggrFunctions) {
+    public static String validateAggFunction(Map<String, Object> aggrInfoClassAsMap, List<String> perfProfileAggrFunctions) {
 
-        List<String> resultDataAggrFuncObjects = keySet.stream().toList();
+        List<String> resultDataAggrFuncObjects = aggrInfoClassAsMap.keySet().stream().toList();
         String errorMsg = "";
         // check if none of the aggrfunctions are present in the aggrInfoObjects List
         if (resultDataAggrFuncObjects.stream().noneMatch(perfProfileAggrFunctions::contains)) {
@@ -161,6 +175,55 @@ public class PerformanceProfileUtil {
             LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH.concat(missingObjects.toString()));
             errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.AGG_FUNCTION_MISMATCH).concat(": ")
                     .concat(missingObjects.toString());
+        }
+        return errorMsg;
+    }
+    public static String validateMetricsValues(String metricVariableName, MetricResults metricResults) {
+
+        String errorMsg = "";
+        // validate the metric variable name
+        try {
+            AnalyzerConstants.MetricName.valueOf(metricVariableName);
+        } catch (Exception e) {
+            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_METRIC;
+            LOGGER.error(errorMsg);
+            return errorMsg;
+        }
+        // check if the 'value' is present in the result JSON
+        if (null == metricResults.getValue()) {
+            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_VALUE.concat(metricVariableName));
+        }
+        // validate the aggregation info values
+        Map<String, Object> aggrInfoClassAsMap;
+        try {
+            aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+        } catch(IllegalAccessException | InvocationTargetException e){
+            errorMsg = "Exception occurred while aggregationInfo conversion to map: ".concat(e.getMessage());
+            LOGGER.error(errorMsg);
+            return errorMsg;
+        }
+        for (Map.Entry<String, Object> entry : aggrInfoClassAsMap.entrySet()) {
+            Object value = entry.getValue();
+            String key = entry.getKey();
+
+            if (value instanceof Number && !key.equals("format")) {
+                double doubleValue = ((Number) value).doubleValue();
+                if (doubleValue < 0 || Double.isNaN(doubleValue)) {
+                    LOGGER.error(key.concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    errorMsg = errorMsg.concat(key.concat(AnalyzerErrorConstants.AutotuneObjectErrors.BLANK_AGGREGATION_INFO_VALUE).concat(metricVariableName));
+                    break;
+                }
+            } else if (key.equals("format")) {
+                String stringValue = null;
+                if (value instanceof String) {
+                    stringValue = (String) value;
+                }
+                if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
+                    LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
+                    errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
+                    break;
+                }
+            }
         }
         return errorMsg;
     }
@@ -181,8 +244,7 @@ public class PerformanceProfileUtil {
         for (Method m : methods) {
             if (m.getName().startsWith("get") && !m.getName().startsWith("getClass")) {
                 Object value = m.invoke(obj);
-                if (value instanceof Double)
-                    map.put(m.getName().substring(3).toLowerCase(), value);
+                map.put(m.getName().substring(3).toLowerCase(), value);
             }
         }
         return map;

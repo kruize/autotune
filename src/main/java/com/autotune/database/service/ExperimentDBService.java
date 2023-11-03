@@ -142,11 +142,11 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName,  Timestamp calculated_start_time,Timestamp interval_end_time) throws Exception {
+    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
         // Load results from the DB and save to local
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, kruizeObject.getClusterName(), calculated_start_time , interval_end_time);
+        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, kruizeObject.getClusterName(), calculated_start_time, interval_end_time);
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
             if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {

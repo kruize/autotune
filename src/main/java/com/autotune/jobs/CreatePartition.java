@@ -33,8 +33,8 @@ public class CreatePartition {
                 // Get the current year and month
                 YearMonth yearMonth = new ExperimentDAOImpl().buildDateForNextMonth(YearMonth.now());
                 // Fixing the partition type to 'by_month'
-                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()),String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
-                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()),String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
                 statusValue = "success";
                 tx.commit();
                 LOGGER.info("Partition creation successful!");
@@ -47,7 +47,6 @@ public class CreatePartition {
                     timerAddBulkResultsDB.stop(MetricsConfig.timerAddBulkResultsDB);
                 }
             }
-
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();

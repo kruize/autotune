@@ -40,7 +40,7 @@ UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the inte
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
 
 # Kruize Recommendations Notification codes
-NOTIFICATION_CODE_FOR_DURATION_BASED_RECOMMENDATIONS_AVAILABLE = "112101"
+NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
@@ -67,7 +67,8 @@ CRITICAL_CPU_REQUEST_NOT_SET_CODE = "523001"
 CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
 CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
-INFO_DURATION_BASED_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -93,7 +94,7 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
     "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
@@ -110,7 +111,7 @@ create_exp_test_data = {
 
 # version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.511Z",
@@ -379,18 +380,18 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
-                duration_based_obj = list_reco_container["recommendations"]["data"][interval_end_time]["duration_based"]
+                terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
-                    if check_if_recommendations_are_present(duration_based_obj[term]):
-                        # Validate timestamps
-                        assert duration_based_obj[term]["monitoring_end_time"] == interval_end_time, \
-                            f"monitoring end time {duration_based_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+                    if check_if_recommendations_are_present(terms_obj[term]):
+                        # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                        # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                        #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert duration_based_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                            f"actual = {duration_based_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
@@ -407,12 +408,23 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                 duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
                         print(
-                            f"Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert duration_based_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {duration_based_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
-                        # Validate recommendation config
-                        validate_config(duration_based_obj[term]["config"])
+                        # Get engine objects
+                        engines_list = ["cost", "performance"]
+
+                        # Extract recommendation engine objects
+                        recommendation_engines_object = None
+                        if "recommendation_engines" in terms_obj[term]:
+                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                        if None != recommendation_engines_object:
+                            for engine_entry in engines_list:
+                                if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    validate_config(engine_obj["config"])
+
             else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
@@ -436,8 +448,8 @@ def validate_config(reco_config):
                    "format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
 
 
-def check_if_recommendations_are_present(duration_based_obj):
-    notifications = duration_based_obj["notifications"]
+def check_if_recommendations_are_present(cost_obj):
+    notifications = cost_obj["notifications"]
     if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
         return False
     return True
