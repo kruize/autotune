@@ -251,7 +251,7 @@ def main(argv):
     global prometheus_url
 
     parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true>')
-    parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube', required=True)
+    parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube')
     parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
     parser.add_argument('-p', '--prometheus_url', help='Prometheus URL',default=None)
     parser.add_argument('-t', '--time', help='Time duration for a query in mins', default='60m')
@@ -259,10 +259,18 @@ def main(argv):
     parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
     parser.add_argument('-o', '--get_one_data_point', help='Single data point', default='true')
     parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
-    args = parser.parse_args()
+    #args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+
+    if not args.cluster_type:
+        print("CLUSTER_TYPE is required.")
+        parser.print_help()
+        parser.exit()
 
     if not (args.cluster_name or args.prometheus_url):
-        parser.error('Either cluster_name or prometheus_url is required.')
+        print("Either CLUSTER_NAME or PROMETHEUS_URL is required.")
+        parser.print_help()
+        parser.exit()
 
     # Access the arguments using the dot operator
     cluster_type = args.cluster_type
