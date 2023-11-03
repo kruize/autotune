@@ -142,20 +142,21 @@ def get_postgresql_metrics(namespace):
     except subprocess.CalledProcessError as e:
         return f"Error executing queries: {e}"
 
-def run_queries(map_type):
+def run_queries(map_type,server,prometheus_url=None):
     TOKEN = 'TOKEN'
-    prometheus_url = None
+    if prometheus_url is None:
+        if cluster_type == "openshift":
+            prometheus_url = f"https://thanos-querier-openshift-monitoring.apps.{server}/api/v1/query"
+        elif cluster_type == "minikube":
+            prometheus_url = f"http://{server}:9090/api/v1/query"
+
     if cluster_type == "openshift":
         output = subprocess.check_output(['oc', 'whoami', '--show-token'])
         TOKEN = output.decode().strip()
-        prometheus_url = f"https://thanos-querier-openshift-monitoring.apps.{server}/api/v1/query"
         # Disable the InsecureRequestWarning
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
-    elif cluster_type == "minikube":
-        prometheus_url = f"http://{server}:9090/api/v1/query"
     headers = {'Authorization': f'Bearer {TOKEN}'}
-
     print("RUNNING THE QUERIES NOW")
 
     results_map = {}
@@ -191,26 +192,26 @@ def write_header_to_csv(filename):
             writer = csv.DictWriter(f, fieldnames=csv_headers)
             writer.writeheader()
 
-def job(queries_type,outputdir):
+def job(queries_type,outputdir,server,prometheus_url=None):
     now_utc = datetime.utcnow()
     timestamp_utc = now_utc.isoformat()
     if queries_type == "increase":
         outputfile = os.path.join(outputdir, "increase_" + resultsfile)
         print("====================================================")
         print("RUNNING THE JOB TO COLLECT KRUIZE INCREASE METRICS..")
-        results_map = run_queries("increase")
+        results_map = run_queries("increase",server,prometheus_url)
     elif queries_type == "total":
         outputfile = os.path.join(outputdir, "total_" + resultsfile)
         print("====================================================")
         print("RUNNING THE JOB TO COLLECT KRUIZE TOTAL METRICS..")
-        results_map = run_queries("total")
+        results_map = run_queries("total",server,prometheus_url)
     results_map['timestamp'] = timestamp_utc
     write_header_to_csv(outputfile)
     with open(outputfile, 'a') as f:
         writer = csv.DictWriter(f, fieldnames=csv_headers)
         writer.writerow(results_map)
 
-def schedule_job(queries_type):
+def schedule_job(queries_type,server,prometheus_url):
     outputdir = "results"
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
@@ -218,8 +219,8 @@ def schedule_job(queries_type):
     time_in_seconds = numeric_time * 60
     if getOneDataPoint == "true" and duration is None:
         print("COLLECTING THE METRICS FOR ONE TIME. METRICS DATA WILL BE AVAILABLE IN \"results\" DIRECTORY IN CSV FORMAT")
-        job("increase",outputdir)
-        job("total",outputdir)
+        job("increase",outputdir,server,prometheus_url)
+        job("total",outputdir,server,prometheus_url)
    
     if duration is not None:
         print("COLLECTING THE METRICS FOR ", duration, " HOURS WITH AN INTERVAL OF ", time_in_seconds, " SECONDS")
@@ -228,7 +229,7 @@ def schedule_job(queries_type):
         end = now + timedelta(hours=int(duration))
         while now < end:
             now = datetime.utcnow()
-            job(queries_type,outputdir) 
+            job(queries_type,outputdir,server,prometheus_url)
             print("SLEEPING FOR ",time_in_seconds, " SECONDS")
             time.sleep(time_in_seconds)
     print("====================================================")
@@ -247,25 +248,31 @@ def main(argv):
     global getOneDataPoint
     global resultsfile
     global namespace
+    global prometheus_url
 
-    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster type> -s <server> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -p <single data point:Default:true>')
+    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true>')
     parser.add_argument('-c', '--cluster_type', help='Cluster type', required=True)
-    parser.add_argument('-s', '--server', help='Server', required=True)
+    parser.add_argument('-s', '--cluster_name', help='Name of the cluster server. Prometheus URL is generated using the name if prometheus_url is None')
+    parser.add_argument('-p', '--prometheus_url', help='Prometheus URL',default=None)
     parser.add_argument('-t', '--time', help='Time duration for a query in mins', default='60m')
     parser.add_argument('-d', '--duration', help='Duration for the script to run:value in hours')
     parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
-    parser.add_argument('-p', '--get_one_data_point', help='Single data point', default='true')
+    parser.add_argument('-o', '--get_one_data_point', help='Single data point', default='true')
     parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
     args = parser.parse_args()
 
+    if not (args.cluster_name or args.prometheus_url):
+        parser.error('Either cluster_name or prometheus_url is required.')
+
     # Access the arguments using the dot operator
     cluster_type = args.cluster_type
-    server = args.server
+    server = args.cluster_name
     duration = args.duration
     time_duration = args.time
     queries_type = args.queries_type
     getOneDataPoint = args.get_one_data_point
     resultsfile = args.resultsfile
+    prometheus_url = args.prometheus_url
 
     if cluster_type == "openshift":
         namespace = "openshift-tuning"
@@ -344,7 +351,7 @@ def main(argv):
         }
     
     # Create a thread to run the job scheduler
-    job_thread = threading.Thread(target=schedule_job(queries_type))
+    job_thread = threading.Thread(target=schedule_job(queries_type,server,prometheus_url))
     job_thread.start()
     job_thread.join()
 
