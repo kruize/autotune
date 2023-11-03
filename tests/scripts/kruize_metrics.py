@@ -23,6 +23,7 @@ import subprocess
 import sys, getopt
 import threading
 import os
+import argparse
 
 csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size"]
 
@@ -163,19 +164,24 @@ def run_queries(map_type):
         queries_data = queries_map.items()
     else:
         queries_data = queries_map_total.items()
-    for key, query in queries_data:
-        response = requests.get(prometheus_url, headers=headers, params={'query': query}, verify=False)
-        if response.status_code == 200:
-            results_data[key] = response.json()['data']
-            if "result" in results_data[key] and isinstance(results_data[key]["result"], list) and len(results_data[key]["result"]) > 0:
-                if "value" in results_data[key]["result"][0]:
-                    results_map[key] = results_data[key]["result"][0]["value"][1]
-            # Uncomment else part to debug which query is not working.
-            #else:
-            #    print(f"Failed to run query '{query}' with status code {response.status_code}")
-    kruize_results, db_size = get_postgresql_metrics(namespace)
-    results_map["kruize_results"] = kruize_results
-    results_map["db_size"] = db_size
+
+    try:
+        for key, query in queries_data:
+            response = requests.get(prometheus_url, headers=headers, params={'query': query}, verify=False)
+            if response.status_code == 200:
+                results_data[key] = response.json()['data']
+                if "result" in results_data[key] and isinstance(results_data[key]["result"], list) and len(results_data[key]["result"]) > 0:
+                    if "value" in results_data[key]["result"][0]:
+                        results_map[key] = results_data[key]["result"][0]["value"][1]
+                # Uncomment else part to debug which query is not working.
+                #else:
+                #    print(f"Failed to run query '{query}' with status code {response.status_code}")
+        kruize_results, db_size = get_postgresql_metrics(namespace)
+        results_map["kruize_results"] = kruize_results
+        results_map["db_size"] = db_size
+    except Exception as e:
+        print(f"AN ERROR OCCURED: {e}")
+        sys.exit(1) 
     return results_map
 
 
@@ -190,10 +196,12 @@ def job(queries_type,outputdir):
     timestamp_utc = now_utc.isoformat()
     if queries_type == "increase":
         outputfile = os.path.join(outputdir, "increase_" + resultsfile)
+        print("====================================================")
         print("RUNNING THE JOB TO COLLECT KRUIZE INCREASE METRICS..")
         results_map = run_queries("increase")
     elif queries_type == "total":
         outputfile = os.path.join(outputdir, "total_" + resultsfile)
+        print("====================================================")
         print("RUNNING THE JOB TO COLLECT KRUIZE TOTAL METRICS..")
         results_map = run_queries("total")
     results_map['timestamp'] = timestamp_utc
@@ -208,23 +216,25 @@ def schedule_job(queries_type):
         os.mkdir(outputdir)
     numeric_time = int(time_duration[:-1])
     time_in_seconds = numeric_time * 60
-    if getOneDataPoint == "true":
+    if getOneDataPoint == "true" and duration is None:
+        print("COLLECTING THE METRICS FOR ONE TIME")
         job("increase",outputdir)
         job("total",outputdir)
-    else:
-        if duration is None:
-            while True:
-                job(queries_type,outputdir)
-                print("Sleep for ",time_in_seconds, " seconds")
-                time.sleep(time_in_seconds)
-        else:
+   
+    if duration is not None:
+        print("COLLECTING THE METRICS FOR ", duration, " HOURS WITH AN INTERVAL OF ", time_in_seconds, " SECONDS")
+        now = datetime.utcnow()
+        end = now + timedelta(hours=int(duration))
+        while now < end:
             now = datetime.utcnow()
-            end = now + timedelta(hours=duration)
-            while now < end:
-                now = datetime.utcnow()
-                job(queries_type,outputdir) 
-                print("Sleep for ",time_in_seconds, " seconds")
-                time.sleep(time_in_seconds) 
+            job(queries_type,outputdir) 
+            print("SLEEPING FOR ",time_in_seconds, " SECONDS")
+            time.sleep(time_in_seconds)
+    print("====================================================")
+    print("COLLECTION OF METRICS IS COMPLETED")
+    print("RESULTS ARE AVAILABLE IN CSV FORMAT IN RESULTS DIRECTORY")
+    print("RESULTS FOR INCREASE METRICS AT results/increase_kruizemetrics.csv")
+    print("RESULTS FOR TOTAL METRICS AT results/total_kruizemetrics.csv")
 
 def main(argv):
     global duration
@@ -237,40 +247,24 @@ def main(argv):
     global resultsfile
     global namespace
 
-    try:
-        opts, args = getopt.getopt(argv,"h:c:s:d:t:q:p:r:")
-    except getopt.GetoptError:
-        print("kruize_metrics.py -c <cluster type> -s <server>")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            print("kruize_metrics.py -c <cluster type> -s <server> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours:Default:None> -q <query_type:increase/total.Default:increase> -p <single data point:Default:false>")
-            sys.exit()
-        elif opt == '-c':
-            cluster_type = arg
-        elif opt == '-s':
-            server = arg
-        elif opt == '-d':
-            duration = arg
-        elif opt == '-t':
-            time_duration = arg
-        elif opt == '-q':
-            queries_type = arg
-        elif opt == '-p':
-            getOneDataPoint = arg
-        elif opt == '-r':
-            resultsfile = arg
-            
-    if '-t' not in sys.argv:
-        time_duration = "60m"
-    if '-q' not in sys.argv:
-        queries_type = "increase"
-    if '-d' not in sys.argv:
-        duration = None
-    if '-p' not in sys.argv:
-        getOneDataPoint = "false"
-    if '-r' not in sys.argv:
-        resultsfile = "kruizemetrics.csv"
+    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster type> -s <server> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -p <single data point:Default:true>')
+    parser.add_argument('-c', '--cluster_type', help='Cluster type', required=True)
+    parser.add_argument('-s', '--server', help='Server', required=True)
+    parser.add_argument('-t', '--time', help='Time duration for a query in mins', default='60m')
+    parser.add_argument('-d', '--duration', help='Duration for the script to run:value in hours')
+    parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
+    parser.add_argument('-p', '--get_one_data_point', help='Single data point', default='true')
+    parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
+    args = parser.parse_args()
+
+    # Access the arguments using the dot operator
+    cluster_type = args.cluster_type
+    server = args.server
+    duration = args.duration
+    time_duration = args.time
+    queries_type = args.queries_type
+    getOneDataPoint = args.get_one_data_point
+    resultsfile = args.resultsfile
 
     if cluster_type == "openshift":
         namespace = "openshift-tuning"
