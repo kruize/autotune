@@ -217,12 +217,13 @@ def schedule_job(queries_type):
     numeric_time = int(time_duration[:-1])
     time_in_seconds = numeric_time * 60
     if getOneDataPoint == "true" and duration is None:
-        print("COLLECTING THE METRICS FOR ONE TIME")
+        print("COLLECTING THE METRICS FOR ONE TIME. METRICS DATA WILL BE AVAILABLE IN \"results\" DIRECTORY IN CSV FORMAT")
         job("increase",outputdir)
         job("total",outputdir)
    
     if duration is not None:
         print("COLLECTING THE METRICS FOR ", duration, " HOURS WITH AN INTERVAL OF ", time_in_seconds, " SECONDS")
+        print("METRICS DATA WILL BE AVAILABLE IN \"results\" DIRECTORY IN CSV FORMAT")
         now = datetime.utcnow()
         end = now + timedelta(hours=int(duration))
         while now < end:
