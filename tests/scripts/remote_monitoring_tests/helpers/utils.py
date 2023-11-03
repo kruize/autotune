@@ -377,6 +377,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert list_reco_container["container_name"] == update_results_container["container_name"], \
             f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
+    # default term value
+    term = SHORT_TERM
     # Validate timestamps
     if update_results_json != None:
         if expected_duration_in_hours == None:
@@ -391,12 +393,11 @@ def validate_container(update_results_container, update_results_json, list_reco_
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
 
-                if MEDIUM_TERM in test_name:
-                    term = MEDIUM_TERM
-                elif LONG_TERM in test_name:
-                    term = LONG_TERM
-                else:
-                    term = SHORT_TERM
+                if test_name is not None:
+                    if MEDIUM_TERM in test_name:
+                        term = MEDIUM_TERM
+                    elif LONG_TERM in test_name:
+                        term = LONG_TERM
 
                 if check_if_recommendations_are_present(terms_obj[term]):
                     # Validate timestamps [deprecated as monitoring end time is moved to higher level]
