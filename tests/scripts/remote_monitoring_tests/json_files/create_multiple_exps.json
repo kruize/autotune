@@ -1,6 +1,6 @@
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
     "cluster_name": "cluster-one-division-bell",
     "mode": "monitor",
@@ -27,7 +27,7 @@
     }
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
     "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
@@ -54,7 +54,7 @@
     }
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",

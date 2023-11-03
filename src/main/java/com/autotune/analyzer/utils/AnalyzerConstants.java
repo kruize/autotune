@@ -534,15 +534,15 @@ public class AnalyzerConstants {
 
     public static final class VersionConstants {
         public static final class APIVersionConstants {
-            public static final String CURRENT_CREATE_EXPERIMENT_VERSION = "v1.0";
-            public static final String CURRENT_UPDATE_RESULTS_VERSION = "v1.0";
+            public static final String CURRENT_CREATE_EXPERIMENT_VERSION = "v2.0";
+            public static final String CURRENT_UPDATE_RESULTS_VERSION = "v2.0";
             public static final String CURRENT_LIST_RECOMMENDATIONS_VERSION = "v2.0";
             public static final String CURRENT_UPDATE_RECOMMENDATIONS_VERSION = "v2.0";
             private APIVersionConstants() {
 
             }
         }
-        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v1.0";
+        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v2.0";
         private VersionConstants() {
 
         }
