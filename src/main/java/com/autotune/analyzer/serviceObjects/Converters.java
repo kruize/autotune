@@ -98,7 +98,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -190,7 +190,7 @@ public class Converters {
                 String monitoringEndTimestamp) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();

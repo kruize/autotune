@@ -94,7 +94,7 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
     "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
@@ -111,7 +111,7 @@ create_exp_test_data = {
 
 # version, experiment_name,interval_start_time,interval_end_time,type,name,namespace,container_image_name,container_name,cpuRequest_name,cpuRequest_sum,cpuRequest_avg,cpuRequest_format,cpuLimit_name,cpuLimit_sum,cpuLimit_avg,cpuLimit_format,cpuUsage_name,cpuUsage_sum,cpuUsage_max,cpuUsage_avg,cpuUsage_min,cpuUsage_format,cpuThrottle_name,cpuThrottle_sum,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_format,memoryRequest_name,memoryRequest_sum,memoryRequest_avg,memoryRequest_format,memoryLimit_name,memoryLimit_sum,memoryLimit_avg,memoryLimit_format,memoryUsage_name,memoryUsage_sum,memoryUsage_max,memoryUsage_avg,memUsage_min,memoryUsage_format,memoryRSS_name,memoryRSS_sum,memoryRSS_max,memoryRSS_avg,memoryRSS_min,memoryRSS_format
 update_results_test_data = {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.511Z",

@@ -84,7 +84,7 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
 
         # Create a dictionary to hold the experiment data
         experiment = {
-            "version": "1.0",
+            "version": "v2.0",
             "experiment_name": exp_name + "_" + str(exp_num),
             "cluster_name": cluster_name + "_" + str(exp_num),
             "performance_profile": performance_profile,
@@ -299,7 +299,7 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
          
                 # Create a dictionary to hold the experiment data
                 update_results = {
-                    "version": "1.0",
+                    "version": "v2.0",
                     "experiment_name": exp_name + "_" + str(exp_num),
                     "interval_start_time": interval_start_time,
                     "interval_end_time": interval_end_time,

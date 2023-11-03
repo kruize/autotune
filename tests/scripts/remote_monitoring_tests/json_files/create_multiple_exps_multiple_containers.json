@@ -1,6 +1,6 @@
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
     "mode": "monitor",
     "performance_profile": "resource-optimization-openshift",
@@ -34,7 +34,7 @@
     }
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
@@ -60,7 +60,7 @@
     }
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",

@@ -82,6 +82,7 @@ public final class KruizeObject {
 
         StringBuilder error = ValidateKruizeObject.validate(map);
         if (error.toString().isEmpty()) {
+            this.apiVersion = AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION;
             this.experimentName = experimentName;
             this.mode = mode;
             this.targetCluster = targetCluster;
