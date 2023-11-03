@@ -456,8 +456,8 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
-               'message'] == 'Recommendations Are Available'
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
 
     response = list_recommendations(experiment_name, latest)
 
@@ -606,8 +606,8 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
-               'message'] == 'Recommendations Are Available'
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
 
     latest = None
     response = list_recommendations(experiment_name, latest, monitoring_end_time)
@@ -729,12 +729,11 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 @pytest.mark.parametrize("latest", ["true", "false"])
 def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, cluster_type):
     """
-        Test Description: This test validates medium term list recommendations for multiple experiments posted using different json files
+        Test Description: This test validates list recommendations for all the terms for multiple experiments posted using different json files
                           and query with only the parameter latest and with both latest=true and latest=false
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
-    test_name = "test_medium_term_list_recommendations_with_only_latest"
 
     find = []
     json_data = json.load(open(input_json_file))

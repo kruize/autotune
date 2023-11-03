@@ -315,7 +315,7 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
     # Validate kubernetes objects
-    if update_results_json != None:
+    if update_results_json is not None and len(update_results_json) > 0:
         length = len(update_results_json[0]["kubernetes_objects"])
         for i in range(length):
             update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
@@ -392,6 +392,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+                current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
                 if test_name is not None:
                     if MEDIUM_TERM in test_name:
@@ -439,6 +440,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             if engine_entry in terms_obj[term]["recommendation_engines"]:
                                 engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                 validate_config(engine_obj["config"])
+                                validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
 
             else:
                 data = list_reco_container["recommendations"]["data"]
