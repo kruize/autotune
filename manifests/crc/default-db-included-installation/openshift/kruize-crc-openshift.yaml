@@ -176,7 +176,7 @@ metadata:
     app: kruize
   namespace: openshift-tuning
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       name: kruize
