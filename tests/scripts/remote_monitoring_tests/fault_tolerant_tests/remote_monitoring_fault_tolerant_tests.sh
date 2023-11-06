@@ -97,7 +97,6 @@ if [ "${prometheus_pod_running}" == "" ]; then
 fi
 
 KRUIZE_SETUP_LOG="${LOG_DIR}/kruize_setup.log"
-KRUIZE_POD_LOG="${LOG_DIR}/kruize_pod.log"
 
 # Setup kruize
 echo "Setting up kruize..." | tee -a ${LOG}
@@ -144,7 +143,8 @@ esac
 
 echo | tee -a ${LOG}
 
-get_kruize_pod_log ${KRUIZE_POD_LOG}
+KRUIZE_POD_LOG_BEFORE="${LOG_DIR}/kruize_pod_before.log"
+get_kruize_pod_log ${KRUIZE_POD_LOG_BEFORE}
 
 # Run the test
 TEST_LOG="${LOG_DIR}/kruize_pod_restart_test.log"
@@ -163,6 +163,9 @@ else
 	echo "exit_code = $exit_code"
 fi
 
+KRUIZE_POD_LOG_AFTER="${LOG_DIR}/kruize_pod_after.log"
+get_kruize_pod_log ${KRUIZE_POD_LOG_AFTER}
+
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
@@ -171,6 +174,11 @@ if [ "${exit_code}" -ne 0 ]; then
 	echo "Fault tolerant test failed! Check the log for details" | tee -a ${LOG}
 	exit 1
 else
-	echo "Fault tolerant test passed!" | tee -a ${LOG}
-	exit 0
+	if [[ $(grep -i "error\|exception" ${KRUIZE_POD_LOG_BEFORE}) || $(grep -i "error\|exception" ${KRUIZE_POD_LOG_AFTER}) ]]; then
+		echo "Fault tolerant test failed! Check the logs for details" | tee -a ${LOG}
+		exit 1
+	else
+		echo "Fault tolerant test passed!" | tee -a ${LOG}
+		exit 0
+	fi
 fi

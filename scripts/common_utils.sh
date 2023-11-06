@@ -91,28 +91,32 @@ kruize_crc_start() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	CRC_MANIFEST_FILE_OLD="${CRC_DIR}/${cluster_type}/kruize_${cluster_type}.yaml"
 
-	cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
-	awk -v image_name=${AUTOTUNE_DOCKER_IMAGE} -v ui_image_name=${KRUIZE_UI_DOCKER_IMAGE} '{
-			if ($2=="name:") {
-				prev=$3;
-				print
-			} else if ($1=="image:" && prev=="kruizecronjob") {
-				$2=image_name;
-				printf"              %s %s\n", $1, $2;
-	  		} else if ($1=="image:" && prev=="kruize") {
-				$2=image_name;
-				printf"          %s %s\n", $1, $2;
-			} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {
-				$2=ui_image_name;
-				printf"      %s %s\n", $1, $2;
-      } else { print }
-  }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
+	echo "use yaml build - $use_yaml_build"
+	if [ ${use_yaml_build} -eq 0 ]; then
+		cp ${CRC_MANIFEST_FILE} ${CRC_MANIFEST_FILE_OLD}
+		awk -v image_name=${AUTOTUNE_DOCKER_IMAGE} -v ui_image_name=${KRUIZE_UI_DOCKER_IMAGE} '{
+				if ($2=="name:") {
+					prev=$3;
+					print
+				} else if ($1=="image:" && prev=="kruize") {
+					$2=image_name;
+					printf"          %s %s\n", $1, $2;
+				} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {
+	        			$2=ui_image_name;
+			        	printf"      %s %s\n", $1, $2;
+			        } else { print }
+			 }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
+	fi
+
 	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
 	check_running kruize ${autotune_ns} kruize-ui
 	if [ "${err}" != "0" ]; then
 		# Indicate deploy failed on error
 		exit 1
 	fi
-	cp ${CRC_MANIFEST_FILE_OLD} ${CRC_MANIFEST_FILE}
-	rm ${CRC_MANIFEST_FILE_OLD}
+
+	if [ ${use_yaml_build} -eq 0 ]; then
+		cp ${CRC_MANIFEST_FILE_OLD} ${CRC_MANIFEST_FILE}
+		rm ${CRC_MANIFEST_FILE_OLD}
+	fi
 }

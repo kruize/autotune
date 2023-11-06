@@ -7,9 +7,9 @@ import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -98,7 +98,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -190,7 +190,7 @@ public class Converters {
                 String monitoringEndTimestamp) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(kruizeObject.getApiVersion());
+                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
@@ -347,6 +347,7 @@ public class Converters {
                 k8sObjectList.add(k8sObject);
             }
             experimentResultData.setKubernetes_objects(k8sObjectList);
+            experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));
             return experimentResultData;
         }
 

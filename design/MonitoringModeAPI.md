@@ -59,6 +59,35 @@ Below are the default terms used in resource analysis, along with their respecti
 **Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
 
 
+### Profile Algorithm's (How Kruize calculate's the recommendations)
+**Profile:**
+
+This column represents different profiles or criteria that the recommendation algorithm takes into account when making recommendations.
+
+**CPU (Percentile):**
+
+It indicates the percentile value for the timeseries CPU usage data that the algorithm considers for each profile.
+
+**Memory (Percentile):**
+
+Similarly, this column denotes the percentile value for the timeseries memory usage data that is used by the algorithm for each profile.
+
+
+#### Profiles
+
+**Cost Profile:**
+For the "Cost" profile, Kruize's recommendation algorithm will consider the 60th percentile for CPU usage and the 100th percentile for memory usage when making recommendations. This means that cost-related recommendations will be based on CPU usage that falls at or above the 60th percentile and memory usage at the 100th percentile.
+
+**Performance Profile:**
+In the "Performance" profile, the algorithm takes into account the 98th percentile for CPU usage and the 100th percentile for memory usage. Consequently, recommendations related to performance will be generated when CPU usage is at or above the 98th percentile, and memory usage is at the 100th percentile.
+
+
+| Profile     | CPU (Percentile) | Memory (percentile) |
+|-------------|------------------|---------------------|
+| Cost        | 60 th            | 100 th              |
+| Performance | 98 th            | 100 th              |
+
+
 <a name="apis"></a>
 ## API's 
 
@@ -83,7 +112,7 @@ see [Create Experiment](/design/CreateExperiment.md)
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
@@ -163,7 +192,7 @@ see [Update results](/design/UpdateResults.md)
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.602Z",
@@ -560,7 +589,7 @@ Returns the latest result of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -695,7 +724,7 @@ Returns the latest result of all the experiments
   ...
   ...
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
@@ -772,7 +801,7 @@ Returns all the results of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1027,7 +1056,7 @@ Returns the latest recommendations of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1196,7 +1225,7 @@ Returns the latest recommendations of all the experiments
   ...
   ...
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
@@ -1294,7 +1323,7 @@ Returns all the recommendations of all the experiments
 ```json
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
@@ -1650,7 +1679,7 @@ If no parameter is passed API returns all the latest recommendations available f
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "111000": {
                   "type": "info",
@@ -1849,7 +1878,7 @@ If no parameter is passed API returns all the latest recommendations available f
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "111000": {
                   "type": "info",
@@ -2070,7 +2099,7 @@ Returns the latest result of that experiment
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "111000": {
                   "type": "info",
@@ -2256,7 +2285,7 @@ Returns the latest result of that experiment
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "120001": {
                   "type": "info",
@@ -2270,7 +2299,7 @@ Returns the latest result of that experiment
         ]
       }
     ],
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
   }
 ]
@@ -2308,7 +2337,7 @@ Returns all the results of that experiment
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "111000": {
                   "type": "info",
@@ -2617,7 +2646,7 @@ Returns all the results of that experiment
             "container_image_name": "kruize/tfb-db:1.15",
             "container_name": "tfb-server-0",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "120001": {
                   "type": "info",
@@ -2631,7 +2660,7 @@ Returns all the results of that experiment
         ]
       }
     ],
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
   }
 ]
@@ -2671,7 +2700,7 @@ Time - `2022-12-20T17:55:05.000Z`**
             "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
             "container_name": "tfb-server-1",
             "recommendations": {
-              "version": "1.0",
+              "version": "v2.0",
               "notifications": {
                 "111000": {
                   "type": "info",
@@ -2856,7 +2885,7 @@ Time - `2022-12-20T17:55:05.000Z`**
         ]
       }
     ],
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0"
   }
 ]
@@ -3174,7 +3203,7 @@ The response will contain a array of JSON object with the updated recommendation
         ]
       }
     ],
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "temp_1"
   }
 ]

@@ -1,6 +1,6 @@
 [
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-1",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.511Z",
@@ -229,7 +229,7 @@
     ]
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-2",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.511Z",
@@ -351,7 +351,7 @@
     ]
   },
   {
-    "version": "1.0",
+    "version": "v2.0",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db-3",
     "interval_start_time": "2022-01-23T18:25:43.511Z",
     "interval_end_time": "2022-01-23T18:40:43.511Z",
