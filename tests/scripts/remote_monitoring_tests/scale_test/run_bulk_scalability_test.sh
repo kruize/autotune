@@ -75,7 +75,7 @@ function execution_time() {
 			echo "6 hours" > ${exec_time_log}
 		else
 			j=$((${i}/4))
-			if [ ${j} > ${num_days_of_res} ]; then
+			if [ ${j} -gt ${num_days_of_res} ]; then
 				break;
 			fi
 			if [ ${i} == 4 ]; then
@@ -210,6 +210,8 @@ while [[ ${expected_results_count} != ${actual_results_count} ]]; do
 done
 
 exps_count=$(kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+mv results ${RESULTS_DIR}
 echo ""
 echo "###########################################################################"
 echo "Scale test completed!"

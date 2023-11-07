@@ -36,17 +36,17 @@ num_clients=20
 minutes_jump=15
 interval_hours=6
 initial_start_date="2023-01-10T00:00:00.000Z"
-query_db_interval=5
+query_db_interval=10
 
 replicas=10
 
 target="crc"
-KRUIZE_IMAGE="kruize/autotune_operator:daily"
+KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 hours=6
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients] [-m results duration interval in mins, (default - 15)] [-i interval hours] [-s Initial start date] [-q query db interval in mins, (default - 5)] [-r <resultsdir path>]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>]"
 	exit -1
 }
 
