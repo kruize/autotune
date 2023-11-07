@@ -30,6 +30,8 @@ SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
+UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: avg cannot be negative or blank for the metric variable: "
+UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile:  Format value should be among these values: [cores, MiB]"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
@@ -38,9 +40,14 @@ UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND = 'Data not found!'
 UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
 UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
+RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
+COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
+PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 
 # Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
+NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "112102"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
@@ -68,7 +75,9 @@ CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
 CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
 INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
+INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -91,6 +100,10 @@ time_log_csv = "/tmp/time_log.csv"
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
+
+SHORT_TERM = "short_term"
+MEDIUM_TERM = "medium_term"
+LONG_TERM = "long_term"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -306,7 +319,7 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
     # Validate kubernetes objects
-    if update_results_json != None:
+    if update_results_json is not None and len(update_results_json) > 0:
         length = len(update_results_json[0]["kubernetes_objects"])
         for i in range(length):
             update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
@@ -356,10 +369,10 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
                 validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours)
+                                   expected_duration_in_hours, test_name)
 
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -368,6 +381,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert list_reco_container["container_name"] == update_results_container["container_name"], \
             f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
+    # default term value
+    term = SHORT_TERM
     # Validate timestamps
     if update_results_json != None:
         if expected_duration_in_hours == None:
@@ -381,6 +396,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+                current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
@@ -424,6 +440,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"])
+                                    validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
 
             else:
                 data = list_reco_container["recommendations"]["data"]

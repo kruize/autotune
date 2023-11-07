@@ -124,7 +124,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: postgres
-          image: quay.io/enterprisedb/postgresql:16-postgis-multilang
+          image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
@@ -176,7 +176,7 @@ metadata:
     app: kruize
   namespace: openshift-tuning
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       name: kruize
