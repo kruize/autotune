@@ -104,7 +104,7 @@ for (( i = 0; i < $iterations; i++ )); do
     wait
 
     echo "Collecting kruize metrics"
-    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -p true -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv"
+    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv"
     eval "${metrics_command}" &
 
     # Sleep for a short duration to avoid flooding the system with too many requests
