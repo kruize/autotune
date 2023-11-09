@@ -1731,3 +1731,114 @@ def test_list_recommendations_cluster_name_and_monitoring_end_time(test_name, mo
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+@pytest.mark.extended
+def test_list_recommendations_single_cluster_multiple_exps(cluster_type):
+    """
+    Test Description: This test validates list recommendations for a single cluster with multiple experiments posted using different json files
+    """
+    num_clusters = 1
+    num_exps = 6
+    num_res = 120
+
+    split = False
+    split_count = 1
+
+    metrics_csv = "../csv_data/tfb_data.csv"
+    exp_jsons_dir = "/tmp/exp_jsons"
+    result_jsons_dir = "/tmp/result_jsons"
+
+    # Create the create experiment jsons
+    create_exp_jsons_with_mutiple_clusters(split, split_count, exp_jsons_dir, num_exps, num_clusters)
+
+    # Create the update result jsons
+    create_update_results_jsons_with_multiple_clusters(metrics_csv, split, split_count, result_jsons_dir, num_exps, num_res, num_clusters=num_clusters)
+
+    # Form the Kruize service URL
+    form_kruize_url(cluster_type)
+
+    for i in range(num_clusters):
+
+        for j in range(num_exps):
+
+            # Create experiment using the specified json
+            create_exp_json_file = exp_jsons_dir + "/create_exp_" + str(i) + "_" + str(j) + ".json"
+
+            response = delete_experiment(create_exp_json_file)
+            print("delete exp = ", response.status_code)
+
+            response = create_experiment(create_exp_json_file)
+
+            data = response.json()
+            json_data = json.load(open(create_exp_json_file))
+            obj_type = json_data[0]['kubernetes_objects'][0]["type"]
+
+            print(f"kubernetes_object_type = {obj_type}")
+
+            print("message = ", data['message'])
+
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+            result_json_arr = []
+            start_time = None
+            end_time = None
+            for k in range(num_res):
+                # Update results for the experiment
+                result_json_file = result_jsons_dir + "/result_" + str(i) + "_" + str(j) + "_" + str(k) + ".json"
+                result_json = read_json_data_from_file(result_json_file)
+                if start_time is None:
+                    start_time = result_json[0]['interval_start_time']
+                end_time = result_json[0]['interval_end_time']
+
+                response = update_results(result_json_file)
+                data = response.json()
+
+                print("message = ", data['message'])
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data['status'] == SUCCESS_STATUS
+                assert data[
+                           'message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
+
+                result_json_data = read_json_data_from_file(result_json_file)
+                result_json_arr.append(result_json_data[0])
+
+            # Get the cluster name and experiment name
+            json_data = json.load(open(create_exp_json_file))
+            cluster_name = json_data[0]['cluster_name']
+            experiment_name = json_data[0]['experiment_name']
+
+            # Update Recommendations
+            response = update_recommendations(experiment_name, None, end_time)
+            data = response.json()
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data[0]['experiment_name'] == experiment_name
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
+                       'message'] == 'Cost Recommendations Available'
+
+            # Invoke list recommendations for the specified experiment
+            response = list_recommendations(experiment_name)
+            assert response.status_code == SUCCESS_200_STATUS_CODE
+
+            list_reco_json = response.json()
+
+            # Validate the json against the json schema
+            errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+            assert errorMsg == ""
+
+            create_exp_json = read_json_data_from_file(create_exp_json_file)
+            update_results_json = []
+            update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+
+            # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
+            expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+            validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+    # Delete the experiments
+    for i in range(num_clusters):
+        for j in range(num_exps):
+            create_exp_json_file = exp_jsons_dir + "/create_exp_" + str(i) + "_" + str(j) + ".json"
+
+            response = delete_experiment(create_exp_json_file)
+            print("delete exp = ", response.status_code)
