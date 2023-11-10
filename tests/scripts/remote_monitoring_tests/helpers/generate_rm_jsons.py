@@ -362,6 +362,7 @@ def create_exp_jsons_with_mutiple_clusters(split = False, split_count = 1, exp_j
     for i in range(num_clusters):
 
         cluster_num = i
+        k = 0
 
         for j in range(total_exps):
 
