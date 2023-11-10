@@ -211,7 +211,6 @@ done
 
 exps_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
 
-mv results ${RESULTS_DIR}
 echo ""
 echo "###########################################################################"
 echo "Scale test completed!"
