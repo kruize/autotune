@@ -1537,8 +1537,9 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
         item['interval_start_time'] for item in sorted_data[:5]
     ]
     print(f"{top_5_dates}")
-    # Get the experiment name
+    # Get the experiment and cluster name
     json_data = json.load(open(input_json_file))
+    cluster_name = json_data[0]['cluster_name']
     experiment_name = json_data[0]['experiment_name']
 
     for dateStr in top_5_dates:
@@ -1553,7 +1554,7 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
                'message'] == 'Cost Recommendations Available'
 
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(cluster_name=cluster_name, latest=latest)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
