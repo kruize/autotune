@@ -224,7 +224,7 @@ for experiment_name in "${experiments_array[@]}"; do
   fi
   # Generate a list of dates to check
   dates_to_check=()
-  currentDate="$minDate"
+  currentDate="$minCalculatedDate"
   while [[ "$currentDate" < "$maxDate" ]]; do
     dates_to_check+=("$currentDate")
     currentDate=$(date -u -d "$currentDate 15 minutes" "+%Y-%m-%d %H:%M:%S")
