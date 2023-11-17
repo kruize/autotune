@@ -333,7 +333,7 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
             if "cpu" in metric['name']:
                 metric['results']['aggregation_info']['format'] = cpu_format_type
 
-            if "memoryLimit" in metric['name']:
+            if "memory" in metric['name']:
                 metric['results']['aggregation_info']['format'] = memory_format_type
 
     tmp_update_results_json_file = "/tmp/update_results_metric" + "_" + memory_format_type + "_" + cpu_format_type + ".json"
