@@ -218,6 +218,7 @@ public class PerformanceProfileUtil {
                 if (value instanceof String) {
                     stringValue = (String) value;
                 }
+                // TODO: handle the conversions for additional supported formats
                 if (!KruizeSupportedTypes.SUPPORTED_FORMATS.contains(stringValue)) {
                     LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
                     errorMsg = errorMsg.concat(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_FORMAT);
