@@ -67,20 +67,14 @@ public class DurationBasedRecommendationEngine implements KruizeRecommendationEn
 
         double sum = 0.0;
         Timestamp intervalEndTime = null;
-        Timestamp thresholdTime = calculateThresholdTimeBasedOnTerm(durationBasedRecommendationSubCategory, endTime);
         for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
             if (!timestamp.after(endTime)) {
-                if (timestamp.before(thresholdTime)) {
-                    // Breaking condition not met so we can be sure that data is not sufficient hence return null
-                    return null;
-                }
                 sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
                 if (sum >= durationBasedRecommendationSubCategory.getGetDurationLowerBound()) {
                     // Storing the timestamp value in startTimestamp variable to return
                     intervalEndTime = timestamp;
                     break;
                 }
-
             }
         }
         try {
