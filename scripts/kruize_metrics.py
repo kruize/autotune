@@ -231,7 +231,6 @@ def job(queries_type,outputdir,server,prometheus_url=None):
         writer.writerow(results_map)
 
 def schedule_job(queries_type,server,prometheus_url):
-    outputdir = "results"
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
     numeric_time = int(time_duration[:-1])
@@ -268,8 +267,9 @@ def main(argv):
     global resultsfile
     global namespace
     global prometheus_url
+    global outputdir
 
-    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true>')
+    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true> -e <results dir:Default:results')
     parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube')
     parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
     parser.add_argument('-p', '--prometheus_url', help='Prometheus URL',default=None)
@@ -278,6 +278,7 @@ def main(argv):
     parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
     parser.add_argument('-o', '--get_one_data_point', help='Single data point', default='true')
     parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
+    parser.add_argument('-e', '--outputdir', help='directory to store the results', default='results')
     #args = parser.parse_args()
     args, unknown = parser.parse_known_args()
 
@@ -300,6 +301,7 @@ def main(argv):
     getOneDataPoint = args.get_one_data_point
     resultsfile = args.resultsfile
     prometheus_url = args.prometheus_url
+    outputdir = args.outputdir
 
     if cluster_type == "openshift":
         namespace = "openshift-tuning"
