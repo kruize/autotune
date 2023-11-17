@@ -255,14 +255,23 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     result_json_file = "../json_files/multiple_results_single_exp.json"
     response = update_results(result_json_file)
 
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+    end_time = "2023-04-14T23:59:20.982Z"
+
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    # Get the experiment name
-    json_data = json.load(open(input_json_file))
-    experiment_name = json_data[0]['experiment_name']
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+
 
     response = list_recommendations(experiment_name)
 
@@ -276,16 +285,99 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)
 
-    # Uncomment the below lines when bulk entries are allowed
-    # update_results_json = read_json_data_from_file(result_json_file)
+    expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
 
-    # Since bulk entries are not supported passing None for update results json
-    update_results_json = None
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+    update_results_json = []
+    result_json_arr = read_json_data_from_file(result_json_file)
+    update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("memory_format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
+@pytest.mark.parametrize("cpu_format_type", ["cores", "m"])
+
+def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_format_type, cluster_type):
+    """
+    Test Description: This test validates listRecommendations by updating multiple results for a single experiment
+    """
+    input_json_file = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/multiple_results_single_exp.json"
+
+
+    # Update the memory format and cpu format
+    result_json = read_json_data_from_file(result_json_file)
+
+    for result in result_json:
+        metrics = result['kubernetes_objects'][0]['containers'][0]['metrics']
+
+        for metric in metrics:
+            if "cpu" in metric['name']:
+                metric['results']['aggregation_info']['format'] = cpu_format_type
+
+            if "memory" in metric['name']:
+                metric['results']['aggregation_info']['format'] = memory_format_type
+
+    tmp_update_results_json_file = "/tmp/update_results_metric" + "_" + memory_format_type + "_" + cpu_format_type + ".json"
+    write_json_data_to_file(tmp_update_results_json_file, result_json)
+
+    # Update the results
+    response = update_results(tmp_update_results_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+    end_time = "2023-04-14T23:59:20.982Z" 
+
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+
+    response = list_recommendations(experiment_name)
+
+    list_reco_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+    assert errorMsg == ""
+
+    # Validate the json values
+    create_exp_json = read_json_data_from_file(input_json_file)
+
+    expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+
+    update_results_json = []
+    result_json_arr = read_json_data_from_file(tmp_update_results_json_file)
+    update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
 
 @pytest.mark.extended

@@ -394,6 +394,14 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_end_time = update_results["interval_end_time"]
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+
+            # Obtain the metrics
+            metrics = ""
+            containers = update_results['kubernetes_objects'][0]['containers']
+            for container in containers:
+                if update_results_container["container_image_name"] == container["container_image_name"]:
+                    metrics = container["metrics"]
+
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
@@ -401,6 +409,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
                     if check_if_recommendations_are_present(terms_obj[term]):
+                        print(f"reco present for term {term}")
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
@@ -439,7 +448,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"])
+                                    validate_config(engine_obj["config"], metrics)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
 
             else:
@@ -452,17 +461,27 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
 
-def validate_config(reco_config):
+def validate_config(reco_config, metrics):
+    cpu_format_type = ""
+    memory_format_type = ""
+
+    for metric in metrics:
+        if "cpuUsage" == metric["name"]:
+            cpu_format_type = metric['results']['aggregation_info']['format']
+
+        if "memoryUsage" == metric["name"]:
+            memory_format_type = metric['results']['aggregation_info']['format']
+
     usage_list = ["requests", "limits"]
     for usage in usage_list:
         assert reco_config[usage]["cpu"][
                    "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
         assert reco_config[usage]["cpu"][
-                   "format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
+                   "format"] == cpu_format_type, f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']} instead of {cpu_format_type}"
         assert reco_config[usage]["memory"][
                    "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
         assert reco_config[usage]["memory"][
-                   "format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
+                   "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
 
 def check_if_recommendations_are_present(cost_obj):
@@ -635,11 +654,13 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
                 current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
             assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
                 AMOUNT_KEY] - current_cpu_value
+            assert variation_requests[CPU_KEY][FORMAT_KEY] == recommended_requests[CPU_KEY][FORMAT_KEY]
         if MEMORY_KEY in recommended_requests:
             if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
                 current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
             assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
+            assert variation_requests[MEMORY_KEY][FORMAT_KEY] == recommended_requests[MEMORY_KEY][FORMAT_KEY]
     if recommended_limits is not None:
         current_cpu_value = 0
         current_memory_value = 0
@@ -647,8 +668,10 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
                 current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
             assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+            assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
         if MEMORY_KEY in recommended_limits:
             if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
                 current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
+            assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
