@@ -46,7 +46,7 @@ spec:
       #  runAsUser: 1000
       containers:
         - name: postgres
-          image: quay.io/enterprisedb/postgresql:16-postgis-multilang
+          image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
@@ -143,7 +143,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20_rm
+          image: kruize/autotune_operator:0.0.20.1_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -208,7 +208,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.20_rm
+              image: kruize/autotune_operator:0.0.20.1_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
