@@ -139,7 +139,7 @@ see [Create Experiment](/design/CreateExperiment.md)
       "measurement_duration": "15min"
     },
     "recommendation_settings": {
-      "threshold": "0.1"
+      "threshold": 0.1
     }
   }
 ]
