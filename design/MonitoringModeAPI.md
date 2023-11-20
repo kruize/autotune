@@ -9,7 +9,7 @@ Documentation still in progress stay tuned.
 # Table of Contents
 
 1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
-  - [Terms & Duration Table](#terms-duration--table)
+  - [Terms and Duration Table](#terms-and-duration-table)
 
 2. [API's](#apis)
   - [Create Experiment API](#create-experiment-api)
@@ -45,8 +45,8 @@ When analyzing resource utilization in Kubernetes, it's essential to define term
 
 Below are the default terms used in resource analysis, along with their respective durations:
 
-<a name="terms-duration--table"></a>
-### Terms & Duration Table
+<a name="terms-and-duration-table"></a>
+### Terms and Duration Table
 
 | Term       | Duration |
 |------------|----------|
