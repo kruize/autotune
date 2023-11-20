@@ -1,8 +1,8 @@
 #!/bin/bash
 # Function to display the usage instructions.
 usage() {
-  echo "Usage: $0 -P -h <optional:host> -p <optional:port> -d <optional:dbname> -U <optional:username> -W <optional:password> -e <cluster_name> -s <optional:monitoring_start_time YYYY-MM-DD HH:MM:SS> -t <optional:monitoring_end_time YYYY-MM-DD HH:MM:SS> -n <optional:day to debug default 1 days>"
-  echo "Usage: $0 -G -h <host> -H <request header> -e <cluster_name> -s <optional:monitoring_start_time YYYY-MM-DD HH:MM:SS> -t <optional:monitoring_end_time YYYY-MM-DD HH:MM:SS> -n <optional:day to debug default 1 days>"
+  echo "Usage: $0 -P -h <optional:host> -p <optional:port> -d <optional:dbname> -U <optional:username> -W <optional:password> -e <workload_name> -s <optional:monitoring_start_time YYYY-MM-DD HH:MM:SS> -t <optional:monitoring_end_time YYYY-MM-DD HH:MM:SS> -n <optional:day to debug default 1 days>"
+  echo "Usage: $0 -G -h <host> -H <request header> -e <workload_name pattern matched> -s <optional:monitoring_start_time YYYY-MM-DD HH:MM:SS> -t <optional:monitoring_end_time YYYY-MM-DD HH:MM:SS> -n <optional:day to debug default 1 days>"
 }
 
 # Define a function to generate the JSON object
@@ -33,7 +33,7 @@ generate_json() {
       "results_count": $results_count,
       "recommendations_count": $recommendations_count,
       "last_recommendation_date" : "$last_recommendation_date",
-      "duration_sum_minutes/required": $duration_sum_minutes/$required_duration_minutes,
+      "duration_sum_minutes/required": "$duration_sum_minutes/$required_duration_minutes",
       "missing_dates": [$missing_dates]
     }
 }
@@ -145,7 +145,7 @@ if [ -n "$use_gabi" ]; then
   IFS=', ' read -r -a experiments_array <<< "$exp_to_check_in_String"
   # Get the size of the array
   experiment_count=${#experiments_array[@]}
-  echo "Total $experiment_count experiments found !"
+  echo "{\"note\" : \"Total $experiment_count experiments found !\"}"
 elif [ -n "$use_psql" ]; then
   # Connect to the PostgreSQL database and execute the query
   exp_to_check_in_String=$(PGPASSWORD="$password" $psql -t -A -c "${GET_EXP_NAME_SQL}")
