@@ -9,7 +9,7 @@ Documentation still in progress stay tuned.
 # Table of Contents
 
 1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
-  - [Terms, Duration & Threshold Table](#terms-duration--threshold-table)
+  - [Terms & Duration Table](#terms-duration--table)
 
 2. [API's](#apis)
   - [Create Experiment API](#create-experiment-api)
@@ -43,21 +43,18 @@ Documentation still in progress stay tuned.
 
 When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and fine-tuning resource allocation.
 
-Below are the default terms used in resource analysis, along with their respective durations and thresholds:
+Below are the default terms used in resource analysis, along with their respective durations:
 
-<a name="terms-duration--threshold-table"></a>
-### Terms, Duration & Threshold Table
+<a name="terms-duration--table"></a>
+### Terms & Duration Table
 
-| Term       | Duration | Threshold |
-|------------|----------|-----------|
-| Short      | 1 day    | 6 hours   |
-| Medium     | 7 days   | 6 hours   |
-| Long       | 15 days  | 6 hours   |
+| Term       | Duration |
+|------------|----------|
+| Short      | 1 day    |
+| Medium     | 7 days   |
+| Long       | 15 days  |
 
 **Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when assessing resource utilization.
-
-**Threshold**: The "threshold" is an additional buffer period. It encompasses the term duration and extends an extra time duration. This buffer accommodates any potential data gaps or misses within the term window, ensuring a comprehensive analysis.
-
 
 <a name="apis"></a>
 ## API's 
