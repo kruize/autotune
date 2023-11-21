@@ -719,3 +719,52 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+def test_update_results__duplicate_records_with_single_exp_multiple_results(cluster_type):
+    """
+    Test Description: This test validates update results with some duplicate results records for a single experiment
+    """
+    input_json_file = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # add results for the experiment
+    result_json_file = "../json_files/multiple_duplicate_results_single_exp.json"
+    response = update_results(result_json_file)
+
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_RESULTS_FAILED_RECORDS_MSG
+
+    response = list_experiments_with_results(experiment_name)
+
+    list_exp_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    # TODO: add list_exp_json_schema
+
+    result_json_arr = read_json_data_from_file(result_json_file)
+    validate_list_exp_results_count(result_json_arr, list_exp_json[0])
+
+    # Delete the experiment
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+

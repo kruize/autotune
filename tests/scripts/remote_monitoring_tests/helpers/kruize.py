@@ -226,3 +226,18 @@ def list_experiments():
 
     print("Response status code = ", response.status_code)
     return response
+
+
+# Description: This function obtains the experiment details including the results from Kruize Autotune using
+# listExperiments API
+# Input Parameters: experiment_name
+def list_experiments_with_results(experiment_name: str):
+    PARAMS = {'results': "true", 'recommendations': "false", "latest": "false", 'experiment_name': experiment_name}
+    print("\nListing the experiment with results...")
+    url = URL + "/listExperiments"
+    print("URL = ", url)
+
+    response = requests.get(url=url, params=PARAMS)
+
+    print("Response status code = ", response.status_code)
+    return response
