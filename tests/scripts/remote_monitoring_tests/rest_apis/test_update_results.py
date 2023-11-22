@@ -749,11 +749,18 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     experiment_name = json_data[0]['experiment_name']
 
     data = response.json()
+    # Extract the inner 'message' from each 'errors' object and then verify it
+    error_messages = [error['message'] for item in data['data'] for error in item['errors']]
+    error_messages_code = [error['httpcode'] for item in data['data'] for error in item['errors']]
+
+    assert DUPLICATE_RECORDS_MSG in error_messages
+    assert ERROR_409_STATUS_CODE in error_messages_code
+
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert data['message'] == UPDATE_RESULTS_FAILED_RECORDS_MSG
 
-    response = list_experiments_with_results(experiment_name)
+    response = list_experiments("true", None, "false", experiment_name)
 
     list_exp_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -762,7 +769,8 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     # TODO: add list_exp_json_schema
 
     result_json_arr = read_json_data_from_file(result_json_file)
-    validate_list_exp_results_count(result_json_arr, list_exp_json[0])
+    expected_results_count = len(result_json_arr) - DUPLICATE_RECORDS_COUNT
+    validate_list_exp_results_count(expected_results_count, list_exp_json[0])
 
     # Delete the experiment
     response = delete_experiment(input_json_file)

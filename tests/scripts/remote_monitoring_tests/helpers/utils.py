@@ -34,6 +34,7 @@ UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End t
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: avg cannot be negative or blank for the metric variable: "
 UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile:  Format value should be among these values: [cores, MiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
@@ -337,19 +338,14 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
 
-def validate_list_exp_results_count(update_results_json, list_exp_json):
+def validate_list_exp_results_count(expected_results_count, list_exp_json):
 
-    # validate the count of results in the list exp response with the update results count
-    results_count = len(update_results_json)
     # Get the count of objects in all results arrays
     list_exp_results_count = count_results_objects(list_exp_json)
-    net_count = results_count - list_exp_results_count
-
-    print("results_count = ", results_count)
+    print("results_count = ", expected_results_count)
     print("list_exp_results_count = ", list_exp_results_count)
-    print("net_count = ", net_count)
 
-    assert net_count == DUPLICATE_RECORDS_COUNT
+    assert expected_results_count == list_exp_results_count
 
 
 # Function to count objects in results arrays

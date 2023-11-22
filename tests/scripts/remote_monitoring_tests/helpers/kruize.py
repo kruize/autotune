@@ -216,28 +216,37 @@ def create_performance_profile(perf_profile_json_file):
 
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
-def list_experiments():
-    PARAMS = {'results': "true", 'recommendations': "true", "latest": "false"}
+def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None):
     print("\nListing the experiments...")
     url = URL + "/listExperiments"
     print("URL = ", url)
+    params = ""
 
-    response = requests.get(url=url, params=PARAMS)
+    if experiment_name is None:
+        if latest is None and results is not None and recommendations is not None:
+            params = {'results': results, 'recommendations': recommendations}
+        elif latest is not None and results is None and recommendations is None:
+            params = {'latest': latest}
+        elif latest is not None and results is not None and recommendations is None:
+            params = {'latest': latest, 'results': results}
+        elif latest is not None and results is None and recommendations is not None:
+            params = {'latest': latest, 'recommendations': recommendations}
+        elif latest is not None and results is not None and recommendations is not None:
+            params = {'latest': latest, 'results': results, 'recommendations': recommendations}
+    else:
+        if latest is None and results is not None and recommendations is not None:
+            params = {'experiment_name': experiment_name, 'results': results, 'recommendations': recommendations}
+        elif latest is not None and results is None and recommendations is None:
+            params = {'experiment_name': experiment_name, 'latest': latest}
+        elif latest is not None and results is not None and recommendations is None:
+            params = {'experiment_name': experiment_name, 'latest': latest, 'results': results}
+        elif latest is not None and results is None and recommendations is not None:
+            params = {'experiment_name': experiment_name, 'latest': latest, 'recommendations': recommendations}
+        elif latest is not None and results is not None and recommendations is not None:
+            params = {'experiment_name': experiment_name, 'latest': latest, 'results': results, 'recommendations': recommendations}
 
-    print("Response status code = ", response.status_code)
-    return response
-
-
-# Description: This function obtains the experiment details including the results from Kruize Autotune using
-# listExperiments API
-# Input Parameters: experiment_name
-def list_experiments_with_results(experiment_name: str):
-    PARAMS = {'results': "true", 'recommendations': "false", "latest": "false", 'experiment_name': experiment_name}
-    print("\nListing the experiment with results...")
-    url = URL + "/listExperiments"
-    print("URL = ", url)
-
-    response = requests.get(url=url, params=PARAMS)
+    print("params = ", params)
+    response = requests.get(url=url, params=params)
 
     print("Response status code = ", response.status_code)
     return response
