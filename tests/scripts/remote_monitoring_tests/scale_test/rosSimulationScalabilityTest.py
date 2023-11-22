@@ -8,9 +8,18 @@ import requests
 
 
 def loadData():
-    createdata = {"version":"1.0","experiment_name":"quarkus-resteasy-kruize-min-http-response-time-db_10","cluster_name":"cluster-one-division-bell","performance_profile":"resource-optimization-openshift","mode":"monitor","target_cluster":"remote","kubernetes_objects":[{"type":"deployment","name":"tfb-qrh-deployment_5","namespace":"default_5","containers":[{"container_image_name":"kruize/tfb-db:1.15","container_name":"tfb-server-0"},{"container_image_name":"kruize/tfb-qrh:1.13.2.F_et17","container_name":"tfb-server-1"}]}],"trial_settings":{"measurement_duration":"15min"},"recommendation_settings":{"threshold":"0.1"}}
-    data = {"version":"3.0","experiment_name":"quarkus-resteasy-kruize-min-http-response-time-db_4","interval_start_time":"2023-01-01T00:00:00.000Z","interval_end_time":"2023-01-01T00:00:00.000Z","kubernetes_objects":[{"type":"deployment","name":"tfb-qrh-deployment_5","namespace":"default_5","containers":[{"container_image_name":"kruize/tfb-db:1.15","container_name":"tfb-server-0","metrics":[{"name":"cpuRequest","results":{"aggregation_info":{"sum":None,"avg":0,"format":"cores"}}},{"name":"cpuLimit","results":{"aggregation_info":{"sum":None,"avg":0,"format":"cores"}}},{"name":"cpuUsage","results":{"aggregation_info":{"min":0,"max":0,"sum":0,"avg":0,"format":"cores"}}},{"name":"cpuThrottle","results":{"aggregation_info":{"sum":0,"max":0,"avg":0,"format":"cores"}}},{"name":"memoryRequest","results":{"aggregation_info":{"sum":260.85,"avg":50.21,"format":"MiB"}}},{"name":"memoryLimit","results":{"aggregation_info":{"sum":700,"avg":100,"format":"MiB"}}},{"name":"memoryUsage","results":{"aggregation_info":{"min":50.6,"max":198.5,"sum":298.5,"avg":40.1,"format":"MiB"}}},{"name":"memoryRSS","results":{"aggregation_info":{"min":50.6,"max":523.6,"sum":123.6,"avg":31.91,"format":"MiB"}}}]},{"container_image_name":"kruize/tfb-qrh:1.13.2.F_et17","container_name":"tfb-server-1","metrics":[{"name":"cpuRequest","results":{"aggregation_info":{"sum":4.4,"avg":1.1,"format":"cores"}}},{"name":"cpuLimit","results":{"aggregation_info":{"sum":2.0,"avg":0.5,"format":"cores"}}},{"name":"cpuUsage","results":{"aggregation_info":{"min":0.14,"max":0.84,"sum":0.84,"avg":0.12,"format":"cores"}}},{"name":"cpuThrottle","results":{"aggregation_info":{"sum":0.19,"max":0.09,"avg":0.045,"format":"cores"}}},{"name":"memoryRequest","results":{"aggregation_info":{"sum":250.85,"avg":50.21,"format":"MiB"}}},{"name":"memoryLimit","results":{"aggregation_info":{"sum":500,"avg":100,"format":"MiB"}}},{"name":"memoryUsage","results":{"aggregation_info":{"min":50.6,"max":198.5,"sum":198.5,"avg":40.1,"format":"MiB"}}},{"name":"memoryRSS","results":{"aggregation_info":{"min":50.6,"max":123.6,"sum":123.6,"avg":31.91,"format":"MiB"}}}]}]}]}
-    profile_data = {"name":"resource-optimization-openshift","profile_version":1,"k8s_type":"openshift","slo":{"slo_class":"resource_usage","direction":"minimize","objective_function":{"function_type":"expression","expression":"cpuRequest"},"function_variables":[{"name":"cpuRequest","datasource":"prometheus","value_type":"double","kubernetes_object":"container","query":"kube_pod_container_resource_requests{pod=~'$DEPLOYMENT_NAME$-[^-]*-[^-]*$', container='$CONTAINER_NAME$', namespace='$NAMESPACE', resource='cpu', unit='core'}","aggregation_functions":[{"function":"avg","query":"avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"}]}]}}
+    json_file = open("./json_files/create_exp.json", "r")
+    createdata = json.loads(json_file.read())
+    print(createdata)
+
+    json_file = open("./json_files/results.json", "r")
+    data = json.loads(json_file.read())
+    print(data)
+    
+    json_file = open("./json_files/profile.json", "r")
+    profile_data = json.loads(json_file.read())
+    print(profile_data)
+
     return (data, createdata, profile_data)
 
 def updateRecommendation(experiment_name, endDate):

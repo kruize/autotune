@@ -45,4 +45,22 @@ For example,
 
 ```
 
-Once the tests are complete, manually check the logs for any exceptions or errors or crashes.  
+Once the tests are complete, manually check the logs for any exceptions or errors or crashes. Verify if the execution times captured in exec_time.log are as expected.
+
+Below commands are used in the script to capture the execution time and the count of experiments and results from the database:
+
+Commands used to capture the execution time:
+
+```
+grep -m28 -H 'Time elapsed:' *.log | awk -F '[:.]' '{ sum[$1] += ($4 * 3600) + ($5 * 60) + $6 } END { for (key in sum) { printf "%s: Total time elapsed: %02d:%02d:%02d\n", key, sum[key] / 3600, (sum[key] / 60) % 60, sum[key] % 60 } }' | sort
+
+```
+
+The above command captures the execution time for 7 days of metrics data upload, modify -m28 (-m<4 * 7> ) to -m<4 * num_days_of_res>
+
+Commands to fetch the count of experiments and results from the DB:
+
+```
+kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;"; kubectl exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;"
+
+```
