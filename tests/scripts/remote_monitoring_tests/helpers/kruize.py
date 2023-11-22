@@ -216,37 +216,26 @@ def create_performance_profile(perf_profile_json_file):
 
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
-def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None):
+def list_experiments(results, recommendations, latest, experiment_name):
     print("\nListing the experiments...")
+    query_params = {}
+
+    if experiment_name is not None:
+        query_params['experiment_name'] = experiment_name
+    if latest is not None:
+        query_params['latest'] = latest
+    if results is not None:
+        query_params['results'] = results
+    if recommendations is not None:
+        query_params['recommendations'] = recommendations
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
     url = URL + "/listExperiments"
+    if query_string:
+        url += "?" + query_string
     print("URL = ", url)
-    params = ""
-
-    if experiment_name is None:
-        if latest is None and results is not None and recommendations is not None:
-            params = {'results': results, 'recommendations': recommendations}
-        elif latest is not None and results is None and recommendations is None:
-            params = {'latest': latest}
-        elif latest is not None and results is not None and recommendations is None:
-            params = {'latest': latest, 'results': results}
-        elif latest is not None and results is None and recommendations is not None:
-            params = {'latest': latest, 'recommendations': recommendations}
-        elif latest is not None and results is not None and recommendations is not None:
-            params = {'latest': latest, 'results': results, 'recommendations': recommendations}
-    else:
-        if latest is None and results is not None and recommendations is not None:
-            params = {'experiment_name': experiment_name, 'results': results, 'recommendations': recommendations}
-        elif latest is not None and results is None and recommendations is None:
-            params = {'experiment_name': experiment_name, 'latest': latest}
-        elif latest is not None and results is not None and recommendations is None:
-            params = {'experiment_name': experiment_name, 'latest': latest, 'results': results}
-        elif latest is not None and results is None and recommendations is not None:
-            params = {'experiment_name': experiment_name, 'latest': latest, 'recommendations': recommendations}
-        elif latest is not None and results is not None and recommendations is not None:
-            params = {'experiment_name': experiment_name, 'latest': latest, 'results': results, 'recommendations': recommendations}
-
-    print("params = ", params)
-    response = requests.get(url=url, params=params)
-
+    response = requests.get(url)
     print("Response status code = ", response.status_code)
+    print("Response content = ", response.content)
     return response

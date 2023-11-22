@@ -749,18 +749,21 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     experiment_name = json_data[0]['experiment_name']
 
     data = response.json()
-    # Extract the inner 'message' from each 'errors' object and then verify it
-    error_messages = [error['message'] for item in data['data'] for error in item['errors']]
-    error_messages_code = [error['httpcode'] for item in data['data'] for error in item['errors']]
 
-    assert DUPLICATE_RECORDS_MSG in error_messages
-    assert ERROR_409_STATUS_CODE in error_messages_code
+    # Asserting message and httpcode for each error object
+    for item in data['data']:
+        for error in item['errors']:
+            assert error['message'] == DUPLICATE_RECORDS_MSG
+            assert error['httpcode'] == ERROR_409_STATUS_CODE
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert data['message'] == UPDATE_RESULTS_FAILED_RECORDS_MSG
 
-    response = list_experiments("true", None, "false", experiment_name)
+    # assign params to be passed in listExp
+    results = "true"
+    latest = "false"
+    response = list_experiments(results, None, latest, experiment_name)
 
     list_exp_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
