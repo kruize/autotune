@@ -123,7 +123,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:m:n:o:p:stub-: gopts; do
+while getopts ac:d:i:k:m:n:o:p:u:stb-: gopts; do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
