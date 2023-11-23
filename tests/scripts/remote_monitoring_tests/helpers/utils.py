@@ -25,11 +25,14 @@ SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+DUPLICATE_RECORDS_COUNT = 5
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
+UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
@@ -319,6 +322,29 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+
+
+def validate_list_exp_results_count(expected_results_count, list_exp_json):
+
+    # Get the count of objects in all results arrays
+    list_exp_results_count = count_results_objects(list_exp_json)
+    print("results_count = ", expected_results_count)
+    print("list_exp_results_count = ", list_exp_results_count)
+
+    assert expected_results_count == list_exp_results_count
+
+
+# Function to count objects in results arrays
+def count_results_objects(list_exp_json):
+    count = 0
+    container_count = 1
+    for k8s_object in list_exp_json.get("kubernetes_objects", []):
+        container_count = len(k8s_object.get("containers"))
+        for container in k8s_object.get("containers", {}).values():
+            results = container.get("results", {})
+            count += len(results)
+
+    return count/container_count
 
 
 def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,

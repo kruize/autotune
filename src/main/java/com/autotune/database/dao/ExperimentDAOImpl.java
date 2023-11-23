@@ -163,8 +163,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
+                tx = session.beginTransaction();
                 try {
                     session.persist(entry);
                     session.flush();
@@ -199,16 +199,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         entry.setErrorReasons(List.of(e.getMessage()));
                         failedResultsEntries.add(entry);
                     }
-                    tx.commit();
-                    tx = session.beginTransaction();
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
                     failedResultsEntries.add(entry);
+                } finally {
                     tx.commit();
-                    tx = session.beginTransaction();
                 }
             }
-            tx.commit();
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
