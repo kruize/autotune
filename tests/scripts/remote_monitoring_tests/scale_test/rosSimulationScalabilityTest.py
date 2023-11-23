@@ -10,15 +10,12 @@ import requests
 def loadData():
     json_file = open("./json_files/create_exp.json", "r")
     createdata = json.loads(json_file.read())
-    print(createdata)
 
     json_file = open("./json_files/results.json", "r")
     data = json.loads(json_file.read())
-    print(data)
     
     json_file = open("./json_files/profile.json", "r")
     profile_data = json.loads(json_file.read())
-    print(profile_data)
 
     return (data, createdata, profile_data)
 
