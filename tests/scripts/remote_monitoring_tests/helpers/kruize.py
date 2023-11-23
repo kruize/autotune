@@ -237,5 +237,4 @@ def list_experiments(results=None, recommendations=None, latest=None, experiment
     print("URL = ", url)
     response = requests.get(url)
     print("Response status code = ", response.status_code)
-    print("Response content = ", response.content)
     return response
