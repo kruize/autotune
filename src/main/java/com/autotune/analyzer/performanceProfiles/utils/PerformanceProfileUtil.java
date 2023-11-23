@@ -68,6 +68,7 @@ public class PerformanceProfileUtil {
      */
     public static String validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
 
+        List<String> errorReasons = new ArrayList<>();
         String errorMsg = "";
         List<AnalyzerConstants.MetricName> mandatoryFields = Arrays.asList(
                 AnalyzerConstants.MetricName.cpuUsage,
@@ -87,12 +88,12 @@ public class PerformanceProfileUtil {
                 queryList.add(metric.getQuery());
         }
 
-        // Get the metrics data from the Kruize Object
+        // Get the metrics data from the Kruize Object and validate it
         for (KubernetesAPIObject kubernetesAPIObject : updateResultsAPIObject.getKubernetesObjects()) {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 // if the metrics data is not present, set corresponding validation message and skip adding the current container data
                 if (containerAPIObject.getMetrics() == null) {
-                    errorMsg = errorMsg.concat(String.format(
+                    errorReasons.add(String.format(
                             AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
                             containerAPIObject.getContainer_name(),
                             updateResultsAPIObject.getExperimentName()
@@ -106,6 +107,10 @@ public class PerformanceProfileUtil {
                         // validate the metric values
                         errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
                         if (!errorMsg.isBlank()) {
+                            errorReasons.add(String.format(
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
+                                    containerAPIObject.getContainer_name(),
+                                    updateResultsAPIObject.getExperimentName()));
                             break;
                         }
                         AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
@@ -113,24 +118,26 @@ public class PerformanceProfileUtil {
                         MetricResults metricResults = metric.getMetricResult();
                         Map<String, Object> aggrInfoClassAsMap;
                         if (!perfProfileAggrFunctions.isEmpty()) {
-                                try {
-                                    aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                    errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
-                                    if (!errorMsg.isBlank()) {
-                                        errorMsg = errorMsg.concat(String.format(" for the experiment : %s"
-                                                , updateResultsAPIObject.getExperimentName()));
-                                        break;
-                                    }
-                                } catch(IllegalAccessException | InvocationTargetException e){
-                                    throw new RuntimeException(e);
-                                }
-                            } else{
-                                // check if query is also absent
-                                if (queryList.isEmpty()) {
-                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
+                            try {
+                                aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
+                                if (!errorMsg.isBlank()) {
+                                    errorReasons.add(String.format(
+                                            AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
+                                            containerAPIObject.getContainer_name(),
+                                            updateResultsAPIObject.getExperimentName()));
                                     break;
                                 }
+                            } catch(IllegalAccessException | InvocationTargetException e){
+                                throw new RuntimeException(e);
                             }
+                        } else{
+                            // check if query is also absent
+                            if (queryList.isEmpty()) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
+                                break;
+                            }
+                        }
                     } catch (IllegalArgumentException e) {
                         LOGGER.error("Error occurred in metrics validation: " + errorMsg);
                     }
@@ -146,7 +153,7 @@ public class PerformanceProfileUtil {
                 }
             }
         }
-        return errorMsg;
+        return errorReasons.toString();
     }
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {

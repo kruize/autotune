@@ -189,8 +189,6 @@ def generate_test_data(csvfile, test_data):
 
                 test_name = t + "_" + key
                 status_code = 400
-                if test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name":
-                    status_code = 201
 
                 data.append(test_name)
                 data.append(status_code)
