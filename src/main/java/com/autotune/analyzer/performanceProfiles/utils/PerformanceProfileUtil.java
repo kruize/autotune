@@ -66,7 +66,7 @@ public class PerformanceProfileUtil {
      * @param updateResultsAPIObject
      * @return
      */
-    public static String validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
+    public static List<String> validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
 
         List<String> errorReasons = new ArrayList<>();
         String errorMsg = "";
@@ -153,7 +153,7 @@ public class PerformanceProfileUtil {
                 }
             }
         }
-        return errorReasons.toString();
+        return errorReasons;
     }
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {

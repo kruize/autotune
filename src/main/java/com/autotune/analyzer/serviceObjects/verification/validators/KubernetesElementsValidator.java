@@ -16,12 +16,12 @@
 package com.autotune.analyzer.serviceObjects.verification.validators;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
-import com.autotune.analyzer.services.UpdateResults;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.k8sObjects.K8sObject;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
@@ -45,7 +47,6 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         String errorMessage = "";
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             String expName = kruizeObject.getExperimentName();
             String errorMsg = "";
@@ -96,6 +97,55 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                         ));
             }
 
+            // Validate container names
+            if(kruizeObject.getKubernetes_objects().size() == resultData.getKubernetes_objects().size() &&
+                    IntStream.range(0, kruizeObject.getKubernetes_objects().size())
+                            .allMatch(i -> {
+                                K8sObject kruizeK8sObject = kruizeObject.getKubernetes_objects().get(i);
+                                K8sObject resultDataK8sObject = resultData.getKubernetes_objects().get(i);
+                                return kruizeK8sObject.getName().equals(resultDataK8sObject.getName()) && compareContainerNames(kruizeK8sObject, resultDataK8sObject);
+                            })) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(
+                        String.format(
+                                "Kubernetes Object Container names MisMatched. Expected names: %s, Found: %s in Results for experiment: %s \n",
+                                kruizeObject.getKubernetes_objects().stream()
+                                        .flatMap(k8sObject -> k8sObject.getContainerDataMap().values().stream())
+                                        .map(ContainerData::getContainer_name)
+                                        .collect(Collectors.toList()),
+                                resultData.getKubernetes_objects().stream()
+                                        .flatMap(k8sObject -> k8sObject.getContainerDataMap().values().stream())
+                                        .map(ContainerData::getContainer_name)
+                                        .collect(Collectors.toList()),
+                                expName
+                        ));
+            }
+
+            // Validate container image names
+            if (kruizeObject.getKubernetes_objects().size() == resultData.getKubernetes_objects().size() &&
+                    IntStream.range(0, kruizeObject.getKubernetes_objects().size())
+                            .allMatch(i -> {
+                                K8sObject kruizeK8sObject = kruizeObject.getKubernetes_objects().get(i);
+                                K8sObject resultDataK8sObject = resultData.getKubernetes_objects().get(i);
+                                return kruizeK8sObject.getName().equals(resultDataK8sObject.getName()) && compareContainerImageNames(kruizeK8sObject, resultDataK8sObject);
+                            })) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(
+                        String.format(
+                                "Kubernetes Object Container names MisMatched. Expected names: %s, Found: %s in Results for experiment: %s \n",
+                                kruizeObject.getKubernetes_objects().stream()
+                                        .flatMap(k8sObject -> k8sObject.getContainerDataMap().values().stream())
+                                        .map(ContainerData::getContainer_image_name)
+                                        .collect(Collectors.toList()),
+                                resultData.getKubernetes_objects().stream()
+                                        .flatMap(k8sObject -> k8sObject.getContainerDataMap().values().stream())
+                                        .map(ContainerData::getContainer_image_name)
+                                        .collect(Collectors.toList()),
+                                expName
+                        ));
+            }
+
+
             if (kubeObjsMisMatch) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(errorMsg)
@@ -125,5 +175,24 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         }
         LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
+    }
+
+    private boolean compareContainerImageNames(K8sObject kruizeK8sObject, K8sObject resultDataK8sObject) {
+        return kruizeK8sObject.getContainerDataMap().size() == resultDataK8sObject.getContainerDataMap().size() &&
+                kruizeK8sObject.getContainerDataMap().values().stream()
+                        .allMatch(containerData ->
+                                resultDataK8sObject.getContainerDataMap().values().stream()
+                                        .anyMatch(data ->
+                                                data.getContainer_image_name().equals(containerData.getContainer_image_name())
+                                        )
+                        );
+    }
+
+    private boolean compareContainerNames(K8sObject kruizeK8sObject, K8sObject resultDataK8sObject) {
+        return kruizeK8sObject.getContainerDataMap().size() == resultDataK8sObject.getContainerDataMap().size() &&
+                kruizeK8sObject.getContainerDataMap().keySet().stream()
+                        .allMatch(containerData ->
+                                resultDataK8sObject.getContainerDataMap().containsKey(containerData)
+                        );
     }
 }
