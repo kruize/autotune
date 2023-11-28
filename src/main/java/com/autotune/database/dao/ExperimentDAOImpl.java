@@ -663,4 +663,53 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         yearMonth = YearMonth.of(year, month);
         return yearMonth;
     }
+
+    @Override
+    public List<String> loadAllExperimentNames(int page, int limit) throws Exception {
+        List<String> experimentNames;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<String> query = session.createQuery(DBConstants.SQLQUERY.SELECT_EXPERIMENT_NAME_FROM_EXPERIMENTS, String.class);
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit);
+            experimentNames = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment names due to {}", e.getMessage());
+            throw new Exception("Error while loading experiment names from database due to : " + e.getMessage());
+        }
+        return experimentNames;
+    }
+
+    @Override
+    public List<String> loadExperimentNamesBasedOnSearchString(String searchString, int page, int limit) throws Exception {
+        List<String> experimentNames;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<String> query = session.createQuery(DBConstants.SQLQUERY.SELECT_EXPERIMENT_NAME_FROM_EXPERIMENTS_BY_NAME, String.class);
+            query.setParameter("search", "%" + searchString + "%");
+            query.setFirstResult((page - 1) * limit); // Calculate the offset
+            query.setMaxResults(limit);
+            experimentNames = query.list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment names due to {}", e.getMessage());
+            throw new Exception("Error while loading experiment names from database due to : " + e.getMessage());
+        }
+        return experimentNames;
+    }
+
+    @Override
+    public long getExperimentsCount(String searchString) throws Exception {
+        Long experimentNamesCount;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            if (searchString.isBlank()) {
+                experimentNamesCount = session.createQuery(DBConstants.SQLQUERY.SELECT_EXPERIMENT_NAME_COUNT, Long.class).getSingleResult();
+            } else {
+                experimentNamesCount = session.createQuery(DBConstants.SQLQUERY.SELECT_SEARCHED_EXPERIMENT_NAME_COUNT, Long.class)
+                        .setParameter("search", "%" + searchString + "%").getSingleResult();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to get the experiment names count due to {}", e.getMessage());
+            throw new Exception("Error while getting experiment names count from database due to : " + e.getMessage());
+        }
+        return experimentNamesCount;
+    }
+
 }

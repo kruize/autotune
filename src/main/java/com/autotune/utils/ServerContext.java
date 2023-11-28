@@ -35,6 +35,7 @@ public class ServerContext {
     public static final String LIST_STACK_TUNABLES = ROOT_CONTEXT + "listStackTunables";
     public static final String SEARCH_SPACE = ROOT_CONTEXT + "searchSpace";
     public static final String LIST_EXPERIMENTS = ROOT_CONTEXT + "listExperiments";
+    public static final String LIST_EXPERIMENT_NAMES = LIST_EXPERIMENTS + ROOT_CONTEXT + "getExperimentNames";
     public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";

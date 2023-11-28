@@ -32,14 +32,10 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.KruizeSupportedTypes;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.TrialHelpers;
+import com.autotune.utils.*;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -69,8 +65,7 @@ import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
  */
 public class ListExperiments extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListExperiments.class);
-    ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
-    KubernetesServices kubernetesServices = null;
+    Map<String, Long> experimentNameWithCount = new ConcurrentHashMap<>();
 
     private static List<K8sObject> convertKubernetesAPIObjectListToK8sObjectList(List<KubernetesAPIObject> kubernetesAPIObjects) {
         List<K8sObject> k8sObjectList = new ArrayList<>();
@@ -102,11 +97,29 @@ public class ListExperiments extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String statusValue = "failure";
-        Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
+        String requestURI = request.getRequestURI();
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
+
+        if (requestURI.contains(ServerContext.LIST_EXPERIMENT_NAMES)) {
+            handleExperimentNamesRequest(request, response);
+        } else if (requestURI.contains(ServerContext.LIST_EXPERIMENTS)) {
+            handleListExperimentsRequest(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    /**
+     * Handles the HTTP request to retrieve a list containing experiments with details based on provided parameters.
+     *
+     * @param request  The HttpServletRequest containing request parameters.
+     * @param response The HttpServletResponse used to send the response.
+     */
+    private void handleListExperimentsRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String statusValue = "failure";
+        Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
         String gsonStr;
         String results = request.getParameter(KruizeConstants.JSONKeys.RESULTS);
         String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
@@ -187,6 +200,92 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
+    /**
+     * Handles the HTTP request to retrieve a list of experiment names based on provided parameters.
+     *
+     * @param request  The HttpServletRequest containing request parameters.
+     * @param response The HttpServletResponse used to send the response.
+     */
+    private void handleExperimentNamesRequest(HttpServletRequest request, HttpServletResponse response) {
+        String statusValue = "failure";
+        Timer.Sample timerListExp = Timer.start(MetricsConfig.meterRegistry());
+        String gsonStr = "[]";
+        String pageStr = request.getParameter(PAGE);
+        String limitStr = request.getParameter(LIMIT);
+        String searchString = (request.getParameter(KruizeConstants.JSONKeys.SEARCH) != null) ? request.getParameter(
+                KruizeConstants.JSONKeys.SEARCH) : "";
+        List<String> kruizeExperimentsList;
+        // validate Query params
+        Set<String> invalidParams = new HashSet<>();
+        for (String param : request.getParameterMap().keySet()) {
+            if (!KruizeSupportedTypes.SEARCH_PARAMS_SUPPORTED.contains(param)) {
+                invalidParams.add(param);
+            }
+        }
+        try {
+            if (invalidParams.isEmpty()) {
+                int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
+                int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
+                // Fetch experiment names data from the DB based on search string
+                kruizeExperimentsList = loadExperimentNamesFromDatabase(searchString, page, limit);
+                long count;
+                if (!kruizeExperimentsList.isEmpty()) {
+                    if (experimentNameWithCount.get(searchString) == null) {
+                        count = getTotalExperimentCount(searchString);
+                        experimentNameWithCount.put(searchString, count);
+                    } else {
+                        count = experimentNameWithCount.get(searchString);
+                    }
+                    // Creating a map with "experimentNames" and "count" fields in the response
+                    Map<String, Object> responseMap = new HashMap<>();
+                    responseMap.put("experimentNames", kruizeExperimentsList);
+                    responseMap.put("count", count);
+                    // create Gson Object
+                    Gson gsonObj = createGsonObject();
+                    gsonStr = gsonObj.toJson(responseMap);
+                }
+
+                response.getWriter().println(gsonStr);
+                response.getWriter().close();
+                statusValue = "success";
+
+            } else {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
+                );
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while fetching experiment names: {}", e.getMessage());
+        } finally {
+            if (null != timerListExp) {
+                MetricsConfig.timerListExp = MetricsConfig.timerBListExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListExp.stop(MetricsConfig.timerListExp);
+            }
+        }
+    }
+
+    private Long getTotalExperimentCount(String searchString) {
+        Long count = 0L;
+        try {
+            count = new ExperimentDBService().getExperimentsCount(searchString);
+        } catch (Exception e) {
+            LOGGER.error("Failed to get experiment names count: {} ", e.getMessage());
+        }
+        return count;
+    }
+
+    private int parseIntegerOrDefault(String value, int defaultValue) {
+        try {
+            int intValue = Integer.parseInt(value);
+            return intValue > 0 ? intValue : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private boolean isValidBooleanValue(String value) {
         return value != null && (value.equals("true") || value.equals("false"));
     }
@@ -215,6 +314,20 @@ public class ListExperiments extends HttpServlet {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
         }
     }
+    private List<String> loadExperimentNamesFromDatabase(String searchString, int page, int limit) {
+        List<String> experimentNames = null;
+        try {
+            if (searchString.isBlank())
+                experimentNames = new ExperimentDBService().loadAllExperimentNames(page, limit);
+            else
+                experimentNames = new ExperimentDBService().loadExperimentNamesBasedOnSearchString(searchString, page, limit);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to load saved experiment names: {} ", e.getMessage());
+        }
+        return experimentNames;
+    }
+
 
     private Gson createGsonObject() {
         return new GsonBuilder()

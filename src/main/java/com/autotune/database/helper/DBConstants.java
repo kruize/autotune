@@ -44,6 +44,10 @@ public class DBConstants {
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME = "DELETE FROM KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName";
         public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000') TO ('%s-%s-%s 23:59:59');";
+        public static final String SELECT_EXPERIMENT_NAME_FROM_EXPERIMENTS = "SELECT experiment_name " + SELECT_FROM_EXPERIMENTS;
+        public static final String SELECT_EXPERIMENT_NAME_FROM_EXPERIMENTS_BY_NAME = SELECT_EXPERIMENT_NAME_FROM_EXPERIMENTS + " WHERE experiment_name LIKE :search";
+        public static final String SELECT_EXPERIMENT_NAME_COUNT = "SELECT count(k) " + SELECT_FROM_EXPERIMENTS + " k";
+        public static final String SELECT_SEARCHED_EXPERIMENT_NAME_COUNT = SELECT_EXPERIMENT_NAME_COUNT + " WHERE experiment_name LIKE :search";
     }
 
     public static final class TABLE_NAMES {

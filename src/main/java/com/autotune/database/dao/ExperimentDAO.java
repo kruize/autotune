@@ -68,4 +68,9 @@ public interface ExperimentDAO {
 
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
+    List<String> loadAllExperimentNames(int page, int limit) throws Exception;
+
+    List<String> loadExperimentNamesBasedOnSearchString(String searchString, int page, int limit) throws Exception;
+
+    long getExperimentsCount(String searchString) throws Exception;
 }
