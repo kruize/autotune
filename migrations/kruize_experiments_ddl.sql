@@ -5,5 +5,6 @@ create table IF NOT EXISTS kruize_results (interval_start_time timestamp(6) not 
 alter table if exists kruize_experiments add constraint UK_experiment_name unique (experiment_name);
 create index IF NOT EXISTS idx_recommendation_experiment_name on kruize_recommendations (experiment_name);
 create index IF NOT EXISTS idx_recommendation_interval_end_time on kruize_recommendations (interval_end_time);
+create index IF NOT EXISTS idx_recommendation_cluster_name on kruize_recommendations (cluster_name);
 create index IF NOT EXISTS idx_result_experiment_name on kruize_results (experiment_name);
 create index IF NOT EXISTS idx_result_interval_end_time on kruize_results (interval_end_time);
