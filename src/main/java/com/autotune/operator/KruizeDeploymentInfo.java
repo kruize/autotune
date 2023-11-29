@@ -66,13 +66,11 @@ public class KruizeDeploymentInfo {
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
-
     public static int generate_recommendations_date_range_limit_in_days = 15;
-
+    public static String delete_partition_threshold_in_days;
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
-
 
     private KruizeDeploymentInfo() {
     }

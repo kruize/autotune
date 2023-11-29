@@ -417,6 +417,7 @@ public class KruizeConstants {
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
         public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
+        public static final String DELETE_PARTITION_THRESHOLD_IN_DAYS = "deletepartitionsthreshold";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
@@ -445,6 +446,7 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 2;
+
                 private DurationAmount() {
 
                 }
@@ -453,7 +455,7 @@ public class KruizeConstants {
             public static final class RecommendationDurationRanges {
                 private static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 /* SHORT TERM */
-                public static final double  SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;

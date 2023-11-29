@@ -24,10 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -73,6 +76,47 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return validationOutputData;
+    }
+
+    @Override
+    public void deletePartitions(int daysCount) {
+        LOGGER.info("Threshold is set to {}", daysCount);
+        // Calculate the date 'daysCount' days ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, -daysCount);
+        Date cutoffDate = calendar.getTime();
+
+        // Format the date to match the table naming pattern
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        String formattedDate = dateFormat.format(cutoffDate);
+
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            List<String> tablenames = session.createNativeQuery(SELECT_ALL_KRUIZE_TABLES).getResultList();
+            for (String tableName : tablenames) {
+                String datePart = null;
+                if (tableName.startsWith("kruize_results_")) {
+                    datePart = tableName.substring("kruize_results_".length());
+                } else if (tableName.startsWith("kruize_recommendations_")) {
+                    datePart = tableName.substring("kruize_recommendations_".length());
+                }
+                if (null != datePart) {
+                    Date tableDate = new SimpleDateFormat("yyyyMMdd").parse(datePart);
+                    // Compare the date part with the cutoff date
+                    if (tableDate.after(cutoffDate)) {
+                        LOGGER.info("Table not eligible for deletion: " + tableName);
+                    } else {
+                        LOGGER.info("Table found for deletion: " + tableName);
+                        Transaction tx = session.beginTransaction();
+                        session.createNativeQuery("DROP TABLE " + tableName).executeUpdate();
+                        tx.commit();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting the partition: {}", e.getMessage());
+        }
+
+
     }
 
     @Override
