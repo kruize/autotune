@@ -107,10 +107,10 @@ public class PerformanceProfileUtil {
                         // validate the metric values
                         errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
                         if (!errorMsg.isBlank()) {
-                            errorReasons.add(String.format(
+                            errorReasons.add(errorMsg.concat(String.format(
                                     AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
                                     containerAPIObject.getContainer_name(),
-                                    updateResultsAPIObject.getExperimentName()));
+                                    updateResultsAPIObject.getExperimentName())));
                             break;
                         }
                         AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
@@ -122,10 +122,10 @@ public class PerformanceProfileUtil {
                                 aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
                                 errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
                                 if (!errorMsg.isBlank()) {
-                                    errorReasons.add(String.format(
+                                    errorReasons.add(errorMsg.concat(String.format(
                                             AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
                                             containerAPIObject.getContainer_name(),
-                                            updateResultsAPIObject.getExperimentName()));
+                                            updateResultsAPIObject.getExperimentName())));
                                     break;
                                 }
                             } catch(IllegalAccessException | InvocationTargetException e){
@@ -134,7 +134,7 @@ public class PerformanceProfileUtil {
                         } else{
                             // check if query is also absent
                             if (queryList.isEmpty()) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
+                                errorReasons.add(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING);
                                 break;
                             }
                         }
@@ -142,13 +142,14 @@ public class PerformanceProfileUtil {
                         LOGGER.error("Error occurred in metrics validation: " + errorMsg);
                     }
                 }
-                if (!errorMsg.isBlank())
+                if (!errorReasons.isEmpty())
                     break;
 
                 LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                 LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                 if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
-                    errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", updateResultsAPIObject.getExperimentName(), mandatoryFields));
+                    errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
+                            updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                     break;
                 }
             }

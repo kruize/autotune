@@ -23,14 +23,11 @@ import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import io.micrometer.core.instrument.Timer;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +39,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -80,13 +74,9 @@ public class UpdateResults extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
-            try {
-                updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
-            } catch (Exception e) {
-                LOGGER.debug("Parsing errors found: {}", e.getMessage());
-            }
+            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
+            List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
             LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
