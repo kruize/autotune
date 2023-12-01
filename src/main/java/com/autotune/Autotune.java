@@ -34,6 +34,8 @@ import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -58,6 +60,9 @@ public class Autotune {
     private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
 
     public static void main(String[] args) {
+
+        // Turning off the logging level for the specific package to reduce console logging
+        Configurator.setLevel("org.hibernate.engine.jdbc.spi", Level.OFF);
 
         ServletContextHandler context = null;
 
