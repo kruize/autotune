@@ -269,6 +269,8 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+                    kruizeExperimentEntry.setDatasource(null);
+                    kruizeExperimentEntry.setMeta_data(null);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
@@ -312,6 +314,7 @@ public class DBHelpers {
                             Double.valueOf((experimentResultData.getIntervalEndTime().getTime() -
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
+                    kruizeResultsEntry.setMeta_data(null);
                     Map<String, List<K8sObject>> k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
                     String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
