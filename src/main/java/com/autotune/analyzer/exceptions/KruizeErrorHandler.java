@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,7 +50,7 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String origMessage = (String) request.getAttribute("javax.servlet.error.message");
         int errorCode = response.getStatus();
-        List<UpdateResultsAPIObject> myList = (List<UpdateResultsAPIObject>) request.getAttribute("data");
+        List<FailedUpdateResultsAPIObject> myList = (List<FailedUpdateResultsAPIObject>) request.getAttribute("data");
         PrintWriter out = response.getWriter();
         Gson gsonObj = new GsonBuilder()
                 .disableHtmlEscaping()
@@ -59,12 +59,17 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
                 .create();
         String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
 
-        // suppress error in case of duplicate records entry and show errors for all other failed cases.
-        if (errorCode == HttpServletResponse.SC_CONFLICT) {
-            LOGGER.debug(gsonStr);
-        } else {
-            LOGGER.error(gsonStr);
-        }
+        // Log messages based on httpcode
+        myList.forEach(updateResult ->
+                updateResult.getErrors().forEach(error -> {
+                    if (error.getHttpcode() == 409) {
+                        LOGGER.debug(gsonObj.toJson(error));
+                    } else {
+                        LOGGER.error(gsonObj.toJson(error));
+                    }
+                })
+        );
+
         out.append(gsonStr);
         out.flush();
     }
