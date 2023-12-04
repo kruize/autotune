@@ -59,17 +59,25 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
                 .create();
         String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
 
-        // Log messages based on httpcode
-        myList.forEach(updateResult ->
-                updateResult.getErrors().forEach(error -> {
-                    if (error.getHttpcode() == 409) {
-                        LOGGER.debug(gsonObj.toJson(error));
-                    } else {
-                        LOGGER.error(gsonObj.toJson(error));
-                    }
-                })
-        );
-
+            // suppress error in case of duplicate records entry and show errors for all other failed cases.
+            // in case of createExp API, data object will be empty so 'myList' will be null
+            if (myList == null) {
+                if (errorCode == HttpServletResponse.SC_CONFLICT) {
+                    LOGGER.debug(gsonStr);
+                } else {
+                    LOGGER.error(gsonStr);
+                }
+            } else {
+                myList.forEach(failedResult ->
+                        failedResult.getErrors().forEach(error -> {
+                            if (error.getHttpcode() == 409) {
+                                LOGGER.debug(gsonObj.toJson(error));
+                            } else {
+                                LOGGER.error(gsonObj.toJson(error));
+                            }
+                        })
+                );
+            }
         out.append(gsonStr);
         out.flush();
     }
