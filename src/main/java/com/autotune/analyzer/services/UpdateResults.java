@@ -23,10 +23,9 @@ import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,9 +74,23 @@ public class UpdateResults extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
+            List<UpdateResultsAPIObject> updateResultsAPIObjects;
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Double.class, new CustomNumberDeserializer())
+                    .registerTypeAdapter(Integer.class, new CustomNumberDeserializer())
+                    .create();
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
-            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-            List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
+            try {
+                updateResultsAPIObjects = Arrays.asList(gson.fromJson(inputData, UpdateResultsAPIObject[].class));
+            } catch (JsonParseException e) {
+                LOGGER.error("{} : {}", AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR, e.getMessage());
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR);
+                return;
+            } catch (NumberFormatException e) {
+                LOGGER.error("{}", e.getMessage());
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                return;
+            }
             LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
@@ -151,4 +165,18 @@ public class UpdateResults extends HttpServlet {
         LOGGER.debug("UpdateRequestsAPI  input pay load {} ", inputPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
+
+    public static class CustomNumberDeserializer implements JsonDeserializer<Number> {
+
+        @Override
+        public Number deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws NumberFormatException {
+            String value = json.getAsString().trim();
+            if (value.isEmpty()) {
+                throw new NumberFormatException(AnalyzerErrorConstants.AutotuneObjectErrors.AGGREGATION_INFO_INVALID_VALUE);
+            } else {
+                return Double.parseDouble(value);
+            }
+        }
+    }
+
 }

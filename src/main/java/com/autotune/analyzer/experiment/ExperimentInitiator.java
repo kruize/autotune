@@ -162,6 +162,15 @@ public class ExperimentInitiator {
                 }
             }
             if (mainKruizeExperimentMAP.containsKey(experimentName)) {
+
+                // check version
+                String errorMsg = checkVersion(object, mainKruizeExperimentMAP);
+                if (errorMsg != null) {
+                    errorReasons.add(errorMsg);
+                    object.setErrors(getErrorMap(errorReasons));
+                    failedUpdateResultsAPIObjects.add(object);
+                    continue;
+                }
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
@@ -204,6 +213,20 @@ public class ExperimentInitiator {
             failedDBObjects = new ExperimentDBService().addResultsToDB(resultDataList);
             failedUpdateResultsAPIObjects.addAll(failedDBObjects);
         }
+    }
+
+    private String checkVersion(UpdateResultsAPIObject object, Map<String, KruizeObject> mainKruizeExperimentMAP) {
+        try {
+            KruizeObject kruizeObject = mainKruizeExperimentMAP.get(object.getExperimentName());
+            if (!object.getApiVersion().equals(kruizeObject.getApiVersion())) {
+                return String.format(AnalyzerErrorConstants.AutotuneObjectErrors.VERSION_MISMATCH,
+                        kruizeObject.getApiVersion(), object.getApiVersion());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while checking version: {}", e.getMessage());
+            return null;
+        }
+        return null;
     }
 
     public String getSerializedName(String fieldName, Class<?> targetClass) {

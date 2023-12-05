@@ -21,7 +21,7 @@ missing_metrics = [
     ("Missing_metrics_single_res_all_containers", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_containers.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. , Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
     ("Missing_metrics_bulk_res_single_container", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_container.json", "Out of a total of 100 records, 1 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
     ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
-    ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 2 failed to save", "Metric data is not present for container")
+    ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
 ]
 
 
@@ -184,7 +184,7 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
                                 "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. , " \
                                 "Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"
             if test_name == "Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing" and d["interval_end_time"] == "2023-04-13T23:44:20.982Z" or d["interval_end_time"] == "2023-04-13T23:59:20.982Z":
-                error_message = "Performance profile: Missing one of the following mandatory parameters for experiment - quarkus-resteasy-kruize-min-http-response-time-db : [cpuUsage, memoryUsage, memoryRSS]"
+                error_message = "Performance profile: [Missing one of the following mandatory parameters for experiment - quarkus-resteasy-kruize-min-http-response-time-db : [cpuUsage, memoryUsage, memoryRSS]]"
             assert error_message in actual_error_message
     
     response = delete_experiment(input_json_file)
