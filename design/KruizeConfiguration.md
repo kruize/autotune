@@ -1,4 +1,4 @@
-# Kubernetes Environment Variables
+# Kruize Configuration
 
 The following environment variables are set using the `kubectl apply` command with the provided YAML configuration.
 
