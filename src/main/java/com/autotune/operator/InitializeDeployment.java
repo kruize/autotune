@@ -111,7 +111,7 @@ public class InitializeDeployment {
                 } else
                     throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
             } catch (Exception e) {
-                LOGGER.warn("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
+                LOGGER.debug("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
             }
         }
     }
