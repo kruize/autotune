@@ -479,4 +479,8 @@ public class KruizeConstants {
 
 
     }
+
+    public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
+        public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
+    }
 }

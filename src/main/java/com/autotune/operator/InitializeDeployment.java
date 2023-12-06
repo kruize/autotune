@@ -101,16 +101,19 @@ public class InitializeDeployment {
             try {
                 Field deploymentInfoField = KruizeDeploymentInfo.class.getDeclaredField(field.getName().toLowerCase(Locale.ROOT));
                 String deploymentInfoFieldValue = getKruizeConfigValue((String) field.get(null), configObject);
-                if (deploymentInfoField.getType() == String.class)
-                    deploymentInfoField.set(null, deploymentInfoFieldValue);
-                else if (deploymentInfoField.getType() == Boolean.class)
-                    deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
-                else if (deploymentInfoField.getType() == Integer.class) {
-                    assert deploymentInfoFieldValue != null;
-                    deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
-                } else
-                    throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
+                if (null != deploymentInfoFieldValue) {
+                    if (deploymentInfoField.getType() == String.class)
+                        deploymentInfoField.set(null, deploymentInfoFieldValue);
+                    else if (deploymentInfoField.getType() == Boolean.class)
+                        deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
+                    else if (deploymentInfoField.getType() == Integer.class) {
+                        deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
+                    } else
+                        throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
+                }
+                // LOGGER.debug("{} = {}", field.getName(), deploymentInfoField.get(new KruizeDeploymentInfo()));  #TODO this may print sensitive data
             } catch (Exception e) {
+                e.printStackTrace();
                 LOGGER.warn("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
             }
         }

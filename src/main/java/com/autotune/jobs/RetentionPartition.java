@@ -17,7 +17,7 @@ public class RetentionPartition {
         LOGGER.info("RetentionPartition");
         try {
             InitializeDeployment.setup_deployment_info();
-            new ExperimentDAOImpl().deletePartitions(Integer.parseInt(KruizeDeploymentInfo.delete_partition_threshold_in_days));
+            new ExperimentDAOImpl().deletePartitions(KruizeDeploymentInfo.delete_partition_threshold_in_days);
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();
