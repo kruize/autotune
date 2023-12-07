@@ -226,6 +226,8 @@ public class ListExperiments extends HttpServlet {
             if (invalidParams.isEmpty()) {
                 int page = parseIntegerOrDefault(pageStr, AnalyzerConstants.DEFAULT_PAGE_VALUE);
                 int limit = parseIntegerOrDefault(limitStr, AnalyzerConstants.DEFAULT_LIMIT_VALUE);
+                // trim the search string and remove the asterisks, if present.
+                searchString = searchString.trim().replace("*", "");
                 // Fetch experiment names data from the DB based on search string
                 kruizeExperimentsList = loadExperimentNamesFromDatabase(searchString, page, limit);
                 long count;
