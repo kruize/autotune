@@ -61,8 +61,12 @@ public class Autotune {
 
     public static void main(String[] args) {
 
-        // Turning off the logging level for the specific package to reduce console logging
-        Configurator.setLevel("org.hibernate.engine.jdbc.spi", Level.OFF);
+        try {
+            // Turning off the logging level for the specific package to reduce console logging
+            Configurator.setLevel(KruizeConstants.SQL_EXCEPTION_HELPER_PKG, Level.OFF);
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while turning the Logger off for the SQLException class: {}", e.getMessage());
+        }
 
         ServletContextHandler context = null;
 
