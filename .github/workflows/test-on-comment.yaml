@@ -4,8 +4,6 @@ on:
   issue_comment:
     types: [created]
     issue_type: [pull_request]
-  pull_request_review:
-    types: [submitted]
 
 jobs:
   functest:
