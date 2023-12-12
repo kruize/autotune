@@ -1498,7 +1498,6 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
 
     response = delete_experiment(input_json_file)
     print("delete response = ", response)
-    print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
     response = create_experiment(input_json_file)
@@ -1552,8 +1551,8 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-               'message'] == 'Cost Recommendations Available'
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
 
     response = list_recommendations(latest=latest, cluster_name=cluster_name)
 
@@ -1702,8 +1701,8 @@ def test_list_recommendations_cluster_name_and_monitoring_end_time(test_name, mo
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-               'message'] == 'Cost Recommendations Available'
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
 
     response = list_recommendations(monitoring_end_time=monitoring_end_time, cluster_name=cluster_name)
 
