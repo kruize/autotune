@@ -26,10 +26,14 @@ import java.net.URL;
  * }
  */
 public class DataSourceInfo {
+    private final String name;
+    private final String serviceName;
     private final String provider;
     private final URL url;
 
-    public DataSourceInfo(String provider, URL url) {
+    public DataSourceInfo(String name, String serviceName, String provider, URL url) {
+        this.name = name;
+        this.serviceName =serviceName;
         this.provider = provider;
         this.url = url;
     }
@@ -45,6 +49,8 @@ public class DataSourceInfo {
     @Override
     public String toString() {
         return "DataSourceInfo{" +
+                ", name='" + name + '\'' +
+                ", serviceName='" + serviceName + '\'' +
                 "provider='" + provider + '\'' +
                 ", url=" + url +
                 '}';
