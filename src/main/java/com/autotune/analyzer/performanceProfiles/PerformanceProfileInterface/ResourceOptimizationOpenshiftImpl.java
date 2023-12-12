@@ -145,7 +145,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                         // Check for min data before setting notifications
                         // Check for at least short term
-                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
+                        double availableData = RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject);
+                        if (availableData < KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MIN_DATA_THRESHOLD_MINS) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
                                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
                             );
@@ -260,7 +261,18 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
                             // Check if there is min data available for the term
-                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
+                            availableData = RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject);
+                            double minAvailableData = 0.0;
+                            if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
+                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MIN_DATA_THRESHOLD_MINS;
+                            } else if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
+                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS;
+                            } else if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)) {
+                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.LONG_TERM_MIN_DATA_THRESHOLD_MINS;
+                            } else {
+                                LOGGER.error("Invalid Recommendation Term");
+                            }
+                            if (availableData < minAvailableData) {
                                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
@@ -291,7 +303,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                             term,
                                             recommendationSettings,
                                             currentConfig,
-                                            Double.valueOf(String.valueOf(duration)));
+                                            Double.valueOf(String.valueOf(duration)),
+                                            availableData);
 
                                     if (null == mappedRecommendationForEngine) {
                                         continue;

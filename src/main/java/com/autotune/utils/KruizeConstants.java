@@ -253,6 +253,7 @@ public class KruizeConstants {
     public static class TimeConv {
         public static final int NO_OF_MSECS_IN_SEC = 1000;
         public static final int MEASUREMENT_DURATION_THRESHOLD_SECONDS = 30;
+        public static final int MEASUREMENT_DURATION_THRESHOLD_MINUTES = 15;
         public static int NO_OF_SECONDS_PER_MINUTE = 60;
         public static int NO_OF_MINUTES_PER_HOUR = 60;
         public static int NO_OF_HOURS_PER_DAY = 24;
@@ -467,6 +468,13 @@ public class KruizeConstants {
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.LONG_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;
+                public static final Integer DURATION_COUNT_ONE_HOUR = TimeConv.NO_OF_MINUTES_PER_HOUR / TimeConv.MEASUREMENT_DURATION_THRESHOLD_MINUTES;
+                public static final double SHORT_TERM_MIN_DATA_THRESHOLD_MINS = 30;
+                public static final double MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS * TimeConv.NO_OF_HOURS_PER_DAY * DURATION_COUNT_ONE_HOUR;
+                public static final double LONG_TERM_MIN_DATA_THRESHOLD_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS * DURATION_COUNT_ONE_HOUR;
+                public static final double SHORT_TERM_MAX_DATA_MINS = DurationAmount.SHORT_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+                public static final double MEDIUM_TERM_MAX_DATA_MINS = DurationAmount.MEDIUM_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+                public static final double LONG_TERM_MAX_DATA_MINS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
 
                 private RecommendationDurationRanges() {
 

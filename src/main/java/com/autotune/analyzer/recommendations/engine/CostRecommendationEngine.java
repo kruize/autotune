@@ -911,7 +911,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                                                                 HashMap<AnalyzerConstants.ResourceSetting,
                                                                         HashMap<AnalyzerConstants.RecommendationItem,
                                                                                 RecommendationConfigItem>> currentConfigMap,
-                                                                Double durationInHrs) {
+                                                                Double durationInHrs, double availableData) {
         MappedRecommendationForEngine mappedRecommendationForEngine = new MappedRecommendationForEngine();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
@@ -968,6 +968,21 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             int numPods = getNumPods(filteredResultsMap);
 
             mappedRecommendationForEngine.setPodsCount(numPods);
+
+            // set the confidence level
+            double term_max_data_mins = 0.0;
+            if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MAX_DATA_MINS;
+            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.MEDIUM_TERM_MAX_DATA_MINS;
+            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.LONG_TERM_MAX_DATA_MINS;
+            } else {
+                LOGGER.error("Invalid Recommendation Term");
+                return null;
+            }
+            double confidenceLevel = (availableData / term_max_data_mins);
+            mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 
             // Pass Notification object to all callers to update the notifications required
             ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();

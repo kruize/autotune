@@ -32,14 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
 public class PerformanceRecommendationEngine implements KruizeRecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceRecommendationEngine.class);
@@ -929,7 +927,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                                                                 HashMap<AnalyzerConstants.ResourceSetting,
                                                                         HashMap<AnalyzerConstants.RecommendationItem,
                                                                                 RecommendationConfigItem>> currentConfigMap,
-                                                                Double durationInHrs) {
+                                                                Double durationInHrs, double availableData) {
         MappedRecommendationForEngine mappedRecommendationForEngine = new MappedRecommendationForEngine();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
@@ -986,6 +984,21 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
             int numPods = getNumPods(filteredResultsMap);
 
             mappedRecommendationForEngine.setPodsCount(numPods);
+
+            // set the confidence level
+            double term_max_data_mins;
+            if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MAX_DATA_MINS;
+            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.MEDIUM_TERM_MAX_DATA_MINS;
+            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)) {
+                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.LONG_TERM_MAX_DATA_MINS;
+            } else {
+                LOGGER.error("Invalid Recommendation Term");
+                return null;
+            }
+            double confidenceLevel = (availableData / term_max_data_mins);
+            mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 
             // Pass Notification object to all callers to update the notifications required
             ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();

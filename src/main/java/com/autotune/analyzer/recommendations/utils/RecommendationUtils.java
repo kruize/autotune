@@ -3,8 +3,6 @@ package com.autotune.analyzer.recommendations.utils;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -94,20 +92,16 @@ public class RecommendationUtils {
         }
     }
 
-    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, RecommendationConstants.RecommendationTerms recommendationTerms) {
+    public static double checkIfMinDataAvailableForTerm(ContainerData containerData) {
+        double sum = 0.0;
         // Check if data available
         if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
-            return false;
+            return sum;
         }
 
-        // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = recommendationTerms.getLowerBound();
-        double sum = getDurationSummation(containerData);
-        // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-        if (sum >= lowerBound)
-            return true;
-
-        return false;
+        // get the sum of the durations
+        sum = getDurationSummation(containerData);
+        return sum;
     }
 
     public static double getDurationSummation(ContainerData containerData) {
