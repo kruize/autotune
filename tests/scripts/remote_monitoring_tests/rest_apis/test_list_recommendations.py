@@ -386,7 +386,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
     num_exps = 6
-    num_res = 120
+    num_res = 100
 
     split = False
     split_count = 1
@@ -429,25 +429,25 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         result_json_arr = []
         start_time = None
         end_time = None
-        for j in range(num_res):
+        #for j in range(num_res):
             # Update results for the experiment
-            result_json_file = result_jsons_dir + "/result_" + str(i) + "_" + str(j) + ".json"
-            result_json = read_json_data_from_file(result_json_file)
-            if start_time is None:
-                start_time = result_json[0]['interval_start_time']
-            end_time = result_json[0]['interval_end_time']
+        result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
+        result_json = read_json_data_from_file(result_json_file)
+        if start_time is None:
+            start_time = result_json[num_res-1]['interval_start_time']
+        end_time = result_json[num_res-1]['interval_end_time']
 
-            response = update_results(result_json_file)
-            data = response.json()
+        response = update_results(result_json_file)
+        data = response.json()
 
-            print("message = ", data['message'])
-            assert response.status_code == SUCCESS_STATUS_CODE
-            assert data['status'] == SUCCESS_STATUS
-            assert data[
-                       'message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data[
+                    'message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
 
-            result_json_data = read_json_data_from_file(result_json_file)
-            result_json_arr.append(result_json_data[0])
+        result_json_data = read_json_data_from_file(result_json_file)
+        result_json_arr.append(result_json_data[num_res-1])
 
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
@@ -1474,7 +1474,7 @@ def test_list_recommendations_invalid_cluster(cluster_type):
     # Get the cluster name
     cluster_name = "xyz"
     experiment_name = None
-    response = list_recommendations(experiment_name, cluster_name)
+    response = list_recommendations(experiment_name=experiment_name, cluster_name=cluster_name)
 
     data = response.json()
     print(data)
@@ -1497,6 +1497,7 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
     form_kruize_url(cluster_type)
 
     response = delete_experiment(input_json_file)
+    print("delete response = ", response)
     print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
@@ -1554,7 +1555,7 @@ def test_list_recommendations_single_cluster_and_latest(latest, cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
                'message'] == 'Cost Recommendations Available'
 
-    response = list_recommendations(cluster_name=cluster_name, latest=latest)
+    response = list_recommendations(latest=latest, cluster_name=cluster_name)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -1632,7 +1633,7 @@ def test_list_recommendations_cluster_name_and_monitoring_end_time_invalid(monit
 
     experiment_name = None
     latest = None
-    response = list_recommendations(experiment_name, cluster_name, latest, monitoring_end_time)
+    response = list_recommendations(experiment_name=experiment_name, cluster_name=cluster_name, latest=latest, monitoring_end_time=monitoring_end_time)
     list_reco_json = response.json()
 
     print(list_reco_json['message'])
@@ -1704,7 +1705,7 @@ def test_list_recommendations_cluster_name_and_monitoring_end_time(test_name, mo
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
                'message'] == 'Cost Recommendations Available'
 
-    response = list_recommendations(cluster_name=cluster_name, monitoring_end_time=monitoring_end_time)
+    response = list_recommendations(monitoring_end_time=monitoring_end_time, cluster_name=cluster_name)
 
     list_reco_json = response.json()
 

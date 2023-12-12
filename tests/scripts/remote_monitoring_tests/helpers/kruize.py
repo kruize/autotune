@@ -139,7 +139,7 @@ def update_recommendations(experiment_name, startTime, endTime):
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment name, cluster name, flag indicating latest result and monitoring end time
-def list_recommendations(experiment_name=None, cluster_name=None, latest=None, monitoring_end_time=None):
+def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, cluster_name=None):
     PARAMS = ""
     print("\nListing the recommendations...")
     url = URL + "/listRecommendations"

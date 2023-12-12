@@ -31,7 +31,7 @@ def convert_date_format(input_date_str):
     output_date_str = input_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     return output_date_str
 
-def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_jsons", total_exps = 10, num_clusters = 1):
+def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_jsons", total_exps = 10):
     complete_json_data = []
     single_json_data = []
     multi_json_data = []
@@ -96,15 +96,15 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
 
         complete_json_data.append(experiment)
         if split == True:
-            if i % split_count != 0:
+            if i == 0 or i % split_count != 0:
                 multi_json_data.append(experiment)
             else:
-                multi_json_data.append(experiment)
                 exp_json_file = exp_json_dir + "/create_exp_" + str(j) + ".json"
                 with open(exp_json_file, "w") as json_file:
                     json.dump(multi_json_data, json_file, indent=4)
 
                 multi_json_data = []
+                multi_json_data.append(experiment)
                 j += 1
         else:
             single_json_data.append(experiment)
@@ -121,6 +121,10 @@ def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_js
         else:
             type_index = 0
 
+    if split==True:
+        exp_json_file = exp_json_dir + "/create_exp_" + str(j) + ".json"
+        with open(exp_json_file, "w") as json_file:
+            json.dump(multi_json_data, json_file, indent=4)
 
     # Write the final JSON data to the output file
     with open("/tmp/exp_complete.json", "w") as json_file:
@@ -326,16 +330,33 @@ def create_update_results_jsons(csv_file_path, split = False, split_count = 1, j
                 else:
                     single_row_json_data.append(update_results)
                     # Write the final JSON data to the output file
-                    result_json_file = json_dir + "/result_" + str(exp_num) + "_" + str(j) + ".json"
-                    with open(result_json_file, "w") as json_file:
-                        json.dump(single_row_json_data, json_file, indent=4)
-
-                    single_row_json_data = []
+                    if(row_counter == 0):
+                        result_json_file = json_dir + "/result_" + str(exp_num) + ".json"
+                        with open(result_json_file, "w") as json_file:
+                            json.dump(single_row_json_data, json_file, indent=4)
+                        single_row_json_data = []
 
                 if type_index < num_obj_types-1:
                     type_index += 1
                 else:
                     type_index = 0
+
+            num_exp = 0
+            if(len(single_row_json_data) > 0):
+                for k in single_row_json_data:
+                    exisiting_result_json_file = json_dir + "/result_" + str(num_exp) + ".json"
+                    with open(exisiting_result_json_file, "r+") as file:
+                        # Load the existing result JSON
+                        existing_data = json.load(file)
+                        # Append the new results object to the existing data
+                        existing_data.append(k)
+                        # Set the file cursor to the beginning to overwrite the content
+                        file.seek(0)
+                        # Write the updated data back to the file
+                        json.dump(existing_data, file, indent=4)
+                    num_exp += 1
+
+                single_row_json_data = []
 
             j += 1
             interval_start_time = interval_end_time
