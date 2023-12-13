@@ -417,6 +417,7 @@ public class KruizeConstants {
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
         public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
+        public static final String DELETE_PARTITION_THRESHOLD_IN_DAYS = "deletepartitionsthreshold";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
@@ -476,5 +477,9 @@ public class KruizeConstants {
         }
 
 
+    }
+
+    public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
+        public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
     }
 }

@@ -191,6 +191,10 @@
                             <mainClass>com.autotune.jobs.CreatePartition</mainClass>
                             <name>CreatePartition</name>
                         </program>
+                        <program>
+                            <mainClass>com.autotune.jobs.RetentionPartition</mainClass>
+                            <name>RetentionPartition</name>
+                        </program>
                     </programs>
                 </configuration>
                 <executions>

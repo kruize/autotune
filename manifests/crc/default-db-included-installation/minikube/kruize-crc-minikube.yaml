@@ -143,7 +143,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.19.5_rm
+          image: quay.io/vinakuma/autotune_operator:rmnew3
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -320,4 +320,47 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
-
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: delete-partition-cronjob
+  namespace: monitoring
+spec:
+  schedule: "*/2 * * * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizedeletejob
+              image: quay.io/vinakuma/autotune_operator:rmnew3
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/RetentionPartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+                - name: deletepartitionsthreshold
+                  value: "15"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
+---
