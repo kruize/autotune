@@ -302,7 +302,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.20.1_rm
+              image: kruize/autotune_operator:0.0.19.5_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
