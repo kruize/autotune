@@ -104,6 +104,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
         // Get the new Timestamp after subtracting 10 days
         Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
+        LOGGER.debug("calculated_start_time = {}", calculated_start_time);
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         String experiment_name = kruizeObject.getExperimentName();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
@@ -272,6 +273,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             } else {
                                 LOGGER.error("Invalid Recommendation Term");
                             }
+                            LOGGER.debug("minAvailableData = {}", minAvailableData);
+                            LOGGER.debug("availableData = {}", availableData);
                             if (availableData < minAvailableData) {
                                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);

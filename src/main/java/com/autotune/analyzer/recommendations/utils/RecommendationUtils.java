@@ -8,11 +8,15 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
 
 public class RecommendationUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
+
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
                                                            AnalyzerConstants.ResourceSetting resourceSetting,
@@ -127,7 +131,7 @@ public class RecommendationUtils {
             if (!timestamp.after(endTime)) {
                 if (sortedResultsHashMap.containsKey(timestamp)) {
                     sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
+                    if (sum >= (KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MIN_DATA_THRESHOLD_MINS
                             - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
                         // Storing the timestamp value in startTimestamp variable to return
                         intervalEndTime = timestamp;
@@ -139,6 +143,7 @@ public class RecommendationUtils {
         try {
             return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
         } catch (NullPointerException npe) {
+            LOGGER.error("Exception occurred while getting MonitoringStartTime: {}", npe.getMessage());
             return null;
         }
     }

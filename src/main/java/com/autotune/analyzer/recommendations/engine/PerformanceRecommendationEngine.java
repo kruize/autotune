@@ -997,7 +997,10 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                 LOGGER.error("Invalid Recommendation Term");
                 return null;
             }
+            // set the confidenceLevel to 1.0 if it exceeds 1 since the confidence can only vary between 0 and 1
             double confidenceLevel = (availableData / term_max_data_mins);
+            confidenceLevel = Math.min(confidenceLevel, 1.0);
+
             mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 
             // Pass Notification object to all callers to update the notifications required

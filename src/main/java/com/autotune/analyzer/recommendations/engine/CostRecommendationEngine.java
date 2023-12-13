@@ -970,7 +970,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             mappedRecommendationForEngine.setPodsCount(numPods);
 
             // set the confidence level
-            double term_max_data_mins = 0.0;
+            double term_max_data_mins;
             if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
                 term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MAX_DATA_MINS;
             } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
@@ -981,7 +981,10 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 LOGGER.error("Invalid Recommendation Term");
                 return null;
             }
+            // set the confidenceLevel to 1.0 if it exceeds 1 since the confidence can only vary between 0 and 1
             double confidenceLevel = (availableData / term_max_data_mins);
+            confidenceLevel = Math.min(confidenceLevel, 1.0);
+
             mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 
             // Pass Notification object to all callers to update the notifications required
