@@ -428,7 +428,7 @@ def create_exp_jsons_with_mutiple_clusters(split = False, split_count = 1, exp_j
             # # Create a dictionary to hold the experiment data
             # if num_clusters != 1:
             experiment = {
-                "version": "1.0",
+                "version": "v2.0",
                 "experiment_name": exp_name + "_" + str(cluster_num) + "_" + str(exp_num),
                 "cluster_name": cluster_name + "_" + str(cluster_num),
                 "performance_profile": performance_profile,
@@ -440,15 +440,15 @@ def create_exp_jsons_with_mutiple_clusters(split = False, split_count = 1, exp_j
             }
             complete_json_data.append(experiment)
             if split == True:
-                if j % split_count != 0:
+                if j == 0 or j % split_count != 0:
                     multi_json_data.append(experiment)
                 else:
-                    multi_json_data.append(experiment)
                     exp_json_file = exp_json_dir + "/create_exp_" + str(i) + "_" + str(k) + ".json"
                     with open(exp_json_file, "w") as json_file:
                         json.dump(multi_json_data, json_file, indent=4)
 
                     multi_json_data = []
+                    multi_json_data.append(experiment)
                     k += 1
             else:
                 single_json_data.append(experiment)
@@ -464,6 +464,11 @@ def create_exp_jsons_with_mutiple_clusters(split = False, split_count = 1, exp_j
                 type_index += 1
             else:
                 type_index = 0
+
+        if split==True:
+            exp_json_file = exp_json_dir + "/create_exp_" + str(i) + "_" + str(k) + ".json"
+            with open(exp_json_file, "w") as json_file:
+                json.dump(multi_json_data, json_file, indent=4)
 
     # Write the final JSON data to the output file
     with open("/tmp/exp_complete.json", "w") as json_file:
@@ -643,7 +648,7 @@ def create_update_results_jsons_with_multiple_clusters(csv_file_path, split = Fa
 
                     # Create a dictionary to hold the experiment data
                     update_results = {
-                        "version": "1.0",
+                        "version": "v2.0",
                         "experiment_name": exp_name + "_" + str(cluster_num) + "_" + str(exp_num),
                         "interval_start_time": interval_start_time,
                         "interval_end_time": interval_end_time,
@@ -671,16 +676,35 @@ def create_update_results_jsons_with_multiple_clusters(csv_file_path, split = Fa
                     else:
                         single_row_json_data.append(update_results)
                         # Write the final JSON data to the output file
-                        result_json_file = json_dir + "/result_" + str(cluster_num) + "_" + str(exp_num) + "_" + str(j) + ".json"
-                        with open(result_json_file, "w") as json_file:
-                            json.dump(single_row_json_data, json_file, indent=4)
+                        if row_counter == 0:
+                            result_json_file = json_dir + "/result_" + str(cluster_num) + "_" + str(exp_num) + ".json"
+                            with open(result_json_file, "w") as json_file:
+                                json.dump(single_row_json_data, json_file, indent=4)
 
-                        single_row_json_data = []
+                            single_row_json_data = []
 
                     if type_index < num_obj_types-1:
                         type_index += 1
                     else:
                         type_index = 0
+
+                num_exp = 0
+                if len(single_row_json_data) > 0:
+                    for k in single_row_json_data:
+                        exisiting_result_json_file = json_dir + "/result_" + str(cluster_num) + "_" + str(num_exp) + ".json"
+                        with open(exisiting_result_json_file, "r+") as file:
+                            # Load the existing result JSON
+                            existing_data = json.load(file)
+                            # Append the new results object to the existing data
+                            existing_data.append(k)
+                            # Set the file cursor to the beginning to overwrite the content
+                            file.seek(0)
+                            # Write the updated data back to the file
+                            json.dump(existing_data, file, indent=4)
+                        num_exp += 1
+
+                single_row_json_data = []
+
             j += 1
             interval_start_time = interval_end_time
             if row_counter < num_res-1:

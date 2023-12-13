@@ -1740,7 +1740,7 @@ def test_list_recommendations_single_cluster_multiple_exps(cluster_type):
     """
     num_clusters = 1
     num_exps = 6
-    num_res = 120
+    num_res = 100
 
     split = False
     split_count = 1
@@ -1785,25 +1785,25 @@ def test_list_recommendations_single_cluster_multiple_exps(cluster_type):
             result_json_arr = []
             start_time = None
             end_time = None
-            for k in range(num_res):
-                # Update results for the experiment
-                result_json_file = result_jsons_dir + "/result_" + str(i) + "_" + str(j) + "_" + str(k) + ".json"
-                result_json = read_json_data_from_file(result_json_file)
-                if start_time is None:
-                    start_time = result_json[0]['interval_start_time']
-                end_time = result_json[0]['interval_end_time']
 
-                response = update_results(result_json_file)
-                data = response.json()
+            # Update results for the experiment
+            result_json_file = result_jsons_dir + "/result_" + str(i) + "_" + str(j) + ".json"
+            result_json = read_json_data_from_file(result_json_file)
+            if start_time is None:
+                start_time = result_json[num_res-1]['interval_start_time']
+            end_time = result_json[num_res-1]['interval_end_time']
 
-                print("message = ", data['message'])
-                assert response.status_code == SUCCESS_STATUS_CODE
-                assert data['status'] == SUCCESS_STATUS
-                assert data[
-                           'message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
+            response = update_results(result_json_file)
+            data = response.json()
 
-                result_json_data = read_json_data_from_file(result_json_file)
-                result_json_arr.append(result_json_data[0])
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data[
+                       'message'] == UPDATE_RESULTS_SUCCESS_MSG, f"expected message = {UPDATE_RESULTS_SUCCESS_MSG} actual message = {data['message']}"
+
+            result_json_data = read_json_data_from_file(result_json_file)
+            result_json_arr.append(result_json_data[num_res-1])
 
             # Get the cluster name and experiment name
             json_data = json.load(open(create_exp_json_file))
@@ -1815,15 +1815,15 @@ def test_list_recommendations_single_cluster_multiple_exps(cluster_type):
             data = response.json()
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data[0]['experiment_name'] == experiment_name
-            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                       'message'] == 'Cost Recommendations Available'
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+                       'message'] == RECOMMENDATIONS_AVAILABLE
 
             # Invoke list recommendations for the specified experiment
-            response = list_recommendations(experiment_name)
+            response = list_recommendations(cluster_name=cluster_name)
             assert response.status_code == SUCCESS_200_STATUS_CODE
 
             list_reco_json = response.json()
-
+            print("list_reco_json  = ", list_reco_json)
             # Validate the json against the json schema
             errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
             assert errorMsg == ""
