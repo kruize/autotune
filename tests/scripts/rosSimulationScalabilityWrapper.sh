@@ -67,7 +67,7 @@ for (( i = 0; i < $iterations; i++ )); do
     current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
     # Build the full command
-    full_command="python3 -u bulkScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix}"
 
     # Execute the command
     echo "Executing: $full_command"
@@ -75,7 +75,14 @@ for (( i = 0; i < $iterations; i++ )); do
 
     # Wait for the command to complete before moving to the next iteration
     wait
-
     # Sleep for a short duration to avoid flooding the system with too many requests
-    #sleep 5
+    file_path="sleep_duration.txt"
+    if [ -f "$file_path" ] && [ -r "$file_path" ]; then
+      sleep_duration=$(cat "$file_path")
+      echo "Using SLEEP_DURATION of $sleep_duration seconds."
+      sleep "$sleep_duration"
+    else
+      echo "no sleep is set"
+    fi
 done
+
