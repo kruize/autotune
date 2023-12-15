@@ -90,7 +90,9 @@ public class ExperimentDBService {
                 List<ExperimentResultData> resultDataList = new ArrayList<>();
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
                     try {
-                        ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                        ExperimentResultData experimentResultData = null;
+                        if (updateResultsAPIObject.getKruizeObject() != null)
+                            experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
                         if (experimentResultData != null)
                             resultDataList.add(experimentResultData);
                         else
