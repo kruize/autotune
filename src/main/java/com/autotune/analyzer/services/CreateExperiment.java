@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.experiment.ExperimentValidation;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
@@ -88,42 +89,62 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects;
+            KruizeObject kruizeObject;
+            try {
+                createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            } catch (com.google.gson.JsonParseException e) {
+                LOGGER.error("{} : {}", AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR, e.getMessage());
+                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR);
+                return;
+            }
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
+                boolean validationFlag = true;
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
-                    if (null != kruizeObject)
-                        kruizeExpList.add(kruizeObject);
-                }
-                new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
-                //TODO: UX needs to be modified - Handle response for the multiple objects
-                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
-                if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
-                    for (KruizeObject ko : kruizeExpList) {
-                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
-                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
-                                .findAny()
-                                .orElse(null);
-                        validAPIObj.setValidationData(ko.getValidation_data());
-                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
-                    }
-                    if (addedToDB.isSuccess()) {
-                        sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-                        statusValue = "success";
+                    // validate the object
+                    new ExperimentValidation().validateCreateExpAPIObject(createExperimentAPIObject);
+                    if (createExperimentAPIObject.getValidationData().isSuccess()) {
+                        kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                        if (kruizeObject.getValidation_data().isSuccess())
+                            kruizeExpList.add(kruizeObject);
                     } else {
-                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        sendErrorResponse(inputData, response, null, createExperimentAPIObject.getValidationData().getErrorCode(),
+                                createExperimentAPIObject.getValidationData().getMessage());
+                        validationFlag = false;
+                        break;
                     }
-                } else {
-                    sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
+                }
+                if (validationFlag) {
+                    new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
+                    //TODO: UX needs to be modified - Handle response for the multiple objects
+                    KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
+                    if (null == invalidKruizeObject) {
+                        ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
+                        for (KruizeObject ko : kruizeExpList) {
+                            CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                                    .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                                    .findAny()
+                                    .orElse(null);
+                            validAPIObj.setValidationData(ko.getValidation_data());
+                            ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                            addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        }
+                        if (addedToDB.isSuccess()) {
+                            sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                            statusValue = "success";
+                        } else {
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        }
+                    } else {
+                        sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
+                    }
                 }
             }
         } catch (Exception e) {

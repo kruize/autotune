@@ -91,7 +91,12 @@ public class AnalyzerErrorConstants {
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
-        public static final String MISSING_MANDATORY_PARAMETERS = "Following mandatory parameters are either missing or have null or empty values: ";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Following mandatory parameters are either missing or have null values: ";
+        public static final String AGGREGATION_INFO_INVALID_VALUE = "Need to update";
+        public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
+        public static final String NOT_EMPTY_OR_NULL = " cannot be empty or null";
+        public static final String NON_NUMERIC_THRESHOLD = "Threshold should be a numeral only";
+        public static final String WRONG_DURATION_FORMAT = "Measurement duration should be in the format '15min'";
 
 
         private AutotuneObjectErrors() {

@@ -267,7 +267,7 @@ public class DBHelpers {
                     kruizeExperimentEntry.setMode(apiObject.getMode());
                     kruizeExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
-                    kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
+                    kruizeExperimentEntry.setTarget_cluster(apiObject.getTarget_cluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {

@@ -210,6 +210,7 @@ public class KruizeConstants {
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
+        public static final String THRESHOLD = "threshold";
 
         private JSONKeys() {
         }
