@@ -1827,6 +1827,11 @@ def test_list_recommendations_single_cluster_multiple_exps(cluster_type):
     # Sort the JSON data by 'experiment_name'
     sorted_list_reco_json = sorted(list_reco_json, key=lambda x: x['experiment_name'])
 
+    # Verify if recommendations are available for all experiments
+    expected_num_exps_with_recommendations = num_exps
+    actual_num_experiments_with_recommendations = len(sorted_list_reco_json)
+    assert actual_num_experiments_with_recommendations == expected_num_exps_with_recommendations, f"Recommendations are not available for all experiments. Expected number of experiments with recommendations should be {expected_num_exps_with_recommendations} but was {actual_num_experiments_with_recommendations}"
+
     # Validate the json against the json schema
     errorMsg = validate_list_reco_json(sorted_list_reco_json, list_reco_json_schema)
     assert errorMsg == ""
@@ -1941,6 +1946,11 @@ def test_list_recommendations_multiple_clusters_multiple_exps(cluster_type):
 
         # Sort the JSON data by 'experiment_name'
         sorted_list_reco_json = sorted(list_reco_json, key=lambda x: x['experiment_name'])
+
+        # Verify if recommendations are available for all experiments
+        expected_num_exps_with_recommendations = num_exps
+        actual_num_experiments_with_recommendations = len(sorted_list_reco_json)
+        assert actual_num_experiments_with_recommendations == expected_num_exps_with_recommendations, f"Recommendations are not available for all experiments. Expected number of experiments with recommendations should be {expected_num_exps_with_recommendations} but was {actual_num_experiments_with_recommendations}"
 
         # Validate the json against the json schema
         errorMsg = validate_list_reco_json(sorted_list_reco_json, list_reco_json_schema)
