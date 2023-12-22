@@ -429,8 +429,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         result_json_arr = []
         start_time = None
         end_time = None
-        #for j in range(num_res):
-            # Update results for the experiment
+
+        # Update results for the experiment
         result_json_file = result_jsons_dir + "/result_" + str(i) + ".json"
         result_json = read_json_data_from_file(result_json_file)
         if start_time is None:
@@ -1473,8 +1473,8 @@ def test_list_recommendations_invalid_cluster(cluster_type):
 
     # Get the cluster name
     cluster_name = "xyz"
-    experiment_name = None
-    response = list_recommendations(experiment_name=experiment_name, cluster_name=cluster_name)
+
+    response = list_recommendations(cluster_name=cluster_name)
 
     data = response.json()
     print(data)
@@ -1626,13 +1626,11 @@ def test_list_recommendations_cluster_name_and_monitoring_end_time_invalid(monit
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-    # Get the experiment name
+    # Get the cluster name
     json_data = json.load(open(input_json_file))
     cluster_name = json_data[0]['cluster_name']
 
-    experiment_name = None
-    latest = None
-    response = list_recommendations(experiment_name=experiment_name, cluster_name=cluster_name, latest=latest, monitoring_end_time=monitoring_end_time)
+    response = list_recommendations(cluster_name=cluster_name, monitoring_end_time=monitoring_end_time)
     list_reco_json = response.json()
 
     print(list_reco_json['message'])
@@ -1871,6 +1869,7 @@ def test_list_recommendations_multiple_clusters_multiple_exps(cluster_type):
     form_kruize_url(cluster_type)
 
     for i in range(num_clusters):
+
         update_results_json = []
         for j in range(num_exps):
 
@@ -1949,7 +1948,7 @@ def test_list_recommendations_multiple_clusters_multiple_exps(cluster_type):
 
         # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-        validate_reco_json_multiple_clusters(exp_jsons_dir, update_results_json, sorted_list_reco_json, expected_duration_in_hours, test_name=None, num_cluster=i)
+        validate_reco_json_multiple_clusters(exp_jsons_dir, update_results_json, sorted_list_reco_json, expected_duration_in_hours, None, num_cluster=i)
 
     # Delete the experiments
     for i in range(num_clusters):
