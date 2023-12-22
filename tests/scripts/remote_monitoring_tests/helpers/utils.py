@@ -675,3 +675,11 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
             assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+def validate_reco_json_multiple_clusters(exp_jsons_dir, update_results_json, list_reco_json, expected_duration_in_hours=None,
+                                         test_name=None, num_cluster=0):
+    # Validate experiment
+    for i in range(len(list_reco_json)):
+        create_exp_json_file = exp_jsons_dir + "/create_exp_" + str(num_cluster) + "_" + str(i) + ".json"
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        validate_reco_json(create_exp_json[0], update_results_json[i], list_reco_json[i], expected_duration_in_hours)
