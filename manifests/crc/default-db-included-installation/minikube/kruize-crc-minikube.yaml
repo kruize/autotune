@@ -157,7 +157,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: rh-ee-shesaxen/autotune:datasource-test
+          image: kruize/autotune_operator:0.0.20.1_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
